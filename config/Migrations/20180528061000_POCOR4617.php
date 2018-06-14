@@ -286,6 +286,46 @@ class POCOR4617 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
         //end committee_attachments
+
+            $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 72');
+
+            // Institution Committees - Setup
+            $this->insert('security_functions', [
+                'id' => 2039,
+                'name' => 'Institution Committees',
+                'controller' => 'InstitutionCommittees',
+                'module' => 'Institutions',
+                'category' => 'Committees',
+                'parent_id' => 1000,
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'remove',
+                '_execute' => 'download',
+                'order' => 73,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]);
+
+            // Institution Committee Attachments 
+            $this->insert('security_functions', [
+                'id' => 2040,
+                'name' => 'Institution Committee Attachments',
+                'controller' => 'InstitutionCommitteeAttachments',
+                'module' => 'Institutions',
+                'category' => 'Committees',
+                'parent_id' => 1000,
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'remove',
+                '_execute' => 'download',
+                'order' => 74,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]);
     }
 
     //rollback
@@ -294,5 +334,9 @@ class POCOR4617 extends AbstractMigration
         $this->execute('DROP TABLE `institution_committees`');
         $this->execute('DROP TABLE `institution_committee_types`');
         $this->execute('DROP TABLE `institution_committee_attachments`');
+
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 72');
+        $this->execute('DELETE FROM security_functions WHERE id = 2039');
+        $this->execute('DELETE FROM security_functions WHERE id = 2040');
     }
 }
