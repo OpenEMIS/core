@@ -574,7 +574,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                     vm.saveSingleRecordData(params, extra)
                                     .then(function(response) {
                                         params.data.save_error[params.colDef.field] = false;
-                                        AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
+                                        AlertSvc.info(scope, 'Student result will be saved after the result has been entered.');
                                         params.api.refreshCells({
                                             rowNodes: [params.node],
                                             columns: [params.colDef.field],
@@ -803,7 +803,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 vm.saveSingleRecordData(params, extra)
                 .then(function(response) {
                     params.data.save_error[params.colDef.field] = false;
-                    AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
+                    AlertSvc.info(scope, 'Student result will be saved after the result has been entered.');
                     params.api.refreshCells({
                         rowNodes: [params.node],
                         columns: [params.colDef.field],
