@@ -205,7 +205,36 @@
     transition: all 1s ease;
 }
 
+.login-box .links-wrapper{
+    padding-top: 20px;
+    display: flex;
+}
 
+.login-box .links-wrapper > a{
+    flex: 1 1 auto;
+    text-align: center;
+    color: white;
+}
+
+.login-box .links-wrapper > a:nth-last-child(2){
+   text-align: right;  
+}
+
+.login-box .links-wrapper > a + a{
+    padding-left: 10px;
+    text-align: left;
+}
+
+.login-box .links-wrapper > a:hover{
+    text-decoration: underline;
+}
+
+.login-box .form-description{
+    padding-bottom: 20px;
+    text-align: center;
+    line-height: 20px;
+    font-size: 15px;
+}
 /*==========  Non-Mobile First Method  ==========*/
 
 
@@ -326,4 +355,15 @@
 .rtl .login-box input,
 .rtl .login-box select {
     padding: 10px 40px 10px 5px !important;
+}
+
+
+.rtl .login-box .links-wrapper > a:nth-last-child(2){
+    text-align: left;
+}
+
+.rtl .login-box .links-wrapper > a + a{
+    text-align: right;
+    padding-left: unset;
+    padding-right: 10px;
 }
