@@ -140,7 +140,6 @@ class LoginTable extends AppTable
                 $this->aliasField('last_login <= "') . $reportEndDate . '"'
             ]);
 
-            pr($query);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
