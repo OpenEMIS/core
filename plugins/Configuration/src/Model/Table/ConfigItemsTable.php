@@ -688,10 +688,6 @@ class ConfigItemsTable extends AppTable
             'rule'  => ['range', 0, 100],
             'message' => 'Numeric Value should be between 0 to 100',
             'last' => true
-        ],
-        'checkMaxStudentsPerClass' => [
-            'rule'  => ['checkMaxStudentsPerClass'],
-            'provider' => 'table'
         ]
     ];
 

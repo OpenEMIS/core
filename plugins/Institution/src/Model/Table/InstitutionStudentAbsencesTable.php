@@ -29,6 +29,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     private $absenceList;
     private $absenceCodeList;
 
+    private $workflowRuleEvents = [
+        [
+            'value' => 'Workflow.onAssignToHomeRoomTeacher',
+            'text' => 'Assign to Home Room Teacher',
+            'description' => 'Triggering this rule will assign the case to the respective Home Room Teacher or Secondary Teacher',
+            'method' => 'onAssignToHomeRoomTeacher'
+        ]
+    ];
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -83,7 +92,63 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $events['InstitutionCase.onIncludeCustomExcelFields'] = 'onIncludeCustomExcelFields';
         $events['InstitutionCase.onSetFilterToolbarElement'] = 'onSetFilterToolbarElement';
         $events['InstitutionCase.onCaseIndexBeforeQuery'] = 'onCaseIndexBeforeQuery';
+
+        // workflow rule events
+        $events['Workflow.getRuleEvents'] = 'getWorkflowRuleEvents';
+        foreach($this->workflowRuleEvents as $event) {
+            $events[$event['value']] = $event['method'];
+        }
         return $events;
+    }
+
+    public function getWorkflowRuleEvents(Event $event, ArrayObject $eventsObject)
+    {
+        foreach ($this->workflowRuleEvents as $key => $attr) {
+            $attr['text'] = __($attr['text']);
+            $attr['description'] = __($attr['description']);
+            $eventsObject[] = $attr;
+        }
+    }
+
+    public function onAssignToHomeRoomTeacher(Event $event, Entity $caseEntity, Entity $linkedRecordEntity)
+    {
+        $Students = TableRegistry::get('Institution.Students');
+        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $Cases = TableRegistry::get('Cases.InstitutionCases');
+
+        $classTeachers = $Students->find()
+            ->select([
+                'homeroom_staff_id' => $Classes->aliasField('staff_id'),
+                'secondary_staff_id' => $Classes->aliasField('secondary_staff_id')
+            ])
+            ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                $ClassStudents->aliasField('student_id = ') . $Students->aliasField('student_id'),
+                $ClassStudents->aliasField('institution_id = ') . $Students->aliasField('institution_id'),
+                $ClassStudents->aliasField('education_grade_id = ') . $Students->aliasField('education_grade_id'),
+                $ClassStudents->aliasField('student_status_id = ') . $Students->aliasField('student_status_id'),
+                $ClassStudents->aliasField('academic_period_id = ') . $Students->aliasField('academic_period_id')
+            ])
+            ->innerJoin([$Classes->alias() => $Classes->table()], [
+                $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
+            ])
+            ->where([
+                $Students->aliasField('student_id') => $linkedRecordEntity->student_id,
+                $Students->aliasField('institution_id') => $linkedRecordEntity->institution_id,
+                $Students->aliasField('academic_period_id') => $linkedRecordEntity->academic_period_id,
+                $Students->aliasField('start_date <= ') => $linkedRecordEntity->start_date,
+                $Students->aliasField('end_date >= ') => $linkedRecordEntity->end_date
+            ])
+            ->first();
+
+        if (!empty($classTeachers)) {
+            $staffId = !empty($classTeachers->homeroom_staff_id) ? $classTeachers->homeroom_staff_id : $classTeachers->secondary_staff_id;
+
+            if (!empty($staffId)) {
+                $caseEntity->assignee_id = $staffId;
+                $Cases->save($caseEntity);
+            }
+        }
     }
 
     private function addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate)
@@ -482,7 +547,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
         $InstitutionCases = TableRegistry::get('Cases.InstitutionCases');
 
-        $newData = [
+        $caseData = [
             'case_number' => '',
             'title' => $title,
             'status_id' => $statusId,
@@ -492,10 +557,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             'linked_records' => $linkedRecords
         ];
 
-        $patchOptions = ['validate' => false];
-
-        $newEntity = $InstitutionCases->newEntity($newData, $patchOptions);
-        return $InstitutionCases->save($newEntity);
+        return $caseData;
     }
 
     public function onSetLinkedRecordsCheckCondition(Event $event, Query $query, array $where)
