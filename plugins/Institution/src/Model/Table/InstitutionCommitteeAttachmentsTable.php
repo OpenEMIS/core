@@ -1,6 +1,6 @@
 <?php
 namespace Institution\Model\Table;
-
+use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
 class InstitutionCommitteeAttachmentsTable extends AppTable {
@@ -13,4 +13,20 @@ class InstitutionCommitteeAttachmentsTable extends AppTable {
             'size' => '2MB'
         ]);
 	}
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
+        return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'download') {
+            // check for the user permission to download here
+            $event->stopPropagation();
+            return true;
+        }
+    }
 }
