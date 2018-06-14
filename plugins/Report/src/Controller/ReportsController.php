@@ -33,12 +33,12 @@ class ReportsController extends AppController
         parent::beforeFilter($event);
         $header = 'Reports';
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
-        $this->Navigation->addCrumb($this->request->action);
+        $this->Navigation->addCrumb("Audit");
     }
 
     public function onInitialize(Event $event, Table $table, ArrayObject $extra)
     {
-        $header = __('Reports') . ' - ' . __($table->alias());
+        $header = __('Reports') . ' - ' . __("Audit");
         $this->set('contentHeader', $header);
     }
 
