@@ -15,6 +15,8 @@ class InstitutionCommitteeAttachmentsController extends PageController
         $this->loadComponent('Institution.InstitutionCommitteeTabs');
 
         $this->Page->disable(['search']);
+
+        $this->Page->enable(['download']);
     }
 
     public function beforeFilter(Event $event)
@@ -55,16 +57,18 @@ class InstitutionCommitteeAttachmentsController extends PageController
 
         $page = $this->Page;
         $entity = $page->getData();
+
+        $page->get('file_name')
+            ->setControlType('hidden');
         
     }
     public function add()
     {
         parent::add();
         $page = $this->Page;
-
+        $this->addEdit();
         $institutionCommitteeId = $page->decode($this->request->query['querystring']);
         $page->get('institution_committee_id')
-             ->setControlType('hidden')
              ->setValue($institutionCommitteeId['institution_committee_id']);
         $page->get('file_content')
             ->setLabel('Attachment');
@@ -73,10 +77,23 @@ class InstitutionCommitteeAttachmentsController extends PageController
         
     }
 
+    public function edit($id)
+    {
+        parent::edit($id);
+        $this->addEdit();
+    }
+
+    private function addEdit()
+    {
+        $page = $this->Page;
+        $page->exclude(['file_name']);
+        $page->get('institution_committee_id')
+            ->setControlType('hidden');
+    }
+
     public function setupTabElements()
     {
         $page = $this->Page;
-
         $tabElements = [];
        
         $tabElements = $this->InstitutionCommitteeTabs->getInstitutionCommitteeTabs();

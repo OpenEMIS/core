@@ -238,6 +238,15 @@ class POCOR4617 extends AbstractMigration
         ]);
 
         $table
+            ->addColumn('name', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => false,
+            ])
+            ->addColumn('description', 'text', [
+                'default' => null,
+                'null' => true
+            ])
             ->addColumn('file_name', 'string', [
                 'default' => null,
                 'limit' => 250,

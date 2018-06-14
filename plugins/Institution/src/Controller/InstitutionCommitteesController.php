@@ -4,6 +4,7 @@ namespace Institution\Controller;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\Log\Log;
 use App\Controller\PageController;
 
 class InstitutionCommitteesController extends PageController
@@ -59,14 +60,14 @@ class InstitutionCommitteesController extends PageController
         $page->exclude(['comment', 'institution_id', 'academic_period_id']);
         $page->move('name')->after('institution_committee_type_id');
 
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $institutionCommitteeTypeOptions = $this->InstitutionCommitteeTypes->getAvailableCommitteeTypes(true,'ASC');
+        // $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        // $institutionCommitteeTypeOptions = $this->InstitutionCommitteeTypes->getAvailableCommitteeTypes(true,'ASC');
 
-        $page->addFilter('academic_period_id')
-            ->setOptions($academicPeriodOptions);
+        // $page->addFilter('academic_period_id')
+        //     ->setOptions($academicPeriodOptions);
 
-        $page->addFilter('institution_committee_type_id')
-            ->setOptions([null => __('All Institution Committee Types')] + $institutionCommitteeTypeOptions);
+        // $page->addFilter('institution_committee_type_id')
+        //     ->setOptions([null => __('All Institution Committee Types')] + $institutionCommitteeTypeOptions);
     }
 
     public function view($id)
@@ -118,7 +119,6 @@ class InstitutionCommitteesController extends PageController
 
     public function getEntityRowActions(Event $event, $entity, ArrayObject $rowActions)
     {
-        
         $rowActionsArray = $rowActions->getArrayCopy();
         $institutionCommitteeId = $entity->id;
 
@@ -136,5 +136,4 @@ class InstitutionCommitteesController extends PageController
 
         $rowActions->exchangeArray($rowActionsArray);
     }
-
 }
