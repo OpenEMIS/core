@@ -12,6 +12,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
+use Cake\Validation\Validator;
 
 class LoginTable extends AppTable
 {
@@ -47,6 +48,28 @@ class LoginTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        $validator
+            ->add('last_login_start_date', [
+                'ruleCompareDate' => [
+                    'rule' => ['compareDate', 'last_login_end_date', true],
+                    'on' => function ($context) {
+                        if (array_key_exists('feature', $context['data'])) {
+                            $feature = $context['data']['feature'];
+                            return in_array($feature, ['Report.Login']);
+                        }
+
+                        return false;
+                    }
+                ],
+            ]);
+
+        return $validator;
+    }
+
     public function beforeAction(Event $event)
     {
         $this->fields = [];
@@ -80,12 +103,8 @@ class LoginTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        // pr($requestData->report_start_date);
-        // $report_start_date = $requestData->report_start_date->format('Y-m-d');
-        // $report_end_date = $requestData->report_end_date->format('Y-m-d');
-
-        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d');
-        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d');
+        $reportStartDate = (new DateTime($requestData->last_login_start_date))->format('Y-m-d');
+        $reportEndDate = (new DateTime($requestData->last_login_end_date))->format('Y-m-d');
 
         $query
             ->select([
@@ -149,32 +168,14 @@ class LoginTable extends AppTable
 
     public function onUpdateFieldLastLoginStartDate(Event $event, array $attr, $action, Request $request)
     {
-        // pr($event);
-        // $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-        // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        // $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
-
         $attr['type'] = 'date';
-        // $attr['date_options']['startDate'] = ("")->format('d-m-Y');
-        // $attr['date_options']['endDate'] = ("")->format('d-m-Y');
-        // $attr['value'] = $selectedPeriod->start_date;
         return $attr;
     }
 
     public function onUpdateFieldLastLoginEndDate(Event $event, array $attr, $action, Request $request)
     {
-        // $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-        // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        // $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
-
         $attr['type'] = 'date';
-        // $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
-        // $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
-        // if ($academicPeriodId != $AcademicPeriods->getCurrent()) {
-        //     $attr['value'] = $selectedPeriod->end_date;
-        // } else {
-            $attr['value'] = Time::now();
-        // }
+        $attr['value'] = Time::now();
         return $attr;
     }
 }
