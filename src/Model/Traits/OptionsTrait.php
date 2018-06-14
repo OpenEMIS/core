@@ -87,6 +87,9 @@ trait OptionsTrait
             'InstitutionInfrastructure' => [
                 'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Type')]
             ],
+            'InstitutionAssets' => [
+                'accessibility' => [1 => __('Accessible'), 0 => __('Not Accessible')]
+            ],
             'Shifts' => [
                 'types' => [
                     1 => __('Single Shift Owner'),
