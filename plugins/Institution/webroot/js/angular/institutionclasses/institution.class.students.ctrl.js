@@ -60,6 +60,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
     Controller.academicPeriodName = '';
     Controller.postError = [];
     Controller.maxStudentsPerClass = null;
+    Controller.classCapacity = null;
 
     // Function mapping
     Controller.setTop = setTop;
@@ -81,6 +82,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 Controller.academicPeriodId = response.academic_period_id;
                 Controller.institutionId = response.institution_id;
                 Controller.academicPeriodName = response.academic_period.name;
+                Controller.classCapacity = response.capacity;
+
                 var assignedStudents = [];
                 angular.forEach(response.class_students, function(value, key) {
                     var toPush = {
@@ -142,8 +145,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 Controller.unassignedStudents = unassignedStudentsArr;
                 Controller.shiftOptions = promises[1];
                 Controller.mainTeacherOptions = promises[2];
-                Controller.maxStudentsPerClass = promises[3];
-
+                Controller.maxStudentsPerClass = parseInt(promises[3]);
+  
                 Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
                 Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
 
@@ -244,9 +247,15 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         postData.classStudents = classStudents;
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;
-        if(classStudents.length > Controller.maxStudentsPerClass){
-            AlertSvc.error(Controller, 'The number of students per class has reached the maximum limit of '+Controller.maxStudentsPerClass+' students.');
-        }else{
+        postData.capacity = parseInt(Controller.classCapacity);
+
+        if(postData.capacity > Controller.maxStudentsPerClass) {
+            Controller.postError.capacity = {
+                'error': 'The capacity per class has exceeded the maximum capacity limit of '+Controller.maxStudentsPerClass+' students.'
+            };
+        } else if(classStudents.length > postData.capacity) {
+            AlertSvc.error(Controller, 'The number of students has reached the capacity limit of '+postData.capacity+' students.');
+        } else {
             InstitutionClassStudentsSvc.saveClass(postData)
             .then(function(response) {
                 var error = response.data.error;
@@ -268,8 +277,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
             }, function(error){
                 console.log(error);
             });
-    }
-
+        }
     }
 
     function updateQueryStringParameter(uri, key, value) {

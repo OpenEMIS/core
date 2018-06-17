@@ -434,7 +434,7 @@ trait MessagesTrait
             'add_question' => 'Add Question',
             'add_to_section' => 'Add to Section',
             'notSupport' => 'Not supported in this form.',
-            'restrictEditFilters' => 'You are not allow to remove the following filters: %s'
+            'restrictEditFilters' => 'You are not allowed to remove the following filters: %s'
         ],
         'StaffPositionTitles' => [
             'inProgress' => 'Update of staff position title roles is in process, please try again later.',
@@ -615,7 +615,9 @@ trait MessagesTrait
             'identity_number_exist' => 'Identity Number for %s already exists.',
             'identity_type_required' => 'Identity Type cant be empty if Identity Number is specified.',
             'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
-            'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.'
+            'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.',
+            'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type'
+
         ],
         'ImportInstitutionSurveys' => [
             'restrictImport' => 'Import operation is not allowed as the record is already Done'
@@ -638,7 +640,7 @@ trait MessagesTrait
         ],
         'ExaminationStudents' => [
             'restrictAdd' => 'Add operation is not allowed.',
-            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to a room.'
         ],
         'ExaminationNotRegisteredStudents' => [
             'restrictAdd' => 'Add operation is not allowed.'
@@ -673,12 +675,12 @@ trait MessagesTrait
 
         'LinkedInstitutionAddStudents' => [
             'noStudentSelected' => 'There are no students selected',
-            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to a room.'
         ],
 
         'BulkStudentRegistration' => [
             'noStudentSelected' => 'There are no students selected',
-            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to a room.'
         ],
         'ExaminationCentresExaminationsInvigilators' => [
             'noInvigilatorsSelected' => 'There are no invigilators selected'
@@ -736,12 +738,15 @@ trait MessagesTrait
             'noFilesToPublish' => 'There are no generated Report Cards to publish',
             'noFilesToUnpublish' => 'There are no published Report Cards to unpublish',
             'inProgress' => 'There is already a process running for this Report Card',
-            'generate' => 'The Report Card has been successfully generated',
+            'generate' => 'The Report Card will be generated in the background',
             'generateAll' => 'All Report Cards will be generated in the background',
             'publish' => 'The Report Card has been successfully published',
             'publishAll' => 'All generated Report Cards have been published successfully',
             'unpublish' => 'The Report Card has been successfully unpublished',
             'unpublishAll' => 'All published Report Cards have been unpublished successfully'
+        ],
+        'RecipientPaymentStructures' => [
+            'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
         ],
         'AlertRules' => [
             'Attendance' => [
@@ -851,7 +856,10 @@ trait MessagesTrait
                 ],
                 'staff_id' => [
                     'ruleCheckHomeRoomTeachers' => 'Home Room Teacher and Secondary Teacher cannot be the same person.'
-                ]
+                ],
+                'capacity' => [
+                    'ruleCheckMaxStudentsPerClass' => 'Capacity must not exceed the maximum number of students per class.'
+                ],
             ],
 
             'InstitutionProgrammes' => [
@@ -924,7 +932,11 @@ trait MessagesTrait
                     'ruleNoSpaces' => 'Only alphabets and numbers are allowed'
                 ],
                 'is_homeroom' => [
-                    'ruleCheckHomeRoomTeacherAssignments' => 'There are homeroom teachers assigned to Classes'
+                    'ruleCheckHomeRoomTeacherAssignments' => 'There are homeroom teachers assigned to Classes',
+                    'ruleIsHomeroomEmpty' => 'Please leave this field empty for non-teaching type titles'
+                ],
+                'status_id' => [
+                    'ruleCheckStatusIdValid' => 'Invalid status id'
                 ]
             ],
             'InstitutionShifts' => [
@@ -1028,11 +1040,17 @@ trait MessagesTrait
                     'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.'
+                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleInAllPeriod' => 'Staff start date must be within all academic period range'
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
                 ],
+            ],
+            'StaffUser' => [
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ]
             ],
             'StudentAdmission' => [
                 'student_id' => [
@@ -1143,6 +1161,11 @@ trait MessagesTrait
                 ]
             ],
             'InstitutionTextbooks' => [
+                'code' => [
+                    'ruleUnique' => 'Code must be unique for the same academic period',
+                ]
+            ],
+            'InstitutionAssets' => [
                 'code' => [
                     'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
@@ -1995,6 +2018,15 @@ trait MessagesTrait
                 'requested_amount' => [
                     'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Maximum Award Amount',
                 ]
+            ],
+            'ScholarshipRecipients' => [
+                'approved_amount' => [
+                    'comparison' => 'Approved Amount cannot be more than Maximum Award Amount',
+                    'validateDecimal' => 'Value cannot be more than two decimal places',
+                    'ruleCheckApprovedWithEstimated' => 'Approved Amount cannot be less than the Estimated Amounts',
+                    'ruleCheckApprovedWithDisbursed' => 'Approved Amount cannot be less than the Disbursed Amounts',
+                    'ruleCheckApprovedWithCollected' => 'Approved Amount cannot be less than the Collected Amounts',
+                ]
             ]
         ],
         'Competency' => [
@@ -2075,7 +2107,7 @@ trait MessagesTrait
             ],
             'StaffPositionTitles' => [
                'position_grades' => [
-                    'ruleCheckPositionGrades' => 'You are not allow to remove the following in-use grades: %s',
+                    'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
                 ]
             ] 
         ],
@@ -2126,9 +2158,6 @@ trait MessagesTrait
                 ],
             ],
             'ConfigStudentSettings' => [
-                'max_students_per_class' => [
-                    'maxStudentLimit' => 'Numeric Value should be between %s to %s'
-                ],
                 'max_students_per_subject' => [
                     'maxStudentLimit' => 'Numeric Value should be between %s to %s'
                 ],

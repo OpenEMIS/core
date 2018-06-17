@@ -53,16 +53,30 @@ class InstitutionChoicesController extends PageController
 
         $page->get('is_selected')
             ->setLabel('Selection');
+
+        $page->exclude(['order']);
     }
 
     public function index()
     {
         $page = $this->Page;
+
+        // default ordering
+        $page->setQueryOption('order', [$this->ApplicationInstitutionChoices->aliasField('order') => 'ASC']);
+
         parent::index();
+        
+        $page->exclude(['estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id']);
+        
+        $this->reorderFields();        
+    }
 
-        $page->exclude(['institution_id', 'estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id', 'is_selected', 'requested_amount']);
-
-        $page->move('scholarship_institution_choice_status_id')->first();
+    public function view($id)
+    {
+        parent::view($id);
+        
+        $page = $this->Page;
+        $this->reorderFields();
     }
 
     public function add()
@@ -139,17 +153,15 @@ class InstitutionChoicesController extends PageController
                     'index'
                 ]);
 
-                $page->addCrumb($userName);
-
-            } else if ($name == 'RecipientInstitutionChoices') {
-                $page->addCrumb('Applicants', [
+            } else if ($name == 'ScholarshipRecipientInstitutionChoices') {
+                $page->addCrumb('Recipients', [
                     'plugin' => 'Scholarship',
-                    'controller' => 'Scholarships',
-                    'action' => 'Applications',
-                    'index'
+                    'controller' => 'ScholarshipRecipients',
+                    'action' => 'index'
                 ]);
             }
 
+            $page->addCrumb($userName);
             $page->addCrumb('Instititution Choices');
 
         } else if ($plugin == 'Profile') {
@@ -174,6 +186,8 @@ class InstitutionChoicesController extends PageController
         $tabElements = [];
         if ($name == 'ScholarshipApplicationInstitutionChoices') {
             $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+        } elseif ($name == 'ScholarshipRecipientInstitutionChoices') {
+            $tabElements = $this->ScholarshipTabs->getScholarshipRecipientTabs();
         } elseif ($name == 'ProfileApplicationInstitutionChoices') {
             $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
         }

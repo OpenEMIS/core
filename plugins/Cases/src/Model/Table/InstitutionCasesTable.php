@@ -18,6 +18,8 @@ class InstitutionCasesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
+    private $features = [];
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -33,6 +35,9 @@ class InstitutionCasesTable extends ControllerActionTable
         ]);
 
         $this->toggle('add', false);
+
+        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
     }
 
     public function implementedEvents()
@@ -82,11 +87,78 @@ class InstitutionCasesTable extends ControllerActionTable
             $this->request->query['sort'] = 'created';
             $this->request->query['direction'] = 'desc';
         }
+
+        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $featureOptions = $WorkflowRules->getFeatureOptions();
+
+        if (!is_null($this->request->query('feature')) && array_key_exists($this->request->query('feature'), $featureOptions)) {
+            $selectedFeature = $this->request->query('feature');
+        } else {
+            $selectedFeature = key($featureOptions);
+            $this->request->query['feature'] = $selectedFeature;
+        }
+
+        $this->controller->set(compact('featureOptions', 'selectedFeature'));
+
+        $selectedModel = $this->features[$selectedFeature];
+        $featureModel = TableRegistry::get($selectedModel);
+        $session = $this->request->session();
+        $requestQuery = $this->request->query;
+        $institutionId = $session->read('Institution.Institutions.id');
+
+        $params = new ArrayObject([
+            'element' => ['filter' => ['name' => 'Cases.controls', 'order' => 2]],
+            'options' => [],
+            'query' => $this->request->query
+        ]);
+
+        $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbarElement', [$params, $institutionId], $featureModel);
+
+        $extra['elements'] = $params['element'] + $extra['elements'];
+        $this->request->query = $params['query'];
+
+        if (!empty($params['options'])) {
+            $this->controller->set($params['options']);
+        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['LinkedRecords']);
+        $requestQuery = $this->request->query;
+        $selectedFeature = $requestQuery['feature'];
+        $featureModel = TableRegistry::get($this->features[$selectedFeature]);
+
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('case_number'),
+                $this->aliasField('title'),
+                $this->aliasField('description'),
+                $this->aliasField('status_id'),
+                $this->aliasField('assignee_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('modified_user_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created_user_id'),
+                $this->aliasField('created'),
+                $this->Assignees->aliasField('first_name'),
+                $this->Assignees->aliasField('middle_name'),
+                $this->Assignees->aliasField('last_name'),
+                $this->Assignees->aliasField('third_name'),
+                $this->Assignees->aliasField('preferred_name')
+            ])
+            ->contain(['LinkedRecords'])
+            ->innerJoin(
+                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [
+                    [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
+                    [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                ]
+            )
+            ->group($this->aliasField('id'));
+
+        
+        $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -194,10 +266,10 @@ class InstitutionCasesTable extends ControllerActionTable
 
         $workflowRuleResults = $WorkflowRules
             ->find()
-            ->where([
-                $WorkflowRules->aliasField('feature') => $feature
-            ])
+            ->contain('WorkflowRuleEvents')
+            ->where([$WorkflowRules->aliasField('feature') => $feature])
             ->all();
+
         // loop through each rule setup for the feature
         // if the record match the rule, then create a new case and linked it with the record
         if (!$workflowRuleResults->isEmpty()) {
@@ -240,14 +312,16 @@ class InstitutionCasesTable extends ControllerActionTable
                             $extra['workflow_rule_id'] = $workflowRuleEntity->id;
 
                             $event = $linkedRecordModel->dispatchEvent('InstitutionCase.onSetCaseRecord', [$extra], $linkedRecordModel);
-                            if (!$event->result) {
+                            if (!empty($event->result)) {
+                                $caseData = $event->result;
+                            } else {
                                 $linkedRecords = [];
                                 $linkedRecords[] = [
                                     'record_id' => $recordId,
                                     'feature' => $feature
                                 ];
 
-                                $newData = [
+                                $caseData = [
                                     'case_number' => '',
                                     'title' => $title,
                                     'status_id' => $statusId,
@@ -256,13 +330,26 @@ class InstitutionCasesTable extends ControllerActionTable
                                     'workflow_rule_id' => $workflowRuleEntity->id, // required by workflow behavior to get the correct workflow
                                     'linked_records' => $linkedRecords
                                 ];
-
-                                $patchOptions = ['validate' => false];
-
-                                $newEntity = $this->newEntity();
-                                $newEntity = $this->patchEntity($newEntity, $newData, $patchOptions);
-                                $this->save($newEntity);
                             }
+
+                            $patchOptions = ['validate' => false];
+
+                            $newEntity = $this->newEntity();
+                            $newEntity = $this->patchEntity($newEntity, $caseData, $patchOptions);
+                            $this->save($newEntity);
+
+                            // Trigger rule Post Events
+                            if ($workflowRuleEntity->has('workflow_rule_events') && !empty($workflowRuleEntity->workflow_rule_events)) {
+                                $ruleEvents = $workflowRuleEntity->workflow_rule_events;
+
+                                foreach ($ruleEvents as $ruleEvent) {
+                                    $event = $linkedRecordModel->dispatchEvent($ruleEvent->event_key, [$newEntity, $linkedRecordEntity], $linkedRecordModel);
+                                    if ($event->isStopped()) {
+                                        return $event->result;
+                                    }
+                                }
+                            }
+                            // End
                         }
                     }
                 }

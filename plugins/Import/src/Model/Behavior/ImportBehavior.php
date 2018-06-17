@@ -5,6 +5,7 @@ use ArrayObject;
 use DateInterval;
 use DateTime;
 use DateTimeInterface;
+use Exception;
 use InvalidArgumentException;
 use Cake\Event\Event;
 use Cake\I18n\Time;
@@ -419,6 +420,38 @@ class ImportBehavior extends Behavior
 
                 $errors = $tableEntity->errors();
                 $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
+
+                // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
+                $isNew = $tableEntity->isNew();
+
+                if ($extra['entityValidate'] == true) {
+                    // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
+                    try {
+                        $newEntity = $activeModel->save($tableEntity);
+                    } catch (Exception $e) {
+                        $newEntity = false;
+                        $message = $e->getMessage();
+                        $matches = '';
+                        // regex to find values in 2 quotes without the quotes
+                        if (preg_match("/(?<=\')(.*?)+(?=\')/", $message, $matches)) {
+                            $errorRow = $matches[0];
+                        } else {
+                            $errorRow = 'row' . $row;
+                        }
+                        $rowInvalidCodeCols[$errorRow] = $message;
+                    }
+
+                    if ($newEntity) {
+                        if ($isNew) {
+                            $totalImported++;
+                        } else {
+                            $totalUpdated++;
+                        }
+                        // update importedUniqueCodes either a single key or composite primary keys
+                        $this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
+                    }
+                }
+
                 if (!empty($rowInvalidCodeCols) || $errors) { // row contains error or record is a duplicate based on unique key(s)
                     $rowCodeError = '';
                     $rowCodeErrorForExcel = [];
@@ -469,22 +502,6 @@ class ImportBehavior extends Behavior
                     $this->dispatchEvent($this->_table, $this->eventKey('onImportSetModelPassedRecord'), 'onImportSetModelPassedRecord', $params);
 
                     $dataPassed[] = $tempPassedRecord->getArrayCopy();
-                }
-
-                // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
-                $isNew = $tableEntity->isNew();
-
-                if ($extra['entityValidate'] == true) {
-                    $newEntity = $activeModel->save($tableEntity);
-                    if ($newEntity) {
-                        if ($isNew) {
-                            $totalImported++;
-                        } else {
-                            $totalUpdated++;
-                        }
-                        // update importedUniqueCodes either a single key or composite primary keys
-                        $this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
-                    }
                 }
 
                 // $model->log('ImportBehavior: '.$row.' records imported', 'info');
@@ -1335,10 +1352,10 @@ class ImportBehavior extends Behavior
                     $val = $cellValue;
                 }
             } elseif ($foreignKey == self::NON_TABLE_LIST) {
-                if (!empty($cellValue)) {
+                if (strlen($cellValue) > 0) {
                     $getIdEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
                     $recordId = $getIdEvent->result;
-                    if (!empty($recordId)) {
+                    if (strlen($recordId) > 0) {
                         $val = $recordId;
                     } else {
                         $rowPass = false;
@@ -1365,7 +1382,7 @@ class ImportBehavior extends Behavior
                     $tempRow['customColumns'][$columnName] = $val;
                 }
             }
-            if (!$isOptional || ($isOptional && !empty($val))) {
+            if (!$isOptional || ($isOptional && strlen($val) > 0)) {
                 $tempRow[$columnName] = $val;
             }
         }

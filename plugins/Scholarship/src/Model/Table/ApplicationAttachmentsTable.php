@@ -2,6 +2,7 @@
 namespace Scholarship\Model\Table;
 
 use Cake\ORM\Query;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class ApplicationAttachmentsTable extends AppTable
@@ -20,6 +21,12 @@ class ApplicationAttachmentsTable extends AppTable
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
         ]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator->requirePresence(['file_name', 'file_content']);
     }
 
     public function findIndex(Query $query, array $options)

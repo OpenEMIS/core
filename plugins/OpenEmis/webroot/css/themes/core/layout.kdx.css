@@ -14,6 +14,10 @@ Darker Shade Color: #476B8F
     background-color: #6699CC !important;
 }
 
+.kdx-visualization .kdx-visualization-menu-btn {
+	border-color: #6699CC !important;
+}
+
 
 .kdx-mindmap .kdx-mindmap-node.kdx-mindmap-node-active .kdx-mindmap-node-wrapper,
 .kdx-mindmap .kdx-mindmap-link.kdx-mindmap-link-active {

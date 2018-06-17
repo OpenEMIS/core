@@ -389,11 +389,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-page",
-            "version": "1.3.7",
+            "version": "1.3.8",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
-                "reference": "eb75952b188da28d76e2dedc1a40a8ac502806b1"
+                "reference": "67759b61979be7a35c6180d685012aab818978f7"
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0"
@@ -427,7 +427,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
             },
-            "time": "2018-02-23T05:26:16+00:00"
+            "time": "2018-05-21T07:47:44+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
@@ -486,11 +486,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
-            "version": "1.2.10",
+            "version": "1.2.11",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "ae6717d4e3f02371059598d0dfe6c8288830b2be"
+                "reference": "b4521490fdf5f7958683de43d5f8b2f0a8a62918"
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0 <3.4",
@@ -527,7 +527,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2017-09-26T07:12:55+00:00"
+            "time": "2018-05-21T06:39:12+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-webhooks",
