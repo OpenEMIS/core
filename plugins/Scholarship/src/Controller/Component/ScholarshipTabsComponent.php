@@ -12,6 +12,9 @@ class ScholarshipTabsComponent extends Component
     {
         $this->controller = $this->_registry->getController();
         $this->queryString = $this->request->query('queryString');
+
+        $this->controller->loadModel('Scholarship.Scholarships');
+        $this->controller->loadModel('Scholarship.FinancialAssistanceTypes');
     }
 
     public function getScholarshipApplicationTabs($options = [])
@@ -50,11 +53,52 @@ class ScholarshipTabsComponent extends Component
                 'text' => __('Attachments')
             ]
         ];
+
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getScholarshipRecipientTabs($options = [])
     {
+        $ids = $this->controller->paramsDecode($this->queryString);
+        $encodedIds = $this->Page->encode($ids);
+        
+        $tabElements = [
+            'Recipients' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'view', $encodedIds, 'queryString' => $this->queryString],
+                'text' => __('Overview')
+            ],
+            'InstitutionChoices' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipientInstitutionChoices', 'action' => 'index', 'queryString' => $this->queryString],
+                'text' => __('Institution Choices')
+            ],
+            'PaymentStructures' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'RecipientPaymentStructures', 'index','queryString' => $this->queryString],
+                'text' => __('Payment Structures')
+            ],
+            'Disbursements' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'RecipientPayments', 'index', 'queryString' => $this->queryString],
+                'text' => __('Disbursements')
+            ],
+            'Collections' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipientCollections', 'action' => 'index', 'queryString' => $this->queryString],
+                'text' => __('Collections')
+            ],
+            'AcademicStandings' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipientAcademicStandings', 'action' => 'index', 'queryString' => $this->queryString],
+                'text' => __('Academic Standings')
+            ]
+        ];
+
+        $isLoan = false;
+        if (array_key_exists('scholarship_id', $ids) && !empty($ids['scholarship_id'])) {
+            $scholarshipEntity = $this->controller->Scholarships->get($ids['scholarship_id']);
+            $isLoan = $this->controller->FinancialAssistanceTypes->is($scholarshipEntity->scholarship_financial_assistance_type_id, 'LOAN');
+        }
+        if (!$isLoan) {
+            unset($tabElements['Collections']);
+        }
+
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getScholarshipProfileTabs($options = [])
@@ -73,6 +117,7 @@ class ScholarshipTabsComponent extends Component
                 'text' => __('Attachments')
             ]
         ];
+
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 }

@@ -263,7 +263,8 @@ class NavigationComponent extends Component
             'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashHygienes',
             'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
             'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips',
-            'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances'
+            'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances',
+            'InstitutionAssets'
         ];
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipsDirectory', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
@@ -632,7 +633,7 @@ class NavigationComponent extends Component
                 'title' => 'Positions',
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Positions'],
+                'selected' => ['Institutions.Positions', 'Institutions.ImportInstitutionPositions'],
             ],
 
             'Institution.Finance' => [
@@ -755,6 +756,13 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Institution'],
                         'selected' => ['InfrastructureUtilityTelephones.view', 'InfrastructureUtilityTelephones.add', 'InfrastructureUtilityTelephones.edit', 'InfrastructureUtilityTelephones.delete']
                     ],
+
+            'InstitutionAssets.index' => [
+                'title' => 'Assets',
+                'parent' => 'Institutions.Institutions.index',
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['InstitutionAssets.index', 'InstitutionAssets.view', 'InstitutionAssets.add', 'InstitutionAssets.edit', 'InstitutionAssets.delete'],
+            ],
 
             'Survey' => [
                 'title' => 'Survey',
@@ -1474,7 +1482,7 @@ class NavigationComponent extends Component
                 'link' => false,
             ],
                 'Scholarships.Scholarships' => [
-                    'title' => 'Scholarships',
+                    'title' => 'Details',
                     'parent' => 'Administration.Scholarships',
                     'params' => ['plugin' => 'Scholarship'],
                     'selected' => ['Scholarships.Scholarships', 'ScholarshipAttachmentTypes.index', 'ScholarshipAttachmentTypes.view', 'ScholarshipAttachmentTypes.add', 'ScholarshipAttachmentTypes.edit', 'ScholarshipAttachmentTypes.delete']
@@ -1489,7 +1497,7 @@ class NavigationComponent extends Component
                     'title' => 'Recipients',
                     'parent' => 'Administration.Scholarships',
                     'params' => ['plugin' => 'Scholarship'],
-                    'selected' => ['ScholarshipRecipients.index', 'ScholarshipRecipients.view', 'ScholarshipRecipients.edit']
+                    'selected' => ['ScholarshipRecipients.index', 'ScholarshipRecipients.view', 'ScholarshipRecipients.edit', 'ScholarshipRecipientInstitutionChoices.index', 'ScholarshipRecipientInstitutionChoices.view', 'ScholarshipRecipientInstitutionChoices.edit', 'Scholarships.RecipientPaymentStructures', 'Scholarships.RecipientPayments', 'ScholarshipRecipientCollections.index', 'ScholarshipRecipientCollections.view', 'ScholarshipRecipientCollections.add', 'ScholarshipRecipientCollections.edit', 'ScholarshipRecipientCollections.delete', 'ScholarshipRecipientAcademicStandings.index', 'ScholarshipRecipientAcademicStandings.view', 'ScholarshipRecipientAcademicStandings.add', 'ScholarshipRecipientAcademicStandings.edit', 'ScholarshipRecipientAcademicStandings.delete'] 
                 ],
 
             'Textbooks.Textbooks' => [

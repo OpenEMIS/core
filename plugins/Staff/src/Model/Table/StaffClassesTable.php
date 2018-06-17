@@ -43,6 +43,7 @@ class StaffClassesTable extends ControllerActionTable
         $this->fields['class_number']['visible'] = false;
         $this->fields['institution_shift_id']['visible'] = false;
         $this->fields['secondary_staff_id']['visible'] = false;
+        $this->fields['capacity']['visible'] = false;
 
         $this->field('total_students', []);
 

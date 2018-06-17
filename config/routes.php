@@ -58,6 +58,9 @@ Router::scope('/', function (RouteBuilder $routes) {
 
     // For landing page
     $routes->connect('/', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+    $routes->connect('/ResetPassword', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'resetPassword']);
+    $routes->connect('/ForgotPassword', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'forgotPassword']);
+    $routes->connect('/ForgotUsername', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'forgotUsername']);
 
     // Standardised login route
     $routes->connect('/Login', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
