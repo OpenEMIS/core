@@ -157,6 +157,11 @@ class FieldOptionComponent extends Component
         'ScholarshipRecipientActivityStatuses' => ['className' => 'Scholarship.RecipientActivityStatuses', 'parent' => 'Scholarship'],
         'ScholarshipDisbursementCategories' => ['className' => 'Scholarship.DisbursementCategories', 'parent' => 'Scholarship'],
         'ScholarshipSemesters' => ['className' => 'Scholarship.Semesters', 'parent' => 'Scholarship'],
+
+    // Assets
+        'AssetTypes' => ['className' => 'Institution.AssetTypes', 'parent' => 'Assets'],
+        'AssetPurposes' => ['className' => 'Institution.AssetPurposes', 'parent' => 'Assets'],
+        'AssetConditions' => ['className' => 'Institution.AssetConditions', 'parent' => 'Assets'],
     ];
 
     public $components = ['AccessControl'];

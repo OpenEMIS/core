@@ -57,18 +57,21 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('HighChart', [
             'number_of_students_by_year' => [
                 '_function' => 'getNumberOfStudentsByYear',
+                '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Years')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'number_of_students_by_stage' => [
                 '_function' => 'getNumberOfStudentsByStage',
+                '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Education')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'institution_student_gender' => [
-                '_function' => 'getNumberOfStudentsByGender'
+                '_function' => 'getNumberOfStudentsByGender',
+                '_defaultColors' => false,
             ],
             'institution_student_age' => [
                 '_function' => 'getNumberOfStudentsByAge'
@@ -1199,17 +1202,21 @@ class StudentsTable extends ControllerActionTable
             ->matching('Users.Genders')
             ->select([
                 'count' => $InstitutionRecords->func()->count('DISTINCT ' . $this->aliasField('student_id')),
-                'gender' => 'Genders.name'
+                'gender' => 'Genders.name',
+                'gender_code' => 'Genders.code'
             ])
             ->group(['gender'], true);
 
         // Creating the data set
-        $dataSet = [];
+        $dataSet = [
+            'M' => [],
+            'F' => [],
+        ];
         foreach ($InstitutionStudentCount->toArray() as $value) {
             //Compile the dataset
-            $dataSet[] = [__($value['gender']), $value['count']];
+            $dataSet[$value['gender_code']] = [__($value['gender']), $value['count']];
         }
-        $params['dataSet'] = $dataSet;
+        $params['dataSet'] = array_values($dataSet);
         unset($InstitutionRecords);
         return $params;
     }

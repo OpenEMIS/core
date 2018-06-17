@@ -86,6 +86,15 @@ $this->start('panelBody');
             <p ng-repeat="error in InstitutionClassStudentsController.postError.staff_id">{{ error }}</p>
         </div>
     </div>
+    <div class="input string required">
+        <label><?=
+            __('Capacity') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' .  __('Capacity must not exceed') . ' {{InstitutionClassStudentsController.maxStudentsPerClass}} ' . __('students per class') . '"></i>'
+        ?></label>
+        <input ng-model="InstitutionClassStudentsController.classCapacity" type="string" ng-init="InstitutionClassStudentsController.classCapacity='';">
+        <div ng-if="InstitutionClassStudentsController.postError.capacity" class="error-message">
+            <p ng-repeat="error in InstitutionClassStudentsController.postError.capacity">{{ error }}</p>
+        </div>
+    </div>
 	<div class="input select">
         <label><?= __('Add Student') ?></label>
         <div class="input-form-wrapper" ng-init="InstitutionClassStudentsController.classId='<?= $classId ?>'; InstitutionClassStudentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>'; InstitutionClassStudentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
