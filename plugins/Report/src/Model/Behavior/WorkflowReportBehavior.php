@@ -12,11 +12,11 @@ use Cake\I18n\Time;
 
 class WorkflowReportBehavior extends Behavior {
 	public function initialize(array $config) {
-                $this->_table->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-                $this->_table->belongsTo('Assignees', ['className' => 'User.Users']);
+        $this->_table->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->_table->belongsTo('Assignees', ['className' => 'User.Users']);
 	}
 
-        public function implementedEvents() {
+    public function implementedEvents() {
         $events = parent::implementedEvents();
         $events['Model.excel.onExcelBeforeQuery'] = 'onExcelBeforeQuery';
         $events['Model.excel.onExcelUpdateFields'] = 'onExcelUpdateFields';
@@ -25,39 +25,37 @@ class WorkflowReportBehavior extends Behavior {
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
 	{
-                $requestData = json_decode($settings['process']['params']);
+        $requestData = json_decode($settings['process']['params']);
 
-                //Re-order the column (Status followed by Assignee) - Start
-                $statusTempArr = null;
-                $assigneeTempArr = null;
-                $hasEnteredStatusTempArr = false;
-                $hasEnteredAssigneeTempArr = false;
-                $currentIndex = 0;
+        //Re-order the column (Status followed by Assignee) - Start
+        $statusTempArr = null;
+        $assigneeTempArr = null;
+        $hasEnteredStatusTempArr = false;
+        $hasEnteredAssigneeTempArr = false;
+        $currentIndex = 0;
 
-                foreach($fields as $value) {
+        foreach($fields as $value) {
 
-                        if($value['field'] == 'status_id') {
-                                $statusTempArr = $value;
-                                $hasEnteredStatusTempArr = true;
-                                $fields[$currentIndex] = $fields[0];
-                        $fields[0] = $statusTempArr;
-                        }
+            if($value['field'] == 'status_id') {
+                $statusTempArr = $value;
+                $hasEnteredStatusTempArr = true;
+                $fields[$currentIndex] = $fields[0];
+                $fields[0] = $statusTempArr;
+            }
 
-                        if($value['field'] == 'assignee_id') {
-                                $assigneeTempArr = $value;
-                                $hasEnteredAssigneeTempArr = true;
-                                $fields[$currentIndex] = $fields[1];
-                        $fields[1] = $assigneeTempArr;
-                        }
+            if($value['field'] == 'assignee_id') {
+                $assigneeTempArr = $value;
+                $hasEnteredAssigneeTempArr = true;
+                $fields[$currentIndex] = $fields[1];
+                $fields[1] = $assigneeTempArr;
+            }
 
-                        if($hasEnteredStatusTempArr && $hasEnteredAssigneeTempArr) {
-                                break;
-                        }
-                        $currentIndex++;
-                }
+            if($hasEnteredStatusTempArr && $hasEnteredAssigneeTempArr) {
+                break;
+            }
+            $currentIndex++;
+        }
         //Re-order the column (Status followed by Assignee) - End
-
-	    // $this->_table->dispatchEvent('WorkflowReport.onExcelUpdateFields', [$settings, $fields]);
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
@@ -82,7 +80,5 @@ class WorkflowReportBehavior extends Behavior {
 	    		->contain('Statuses')
 	    		->where(['Statuses.category' => $category]);
 	    }
-
-	    // $this->_table->dispatchEvent('WorkflowReport.onExcelBeforeQuery', [$settings, $query]);
 	}
 }
