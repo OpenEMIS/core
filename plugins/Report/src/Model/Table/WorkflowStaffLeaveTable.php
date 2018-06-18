@@ -29,17 +29,15 @@ class WorkflowStaffLeaveTable extends AppTable  {
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
-        // $events['WorkflowReport.onExcelBeforeQuery'] = 'workflowBeforeQuery';
-        $events['Model.excel.onExcelUpdateFields'] = 'onExcelUpdateFields';
+        $events['Model.excel.onExcelBeforeQuery'] = 'onExcelBeforeQuery2';
+        $events['Model.excel.onExcelUpdateFields'] = 'onExcelUpdateFields2';
         return $events;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {
-        pr('WorkflowStaffLeaveTable >>> onExcelUpdateFields');
+    public function onExcelUpdateFields2(Event $event, ArrayObject $settings, ArrayObject $fields) {
+
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
-        pr("WorkflowStaffPositionProfileTable - onExcelBeforeQuery");
+    public function onExcelBeforeQuery2(Event $event, ArrayObject $settings, $query) {
     }
 }
