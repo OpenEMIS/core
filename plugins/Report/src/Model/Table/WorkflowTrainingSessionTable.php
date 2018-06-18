@@ -10,7 +10,6 @@ use App\Model\Table\AppTable;
 class WorkflowTrainingSessionTable extends AppTable  {
 
     public function initialize(array $config) {
-        //This controller base table is "workflow_models" so '$this' will represent the "workflow_models" table
         $this->table("training_sessions");
         parent::initialize($config);
 
@@ -44,8 +43,6 @@ class WorkflowTrainingSessionTable extends AppTable  {
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
-        // $events['WorkflowReport.onExcelBeforeQuery'] = 'workflowBeforeQuery';
-        // $events['WorkflowReport.onExcelUpdateFields'] = 'workflowUpdateFields';
         return $events;
     }
 }

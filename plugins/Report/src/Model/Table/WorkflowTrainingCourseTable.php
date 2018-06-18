@@ -10,7 +10,6 @@ use App\Model\Table\AppTable;
 class WorkflowTrainingCourseTable extends AppTable  {
 
     public function initialize(array $config) {
-        //This controller base table is "workflow_models" so '$this' will represent the "workflow_models" table
         $this->table("training_courses");
         parent::initialize($config);
 
@@ -67,7 +66,6 @@ $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignK
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.WorkflowReport');
         $this->addBehavior('Excel', [
-            'excludes' => ['staff_id', 'date_from'],
             'pages' => false,
             'autoFields' => false
         ]);
@@ -75,8 +73,6 @@ $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignK
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
-        // $events['WorkflowReport.onExcelBeforeQuery'] = 'workflowBeforeQuery';
-        // $events['WorkflowReport.onExcelUpdateFields'] = 'workflowUpdateFields';
         return $events;
     }
 }
