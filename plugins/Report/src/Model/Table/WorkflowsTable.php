@@ -39,19 +39,13 @@ class WorkflowsTable extends AppTable  {
             'Report.WorkflowStaffAppraisal' => 'Staff > Career > Appraisals',
             'Report.WorkflowScholarshipsApplication' => 'Administration > Scholarships > Applications'
 
-        ]//,
-        // 'Report.WorkflowRecords2' => [
-        //     'Report.StaffLeaveWorkflow' => 'Staff Leave2', // __('Staff Leave')
-        //     'Report.SurveyWorkflow' => 'Survey Forms2'
-        // ]
+        ]
     ];
 
     public function initialize(array $config) {
-        //Connect to the base table
         $this->table("workflow_models");
         parent::initialize($config);
 
-        //Excel format - 2
         $this->addBehavior('Report.ReportList');
 
     }
@@ -60,50 +54,30 @@ class WorkflowsTable extends AppTable  {
     {
         $validator = parent::validationDefault($validator);
 
-        // validation for attendance marked record feature
+        // validation for start/end Date
         $validator
             ->add('report_start_date', [
                 'ruleCompareDate' => [
                     'rule' => ['compareDate', 'report_end_date', true],
                     'on' => function ($context) {
-                        $feature = $context['data']['feature'];
-                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases']);
-                    }
-                ],
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
-                    'on' => function ($context) {
-                        $feature = $context['data']['feature'];
-                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases']);
-                    },
-                    'message' => __('Report Start Date should be later than Academic Period Start Date')
-                ],
+                        if(array_key_exists('feautre', $context['data'])) {
+                            $feature = $context['data']['feature'];
+                            return in_array($feature, [$context['data']['feature']]);
+                        }
+                        return true;
+                    }]
             ]);
-
-        $validator
-            ->add('report_end_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
-                    'on' => function ($context) {
-                        $feature = $context['data']['feature'];
-                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases']);
-                    },
-                    'message' => __('Report End Date should be earlier than Academic Period End Date')
-                ],
-            ]);
-
         return $validator;
     }
 
     public function beforeAction(Event $event)
     {
         $this->fields = [];
-        //Feature Dropdown list - 1
         $this->ControllerAction->field('feature', [
             'select' => false,
             'type' => 'select'
         ]);
-        //Excel format - 1
+
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('model', [
             'select' => false,
@@ -121,7 +95,6 @@ class WorkflowsTable extends AppTable  {
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
-        //Feature Dropdown list - 2 ( Calling getFeatureOptions method with the parameter of this table the alias which is workflow )
         $featureOptions = $this->controller->getFeatureOptions($this->alias());
 
         $attr['options'] = $featureOptions;

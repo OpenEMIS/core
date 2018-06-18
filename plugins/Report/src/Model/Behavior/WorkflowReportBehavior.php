@@ -18,20 +18,16 @@ class WorkflowReportBehavior extends Behavior {
 
         public function implementedEvents() {
         $events = parent::implementedEvents();
-        // $events['WorkflowReport.onExcelBeforeQuery'] = 'workflowBeforeQuery';
+        $events['Model.excel.onExcelBeforeQuery'] = 'onExcelBeforeQuery';
         $events['Model.excel.onExcelUpdateFields'] = 'onExcelUpdateFields';
         return $events;
     }
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
 	{
-                pr("WorkflowReportBehavior - onExcelUpdateFields");
-
                 $requestData = json_decode($settings['process']['params']);
 
                 //Re-order the column (Status followed by Assignee) - Start
-                // pr('Before');
-                // pr($fields);
                 $statusTempArr = null;
                 $assigneeTempArr = null;
                 $hasEnteredStatusTempArr = false;
@@ -59,21 +55,14 @@ class WorkflowReportBehavior extends Behavior {
                         }
                         $currentIndex++;
                 }
-      
-        // pr('After');
-        // pr($fields);
         //Re-order the column (Status followed by Assignee) - End
-
 
 	    // $this->_table->dispatchEvent('WorkflowReport.onExcelUpdateFields', [$settings, $fields]);
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
 	{
-        pr("WorkflowReportBehavior - onExcelBeforeQuery");
-
         $requestData = json_decode($settings['process']['params']);
-
 
         $category = $requestData->category;
         $startDate = $requestData->report_start_date;
@@ -96,11 +85,4 @@ class WorkflowReportBehavior extends Behavior {
 
 	    // $this->_table->dispatchEvent('WorkflowReport.onExcelBeforeQuery', [$settings, $query]);
 	}
-
-        public function workflowBeforeQuery(Event $event, ArrayObject $settings, $query) {
-        pr("WorkflowReportBehavior - workflowBeforeQuery");
-        $requestData = json_decode($settings['process']['params']);
-        // pr($requestData);
-
-    }
 }
