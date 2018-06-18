@@ -293,3 +293,10 @@
     height: 4px;
     background-color: #999;
 }
+
+/* PROGRESS LOADERS from Styleguide V3 v.1.0.0 */
+
+/* Spinner */
+.kdx-load-page .kdx-loader {
+    border-top: 5px solid #000;
+}

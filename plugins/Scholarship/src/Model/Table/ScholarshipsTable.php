@@ -96,7 +96,7 @@ class ScholarshipsTable extends ControllerActionTable
             $Navigation->addCrumb($scholarshipName);
             $Navigation->addCrumb(__('Overview'));
         } else {
-            $Navigation->addCrumb(__($this->getHeader($this->alias())));
+            $Navigation->addCrumb(__('Details'));
         }
     }
 
@@ -247,6 +247,11 @@ class ScholarshipsTable extends ControllerActionTable
             }
         }
         return implode(', ', array_values($return));
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->controller->set('contentHeader', __($this->getHeader($this->alias())) . ' - ' . __('Details'));
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
