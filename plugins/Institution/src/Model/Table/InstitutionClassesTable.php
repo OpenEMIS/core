@@ -15,7 +15,6 @@ use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 use Cake\I18n\Date;
 use Cake\Log\Log;
-use Cake\Datasource\ResultSetInterface;
 use Cake\Routing\Router;
 
 use App\Model\Table\ControllerActionTable;
@@ -36,7 +35,6 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions',         'foreignKey' => 'institution_id']);
 
         $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
-        $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'saveStrategy' => 'replace', 'cascadeCallbacks' => true]);
         $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'saveStrategy' => 'replace']);
         $this->hasMany('ClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -547,37 +545,6 @@ class InstitutionClassesTable extends ControllerActionTable
         return $query;
     }
 
-    public function findByQueue(Query $query, array $options)
-    {
-        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
-        $classId = array_key_exists('institution_class_id', $options) ? $options['institution_class_id'] : null;
-
-        if(!is_null($institutionId) && !is_null($classId)) {
-            $query
-                ->select([
-                    $this->aliasField('name'),
-                    $this->aliasField('capacity'),
-                    $this->aliasField('total_male_students'),
-                    $this->aliasField('total_female_students'),
-                    'pending_queue' => $query->func()->count('StudentAdmission.id')
-                ])
-                ->leftJoinWith('StudentAdmission')
-                ->where([
-                    $this->aliasField('institution_id') => $institutionId,
-                    $this->aliasField('id')  => $classId
-                ])
-                ->formatResults(function (ResultSetInterface $results) {
-                    return $results->map(function ($row) {
-                        $row->total_students = $row->total_male_students + $row->total_female_students;
-                        return $row;
-                    });
-                });
-        } else {
-            $query->where(['1=0']);
-        }
-
-        return $query;
-    }
 
     /******************************************************************************************************************
     **
