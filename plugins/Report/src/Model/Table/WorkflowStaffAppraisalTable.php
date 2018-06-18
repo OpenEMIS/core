@@ -10,7 +10,6 @@ use App\Model\Table\AppTable;
 class WorkflowStaffAppraisalTable extends AppTable  {
 
     public function initialize(array $config) {
-        //This controller base table is "workflow_models" so '$this' will represent the "workflow_models" table
         $this->table("institution_staff_appraisals");
         parent::initialize($config);
 
@@ -28,12 +27,14 @@ class WorkflowStaffAppraisalTable extends AppTable  {
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+
         $this->hasMany('AppraisalSliderAnswers', [
             'className' => 'StaffAppraisal.AppraisalSliderAnswers',
             'foreignKey' => 'institution_staff_appraisal_id',
             'saveStrategy' => 'replace',
             'dependent' => true,
             'cascadeCallbacks' => true]);
+
         $this->hasMany('AppraisalDropdownAnswers', [
             'className' => 'StaffAppraisal.AppraisalDropdownAnswers',
             'foreignKey' => 'institution_staff_appraisal_id',
@@ -41,6 +42,7 @@ class WorkflowStaffAppraisalTable extends AppTable  {
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+
         $this->hasMany('AppraisalNumberAnswers', [
             'className' => 'StaffAppraisal.AppraisalNumberAnswers',
             'foreignKey' => 'institution_staff_appraisal_id',
@@ -52,7 +54,6 @@ class WorkflowStaffAppraisalTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.WorkflowReport');
         $this->addBehavior('Excel', [
-            'excludes' => ['staff_id', 'date_from'],
             'pages' => false,
             'autoFields' => false
         ]);
@@ -60,8 +61,6 @@ class WorkflowStaffAppraisalTable extends AppTable  {
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
-        // $events['WorkflowReport.onExcelBeforeQuery'] = 'workflowBeforeQuery';
-        // $events['WorkflowReport.onExcelUpdateFields'] = 'workflowUpdateFields';
         return $events;
     }
 }
