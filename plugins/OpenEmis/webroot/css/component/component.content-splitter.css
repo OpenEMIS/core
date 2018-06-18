@@ -39,7 +39,9 @@
 }
 
 .splitter-slide-out {
-    left: 4000px !important;
+    /* FIX IOSTG-331
+    left: 4000px !important;*/
+    left: 100vw !important;
     right: -4000px !important;
     display: block !important;
 }
@@ -337,7 +339,9 @@
 }
 
 .rtl .splitter-slide-out {
-    right: 2000px !important;
+    /* FIX IOSTG-331
+    right: 2000px !important;*/
+    right: 100vw !important;
     left: -2000px !important;
 }
 
