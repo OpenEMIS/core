@@ -18,7 +18,7 @@ class WorkflowTrainingSessionTable extends AppTable
         $this->belongsTo('TrainingProviders', ['className' => 'Training.TrainingProviders', 'foreignKey' => 'training_provider_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
-        // revert back the association for Trainers to hasMany to handle saving of External Trainers
+        // Revert back the association for Trainers to hasMany to handle saving of External Trainers
         $this->hasMany('Trainers', ['className' => 'Training.TrainingSessionTrainers', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('TrainingApplications', ['className' => 'Training.TrainingApplications', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('SessionResults', ['className' => 'Training.TrainingSessionResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
