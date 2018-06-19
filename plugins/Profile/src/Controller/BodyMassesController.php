@@ -89,11 +89,11 @@ class BodyMassesController extends PageController
         } elseif ($plugin == 'Profile') {
             $page->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $encodedUserId]);
             $page->addCrumb($userName);
-            $page->addCrumb('Body Masses');
+            $page->addCrumb('Body Mass');
         } elseif ($plugin == 'Directory') {
             $page->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'index']);
             $page->addCrumb($userName, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'view', $encodedUserId]);
-            $page->addCrumb('Body Masses');
+            $page->addCrumb('Body Mass');
         }
 
         $page->move('academic_period_id')->first(); // move academic_period_id to be the first
@@ -119,7 +119,7 @@ class BodyMassesController extends PageController
             'HealthImmunizations' => ['text' => __('Immunizations')],
             'HealthMedications' => ['text' => __('Medications')],
             'HealthTests' => ['text' => __('Tests')],
-            'BodyMasses' => ['text' => __('Body Masses')],
+            'BodyMasses' => ['text' => __('Body Mass')],
             'Insurances' => ['text' => __('Insurances')]
         ];
 
@@ -177,7 +177,7 @@ class BodyMassesController extends PageController
             'HealthImmunizations' => ['text' => __('Immunizations')],
             'HealthMedications' => ['text' => __('Medications')],
             'HealthTests' => ['text' => __('Tests')],
-            'BodyMasses' => ['text' => __('Body Masses')],
+            'BodyMasses' => ['text' => __('Body Mass')],
             'Insurances' => ['text' => __('Insurances')]
         ];
 
