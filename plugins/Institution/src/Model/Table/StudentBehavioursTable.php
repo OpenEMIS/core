@@ -14,11 +14,12 @@ use Cake\I18n\Date;
 
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Page\Traits\EncodingTrait;
 
 class StudentBehavioursTable extends AppTable
 {
     use OptionsTrait;
-
+    use EncodingTrait;
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -426,7 +427,12 @@ class StudentBehavioursTable extends AppTable
     }
 
     // Start PHPOE-1897
-
+    public function viewBeforeAction(Event $event)
+    {
+        $tabElements = $this->getStudentBehaviourTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
     public function viewAfterAction(Event $event, Entity $entity)
     {
         $this->ControllerAction->field('academic_period_id', ['visible' => false]);
@@ -558,4 +564,27 @@ class StudentBehavioursTable extends AppTable
 
         return $reference;
     }
+
+    public function getStudentBehaviourTabElements($options = [])
+    {
+        $institution_id = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->paramsEncode(['id' => $institution_id]);
+
+        $studentBehaviourId = $this->request->params['pass'][1];
+        $studentBehaviourIdDecode = $this->paramsDecode($studentBehaviourId);
+        $queryString = $this->encode(['student_behaviour_id' => $studentBehaviourIdDecode['id']]);
+       
+        $tabElements = [
+            'StudentBehaviours' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours', 'view', $studentBehaviourId],
+                'text' => __('Overview')
+            ],
+            'StudentBehaviourAttachments' => [
+                'url' => ['plugin' => 'Institution','controller' => 'StudentBehaviourAttachments', 'institutionId' => $institutionId, 'action' => 'index', 'querystring' => $queryString],
+                'text' => __('Attachments')
+            ]
+        ];
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
 }
