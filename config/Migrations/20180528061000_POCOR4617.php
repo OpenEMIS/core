@@ -147,93 +147,11 @@ class POCOR4617 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-
-
-        $data = [
-            ['name' => 'School Board Of Management (BOM)',
-            'order' => 1,
-            'visible' => 1,
-            'editable' => 1,
-            'default' => 1,
-            'international_code' => '',
-            'national_code' => '',
-            'modified_user_id' => NULL,
-            'modified' => NULL,
-            'created_user_id' => '1',
-            'created' => date('Y-m-d H:i:s')
-            ],
-            [
-            'name' => "Parents and Citizens' Association (P&C)",
-            'order' => 1,
-            'visible' => 1,
-            'editable' => 1,
-            'default' => 1,
-            'international_code' => '',
-            'national_code' => '',
-            'modified_user_id' => NULL,
-            'modified' => NULL,
-            'created_user_id' => '1',
-            'created' => date('Y-m-d H:i:s')
-            ],
-            [
-            'name' => 'Staff Meeting',
-            'order' => 1,
-            'visible' => 1,
-            'editable' => 1,
-            'default' => 1,
-            'international_code' => '',
-            'national_code' => '',
-            'modified_user_id' => NULL,
-            'modified' => NULL,
-            'created_user_id' => '1',
-            'created' => date('Y-m-d H:i:s')
-            ],
-            [
-            'name' => 'Parent Meeting',
-            'order' => 1,
-            'visible' => 1,
-            'editable' => 1,
-            'default' => 1,
-            'international_code' => '',
-            'national_code' => '',
-            'modified_user_id' => NULL,
-            'modified' => NULL,
-            'created_user_id' => '1',
-            'created' => date('Y-m-d H:i:s')
-            ],
-            [
-            'name' => 'PTA committee',
-            'order' => 1,
-            'visible' => 1,
-            'editable' => 1,
-            'default' => 1,
-            'international_code' => '',
-            'national_code' => '',
-            'modified_user_id' => NULL,
-            'modified' => NULL,
-            'created_user_id' => '1',
-            'created' => date('Y-m-d H:i:s')
-            ],
-            [
-            'name' => 'Hygiene committee',
-            'order' => 1,
-            'visible' => 1,
-            'editable' => 1,
-            'default' => 1,
-            'international_code' => '',
-            'national_code' => '',
-            'modified_user_id' => NULL,
-            'modified' => NULL,
-            'created_user_id' => '1',
-            'created' => date('Y-m-d H:i:s')
-            ]
-        ];
-        $table->insert($data);
-        $table->saveData();
         //end institution_committee_types
 
        // committee_attachments
         $table = $this->table('institution_committee_attachments', [
+            'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains the list of attachments linked to specific committee'
         ]);
 
@@ -287,7 +205,7 @@ class POCOR4617 extends AbstractMigration
             ->save();
         //end committee_attachments
 
-            $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 72');
+            $this->execute('UPDATE security_functions SET `order` = `order` + 2 WHERE `order` > 102');
 
             // Institution Committees - Setup
             $this->insert('security_functions', [
@@ -302,7 +220,7 @@ class POCOR4617 extends AbstractMigration
                 '_add' => 'add',
                 '_delete' => 'remove',
                 '_execute' => 'download',
-                'order' => 73,
+                'order' => 103,
                 'visible' => 1,
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
@@ -321,7 +239,7 @@ class POCOR4617 extends AbstractMigration
                 '_add' => 'add',
                 '_delete' => 'remove',
                 '_execute' => 'download',
-                'order' => 74,
+                'order' => 104,
                 'visible' => 1,
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
@@ -335,7 +253,7 @@ class POCOR4617 extends AbstractMigration
         $this->execute('DROP TABLE `institution_committee_types`');
         $this->execute('DROP TABLE `institution_committee_attachments`');
 
-        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 72');
+        $this->execute('UPDATE security_functions SET `order` = `order` - 2 WHERE `order` > 102');
         $this->execute('DELETE FROM security_functions WHERE id = 2039');
         $this->execute('DELETE FROM security_functions WHERE id = 2040');
     }

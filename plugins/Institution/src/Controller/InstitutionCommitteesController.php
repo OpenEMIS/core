@@ -50,6 +50,8 @@ class InstitutionCommitteesController extends PageController
         $page->get('institution_id')
             ->setControlType('hidden')
             ->setValue($institutionId);
+
+        $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
     }
 
     public function index()
@@ -59,15 +61,6 @@ class InstitutionCommitteesController extends PageController
         $page = $this->Page;
         $page->exclude(['comment', 'institution_id', 'academic_period_id']);
         $page->move('name')->after('institution_committee_type_id');
-
-        // $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        // $institutionCommitteeTypeOptions = $this->InstitutionCommitteeTypes->getAvailableCommitteeTypes(true,'ASC');
-
-        // $page->addFilter('academic_period_id')
-        //     ->setOptions($academicPeriodOptions);
-
-        // $page->addFilter('institution_committee_type_id')
-        //     ->setOptions([null => __('All Institution Committee Types')] + $institutionCommitteeTypeOptions);
     }
 
     public function view($id)
@@ -75,29 +68,23 @@ class InstitutionCommitteesController extends PageController
         parent::view($id);
 
         $page = $this->Page;
-        $entity = $page->getData();
-
         $page->move('institution_committee_type_id')->after('academic_period_id');
         $page->move('name')->after('institution_committee_type_id');
         $this->setupTabElements();
         
     }
+
     public function add()
     {
         parent::add();
 
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $institutionCommitteeTypeOptions = $this->InstitutionCommitteeTypes->getAvailableCommitteeTypes(true,'ASC');
-
         $page = $this->Page;
         $page->get('academic_period_id')
             ->setControlType('select')
-            ->setOptions($academicPeriodOptions);
-        $page
-            ->get('institution_committee_type_id')
-            ->setControlType('select')
-            ->setOptions($institutionCommitteeTypeOptions);
-        
+            ->setOptions($this->academicPeriodOptions);
+
+        $page->get('institution_committee_type_id')
+            ->setControlType('select');
     }
 
     public function setupTabElements()
