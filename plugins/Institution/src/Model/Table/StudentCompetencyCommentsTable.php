@@ -83,6 +83,7 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden']);
         $this->field('secondary_staff_id', ['type' => 'hidden']);
         $this->field('institution_shift_id', ['type' => 'hidden']);
+        $this->field('capacity', ['type' => 'hidden']);
         $this->field('modified_user_id', ['type' => 'hidden']);
         $this->field('modified', ['type' => 'hidden']);
         $this->field('created_user_id', ['type' => 'hidden']);

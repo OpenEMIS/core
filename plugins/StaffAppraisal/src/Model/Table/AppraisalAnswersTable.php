@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
+use Cake\Log\Log;
 class AppraisalAnswersTable extends AppTable
 {
     public function initialize(array $config)
@@ -31,8 +32,16 @@ class AppraisalAnswersTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if (is_null($entity->answer) || $entity->answer === '') {
+        if ($entity->isNew() && $entity->answer === '') {
             return $event->stopPropagation();
         }
     }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->answer === '' || is_null($entity->answer)) {
+            $this->delete($entity);
+        }
+    }
+
 }
