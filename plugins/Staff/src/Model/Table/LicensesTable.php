@@ -205,6 +205,7 @@ class LicensesTable extends ControllerActionTable
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('status_id'),
+                $this->aliasField('staff_id'),
                 $this->aliasField('license_number'),
                 $this->aliasField('license_type_id'),
                 $this->aliasField('modified'),
@@ -237,7 +238,8 @@ class LicensesTable extends ControllerActionTable
                         'controller' => 'Directories',
                         'action' => 'StaffLicenses',
                         'view',
-                        $this->paramsEncode(['id' => $row->id])
+                        $this->paramsEncode(['id' => $row->id]),
+                        'user_id' => $row->staff_id
                     ];
 
                     if (is_null($row->modified)) {
