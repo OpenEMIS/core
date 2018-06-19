@@ -686,24 +686,20 @@ class ValidationBehavior extends Behavior
 
     // Return false if not enrolled in other education system
     public static function checkInstitutionClassMaxLimit($class_id, array $globalData)
-    {
-        if(empty($class_id)) {
-            return true; 
-        } else {
-            $ClassStudents = TableRegistry::get("Institution.InstitutionClassStudents");
-            $currentNumberOfStudents = $ClassStudents->find()->where([
-                    $ClassStudents->aliasField('institution_class_id') => $class_id,
-                    $ClassStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id']
-                ])->count();
-            /**
-             * @todo  add this max limit to config
-             * This limit value is being used in InstitutionClasses->editAfterAction()
-             */
-            $Classes = TableRegistry::get('Institution.InstitutionClasses');
-            $classCapacity = $Classes->get($class_id)->capacity;
+    {    
+        $ClassStudents = TableRegistry::get("Institution.InstitutionClassStudents");
+        $currentNumberOfStudents = $ClassStudents->find()->where([
+                $ClassStudents->aliasField('institution_class_id') => $class_id,
+                $ClassStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id']
+            ])->count();
+        /**
+         * @todo  add this max limit to config
+         * This limit value is being used in InstitutionClasses->editAfterAction()
+         */
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $classCapacity = $Classes->get($class_id)->capacity;
 
-            return ($currentNumberOfStudents < $classCapacity);
-        }
+        return ($currentNumberOfStudents < $classCapacity);
     }
 
     public static function studentNotEnrolledInAnyInstitutionAndSameEducationSystem($field, $options = [], array $globalData)
