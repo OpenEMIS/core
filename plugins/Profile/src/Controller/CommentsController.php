@@ -213,6 +213,10 @@ class CommentsController extends PageController
             $tabElements[$action]['url'] = $url;
         }
 
+        if ($plugin == 'Directory') {
+            unset($tabElements['History']);
+        }
+        
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
 
         foreach ($tabElements as $action => $obj) {
