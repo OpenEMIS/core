@@ -7,9 +7,11 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
-class WorkflowInstitutionCaseTable extends AppTable  {
+class WorkflowInstitutionCaseTable extends AppTable  
+{
 
-    public function initialize(array $config) {
+    public function initialize(array $config) 
+    {
         $this->table("institution_cases");
         parent::initialize($config);
 

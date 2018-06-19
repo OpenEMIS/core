@@ -7,9 +7,10 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
-class WorkflowStudentWithdrawTable extends AppTable  {
-
-    public function initialize(array $config) {
+class WorkflowStudentWithdrawTable extends AppTable  
+{
+    public function initialize(array $config) 
+    {
         $this->table("institution_student_withdraw");
         parent::initialize($config);
 
