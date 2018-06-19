@@ -214,7 +214,9 @@ class CommentsController extends PageController
         }
 
         if ($plugin == 'Directory') {
-            unset($tabElements['History']);
+            if (isset($tabElements['History'])) {
+                unset($tabElements['History']);
+            }
         }
         
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
