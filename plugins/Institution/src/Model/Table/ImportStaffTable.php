@@ -234,8 +234,8 @@ class ImportStaffTable extends AppTable
                     $positionTitleType = __('Non-Teaching');
                 }
                 $data[$columnOrder]['data'][] = [
-                    $row->position_no,
                     $positionTitleType,
+                    $row->position_no,
                     $row->staff_position_title->name,
                     $row->status->name,
                     $yesNoOptions[$row->is_homeroom]
