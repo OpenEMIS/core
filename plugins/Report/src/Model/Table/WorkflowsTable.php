@@ -13,7 +13,8 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
 
-class WorkflowsTable extends AppTable  {
+class WorkflowsTable extends AppTable  
+{
     use OptionsTrait;
 
     private $modelList = [
@@ -42,7 +43,8 @@ class WorkflowsTable extends AppTable  {
         ]
     ];
 
-    public function initialize(array $config) {
+    public function initialize(array $config) 
+    {
         $this->table("workflow_models");
         parent::initialize($config);
 

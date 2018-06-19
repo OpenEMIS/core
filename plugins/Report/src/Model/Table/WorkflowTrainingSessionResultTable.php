@@ -7,9 +7,10 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
-class WorkflowTrainingSessionResultTable extends AppTable  {
-
-    public function initialize(array $config) {
+class WorkflowTrainingSessionResultTable extends AppTable  
+{
+    public function initialize(array $config) 
+    {
         $this->table("training_session_results");
         parent::initialize($config);
 

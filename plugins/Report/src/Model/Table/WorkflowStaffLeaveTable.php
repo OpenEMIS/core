@@ -7,9 +7,10 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
-class WorkflowStaffLeaveTable extends AppTable  {
-
-    public function initialize(array $config) {
+class WorkflowStaffLeaveTable extends AppTable  
+{
+    public function initialize(array $config) 
+    {
         $this->table("institution_staff_leave");
         parent::initialize($config);
 
