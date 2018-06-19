@@ -30,9 +30,18 @@ class InstitutionSubjectsTable extends AppTable  {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        $institutionId = $requestData->institution_id;
+
+
         $query
             ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives'])
-            ->select(['institution_code' => 'Institutions.code', 'area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name']);
+            ->select(['institution_code' => 'Institutions.code', 'area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name'])
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                'Institutions.id' => $institutionId
+            ]);
     }
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
