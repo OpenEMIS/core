@@ -11,14 +11,13 @@ class InstitutionCommitteeTabsComponent extends Component
     private $institutionCommitteeId;
 
     public function initialize(array $config)
-    {
-        $this->controller = $this->_registry->getController();
+    {   
         $this->querystring = $this->request->query('querystring');
         $this->institutionId = $this->request->params['institutionId'];
         $decodeQueryString = $this->Page->decode($this->querystring);
 
         $institutionCommitteeId = [];
-        if ($decodeQueryString) {
+        if ($decodeQueryString && array_key_exists('institution_committee_id', $decodeQueryString)) {
             $institutionCommitteeId['id'] = $decodeQueryString['institution_committee_id'];
         }
         $this->institutionCommitteeId = $this->Page->encode($institutionCommitteeId);

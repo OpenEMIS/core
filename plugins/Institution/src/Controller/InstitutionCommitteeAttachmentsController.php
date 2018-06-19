@@ -56,11 +56,10 @@ class InstitutionCommitteeAttachmentsController extends PageController
         parent::view($id);
 
         $page = $this->Page;
-        $entity = $page->getData();
-
+        $page->exclude(['file_name']);
+        $page->exclude(['institution_committee_id']);
         $page->get('file_name')
             ->setControlType('hidden');
-        
     }
     public function add()
     {
@@ -72,8 +71,6 @@ class InstitutionCommitteeAttachmentsController extends PageController
              ->setValue($institutionCommitteeId['institution_committee_id']);
         $page->get('file_content')
             ->setLabel('Attachment');
-        $page->get('file_name')
-            ->setLabel('Name');
         
     }
 
