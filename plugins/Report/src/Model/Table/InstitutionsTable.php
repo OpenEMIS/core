@@ -146,6 +146,8 @@ class InstitutionsTable extends AppTable
     {
         $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_type', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_programme_id', ['type' => 'hidden']);
         $this->ControllerAction->field('status', ['type' => 'hidden']);
         $this->ControllerAction->field('type', ['type' => 'hidden']);
@@ -370,7 +372,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords']))
+            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects']))
                 ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
@@ -492,6 +494,43 @@ class InstitutionsTable extends AppTable
                 }
             } else {
                 $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldInstitutionType(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.InstitutionSubjects'])) {
+                $attr['options'] = $this->Types
+                    ->find('list')
+                    ->find('visible')
+                    ->toArray();
+
+                $attr['type'] = 'select';
+                $attr['onChangeReload'] = true;
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.InstitutionSubjects'])) {
+                $options = $this->find('list');
+
+                if (!empty($request->data[$this->alias()]['institution_type'])) {
+                    $type = $request->data[$this->alias()]['institution_type'];
+                    $options->where([$this->aliasField('institution_type_id') => $type]);
+                }
+
+                $institutionOptions = $options->toArray();
+                $attr['type'] = 'select';
+                $attr['options'] = $institutionOptions;
             }
             return $attr;
         }
