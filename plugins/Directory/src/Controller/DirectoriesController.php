@@ -182,6 +182,10 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
     }
+    public function StudentRisks()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentRisks']);
+    }
 
     // health
     public function Healths()
@@ -576,14 +580,20 @@ class DirectoriesController extends AppController
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
-            'Textbooks' => ['text' => __('Textbooks')]
+            'Textbooks' => ['text' => __('Textbooks')],
+            'StudentRisks' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            if ($key == 'StudentRisks') {
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']); 
+            } else {
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]); 
+            }  
         }
+
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
