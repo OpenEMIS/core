@@ -16,7 +16,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         workbenchItems: {}
     };
 
-    var includedPlugins = ['Scholarship'];
+    var includedPlugins = ['Directory', 'Scholarship'];
 
     var configModels = {
         // SCHOOL_BASED Workflow
