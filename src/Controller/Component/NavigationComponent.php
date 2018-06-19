@@ -1174,7 +1174,6 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
-            //View, to generate the UI ( This will be also be the side navigation button)
             'Reports.Workflows' => [
                 'title' => 'Workflows',
                 'parent' => 'Reports',
