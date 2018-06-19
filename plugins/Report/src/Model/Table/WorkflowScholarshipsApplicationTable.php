@@ -7,9 +7,11 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
-class WorkflowScholarshipsApplicationTable extends AppTable  {
+class WorkflowScholarshipsApplicationTable extends AppTable
+{
 
-    public function initialize(array $config) {
+    public function initialize(array $config) 
+    {
         $this->table("scholarship_applications");
         parent::initialize($config);
 
@@ -33,7 +35,6 @@ class WorkflowScholarshipsApplicationTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.WorkflowReport');
         $this->addBehavior('Excel', [
-            'excludes' => ['staff_id', 'date_from'],
             'pages' => false,
             'autoFields' => false
         ]);

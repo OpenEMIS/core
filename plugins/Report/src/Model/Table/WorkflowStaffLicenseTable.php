@@ -7,13 +7,14 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
-class WorkflowStaffLicenseTable extends AppTable  {
-
-    public function initialize(array $config) {
+class WorkflowStaffLicenseTable extends AppTable  
+{
+    public function initialize(array $config) 
+    {
         $this->table("staff_licenses");
         parent::initialize($config);
 
-       $this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
