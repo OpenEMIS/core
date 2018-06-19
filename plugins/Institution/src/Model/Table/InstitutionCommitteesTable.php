@@ -16,6 +16,5 @@ class InstitutionCommitteesTable extends AppTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-        // $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' =>'student_id']);
     }
 }
