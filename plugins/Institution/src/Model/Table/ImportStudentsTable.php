@@ -359,8 +359,6 @@ class ImportStudentsTable extends AppTable {
                                         $classCapacity = $InstitutionClasses->get($id)->capacity; 
 
                                         if ($countStudent + 1 > $classCapacity) {
-                                            $rowInvalidCodeCols['class'] = __('Selected class has hit limit of ') .$classCapacity. __(' students');
-
                                             return false;
                                         }
                                     }
