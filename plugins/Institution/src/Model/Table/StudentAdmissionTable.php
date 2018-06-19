@@ -113,7 +113,7 @@ class StudentAdmissionTable extends ControllerActionTable
             ->add('institution_class_id', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit'],
                 'on' => function ($context) {  
-                    return (!empty($context['data']['institution_class_id']) && $context['newRecord']);
+                    return (!empty($context['data']['institution_class_id']));
                 }
             ]);
 
