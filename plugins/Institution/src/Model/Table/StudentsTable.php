@@ -168,7 +168,9 @@ class StudentsTable extends ControllerActionTable
             ->allowEmpty('class')
             ->add('class', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit'],
-                'on' => 'create'
+                'on' => function ($context) {  
+                    return (!empty($context['data']['class']) && $context['newRecord']);
+                }
             ])
             ->add('gender_id', 'rulecompareStudentGenderWithInstitution', [
                 'rule' => ['compareStudentGenderWithInstitution']

@@ -356,9 +356,11 @@ class ImportStudentsTable extends AppTable {
                                         //checking class capacity if student imported straight to the class.
                                         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
                                         $countStudent = $InstitutionClassStudents->getStudentCountByClass($id);
+                                        $classCapacity = $InstitutionClasses->get($id)->capacity; 
 
-                                        if ($countStudent + 1 > 100) {
-                                            $rowInvalidCodeCols['class'] = __('Selected class has hit limit of 100 students');
+                                        if ($countStudent + 1 > $classCapacity) {
+                                            $rowInvalidCodeCols['class'] = __('Selected class has hit limit of ') .$classCapacity. __(' students');
+
                                             return false;
                                         }
                                     }
