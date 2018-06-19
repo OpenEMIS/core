@@ -233,12 +233,11 @@ class LicensesTable extends ControllerActionTable
             ->formatResults(function (ResultSetInterface $results) use ($institutionId) {
                 return $results->map(function ($row) use ($institutionId) {
                     $url = [
-                        'plugin' => 'Staff',
-                        'controller' => 'Staff',
-                        'action' => 'Licenses',
+                        'plugin' => 'Directory',
+                        'controller' => 'Directories',
+                        'action' => 'StaffLicenses',
                         'view',
-                        $this->paramsEncode(['id' => $row->id]),
-                        'institution_id' => $institutionId
+                        $this->paramsEncode(['id' => $row->id])
                     ];
 
                     if (is_null($row->modified)) {
