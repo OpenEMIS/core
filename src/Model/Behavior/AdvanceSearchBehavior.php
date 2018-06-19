@@ -140,7 +140,7 @@ class AdvanceSearchBehavior extends Behavior
 
                 if (in_array($key, $this->config('include'))) {
                     $includedFields[$key] = [
-                        'label' => ($label) ? $label : Inflector::humanize($key),
+                        'label' => ($label) ? $label : __(Inflector::humanize($key)),
                         'value' => (isset($advanceSearchModelData['tableField']) && isset($advanceSearchModelData['tableField'][$key])) ? $advanceSearchModelData['tableField'][$key] : '',
                     ];
                 }
