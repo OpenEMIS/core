@@ -35,9 +35,4 @@ class WorkflowStudentTransferInTable extends AppTable  {
             'autoFields' => false
         ]);
     }
-
-    public function implementedEvents() {
-        $events = parent::implementedEvents();
-        return $events;
-    }
 }

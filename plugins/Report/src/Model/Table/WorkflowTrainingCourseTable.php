@@ -13,7 +13,7 @@ class WorkflowTrainingCourseTable extends AppTable  {
         $this->table("training_courses");
         parent::initialize($config);
 
-$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('TrainingFieldStudies', ['className' => 'Training.TrainingFieldStudies', 'foreignKey' => 'training_field_of_study_id']);
         $this->belongsTo('TrainingCourseTypes', ['className' => 'Training.TrainingCourseTypes', 'foreignKey' => 'training_course_type_id']);
         $this->belongsTo('TrainingModeDeliveries', ['className' => 'Training.TrainingModeDeliveries', 'foreignKey' => 'training_mode_of_delivery_id']);
@@ -69,10 +69,5 @@ $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignK
             'pages' => false,
             'autoFields' => false
         ]);
-    }
-
-    public function implementedEvents() {
-        $events = parent::implementedEvents();
-        return $events;
     }
 }
