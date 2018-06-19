@@ -28,7 +28,6 @@ class WorkflowStaffTransferOutTable extends AppTable
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.WorkflowReport');
         $this->addBehavior('Excel', [
-            'excludes' => ['staff_id', 'date_from'],
             'pages' => false,
             'autoFields' => false
         ]);

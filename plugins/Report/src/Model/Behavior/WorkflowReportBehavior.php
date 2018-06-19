@@ -30,7 +30,7 @@ class WorkflowReportBehavior extends Behavior
     {
         $requestData = json_decode($settings['process']['params']);
 
-        //Re-order the column (Status followed by Assignee) - Start
+        // Re-order the column (Status followed by Assignee) - Start
         $statusTempArr = null;
         $assigneeTempArr = null;
         $hasEnteredStatusTempArr = false;
@@ -60,7 +60,7 @@ class WorkflowReportBehavior extends Behavior
         array_unshift($localFields , $assigneeTempArr);
         array_unshift($localFields , $statusTempArr);
         $fields->exchangeArray($localFields);
-        //Re-order the column (Status followed by Assignee) - End
+        // Re-order the column (Status followed by Assignee) - End
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
