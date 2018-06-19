@@ -8,6 +8,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
+use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
 use Cake\Log\Log;
 use ZipArchive;
@@ -636,13 +637,36 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'institution_class_id' => $student->institution_class_id,
             ];
             if ($this->StudentsReportCards->exists($recordIdKeys)) {
+                $conn = ConnectionManager::get('default');
+                $conn->begin();
+
                 $studentsReportCardEntity = $this->StudentsReportCards->find()
                     ->where($recordIdKeys)
                     ->first();
 
                 $this->StudentsReportCards->delete($studentsReportCardEntity);
+
+                $newData = [
+                    'status' => $this->StudentsReportCards::NEW_REPORT,
+                    'principal_comments' => $studentsReportCardEntity->principal_comments,
+                    'homeroom_teacher_comments' => $studentsReportCardEntity->homeroom_teacher_comments,
+                    'file_name' => NULL,
+                    'file_content' => NULL,
+                    'report_card_id' => $studentsReportCardEntity->report_card_id,
+                    'student_id' => $studentsReportCardEntity->student_id,
+                    'institution_id' => $studentsReportCardEntity->institution_id,
+                    'academic_period_id' => $studentsReportCardEntity->academic_period_id,
+                    'education_grade_id' => $studentsReportCardEntity->education_grade_id,
+                    'institution_class_id' => $studentsReportCardEntity->institution_class_id
+                ];
+                $newEntity = $this->StudentsReportCards->newEntity($newData);
+
+                if ($this->StudentsReportCards->save($newEntity)) {
+                    $conn->commit();
+                } else {
+                    $conn->rollback();
+                }
             }
-            // end
         }
 
         Log::write('debug', 'End Generate All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' ('.Time::now().')');
