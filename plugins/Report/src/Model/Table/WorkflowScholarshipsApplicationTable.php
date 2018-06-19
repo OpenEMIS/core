@@ -10,7 +10,6 @@ use App\Model\Table\AppTable;
 class WorkflowScholarshipsApplicationTable extends AppTable  {
 
     public function initialize(array $config) {
-        //This controller base table is "workflow_models" so '$this' will represent the "workflow_models" table
         $this->table("scholarship_applications");
         parent::initialize($config);
 
@@ -38,12 +37,5 @@ class WorkflowScholarshipsApplicationTable extends AppTable  {
             'pages' => false,
             'autoFields' => false
         ]);
-    }
-
-    public function implementedEvents() {
-        $events = parent::implementedEvents();
-        // $events['WorkflowReport.onExcelBeforeQuery'] = 'workflowBeforeQuery';
-        // $events['WorkflowReport.onExcelUpdateFields'] = 'workflowUpdateFields';
-        return $events;
     }
 }

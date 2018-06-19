@@ -32,29 +32,31 @@ class WorkflowReportBehavior extends Behavior {
         $assigneeTempArr = null;
         $hasEnteredStatusTempArr = false;
         $hasEnteredAssigneeTempArr = false;
-        $currentIndex = 0;
 
-        foreach($fields as $value) {
+        $localFields = (array) $fields;
 
+        foreach ($localFields as $currentIndex => $value) {
             if($value['field'] == 'status_id') {
                 $statusTempArr = $value;
                 $hasEnteredStatusTempArr = true;
-                $fields[$currentIndex] = $fields[0];
-                $fields[0] = $statusTempArr;
+                unset($localFields[$currentIndex]);
             }
 
             if($value['field'] == 'assignee_id') {
                 $assigneeTempArr = $value;
                 $hasEnteredAssigneeTempArr = true;
-                $fields[$currentIndex] = $fields[1];
-                $fields[1] = $assigneeTempArr;
+                unset($localFields[$currentIndex]);
             }
 
             if($hasEnteredStatusTempArr && $hasEnteredAssigneeTempArr) {
                 break;
             }
-            $currentIndex++;
         }
+
+        $localFields = array_values($localFields);
+        array_unshift($localFields , $assigneeTempArr);
+        array_unshift($localFields , $statusTempArr);
+        $fields->exchangeArray($localFields);
         //Re-order the column (Status followed by Assignee) - End
 	}
 
@@ -63,17 +65,6 @@ class WorkflowReportBehavior extends Behavior {
         $requestData = json_decode($settings['process']['params']);
 
         $category = $requestData->category;
-        $startDate = $requestData->report_start_date;
-        $endDate = $requestData->report_end_date;
-
-        $reportStartDate = (new DateTime($startDate))->format('Y-m-d');
-        $reportEndDate = (new DateTime($endDate))->format('Y-m-d');
-
-        $query
-        	->where([
-	            $this->_table->aliasField('created') . ' <= ' => $reportEndDate,
-	            $this->_table->aliasField('created') . ' >= ' => $reportStartDate
-	        ]);
 
 	    if ($category != -1) {
 	    	$query
