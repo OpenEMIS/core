@@ -76,7 +76,6 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
     function getConfigItemValue(code) {
         var success = function(response, deferred) {
             var results = response.data.data;
-
             if (angular.isObject(results) && results.length > 0) {
                 var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
                 deferred.resolve(configItemValue);
