@@ -33,7 +33,7 @@ class UpdateSecurityGroupUsersShell extends Shell
                 $this->out('No role id found. Please configure your security_roles table before running patch.');
             }
         } catch (Exception $e) {
-            pr($e->getMessage());
+            $this->out($e->getMessage());
         }
 
         $this->out('------- End SecurityGroupUsersShell -------');
