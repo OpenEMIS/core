@@ -18,24 +18,6 @@ class POCOR4617 extends AbstractMigration
                 'limit' => 50,
                 'null' => false,
             ])
-            ->addColumn('institution_committee_type_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to institution_committee_types.id'
-            ])
-            ->addColumn('academic_period_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to academic_periods.id'
-            ])
-            ->addColumn('institution_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to institutions.id'
-            ])
             ->addColumn('meeting_date', 'date', [
                 'default' => null,
                 'null' => false
@@ -53,6 +35,24 @@ class POCOR4617 extends AbstractMigration
             ->addColumn('comment', 'text', [
                 'default' => null,
                 'null' => true
+            ])
+            ->addColumn('institution_committee_type_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_committee_types.id'
+            ])
+            ->addColumn('academic_period_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to academic_periods.id'
+            ])
+            ->addColumn('institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -94,7 +94,7 @@ class POCOR4617 extends AbstractMigration
                 'limit' => 50,
                 'null' => false,
             ])
-             ->addColumn('order', 'integer', [
+            ->addColumn('order', 'integer', [
                 'default' => null,
                 'limit' => 3,
                 'null' => false,
@@ -226,7 +226,7 @@ class POCOR4617 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ]);
 
-            // Institution Committee Attachments 
+            // Institution Committee Attachments
             $this->insert('security_functions', [
                 'id' => 2040,
                 'name' => 'Institution Committee Attachments',

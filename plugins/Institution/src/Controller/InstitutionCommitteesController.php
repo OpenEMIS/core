@@ -52,6 +52,10 @@ class InstitutionCommitteesController extends PageController
             ->setValue($institutionId);
 
         $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
+
+        $page->move('academic_period_id')->after('id');
+        $page->move('institution_committee_type_id')->after('academic_period_id')->setLabel('Type');
+        $page->get('meeting_date')->setLabel('Date of Meeting');
     }
 
     public function index()
@@ -60,7 +64,6 @@ class InstitutionCommitteesController extends PageController
 
         $page = $this->Page;
         $page->exclude(['comment', 'institution_id', 'academic_period_id']);
-        $page->move('name')->after('institution_committee_type_id');
     }
 
     public function view($id)
@@ -71,7 +74,6 @@ class InstitutionCommitteesController extends PageController
         $page->move('institution_committee_type_id')->after('academic_period_id');
         $page->move('name')->after('institution_committee_type_id');
         $this->setupTabElements();
-        
     }
 
     public function add()
