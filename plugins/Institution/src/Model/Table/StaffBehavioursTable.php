@@ -14,10 +14,12 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
+use Page\Traits\EncodingTrait;
+
 class StaffBehavioursTable extends ControllerActionTable
 {
     use OptionsTrait;
-
+    use EncodingTrait;
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -26,7 +28,12 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->belongsTo('StaffBehaviourCategories', ['className' => 'Staff.StaffBehaviourCategories']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
-
+        $this->hasMany('StaffBehaviourAttachments', [
+            'className' => 'Institutions.StaffBehaviourAttachments', 
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Institution.Case');
@@ -305,6 +312,13 @@ class StaffBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
+    public function viewBeforeAction(Event $event)
+    {
+        $tabElements = $this->getStaffBehaviourTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
+
     public function onSetCustomCaseTitle(Event $event, Entity $entity)
     {
         $recordEntity = $this->get($entity->id, [
@@ -361,5 +375,27 @@ class StaffBehavioursTable extends ControllerActionTable
             ->innerJoinWith('InstitutionCaseRecords.StaffBehaviours.Staff');
         
         return $query;
+    }
+
+    public function getStaffBehaviourTabElements($options = [])
+    {
+        $institution_id = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->paramsEncode(['id' => $institution_id]);
+
+        $staffBehaviourId = $this->request->params['pass'][1];
+        $staffBehaviourIdDecode = $this->paramsDecode($staffBehaviourId);
+        $queryString = $this->encode(['staff_behaviour_id' => $staffBehaviourIdDecode['id']]);
+       
+        $tabElements = [
+            'StaffBehaviours' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours', 'view', $staffBehaviourId],
+                'text' => __('Overview')
+            ],
+            'StaffBehaviourAttachments' => [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $institutionId, 'controller' => 'StaffBehaviourAttachments', 'action' => 'index', 'querystring' => $queryString],
+                'text' => __('Attachments')
+            ]
+        ];
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }

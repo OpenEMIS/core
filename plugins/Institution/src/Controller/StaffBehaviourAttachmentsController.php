@@ -5,7 +5,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use App\Controller\PageController;
 
-class StudentBehaviourAttachmentsController extends PageController
+class StaffBehaviourAttachmentsController extends PageController
 {
     public function initialize()
     {
@@ -29,7 +29,7 @@ class StudentBehaviourAttachmentsController extends PageController
         // set Breadcrumb
         $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
-        $page->addCrumb('Student Behaviours', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'StudentBehaviours','index']);
+        $page->addCrumb('Staff Behaviours', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'StaffBehaviours','index']);
         $page->addCrumb('Attachments');
 
         // // set header
@@ -45,15 +45,14 @@ class StudentBehaviourAttachmentsController extends PageController
         parent::index();
         $page = $this->Page;
         $page->exclude(['file_content']);
-        $page->exclude(['student_behaviour_id']);
+        $page->exclude(['staff_behaviour_id']);
     }
 
     public function view($id)
     {
         parent::view($id);
-
         $page = $this->Page;
-        $page->exclude(['student_behaviour_id']);
+        $page->exclude(['staff_behaviour_id']);
         $page->exclude(['file_name']);
         $page->get('file_name')
             ->setControlType('hidden');
@@ -64,9 +63,9 @@ class StudentBehaviourAttachmentsController extends PageController
         parent::add();
         $page = $this->Page;
         $this->addEdit();
-        $studentBehaviourId = $page->decode($this->request->query['querystring']);
-        $page->get('student_behaviour_id')
-             ->setValue($studentBehaviourId['student_behaviour_id']);
+        $staffBehaviourId = $page->decode($this->request->query['querystring']);
+        $page->get('staff_behaviour_id')
+             ->setValue($staffBehaviourId['staff_behaviour_id']);
     }
 
     public function edit($id)
@@ -79,7 +78,7 @@ class StudentBehaviourAttachmentsController extends PageController
     {
         $page = $this->Page;
         $page->exclude(['file_name']);
-        $page->get('student_behaviour_id')
+        $page->get('staff_behaviour_id')
             ->setControlType('hidden');
         $page->get('file_content')
             ->setLabel('Attachment');
@@ -88,18 +87,18 @@ class StudentBehaviourAttachmentsController extends PageController
     public function setupTabElements($encodedInstitutionId, $query)
     {
         $page = $this->Page;
-        $studentBehaviourIdDecode = $page->decode($query);
-        $studentBehaviourIdEncode = $this->paramsEncode(['id' => $studentBehaviourIdDecode['student_behaviour_id']]);
+        $staffBehaviourIdDecode = $page->decode($query);
+        $staffBehaviourIdEncode = $this->paramsEncode(['id' => $staffBehaviourIdDecode['staff_behaviour_id']]);
         $page = $this->Page;
         $tabElements = [];
        
         $tabElements = [
-            'StudentBehaviours' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $encodedInstitutionId, 'action' => 'StudentBehaviours', 'view', $studentBehaviourIdEncode],
+            'StaffBehaviours' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $encodedInstitutionId, 'action' => 'StaffBehaviours', 'view', $staffBehaviourIdEncode],
                 'text' => __('Overview')
             ],
-            'StudentBehaviourAttachments' => [
-                'url' => ['plugin' => 'Institution','controller' => 'StudentBehaviourAttachments', 'institutionId' => $encodedInstitutionId, 'action' => 'index', 'querystring' => $query],
+            'StaffBehaviourAttachments' => [
+                'url' => ['plugin' => 'Institution','controller' => 'StaffBehaviourAttachments', 'institutionId' => $encodedInstitutionId, 'action' => 'index', 'querystring' => $query],
                 'text' => __('Attachments')
             ]
         ];
@@ -112,7 +111,7 @@ class StudentBehaviourAttachmentsController extends PageController
                 ->setUrl($tabAttr['url']);
         }
         // set active tab
-        $page->getTab('StudentBehaviourAttachments')->setActive('true');
+        $page->getTab('StaffBehaviourAttachments')->setActive('true');
     }
 
 }
