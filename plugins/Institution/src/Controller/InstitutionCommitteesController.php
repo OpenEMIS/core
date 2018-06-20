@@ -61,7 +61,6 @@ class InstitutionCommitteesController extends PageController
     public function index()
     {
         parent::index();
-
         $page = $this->Page;
         $page->exclude(['comment', 'institution_id', 'academic_period_id']);
     }
@@ -69,17 +68,12 @@ class InstitutionCommitteesController extends PageController
     public function view($id)
     {
         parent::view($id);
-
-        $page = $this->Page;
-        $page->move('institution_committee_type_id')->after('academic_period_id');
-        $page->move('name')->after('institution_committee_type_id');
         $this->setupTabElements();
     }
 
     public function add()
     {
         parent::add();
-
         $page = $this->Page;
         $page->get('academic_period_id')
             ->setControlType('select')
