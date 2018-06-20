@@ -28,6 +28,11 @@ class StudentBehavioursTable extends AppTable
         $this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
+        $this->hasMany('StudentBehaviourAttachments', [
+            'className' => 'Institutions.StudentBehaviourAttachments', 
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
@@ -580,7 +585,7 @@ class StudentBehavioursTable extends AppTable
                 'text' => __('Overview')
             ],
             'StudentBehaviourAttachments' => [
-                'url' => ['plugin' => 'Institution','controller' => 'StudentBehaviourAttachments', 'institutionId' => $institutionId, 'action' => 'index', 'querystring' => $queryString],
+                'url' => ['plugin' => 'Institution', 'institutionId' => $institutionId, 'controller' => 'StudentBehaviourAttachments', 'action' => 'index', 'querystring' => $queryString],
                 'text' => __('Attachments')
             ]
         ];
