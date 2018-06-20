@@ -3,11 +3,9 @@ namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
-use App\Model\Traits\MessagesTrait;
 
 class InstitutionCommitteesTable extends AppTable
 {
-    use MessagesTrait;
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -28,6 +26,9 @@ class InstitutionCommitteesTable extends AppTable
         return $validator
             ->add('meeting_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+            ])
+            ->add('end_time', 'ruleCompareTimeReverse', [
+                'rule' => ['compareDateReverse', 'start_time', false]
             ]);
     }
 }
