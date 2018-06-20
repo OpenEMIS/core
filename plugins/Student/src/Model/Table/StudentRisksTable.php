@@ -1,5 +1,5 @@
 <?php
-namespace Institution\Model\Table;
+namespace Student\Model\Table;
 
 use ArrayObject;
 
@@ -36,6 +36,7 @@ class StudentRisksTable extends ControllerActionTable
     {
         $this->field('average_risk', ['visible' => false]);
         $this->field('student_id', ['visible' => false]);
+        $this->field('institution_id', ['type' => 'integer']);
         $this->field('total_risk', ['after' => 'risk_id']);
     }
 
@@ -43,7 +44,7 @@ class StudentRisksTable extends ControllerActionTable
     {
         $this->field('generated_by', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
-        $this->field('institution', ['after' => 'academic_period_id']);
+        $this->field('institution_id', ['after' => 'academic_period_id']);
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -73,11 +74,6 @@ class StudentRisksTable extends ControllerActionTable
         $this->field('risk_criterias', ['type' => 'custom_criterias', 'after' => 'total_risk']);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
-    }
-
-    public function onGetInstitution(Event $event, Entity $entity)
-    {
-        return $entity->institution->name;
     }
 
     public function onGetName(Event $event, Entity $entity)
@@ -135,12 +131,10 @@ class StudentRisksTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
         $studentId = $session->read('Student.Students.id');
 
         $query = $query
             ->where([
-                $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']
             ])
@@ -155,7 +149,7 @@ class StudentRisksTable extends ControllerActionTable
         $options['type'] = 'student';
         $tabElements = $this->controller->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', 'Risks');
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
