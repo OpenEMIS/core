@@ -23,6 +23,7 @@ class ReportsController extends AppController
             'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
             'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
             'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
+            'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
         ];
         $this->loadComponent('Training.Training');
@@ -117,6 +118,10 @@ class ReportsController extends AppController
                 'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
                 'Report.NotRegisteredStudents' => __('Not Registered Students'),
                 'Report.ExaminationResults' => __('Examination Results'),
+            ];
+        } elseif ($module == 'Workflows') {
+            $options = [
+                'Report.WorkflowRecords' => __('Workflow Records')
             ];
         }
         return $options;

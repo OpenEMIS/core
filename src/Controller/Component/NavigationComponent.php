@@ -1182,6 +1182,11 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            'Reports.Workflows' => [
+                'title' => 'Workflows',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
             'Map.index' => [
                 'title' => 'Map',
                 'parent' => 'Reports',
