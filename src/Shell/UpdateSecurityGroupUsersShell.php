@@ -9,7 +9,6 @@ use Cake\Utility\Text;
 class UpdateSecurityGroupUsersShell extends Shell
 {
     private $homeroomRoleId;
-    private $teacherRoleId;
 
     public function initialize()
     {
@@ -27,8 +26,8 @@ class UpdateSecurityGroupUsersShell extends Shell
 
         try {
             $this->extractSecurityRoleIds();
-            if (!is_null($this->homeroomRoleId) && !is_null($this->teacherRoleId)) {
-                    $this->patchFromInstitutionStaff();
+            if (!is_null($this->homeroomRoleId)) {
+                $this->patchFromInstitutionStaff();
             } else {
                 $this->out('No role id found. Please configure your security_roles table before running patch.');
             }
@@ -49,18 +48,8 @@ class UpdateSecurityGroupUsersShell extends Shell
             ->where([$this->SecurityRoles->aliasField('code') => 'HOMEROOM_TEACHER'])
             ->first();
 
-        $teacherRoleId = $this->SecurityRoles
-            ->find()
-            ->select([$this->SecurityRoles->aliasField('id')])
-            ->where([$this->SecurityRoles->aliasField('code') => 'TEACHER'])
-            ->first();
-
         if (!is_null($homeroomRoleId)) {
             $this->homeroomRoleId = $homeroomRoleId->id;
-        }
-
-        if (!is_null($teacherRoleId)) {
-            $this->teacherRoleId = $teacherRoleId->id;
         }
     }
 
@@ -110,7 +99,7 @@ class UpdateSecurityGroupUsersShell extends Shell
                     ->values($data)
                     ->execute();
 
-                if ($record->is_homeroom && $record->security_role_id == $this->teacherRoleId) {
+                if ($record->is_homeroom) {
                     $this->out('Record is homeroom, insert homeroom role record to security_group_users');
                     $homeroomData = [
                         'id' => Text::uuid(),
