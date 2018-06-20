@@ -264,7 +264,7 @@ class NavigationComponent extends Component
             'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
             'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips',
             'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances',
-            'InstitutionAssets'
+            'InstitutionAssets', 'StudentBehaviourAttachments', 'StaffBehaviourAttachments'
         ];
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipsDirectory', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
@@ -540,14 +540,14 @@ class NavigationComponent extends Component
                 'Institutions.StudentBehaviours.index' => [
                     'title' => 'Students',
                     'parent' => 'Institution.Behaviour',
-                    'selected' => ['Institutions.StudentBehaviours'],
+                    'selected' => ['Institutions.StudentBehaviours', 'StudentBehaviourAttachments.index', 'StudentBehaviourAttachments.view','StudentBehaviourAttachments.edit','StudentBehaviourAttachments.delete'],
                     'params' => ['plugin' => 'Institution']
                 ],
 
                 'Institutions.StaffBehaviours.index' => [
                     'title' => 'Staff',
                     'parent' => 'Institution.Behaviour',
-                    'selected' => ['Institutions.StaffBehaviours'],
+                    'selected' => ['Institutions.StaffBehaviours', 'StaffBehaviourAttachments.index', 'StaffBehaviourAttachments.view','StaffBehaviourAttachments.edit','StaffBehaviourAttachments.delete'],
                     'params' => ['plugin' => 'Institution']
                 ],
 
