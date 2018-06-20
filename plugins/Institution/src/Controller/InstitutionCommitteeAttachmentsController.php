@@ -88,6 +88,13 @@ class InstitutionCommitteeAttachmentsController extends PageController
             ->setControlType('hidden');
     }
 
+    public function delete($id)
+    {
+        parent::delete($id);
+        $page = $this->Page;
+        $page->exclude(['file_content']);
+    }
+
     public function setupTabElements()
     {
         $page = $this->Page;

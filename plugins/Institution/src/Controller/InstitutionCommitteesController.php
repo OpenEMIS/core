@@ -62,7 +62,7 @@ class InstitutionCommitteesController extends PageController
     {
         parent::index();
         $page = $this->Page;
-        $page->exclude(['comment', 'institution_id', 'academic_period_id']);
+        $page->exclude(['comment', 'institution_id', 'academic_period_id', 'start_time', 'end_time']);
     }
 
     public function view($id)
@@ -75,9 +75,12 @@ class InstitutionCommitteesController extends PageController
     {
         parent::add();
         $page = $this->Page;
+
+        $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         $page->get('academic_period_id')
             ->setControlType('select')
-            ->setOptions($this->academicPeriodOptions);
+            ->setOptions($this->academicPeriodOptions)
+            ->setValue($currentAcademicPeriodId);
 
         $page->get('institution_committee_type_id')
             ->setControlType('select');
