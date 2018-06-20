@@ -98,6 +98,15 @@ class InstitutionsTable extends AppTable
         return $validator;
     }
 
+    public function validationSubjects(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('institution_type_id')
+            ->notEmpty('institution_id');
+        return $validator;
+    }
+
     public function validationStudents(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
@@ -146,7 +155,7 @@ class InstitutionsTable extends AppTable
     {
         $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('institution_type', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_programme_id', ['type' => 'hidden']);
         $this->ControllerAction->field('status', ['type' => 'hidden']);
@@ -161,7 +170,9 @@ class InstitutionsTable extends AppTable
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if ($data[$this->alias()]['feature'] == 'Report.InstitutionStudents') {
+        if ($data[$this->alias()]['feature'] == 'Report.InstitutionSubjects') {
+            $options['validate'] = 'subjects';
+        } elseif ($data[$this->alias()]['feature'] == 'Report.InstitutionStudents') {
             $options['validate'] = 'students';
         } elseif ($data[$this->alias()]['feature'] == 'Report.InstitutionStaff') {
             $options['validate'] = 'staff';
@@ -499,18 +510,22 @@ class InstitutionsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldInstitutionType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.InstitutionSubjects'])) {
-                $attr['options'] = $this->Types
+                $TypesTable = TableRegistry::get('Institution.Types');
+                $typeOptions = $TypesTable
                     ->find('list')
                     ->find('visible')
+                    ->find('order')
                     ->toArray();
 
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
+                $attr['options'] = $typeOptions;
+                $attr['attr']['required'] = true;
             }
             return $attr;
         }
@@ -521,16 +536,41 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.InstitutionSubjects'])) {
-                $options = $this->find('list');
 
-                if (!empty($request->data[$this->alias()]['institution_type'])) {
-                    $type = $request->data[$this->alias()]['institution_type'];
-                    $options->where([$this->aliasField('institution_type_id') => $type]);
+                $institutionList = [];
+                if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
+                    $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
+
+                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                    $institutionList = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->where([
+                            $this->aliasField('institution_type_id') => $institutionTypeId
+                        ])
+                        ->order([
+                            $this->aliasField('code') => 'ASC',
+                            $this->aliasField('name') => 'ASC'
+                        ])
+                        ->toArray();
                 }
 
-                $institutionOptions = $options->toArray();
-                $attr['type'] = 'select';
-                $attr['options'] = $institutionOptions;
+                if (empty($institutionList)) {
+                    $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
+
+                    $attr['type'] = 'select';
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+                    $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                }
             }
             return $attr;
         }
