@@ -756,12 +756,12 @@ class NavigationComponent extends Component
                         'selected' => ['InfrastructureUtilityTelephones.view', 'InfrastructureUtilityTelephones.add', 'InfrastructureUtilityTelephones.edit', 'InfrastructureUtilityTelephones.delete']
                     ],
 
-            'InstitutionAssets.index' => [
-                'title' => 'Assets',
-                'parent' => 'Institutions.Institutions.index',
-                'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionAssets.index', 'InstitutionAssets.view', 'InstitutionAssets.add', 'InstitutionAssets.edit', 'InstitutionAssets.delete'],
-            ],
+                'InstitutionAssets.index' => [
+                    'title' => 'Assets',
+                    'parent' => 'Infrastructures',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['InstitutionAssets.view', 'InstitutionAssets.add', 'InstitutionAssets.edit', 'InstitutionAssets.delete'],
+                ],
 
             'Survey' => [
                 'title' => 'Survey',
