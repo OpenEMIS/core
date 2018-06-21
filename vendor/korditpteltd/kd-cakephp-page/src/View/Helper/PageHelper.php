@@ -913,7 +913,7 @@ EOT;
             $options['time_options']['defaultTime'] = $options['value'];
         } else {
             $options['value'] = date('h:i A', strtotime($data[$field['key']]));
-            $options['time_options']['defaultTime'] = $data[$field['key']];
+            $options['time_options']['defaultTime'] = $options['value'];
         }
 
         $attr = [
