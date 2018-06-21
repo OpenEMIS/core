@@ -33,12 +33,12 @@ class ReportsController extends AppController
         parent::beforeFilter($event);
         $header = 'Reports';
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
-        $this->Navigation->addCrumb("Audit");
+        $this->Navigation->addCrumb($this->request->action);
     }
 
     public function onInitialize(Event $event, Table $table, ArrayObject $extra)
     {
-        $header = __('Reports') . ' - ' . __("Audit");
+        $header = __('Reports') . ' - ' . __($table->alias());
         $this->set('contentHeader', $header);
     }
 
@@ -110,7 +110,9 @@ class ReportsController extends AppController
             ];
         } elseif ($module == 'Audit') {
             $options = [
-                'Report.Audit' => __('Login')
+                'Report.Audit' => __('Login'),
+                'Report.AuditInstitution' => __('Institutions'),
+                'Report.AuditUser' => __('Users')
             ];
         } elseif ($module == 'Examinations') {
             $options = [
