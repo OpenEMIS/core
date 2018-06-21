@@ -60,10 +60,6 @@ class AuditInstitutionTable extends AppTable
                     ' - ',
                     'Institutions.name' => 'literal'
                 ])
-                // 'first_name' => 'CreatedUser.first_name',
-                // 'last_name' => 'CreatedUser.last_name',
-                // 'name' => 'Institutions.name',
-                // 'code' => 'Institutions.code',
             ])
             ->contain([
                 'CreatedUser' => [
