@@ -6,6 +6,11 @@ use Cake\Utility\Inflector;
 
 class HighChartBehavior extends Behavior
 {
+    private $colors = [
+        '#7D68D5',
+        '#F1658D',
+        '#FFD16A'
+    ];
 
     public function initialize(array $config)
     {
@@ -16,6 +21,7 @@ class HighChartBehavior extends Behavior
         $model = $this->_table;
         $selectedConfig = $this->config($chart);
         $function = $selectedConfig['_function'];
+        $defaultColors = isset($selectedConfig['_defaultColors']) ? $selectedConfig['_defaultColors'] : true;
         $params = call_user_func_array([$model, $function], [$params]);
 
         $dataSet = [];
@@ -44,6 +50,9 @@ class HighChartBehavior extends Behavior
         }
         $options['series'] = array_values($dataSet);
         $options['credits'] = ['enabled' => false];
+        if (!array_key_exists('colors', $options) && !$defaultColors) {
+            $options['colors'] = $this->colors;
+        }
         return json_encode($options, JSON_NUMERIC_CHECK);
     }
 
@@ -52,6 +61,7 @@ class HighChartBehavior extends Behavior
         $model = $this->_table;
         $selectedConfig = $this->config($chart);
         $function = $selectedConfig['_function'];
+        $defaultColors = isset($selectedConfig['_defaultColors']) ? $selectedConfig['_defaultColors'] : true;
         $params = call_user_func_array([$model, $function], [$params]);
         $dataSet = [];
         $key = '';
@@ -96,6 +106,9 @@ class HighChartBehavior extends Behavior
         $options = array_replace_recursive($selectedConfig, $options);
         $options['series'][] = ['type' => 'pie', 'innerSize' => '85%', 'data' => array_values($dataSet)];
         $options['credits'] = ['enabled' => false];
+        if (!array_key_exists('colors', $options) && !$defaultColors) {
+            $options['colors'] = $this->colors;
+        }
         return json_encode($options, JSON_NUMERIC_CHECK);
     }
 

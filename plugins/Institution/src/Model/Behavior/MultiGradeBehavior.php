@@ -76,7 +76,7 @@ class MultiGradeBehavior extends Behavior
         $model->fields['total_male_students']['visible'] = false;
         $model->fields['total_female_students']['visible'] = false;  
         $model->setFieldOrder([
-            'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'secondary_staff_id', 'multi_grade_field'
+            'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'secondary_staff_id', 'capacity', 'multi_grade_field'
         ]);
     }
 

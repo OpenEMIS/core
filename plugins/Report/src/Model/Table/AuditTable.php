@@ -2,6 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
@@ -10,6 +11,8 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\I18n\Time;
+use Cake\Validation\Validator;
 
 class AuditTable extends AppTable
 {
@@ -45,11 +48,36 @@ class AuditTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        $validator
+            ->add('last_login_start_date', [
+                'ruleCompareDate' => [
+                    'rule' => ['compareDate', 'last_login_end_date', true],
+                    'on' => function ($context) {
+                        if (array_key_exists('feature', $context['data'])) {
+                            $feature = $context['data']['feature'];
+                            return in_array($feature, ['Report.Login']);
+                        }
+
+                        return true;
+                    }
+                ],
+            ]);
+
+        return $validator;
+    }
+
     public function beforeAction(Event $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
+
+        $this->ControllerAction->field('last_login_start_date');
+        $this->ControllerAction->field('last_login_end_date');
     }
 
     public function onExcelGetStatus(Event $event, Entity $entity)
@@ -74,22 +102,26 @@ class AuditTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $requestData = json_decode($settings['process']['params']);
+        $reportStartDate = (new DateTime($requestData->last_login_start_date))->format('Y-m-d');
+        $reportEndDate = (new DateTime($requestData->last_login_end_date))->format('Y-m-d');
+
         $query
             ->select([
-                'openemis_no' => 'Audit.openemis_no',
-                'first_name' => 'Audit.first_name',
-                'middle_name' => 'Audit.middle_name',
-                'third_name' => 'Audit.third_name',
-                'last_name' => 'Audit.last_name',
-                'preferred_name' => 'Audit.preferred_name',
-                'email' => 'Audit.email',
+                'openemis_no' => $this->aliasField('openemis_no'),
+                'first_name' => $this->aliasField('first_name'),
+                'middle_name' => $this->aliasField('middle_name'),
+                'third_name' => $this->aliasField('third_name'),
+                'last_name' => $this->aliasField('last_name'),
+                'preferred_name' => $this->aliasField('preferred_name'),
+                'email' => $this->aliasField('email'),
                 'nationality_name' => 'MainNationalities.name',
                 'identity_type' => 'MainIdentityTypes.name',
-                'identity_number' => 'Audit.identity_number',
-                'external_reference' => 'Audit.external_reference',
-                'status' => 'Audit.status',
-                'last_login' => 'Audit.last_login',
-                'preferred_language' => 'Audit.preferred_language'
+                'identity_number' => $this->aliasField('identity_number'),
+                'external_reference' => $this->aliasField('external_reference'),
+                'status' => $this->aliasField('status'),
+                'last_login' => $this->aliasField('last_login'),
+                'preferred_language' => $this->aliasField('preferred_language')
             ])
             ->contain([
                 'MainNationalities' => [
@@ -102,7 +134,12 @@ class AuditTable extends AppTable
                         'MainIdentityTypes.name'
                     ]
                 ]
+            ])
+            ->where([
+                $this->aliasField('last_login >= "') . $reportStartDate . '"',
+                $this->aliasField('last_login <= "') . $reportEndDate . '"'
             ]);
+
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -126,5 +163,18 @@ class AuditTable extends AppTable
                 ];
             }
         }
+    }
+
+    public function onUpdateFieldLastLoginStartDate(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['type'] = 'date';
+        return $attr;
+    }
+
+    public function onUpdateFieldLastLoginEndDate(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['type'] = 'date';
+        $attr['value'] = Time::now();
+        return $attr;
     }
 }

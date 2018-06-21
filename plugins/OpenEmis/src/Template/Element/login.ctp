@@ -91,6 +91,12 @@ $icon = strpos($_productName, 'School') != -1 ? '_school' : '';
 				<button class="hidden" value="reload" name="submit" type="submit" id="reload">reload</button>
 			<?= $this->Form->end() ?>
 
+			<div class="links-wrapper">
+				<a target="_self" href="./ForgotUsername">Forgot username?</a>
+				<a target="_self" href="./ForgotPassword">Forgot password?</a>
+			</div>
+
+
 			<?php
 				if ($authentications) :
 			?>

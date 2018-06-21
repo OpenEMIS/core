@@ -205,11 +205,18 @@ class LicensesTable extends ControllerActionTable
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('status_id'),
+                $this->aliasField('staff_id'),
                 $this->aliasField('license_number'),
                 $this->aliasField('license_type_id'),
                 $this->aliasField('modified'),
                 $this->aliasField('created'),
                 $this->Statuses->aliasField('name'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name'),
                 $this->LicenseTypes->aliasField('name'),
                 $this->CreatedUser->aliasField('openemis_no'),
                 $this->CreatedUser->aliasField('first_name'),
@@ -218,7 +225,7 @@ class LicensesTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->LicenseTypes->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->LicenseTypes->alias(), $this->Users->alias(), $this->CreatedUser->alias()])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
@@ -227,12 +234,12 @@ class LicensesTable extends ControllerActionTable
             ->formatResults(function (ResultSetInterface $results) use ($institutionId) {
                 return $results->map(function ($row) use ($institutionId) {
                     $url = [
-                        'plugin' => 'Staff',
-                        'controller' => 'Staff',
-                        'action' => 'Licenses',
+                        'plugin' => 'Directory',
+                        'controller' => 'Directories',
+                        'action' => 'StaffLicenses',
                         'view',
                         $this->paramsEncode(['id' => $row->id]),
-                        'institution_id' => $institutionId
+                        'user_id' => $row->staff_id
                     ];
 
                     if (is_null($row->modified)) {
@@ -243,7 +250,11 @@ class LicensesTable extends ControllerActionTable
 
                     $row['url'] = $url;
                     $row['status'] = __($row->_matchingData['Statuses']->name);
-                    $row['request_title'] = sprintf(__('%s of %s'), $row->license_type->name, $row->license_number);
+                    if ($row->has('license_number') && strlen($row->license_number) > 0) {
+                        $row['request_title'] = sprintf(__('%s of %s for %s'), $row->license_type->name, $row->license_number, $row->user->name_with_id);
+                    } else {
+                        $row['request_title'] = sprintf(__('%s for %s'), $row->license_type->name, $row->user->name_with_id);
+                    }                    
                     $row['received_date'] = $receivedDate;
                     $row['requester'] = $row->created_user->name_with_id;
 

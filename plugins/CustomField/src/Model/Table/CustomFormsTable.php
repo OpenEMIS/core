@@ -254,7 +254,16 @@ class CustomFormsTable extends ControllerActionTable
 
             $Fields = TableRegistry::get($this->extra['fieldClass']['className']);
             $customFieldOptions = $this->CustomFields
-                ->find('list')
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => function ($row) {
+                        if ($row->has('code') && !empty($row->code)) {
+                            return $row->code . ' - ' . $row->name;
+                        } else {
+                            return $row->name;
+                        }
+                    }
+                ])
                 ->toArray();
 
             $arrayFields = [];
