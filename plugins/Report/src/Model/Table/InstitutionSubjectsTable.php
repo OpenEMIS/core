@@ -12,9 +12,9 @@ class InstitutionSubjectsTable extends AppTable  {
 		$this->table('institution_subjects');
 		parent::initialize($config);
 
-		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
 		$this->addBehavior('Excel', [
