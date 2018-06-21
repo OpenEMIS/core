@@ -835,8 +835,8 @@ EOT;
         $dateProperties = ['minDate' => 'startDate', 'maxDate' => 'endDate'];
 
         foreach ($dateProperties as $prop => $mapped) {
-            if (array_key_exists($prop, $field)) {
-                $propValue = $field[$prop];
+            if (array_key_exists($prop, $field['attributes'])) {
+                $propValue = $field['attributes'][$prop];
                 $dateOptions[$mapped] = implode('-', [$propValue['day'], $propValue['month'], $propValue['year']]);
             }
         }

@@ -215,34 +215,18 @@ class ValidationBehavior extends Behavior
         }
     }
 
-    public static function checkMaxStudentsPerClass($check, array $globalData)
+    public static function checkMaxStudentsPerClass($capacity, array $globalData)
     {   
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $model = $globalData['providers']['table'];
-        $validationErrorMsg = '';
-        
-        $InstitutionClassSubjectTable = TableRegistry::get('Institution.InstitutionClasses');
-        $MaxStudentSysConfig = $ConfigItems->value('max_students_per_class');
-  
-        $query = $InstitutionClassSubjectTable->find();
-        $query->select([
-            'total_number_of_students' => $query->func()->sum('total_male_students + total_female_students'),
-            'id','name', 'total_male_students', 'total_female_students'
-        ])
-        ->group('id','name', 'total_male_students', 'total_female_students')
-        ->having(['total_number_of_students >' => $check]);
-        
-        $count = $query->count();
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $maxCapacity = $ConfigItems->value('max_students_per_class');
 
-        if($count){
-            $max = $query->max('total_number_of_students');
-            $validationErrorMsg = $model->getMessage('Configuration.ConfigStudentSettings.max_students_per_class.maxStudentLimit', ['sprintf' => [$max['total_number_of_students'], $MaxStudentSysConfig]]);
+        if($capacity > $maxCapacity){
+            $errorMsg = $model->getMessage('Institution.InstitutionClasses.capacity.ruleCheckMaxStudentsPerClass');
+            return $errorMsg;
         }
-        if (!empty($validationErrorMsg)) {
-            return $validationErrorMsg;
-        } else {
-            return true;
-        }
+        
+        return true;
     }
 
     public static function checkMaxStudentsPerSubject($check, array $globalData)
@@ -274,8 +258,6 @@ class ValidationBehavior extends Behavior
             return true;
         }
     }
-
-
 
     public static function checkLatitude($check)
     {
@@ -704,7 +686,7 @@ class ValidationBehavior extends Behavior
 
     // Return false if not enrolled in other education system
     public static function checkInstitutionClassMaxLimit($class_id, array $globalData)
-    {
+    {    
         $ClassStudents = TableRegistry::get("Institution.InstitutionClassStudents");
         $currentNumberOfStudents = $ClassStudents->find()->where([
                 $ClassStudents->aliasField('institution_class_id') => $class_id,
@@ -714,9 +696,10 @@ class ValidationBehavior extends Behavior
          * @todo  add this max limit to config
          * This limit value is being used in InstitutionClasses->editAfterAction()
          */
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $MaxStudentSysConfig = $ConfigItems->value('max_students_per_class');
-        return ($currentNumberOfStudents < $MaxStudentSysConfig);
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $classCapacity = $Classes->get($class_id)->capacity;
+
+        return ($currentNumberOfStudents < $classCapacity);
     }
 
     public static function studentNotEnrolledInAnyInstitutionAndSameEducationSystem($field, $options = [], array $globalData)
