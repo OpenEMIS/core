@@ -14,6 +14,7 @@ use Cake\I18n\I18n;
 use Cake\Network\Session;
 use Cake\I18n\Time;
 use Cake\FileSystem\File;
+use DateTime;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
@@ -55,7 +56,7 @@ class ReportListBehavior extends Behavior {
 		$fields['params']['visible'] = false;
 		$fields['pid']['visible'] = false;
 		$fields['created']['visible'] = true;
-        $fields['modified']['visible'] = true;
+		$fields['modified']['visible'] = true;
 
 		$this->_table->fields = $fields;
 
@@ -65,16 +66,16 @@ class ReportListBehavior extends Behavior {
 		$this->ReportProgress->purge();
 
 		// beside super user, report can only be seen by the one who generate it.
-        $conditions = [
-            $this->ReportProgress->aliasField('module') => $this->_table->alias()
-        ];
+		$conditions = [
+			$this->ReportProgress->aliasField('module') => $this->_table->alias()
+		];
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$conditions[$this->ReportProgress->aliasField('created_user_id')] = $userId;
 		}
 
 		$query = $this->ReportProgress->find()
-            ->contain('CreatedUser') //association declared on AppTable
+			->contain('CreatedUser') //association declared on AppTable
 			->where($conditions)
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
@@ -158,26 +159,26 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
-    {
-        $process = $extra['process'];
+	{
+		$process = $extra['process'];
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
 			['status' => Process::COMPLETED, 'file_path' => $extra['file_path'], 'expiry_date' => $expiryDate, 'modified' => new Time()],
 			['id' => $process->id]
 		);
-    }
+	}
 
 	public function onCsvGenerateComplete(Event $event, ArrayObject $settings)
-    {
-        $process = $settings['process'];
+	{
+		$process = $settings['process'];
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
 			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => new Time()],
 			['id' => $process->id]
 		);
-    }
+	}
 
 	protected function _generate($data) {
 		$alias = $this->_table->alias();
@@ -217,10 +218,20 @@ class ReportListBehavior extends Behavior {
 			}
 		}
 
-		$name = $featureList[$feature];
+		//Check if there exists start and end report date filter, if yes, print out the start and end date.
+		if(!is_null(array_key_exists('report_start_date', $data[$alias])) && !is_null(array_key_exists('report_end_date', $data[$alias])) && $data[$alias]['report_start_date'] != 0 && $data[$alias]['report_end_date'] != 0) {
+				$reportStartDate = (new DateTime($data[$alias]['report_start_date']))->format('F d, Y');
+				$reportEndDate = (new DateTime($data[$alias]['report_end_date']))->format('F d, Y');
+				$filters[] = __($reportStartDate. ' to '. $reportEndDate);
+		}
+		
 
+		$name = $alias;
+		$name .= ': '. $featureList[$feature];
+			
 		if (!empty($filters)) {
 			$filterStr = implode(' - ', $filters);
+
 			$name .= ' - '.$filterStr;
 		}
 
@@ -247,10 +258,10 @@ class ReportListBehavior extends Behavior {
 			$ext = $pathInfo['extension'];
 
 			// set name of report (with filters and translation)
-	        $filename = $entity->name . ' - ' . date('Ymd') . 'T' . date('His') . '.' . $ext;
+			$filename = $entity->name . ' - ' . date('Ymd') . 'T' . date('His') . '.' . $ext;
 
-	        // Syntax will change in v3.4.x
-	        $response = $this->_table->controller->response;
+			// Syntax will change in v3.4.x
+			$response = $this->_table->controller->response;
 			$response->file($path, [
 				'name' => $filename,
 				'download' => true
@@ -262,7 +273,7 @@ class ReportListBehavior extends Behavior {
 			$table = $this->_table->alias();
 			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
 			$url = ['controller' => $controller, 'action' => $table, 'index'];
-            return $this->_table->controller->redirect($url);
+			return $this->_table->controller->redirect($url);
 		}
 	}
 }
