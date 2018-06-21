@@ -10,12 +10,8 @@ class InstitutionCommitteeAttachmentsController extends PageController
     public function initialize()
     {
         parent::initialize();
-
         $this->Page->loadElementsFromTable($this->InstitutionCommitteeAttachments);
-        $this->loadComponent('Institution.InstitutionCommitteeTabs');
-
         $this->Page->disable(['search']);
-
         $this->Page->enable(['download']);
     }
 
@@ -40,7 +36,9 @@ class InstitutionCommitteeAttachmentsController extends PageController
         // set header
         $page->setHeader($institutionName . ' - ' . __('Committee Attachments'));
 
-        $this->setupTabElements();
+        $query = $this->request->query['querystring'];
+
+        $this->setupTabElements($encodedInstitutionId, $query);
     }
 
     public function index()
@@ -71,7 +69,6 @@ class InstitutionCommitteeAttachmentsController extends PageController
              ->setValue($institutionCommitteeId['institution_committee_id']);
         $page->get('file_content')
             ->setLabel('Attachment');
-        
     }
 
     public function edit($id)
@@ -95,12 +92,27 @@ class InstitutionCommitteeAttachmentsController extends PageController
         $page->exclude(['file_content']);
     }
 
-    public function setupTabElements()
+    public function setupTabElements($encodedInstitutionId, $query)
     {
         $page = $this->Page;
         $tabElements = [];
-       
-        $tabElements = $this->InstitutionCommitteeTabs->getInstitutionCommitteeTabs();
+
+        $decodeCommitteeId = $page->decode($query);
+        $committeeId = $decodeCommitteeId['institution_committee_id'];
+        $encodeCommitteeId = $page->encode(['id' => $committeeId]);
+
+        $tabElements = [
+            'InstitutionCommittees' => [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'InstitutionCommittees', 'action' => 'view', $encodeCommitteeId],
+                'text' => __('Overview')
+            ],
+            'Attachments' => [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'InstitutionCommitteeAttachments', 'action' => 'index', 'querystring' => $query],
+                'text' => __('Attachments')
+            ]
+        ];
+
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
 
         foreach ($tabElements as $tab => $tabAttr) {
             $page->addTab($tab)
@@ -110,5 +122,4 @@ class InstitutionCommitteeAttachmentsController extends PageController
         // set active tab
         $page->getTab('Attachments')->setActive('true');
     }
-
 }

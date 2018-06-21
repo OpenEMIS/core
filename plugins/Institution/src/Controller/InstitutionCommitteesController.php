@@ -14,16 +14,7 @@ class InstitutionCommitteesController extends PageController
         parent::initialize();
         $this->loadModel('AcademicPeriod.AcademicPeriods');
         $this->loadModel('Institution.InstitutionCommitteeTypes');
-
-        $this->loadComponent('Institution.InstitutionCommitteeTabs');
-
         $this->Page->disable(['search']);
-    }
-    public function implementedEvents()
-    {
-        $event = parent::implementedEvents();
-        $event['Controller.Page.getEntityRowActions'] = 'getEntityRowActions';
-        return $event;
     }
 
     public function beforeFilter(Event $event)
@@ -50,12 +41,14 @@ class InstitutionCommitteesController extends PageController
         $page->get('institution_id')
             ->setControlType('hidden')
             ->setValue($institutionId);
-
-        $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $page->get('meeting_date')->setLabel('Date of Meeting');
 
         $page->move('academic_period_id')->after('id');
         $page->move('institution_committee_type_id')->after('academic_period_id')->setLabel('Type');
-        $page->get('meeting_date')->setLabel('Date of Meeting');
+
+        $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $page->setQueryString('academic_period_id', $academicPeriodId);
+        $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
     }
 
     public function index()
@@ -63,63 +56,67 @@ class InstitutionCommitteesController extends PageController
         parent::index();
         $page = $this->Page;
         $page->exclude(['comment', 'institution_id', 'academic_period_id']);
+
+        $institutionCommitteeTypes = $this->InstitutionCommitteeTypes
+            ->find('optionList', ['defaultOption' => false])
+            ->toArray();
+        $institutionCommitteeTypes = [null => __('All Types')] + $institutionCommitteeTypes;
+
+        $page->addFilter('institution_committee_type_id')
+            ->setOptions($institutionCommitteeTypes);
+        $page->addFilter('academic_period_id')
+            ->setOptions($this->academicPeriodOptions);
     }
 
     public function view($id)
     {
         parent::view($id);
-        $this->setupTabElements();
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+        $this->setupTabElements($encodedInstitutionId, $id);
     }
 
     public function add()
     {
         parent::add();
         $page = $this->Page;
-
-        $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         $page->get('academic_period_id')
             ->setControlType('select')
             ->setOptions($this->academicPeriodOptions)
-            ->setValue($currentAcademicPeriodId);
+            ->setValue($this->AcademicPeriods->getCurrent());
 
         $page->get('institution_committee_type_id')
             ->setControlType('select');
     }
-
-    public function setupTabElements()
+    public function setupTabElements($encodedInstitutionId, $query)
     {
         $page = $this->Page;
         $tabElements = [];
-       
-        $tabElements = $this->InstitutionCommitteeTabs->getInstitutionCommitteeTabs();
+
+        $decodeCommitteeId = $page->decode($query);
+        $committeeId = $decodeCommitteeId['id'];
+        $encodeCommitteeId = $page->encode(['institution_committee_id' => $committeeId]);
+
+        $tabElements = [
+            'InstitutionCommittees' => [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'InstitutionCommittees', 'action' => 'view', $query],
+                'text' => __('Overview')
+            ],
+            'Attachments' => [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'InstitutionCommitteeAttachments', 'action' => 'index', 'querystring' => $encodeCommitteeId],
+                'text' => __('Attachments')
+            ]
+        ];
+
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
 
         foreach ($tabElements as $tab => $tabAttr) {
             $page->addTab($tab)
                 ->setTitle($tabAttr['text'])
                 ->setUrl($tabAttr['url']);
         }
-
         // set active tab
         $page->getTab('InstitutionCommittees')->setActive('true');
-    }
-
-    public function getEntityRowActions(Event $event, $entity, ArrayObject $rowActions)
-    {
-        $rowActionsArray = $rowActions->getArrayCopy();
-        $institutionCommitteeId = $entity->id;
-
-        $querystring = $this->Page->encode([
-            'institution_committee_id' => $institutionCommitteeId
-        ]);
-
-        if (array_key_exists('view', $rowActions)) {
-            $rowActionsArray['view']['url']['querystring'] = $querystring;
-        }
-
-        if (array_key_exists('edit', $rowActions)) {
-            $rowActionsArray['edit']['url']['querystring'] = $querystring;
-        }
-
-        $rowActions->exchangeArray($rowActionsArray);
     }
 }
