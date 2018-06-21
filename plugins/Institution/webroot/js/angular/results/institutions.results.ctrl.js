@@ -142,7 +142,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
-                            AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
+                            AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
                             // refreshCells function updated parameters
                             params.api.refreshCells({
                                 rowNodes: [params.node],
@@ -224,7 +224,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
-                            AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
+                            AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
                             params.api.refreshCells([params.node], [params.colDef.field, 'total_mark']);
 
                         }, function(error) {
@@ -279,7 +279,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
     $scope.onChangeSubject = function(subject = undefined) {
         AlertSvc.reset($scope);
         if ($scope.action == 'edit') {
-            AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
+            AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
         }
 
         if (typeof subject !== "undefined") {
@@ -340,7 +340,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
 
     $scope.onEditClick = function() {
         $scope.action = 'edit';
-        AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
+        AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
     };
 
     $scope.onBackClick = function() {
