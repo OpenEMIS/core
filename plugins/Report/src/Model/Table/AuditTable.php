@@ -16,11 +16,13 @@ use Cake\Validation\Validator;
 
 class AuditTable extends AppTable
 {
+    //User type ddl
+    private $userTypeOption = ['0' => "All Type", '1' => 'Student', '2' => 'Staff', '3' => 'Guardian'];
+
     public function initialize(array $config)
     {
         $this->table('security_users');
         parent::initialize($config);
-
         $this->hasMany('Identities', ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Nationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds',    'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -51,17 +53,25 @@ class AuditTable extends AppTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-
         $validator
-            ->add('last_login_start_date', [
+            ->add('report_start_date', [
                 'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'last_login_end_date', true],
+                    'rule' => ['compareDate', 'report_end_date', true],
                     'on' => function ($context) {
                         if (array_key_exists('feature', $context['data'])) {
                             $feature = $context['data']['feature'];
-                            return in_array($feature, ['Report.Login']);
+                            switch ($feature) {
+                                case "Report.Audit":
+                                    return in_array($feature, ['Report.Audit']);
+                                case "Report.AuditInstitution":
+                                    return in_array($feature, ['Report.AuditInstitution']);
+                                case "Report.AuditUser":
+                                    return in_array($feature, ['Report.AuditUser']);
+                                default:
+                                    return in_array($feature, ['Report.Audit']);
+                            }
+                            
                         }
-
                         return true;
                     }
                 ],
@@ -75,9 +85,9 @@ class AuditTable extends AppTable
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
-
-        $this->ControllerAction->field('last_login_start_date');
-        $this->ControllerAction->field('last_login_end_date');
+        $this->ControllerAction->field('user_type', ['type' => 'hidden']);
+        $this->ControllerAction->field('report_start_date');
+        $this->ControllerAction->field('report_end_date');
     }
 
     public function onExcelGetStatus(Event $event, Entity $entity)
@@ -91,8 +101,29 @@ class AuditTable extends AppTable
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
-        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
-        return $attr;
+        if ($action == 'add') {
+            $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+            $attr['onChangeReload'] = true;
+            if (!(isset($this->request->data[$this->alias()]['feature']))) {
+                $option = $attr['options'];
+                reset($option);
+                $this->request->data[$this->alias()]['feature'] = key($option);
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.AuditUser'])) {
+                $attr['options'] = $this->userTypeOption;
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+            }
+            return $attr;
+        }
     }
 
     public function onGetReportName(Event $event, ArrayObject $data)
@@ -103,8 +134,8 @@ class AuditTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $reportStartDate = (new DateTime($requestData->last_login_start_date))->format('Y-m-d');
-        $reportEndDate = (new DateTime($requestData->last_login_end_date))->format('Y-m-d');
+        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d');
+        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d');
 
         $query
             ->select([
@@ -165,13 +196,13 @@ class AuditTable extends AppTable
         }
     }
 
-    public function onUpdateFieldLastLoginStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, Request $request)
     {
         $attr['type'] = 'date';
         return $attr;
     }
 
-    public function onUpdateFieldLastLoginEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, Request $request)
     {
         $attr['type'] = 'date';
         $attr['value'] = Time::now();
