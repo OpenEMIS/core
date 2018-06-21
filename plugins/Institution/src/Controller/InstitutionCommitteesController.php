@@ -62,7 +62,7 @@ class InstitutionCommitteesController extends PageController
     {
         parent::index();
         $page = $this->Page;
-        $page->exclude(['comment', 'institution_id', 'academic_period_id', 'start_time', 'end_time']);
+        $page->exclude(['comment', 'institution_id', 'academic_period_id']);
     }
 
     public function view($id)
