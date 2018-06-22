@@ -7,6 +7,8 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
+use Institution\Model\Table\InstitutionStaffTransfersTable as TransferType;
+
 class WorkflowStaffTransferInTable extends AppTable  
 {
 
@@ -28,8 +30,24 @@ class WorkflowStaffTransferInTable extends AppTable
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.WorkflowReport');
         $this->addBehavior('Excel', [
+            'excludes' => ['all_visible'],
             'pages' => false,
             'autoFields' => false
         ]);
+    }
+
+    public function onExcelGetTransferType(Event $event, Entity $entity)
+    {
+        $transferTypeOptions = [
+            TransferType::FULL_TRANSFER => __('Full Transfer'),
+            TransferType::PARTIAL_TRANSFER => __('Partial Transfer'),
+            TransferType::NO_CHANGE => __('No Change')
+        ];
+
+        if (array_key_exists($entity->transfer_type, $transferTypeOptions)) {
+            return $transferTypeOptions[$entity->transfer_type];
+        }
+
+        return '';
     }
 }
