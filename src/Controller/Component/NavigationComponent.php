@@ -539,14 +539,14 @@ class NavigationComponent extends Component
                 'Institutions.StudentBehaviours.index' => [
                     'title' => 'Students',
                     'parent' => 'Institution.Behaviour',
-                    'selected' => ['Institutions.StudentBehaviours', 'StudentBehaviourAttachments.index', 'StudentBehaviourAttachments.view','StudentBehaviourAttachments.edit','StudentBehaviourAttachments.delete'],
+                    'selected' => ['Institutions.StudentBehaviours', 'StudentBehaviourAttachments.index', 'StudentBehaviourAttachments.view', 'StudentBehaviourAttachments.add', 'StudentBehaviourAttachments.edit', 'StudentBehaviourAttachments.delete'],
                     'params' => ['plugin' => 'Institution']
                 ],
 
                 'Institutions.StaffBehaviours.index' => [
                     'title' => 'Staff',
                     'parent' => 'Institution.Behaviour',
-                    'selected' => ['Institutions.StaffBehaviours', 'StaffBehaviourAttachments.add','StaffBehaviourAttachments.index', 'StaffBehaviourAttachments.view','StaffBehaviourAttachments.edit','StaffBehaviourAttachments.delete'],
+                    'selected' => ['Institutions.StaffBehaviours', 'StaffBehaviourAttachments.index', 'StaffBehaviourAttachments.view', 'StaffBehaviourAttachments.add', 'StaffBehaviourAttachments.edit', 'StaffBehaviourAttachments.delete'],
                     'params' => ['plugin' => 'Institution']
                 ],
 
