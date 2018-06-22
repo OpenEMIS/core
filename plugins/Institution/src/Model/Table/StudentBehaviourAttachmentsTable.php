@@ -21,6 +21,12 @@ class StudentBehaviourAttachmentsTable extends AppTable {
             'size' => '2MB'
         ]);
    }
+   
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator->requirePresence(['file_name', 'file_content']);
+    }
 
     public function implementedEvents()
     {
