@@ -64,7 +64,7 @@ class WorkflowReportBehavior extends Behavior
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
-    {
+    {   
         $requestData = json_decode($settings['process']['params']);
 
         $category = $requestData->category;
