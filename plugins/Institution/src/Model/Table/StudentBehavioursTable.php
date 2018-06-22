@@ -572,23 +572,25 @@ class StudentBehavioursTable extends AppTable
 
     public function getStudentBehaviourTabElements($options = [])
     {
-        $institution_id = $this->Session->read('Institution.Institutions.id');
-        $institutionId = $this->paramsEncode(['id' => $institution_id]);
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
 
-        $studentBehaviourId = $this->request->params['pass'][1];
-        $studentBehaviourIdDecode = $this->paramsDecode($studentBehaviourId);
-        $queryString = $this->encode(['student_behaviour_id' => $studentBehaviourIdDecode['id']]);
-       
+        $paramPass = $this->request->param('pass');
+        $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
+        $studentBehaviourId = $ids['id'];
+        $queryString = $this->encode(['student_behaviour_id' => $studentBehaviourId]);
+
         $tabElements = [
             'StudentBehaviours' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours', 'view', $studentBehaviourId],
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours', 'view', $paramPass[1]],
                 'text' => __('Overview')
             ],
             'StudentBehaviourAttachments' => [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $institutionId, 'controller' => 'StudentBehaviourAttachments', 'action' => 'index', 'querystring' => $queryString],
+                'url' => ['plugin' => 'Institution', 'controller' => 'StudentBehaviourAttachments', 'action' => 'index', 'querystring' => $queryString, 'institutionId' => $encodedInstitutionId],
                 'text' => __('Attachments')
             ]
         ];
+
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
