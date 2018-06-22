@@ -16,10 +16,7 @@ class WorkflowScholarshipsApplicationTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
-        $this->belongsTo('Scholarships', [
-            'className' => 'Scholarship.Scholarships'
-
-        ]);
+        $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->hasMany('ApplicationAttachments', [
@@ -45,66 +42,66 @@ class WorkflowScholarshipsApplicationTable extends AppTable
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
-        $events['Model.excel.onExcelBeforeQuery'] = 'onExcelBeforeQuery2';
-        $events['Model.excel.onExcelUpdateFields'] = 'onExcelUpdateFields2';
+        $events['Model.excel.onExcelBeforeQuery'] = 'onExcelBeforeQuery';
+        $events['Model.excel.onExcelUpdateFields'] = 'onExcelUpdateFields';
         return $events;
     }
 
-    public function onExcelUpdateFields2(Event $event, ArrayObject $settings, ArrayObject $fields) {
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
         $newFields = [];
 
-        $newFields[0] = [
+        $newFields[] = [
             'key' => 'name',
             'field' => 'name',
             'type' => 'string',
-            'label' => 'Status'
+            'label' => __('Status')
         ];
-        $newFields[1] = [
+        $newFields[] = [
             'key' => 'assigneeFirstLastName',
             'field' => 'assignee_id',
             'type' => 'string',
-            'label' => 'Assignee'
+            'label' => __('Assignee')
         ];
-        $newFields[2] = [
+        $newFields[] = [
             'key' => 'Applicants.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => 'OpenEMIS ID'
+            'label' => __('OpenEMIS ID')
         ];
-        $newFields[3] = [
+        $newFields[] = [
             'key' => 'applicantFirstLastName',
             'field' => 'applicant_id',
             'type' => 'string',
-            'label' => 'Applicant'
+            'label' => __('Applicant')
         ];
-        $newFields[4] = [
+        $newFields[] = [
             'key' => 'financial_assistance_type',
             'field' => 'financial_assistance_type',
             'type' => 'string',
-            'label' => 'financial_assistance_type'
+            'label' => __('financial_assistance_type')
         ];
-        $newFields[5] = [
+        $newFields[] = [
             'key' => 'Scholarship.name',
             'field' => 'scholarship_name',
             'type' => 'string',
-            'label' => 'Scholarship'
+            'label' => __('Scholarship')
         ];
-        $newFields[6] = [
+        $newFields[] = [
             'key' => 'requested_amount',
             'field' => 'requested_amount',
             'type' => 'integer',
-            'label' => 'Requested Amount'
+            'label' => __('Requested Amount')
         ];
-        $newFields[7] = [
+        $newFields[] = [
             'key' => 'comments',
             'field' => 'comments',
             'type' => 'integer',
-            'label' => 'Comments'
+            'label' => __('Comments')
         ];
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelBeforeQuery2(Event $event, ArrayObject $settings, $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
         $requestData = json_decode($settings['process']['params']);
         $category = $requestData->category;
 
@@ -117,7 +114,7 @@ class WorkflowScholarshipsApplicationTable extends AppTable
                 'financial_assistance_type' => 'FinancialAssistanceTypes.code',
                 'scholarship_name' => 'Scholarships.name',
                 'requested_amount' => 'requested_amount',
-                'comments' => 'comments'
+                'comments' => $this->aliasField('comments')
             ])
             ->contain([
                 'Statuses' => [

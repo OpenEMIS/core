@@ -15,19 +15,12 @@ class WorkflowStaffTrainingNeedTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('TrainingCourses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
-
         $this->belongsTo('TrainingNeedCategories', ['className' => 'Training.TrainingNeedCategories', 'foreignKey' => 'training_need_category_id']);
-
         $this->belongsTo('TrainingNeedCompetencies', ['className' => 'Training.TrainingNeedCompetencies', 'foreignKey' => 'training_need_competency_id']);
-
         $this->belongsTo('TrainingNeedSubStandards', ['className' => 'Training.TrainingNeedSubStandards', 'foreignKey' => 'training_need_sub_standard_id']);
-
         $this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities', 'foreignKey' => 'training_priority_id']);
-
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
         
         $this->addBehavior('Report.ReportList');
