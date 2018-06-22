@@ -15,7 +15,6 @@ use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 use Cake\I18n\Date;
 use Cake\Log\Log;
-
 use Cake\Routing\Router;
 
 use App\Model\Table\ControllerActionTable;
