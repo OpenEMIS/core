@@ -319,6 +319,7 @@ Plugin::load('Outcome', ['routes' => true, 'autoload' => true]);
 Plugin::load('Theme', ['routes' => true, 'autoload' => true]);
 Plugin::load('StaffAppraisal', ['routes' => true, 'autoload' => true]);
 Plugin::load('Scholarship', ['routes' => true, 'autoload' => true]);
+Plugin::load('Guardian', ['routes' => true, 'autoload' => true]);
 
 $pluginPath = Configure::read('plugins');
 foreach ($pluginPath as $key => $path) {
