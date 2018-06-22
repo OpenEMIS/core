@@ -99,7 +99,7 @@ class StudentAttendanceSummaryTable extends AppTable
                         'AcademicPeriods.name'
                     ]
                 ],
-                'InstitutionClassStudents' => function ($q) {
+                'InstitutionClassStudents' => function ($q) use ($enrolledStatus) {
                     return $q
                         ->select([
                             'id',
@@ -237,6 +237,10 @@ class StudentAttendanceSummaryTable extends AppTable
         if ($entity->has('institution_class_students')) {
             $totalStudents = count($entity->institution_class_students);
         }
+
+        if ($totalStudents == 0) {
+            $totalStudents = '-';
+        }
         return $totalStudents;
     }
 
@@ -247,6 +251,10 @@ class StudentAttendanceSummaryTable extends AppTable
 
         if ($entity->has('absence_count')) {
             $totalStudentsAbsent = $entity->absence_count;
+        }
+
+        if ($totalStudentsAbsent == 0) {
+            $totalStudentsAbsent = '-';
         }
         return $totalStudentsAbsent;
     }
@@ -265,6 +273,10 @@ class StudentAttendanceSummaryTable extends AppTable
         }
 
         $totalStudentsPresent = $totalStudents - $totalStudentsAbsent;
+
+        if ($totalStudentsPresent == 0) {
+            $totalStudentsPresent = '-';
+        }
         return $totalStudentsPresent;
     }
 
@@ -275,6 +287,11 @@ class StudentAttendanceSummaryTable extends AppTable
         if ($entity->has('late_count')) {
             $totalStudentsLate = $entity->late_count;
         }
+
+        if ($totalStudentsLate == 0) {
+            $totalStudentsLate = '-';
+        }
+
         return $totalStudentsLate;
     }
 
