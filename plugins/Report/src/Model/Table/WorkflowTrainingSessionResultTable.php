@@ -15,10 +15,9 @@ class WorkflowTrainingSessionResultTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
+        $this->belongsTo('TrainingSession', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
+
 
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.WorkflowReport');
@@ -26,5 +25,22 @@ class WorkflowTrainingSessionResultTable extends AppTable
             'pages' => false,
             'autoFields' => false
         ]);
+    }
+
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.excel.onExcelBeforeQuery'] = 'onExcelBeforeQuery';
+        return $events;
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+        $query
+            ->contain([
+                'TrainingSession' => [
+                    'fields' => [
+                        'TrainingSession.name'
+                    ]
+                ]   
+            ]);
     }
 }

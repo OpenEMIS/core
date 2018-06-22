@@ -7,8 +7,11 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
+use App\Model\Traits\OptionsTrait;
+
 class WorkflowInstitutionPositionTable extends AppTable
 {
+    use OptionsTrait;
 
     public function initialize(array $config) 
     {
@@ -32,5 +35,16 @@ class WorkflowInstitutionPositionTable extends AppTable
             'pages' => false,
             'autoFields' => false
         ]);
+    }
+
+    public function onExcelGetIsHomeroom(Event $event, Entity $entity)
+    {
+        $options = $this->getSelectOptions('general.yesno');
+
+        if (array_key_exists($entity->is_homeroom, $options)) {
+            return $options[$entity->is_homeroom];
+        }
+
+        return '';
     }
 }
