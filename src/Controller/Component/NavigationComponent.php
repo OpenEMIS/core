@@ -547,7 +547,7 @@ class NavigationComponent extends Component
                 'Institutions.StaffBehaviours.index' => [
                     'title' => 'Staff',
                     'parent' => 'Institution.Behaviour',
-                    'selected' => ['Institutions.StaffBehaviours', 'StaffBehaviourAttachments.index', 'StaffBehaviourAttachments.view','StaffBehaviourAttachments.edit','StaffBehaviourAttachments.delete'],
+                    'selected' => ['Institutions.StaffBehaviours', 'StaffBehaviourAttachments.add','StaffBehaviourAttachments.index', 'StaffBehaviourAttachments.view','StaffBehaviourAttachments.edit','StaffBehaviourAttachments.delete'],
                     'params' => ['plugin' => 'Institution']
                 ],
 

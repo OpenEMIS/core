@@ -45,4 +45,28 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Behaviours');
     }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        if (array_key_exists('view', $buttons)) {
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StaffBehaviours',
+                'view',
+                $this->paramsEncode(['id' => $entity->id]),
+                'institution_id' => $entity->institution->id,
+            ];
+            $buttons['view']['url'] = $url;
+
+            // POCOR-1893 unset the view button on profiles controller
+            if ($this->controller->name == 'Profiles') {
+                unset($buttons['view']);
+            }
+        }
+
+        return $buttons;
+    }
 }
