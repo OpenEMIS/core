@@ -379,20 +379,21 @@ class StaffBehavioursTable extends ControllerActionTable
 
     public function getStaffBehaviourTabElements($options = [])
     {
-        $institution_id = $this->Session->read('Institution.Institutions.id');
-        $institutionId = $this->paramsEncode(['id' => $institution_id]);
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
 
-        $staffBehaviourId = $this->request->params['pass'][1];
-        $staffBehaviourIdDecode = $this->paramsDecode($staffBehaviourId);
-        $queryString = $this->encode(['staff_behaviour_id' => $staffBehaviourIdDecode['id']]);
+        $paramPass = $this->request->param('pass');
+        $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
+        $studentBehaviourId = $ids['id'];
+        $queryString = $this->encode(['staff_behaviour_id' => $studentBehaviourId]);
        
         $tabElements = [
             'StaffBehaviours' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours', 'view', $staffBehaviourId],
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours', 'view', $paramPass[1]],
                 'text' => __('Overview')
             ],
             'StaffBehaviourAttachments' => [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $institutionId, 'controller' => 'StaffBehaviourAttachments', 'action' => 'index', 'querystring' => $queryString],
+                'url' => ['plugin' => 'Institution', 'controller' => 'StaffBehaviourAttachments', 'action' => 'index', 'querystring' => $queryString, 'institutionId' => $encodedInstitutionId],
                 'text' => __('Attachments')
             ]
         ];
