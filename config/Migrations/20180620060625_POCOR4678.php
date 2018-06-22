@@ -26,6 +26,12 @@ class POCOR4678 extends AbstractMigration
             ->save();
 
         $this->execute('UPDATE `institution_assets` SET `purpose` = 1');
+
+        // security_functions - order currently 105
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 104');
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 51');
+
+        $this->execute("UPDATE security_functions SET `category` = 'Details', `parent_id` = 8, `order` = 52 WHERE `id` = 3044");
     }
 
     public function down()
@@ -36,5 +42,11 @@ class POCOR4678 extends AbstractMigration
         // institution_assets
         $this->dropTable('institution_assets');
         $this->table('z_4678_institution_assets')->rename('institution_assets');
+
+        // security_functions - set order back to 105
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 51');
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 104');
+
+        $this->execute("UPDATE security_functions SET `category` = 'Assets', `parent_id` = 1000, `order` = 105 WHERE `id` = 3044");
     }
 }
