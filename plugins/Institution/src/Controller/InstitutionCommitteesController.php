@@ -41,13 +41,13 @@ class InstitutionCommitteesController extends PageController
         $page->get('institution_id')
             ->setControlType('hidden')
             ->setValue($institutionId);
+        $page->setQueryString('institution_id', $institutionId);
+        
         $page->get('meeting_date')->setLabel('Date of Meeting');
 
         $page->move('academic_period_id')->after('id');
         $page->move('institution_committee_type_id')->after('academic_period_id')->setLabel('Type');
 
-        $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $page->setQueryString('academic_period_id', $academicPeriodId);
         $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
     }
 
@@ -62,10 +62,14 @@ class InstitutionCommitteesController extends PageController
             ->toArray();
         $institutionCommitteeTypes = [null => __('All Types')] + $institutionCommitteeTypes;
 
-        $page->addFilter('institution_committee_type_id')
-            ->setOptions($institutionCommitteeTypes);
         $page->addFilter('academic_period_id')
             ->setOptions($this->academicPeriodOptions);
+
+        $page->addFilter('institution_committee_type_id')
+            ->setOptions($institutionCommitteeTypes);
+
+        $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $page->setQueryString('academic_period_id', $academicPeriodId);
     }
 
     public function view($id)
