@@ -74,6 +74,13 @@ class StaffBehaviourAttachmentsController extends PageController
         $this->addEdit();
     }
 
+    public function delete($id)
+    {
+        $page = $this->Page;
+        $page->exclude(['file_content']);
+        parent::delete($id);
+    }
+    
     private function addEdit()
     {
         $page = $this->Page;

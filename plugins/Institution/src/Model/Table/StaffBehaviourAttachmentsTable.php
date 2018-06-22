@@ -22,6 +22,12 @@ class StaffBehaviourAttachmentsTable extends AppTable {
         ]);
    }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator->requirePresence(['file_name', 'file_content']);
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
