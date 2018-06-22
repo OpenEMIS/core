@@ -32,6 +32,7 @@ class WorkflowStudentTransferOutTable extends AppTable
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.WorkflowReport');
         $this->addBehavior('Excel', [
+            'excludes' => ['all_visible'],
             'pages' => false,
             'autoFields' => false
         ]);
