@@ -98,37 +98,37 @@ class WorkflowTrainingApplicationTable extends AppTable
             'key' => 'Statuses.name',
             'field' => 'name',
             'type' => 'string',
-            'label' => 'Status'
+            'label' => __('Status')
         ];
         $newFields[] = [
             'key' => 'assignee_id',
             'field' => 'assignee_id',
             'type' => 'string',
-            'label' => 'Assignee'
+            'label' => __('Assignee')
         ];
         $newFields[] = [
             'key' => 'staff_id',
             'field' => 'staff_id',
             'type' => 'string',
-            'label' => 'Staff'
+            'label' => __('Staff')
         ];
         $newFields[] = [
             'key' => 'session_name',
             'field' => 'session_name',
             'type' => 'string',
-            'label' => 'Training Session'
+            'label' => __('Training Session')
         ];
         $newFields[] = [
             'key' => 'institution_name',
             'field' => 'institution_name',
             'type' => 'string',
-            'label' => 'Institution'
+            'label' => __('Institution')
         ];
         $newFields[] = [
             'key' => 'course_name',
             'field' => 'course_name',
             'type' => 'string',
-            'label' => 'Course'
+            'label' => __('Course')
         ];
 
         $fields->exchangeArray($newFields);
