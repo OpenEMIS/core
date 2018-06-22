@@ -41,8 +41,8 @@ class StudentAttendanceSummaryTable extends AppTable
 
         $this->addBehavior('Excel', [
             'excludes' => [
-                // 'name',
                 'class_number',
+                'capacity',
                 'total_male_students',
                 'total_female_students',
                 'staff_id',
@@ -57,13 +57,6 @@ class StudentAttendanceSummaryTable extends AppTable
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $this->workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
-
-        // $ReportProgress = TableRegistry::get('Report.ReportProgress');
-        // $entity = $ReportProgress->get('4c93ec41-363b-4b37-a7d1-b8f1b94b759d');
-        // $this->generateXLXS(['download' => false, 'process' => $entity]);
-        // pr('test test');
-        // die;
-
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -77,25 +70,22 @@ class StudentAttendanceSummaryTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $gradeName = $settings['sheet']['name'];
+        $sheetData = $settings['sheet']['sheetData'];
+        $gradeId = $sheetData['education_grade_id'];
 
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
         $institutionId = $requestData->institution_id;
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
 
         $startDate = new DateTime($requestData->report_start_date);
         $endDate = new DateTime($requestData->report_end_date);
 
         $conditions = [
             $this->aliasField('academic_period_id') => $academicPeriodId,
-            'Institutions.id' => $institutionId,
-            'EducationGrades.name' => $gradeName
+            $this->aliasField('institution_id') => $institutionId
         ];
-        if ($educationGradeId != -1) {
-            $conditions['EducationGrades.id'] = $educationGradeId;
-        }
 
-        Log::write('debug', 'onExcelBeforeQuery >>> : ' . memory_get_usage());
         $query
             ->contain([
                 'Institutions' => [
@@ -119,130 +109,130 @@ class StudentAttendanceSummaryTable extends AppTable
                             'institution_id',
                             'student_status_id'
                         ])
-                        ->where(['InstitutionClassStudents.student_status_id' => 1]);
+                        ->where(['InstitutionClassStudents.student_status_id' => $enrolledStatus]);
                 }
             ])
-            ->matching('EducationGrades')
+            ->matching('EducationGrades', function ($q) use ($gradeId) {
+                return $q->where([
+                    'EducationGrades.id' => $gradeId
+                ]);
+            })
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('name'),
                 $this->aliasField('institution_id'),
                 $this->aliasField('academic_period_id')
             ])
-            ->where($conditions)
-            // ->distinct()
-            ;
-            // Log::write('debug', $query);
-            Log::write('debug', 'onExcelBeforeQuery >>> before results: ' . memory_get_usage());
+            ->where($conditions);
+
             $results = $query->toArray();
 
             //To get a list of dates based on user's input start and end dates
-                $begin = $startDate;
-                $end = $endDate;
-                $end = $end->modify('+1 day');
+            $begin = $startDate;
+            $end = $endDate;
+            $end = $end->modify('+1 day');
 
-                $interval = new DateInterval('P1D');
-                $daterange = new DatePeriod($begin, $interval, $end);
-                $formattedDates = [];
+            $interval = new DateInterval('P1D');
+            $daterange = new DatePeriod($begin, $interval, $end);
+            $formattedDates = [];
 
-                // To get all the dates of the working days only
-                foreach ($daterange as $date) {
-                    $dayText = $date->format('l');
-                    if (in_array($dayText, $this->workingDays)) {
-                        $formattedDates[] = $date;
-                    }
+            // To get all the dates of the working days only
+            foreach ($daterange as $date) {
+                $dayText = $date->format('l');
+                if (in_array($dayText, $this->workingDays)) {
+                    $formattedDates[] = $date;
                 }
+            }
 
-                //Insert each date from $formattedDates into each and every entity
-                $formattedDateResults = [];
-                foreach ($formattedDates as $key => $formattedDate) {
-                    foreach ($results as $result) {
-                        $cloneResult =  clone $result;
-                        $cloneResult['date'] = $formattedDate;
-                        $formattedDateResults[] = $cloneResult;
-                    }
+            //Insert each date from $formattedDates into each and every entity
+            $formattedDateResults = [];
+            foreach ($formattedDates as $key => $formattedDate) {
+                foreach ($results as $result) {
+                    $cloneResult =  clone $result;
+                    $cloneResult['date'] = $formattedDate;
+                    $formattedDateResults[] = $cloneResult;
                 }
+            }
 
-                // To get the student absent count for each date
-                $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-                $institutionStudentAbsences = $InstitutionStudentAbsences
-                    ->find()
-                    ->where([
-                        $InstitutionStudentAbsences->aliasField('start_date >=') => $startDate->format("Y-m-d"),
-                        $InstitutionStudentAbsences->aliasField('end_date <=') => $endDate->format("Y-m-d"),
-                        $InstitutionStudentAbsences->aliasField('institution_id') => $institutionId,
-                    ])
-                    ->toArray();
+            // To get the student absent count for each date
+            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            $institutionStudentAbsences = $InstitutionStudentAbsences
+                ->find()
+                ->where([
+                    $InstitutionStudentAbsences->aliasField('start_date >=') => $startDate->format("Y-m-d"),
+                    $InstitutionStudentAbsences->aliasField('end_date <=') => $endDate->format("Y-m-d"),
+                    $InstitutionStudentAbsences->aliasField('institution_id') => $institutionId,
+                ])
+                ->toArray();
 
-                $absentStudentArray = [];
-                foreach ($institutionStudentAbsences as $key => $absentRecords) {
-                    if (!array_key_exists($absentRecords->student_id, $absentStudentArray)) {
-                        $absentStudentArray[$absentRecords->student_id] = [];
-                    }
-                    $startDate = $this->formatDate($absentRecords->start_date);
-                    $absentStudentArray[$absentRecords->student_id][$startDate] = true;
+            $absentStudentArray = [];
+            foreach ($institutionStudentAbsences as $key => $absentRecords) {
+                if (!array_key_exists($absentRecords->student_id, $absentStudentArray)) {
+                    $absentStudentArray[$absentRecords->student_id] = [];
                 }
+                $startDate = $this->formatDate($absentRecords->start_date);
+                $absentStudentArray[$absentRecords->student_id][$startDate] = true;
+            }
 
-                $rowData = [];
-                foreach ($formattedDateResults as $k => $formattedDateResult) {
-                    $absenceCount = 0;
-                    $lateCount = 0;
-                    $currentDate = $this->formatDate($formattedDateResult->date);
-                    if (count($institutionStudentAbsences) > 0) {
-                        foreach ($institutionStudentAbsences as $key => $value) {
-                            $absentStartDate = $this->formatDate($value->start_date);
-                            $absentEndDate = $this->formatDate($value->end_date);
+            $rowData = [];
+            foreach ($formattedDateResults as $k => $formattedDateResult) {
+                $absenceCount = 0;
+                $lateCount = 0;
+                $currentDate = $this->formatDate($formattedDateResult->date);
+                if (count($institutionStudentAbsences) > 0) {
+                    foreach ($institutionStudentAbsences as $key => $value) {
+                        $absentStartDate = $this->formatDate($value->start_date);
+                        $absentEndDate = $this->formatDate($value->end_date);
 
-                            if (($absentStartDate <= $currentDate && $absentEndDate >= $currentDate) && $value->institution_id == $formattedDateResult->institution_id) {
-                                $institutionClassStudents = $formattedDateResult->institution_class_students;
-                                foreach ($institutionClassStudents as $key => $institutionClassStudent) {
-                                    if ($institutionClassStudent->student_id == $value->student_id) {
-                                        if ($value->absence_type_id == 3) {
-                                            $lateCount++;
-                                        } else {
-                                            $absenceCount++;
-                                        }
+                        if (($absentStartDate <= $currentDate && $absentEndDate >= $currentDate) && $value->institution_id == $formattedDateResult->institution_id) {
+                            $institutionClassStudents = $formattedDateResult->institution_class_students;
+                            foreach ($institutionClassStudents as $key => $institutionClassStudent) {
+                                if ($institutionClassStudent->student_id == $value->student_id) {
+                                    if ($value->absence_type_id == 3) {
+                                        $lateCount++;
+                                    } else {
+                                        $absenceCount++;
                                     }
                                 }
                             }
                         }
                     }
-                    $formattedDateResult['absence_count'] = $absenceCount;
-                    $formattedDateResult['late_count'] = $lateCount;
-                    $rowData[] = $formattedDateResult;
                 }
+                $formattedDateResult['absence_count'] = $absenceCount;
+                $formattedDateResult['late_count'] = $lateCount;
+                $rowData[] = $formattedDateResult;
+            }
 
-                //To get the attendance mark status for each date
-                $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
-                $classAttendanceRecords = $ClassAttendanceRecords
-                    ->find()
-                    ->where([
-                        $ClassAttendanceRecords->aliasField('academic_period_id') => $academicPeriodId
-                    ])
-                    ->toArray();
+            //To get the attendance mark status for each date
+            $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+            $classAttendanceRecords = $ClassAttendanceRecords
+                ->find()
+                ->where([
+                    $ClassAttendanceRecords->aliasField('academic_period_id') => $academicPeriodId
+                ])
+                ->toArray();
 
-                $rowResults = [];
-                foreach ($rowData as $key => $value) {
-                        $month = $value->date->format('n');
-                        $day_text = 'day_'.$value->date->format('j');
-                    foreach ($classAttendanceRecords as $k => $classAttendanceRecord) {
-                        if ($classAttendanceRecord->institution_class_id == $value->id
-                            && $classAttendanceRecord->month == $month) {
-                            $value['class_attendance_records'] = $classAttendanceRecord->{$day_text};
-                        }
+            $rowResults = [];
+            foreach ($rowData as $key => $value) {
+                    $month = $value->date->format('n');
+                    $day_text = 'day_'.$value->date->format('j');
+                foreach ($classAttendanceRecords as $k => $classAttendanceRecord) {
+                    if ($classAttendanceRecord->institution_class_id == $value->id
+                        && $classAttendanceRecord->month == $month) {
+                        $value['class_attendance_records'] = $classAttendanceRecord->{$day_text};
                     }
-                    $rowResults[] = $value;
                 }
-        $query
-            ->formatResults(function (ResultSetInterface $results) use ($startDate, $endDate, $academicPeriodId, $rowResults) {
+                $rowResults[] = $value;
+            }
 
+        $query
+            ->formatResults(function (ResultSetInterface $results) use ($rowResults) {
                 return $rowResults;
             });
     }
 
     public function onExcelRenderTotalStudents(Event $event, Entity $entity, $attr)
     {
-        
         $totalStudents = 0;
         if ($entity->has('institution_class_students')) {
             $totalStudents = count($entity->institution_class_students);
@@ -290,18 +280,18 @@ class StudentAttendanceSummaryTable extends AppTable
 
     public function onExcelRenderMarkStatus(Event $event, Entity $entity, $attr)
     {
-        $markStatus = 'Not Marked';
+        $markStatus = __('Not Marked');
 
         $schoolClosedDays = $this->schoolClosedDays;
 
         if ($entity->has('class_attendance_records') && $entity->class_attendance_records == 1) {
-            $markStatus = 'Marked';
+            $markStatus = __('Marked');
         } else {
             foreach ($schoolClosedDays as $institution_id => $value) {
                 if ($entity->institution_id == $institution_id) {
                     foreach ($value as $schoolClosedDate => $isRequired) {
                         if ($schoolClosedDate == $entity->date->format("Y-m-d")) {
-                            $markStatus = 'School Closed';
+                            $markStatus = __('School Closed');
                         }
                     }
                 }
@@ -388,45 +378,32 @@ class StudentAttendanceSummaryTable extends AppTable
 
     private function generateSheetsData($requestData)
     {
-
+        $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
-        $institutionId = $requestData->institution_id;
 
-        $conditions = [
-            $this->aliasField('academic_period_id') => $academicPeriodId,
-            'Institutions.id' => $institutionId
-        ];
-        if ($educationGradeId != -1) {
-            $conditions['EducationGrades.id'] = $educationGradeId;
+        $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
+        $institutionGradeResults = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId, false);
+
+        $gradeOptions = [];
+        foreach ($institutionGradeResults as $institutionGradeEntity) {
+            $gradeEntity = $institutionGradeEntity->education_grade;
+            if ($educationGradeId != -1) {
+                if ($educationGradeId == $gradeEntity->id) {
+                    $gradeOptions[$gradeEntity->id] = $gradeEntity->name;
+                }
+            } else {
+                $gradeOptions[$gradeEntity->id] = $gradeEntity->name;
+            }
         }
 
-        $query = $this
-            ->find()
-            ->select([
-                'EducationGrades.name',
-            ])
-            ->contain([
-                'Institutions'
-            ])
-            ->matching('EducationGrades')
-            ->where(
-                $conditions
-            )
-            ->order([
-                'EducationGrades.id' => 'ASC'
-            ])
-            ->distinct()
-            ->toArray();
-            
         $sheets = [];
-
-        foreach ($query as $value) {
-            $tabName = $value['_matchingData']['EducationGrades']['name'];
-            Log::write('debug', 'generateSheetsData >>> : ' . $tabName . ' ' . memory_get_usage());
+        foreach ($gradeOptions as $gradeId => $gradeName) {
             $sheets[] = [
-                'sheetData' => '',
-                'name' => $tabName,
+                'sheetData' => [
+                    'education_grade_id' => $gradeId
+                ],
+                'name' => $gradeName,
                 'table' => $this,
                 'query' => $this->find(),
                 'orientation' => 'landscape'
