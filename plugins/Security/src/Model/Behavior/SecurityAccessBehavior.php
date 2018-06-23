@@ -21,7 +21,7 @@ class SecurityAccessBehavior extends Behavior
     {
         // $options['user'] = ['id' => 4, 'super_admin' => 0]; // for testing purposes
         // This logic will only be triggered when the table is accessed by RestfulController
-        if (array_key_exists('user', $options) && is_array($options['user'])) { // the user object is set by RestfulComponent
+        if (array_key_exists('user', $options) && is_array($options['user']) && !array_key_exists('iss', $options['user'])) { // the user object is set by RestfulComponent
             $user = $options['user'];
             if ($user['super_admin'] == 0) { // if he is not super admin
                 $userId = $user['id'];

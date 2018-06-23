@@ -14,11 +14,12 @@ use Cake\I18n\Date;
 
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Page\Traits\EncodingTrait;
 
 class StudentBehavioursTable extends AppTable
 {
     use OptionsTrait;
-
+    use EncodingTrait;
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -27,6 +28,11 @@ class StudentBehavioursTable extends AppTable
         $this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
+        $this->hasMany('StudentBehaviourAttachments', [
+            'className' => 'Institutions.StudentBehaviourAttachments', 
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
@@ -426,7 +432,12 @@ class StudentBehavioursTable extends AppTable
     }
 
     // Start PHPOE-1897
-
+    public function viewBeforeAction(Event $event)
+    {
+        $tabElements = $this->getStudentBehaviourTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
     public function viewAfterAction(Event $event, Entity $entity)
     {
         $this->ControllerAction->field('academic_period_id', ['visible' => false]);
@@ -558,4 +569,29 @@ class StudentBehavioursTable extends AppTable
 
         return $reference;
     }
+
+    public function getStudentBehaviourTabElements($options = [])
+    {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+
+        $paramPass = $this->request->param('pass');
+        $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
+        $studentBehaviourId = $ids['id'];
+        $queryString = $this->encode(['student_behaviour_id' => $studentBehaviourId]);
+
+        $tabElements = [
+            'StudentBehaviours' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours', 'view', $paramPass[1]],
+                'text' => __('Overview')
+            ],
+            'StudentBehaviourAttachments' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'StudentBehaviourAttachments', 'action' => 'index', 'querystring' => $queryString, 'institutionId' => $encodedInstitutionId],
+                'text' => __('Attachments')
+            ]
+        ];
+
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
 }
