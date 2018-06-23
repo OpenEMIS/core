@@ -2,7 +2,6 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
-use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
@@ -13,11 +12,14 @@ class InstitutionSubjectsTable extends AppTable  {
 		$this->table('institution_subjects');
 		parent::initialize($config);
 
-		$this->belongsTo('AcademicPeriods', 			['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions']);
-		$this->belongsTo('EducationSubjects', 			['className' => 'Education.EducationSubjects']);
-		
-		$this->addBehavior('Excel');
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+
+		$this->addBehavior('Excel', [
+            'autoFields' => false
+        ]);
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Report.InstitutionSecurity');
 	}
@@ -30,9 +32,46 @@ class InstitutionSubjectsTable extends AppTable  {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        $institutionId = $requestData->institution_id;
+
+        $conditions = [];
+        if (!empty($academicPeriodId)) {
+            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+        }
+        if (!empty($institutionId)) {
+            $conditions['Institutions.id'] = $institutionId;
+        }
+
         $query
-            ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives'])
-            ->select(['institution_code' => 'Institutions.code', 'area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name']);
+            ->select([
+                $this->aliasField('name'),
+                $this->aliasField('no_of_seats'),
+                $this->aliasField('total_male_students'),
+                $this->aliasField('total_female_students'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('education_grade_id'),
+                $this->aliasField('education_subject_id'),
+                $this->aliasField('academic_period_id'),
+                'institution_code' => 'Institutions.code',
+                'Institutions.name',
+                'area_code' => 'Areas.code',
+                'area_name' => 'Areas.name',
+                'area_administrative_code' => 'AreaAdministratives.code',
+                'area_administrative_name' => 'AreaAdministratives.name',
+                'EducationGrades.name',
+                'EducationSubjects.name',
+                'AcademicPeriods.name'
+            ])
+            ->contain([
+                'Institutions.Areas',
+                'Institutions.AreaAdministratives',
+                'EducationGrades',
+                'EducationSubjects',
+                'AcademicPeriods'
+            ])
+            ->where($conditions);
     }
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
