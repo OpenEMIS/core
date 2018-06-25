@@ -15,6 +15,7 @@
 							<th><?= __('Student') ?></th>
 							<th><?= __('Current Grade') ?></th>
 							<th><?= __('Class') ?></th>
+							<th><?= __('Next Class') ?></th>
 						</tr>
 					</thead>
 					<?php if (isset($attr['data'])) :
@@ -53,6 +54,7 @@
 									<td><?= $obj->_matchingData['Users']->name ?></td>
 									<td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
 									<td><?= isset($attr['classOptions'][$obj->institution_class_id]) ? $attr['classOptions'][$obj->institution_class_id] : '' ?></td>
+									<td><select></select></td>
 								</tr>
 							<?php $studentCount++;
 							endforeach ?>
