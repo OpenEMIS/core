@@ -23,6 +23,7 @@ class ReportsController extends AppController
             'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
             'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
             'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
+            'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
         ];
         $this->loadComponent('Training.Training');
@@ -56,6 +57,7 @@ class ReportsController extends AppController
                 // 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
                 'Report.InstitutionStaff' => __('Staff'),
                 'Report.StudentAbsences' => __('Student Absence'),
+                'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
                 'Report.StaffAbsences' => __('Staff Absence'),
                 'Report.StaffLeave' => __('Staff Leave'),
                 'Report.StaffTransfers' => __('Staff Transfer'),
@@ -118,6 +120,10 @@ class ReportsController extends AppController
                 'Report.NotRegisteredStudents' => __('Not Registered Students'),
                 'Report.ExaminationResults' => __('Examination Results'),
             ];
+        } elseif ($module == 'Workflows') {
+            $options = [
+                'Report.WorkflowRecords' => __('Workflow Records')
+            ];
         }
         return $options;
     }
@@ -154,6 +160,9 @@ class ReportsController extends AppController
                     foreach ($results as $key => $entity) {
                         if ($entity->total_records > 0) {
                             $data['percent'] = intval($entity->current_records / $entity->total_records * 100);
+                            if ($data['percent'] > 100) {
+                                $data['percent'] = 100;
+                            }
                         } elseif ($entity->total_records == 0 && $entity->status == 0) {
                             // if only the status is complete, than percent will be 100, total record can still be 0 if the shell excel generation is slow, and percent should not be 100.
                             $data['percent'] = 100;

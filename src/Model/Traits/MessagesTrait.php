@@ -1252,6 +1252,14 @@ trait MessagesTrait
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
                 ]
             ],
+            'InstitutionCommittees' => [
+                'meeting_date' => [
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ],
+                'end_time' => [
+                    'ruleCompareTimeReverse' => 'End Time should not be earlier than Start Time'
+                ]
+            ],
         ],
         'User' => [
             'Users' => [

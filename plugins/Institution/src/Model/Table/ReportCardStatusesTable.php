@@ -220,8 +220,8 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->select([
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
                 'report_card_status' => $this->StudentsReportCards->aliasField('status'),
-                'report_card_modified' => $this->StudentsReportCards->aliasField('modified'),
-                'report_card_created' => $this->StudentsReportCards->aliasField('created')
+                'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
+                'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on')
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -383,9 +383,9 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $value = '';
 
-        if ($entity->has('report_card_created')) {
-            $createdValue = new Time($entity->report_card_created);
-            $value = $this->formatDateTime($createdValue);
+        if ($entity->has('report_card_started_on')) {
+            $startedOnValue = new Time($entity->report_card_started_on);
+            $value = $this->formatDateTime($startedOnValue);
         }
 
         return $value;
@@ -395,9 +395,9 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $value = '';
 
-        if ($entity->has('report_card_modified')) {
-            $modifiedValue = new Time($entity->report_card_modified);
-            $value = $this->formatDateTime($modifiedValue);
+        if ($entity->has('report_card_completed_on')) {
+            $completedOnValue = new Time($entity->report_card_completed_on);
+            $value = $this->formatDateTime($completedOnValue);
         }
 
         return $value;
@@ -587,7 +587,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     private function addReportCardsToProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
-        Log::write('debug', 'Initialize Generate All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' ('.Time::now().')');
+        Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
 
         $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
         $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
@@ -637,39 +637,29 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'institution_class_id' => $student->institution_class_id,
             ];
             if ($this->StudentsReportCards->exists($recordIdKeys)) {
-                $conn = ConnectionManager::get('default');
-                $conn->begin();
-
                 $studentsReportCardEntity = $this->StudentsReportCards->find()
                     ->where($recordIdKeys)
                     ->first();
 
-                $this->StudentsReportCards->delete($studentsReportCardEntity);
-
                 $newData = [
                     'status' => $this->StudentsReportCards::NEW_REPORT,
-                    'principal_comments' => $studentsReportCardEntity->principal_comments,
-                    'homeroom_teacher_comments' => $studentsReportCardEntity->homeroom_teacher_comments,
+                    'started_on' => NULL,
+                    'completed_on' => NULL,
                     'file_name' => NULL,
                     'file_content' => NULL,
-                    'report_card_id' => $studentsReportCardEntity->report_card_id,
-                    'student_id' => $studentsReportCardEntity->student_id,
-                    'institution_id' => $studentsReportCardEntity->institution_id,
-                    'academic_period_id' => $studentsReportCardEntity->academic_period_id,
-                    'education_grade_id' => $studentsReportCardEntity->education_grade_id,
                     'institution_class_id' => $studentsReportCardEntity->institution_class_id
                 ];
-                $newEntity = $this->StudentsReportCards->newEntity($newData);
+                $newEntity = $this->StudentsReportCards->patchEntity($studentsReportCardEntity, $newData);
 
-                if ($this->StudentsReportCards->save($newEntity)) {
-                    $conn->commit();
-                } else {
-                    $conn->rollback();
+                if (!$this->StudentsReportCards->save($newEntity)) {
+                    Log::write('debug', 'Error Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
+                    Log::write('debug', $newEntity->errors());
                 }
             }
+            // end
         }
 
-        Log::write('debug', 'End Generate All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' ('.Time::now().')');
+        Log::write('debug', 'End Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
     }
 
     private function triggerGenerateAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
