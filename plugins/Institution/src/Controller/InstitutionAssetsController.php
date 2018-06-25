@@ -13,6 +13,7 @@ class InstitutionAssetsController extends PageController
 
     private $academicPeriodOptions = [];
     private $accessibilityOptions = [];
+    private $purposeOptions = [];
 
     public function initialize()
     {
@@ -27,6 +28,7 @@ class InstitutionAssetsController extends PageController
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderAccessibility'] = 'onRenderAccessibility';
+        $event['Controller.Page.onRenderPurpose'] = 'onRenderPurpose';
         return $event;
     }
 
@@ -50,7 +52,6 @@ class InstitutionAssetsController extends PageController
 
         $page->get('asset_status_id')->setLabel('Status');
         $page->get('asset_type_id')->setLabel('Type');
-        $page->get('asset_purpose_id')->setLabel('Purpose');
         $page->get('asset_condition_id')->setLabel('Condition');
 
         $page->move('accessibility')->after('asset_condition_id');
@@ -66,6 +67,7 @@ class InstitutionAssetsController extends PageController
         // get options
         $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $this->accessibilityOptions = $this->getSelectOptions($this->InstitutionAssets->aliasField('accessibility'));
+        $this->purposeOptions = $this->getSelectOptions($this->InstitutionAssets->aliasField('purpose'));
     }
 
     public function index()
@@ -96,7 +98,7 @@ class InstitutionAssetsController extends PageController
         $page->exclude(['institution_id']);
 
         // sorting
-        $page->get('asset_purpose_id')->setSortable(true);
+        $page->get('purpose')->setSortable(true);
         $page->get('asset_condition_id')->setSortable(true);
         $page->get('asset_status_id')->setSortable(true);
     }
@@ -124,12 +126,15 @@ class InstitutionAssetsController extends PageController
 
         $page->get('asset_status_id')->setControlType('select');
         $page->get('asset_type_id')->setControlType('select');
-        $page->get('asset_purpose_id')->setControlType('select');
         $page->get('asset_condition_id')->setControlType('select');
 
         $page->get('academic_period_id')
             ->setControlType('select')
             ->setOptions($this->academicPeriodOptions, false);
+
+        $page->get('purpose')
+            ->setControlType('select')
+            ->setOptions($this->purposeOptions);
 
         $page->get('accessibility')
             ->setControlType('select')
@@ -144,6 +149,15 @@ class InstitutionAssetsController extends PageController
 
         if ($page->is(['index', 'view', 'delete'])) {
             return $this->accessibilityOptions[$entity->accessibility];
+        }
+    }
+
+    public function onRenderPurpose(Event $event, Entity $entity, PageElement $element)
+    {
+        $page = $this->Page;
+
+        if ($page->is(['index', 'view', 'delete'])) {
+            return $this->purposeOptions[$entity->purpose];
         }
     }
 }

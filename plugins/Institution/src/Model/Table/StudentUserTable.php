@@ -170,7 +170,9 @@ class StudentUserTable extends ControllerActionTable
             ->allowEmpty('class')
             ->add('class', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit'],
-                'on' => 'create'
+                'on' => function ($context) {  
+                    return (!empty($context['data']['class']) && $context['newRecord']);
+                }
             ])
             ->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
                 'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
@@ -592,12 +594,14 @@ class StudentUserTable extends ControllerActionTable
             if (isset($tabElements['ExaminationResults'])) {
                 unset($tabElements['ExaminationResults']);
             }
-        }
-        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
-            if (isset($tabElements['Risks'])) {
-                unset($tabElements['Risks']);
+
+            if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+                if (isset($tabElements['Risks'])) {
+                    unset($tabElements['Risks']);
+                }
             }
         }
+
         return $tabElements;
     }
 
