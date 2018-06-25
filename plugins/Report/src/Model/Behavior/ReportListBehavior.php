@@ -15,6 +15,7 @@ use Cake\Network\Session;
 use Cake\I18n\Time;
 use Cake\FileSystem\File;
 use DateTime;
+use Date;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
@@ -219,10 +220,13 @@ class ReportListBehavior extends Behavior {
 		}
 
 		//Check if there exists start and end report date filter, if yes, print out the start and end date.
-		if(!is_null(array_key_exists('report_start_date', $data[$alias])) && !is_null(array_key_exists('report_end_date', $data[$alias])) && $data[$alias]['report_start_date'] != 0 && $data[$alias]['report_end_date'] != 0) {
-				$reportStartDate = (new DateTime($data[$alias]['report_start_date']))->format('F d, Y');
-				$reportEndDate = (new DateTime($data[$alias]['report_end_date']))->format('F d, Y');
-				$filters[] = __($reportStartDate. ' to '. $reportEndDate);
+		if(array_key_exists('report_start_date', $data[$alias]) && array_key_exists('report_end_date', $data[$alias]) && $data[$alias]['report_start_date'] != 0 && $data[$alias]['report_end_date'] != 0) {
+				
+				$reportStartDate = ($this->_table->formatDate(new DateTime($data[$alias]['report_start_date'])));
+
+				$reportEndDate = ($this->_table->formatDate(new DateTime($data[$alias]['report_end_date'])));
+
+				$filters[] = $reportStartDate. __(' to '). $reportEndDate;
 		}
 		
 
