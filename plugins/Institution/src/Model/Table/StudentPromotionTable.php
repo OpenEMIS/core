@@ -11,7 +11,7 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Controller\Component;
 use Cake\Validation\Validator;
-
+use Cake\Log\Log;
 use App\Model\Table\AppTable;
 
 class StudentPromotionTable extends AppTable
@@ -119,6 +119,7 @@ class StudentPromotionTable extends AppTable
     public function addOnChangeFromPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         unset($this->request->query['from_period']);
+        unset($this->request->query['next_period']);
         unset($this->request->query['grade_to_promote']);
         unset($this->request->query['class']);
         unset($this->request->query['student_status']);
@@ -130,6 +131,31 @@ class StudentPromotionTable extends AppTable
                 }
                 if (array_key_exists('next_academic_period_id', $data[$this->alias()])) {
                     unset($data[$this->alias()]['next_academic_period_id']);
+                }
+                if (array_key_exists('grade_to_promote', $data[$this->alias()])) {
+                    unset($data[$this->alias()]['grade_to_promote']);
+                }
+                if (array_key_exists('class', $data[$this->alias()])) {
+                    unset($data[$this->alias()]['class']);
+                }
+                if (array_key_exists('student_status_id', $data[$this->alias()])) {
+                    unset($data[$this->alias()]['student_status_id']);
+                }
+            }
+        }
+    }
+
+    public function addOnChangeNextPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        unset($this->request->query['next_period']);
+        unset($this->request->query['grade_to_promote']);
+        unset($this->request->query['class']);
+        unset($this->request->query['student_status']);
+
+        if ($this->request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $data)) {
+                if (array_key_exists('next_academic_period_id', $data[$this->alias()])) {
+                    $this->request->query['next_period'] = $data[$this->alias()]['next_academic_period_id'];
                 }
                 if (array_key_exists('grade_to_promote', $data[$this->alias()])) {
                     unset($data[$this->alias()]['grade_to_promote']);
@@ -194,6 +220,21 @@ class StudentPromotionTable extends AppTable
         }
     }
 
+    public function addOnChangeToNextGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        // pr($data);die;
+        unset($this->request->query['to_next_grade']);
+        // unset($data[$this->alias()]['education_grade_id']);
+
+        if ($this->request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $data)) {
+                if (array_key_exists('education_grade_id', $data[$this->alias()])) {
+                    $this->request->query['to_next_grade'] = $data[$this->alias()]['education_grade_id'];
+                }
+            }
+        }
+    }
+
     public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         switch ($action) {
@@ -248,7 +289,7 @@ class StudentPromotionTable extends AppTable
                     $periodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition, 'isEditable' => true]);
                     $attr['type'] = 'select';
                 }
-
+                $attr['onChangeReload'] = 'changeNextPeriod';
                 $attr['options'] = $periodOptions;
                 break;
         }
@@ -543,8 +584,9 @@ class StudentPromotionTable extends AppTable
                 }
 
                 $attr['type'] = 'select';
-                $attr['select'] = false;
+                // $attr['select'] = true;
                 $attr['options'] = $options;
+                $attr['onChangeReload'] = 'ChangeToNextGrade';
 
             } else {
                 $gradeData = $this->EducationGrades->get($educationGradeId);
@@ -583,12 +625,16 @@ class StudentPromotionTable extends AppTable
         }
 
         $students = [];
+        $availableInstitutionClasses = [];
         if (!empty($selectedPeriod) && $selectedPeriod != -1) {
             $selectedGrade = $request->query('grade_to_promote');
+            $selectedNextGrade = $request->query('to_next_grade');
+            // pr($selectedNextGrade);
             if (!is_null($selectedGrade)) {
                 $studentStatuses = $this->statuses;
                 $selectedClass = $request->query('class');
-
+                $selectedNextPeriod = $request->query('next_period');
+                // pr($selectedNextPeriod);
                 $students = $this->find()
                     ->matching('Users')
                     ->matching('EducationGrades')
@@ -602,8 +648,23 @@ class StudentPromotionTable extends AppTable
                     ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
                     ->order(['Users.first_name'])
                     ->autoFields(true);
-
+                    Log::write('debug', $students);
                 if ($students->count() > 0) {
+
+                    $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
+                    $availableInstitutionClasses = $institutionClassTable
+                        ->find('list')
+                        ->matching('EducationGrades', function ($q) use ($selectedNextGrade) {
+                        return $q->where([
+                            'EducationGrades.id' => $selectedNextGrade
+                        ]);
+                        })
+                        ->where([
+                            $institutionClassTable->aliasField('institution_id') => $institutionId,
+                            $institutionClassTable->aliasField('academic_period_id') => $selectedNextPeriod,
+                        ])
+                        ->toArray();
+
                     $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
                     $StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
                     $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
@@ -670,7 +731,9 @@ class StudentPromotionTable extends AppTable
         $attr['element'] = 'Institution.StudentPromotion/students';
         $attr['data'] = $students;
         $attr['classOptions'] = $this->institutionClasses;
-
+        // pr($availableInstitutionClasses);
+        $attr['availableClassOptions'] = $availableInstitutionClasses;
+        
         return $attr;
     }
 
