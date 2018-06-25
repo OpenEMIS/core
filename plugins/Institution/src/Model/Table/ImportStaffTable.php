@@ -224,7 +224,7 @@ class ImportStaffTable extends AppTable
         $yesNoOptions = $this->getSelectOptions('general.yesno');
 
         $data[$columnOrder]['lookupColumn'] = 1;
-        $data[$columnOrder]['data'][] = [$typeLabel, $codeLabel, $nameLabel, $statusLabel, $isHomeroomLabel];
+        $data[$columnOrder]['data'][] = [$codeLabel,$nameLabel, $typeLabel, $statusLabel, $isHomeroomLabel];
         if (!empty($modelData)) {
             foreach($modelData as $row) {
                 $positionTitleType = $row->staff_position_title->type;
@@ -235,8 +235,8 @@ class ImportStaffTable extends AppTable
                 }
                 $data[$columnOrder]['data'][] = [
                     $row->position_no,
-                    $positionTitleType,
                     $row->staff_position_title->name,
+                    $positionTitleType,
                     $row->status->name,
                     $yesNoOptions[$row->is_homeroom]
                 ];

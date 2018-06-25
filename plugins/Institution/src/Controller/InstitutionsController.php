@@ -342,7 +342,7 @@ class InstitutionsController extends AppController
     }
     public function StudentRisks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentRisks']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentRisks']);
     }
     public function InstitutionStudentRisks()
     {
@@ -1530,19 +1530,16 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'StudentRisks' => ['text' => __('Risks')]
+            'Risks' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if ($key == 'Programmes' || $key == 'Textbooks') {
+            if (in_array($key, ['Programmes', 'Textbooks', 'Risks'])) {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
-            } elseif ($key == 'StudentRisks') {
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             } else {
                 $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);

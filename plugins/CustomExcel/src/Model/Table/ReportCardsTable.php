@@ -123,11 +123,15 @@ class ReportCardsTable extends AppTable
         if (!$StudentsReportCards->exists($params)) {
             // insert student report card record if it does not exist
             $params['status'] = $StudentsReportCards::IN_PROGRESS;
+            $params['started_on'] = date('Y-m-d H:i:s');
             $newEntity = $StudentsReportCards->newEntity($params);
             $StudentsReportCards->save($newEntity);
         } else {
             // update status to in progress if record exists
-            $StudentsReportCards->updateAll(['status' => $StudentsReportCards::IN_PROGRESS], $params);
+            $StudentsReportCards->updateAll([
+                'status' => $StudentsReportCards::IN_PROGRESS,
+                'started_on' => date('Y-m-d H:i:s')
+            ], $params);
         }
     }
 
@@ -186,10 +190,9 @@ class ReportCardsTable extends AppTable
         // save file
         $StudentsReportCards->updateAll([
             'status' => $status,
+            'completed_on' => date('Y-m-d H:i:s'),
             'file_name' => $fileName,
-            'file_content' => $fileContent,
-            'modified' => date('Y-m-d H:i:s'),
-            'modified_user_id' => 1
+            'file_content' => $fileContent
         ], $params);
 
         // delete report card process
