@@ -1,3 +1,35 @@
+### [3.29.0] - 2018-06-22
+- Data patch on Positions feature
+
+### [3.28.1] - 2018-06-20
+- Rename breadcrumbs and headers to the original name under Report module 
+
+### [3.28.0] - 2018-06-14
+- Rename Scholarships sub-menu in Administration > Scholarships > Details
+- Added date range to Audit Login report
+- Added "Forgot Password" and "Forgot Username" feature 
+- Develop student capacity per class
+- Develop Workflow Rules event in Administration > Workflows > Rules
+- Develop Assets feature in Institutions > Assets
+
+### [3.27.2] - 2018-06-11
+- Added new labels to Administration > Translations
+- Changed colours for Institution > Dashboard charts
+
+### [3.27.1] - 2018-06-06
+- Optimized the generation of Student Reports Card
+
+### [3.27.0] - 2018-06-04
+- Developed Recipients feature under Administration > Scholarships
+- Removed the Title field in Staff > Career > Appraisal
+- Added additional filters and columns to Institution > Cases
+- Added Date of Birth to Report > Institutions > Student 
+- Developed import feature for Institutions > Staff > Positions
+- Developed import feature for Institutions > Positions
+
+### [3.26.1] - 2018-05-25
+- Created Deputy Principal system role in Administration > Security > Role
+
 ### [3.26.0] - 2018-05-18
 - Developed Scholarship feature under Profile and Administration
 - Implemented import feature for Staff Leave under Staff > Career > Leave
