@@ -14,10 +14,11 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
 
-class AuditTable extends AppTable
+use App\Model\Traits\OptionsTrait;
+
+class AuditsLoginTable extends AppTable
 {
-    //User type ddl
-    private $userTypeOption = ['0' => "All Type", '1' => 'Student', '2' => 'Staff', '3' => 'Guardian'];
+    use OptionsTrait;
 
     public function initialize(array $config)
     {
@@ -48,87 +49,6 @@ class AuditTable extends AppTable
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
         $this->addBehavior('Report.ReportList');
-    }
-
-    public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-        $validator
-            ->add('report_start_date', [
-                'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'report_end_date', true],
-                    'on' => function ($context) {
-                        if (array_key_exists('feature', $context['data'])) {
-                            $feature = $context['data']['feature'];
-                            switch ($feature) {
-                                case "Report.Audit":
-                                    return in_array($feature, ['Report.Audit']);
-                                case "Report.AuditInstitution":
-                                    return in_array($feature, ['Report.AuditInstitution']);
-                                case "Report.AuditUser":
-                                    return in_array($feature, ['Report.AuditUser']);
-                                default:
-                                    return in_array($feature, ['Report.Audit']);
-                            }
-                            
-                        }
-                        return true;
-                    }
-                ],
-            ]);
-
-        return $validator;
-    }
-
-    public function beforeAction(Event $event)
-    {
-        $this->fields = [];
-        $this->ControllerAction->field('feature', ['select' => false]);
-        $this->ControllerAction->field('format');
-        $this->ControllerAction->field('user_type', ['type' => 'hidden']);
-        $this->ControllerAction->field('report_start_date');
-        $this->ControllerAction->field('report_end_date');
-    }
-
-    public function onExcelGetStatus(Event $event, Entity $entity)
-    {
-        if ($entity->status == 1) {
-            return __('Active');
-        } else {
-            return __('Inactive');
-        }
-    }
-
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-            $attr['options'] = $this->controller->getFeatureOptions($this->alias());
-            $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->alias()]['feature']))) {
-                $option = $attr['options'];
-                reset($option);
-                $this->request->data[$this->alias()]['feature'] = key($option);
-            }
-            return $attr;
-        }
-    }
-
-    public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request)
-    {
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.AuditUser'])) {
-                $attr['options'] = $this->userTypeOption;
-                $attr['type'] = 'select';
-                $attr['select'] = false;
-            }
-            return $attr;
-        }
-    }
-
-    public function onGetReportName(Event $event, ArrayObject $data)
-    {
-        return __('Overview');
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -170,42 +90,16 @@ class AuditTable extends AppTable
                 $this->aliasField('last_login >= "') . $reportStartDate . '"',
                 $this->aliasField('last_login <= "') . $reportEndDate . '"'
             ]);
-
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelGetStatus(Event $event, Entity $entity)
     {
-        foreach ($fields as $key => $field) {
-            if ($field['field'] == 'identity_type_id') {
-                $fields[$key] = [
-                    'key' => 'MainIdentityTypes.name',
-                    'field' => 'identity_type',
-                    'type' => 'string',
-                    'label' => __('Main Identity Type')
-                ];
-            }
+        $options = $this->getSelectOptions('general.active');
 
-            if ($field['field'] == 'nationality_id') {
-                $fields[$key] = [
-                    'key' => 'MainNationalities.name',
-                    'field' => 'nationality_name',
-                    'type' => 'string',
-                    'label' => __('Main Nationality')
-                ];
-            }
+        if (array_key_exists($entity->status, $options)) {
+            return $options[$entity->status];
         }
-    }
 
-    public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, Request $request)
-    {
-        $attr['type'] = 'date';
-        return $attr;
-    }
-
-    public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, Request $request)
-    {
-        $attr['type'] = 'date';
-        $attr['value'] = Time::now();
-        return $attr;
+        return '';
     }
 }

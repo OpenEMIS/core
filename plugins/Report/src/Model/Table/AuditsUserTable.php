@@ -14,8 +14,12 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
 
-class AuditUserTable extends AppTable
+use App\Model\Traits\OptionsTrait;
+
+class AuditsUserTable extends AppTable
 {
+    use OptionsTrait;
+
     public function initialize(array $config)
     {
         $this->table('user_activities');
@@ -120,25 +124,25 @@ class AuditUserTable extends AppTable
             'key' => 'created',
             'field' => 'ModifiedOn',
             'type' => 'string',
-            'label' => 'Modified On'
+            'label' => __('Modified On')
         ];
         $newFields[1] = [
             'key' => 'CreatedUser.First_Last_Name',
             'field' => 'ModifiedBy',
             'type' => 'string',
-            'label' => 'Modified By'
+            'label' => __('Modified By'
         ];
         $newFields[6] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => 'openemis_no'  
+            'label' => __('Openemis ID')  
         ];
         $newFields[7] = [
             'key' => 'Users.First_Last_Name',
             'field' => 'UserFirstLastName',
             'type' => 'string',
-            'label' => 'Name'  
+            'label' => __('Name')
         ];
         $newFields[8] = [
             'key' => 'Users.isStaff',
@@ -163,19 +167,19 @@ class AuditUserTable extends AppTable
             switch ($value['field']) {
                 case "operation":
                     $newFields[2] = $value;
-                    $newFields[2]['label'] = "Activity";
+                    $newFields[2]['label'] = __("Activity");
                     break;
                 case "field":
                     $newFields[3] = $value;
-                    $newFields[3]['label'] = "Field";
+                    $newFields[3]['label'] = __("Field");
                     break;
                 case "old_value":
                     $newFields[4] = $value;
-                    $newFields[4]['label'] = "Original Value";
+                    $newFields[4]['label'] = __("Original Value");
                     break;
                 case "new_value":
                     $newFields[5] = $value;
-                    $newFields[5]['label'] = "Modified Value";
+                    $newFields[5]['label'] = __("Modified Value");
                     break;
                 default:
                     break;
@@ -184,5 +188,38 @@ class AuditUserTable extends AppTable
 
         ksort($newFields);
         $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetIsStaff(Event $event, Entity $entity)
+    {
+        $options = $this->getSelectOptions('general.yesno');
+
+        if (array_key_exists($entity->is_staff, $options)) {
+            return $options[$entity->is_staff];
+        }
+
+        return '';
+    }
+
+    public function onExcelGetIsGuardian(Event $event, Entity $entity)
+    {
+        $options = $this->getSelectOptions('general.yesno');
+
+        if (array_key_exists($entity->is_guardian, $options)) {
+            return $options[$entity->is_guardian];
+        }
+
+        return '';
+    }
+
+    public function onExcelGetIsStudent(Event $event, Entity $entity)
+    {
+        $options = $this->getSelectOptions('general.yesno');
+
+        if (array_key_exists($entity->is_student, $options)) {
+            return $options[$entity->is_student];
+        }
+
+        return '';
     }
 }

@@ -14,7 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
 
-class AuditInstitutionTable extends AppTable
+class AuditsInstitutionTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -92,38 +92,38 @@ class AuditInstitutionTable extends AppTable
             'key' => 'Institutions.created',
             'field' => 'ModifiedOn',
             'type' => 'string',
-            'label' => 'Modified On'
+            'label' => __('Modified On')
         ];
         $newFields[1] = [
             'key' => 'CreatedUser.First_Last_Name',
             'field' => 'ModifiedBy',
             'type' => 'string',
-            'label' => 'Modified By'
+            'label' => __('Modified By')
         ];
         $newFields[6] = [
             'key' => 'Institutions.Name_Code',
             'field' => 'InstitutionNamePlusCode',
             'type' => 'string',
-            'label' => 'Institution'
+            'label' => __('Institution')
         ];
 
         foreach ($fields as $currentIndex => $value) {
             switch ($value['field']) {
                 case "operation":
                     $newFields[2] = $value;
-                    $newFields[2]['label'] = "Activity";
+                    $newFields[2]['label'] = __("Activity");
                     break;
                 case "field":
                     $newFields[3] = $value;
-                    $newFields[3]['label'] = "Field";
+                    $newFields[3]['label'] = __("Field");
                     break;
                 case "old_value":
                     $newFields[4] = $value;
-                    $newFields[4]['label'] = "Original Value";
+                    $newFields[4]['label'] = __("Original Value");
                     break;
                 case "new_value":
                     $newFields[5] = $value;
-                    $newFields[5]['label'] = "Modified Value";
+                    $newFields[5]['label'] = __("Modified Value");
                     break;
                 default:
                     break;
