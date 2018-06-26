@@ -1,6 +1,6 @@
 <?php
 $description = __d('open_emis', $_productName);
-$icon = strpos($_productName, 'School') != -1 ? '_school' : '';
+$icon = strpos($_productName, 'School') !== false ? '_school' : '';
 ?>
 
 <!DOCTYPE html>
