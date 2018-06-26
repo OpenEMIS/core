@@ -14,7 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
 
-class AuditsInstitutionTable extends AppTable
+class AuditInstitutionsTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -47,15 +47,15 @@ class AuditsInstitutionTable extends AppTable
                 'field' => $this->aliasField('field'),
                 'old_value' => $this->aliasField('old_value'),
                 'new_value' => $this->aliasField('new_value'),
-                'ModifiedBy' => $query->func()->concat([
+                'modified_by' => $query->func()->concat([
                     'CreatedUser.first_name' => 'literal',
                     ' ',
                     'CreatedUser.last_name' => 'literal'
                 ]),
-                'ModifiedOn' => $query->func()->concat([
+                'modified_on' => $query->func()->concat([
                     $this->aliasField('created') => 'literal'
                 ]),
-                'InstitutionNamePlusCode' => $query->func()->concat([
+                'institution_name_plus_code' => $query->func()->concat([
                     'Institutions.code' => 'literal',
                     ' - ',
                     'Institutions.name' => 'literal'
@@ -85,52 +85,51 @@ class AuditsInstitutionTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-
         $newFields = [];
 
         $newFields[0] = [
             'key' => 'Institutions.created',
-            'field' => 'ModifiedOn',
+            'field' => 'modified_on',
             'type' => 'string',
             'label' => __('Modified On')
         ];
         $newFields[1] = [
             'key' => 'CreatedUser.First_Last_Name',
-            'field' => 'ModifiedBy',
+            'field' => 'modified_by',
             'type' => 'string',
             'label' => __('Modified By')
         ];
+        $newFields[2] = [
+            'key' => 'AuditInstitutions.operation',
+            'field' => 'operation',
+            'type' => 'string',
+            'label' => __('Activity')
+        ];
+        $newFields[3] = [
+            'key' => 'AuditInstitutions.field',
+            'field' => 'field',
+            'type' => 'string',
+            'label' => __('Field')
+        ];
+        $newFields[4] = [
+            'key' => 'AuditInstitutions.old_value',
+            'field' => 'old_value',
+            'type' => 'string',
+            'label' => __('Original Value')
+        ];
+        $newFields[5] = [
+            'key' => 'AuditInstitutions.new_value',
+            'field' => 'new_value',
+            'type' => 'string',
+            'label' => __('Modified Value')
+        ];
         $newFields[6] = [
             'key' => 'Institutions.Name_Code',
-            'field' => 'InstitutionNamePlusCode',
+            'field' => 'institution_name_plus_code',
             'type' => 'string',
             'label' => __('Institution')
         ];
 
-        foreach ($fields as $currentIndex => $value) {
-            switch ($value['field']) {
-                case "operation":
-                    $newFields[2] = $value;
-                    $newFields[2]['label'] = __("Activity");
-                    break;
-                case "field":
-                    $newFields[3] = $value;
-                    $newFields[3]['label'] = __("Field");
-                    break;
-                case "old_value":
-                    $newFields[4] = $value;
-                    $newFields[4]['label'] = __("Original Value");
-                    break;
-                case "new_value":
-                    $newFields[5] = $value;
-                    $newFields[5]['label'] = __("Modified Value");
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        ksort($newFields);
         $fields->exchangeArray($newFields);
     }
 }
