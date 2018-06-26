@@ -42,30 +42,20 @@ class AuditInstitutionsTable extends AppTable
 
         $query
             ->select([
-                'created' => $this->aliasField('created'),
+                'modified_on' => $this->aliasField('created'),
                 'operation' => $this->aliasField('operation'),
                 'field' => $this->aliasField('field'),
                 'old_value' => $this->aliasField('old_value'),
                 'new_value' => $this->aliasField('new_value'),
-                'modified_by' => $query->func()->concat([
-                    'CreatedUser.first_name' => 'literal',
-                    ' ',
-                    'CreatedUser.last_name' => 'literal'
-                ]),
-                'modified_on' => $query->func()->concat([
-                    $this->aliasField('created') => 'literal'
-                ]),
-                'institution_name_plus_code' => $query->func()->concat([
-                    'Institutions.code' => 'literal',
-                    ' - ',
-                    'Institutions.name' => 'literal'
-                ])
             ])
             ->contain([
                 'CreatedUser' => [
                     'fields' => [
                         'first_name',
-                        'last_name'
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
                     ]
                 ]
             ])
@@ -83,49 +73,59 @@ class AuditInstitutionsTable extends AppTable
             ]);
     }
 
+    public function onExcelGetCreatedName(Event $event, Entity $entity)
+    {
+        return $entity->created_user->name;
+    }
+
+    public function onExcelGetCodeName(Event $event, Entity $entity)
+    {
+        return $entity->institution->code_name;
+    }
+
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
-        $newFields[0] = [
-            'key' => 'Institutions.created',
+        $newFields[] = [
+            'key' => 'Institutions.modified_on',
             'field' => 'modified_on',
             'type' => 'string',
             'label' => __('Modified On')
         ];
-        $newFields[1] = [
-            'key' => 'CreatedUser.First_Last_Name',
-            'field' => 'modified_by',
+        $newFields[] = [
+            'key' => 'CreatedUser.name',
+            'field' => 'created_name',
             'type' => 'string',
             'label' => __('Modified By')
         ];
-        $newFields[2] = [
+        $newFields[] = [
             'key' => 'AuditInstitutions.operation',
             'field' => 'operation',
             'type' => 'string',
             'label' => __('Activity')
         ];
-        $newFields[3] = [
+        $newFields[] = [
             'key' => 'AuditInstitutions.field',
             'field' => 'field',
             'type' => 'string',
             'label' => __('Field')
         ];
-        $newFields[4] = [
+        $newFields[] = [
             'key' => 'AuditInstitutions.old_value',
             'field' => 'old_value',
             'type' => 'string',
             'label' => __('Original Value')
         ];
-        $newFields[5] = [
+        $newFields[] = [
             'key' => 'AuditInstitutions.new_value',
             'field' => 'new_value',
             'type' => 'string',
             'label' => __('Modified Value')
         ];
-        $newFields[6] = [
-            'key' => 'Institutions.Name_Code',
-            'field' => 'institution_name_plus_code',
+        $newFields[] = [
+            'key' => 'Institutions.code_name',
+            'field' => 'code_name',
             'type' => 'string',
             'label' => __('Institution')
         ];
