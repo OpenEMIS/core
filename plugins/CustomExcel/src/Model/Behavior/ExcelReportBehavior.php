@@ -15,8 +15,6 @@ use Cake\Collection\Collection;
 use Cake\Log\Log;
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -249,7 +247,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         // set cell style to follow placeholder
-        $objWorksheet->setCellValue($cellCoordinate, __($cellValue));
+        $objWorksheet->getCell($cellCoordinate)->setValue(__($cellValue));
         $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
 
         // set column width to follow placeholder
@@ -299,7 +297,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         // set to empty to remove the placeholder
-        $objWorksheet->setCellValue($cellCoordinate, $cellValue);
+        $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
     }
 
     public function renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
@@ -528,7 +526,6 @@ class ExcelReportBehavior extends Behavior
     {
         $attr = [];
 
-        // columnIndexFromString(): Column index start from 1
         $columnValue = $objCell->getColumn();
         $attr['columnValue'] = $columnValue;
         $attr['columnIndex'] = Coordinate::columnIndexFromString($columnValue);
@@ -587,7 +584,8 @@ class ExcelReportBehavior extends Behavior
 
     private function processBasicPlaceholder($objSpreadsheet, $objWorksheet, $extra)
     {
-        $cells = $objWorksheet->getCellCollection();
+        $cellCollection = $objWorksheet->getCellCollection();
+        $cells = $cellCollection->getCoordinates();
 
         foreach ($cells as $cellCoordinate) {
             $objCell = $objWorksheet->getCell($cellCoordinate);
@@ -624,7 +622,7 @@ class ExcelReportBehavior extends Behavior
 
         while(!empty($extra['placeholders'])) {
             $columnIndex = key($extra['placeholders']);
-            $columnValue = Coordinate::stringFromColumnIndex($columnIndex-1);
+            $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
             $rowsObj = current($extra['placeholders']);
             $rowValue = key($rowsObj);
             $cellValue = current($rowsObj);
@@ -731,15 +729,15 @@ class ExcelReportBehavior extends Behavior
             $cellStyle->getAlignment()->setWrapText(true);
         }
 
-        $objWorksheet->setCellValue($cellCoordinate, $search);
+        $objWorksheet->getCell($cellCoordinate)->setValue($search);
         $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
     }
 
     private function mergeRange($fromColumn, $fromRow, $toColumn, $toRow, $objWorksheet, $attr)
     {
         if (($fromColumn != $toColumn) || ($fromRow != $toRow)) {
-            $fromColumnValue = Coordinate::stringFromColumnIndex($fromColumn-1);
-            $toColumnValue = Coordinate::stringFromColumnIndex($toColumn-1);
+            $fromColumnValue = Coordinate::stringFromColumnIndex($fromColumn);
+            $toColumnValue = Coordinate::stringFromColumnIndex($toColumn);
             $mergeRange = $fromColumnValue.$fromRow.":".$toColumnValue.$toRow;
 
             $objWorksheet->mergeCells($mergeRange);
@@ -806,7 +804,7 @@ class ExcelReportBehavior extends Behavior
 
         $nestedRowValue = $parentRowValue;
         $nestedColumnIndex = $parentColumnIndex + ($parentMergeColumns - 1) + 1; // always output children to the immediate next column
-        $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1); // column index starts from 0
+        $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
 
         $nestedMergeColumns = $nestedAttr['mergeColumns'];
         $mergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
@@ -878,7 +876,7 @@ class ExcelReportBehavior extends Behavior
 
         if (!empty($attr['data'])) {
             foreach ($attr['data'] as $key => $value) {
-                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1); // column index starts from 0
+                $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
 
                 // skip first column don't need to auto insert new column
                 if ($columnIndex != $attr['columnIndex']) {
@@ -897,7 +895,7 @@ class ExcelReportBehavior extends Behavior
 
                     if (!empty($nestedAttr['data'])) {
                         foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
-                            $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
+                            $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
                             if ($nestedColumnIndex != $columnIndex) {
                                 $objWorksheet->insertNewColumnBefore($nestedColumnValue);
                                 $this->updatePlaceholderCoordinate($nestedColumnValue, null, $extra);
@@ -918,7 +916,7 @@ class ExcelReportBehavior extends Behavior
                         $nestedColumnIndex = $nestedColumnIndex - 1;
                     } else {
                         // renderCell as empty to set style
-                        $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1); // column index starts from 0
+                        $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
                         $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
                         $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
 
@@ -961,8 +959,7 @@ class ExcelReportBehavior extends Behavior
             foreach($displayColumns as $key => $column) {
                 $header = Inflector::humanize($key);
 
-                // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                 $cellCoordinate = $columnValue.$rowValue;
                 $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $header, $attr, $extra);
                 $columnIndex++;
@@ -994,8 +991,7 @@ class ExcelReportBehavior extends Behavior
                     $attr['type'] = array_key_exists('type', $column) ? $column['type'] : null;
                     $attr['format'] = array_key_exists('format', $column) ? $column['format'] : null;
 
-                    // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                    $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                    $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                     $cellCoordinate = $columnValue.$rowValue;
                     $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
@@ -1061,7 +1057,7 @@ class ExcelReportBehavior extends Behavior
                         $matchData = Hash::extract($extra['vars'], $placeholder);
                         $matchValue = !empty($matchData) ? current($matchData) : '';
 
-                        $columnValue = $objCell->stringFromColumnIndex($columnIndex-1); // column index starts from 0
+                        $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                         $cellCoordinate = $columnValue.$rowValue;
                         $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
                         $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
@@ -1128,8 +1124,7 @@ class ExcelReportBehavior extends Behavior
                         $matchData = Hash::extract($extra['vars'], $placeholder);
                         $matchValue = !empty($matchData) ? current($matchData) : '';
 
-                        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                        $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                        $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                         $nestedCellCoordinate = $columnValue.$rowValue;
 
                         $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
@@ -1142,7 +1137,7 @@ class ExcelReportBehavior extends Behavior
                     }
                 }
             } else {
-                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                 $nestedCellCoordinate = $columnValue.$rowValue;
                 $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
                 $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
@@ -1183,8 +1178,7 @@ class ExcelReportBehavior extends Behavior
                         $matchData = Hash::extract($extra['vars'], $placeholder);
                         $matchValue = !empty($matchData) ? current($matchData) : '';
 
-                        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                        $nestedColumnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                        $nestedColumnValue = Coordinate::stringFromColumnIndex($columnIndex);
                         $nestedCellCoordinate = $nestedColumnValue.$rowValue;
 
                         $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
@@ -1200,8 +1194,7 @@ class ExcelReportBehavior extends Behavior
                     $matchData = Hash::extract($extra['vars'], $placeholder);
                     $matchValue = !empty($matchData) ? current($matchData) : '';
 
-                    // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                    $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                    $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                     $cellCoordinate = $columnValue.$rowValue;
 
                     $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
@@ -1271,7 +1264,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function image($objSpreadsheet, $objWorksheet, $objCell, $attr,ArrayObject $extra)
+    private function image($objSpreadsheet, $objWorksheet, $objCell, $attr, ArrayObject $extra)
     {
         $columnValue = $attr['columnValue'];
         $rowValue = $attr['rowValue'];
@@ -1311,6 +1304,6 @@ class ExcelReportBehavior extends Behavior
         $this->renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $tempImagePath, $attr, $extra);
 
         // set to empty to remove the placeholder
-        $objWorksheet->setCellValue($cellCoordinate, '');
+        $objWorksheet->getCell($cellCoordinate)->setValue('');
     }
 }
