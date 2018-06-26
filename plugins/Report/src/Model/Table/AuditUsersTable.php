@@ -90,20 +90,20 @@ class AuditUsersTable extends AppTable
                 $this->aliasField('created <= "') . $reportEndDate . '"'
             ]);
 
-            switch ($requestData->user_type) {
+        switch ($requestData->user_type) {
             case UserTypeSelected::STUDENT:
                 $query->where([
-                    $this->aliasField('Users.is_student = "') . 1 . '"',
+                    'Users.is_student' => 1
                 ]);
                 break;
             case UserTypeSelected::STAFF:
                 $query->where([
-                    $this->aliasField('Users.is_staff = "') . 1 . '"',
+                    'Users.is_staff' => 1
                 ]);
                 break;
             case UserTypeSelected::GUARDIAN:
                 $query->where([
-                    $this->aliasField('Users.is_guardian = "') . 1 . '"',
+                    'Users.is_guardian' => 1
                 ]);
                 break;
             default:    
@@ -116,65 +116,65 @@ class AuditUsersTable extends AppTable
     {
         $newFields = [];
 
-        $newFields[0] = [
+        $newFields[] = [
             'key' => 'created',
             'field' => 'modified_on',
             'type' => 'string',
             'label' => __('Modified On')
         ];
-        $newFields[1] = [
+        $newFields[] = [
             'key' => 'CreatedUser.First_Last_Name',
             'field' => 'modified_by',
             'type' => 'string',
             'label' => __('Modified By')
         ];
-        $newFields[2] = [
+        $newFields[] = [
             'key' => 'AuditUsers.operation',
             'field' => 'operation',
             'type' => 'string',
             'label' => __('Activity')
         ];
-        $newFields[3] = [
+        $newFields[] = [
             'key' => 'AuditUsers.field',
             'field' => 'field',
             'type' => 'string',
             'label' => __('Field')
         ];
-        $newFields[4] = [
+        $newFields[] = [
             'key' => 'AuditUsers.old_value',
             'field' => 'old_value',
             'type' => 'string',
             'label' => __('Original Value')
         ];
-        $newFields[5] = [
+        $newFields[] = [
             'key' => 'AuditUsers.new_value',
             'field' => 'new_value',
             'type' => 'string',
             'label' => __('Modified Value')
         ];
-        $newFields[6] = [
+        $newFields[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
             'label' => __('Openemis ID')  
         ];
-        $newFields[7] = [
+        $newFields[] = [
             'key' => 'Users.First_Last_Name',
             'field' => 'user_first_last_name',
             'type' => 'string',
             'label' => __('Name')
         ];
-        $newFields[8] = [
+        $newFields[] = [
             'key' => 'Users.isStaff',
             'field' => 'is_staff',
             'type' => 'string'
         ];
-        $newFields[9] = [
+        $newFields[] = [
             'key' => 'Users.isStudent',
             'field' => 'is_student',
             'type' => 'string'
         ];
-        $newFields[10] = [
+        $newFields[] = [
             'key' => 'Users.isGuardian',
             'field' => 'is_guardian',
             'type' => 'string'
