@@ -433,6 +433,7 @@ class ExcelBehavior extends Behavior
                 }
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
+                pr($method);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
                 if ($event->result) {
                     $returnedResult = $event->result;
