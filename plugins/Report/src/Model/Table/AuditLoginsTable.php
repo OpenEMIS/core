@@ -16,7 +16,7 @@ use Cake\Validation\Validator;
 
 use App\Model\Traits\OptionsTrait;
 
-class AuditsLoginTable extends AppTable
+class AuditLoginsTable extends AppTable
 {
     use OptionsTrait;
 
