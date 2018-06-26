@@ -15,8 +15,9 @@ use Cake\I18n\Time;
 use Cake\Validation\Validator;
 
 use App\Model\Traits\OptionsTrait;
+use Directory\Model\Table\DirectoriesTable as UserTypeSelected;
 
-class AuditsUserTable extends AppTable
+class AuditUsersTable extends AppTable
 {
     use OptionsTrait;
 
@@ -54,15 +55,15 @@ class AuditsUserTable extends AppTable
                 'is_staff' => 'Users.is_staff',
                 'is_guardian' => 'Users.is_guardian',
                 'openemis_no' => 'Users.openemis_no',
-                'ModifiedBy' => $query->func()->concat([
+                'modified_by' => $query->func()->concat([
                     'CreatedUser.first_name' => 'literal',
                     ' ',
                     'CreatedUser.last_name' => 'literal'
                 ]),
-                'ModifiedOn' => $query->func()->concat([
+                'modified_on' => $query->func()->concat([
                     $this->aliasField('created') => 'literal'
                 ]),
-                'UserFirstLastName' => $query->func()->concat([
+                'user_first_last_name' => $query->func()->concat([
                     'Users.first_name' => 'literal',
                     ' ',
                     'Users.last_name' => 'literal'
@@ -83,35 +84,30 @@ class AuditsUserTable extends AppTable
                         'last_name'
                     ]
                 ]
+            ])
+            ->where([
+                $this->aliasField('created >= "') . $reportStartDate . '"',
+                $this->aliasField('created <= "') . $reportEndDate . '"'
             ]);
 
             switch ($requestData->user_type) {
-            case 1:
+            case UserTypeSelected::STUDENT:
                 $query->where([
                     $this->aliasField('Users.is_student = "') . 1 . '"',
-                    $this->aliasField('created >= "') . $reportStartDate . '"',
-                    $this->aliasField('created <= "') . $reportEndDate . '"'
                 ]);
                 break;
-            case 2:
+            case UserTypeSelected::STAFF:
                 $query->where([
                     $this->aliasField('Users.is_staff = "') . 1 . '"',
-                    $this->aliasField('created >= "') . $reportStartDate . '"',
-                    $this->aliasField('created <= "') . $reportEndDate . '"'
                 ]);
                 break;
-            case 3:
+            case UserTypeSelected::GUARDIAN:
                 $query->where([
                     $this->aliasField('Users.is_guardian = "') . 1 . '"',
-                    $this->aliasField('created >= "') . $reportStartDate . '"',
-                    $this->aliasField('created <= "') . $reportEndDate . '"'
                 ]);
                 break;
-            default:
-                $query->where([
-                    $this->aliasField('created >= "') . $reportStartDate . '"',
-                    $this->aliasField('created <= "') . $reportEndDate . '"'
-                ]);
+            default:    
+                //UserTypeSelected::ALL
                 break;
         } 
     }
@@ -122,15 +118,39 @@ class AuditsUserTable extends AppTable
 
         $newFields[0] = [
             'key' => 'created',
-            'field' => 'ModifiedOn',
+            'field' => 'modified_on',
             'type' => 'string',
             'label' => __('Modified On')
         ];
         $newFields[1] = [
             'key' => 'CreatedUser.First_Last_Name',
-            'field' => 'ModifiedBy',
+            'field' => 'modified_by',
             'type' => 'string',
-            'label' => __('Modified By'
+            'label' => __('Modified By')
+        ];
+        $newFields[2] = [
+            'key' => 'AuditUsers.operation',
+            'field' => 'operation',
+            'type' => 'string',
+            'label' => __('Activity')
+        ];
+        $newFields[3] = [
+            'key' => 'AuditUsers.field',
+            'field' => 'field',
+            'type' => 'string',
+            'label' => __('Field')
+        ];
+        $newFields[4] = [
+            'key' => 'AuditUsers.old_value',
+            'field' => 'old_value',
+            'type' => 'string',
+            'label' => __('Original Value')
+        ];
+        $newFields[5] = [
+            'key' => 'AuditUsers.new_value',
+            'field' => 'new_value',
+            'type' => 'string',
+            'label' => __('Modified Value')
         ];
         $newFields[6] = [
             'key' => 'Users.openemis_no',
@@ -140,53 +160,26 @@ class AuditsUserTable extends AppTable
         ];
         $newFields[7] = [
             'key' => 'Users.First_Last_Name',
-            'field' => 'UserFirstLastName',
+            'field' => 'user_first_last_name',
             'type' => 'string',
             'label' => __('Name')
         ];
         $newFields[8] = [
             'key' => 'Users.isStaff',
             'field' => 'is_staff',
-            'type' => 'string',
-            'label' => ''  
+            'type' => 'string'
         ];
         $newFields[9] = [
             'key' => 'Users.isStudent',
             'field' => 'is_student',
-            'type' => 'string',
-            'label' => ''  
+            'type' => 'string'
         ];
         $newFields[10] = [
             'key' => 'Users.isGuardian',
             'field' => 'is_guardian',
-            'type' => 'string',
-            'label' => ''  
+            'type' => 'string'
         ];
 
-        foreach ($fields as $currentIndex => $value) {
-            switch ($value['field']) {
-                case "operation":
-                    $newFields[2] = $value;
-                    $newFields[2]['label'] = __("Activity");
-                    break;
-                case "field":
-                    $newFields[3] = $value;
-                    $newFields[3]['label'] = __("Field");
-                    break;
-                case "old_value":
-                    $newFields[4] = $value;
-                    $newFields[4]['label'] = __("Original Value");
-                    break;
-                case "new_value":
-                    $newFields[5] = $value;
-                    $newFields[5]['label'] = __("Modified Value");
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        ksort($newFields);
         $fields->exchangeArray($newFields);
     }
 
