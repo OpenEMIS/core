@@ -24,6 +24,8 @@ class AuditLoginsTable extends AppTable
     {
         $this->table('security_users');
         parent::initialize($config);
+        $this->entityClass('User.User');
+
         $this->hasMany('Identities', ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Nationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds',    'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -90,6 +92,74 @@ class AuditLoginsTable extends AppTable
                 $this->aliasField('last_login >= "') . $reportStartDate . '"',
                 $this->aliasField('last_login <= "') . $reportEndDate . '"'
             ]);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $newFields = [];
+
+        $newFields[] = [
+            'key' => 'AuditLogins.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => __('Modified By')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.email',
+            'field' => 'email',
+            'type' => 'string',
+            'label' => __('Email')
+        ];
+        $newFields[] = [
+            'key' => 'MainIdentityTypes.name',
+            'field' => 'nationality_name',
+            'type' => 'string',
+            'label' => __('Nationality')
+        ];
+        $newFields[] = [
+            'key' => 'MainNationalities.name',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.external_reference',
+            'field' => 'external_reference',
+            'type' => 'string',
+            'label' => __('External Reference')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.status',
+            'field' => 'status',
+            'type' => 'string',
+            'label' => __('Status')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.last_login',
+            'field' => 'last_login',
+            'type' => 'datetime',
+            'label' => __('Last Login')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.preferred_language',
+            'field' => 'preferred_language',
+            'type' => 'string',
+            'label' => __('Preferred Language')
+        ];
+
+        $fields->exchangeArray($newFields);
     }
 
     public function onExcelGetStatus(Event $event, Entity $entity)
