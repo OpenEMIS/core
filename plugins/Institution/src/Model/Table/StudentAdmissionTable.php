@@ -115,6 +115,16 @@ class StudentAdmissionTable extends ControllerActionTable
                 'on' => function ($context) {  
                     return (!empty($context['data']['institution_class_id']));
                 }
+            ])
+            ->add('status_id', 'ruleCheckStatusIdValid', [
+                'rule' => ['checkStatusIdValid'],
+                'provider' => 'table',
+                'on' => function ($context) {  
+                    if (array_key_exists('is_imported', $context['data']) && $context['data']['is_imported']) {
+                        return true;
+                    }
+                    return false;
+                }
             ]);
 
         return $validator;
@@ -472,48 +482,60 @@ class StudentAdmissionTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        // auto approve admission and add student into the institution
         if ($entity->isNew()) {
-            $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
-            $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
-
-            // creator must be admin or have 'Student Admission -> Execute' permission
-            if ($superAdmin || $executePermission) {
-                $workflowEntity = $this->getWorkflow($this->registryAlias());
-
-                // get the first step in 'APPROVED' workflow statuses
-                $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-                $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
-                ksort($statuses);
-                $approvedStatusId = key($statuses);
-                $approvedStatusEntity = $this->Statuses->get($approvedStatusId);
-
-                if (!empty($approvedStatusEntity)) {
-                    $prevStepEntity = $this->Statuses->get($entity->status_id);
-
-                    // update status_id and assignee_id of admission record
-                    $entity->status_id = $approvedStatusEntity->id;
-                    $this->autoAssignAssignee($entity);
-
+            if (isset($entity->is_imported) && !empty($entity->is_imported)) {
+                // Import logic
+                $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
+                $triggeringStep = $WorkflowActions->getEventTriggeringStep('Institution.StudentAdmission', 'Workflow.onApprove');
+                
+                if(!empty($triggeringStep) && $entity->status_id == $triggeringStep) {  
                     if ($this->save($entity)) {
-                        // add student into institution_students
                         $this->addInstitutionStudent($entity);
+                    }
+                }
+            } else {
+                // auto approve admission and add student into the institution (FOR ANGULARJS)
+                $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
+                $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
 
-                        // add workflow transition
-                        $transition = [
-                            'comment' => __('On Auto Approve Student Admission'),
-                            'prev_workflow_step_name' => $prevStepEntity->name,
-                            'workflow_step_name' => $approvedStatusEntity->name,
-                            'workflow_action_name' => 'Administration - Approve Record',
-                            'workflow_model_id' => $workflowEntity->workflow_model_id,
-                            'model_reference' => $entity->id,
-                            'created_user_id' => 1,
-                            'created' => new Time('NOW')
-                        ];
+                // creator must be admin or have 'Student Admission -> Execute' permission
+                if ($superAdmin || $executePermission) {
+                    $workflowEntity = $this->getWorkflow($this->registryAlias());
 
-                        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
-                        $transitionEntity = $WorkflowTransitions->newEntity($transition);
-                        $WorkflowTransitions->save($transitionEntity);
+                    // get the first step in 'APPROVED' workflow statuses
+                    $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                    $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
+                    ksort($statuses);
+                    $approvedStatusId = key($statuses);
+                    $approvedStatusEntity = $this->Statuses->get($approvedStatusId);
+
+                    if (!empty($approvedStatusEntity)) {
+                        $prevStepEntity = $this->Statuses->get($entity->status_id);
+
+                        // update status_id and assignee_id of admission record
+                        $entity->status_id = $approvedStatusEntity->id;
+                        $this->autoAssignAssignee($entity);
+
+                        if ($this->save($entity)) {
+                            // add student into institution_students
+                            $this->addInstitutionStudent($entity);
+
+                            // add workflow transition
+                            $transition = [
+                                'comment' => __('On Auto Approve Student Admission'),
+                                'prev_workflow_step_name' => $prevStepEntity->name,
+                                'workflow_step_name' => $approvedStatusEntity->name,
+                                'workflow_action_name' => 'Administration - Approve Record',
+                                'workflow_model_id' => $workflowEntity->workflow_model_id,
+                                'model_reference' => $entity->id,
+                                'created_user_id' => 1,
+                                'created' => new Time('NOW')
+                            ];
+
+                            $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+                            $transitionEntity = $WorkflowTransitions->newEntity($transition);
+                            $WorkflowTransitions->save($transitionEntity);
+                        }
                     }
                 }
             }
