@@ -47,7 +47,7 @@ class AuditUsersTable extends AppTable
 
         $query
             ->select([
-                'created' => $this->aliasField('created'),
+                'modified_on' => $this->aliasField('created'),
                 'field' => $this->aliasField('field'),
                 'old_value' => $this->aliasField('old_value'),
                 'new_value' => $this->aliasField('new_value'),
@@ -55,19 +55,6 @@ class AuditUsersTable extends AppTable
                 'is_staff' => 'Users.is_staff',
                 'is_guardian' => 'Users.is_guardian',
                 'openemis_no' => 'Users.openemis_no',
-                'modified_by' => $query->func()->concat([
-                    'CreatedUser.first_name' => 'literal',
-                    ' ',
-                    'CreatedUser.last_name' => 'literal'
-                ]),
-                'modified_on' => $query->func()->concat([
-                    $this->aliasField('created') => 'literal'
-                ]),
-                'user_first_last_name' => $query->func()->concat([
-                    'Users.first_name' => 'literal',
-                    ' ',
-                    'Users.last_name' => 'literal'
-                ])
             ])
             ->contain([
                 'CreatedUser' => [
@@ -214,5 +201,15 @@ class AuditUsersTable extends AppTable
         }
 
         return '';
+    }
+
+    public function onExcelGetModifiedBy(Event $event, Entity $entity)
+    {
+        return $entity->user->name;
+    }
+
+    public function onExcelGetUserFirstLastName(Event $event, Entity $entity)
+    {
+        return $entity->user->name;
     }
 }
