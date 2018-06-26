@@ -14,12 +14,17 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
 
-class AuditTable extends AppTable
+use App\Model\Traits\OptionsTrait;
+
+class AuditLoginsTable extends AppTable
 {
+    use OptionsTrait;
+
     public function initialize(array $config)
     {
         $this->table('security_users');
         parent::initialize($config);
+        $this->entityClass('User.User');
 
         $this->hasMany('Identities', ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Nationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -48,63 +53,11 @@ class AuditTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-
-        $validator
-            ->add('last_login_start_date', [
-                'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'last_login_end_date', true],
-                    'on' => function ($context) {
-                        if (array_key_exists('feature', $context['data'])) {
-                            $feature = $context['data']['feature'];
-                            return in_array($feature, ['Report.Login']);
-                        }
-
-                        return true;
-                    }
-                ],
-            ]);
-
-        return $validator;
-    }
-
-    public function beforeAction(Event $event)
-    {
-        $this->fields = [];
-        $this->ControllerAction->field('feature', ['select' => false]);
-        $this->ControllerAction->field('format');
-
-        $this->ControllerAction->field('last_login_start_date');
-        $this->ControllerAction->field('last_login_end_date');
-    }
-
-    public function onExcelGetStatus(Event $event, Entity $entity)
-    {
-        if ($entity->status == 1) {
-            return __('Active');
-        } else {
-            return __('Inactive');
-        }
-    }
-
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
-    {
-        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
-        return $attr;
-    }
-
-    public function onGetReportName(Event $event, ArrayObject $data)
-    {
-        return __('Overview');
-    }
-
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $reportStartDate = (new DateTime($requestData->last_login_start_date))->format('Y-m-d');
-        $reportEndDate = (new DateTime($requestData->last_login_end_date))->format('Y-m-d');
+        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d');
+        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d');
 
         $query
             ->select([
@@ -139,42 +92,84 @@ class AuditTable extends AppTable
                 $this->aliasField('last_login >= "') . $reportStartDate . '"',
                 $this->aliasField('last_login <= "') . $reportEndDate . '"'
             ]);
-
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        foreach ($fields as $key => $field) {
-            if ($field['field'] == 'identity_type_id') {
-                $fields[$key] = [
-                    'key' => 'MainIdentityTypes.name',
-                    'field' => 'identity_type',
-                    'type' => 'string',
-                    'label' => __('Main Identity Type')
-                ];
-            }
+        $newFields = [];
 
-            if ($field['field'] == 'nationality_id') {
-                $fields[$key] = [
-                    'key' => 'MainNationalities.name',
-                    'field' => 'nationality_name',
-                    'type' => 'string',
-                    'label' => __('Main Nationality')
-                ];
-            }
+        $newFields[] = [
+            'key' => 'AuditLogins.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => __('Modified By')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.email',
+            'field' => 'email',
+            'type' => 'string',
+            'label' => __('Email')
+        ];
+        $newFields[] = [
+            'key' => 'MainIdentityTypes.name',
+            'field' => 'nationality_name',
+            'type' => 'string',
+            'label' => __('Nationality')
+        ];
+        $newFields[] = [
+            'key' => 'MainNationalities.name',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.external_reference',
+            'field' => 'external_reference',
+            'type' => 'string',
+            'label' => __('External Reference')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.status',
+            'field' => 'status',
+            'type' => 'string',
+            'label' => __('Status')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.last_login',
+            'field' => 'last_login',
+            'type' => 'datetime',
+            'label' => __('Last Login')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.preferred_language',
+            'field' => 'preferred_language',
+            'type' => 'string',
+            'label' => __('Preferred Language')
+        ];
+
+        $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetStatus(Event $event, Entity $entity)
+    {
+        $options = $this->getSelectOptions('general.active');
+
+        if (array_key_exists($entity->status, $options)) {
+            return $options[$entity->status];
         }
-    }
 
-    public function onUpdateFieldLastLoginStartDate(Event $event, array $attr, $action, Request $request)
-    {
-        $attr['type'] = 'date';
-        return $attr;
-    }
-
-    public function onUpdateFieldLastLoginEndDate(Event $event, array $attr, $action, Request $request)
-    {
-        $attr['type'] = 'date';
-        $attr['value'] = Time::now();
-        return $attr;
+        return '';
     }
 }
