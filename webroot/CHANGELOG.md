@@ -1,5 +1,9 @@
 ### [3.29.0] - 2018-06-22
 - Data patch on Positions feature
+- Develop Student Attendance Summary Report
+- Develop Workflow Report
+- Develop OpenEMIS Committees feature
+- Develop ability to add multiple attachments to Students/Staff behaviour feature
 
 ### [3.28.1] - 2018-06-20
 - Rename breadcrumbs and headers to the original name under Report module 
