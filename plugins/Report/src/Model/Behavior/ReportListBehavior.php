@@ -15,7 +15,6 @@ use Cake\Network\Session;
 use Cake\I18n\Time;
 use Cake\FileSystem\File;
 use DateTime;
-use Date;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
