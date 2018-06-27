@@ -55,6 +55,7 @@ class AuditUsersTable extends AppTable
                 'is_staff' => 'Users.is_staff',
                 'is_guardian' => 'Users.is_guardian',
                 'openemis_no' => 'Users.openemis_no',
+                'activity' => $this->aliasField('operation')
             ])
             ->contain([
                 'CreatedUser' => [
@@ -117,7 +118,7 @@ class AuditUsersTable extends AppTable
         ];
         $newFields[] = [
             'key' => 'AuditUsers.operation',
-            'field' => 'operation',
+            'field' => 'activity',
             'type' => 'string',
             'label' => __('Activity')
         ];
@@ -205,7 +206,7 @@ class AuditUsersTable extends AppTable
 
     public function onExcelGetModifiedBy(Event $event, Entity $entity)
     {
-        return $entity->user->name;
+        return $entity->created_user->name;
     }
 
     public function onExcelGetUserFirstLastName(Event $event, Entity $entity)
