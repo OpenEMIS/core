@@ -21,7 +21,6 @@ return [
         'DebugKit' => $baseDir . '/vendor/cakephp/debug_kit/',
         'Directory' => $baseDir . '/plugins/Directory/',
         'Education' => $baseDir . '/plugins/Education/',
-        'Equipment' => $baseDir . '/plugins/Equipment/',
         'Error' => $baseDir . '/plugins/Error/',
         'Examination' => $baseDir . '/plugins/Examination/',
         'FieldOption' => $baseDir . '/plugins/FieldOption/',
