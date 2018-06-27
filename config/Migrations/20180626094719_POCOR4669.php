@@ -78,6 +78,16 @@ class POCOR4669 extends AbstractMigration
                 'en' => 'Sorry, there was an error. Please retry your request.',
                 'created_user_id' => 1,
                 'created' => $now
+            ],
+            [
+                'en' => 'Forgot username?',
+                'created_user_id' => 1,
+                'created' => $now
+            ],
+            [
+                'en' => 'Forgot password?',
+                'created_user_id' => 1,
+                'created' => $now
             ]
         ];
 
