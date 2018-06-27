@@ -92,6 +92,14 @@ class AuditLoginsTable extends AppTable
                 $this->aliasField('last_login >= "') . $reportStartDate . '"',
                 $this->aliasField('last_login <= "') . $reportEndDate . '"'
             ]);
+
+        switch ($requestData->sort_by) {
+            case "LastLoginDESC":
+                $query->order(['last_login' =>'DESC']);
+                break;
+            default:    // By default sort by ascending order
+                break;
+        }
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -171,10 +179,5 @@ class AuditLoginsTable extends AppTable
         }
 
         return '';
-    }
-
-    public function onExcelRenderDatetime(Event $event, Entity $entity)
-    {
-        return $entity->last_login->format('Y-m-d');
     }
 }
