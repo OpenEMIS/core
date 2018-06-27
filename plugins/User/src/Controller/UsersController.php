@@ -143,7 +143,12 @@ class UsersController extends AppController
                 ->find()
                 ->select([
                     $this->Users->aliasField('id'),
-                    $this->Users->aliasField('email')
+                    $this->Users->aliasField('email'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name')
                 ])
                 ->where([
                     'OR' => [
@@ -173,33 +178,48 @@ class UsersController extends AppController
 
                 // user still have active reset request - redirect to login page with info message
                 if ($userRequestCount > 0) {
-                    $message = __('An Email has already sent to reset your password. Please check your mailbox.');
-                    $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                    $message = __('Please check your email for further instructions.');
+                    $this->Alert->info($message, ['type' => 'string', 'reset' => true]);
                     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                 }
                 
                 try {
-                    $email = new Email('openemis');
                     $checksum = Security::hash($userId . $expiryFormat, 'sha256');
+                    $storedChecksum = Security::hash($checksum, 'sha256');
+
                     $passwordRequestData = [
                         'user_id' => $userId,
                         'expiry_date' => $expiry,
-                        'id' => $checksum
+                        'id' => $storedChecksum
                     ];
 
                     $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
                     $SecurityUserPasswordRequests->save($saveEntity);
                     
+                    $userEmail = $userEntity->email;
+                    $name = $userEntity->name;
                     $url = Router::url([
                         'plugin' => 'User',
                         'controller' => 'Users',
                         'action' => 'resetPassword',
                         'token' => $checksum
                     ], true);
+                    /*
+                    Subject: OpenEMIS - Password Reset Request
+                    Message Body:
+                        Dear <name>,
 
-                    $userEmail = $userEntity->email;
-                    $emailSubject = __('OpenEMIS - Password reset request');
-                    $emailMessage = "Dear User\n\nPlease click on this link to reset your password. If this is not requested by you, kindly please ignore the email.\n\n" . $url . "\n\nOpenEMIS";
+                        We received a password reset request for your account.
+                        If you didn’t request a password reset, kindly ignore this email and your password will not be changed.
+
+                        To reset your password, please click the link below:
+                        <url link>
+
+                        Thank you.
+                    */
+                    $email = new Email('openemis');
+                    $emailSubject = __('OpenEMIS - Password Reset Request');
+                    $emailMessage = "Dear " . $name . ",\n\nWe received a password reset request for your account.\nIf you didn’t request a password reset, kindly ignore this email and your password will not be changed.\n\nTo reset your password, please click the link below:\n" . $url . "\n\nThank you.";
                     $email
                         ->to($userEmail)
                         ->subject($emailSubject)
@@ -212,7 +232,7 @@ class UsersController extends AppController
                 }
             }
 
-            $message = __('An email will be send shortly. Please check your mailbox.');
+            $message = __('Please check your email for further instructions.');
             $this->Alert->info($message, ['type' => 'string', 'reset' => true]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
@@ -232,7 +252,12 @@ class UsersController extends AppController
                     ->select([
                         $this->Users->aliasField('id'),
                         $this->Users->aliasField('email'),
-                        $this->Users->aliasField('username')
+                        $this->Users->aliasField('username'),
+                        $this->Users->aliasField('first_name'),
+                        $this->Users->aliasField('middle_name'),
+                        $this->Users->aliasField('third_name'),
+                        $this->Users->aliasField('last_name'),
+                        $this->Users->aliasField('preferred_name')
                     ])
                     ->where([
                         $this->Users->aliasField('email') => $userEmail
@@ -242,11 +267,23 @@ class UsersController extends AppController
                 if (!is_null($userEntity) && !is_null($userEntity->email)) {
                     $userEmail = $userEntity->email;
                     $username = $userEntity->username;
+                    $name = $userEntity->name;
 
                     try {
+                        /*
+                        Subject: OpenEMIS - Username Recovery Request
+                        Message Body: 
+                            Dear <name>,
+
+                            We received a username recovery request for your account.
+                            Your username is: <username>
+
+                            Thank you.
+                         */
                         $email = new Email('openemis');
-                        $emailSubject = __('OpenEMIS - Username recovery');
-                        $emailMessage = "Dear User\n\nYour username is\n\n" . $username . "\n\nOpenEMIS";
+                        $emailSubject = __('OpenEMIS - Username Recovery Request');
+                        
+                        $emailMessage = "Dear " . $name . ",\n\nWe received a username recovery request for your account.\nYour username is: " . $username . "\n\nThank you.";
                         $email
                             ->to($userEmail)
                             ->subject($emailSubject)
@@ -259,11 +296,11 @@ class UsersController extends AppController
                     }
                 }
 
-                $message = __('An email will be send shortly. Please check your mailbox.');
+                $message = __('Please check your email for more information.');
                 $this->Alert->info($message, ['type' => 'string', 'reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             } else {
-                $message = __('Please enter a valid Email');
+                $message = __('Please enter a valid email address.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'forgotUsername', 'email' => $userEmail]);
             }
@@ -276,10 +313,11 @@ class UsersController extends AppController
         if ($this->request->is('post')) {
             $token = $this->request->query('token');
             if (!is_null($token)) {
+                $checksum = Security::hash($token, 'sha256');
                 $SecurityUserPasswordRequests = TableRegistry::get('User.SecurityUserPasswordRequests');
                 $passwordRequestEntity = $SecurityUserPasswordRequests
                     ->find()
-                    ->where([$SecurityUserPasswordRequests->aliasField('id') => $token])
+                    ->where([$SecurityUserPasswordRequests->aliasField('id') => $checksum])
                     ->first();
 
                 if (!is_null($passwordRequestEntity)) {
@@ -297,7 +335,7 @@ class UsersController extends AppController
                     if (empty($errors)) {
                         if ($Passwords->save($userEntity)) {
                             $SecurityUserPasswordRequests->delete($passwordRequestEntity);
-                            $message = __('Password reset successfully');
+                            $message = __('Your password has been reset successfully.');
                             $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
                             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                         } else {
@@ -316,12 +354,12 @@ class UsersController extends AppController
                         return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'resetPassword', 'token' => $token]);
                     }
                 } else {
-                    $message = __('Invalid request');
+                    $message = __('Sorry, there was an error. Please retry your request.');
                     $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                 }
             } else {
-                $message = __('Invalid request');
+                $message = __('Sorry, there was an error. Please retry your request.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }
@@ -333,10 +371,11 @@ class UsersController extends AppController
         $this->viewBuilder()->layout(false);
         $token = $this->request->query('token');
         if (!is_null($token)) {
+            $checksum = Security::hash($token, 'sha256');
             $SecurityUserPasswordRequests = TableRegistry::get('User.SecurityUserPasswordRequests');
             $passwordRequestEntity = $SecurityUserPasswordRequests
                 ->find()
-                ->where([$SecurityUserPasswordRequests->aliasField('id') => $token])
+                ->where([$SecurityUserPasswordRequests->aliasField('id') => $checksum])
                 ->first();
 
             if (!is_null($passwordRequestEntity)) {
@@ -347,17 +386,17 @@ class UsersController extends AppController
                     $this->set('token', $token);
                 } else {
                     $SecurityUserPasswordRequests->delete($passwordRequestEntity);
-                    $message = __('Token expired');
+                    $message = __('Sorry, there was an error. Please retry your request.');
                     $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                 }
             } else {
-                $message = __('Invalid request');
+                $message = __('Sorry, there was an error. Please retry your request.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }
         } else {
-            $message = __('Invalid request');
+            $message = __('Sorry, there was an error. Please retry your request.');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }

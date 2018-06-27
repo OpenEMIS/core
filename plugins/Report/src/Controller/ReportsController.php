@@ -112,9 +112,9 @@ class ReportsController extends AppController
             ];
         } elseif ($module == 'Audits') {
             $options = [
-                'Report.AuditsLogin' => __('Logins'),
-                'Report.AuditsInstitution' => __('Institutions'),
-                'Report.AuditsUser' => __('Users')
+                'Report.AuditLogins' => __('Logins'),
+                'Report.AuditInstitutions' => __('Institutions'),
+                'Report.AuditUsers' => __('Users')
             ];
         } elseif ($module == 'Examinations') {
             $options = [
