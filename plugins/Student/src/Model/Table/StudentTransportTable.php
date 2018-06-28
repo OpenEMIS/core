@@ -9,11 +9,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentTransportTable extends ControllerActionTable
 {
-    // Default Status
-
     public function initialize(array $config)
     {
-         $this->table('institution_trip_passengers');
+        $this->table('institution_trip_passengers');
         parent::initialize($config);
 
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -32,13 +30,13 @@ class StudentTransportTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'integer']);
         $this->field('institution_trip_id', ['type' => 'integer']);        
         $this->field('trip_type_id', ['type' => 'integer']);    
-        $this->field('Provider_id', ['type' => 'integer']);  
-        $this->field('Bus_id', ['type' => 'integer']);
+        $this->field('provider_id', ['type' => 'integer']);  
+        $this->field('bus_id', ['type' => 'integer']);
 
         $this->setupTabElements();                              
     }
 
-    public function viewBeforeAction(Event $event)
+    public function viewAfterAction(Event $event)
     {
         $this->field('academic_period_id', ['type' => 'integer']);
         $this->field('institution_trip_id', ['type' => 'integer']);        
@@ -72,11 +70,10 @@ class StudentTransportTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-
         $query
             ->contain(['InstitutionTrips.TripTypes','InstitutionTrips.InstitutionBuses','InstitutionTrips.InstitutionTransportProviders']);
     }
-        public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
 
         $query
