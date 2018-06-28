@@ -92,8 +92,8 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 			<?= $this->Form->end() ?>
 
 			<div class="links-wrapper">
-				<a target="_self" href="./ForgotUsername">Forgot username?</a>
-				<a target="_self" href="./ForgotPassword">Forgot password?</a>
+				<a target="_self" href="./ForgotUsername"><?php echo __('Forgot username?') ?></a>
+				<a target="_self" href="./ForgotPassword"><?php echo __('Forgot password?') ?></a>
 			</div>
 
 
