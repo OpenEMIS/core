@@ -97,7 +97,10 @@ class AuditLoginsTable extends AppTable
             case "LastLoginDESC":
                 $query->order(['last_login' =>'DESC']);
                 break;
-            default:    // By default sort by ascending order
+            case "LastLoginASC":
+                $query->order(['last_login' =>'ASC']);
+                break;
+            default:    // By default sort by nothing (Default Sort)
                 break;
         }
     }

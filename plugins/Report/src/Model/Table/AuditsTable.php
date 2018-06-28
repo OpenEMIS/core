@@ -104,6 +104,7 @@ class AuditsTable extends AppTable
             ])) {
 
                 $userSortByOptions = [
+                    "DefaultSort" => __("Default Order"),
                     "LastLoginDESC" => __('Last Login - Descending Order'),
                     "LastLoginASC" => __('Last Login - Ascending Order')
                 ];
