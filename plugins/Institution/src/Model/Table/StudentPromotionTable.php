@@ -565,6 +565,7 @@ class StudentPromotionTable extends AppTable
                 $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId);
 
                 // Only display the options that are available in the institution and also linked to the current programme
+                
                 $gradeOptions = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
 
                 // if no grade option or the next grade is not available in the institution
@@ -582,7 +583,6 @@ class StudentPromotionTable extends AppTable
                 }
 
                 $attr['type'] = 'select';
-                // $attr['select'] = true;
                 $attr['options'] = $options;
                 $attr['onChangeReload'] = 'ChangeToNextGrade';
 
@@ -635,7 +635,6 @@ class StudentPromotionTable extends AppTable
             $toNextGrade = $request->query('to_next_grade');
             $selectedStudentStatusId = $request->query('student_status');
             $selectedNextGrade = null;
-
             if (!is_null($selectedGrade)) {
                 if ($selectedStudentStatusId == $studentStatuses['REPEATED']) {
                     $selectedNextGrade = $selectedGrade;
