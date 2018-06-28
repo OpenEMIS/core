@@ -957,6 +957,12 @@ class StudentPromotionTable extends AppTable
         if ($this->Session->check($sessionKey)) {
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
+            $studentPromotionId = $currentData['StudentPromotion']['student_status_id'];
+            $disable = $this->isNextClassroomEmpty($currentData);
+
+            if ($disable) {
+                $this->Alert->error('StudentPromotion.noClassSelected', ['reset' => true]);
+            }
         } else {
             $this->Alert->warning('general.notExists');
             return $this->controller->redirect($this->ControllerAction->url('add'));
@@ -1007,6 +1013,14 @@ class StudentPromotionTable extends AppTable
                 break;
 
             case 'reconfirm':
+                $studentStatuses = $this->statuses;
+                $sessionKey = $this->registryAlias() . '.confirm';
+                if ($this->Session->check($sessionKey)) {
+                    $currentEntity = $this->Session->read($sessionKey);
+                    $currentData = $this->Session->read($sessionKey.'Data');
+                    $disable = $this->isNextClassroomEmpty($currentData);
+                }
+
                 $saveAsDraftButton = $buttons[0];
                 $confirmButton = $buttons[0];
                 $cancelButton = $buttons[1];
@@ -1020,6 +1034,11 @@ class StudentPromotionTable extends AppTable
                 $cancelUrl = array_diff_key($cancelUrl, $this->request->query);
                 $buttons[2] = $cancelButton;
                 $buttons[2]['url'] = $cancelUrl;
+
+                if ($disable) {
+                    $buttons[0]['attr']['disabled'] = 'disabled';
+                    $buttons[1]['attr']['disabled'] = 'disabled';
+                }
                 break;
 
             default:
@@ -1055,5 +1074,19 @@ class StudentPromotionTable extends AppTable
         ->toArray();
 
         return $listOfInstitutionGrades;
+    }
+
+    public function isNextClassroomEmpty($currentData)
+    {
+        $studentStatuses = $this->statuses;
+        $studentPromotionId = $currentData['StudentPromotion']['student_status_id'];
+        $disable = false;
+        foreach ($currentData['StudentPromotion']['students'] as $key => $value) {
+            if ($value['selected'] == 1 && $value['next_institution_class_id'] == 0 && $studentPromotionId != $studentStatuses['GRADUATED']) {
+                $disable = true;
+                break;
+            }
+        }
+        return $disable;
     }
 }
