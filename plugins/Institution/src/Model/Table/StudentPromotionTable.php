@@ -662,8 +662,8 @@ class StudentPromotionTable extends AppTable
                     ->order(['Users.first_name'])
                     ->autoFields(true);
                 if ($students->count() > 0) {
-                    if ($selectedStudentStatusId == $studentStatuses['GRADUATED']) {
-                    } else {
+
+                    if ((!is_null($selectedStudentStatusId)) && ($selectedStudentStatusId != $studentStatuses['GRADUATED'])){
                         $show = true;
                         $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
                         $availableInstitutionClasses = $institutionClassTable
@@ -676,8 +676,11 @@ class StudentPromotionTable extends AppTable
                                 $institutionClassTable->aliasField('academic_period_id') => $selectedNextPeriod,
                             ])
                             ->toArray();
-
+                        if (empty($availableInstitutionClasses)) {
+                            $availableInstitutionClasses = ['' => $this->getMessage('general.select.noOptions')];
+                        } else {
                             $availableInstitutionClasses = [0 => '-- Select available classes --'] + $availableInstitutionClasses;
+                        }
                     }
 
                     $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
@@ -740,10 +743,6 @@ class StudentPromotionTable extends AppTable
             if (empty($students)) {
                 $this->Alert->warning($this->aliasField('noData'));
             }
-        }
-
-        if (empty($availableInstitutionClasses)) {
-            $availableInstitutionClasses = [0 => '-- No available classes --'];
         }
 
         $attr['type'] = 'element';
@@ -910,7 +909,9 @@ class StudentPromotionTable extends AppTable
                                     $this->aliasField('student_status_id') => $studentStatuses['CURRENT']
                                 ])->first();
                             $existingStudentEntity->student_status_id = $statusToUpdate;
-                            $existingStudentEntity->next_institution_class_id = $entity->next_institution_class_id;
+                            if(isset($entity->next_institution_class_id)){
+                                $existingStudentEntity->next_institution_class_id = $entity->next_institution_class_id;
+                            }
 
                             if ($this->save($existingStudentEntity)) {
                                 if ($nextEducationGradeId != 0 && $nextAcademicPeriodId != 0) {
@@ -962,14 +963,6 @@ class StudentPromotionTable extends AppTable
         if ($this->Session->check($sessionKey)) {
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
-            // $displayNextClassCol = $this->isAllNextClassroomSelected($currentData);
-            // pr($currentData);die;
-            // $studentPromotionId = $currentData['StudentPromotion']['student_status_id'];
-            // $disable = $this->isNextClassroomEmpty($currentData);
-
-            // if ($disable) {
-            //     $this->Alert->error('StudentPromotion.noClassSelected', ['reset' => true]);
-            // }
         } else {
             $this->Alert->warning('general.notExists');
             return $this->controller->redirect($this->ControllerAction->url('add'));
@@ -996,9 +989,7 @@ class StudentPromotionTable extends AppTable
         $this->ControllerAction->setFieldOrder(['from_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'class', 'student_status', 'next_grade',  'students']);
 
         if ($currentEntity && !empty($currentEntity)) {
-            // die;
             if ($this->request->is(['post', 'put'])) {
-                // pr('sdasd');die;
                 if ($currentData instanceOf ArrayObject) {
                     $currentData = $currentData->getArrayCopy();
                 }
@@ -1022,14 +1013,6 @@ class StudentPromotionTable extends AppTable
                 break;
 
             case 'reconfirm':
-                // $studentStatuses = $this->statuses;
-                // $sessionKey = $this->registryAlias() . '.confirm';
-                // if ($this->Session->check($sessionKey)) {
-                //     $currentEntity = $this->Session->read($sessionKey);
-                //     $currentData = $this->Session->read($sessionKey.'Data');
-                //     $disable = $this->isNextClassroomEmpty($currentData);
-                // }
-
                 $saveAsDraftButton = $buttons[0];
                 $confirmButton = $buttons[0];
                 $cancelButton = $buttons[1];
@@ -1044,10 +1027,17 @@ class StudentPromotionTable extends AppTable
                 $buttons[2] = $cancelButton;
                 $buttons[2]['url'] = $cancelUrl;
 
-                // if ($disable) {
-                //     $buttons[0]['attr']['disabled'] = 'disabled';
-                //     $buttons[1]['attr']['disabled'] = 'disabled';
-                // }
+                
+                $sessionKey = $this->registryAlias() . '.confirm';
+                if ($this->Session->check($sessionKey)) {
+                    $currentData = $this->Session->read($sessionKey);
+                    $studentStatusId = $currentData['student_status_id'];
+                    if ($studentStatusId == $this->statuses['GRADUATED']) {
+                        unset($buttons[0]);
+                    } elseif (!$this->isAllNextClassroomSelected($currentData)) {
+                        unset($buttons[0]);
+                    }
+                }
                 break;
 
             default:
