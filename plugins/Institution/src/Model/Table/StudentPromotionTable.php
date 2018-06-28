@@ -605,13 +605,19 @@ class StudentPromotionTable extends AppTable
     public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request)
     {
         $institutionId = $this->institutionId;
-
+        $studentStatuses = $this->statuses;
+        $show = false;
         $currentData = null;
+        $selectedStudentStatusId = $request->query('student_status');
         switch ($action) {
             case 'reconfirm':
                 $sessionKey = $this->registryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
+                    if ($selectedStudentStatusId != $studentStatuses['GRADUATED']) {
+                        $displayNextClassCol = $this->isAllNextClassroomSelected($currentData);
+                        $attr['displayNextClassCol'] = $displayNextClassCol;
+                    }
                 }
                 $attr['selectedStudents'] = ($currentData->has('students'))? $currentData->students: [];
                 $selectedPeriod = $currentData['from_academic_period_id'];
@@ -631,7 +637,6 @@ class StudentPromotionTable extends AppTable
             $selectedNextGrade = null;
 
             if (!is_null($selectedGrade)) {
-                $studentStatuses = $this->statuses;
                 if ($selectedStudentStatusId == $studentStatuses['REPEATED']) {
                     $selectedNextGrade = $selectedGrade;
                 } else {
@@ -658,8 +663,8 @@ class StudentPromotionTable extends AppTable
                     ->autoFields(true);
                 if ($students->count() > 0) {
                     if ($selectedStudentStatusId == $studentStatuses['GRADUATED']) {
-                        $availableInstitutionClasses = [0 => '-- Not Applicable --'];
                     } else {
+                        $show = true;
                         $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
                         $availableInstitutionClasses = $institutionClassTable
                             ->find('list')
@@ -746,7 +751,7 @@ class StudentPromotionTable extends AppTable
         $attr['data'] = $students;
         $attr['classOptions'] = $this->institutionClasses;
         $attr['availableClassOptions'] = $availableInstitutionClasses;
-        
+        $attr['displayNextClassColByStatus'] = $show;
         return $attr;
     }
 
@@ -957,12 +962,14 @@ class StudentPromotionTable extends AppTable
         if ($this->Session->check($sessionKey)) {
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
-            $studentPromotionId = $currentData['StudentPromotion']['student_status_id'];
-            $disable = $this->isNextClassroomEmpty($currentData);
+            // $displayNextClassCol = $this->isAllNextClassroomSelected($currentData);
+            // pr($currentData);die;
+            // $studentPromotionId = $currentData['StudentPromotion']['student_status_id'];
+            // $disable = $this->isNextClassroomEmpty($currentData);
 
-            if ($disable) {
-                $this->Alert->error('StudentPromotion.noClassSelected', ['reset' => true]);
-            }
+            // if ($disable) {
+            //     $this->Alert->error('StudentPromotion.noClassSelected', ['reset' => true]);
+            // }
         } else {
             $this->Alert->warning('general.notExists');
             return $this->controller->redirect($this->ControllerAction->url('add'));
@@ -989,7 +996,9 @@ class StudentPromotionTable extends AppTable
         $this->ControllerAction->setFieldOrder(['from_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'class', 'student_status', 'next_grade',  'students']);
 
         if ($currentEntity && !empty($currentEntity)) {
+            // die;
             if ($this->request->is(['post', 'put'])) {
+                // pr('sdasd');die;
                 if ($currentData instanceOf ArrayObject) {
                     $currentData = $currentData->getArrayCopy();
                 }
@@ -1013,13 +1022,13 @@ class StudentPromotionTable extends AppTable
                 break;
 
             case 'reconfirm':
-                $studentStatuses = $this->statuses;
-                $sessionKey = $this->registryAlias() . '.confirm';
-                if ($this->Session->check($sessionKey)) {
-                    $currentEntity = $this->Session->read($sessionKey);
-                    $currentData = $this->Session->read($sessionKey.'Data');
-                    $disable = $this->isNextClassroomEmpty($currentData);
-                }
+                // $studentStatuses = $this->statuses;
+                // $sessionKey = $this->registryAlias() . '.confirm';
+                // if ($this->Session->check($sessionKey)) {
+                //     $currentEntity = $this->Session->read($sessionKey);
+                //     $currentData = $this->Session->read($sessionKey.'Data');
+                //     $disable = $this->isNextClassroomEmpty($currentData);
+                // }
 
                 $saveAsDraftButton = $buttons[0];
                 $confirmButton = $buttons[0];
@@ -1035,10 +1044,10 @@ class StudentPromotionTable extends AppTable
                 $buttons[2] = $cancelButton;
                 $buttons[2]['url'] = $cancelUrl;
 
-                if ($disable) {
-                    $buttons[0]['attr']['disabled'] = 'disabled';
-                    $buttons[1]['attr']['disabled'] = 'disabled';
-                }
+                // if ($disable) {
+                //     $buttons[0]['attr']['disabled'] = 'disabled';
+                //     $buttons[1]['attr']['disabled'] = 'disabled';
+                // }
                 break;
 
             default:
@@ -1076,17 +1085,26 @@ class StudentPromotionTable extends AppTable
         return $listOfInstitutionGrades;
     }
 
-    public function isNextClassroomEmpty($currentData)
+    public function isAllNextClassroomSelected($currentData)
     {
-        $studentStatuses = $this->statuses;
-        $studentPromotionId = $currentData['StudentPromotion']['student_status_id'];
-        $disable = false;
-        foreach ($currentData['StudentPromotion']['students'] as $key => $value) {
-            if ($value['selected'] == 1 && $value['next_institution_class_id'] == 0 && $studentPromotionId != $studentStatuses['GRADUATED']) {
-                $disable = true;
-                break;
+        $data = $currentData['students'];
+        $selectedStudentCount = 0;
+        $nextClassNotSelectedCount = 0;
+        $show = true;
+
+        foreach ($data as $key => $value) {
+            if ($value['selected'] == 1) {
+                $selectedStudentCount++;
+                if ($value['next_institution_class_id'] == 0) {
+                    $nextClassNotSelectedCount++;
+                }
             }
         }
-        return $disable;
+        //if all the selected students does not have a next institution class selected then hide next class column
+        if ($selectedStudentCount == $nextClassNotSelectedCount) {
+            $show = false;
+        }
+
+        return $show;
     }
 }
