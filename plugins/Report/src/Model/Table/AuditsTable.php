@@ -57,6 +57,7 @@ class AuditsTable extends AppTable
         $this->ControllerAction->field('user_type', ['type' => 'hidden']);
         $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
         $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('sort_by', ['type' => 'hidden']);
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -90,6 +91,28 @@ class AuditsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
             }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldSortBy(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, [
+                'Report.AuditLogins'
+            ])) {
+
+                $userSortByOptions = [
+                    "LastLoginDESC" => __('Last Login - Descending Order'),
+                    "LastLoginASC" => __('Last Login - Ascending Order')
+                ];
+
+                $attr['options'] = $userSortByOptions;
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+            }
+
             return $attr;
         }
     }
