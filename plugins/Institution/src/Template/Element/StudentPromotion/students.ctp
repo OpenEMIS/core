@@ -8,15 +8,16 @@
 				<table class="table table-checkable">
 					<thead>
 						<tr>
-							<?php $show = false; ?>
-							<?php 
-							if(isset($attr['displayNextClassCol'])){
-								if($attr['displayNextClassCol']){
-									$show = $attr['displayNextClassCol'];
-								}
-							}else{
-								if ($attr['displayNextClassColByStatus']) { $show = $attr['displayNextClassColByStatus']; }
-							} ?>
+							<?php
+								$show = false; 
+								if(isset($attr['displayNextClassCol'])){
+									if($attr['displayNextClassCol']){
+										$show = $attr['displayNextClassCol'];
+									}
+								}else{
+									if ($attr['displayNextClassColByStatus']) { $show = $attr['displayNextClassColByStatus']; }
+								} 
+							?>
 							<?php if ($action != 'reconfirm') { ?>
 							<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
 							<?php } ?>
@@ -66,19 +67,17 @@
 									<td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
 									<td><?= isset($attr['classOptions'][$obj->institution_class_id]) ? $attr['classOptions'][$obj->institution_class_id] : '' ?></td>
 									<?php if ($show) { ?>
-										<td>
-											<?php
-												if ($action != 'reconfirm') {
-
-													echo $this->Form->input(sprintf('StudentPromotion.students.%d.next_institution_class_id', $i), array(
-														'options' => $attr['availableClassOptions'],
-														'value' => [$obj->next_institution_class_id],
-													));
-												} else {
-													echo isset($attr['selectedStudents'][$i]['next_institution_class_id']) && $attr['selectedStudents'][$i]['next_institution_class_id'] != 0 ? $attr['availableClassOptions'][$attr['selectedStudents'][$i]['next_institution_class_id']] : '';
-												}
-											?>
-	                        			</td>
+									<td>
+										<?php if ($action != 'reconfirm') {
+											echo $this->Form->input(sprintf('StudentPromotion.students.%d.next_institution_class_id', $i), array(
+												'options' => $attr['availableClassOptions'],
+												'value' => [$obj->next_institution_class_id],
+												));
+											} else {
+												echo isset($attr['selectedStudents'][$i]['next_institution_class_id']) && $attr['selectedStudents'][$i]['next_institution_class_id'] != 0 ? $attr['availableClassOptions'][$attr['selectedStudents'][$i]['next_institution_class_id']] : '';
+											}
+										?>
+                        			</td>
                         			<?php } ?>
 								</tr>
 							<?php $studentCount++;
