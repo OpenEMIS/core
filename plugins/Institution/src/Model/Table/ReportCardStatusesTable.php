@@ -355,7 +355,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         $query
             ->select([
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
-                'report_card_status' => $this->StudentsReportCards->aliasField('status')
+                'report_card_status' => $this->StudentsReportCards->aliasField('status'),
+                'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
+                'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on')
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
