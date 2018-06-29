@@ -25,6 +25,13 @@ class POCOR4645 extends AbstractMigration
         ];
 
         $this->insert('import_mapping', $data);
+
+        $this->execute('
+            UPDATE `security_functions`
+            SET `name` = "Import Student Admission",
+                `_execute` = "ImportStudentAdmission.add|ImportStudentAdmission.template|ImportStudentAdmission.results|ImportStudentAdmission.downloadFailed|ImportStudentAdmission.downloadPassed"
+            WHERE `id` = 1035
+        ');
     }
 
     public function down()
@@ -33,5 +40,12 @@ class POCOR4645 extends AbstractMigration
         
         $this->execute('UPDATE `import_mapping` SET `model` = "Institution.Students" WHERE `model` = "Institution.StudentAdmission"');
         $this->execute('UPDATE `import_mapping` SET `column_name` = "class" WHERE `model` = "Institution.Students" AND `column_name` = "institution_class_id"');
+
+        $this->execute('
+            UPDATE `security_functions`
+            SET `name` = "Import Students",
+                `_execute` = "ImportStudents.add|ImportStudents.template|ImportStudents.results|ImportStudents.downloadFailed|ImportStudents.downloadPassed"
+            WHERE `id` = 1035
+        ');
     }
 }   
