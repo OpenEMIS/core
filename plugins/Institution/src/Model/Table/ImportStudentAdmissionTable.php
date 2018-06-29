@@ -15,8 +15,9 @@ use Cake\Network\Request;
 use DateTimeInterface;
 use DateTime;
 use PHPExcel_Worksheet;
+use Workflow\Model\Behavior\WorkflowBehavior;
 
-class ImportStudentsTable extends AppTable {
+class ImportStudentAdmissionTable extends AppTable {
     private $institutionId;
     private $gradesInInstitution;
     private $systemDateFormat;
@@ -27,13 +28,14 @@ class ImportStudentsTable extends AppTable {
         $this->table('import_mapping');
         parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'Students']);
+        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'StudentAdmission']);
 
         // register the target table once
         $this->Institutions = TableRegistry::get('Institution.Institutions');
-        $this->InstitutionStudents = TableRegistry::get('Institution.Students');
+        $this->StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $this->Students = TableRegistry::get('Security.Users');
+        $this->Workflows = TableRegistry::get('Workflow.Workflows'); 
     }
 
     public function beforeAction($event) {
@@ -53,13 +55,6 @@ class ImportStudentsTable extends AppTable {
             $this->institutionId = false;
             $this->gradesInInstitution = [];
         }
-        $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $this->studentStatusId = $StudentStatuses->find()
-                                                ->select(['id'])
-                                                ->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
-                                                ->first()
-                                                ->id;
     }
 
     public function implementedEvents() {
@@ -92,14 +87,12 @@ class ImportStudentsTable extends AppTable {
             return false;
         }
 
-        $tempRow['entity'] = $this->InstitutionStudents->newEntity();
-        $tempRow['student_status_id'] = $this->studentStatusId;
-        $tempRow['start_year'] = false;
+        $tempRow['entity'] = $this->StudentAdmission->newEntity();
         $tempRow['end_date'] = false;
-        $tempRow['end_year'] = false;
+        $tempRow['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
         $tempRow['institution_id'] = $this->institutionId;
         // Optional fields which will be validated should be set with a default value on initialisation
-        $tempRow['class'] = 0;
+        $tempRow['institution_class_id'] = null;
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
@@ -217,6 +210,43 @@ class ImportStudentsTable extends AppTable {
         return $modelData;
     }
 
+    public function onImportPopulateWorkflowStepsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+
+        $workflowResult = $this->Workflows
+            ->find()
+            ->select([
+                'workflow_id' => $this->Workflows->aliasField('id'),
+                'workflow_step_id' => $lookedUpTable->aliasField('id'),
+                'workflow_step_name' => $lookedUpTable->aliasField('name')
+            ])
+            ->matching('WorkflowModels', function ($q) {
+                return $q->where(['WorkflowModels.model' => 'Institution.StudentAdmission']);
+            })
+            ->matching($lookedUpTable->alias())
+            ->order([
+                $this->Workflows->aliasField('name'),
+                $lookupModel.'.category'
+            ])
+            ->all();
+
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+
+        if (!$workflowResult->isEmpty()) {
+            $modelData = $workflowResult->toArray();
+
+            foreach ($modelData as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->workflow_step_name,
+                    $row->workflow_step_id
+                ];
+            }
+        }
+    }
+
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) 
     {
         if (empty($tempRow['student_id'])) {
@@ -265,7 +295,6 @@ class ImportStudentsTable extends AppTable {
             }
         }
 
-
         $periods = $this->getAcademicPeriodByStartDate($tempRow['start_date']->format('Y-m-d'));
         if (!$periods) {
             $rowInvalidCodeCols['start_date'] = __('No matching academic period based on the start date');
@@ -278,6 +307,7 @@ class ImportStudentsTable extends AppTable {
                 break;
             }
         }
+
         if (empty($period)) {
             $rowInvalidCodeCols['start_date'] = __('Start date is not within selected academic period');
             return false;
@@ -292,10 +322,8 @@ class ImportStudentsTable extends AppTable {
             return false;
         }
         $periodEndDate = $period->end_date->toUnixString();
-        $tempRow['start_year'] = $period->start_year;
         $tempRow['end_date'] = $period->end_date;
-        $tempRow['end_year'] = $period->end_year;
-
+    
         if (!in_array($tempRow['education_grade_id'], $this->gradesInInstitution)) {
             $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade is not being offered in this institution');
             return false;
@@ -330,7 +358,7 @@ class ImportStudentsTable extends AppTable {
             return false;
         }
 
-        if (!empty($tempRow['class']) || $tempRow['class']!=0) {
+        if (!empty($tempRow['institution_class_id'])) {
             if (empty($this->availableClasses)) {
                 $this->availableClasses = $this->populateInstitutionClassesData();
             }
@@ -340,7 +368,7 @@ class ImportStudentsTable extends AppTable {
                 foreach($this->availableClasses as $periodCode=>$periodClasses) {
                     if (!empty($periodClasses)) {
                         foreach($periodClasses as $id=>$name) {
-                            if ($id == $tempRow['class']) {
+                            if ($id == $tempRow['institution_class_id']) {
 
                                 if ($periodCode == $period->code) {
                                     $selectedClassIdFound = true;
@@ -373,14 +401,14 @@ class ImportStudentsTable extends AppTable {
                 }
             }
             if (is_null($selectedClassIdFound)) {
-                $rowInvalidCodeCols['class'] = __('Selected class does not exists in this institution');
+                $rowInvalidCodeCols['institution_class_id'] = __('Selected class does not exists in this institution');
                 return false;
             } else if (!$selectedClassIdFound) {
-                $rowInvalidCodeCols['class'] = __('Selected class does not exists during the selected Academic Period');
+                $rowInvalidCodeCols['institution_class_id'] = __('Selected class does not exists during the selected Academic Period');
                 return false;
             }
         }
-
+        
         //check student gender against institution gender (use existing function from validation behavior)
         $result = $this->checkStudentGenderAgainstInstitutionGender($tempRow['student_id'], $this->institutionId);
             
@@ -429,5 +457,4 @@ class ImportStudentsTable extends AppTable {
         $key = $flipped['student_id'];
         $tempPassedRecord['data'][$key] = $originalRow[$key];
     }
-
 }

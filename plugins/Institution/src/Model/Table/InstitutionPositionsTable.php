@@ -165,21 +165,9 @@ class InstitutionPositionsTable extends ControllerActionTable
                 }
             ])
             ->add('status_id', 'ruleCheckStatusIdValid', [
-                'rule' => function ($value, $context) {
-                    $Workflows = TableRegistry::get('Workflow.Workflows');
-                    $workflowResult = $Workflows
-                        ->find()
-                        ->matching('WorkflowModels', function ($q) {
-                            return $q->where(['WorkflowModels.model' => 'Institution.InstitutionPositions']);
-                        })
-                        ->matching('WorkflowSteps', function ($q) use ($value) {
-                            return $q->where(['WorkflowSteps.id' => $value]);
-                        })
-                        ->all();
-
-                    return !$workflowResult->isEmpty();
-                },
-                'on' => function ($context) {
+                'rule' => ['checkStatusIdValid'],
+                'provider' => 'table',
+                'on' => function ($context) {  
                     if (array_key_exists('is_imported', $context['data']) && $context['data']['is_imported']) {
                         return true;
                     }
