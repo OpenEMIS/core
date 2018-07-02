@@ -80,7 +80,7 @@ class StudentsTable extends ControllerActionTable
                 '_function' => 'getNumberOfStudentsByGradeByInstitution'
             ]
         ]);
-        $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStudentAdmission']);
 
         /**
          * Advance Search Types.
