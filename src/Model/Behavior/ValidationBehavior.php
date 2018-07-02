@@ -2704,4 +2704,22 @@ class ValidationBehavior extends Behavior
         }
         return false;
     }
+
+    public static function checkStatusIdValid($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+
+        $Workflows = TableRegistry::get('Workflow.Workflows');
+        $workflowResult = $Workflows
+            ->find()
+            ->matching('WorkflowModels', function ($q) use ($model) {
+                return $q->where(['WorkflowModels.model' => $model->registryAlias()]);
+            })
+            ->matching('WorkflowSteps', function ($q) use ($field) {
+                return $q->where(['WorkflowSteps.id' => $field]);
+            })
+            ->all();
+
+        return !$workflowResult->isEmpty();
+    }
 }

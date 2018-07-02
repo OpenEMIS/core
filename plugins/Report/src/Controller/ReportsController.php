@@ -22,7 +22,7 @@ class ReportsController extends AppController
             'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
             'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
             'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
-            'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
+            'Audits' => ['className' => 'Report.Audits', 'actions' => ['index', 'add']],
             'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
         ];
@@ -110,9 +110,11 @@ class ReportsController extends AppController
                 'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
                 'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates')
             ];
-        } elseif ($module == 'Audit') {
+        } elseif ($module == 'Audits') {
             $options = [
-                'Report.Audit' => __('Login')
+                'Report.AuditLogins' => __('Logins'),
+                'Report.AuditInstitutions' => __('Institutions'),
+                'Report.AuditUsers' => __('Users')
             ];
         } elseif ($module == 'Examinations') {
             $options = [

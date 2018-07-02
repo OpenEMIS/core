@@ -146,7 +146,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
     }
 
     function getColumnDefs(period, subject, student, periodOptions, subjectOptions, studentOptions, studentResults) {
-        var menuTabs = [ "filterMenuTab" ];
+        var menuTabs = [];
         var filterParams = {
             cellHeight: 30
         };
