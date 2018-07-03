@@ -1,3 +1,8 @@
+### [3.30.0] - 2018-07-02
+- Developed audit reports via feature
+- Implemented status column in Institution > Students > Import feature
+- Change date format in Audit Report to yyyy-mm-dd to enable sorting
+
 ### [3.29.0] - 2018-06-22
 - Data patch on Positions feature
 - Develop Student Attendance Summary Report
