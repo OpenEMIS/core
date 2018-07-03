@@ -1228,6 +1228,12 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'AcademicPeriod'],
                     'selected' => ['AcademicPeriods.Periods', 'AcademicPeriods.Levels']
                 ],
+                'Attendances.StudentMarkTypes' => [
+                    'title' => 'Attendances',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Attendance'],
+                    'selected' => ['Attendance.StudentMarkTypes']
+                ],
                 'Educations.Systems' => [
                     'title' => 'Education Structure',
                     'parent' => 'SystemSetup',
