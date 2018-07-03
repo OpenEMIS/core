@@ -77,10 +77,16 @@ class StudentOutcomesTable extends ControllerActionTable
             $buttons['view']['url'] = $this->setQueryString($url, $params);
         }
 
-        if (isset($buttons['edit']['url'])) {
-            $url = $buttons['edit']['url'];
-            unset($url[1]);
-            $buttons['edit']['url'] = $this->setQueryString($url, $params);
+        $enabledOutcomePeriodsCount = $this->enableEditButton($entity->outcome_template_id, $entity->academic_period_id);
+
+        if ($enabledOutcomePeriodsCount > 0) {
+            if (isset($buttons['edit']['url'])) {
+                $url = $buttons['edit']['url'];
+                unset($url[1]);
+                $buttons['edit']['url'] = $this->setQueryString($url, $params);
+            }
+        }else{
+            unset($buttons['edit']);
         }
 
         return $buttons;
@@ -281,6 +287,14 @@ class StudentOutcomesTable extends ControllerActionTable
         $this->field('student', ['type' => 'custom_criterias']);
 
         $this->setFieldOrder(['name', 'academic_period_id', 'outcome_template', 'total_male_students', 'total_female_students', 'student']);
+
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $enabledOutcomePeriodsCount = $this->enableEditButton($this->outcomeTemplateId,$this->academicPeriodId);
+
+        if ($enabledOutcomePeriodsCount == 0) {
+            unset($toolbarButtonsArray['edit']);
+        }
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
     public function onGetOutcomeTemplate(Event $event, Entity $entity)
@@ -595,5 +609,20 @@ class StudentOutcomesTable extends ControllerActionTable
             $gradingTypes[$gradingTypeEntity->id] = $gradingOptions;
         }
         return $gradingTypes;
+    }
+
+    private function enableEditButton($outcomeTemplateId, $academicPeriodId)
+    {
+        $todayDate = date("Y-m-d");
+        $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
+        $enabledOutcomePeriodsCount = $OutcomePeriods->find()
+            ->where([
+                $OutcomePeriods->aliasField('date_enabled <= ') => $todayDate,
+                $OutcomePeriods->aliasField('date_disabled >= ') => $todayDate,
+                $OutcomePeriods->aliasField('outcome_template_id') => $outcomeTemplateId,
+                $OutcomePeriods->aliasField('academic_period_id') => $academicPeriodId,
+            ])->count();
+
+        return $enabledOutcomePeriodsCount;
     }
 }
