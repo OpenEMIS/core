@@ -7,6 +7,7 @@ use Attendance\Model\Table\StudentAttendanceTypesTable as AttendanceTypes;
 class StudentAttendanceMarkTypesTable extends AppTable
 {
     const MAX_MARK_DAYS = 5;
+    const DEFAULT_ATTENDANCE_PER_DAY = 1;
 
     public function initialize(array $config)
     {
@@ -22,8 +23,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
     {
         $defaultTypes = [
             'student_attendance_type_id' => AttendanceTypes::DAY,
-            'attendance_per_day' => 1,
-            'student_attendance_type_name' => 'Day'
+            'attendance_per_day' => self::DEFAULT_ATTENDANCE_PER_DAY
         ];
 
         return $defaultTypes;
@@ -42,6 +42,6 @@ class StudentAttendanceMarkTypesTable extends AppTable
 
     public function isDefaultType($attendancePerDay, $attendanceTypeId)
     {
-        return ($attendancePerDay == 1 && $attendanceTypeId == AttendanceTypes::DAY);
+        return ($attendancePerDay == self::DEFAULT_ATTENDANCE_PER_DAY && $attendanceTypeId == AttendanceTypes::DAY);
     }
 }

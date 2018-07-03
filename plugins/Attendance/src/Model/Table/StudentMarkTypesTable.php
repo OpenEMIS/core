@@ -30,6 +30,15 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->defaultMarkType = $this->StudentAttendanceMarkTypes->getDefaultMarkType();
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        // add validations to per day value field not to be bigger than the mark attendance
+
+        return $validator;
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -257,19 +266,21 @@ class StudentMarkTypesTable extends ControllerActionTable
     public function onGetStudentAttendanceTypeId(Event $event, Entity $entity)
     {
         if (!empty($entity->student_attendance_mark_types)) {
-            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
             $attendanceTypeEntity = $entity->student_attendance_mark_types[0];
-            $markTypeEntity = $StudentAttendanceTypes
-                ->find()
-                ->select([$StudentAttendanceTypes->aliasField('name')])
-                ->where([$StudentAttendanceTypes->aliasField('id') => $attendanceTypeEntity->student_attendance_type_id])
-                ->first();
-
-            if (!is_null($markTypeEntity)) {
-                return $markTypeEntity->name;
-            }
+            $attendanceTypeId = $attendanceTypeEntity->student_attendance_type_id;
         } else {
-            return $this->defaultMarkType['student_attendance_type_name'];
+            $attendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
+        }
+
+        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $markTypeEntity = $StudentAttendanceTypes
+            ->find()
+            ->select([$StudentAttendanceTypes->aliasField('name')])
+            ->where([$StudentAttendanceTypes->aliasField('id') => $attendanceTypeId])
+            ->first();
+
+        if (!is_null($markTypeEntity)) {
+            return $markTypeEntity->name;
         }
     }
 
@@ -291,6 +302,11 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->field('education_stage_id', ['visible' => false]);
         $this->field('education_programme_id', ['visible' => false]);
         $this->field('name', ['attr' => ['label' => __('Education Grade')]]);
+
+        $this->field('created_user_id', ['visible' => false]);
+        $this->field('created', ['visible' => false]);
+        $this->field('modified_user_id', ['visible' => false]);
+        $this->field('modified', ['visible' => false]);
 
         $this->field('attendance_per_day', ['entity' => $entity]);
         $this->field('student_attendance_type_id', ['entity' => $entity, 'attr' => ['label' => __('Type')]]);
