@@ -347,7 +347,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('institution_class_id', ['type' => 'integer']);
-        $this->setFieldOrder(['academic_period_id', 'status', 'openemis_no', 'student_id',  'report_card', 'institution_class_id']);
+        $this->setFieldOrder(['academic_period_id', 'status', 'started_on', 'completed_on', 'openemis_no', 'student_id',  'report_card', 'institution_class_id']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
