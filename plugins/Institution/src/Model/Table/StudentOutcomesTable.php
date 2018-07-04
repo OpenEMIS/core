@@ -85,7 +85,7 @@ class StudentOutcomesTable extends ControllerActionTable
                 unset($url[1]);
                 $buttons['edit']['url'] = $this->setQueryString($url, $params);
             }
-        }else{
+        } elseif (isset($buttons['edit'])) {
             unset($buttons['edit']);
         }
 
@@ -291,7 +291,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $enabledOutcomePeriodsCount = $this->enableEditButton($this->outcomeTemplateId,$this->academicPeriodId);
 
-        if ($enabledOutcomePeriodsCount == 0) {
+        if ($enabledOutcomePeriodsCount == 0 && isset($toolbarButtonsArray['edit'])) {
             unset($toolbarButtonsArray['edit']);
         }
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
