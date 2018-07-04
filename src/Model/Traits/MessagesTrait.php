@@ -1070,6 +1070,9 @@ trait MessagesTrait
                 'education_grade_id' => [
                     'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
                 ],
+                'status_id' => [
+                    'ruleCheckStatusIdValid' => 'Invalid status id'
+                ],
             ],
             'StaffBehaviours' => [
                 'date_of_behaviour' => [
