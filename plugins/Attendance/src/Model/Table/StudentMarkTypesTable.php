@@ -24,7 +24,8 @@ class StudentMarkTypesTable extends ControllerActionTable
 
         $this->toggle('add', false);
         $this->toggle('remove', false);
-        
+        $this->toggle('reorder', false);
+
         $this->removeBehavior('Reorder');
 
         $this->defaultMarkType = $this->StudentAttendanceMarkTypes->getDefaultMarkType();
@@ -308,8 +309,8 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
 
-        $this->field('attendance_per_day', ['entity' => $entity]);
-        $this->field('student_attendance_type_id', ['entity' => $entity, 'attr' => ['label' => __('Type')]]);
+        $this->field('attendance_per_day', ['entity' => $entity, 'attr' => ['required' => true]]);
+        $this->field('student_attendance_type_id', ['entity' => $entity, 'attr' => ['label' => __('Type'), 'required' => true]]);
         $this->field('academic_period_id', ['visible' => [
             'index' => false, 'view' => true, 'edit' => true
         ]]);
