@@ -16,11 +16,11 @@ class PotentialWrongBirthdatesTable extends AppTable
 		parent::initialize($config);
         
         // Associations
-        $this->belongsTo('SecurityUsers', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('SecurityUsers', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         
 		// Behaviors
 		$this->addBehavior('Excel', [
@@ -56,19 +56,19 @@ class PotentialWrongBirthdatesTable extends AppTable
    	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
 		$query
-			 ->select([
-       			'openemis_no' => 'SecurityUsers.openemis_no',
-                'first_name' => 'SecurityUsers.first_name',
-                'last_name' => 'SecurityUsers.last_name',
-                'date_of_birth' => 'SecurityUsers.date_of_birth',
-                'grades_name' => 'EducationGrades.name',
-                'grades_admission_age' => 'EducationGrades.admission_age',
-                'institutions_name' => 'Institutions.name',
-                'start_year' => 'AcademicPeriods.start_year'
+			->select([
+				'openemis_no' => 'SecurityUsers.openemis_no',
+				'first_name' => 'SecurityUsers.first_name',
+				'last_name' => 'SecurityUsers.last_name',
+				'date_of_birth' => 'SecurityUsers.date_of_birth',
+				'grades_name' => 'EducationGrades.name',
+				'grades_admission_age' => 'EducationGrades.admission_age',
+				'institutions_name' => 'Institutions.name',
+				'start_year' => 'AcademicPeriods.start_year'
             ])
 			->innerJoinWith('SecurityUsers')	
-            ->innerJoinWith('AcademicPeriods')
-            ->innerJoinWith('EducationGrades')
+			->innerJoinWith('AcademicPeriods')
+			->innerJoinWith('EducationGrades')
             ->innerJoinWith('Institutions')
             ->innerJoinWith('StudentStatuses')
             ->where([
