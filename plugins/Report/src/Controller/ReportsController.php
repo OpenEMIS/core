@@ -108,7 +108,8 @@ class ReportsController extends AppController
         } elseif ($module == 'DataQuality') {
             $options = [
                 'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
-                'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates')
+                'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates'),
+                'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates')
             ];
         } elseif ($module == 'Audit') {
             $options = [
