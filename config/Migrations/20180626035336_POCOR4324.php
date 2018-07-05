@@ -106,6 +106,12 @@ class POCOR4324 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
+
+        // institution_student_absences_period_1
+        // institution_student_absences_period_2
+        // institution_student_absences_period_3
+        // institution_student_absences_period_4
+        // institution_student_absences_period_5
     }
 
     public function down()
