@@ -2,6 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
@@ -16,16 +17,20 @@ class PotentialWrongBirthdatesTable extends AppTable
 		parent::initialize($config);
         
         // Associations
-		$this->belongsTo('SecurityUsers', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
-		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
         
 		// Behaviors
 		$this->addBehavior('Excel', [
-			'excludes' => ['is_student', 'is_staff', 'is_guardian', 'external_reference', 'super_admin', 'status', 'last_login', 'photo_name', 'photo_content', 'preferred_language'],
-			'pages' => false
+			'excludes' => [
+                'start_date', 'start_year', 'end_date', 'end_year', 'previous_institution_student_id'
+            ],
+			'pages' => false,
+            'autoFields' => false
 		]);
 		$this->addBehavior('Report.ReportList');
 	}
@@ -46,8 +51,8 @@ class PotentialWrongBirthdatesTable extends AppTable
 	public function onExcelGetAge(Event $event, Entity $entity)
 	{
 		// Calculate the age
-		if (!is_null($entity->start_year) && !is_null($entity->date_of_birth)) {
-			$startYear = $entity->start_year;
+		if (!is_null($entity->academic_period_start_year) && !is_null($entity->date_of_birth)) {
+			$startYear = $entity->academic_period_start_year;
 			$dob = $entity->date_of_birth->format('Y');
     		return $startYear - $dob;
 		}
@@ -55,86 +60,118 @@ class PotentialWrongBirthdatesTable extends AppTable
 
    	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $enrolledStatus = $this->StudentStatuses->getIdByCode('CURRENT');
+
 		$query
-			->select([
-				'openemis_no' => 'SecurityUsers.openemis_no',
-				'first_name' => 'SecurityUsers.first_name',
-				'last_name' => 'SecurityUsers.last_name',
-				'date_of_birth' => 'SecurityUsers.date_of_birth',
-				'grades_name' => 'EducationGrades.name',
-				'grades_admission_age' => 'EducationGrades.admission_age',
-				'institutions_name' => 'Institutions.name',
-				'start_year' => 'AcademicPeriods.start_year'
+            ->select([
+                $this->aliasField('student_id'),                
+                $this->aliasField('student_status_id'),
+                $this->aliasField('education_grade_id'),
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('institution_id'),                
             ])
-			->innerJoinWith('SecurityUsers')	
-			->innerJoinWith('AcademicPeriods')
-			->innerJoinWith('EducationGrades')
-            ->innerJoinWith('Institutions')
-            ->innerJoinWith('StudentStatuses')
+            ->contain([
+                'Users' => [
+                    'fields' => [
+                        'openemis_no' => 'Users.openemis_no',
+                        'Users.first_name',
+                        'Users.middle_name',
+                        'Users.third_name',
+                        'Users.last_name',
+                        'Users.preferred_name',
+                        'date_of_birth' => 'Users.date_of_birth'
+                    ]
+                ],
+                'StudentStatuses' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'EducationGrades' => [
+                    'fields' => [
+                        'education_name' => 'EducationGrades.name',
+                        'education_grade_age' => 'EducationGrades.admission_age'
+                    ]
+                ],
+                'Institutions' => [
+                    'fields' => [
+                        'institutions_name' => 'Institutions.name'
+                    ]
+                ],
+                'AcademicPeriods' => [
+                    'fields' => [
+                        'name',
+                        'academic_period_start_year' => 'AcademicPeriods.start_year'
+                    ]
+                ]
+            ])   
             ->where([
-            	'StudentStatuses.code' => 'CURRENT',
-            	"`AcademicPeriods`.`start_year` - YEAR(`SecurityUsers`.`date_of_birth`) <> `EducationGrades`.`admission_age`"
+                $this->aliasField('student_status_id') => $enrolledStatus,
+                "`AcademicPeriods`.`start_year` - YEAR(`Users`.`date_of_birth`) <> `EducationGrades`.`admission_age`"
             ]);
     }
 
-   	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        $newFields = [];
 
-        $Fields = [];
-        $Fields[] = [
-            'key' => 'SecurityUsers.openemis_no',
+        $newFields[] = [
+            'key' => 'openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
             'label' => __('Openemis No')
         ];
 
-        $Fields[] = [
-            'key' => 'SecurityUsers.first_name',
-            'field' => 'first_name',
+        $newFields[] = [
+            'key' => 'Users.full_name',
+            'field' => 'student_id',
             'type' => 'string',
-            'label' => __('First Name')
-        ];
+            'label' => ''
+        ];           
 
-        $Fields[] = [
-            'key' => 'SecurityUsers.last_name',
-            'field' => 'last_name',
-            'type' => 'string',
-            'label' => __('Last Name')
-        ];
-        $Fields[] = [
-            'key' => 'SecurityUsers.date_of_birth',
+        $newFields[] = [
+            'key' => 'date_of_birth',
             'field' => 'date_of_birth',
             'type' => 'date',
             'label' => __('Date Of Birth')
-        ];
-
-        $Fields[] = [
+        ];   
+        
+        $newFields[] = [
             'key' => 'SecurityUsers.age',
             'field' => 'age',
             'type' => 'string',            
             'label' => __('Age')
         ];
 
-        $Fields[] = [
-            'key' => 'EducationGrades.name',
-            'field' => 'grades_name',
+        $newFields[] = [
+            'key' => 'education_name',
+            'field' => 'education_name',
             'type' => 'string',
-            'label' => __('Grades Name')
-        ];   
-   
-        $Fields[] = [
-            'key' => 'EducationGrades.admission_age',
-            'field' => 'grades_admission_age',
-            'type' => 'string',
-            'label' => __('Grades Admission Age')
-        ];      
+            'label' => __('Education Name')
+        ];              
 
-        $Fields[] = [
-            'key' => 'Institutions.name',
+        $newFields[] = [
+            'key' => 'institutions_name',
             'field' => 'institutions_name',
             'type' => 'string',
-            'label' => __('Institutions Name')
-        ];                 
-         $fields->exchangeArray($Fields);
-    }    
+            'label' => __('institutions_name')
+        ]; 
+
+        $newFields[] = [
+            'key' => 'education_grade_age',
+            'field' => 'education_grade_age',
+            'type' => 'string',
+            'label' => __('Education Grade Age')
+        ];         
+
+        $newFields[] = [
+            'key' => 'AcademicPeriods.start_year',
+            'field' => 'academic_period_start_year',
+            'type' => 'string',
+            'label' => __('Academic Period Start Year')
+        ];  
+
+        $fields->exchangeArray($newFields);    
+    }
+
 }
