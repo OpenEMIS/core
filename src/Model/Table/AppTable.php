@@ -83,6 +83,7 @@ class AppTable extends Table
         $this->addBehavior('Validation');
         $this->addBehavior('Modification');
 
+        $this->addBehavior('TrackAdd');
         $this->addBehavior('TrackDelete');
         $this->addBehavior('ControllerAction.Security');
 
