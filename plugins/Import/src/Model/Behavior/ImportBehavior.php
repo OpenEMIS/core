@@ -414,7 +414,7 @@ class ImportBehavior extends Behavior
 
                 if ($extra['entityValidate'] == true) {
                     // added for POCOR-4577 import staff leave for workflow related record to save the transition record
-                    $tempRow['is_imported'] = true;
+                    $tempRow['action_type'] = 'imported';
                     $activeModel->patchEntity($tableEntity, $tempRow);
                 }
 
