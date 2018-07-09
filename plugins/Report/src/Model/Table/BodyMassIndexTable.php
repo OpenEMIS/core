@@ -82,9 +82,9 @@ class BodyMassIndexTable extends AppTable
         ];
 
         $extraFields[] = [
-            'key' => 'Users.full_name',
+            'key' => 'BodyMassIndex.full_name',
             'field' => 'security_user_id',
-            'type' => 'string',
+            'type' => 'integer',
             'label' => ''
         ];          
 
