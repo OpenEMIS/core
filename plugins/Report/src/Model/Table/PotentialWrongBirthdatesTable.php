@@ -13,8 +13,8 @@ class PotentialWrongBirthdatesTable extends AppTable
 {
 	public function initialize(array $config) 
 	{
-		$this->table('institution_students');
-		parent::initialize($config);
+        $this->table('institution_students');
+        parent::initialize($config);
         
         // Associations
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -25,50 +25,50 @@ class PotentialWrongBirthdatesTable extends AppTable
         $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
         
 		// Behaviors
-		$this->addBehavior('Excel', [
-			'excludes' => [
-                'start_date', 'start_year', 'end_date', 'end_year', 'previous_institution_student_id'
+        $this->addBehavior('Excel', [
+            'excludes' => [
+            'start_date', 'start_year', 'end_date', 'end_year', 'previous_institution_student_id'
             ],
-			'pages' => false,
+            'pages' => false,
             'autoFields' => false
-		]);
-		$this->addBehavior('Report.ReportList');
+        ]);
+        $this->addBehavior('Report.ReportList');
 	}
 
-	public function beforeAction(Event $event) 
-	{
-		$this->fields = [];
-		$this->ControllerAction->field('feature');
-		$this->ControllerAction->field('format');
-	}
+    public function beforeAction(Event $event) 
+    {
+        $this->fields = [];
+        $this->ControllerAction->field('feature');
+        $this->ControllerAction->field('format');
+    }
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) 
-	{
-		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
-		return $attr;
-	}
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) 
+    {
+        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+        return $attr;
+    }
 
-	public function onExcelGetAge(Event $event, Entity $entity)
-	{
-		// Calculate the age
-		if (!is_null($entity->academic_period_start_year) && !is_null($entity->date_of_birth)) {
-			$startYear = $entity->academic_period_start_year;
-			$dob = $entity->date_of_birth->format('Y');
-    		return $startYear - $dob;
-		}
-	}
+    public function onExcelGetAge(Event $event, Entity $entity)
+    {
+        // Calculate the age
+        if (!is_null($entity->academic_period_start_year) && !is_null($entity->date_of_birth)) {
+            $startYear = $entity->academic_period_start_year;
+            $dob = $entity->date_of_birth->format('Y');
+            return $startYear - $dob;
+        }
+    }
 
-   	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $enrolledStatus = $this->StudentStatuses->getIdByCode('CURRENT');
 
-		$query
+        $query
             ->select([
-                $this->aliasField('student_id'),                
+                $this->aliasField('student_id'),
                 $this->aliasField('student_status_id'),
                 $this->aliasField('education_grade_id'),
                 $this->aliasField('academic_period_id'),
-                $this->aliasField('institution_id'),                
+                $this->aliasField('institution_id')
             ])
             ->contain([
                 'Users' => [
@@ -104,7 +104,7 @@ class PotentialWrongBirthdatesTable extends AppTable
                         'academic_period_start_year' => 'AcademicPeriods.start_year'
                     ]
                 ]
-            ])   
+            ])
             ->where([
                 $this->aliasField('student_status_id') => $enrolledStatus,
                 "`AcademicPeriods`.`start_year` - YEAR(`Users`.`date_of_birth`) <> `EducationGrades`.`admission_age`"
