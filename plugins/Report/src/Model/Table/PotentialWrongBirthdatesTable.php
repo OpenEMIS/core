@@ -51,11 +51,14 @@ class PotentialWrongBirthdatesTable extends AppTable
     public function onExcelGetAge(Event $event, Entity $entity)
     {
         // Calculate the age
-        if (!is_null($entity->academic_period_start_year) && !is_null($entity->date_of_birth)) {
-            $startYear = $entity->academic_period_start_year;
+        $age = '';
+        if (!is_null($entity->academic_period->start_year) && !is_null($entity->date_of_birth)) {
+            $startYear = $entity->academic_period->start_year;
             $dob = $entity->date_of_birth->format('Y');
-            return $startYear - $dob;
+            $age = $startYear - $dob;
         }
+
+        return $age;
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -89,19 +92,19 @@ class PotentialWrongBirthdatesTable extends AppTable
                 ],
                 'EducationGrades' => [
                     'fields' => [
-                        'education_name' => 'EducationGrades.name',
-                        'education_grade_age' => 'EducationGrades.admission_age'
+                        'name',
+                        'admission_age' => 'EducationGrades.admission_age'
                     ]
                 ],
                 'Institutions' => [
                     'fields' => [
-                        'institutions_name' => 'Institutions.name'
+                        'name'
                     ]
                 ],
                 'AcademicPeriods' => [
                     'fields' => [
                         'name',
-                        'academic_period_start_year' => 'AcademicPeriods.start_year'
+                        'start_year'
                     ]
                 ]
             ])
@@ -116,62 +119,61 @@ class PotentialWrongBirthdatesTable extends AppTable
         $newFields = [];
 
         $newFields[] = [
-            'key' => 'openemis_no',
+            'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => __('Openemis No')
+            'label' => __('OpenEMIS ID')
         ];
 
         $newFields[] = [
-            'key' => 'Users.full_name',
+            'key' => 'PotentialWrongBirthdates.student_id',
             'field' => 'student_id',
-            'type' => 'string',
+            'type' => 'integer',
             'label' => ''
-        ];           
+        ];
 
         $newFields[] = [
             'key' => 'date_of_birth',
             'field' => 'date_of_birth',
             'type' => 'date',
             'label' => __('Date Of Birth')
-        ];   
+        ];
         
         $newFields[] = [
-            'key' => 'SecurityUsers.age',
+            'key' => 'Users.age',
             'field' => 'age',
-            'type' => 'string',            
+            'type' => 'string',
             'label' => __('Age')
         ];
 
         $newFields[] = [
-            'key' => 'education_name',
-            'field' => 'education_name',
-            'type' => 'string',
-            'label' => __('Education Name')
-        ];              
+            'key' => 'PotentialWrongBirthdates.education_grade_id',
+            'field' => 'education_grade_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
 
         $newFields[] = [
-            'key' => 'institutions_name',
-            'field' => 'institutions_name',
+            'key' => 'admission_age',
+            'field' => 'admission_age',
             'type' => 'string',
-            'label' => __('institutions_name')
-        ]; 
+            'label' => __('Admission Age')
+        ];
 
         $newFields[] = [
-            'key' => 'education_grade_age',
-            'field' => 'education_grade_age',
-            'type' => 'string',
-            'label' => __('Education Grade Age')
-        ];         
+            'key' => 'PotentialWrongBirthdates.institution_id',
+            'field' => 'institution_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
 
         $newFields[] = [
-            'key' => 'AcademicPeriods.start_year',
-            'field' => 'academic_period_start_year',
+            'key' => 'PotentialWrongBirthdates.academic_period_id',
+            'field' => 'academic_period_id',
             'type' => 'string',
-            'label' => __('Academic Period Start Year')
-        ];  
+            'label' => ''
+        ];
 
-        $fields->exchangeArray($newFields);    
+        $fields->exchangeArray($newFields);
     }
-
 }
