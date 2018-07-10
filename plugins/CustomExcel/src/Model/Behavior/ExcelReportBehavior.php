@@ -43,7 +43,7 @@ class ExcelReportBehavior extends Behavior
         'match' => 'match',
         'dropdown' => 'dropdown',
         'image' => 'image'
-];
+    ];
 
     public function initialize(array $config)
     {
