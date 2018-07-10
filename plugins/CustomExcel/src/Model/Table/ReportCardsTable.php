@@ -1324,7 +1324,7 @@ class ReportCardsTable extends AppTable
                     'academic_term_value'
                 ])
                 ->formatResults(function (ResultSetInterface $results) {
-                    return $results->map(function ($row) { 
+                    return $results->map(function ($row) {
                         $row['marks_formatted'] = number_format($row['marks'], 2);
                         return $row;
                     });
