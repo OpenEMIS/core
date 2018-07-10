@@ -43,7 +43,7 @@ class ExcelReportBehavior extends Behavior
         'match' => 'match',
         'dropdown' => 'dropdown',
         'image' => 'image'
-    ];
+];
 
     public function initialize(array $config)
     {
@@ -701,36 +701,49 @@ class ExcelReportBehavior extends Behavior
     {
         $format = '${%s}';
         $vars = $extra->offsetExists('vars') ? $extra['vars'] : [];
+        $placeHolderAttr = $this->convertPlaceHolderToArray($search);
 
-        $strArray = explode('${', $search);
-        array_shift($strArray); // first element will not contain the placeholder
+        if (empty($placeHolderAttr)) {
+            // basic type without formating
+            $strArray = explode('${', $search);
+            array_shift($strArray); // first element will not contain the placeholder
 
-        foreach ($strArray as $key => $str) {
-            $pos = strpos($str, '}');
+            foreach ($strArray as $key => $str) {
+                $pos = strpos($str, '}');
 
-            if ($pos !== false) {
-                $placeholder = substr($str, 0, $pos);
-                $replace = sprintf($format, $placeholder);
-                $value = Hash::get($vars, $placeholder);
+                if ($pos !== false) {
+                    $placeholder = substr($str, 0, $pos);
+                    $replace = sprintf($format, $placeholder);
+                    $value = Hash::get($vars, $placeholder);
 
-                if (!is_null($value)) {
-                    $search = str_replace($replace, $value, $search);
-                } else {
-                    // replace placeholder as blank if data is empty
-                    $search = '';
+                    if (!is_null($value)) {
+                        $search = str_replace($replace, $value, $search);
+                    } else {
+                        // replace placeholder as blank if data is empty
+                        $search = '';
+                    }
                 }
             }
+
+            $cellCoordinate = $objCell->getCoordinate();
+            $cellStyle = $objCell->getStyle($cellCoordinate);
+
+            if ($this->config('wrapText')) {
+                $cellStyle->getAlignment()->setWrapText(true);
+            }
+
+            $objWorksheet->getCell($cellCoordinate)->setValue($search);
+            $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
+        } else {
+            // basic types with formating
+            $cellCoordinate = $objCell->getCoordinate();
+            $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
+            $placeholder = $placeHolderAttr['displayValue'];
+            $replace = sprintf($format, $placeholder);
+            $value = Hash::get($vars, $placeholder);
+            $attr = array_merge($placeHolderAttr, $cellAttr);
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
         }
-
-        $cellCoordinate = $objCell->getCoordinate();
-        $cellStyle = $objCell->getStyle($cellCoordinate);
-
-        if ($this->config('wrapText')) {
-            $cellStyle->getAlignment()->setWrapText(true);
-        }
-
-        $objWorksheet->getCell($cellCoordinate)->setValue($search);
-        $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
     }
 
     private function mergeRange($fromColumn, $fromRow, $toColumn, $toRow, $objWorksheet, $attr)
