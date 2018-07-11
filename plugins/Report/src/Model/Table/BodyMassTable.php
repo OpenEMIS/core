@@ -9,7 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class BodyMassIndexTable extends AppTable  
+class BodyMassTable extends AppTable  
 {
     public function initialize(array $config) 
     {
@@ -78,7 +78,7 @@ class BodyMassIndexTable extends AppTable
             'key' => 'openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => __('Openemis No')
+            'label' => __('OpenEMIS ID')
         ];
 
         $extraFields[] = [
