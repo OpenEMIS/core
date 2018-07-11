@@ -9,7 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class BodyMassTable extends AppTable  
+class BodyMassesTable extends AppTable  
 {
     public function initialize(array $config) 
     {
@@ -18,6 +18,7 @@ class BodyMassTable extends AppTable
         
         // Associations
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);        
         
         // Behaviors
         $this->addBehavior('Excel', [
@@ -82,7 +83,7 @@ class BodyMassTable extends AppTable
         ];
 
         $extraFields[] = [
-            'key' => 'BodyMassIndex.full_name',
+            'key' => 'BodyMasses.full_name',
             'field' => 'security_user_id',
             'type' => 'integer',
             'label' => ''
