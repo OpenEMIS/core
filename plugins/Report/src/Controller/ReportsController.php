@@ -70,7 +70,7 @@ class ReportsController extends AppController
                 'Report.StudentIdentities' => __('Identities'),
                 'Report.StudentContacts' => __('Contacts'),
                 'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
-                'Report.BodyMass' => __('Body Mass Index')
+                'Report.BodyMasses' => __('Body Masses')
             ];
         } elseif ($module == 'Staff') {
             $options = [
