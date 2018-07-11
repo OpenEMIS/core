@@ -1,4 +1,4 @@
-<?php if (!empty($periodOptions) || !empty($weekOptions) || !empty($dayOptions) || !empty($classOptions) || !empty($attendancePeriodOptions)) : ?>
+<?php if (!empty($periodOptions) || !empty($weekOptions) || !empty($dayOptions) || !empty($classOptions)) : ?>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -74,22 +74,6 @@
 							$dataNamedGroup[] = 'day';
 						}
 						echo $this->Form->input('days', $inputOptions);
-					}
-
-					if (!empty($attendancePeriodOptions)) {
-						$inputOptions = [
-							'class' => 'form-control',
-							'label' => false,
-							'options' => $attendancePeriodOptions,
-							'url' => $baseUrl,
-							'data-named-key' => 'class_id',
-							'escape' => false
-						];
-						if (!empty($dataNamedGroup)) {
-							$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-							$dataNamedGroup[] = 'class_id';
-						}
-						echo $this->Form->input('classes', $inputOptions);
 					}
 
 					if (!empty($classOptions)) {

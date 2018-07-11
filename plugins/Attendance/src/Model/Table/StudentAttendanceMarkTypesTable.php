@@ -2,6 +2,7 @@
 namespace Attendance\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\ORM\TableRegistry;
 use Attendance\Model\Table\StudentAttendanceTypesTable as AttendanceTypes;
 
 class StudentAttendanceMarkTypesTable extends AppTable
@@ -43,5 +44,44 @@ class StudentAttendanceMarkTypesTable extends AppTable
     public function isDefaultType($attendancePerDay, $attendanceTypeId)
     {
         return ($attendancePerDay == self::DEFAULT_ATTENDANCE_PER_DAY && $attendanceTypeId == AttendanceTypes::DAY);
+    }
+
+    public function getAttendancePerDayOptionsByClass($classId, $academicPeriodId)
+    {
+        $prefix = 'Period ';
+        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $gradesResultSet = $InstitutionClassGrades
+            ->find('list', [
+                'keyField' => 'education_grade_id',
+                'valueField' => 'education_grade_id'
+            ])
+            ->where([$InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+            ->all();
+
+        if (!$gradesResultSet->isEmpty()) {
+            $gradeList = $gradesResultSet->toArray();
+            $attendencePerDay = self::DEFAULT_ATTENDANCE_PER_DAY;
+
+            $markResultSet = $this
+                ->find()
+                ->where([
+                    $this->aliasField('education_grade_id IN ') => $gradeList,
+                    $this->aliasField('academic_period_id') => $academicPeriodId
+                ])
+                ->all();
+
+            if (!$markResultSet->isEmpty()) {
+                $marksEntity = $markResultSet->toArray();
+                pr($marksEntity);
+                die;
+            }
+
+            $options = [];
+            for ($i = 1; $i <= $attendencePerDay; ++$i) {
+                $options[$i] = $prefix . $i;
+            }
+
+            return $options;
+        }
     }
 }
