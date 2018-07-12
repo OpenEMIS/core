@@ -5,17 +5,19 @@ use Phinx\Migration\AbstractMigration;
 class POCOR4722 extends AbstractMigration
 {
     public function up(){
-        $this->execute('RENAME TABLE `institutions` TO `z_4722_institutions`');    
+        $this->table('institutions')->rename('z_4722_institutions');           
         $this->execute('CREATE TABLE `institutions` LIKE `z_4722_institutions`');
-        $this->execute('ALTER TABLE `institutions` MODIFY COLUMN `longitude` varchar(25) NULL');
-        $this->execute('ALTER TABLE `institutions` MODIFY COLUMN `latitude` varchar(25) NULL');
-        $this->execute('INSERT INTO `institutions` SELECT * FROM `z_4722_institutions`');                
+        $this->table('institutions')->changeColumn('longitude', 'string', ['limit' => 25])->save();;  
+        $this->table('institutions')->changeColumn('latitude', 'string', ['limit' => 25])->save();;          
+        $this->execute('INSERT INTO `institutions` SELECT * FROM `z_4722_institutions`'); 
     }
-
-
 
     public function down(){
-        $this->execute('DROP TABLE `institutions`');        
-        $this->execute('RENAME TABLE `z_4722_institutions` TO `institutions`');  
+        $this->dropTable('institutions');
+        $this->table('z_4722_institutions')->rename('institutions');
     }
 }
+
+
+
+
