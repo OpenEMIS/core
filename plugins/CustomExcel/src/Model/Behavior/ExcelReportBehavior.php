@@ -740,7 +740,14 @@ class ExcelReportBehavior extends Behavior
             $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
             $placeholder = $placeHolderAttr['displayValue'];
             $replace = sprintf($format, $placeholder);
-            $value = Hash::get($vars, $placeholder);
+
+            $flattenVar = Hash::flatten($vars, '.');
+            if (array_key_exists($placeholder, $flattenVar)) {
+                $value = $flattenVar[$placeholder];
+            } else {
+                $value = '';
+            }
+
             $attr = array_merge($placeHolderAttr, $cellAttr);
             $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
         }
