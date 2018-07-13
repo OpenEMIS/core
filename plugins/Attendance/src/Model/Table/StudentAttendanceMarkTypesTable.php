@@ -71,9 +71,8 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 ->all();
 
             if (!$markResultSet->isEmpty()) {
-                $marksEntity = $markResultSet->toArray();
-                pr($marksEntity);
-                die;
+                $marksEntity = $markResultSet->first();
+                $attendencePerDay = $marksEntity->attendance_per_day;
             }
 
             $options = [];
