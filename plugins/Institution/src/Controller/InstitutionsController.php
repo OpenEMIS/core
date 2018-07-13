@@ -141,7 +141,7 @@ class InstitutionsController extends AppController
         parent::initialize();
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
-            'Attachments'       => ['className' => 'Institution.InstitutionAttachments'],
+            'Attachments'       => ['className' => 'Institution.InstitutionAttachments'],            
 
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
             'Staff'             => ['className' => 'Institution.Staff'],
@@ -170,7 +170,8 @@ class InstitutionsController extends AppController
             'ImportInstitutionTextbooks'=> ['className' => 'Institution.ImportInstitutionTextbooks', 'actions' => ['add']],
             'ImportOutcomeResults'      => ['className' => 'Institution.ImportOutcomeResults', 'actions' => ['add']],
             'ImportStaffLeave'          => ['className' => 'Institution.ImportStaffLeave', 'actions' => ['add']],
-            'ImportInstitutionPositions'=> ['className' => 'Institution.ImportInstitutionPositions', 'actions' => ['add']]
+            'ImportInstitutionPositions'=> ['className' => 'Institution.ImportInstitutionPositions', 'actions' => ['add']],
+            'ImportStudentBodyMasses'   => ['className' => 'Institution.ImportStudentBodyMasses', 'actions' => ['add']]           
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
