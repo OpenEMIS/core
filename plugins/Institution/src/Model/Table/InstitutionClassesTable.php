@@ -1336,6 +1336,23 @@ class InstitutionClassesTable extends ControllerActionTable
         return $multiGradeData->toArray();
     }
 
+    public function findClassesByInstitutionAndAcademicPeriod(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+
+        return $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('name')
+            ])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->order([$this->aliasField('name')]);
+    }
+
     public function getSubjectClasses($institutionId, $academicPeriodId, $gradeId, $subjectId)
     {
         return $this->find('list')->where([
