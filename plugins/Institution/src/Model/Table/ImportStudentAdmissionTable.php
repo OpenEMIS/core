@@ -17,18 +17,19 @@ use DateTime;
 use PHPExcel_Worksheet;
 use Workflow\Model\Behavior\WorkflowBehavior;
 
-class ImportStudentAdmissionTable extends AppTable {
-    private $institutionId;
+class ImportStudentAdmissionTable extends AppTable { 
+    public $institutionId;
     private $gradesInInstitution;
     private $systemDateFormat;
     private $studentStatusId;
     private $availableClasses;
 
-    public function initialize(array $config) {
+    public function initialize(array $config) { 
         $this->table('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'StudentAdmission']);
+        $this->addBehavior('Institution.ImportStudent');
 
         // register the target table once
         $this->Institutions = TableRegistry::get('Institution.Institutions');
@@ -36,25 +37,6 @@ class ImportStudentAdmissionTable extends AppTable {
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $this->Students = TableRegistry::get('Security.Users');
         $this->Workflows = TableRegistry::get('Workflow.Workflows'); 
-    }
-
-    public function beforeAction($event) {
-        $session = $this->request->session();
-        if ($session->check('Institution.Institutions.id')) {
-            $this->institutionId = $session->read('Institution.Institutions.id');
-            $this->gradesInInstitution = $this->InstitutionGrades
-                    ->find('list', [
-                        'keyField' => 'id',
-                        'valueField' => 'education_grade_id'
-                    ])
-                    ->where([
-                        $this->InstitutionGrades->aliasField('institution_id') => $this->institutionId
-                    ])
-                    ->toArray();
-        } else {
-            $this->institutionId = false;
-            $this->gradesInInstitution = [];
-        }
     }
 
     public function implementedEvents() {

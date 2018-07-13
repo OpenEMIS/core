@@ -1458,6 +1458,9 @@ trait MessagesTrait
                 ]
             ],
             'UserBodyMasses' => [
+                'date' => [
+                    'ruleUnique' => 'Repeated Date',
+                ],
                 'height' => [
                     'validateDecimal' => 'Cannot be more than two decimal place',
                     'notZero' => 'Height must be more than 0',
