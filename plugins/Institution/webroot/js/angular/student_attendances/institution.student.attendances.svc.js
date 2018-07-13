@@ -19,7 +19,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
     var models = {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         StudentAttendances: 'Institution.StudentAttendances',
-        InstitutionClasses: 'Institution.InstitutionClasses'
+        InstitutionClasses: 'Institution.InstitutionClasses',
+        StudentAttendanceMarkTypes: 'Attendance.StudentAttendanceMarkTypes'
     };
 
     return service;
@@ -50,7 +51,6 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
     function getWeekListOptions(academicPeriodId) {
         var success = function(response, deferred) {
             var academicPeriodObj = response.data.data;
-
             if (angular.isDefined(academicPeriodObj) && academicPeriodObj.length > 0) {
                 var weeks = academicPeriodObj[0].weeks; // find only 1 academic period entity
 
@@ -74,7 +74,6 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
     function getDayListOptions(academicPeriodId, weekId) {
         var success = function(response, deferred) {
             var dayList = response.data.data;
-
             if (angular.isObject(dayList) && dayList.length > 0) {
                 deferred.resolve(dayList);
             } else {
@@ -93,7 +92,6 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
     function getClassOptions(institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             var classList = response.data.data;
-            console.log('classList', classList);
             if (angular.isObject(classList) && classList.length > 0) {
                 deferred.resolve(classList);
             } else {
@@ -111,10 +109,9 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         return [];
     }
 
-    function getPeriodOptions() {
+    function getPeriodOptions(institutionClassId, academicPeriodId) {
         var success = function(response, deferred) {
             var attendancePeriodList = response.data.data;
-
             if (angular.isObject(attendancePeriodList) && attendancePeriodList.length > 0) {
                 deferred.resolve(attendancePeriodList);
             } else {
@@ -122,7 +119,12 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             }
         };
 
-        return [];
+        return StudentAttendanceMarkTypes
+            .find('PeriodByClass', {
+                institution_class_id: institutionClassId,
+                academic_period_id: academicPeriodId
+            })
+            .ajax({success: success, defer: true});
     }
 
     function getClassStudent() {

@@ -49,25 +49,25 @@ $panelHeader = $this->fetch('panelHeader');
 					<div class="data-section">
 						<i class="kd-students icon"></i>
 						<div class="data-field">
-							<h4>Total Students:</h4>
+							<h4><?= __('Total Students') ?>:</h4>
 							<h1 class="data-header">Over 9000</h1>
 						</div>
 					</div>
 						<div class="data-section">
 						<div class="data-field">
-							<h4>No. of Students Present</h4>	
+							<h4><?= __('No. of Students Present') ?></h4>	
 							<h1 class="data-header">Over 9000</h1>
 						</div>
 					</div>
 						<div class="data-section">
 						<div class="data-field">
-							<h4>No. of Students Absent</h4>	
+							<h4><?= __('No. of Students Absent') ?></h4>	
 							<h1 class="data-header">Over 9000</h1>
 						</div>
 					</div>
 					<div class="data-section">
 						<div class="data-field">
-							<h4>No. of Students Late</h4>	
+							<h4><?= __('No. of Students Late') ?></h4>	
 							<h1 class="data-header">Over 9000</h1>
 						</div>
 					</div>
@@ -110,20 +110,11 @@ $panelHeader = $this->fetch('panelHeader');
 					<h5><?= __('Attendance per day') ?>: </h5>
 					<div class="input">
 						<div class="input-selection" style="width: 100%;">
-							<div class="input">
-								<input kd-checkbox-radio="This is an example of a long text in the radiobutton" type="radio" name="attendance_per_day">
-							</div>
-							<div class="input">	
-								<input kd-checkbox-radio="This is an example of a long text in the radiobutton" type="radio" name="attendance_per_day">
+							<div class="input" ng-repeat="attendance_period in $ctrl.attendancePeriodOptions">
+								<input kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
 							</div>
 						</div>
 					</div>	
-				
-					<!-- <div class="input-select-wrapper">
-						<select ng-disabled="$ctrl.action=='edit'" name="academic_period" ng-options="period.id as period.name for period in academicPeriodOptions" ng-model="selectedAcademicPeriod" ng-change="changeAcademicPeriod();">
-                			<option value="" ng-if="academicPeriodOptions.length == 0"><?= __('No Options') ?></option>
-						</select>
-					</div> -->
 				</div>
 			</bg-pane>
 		</bg-splitter>
