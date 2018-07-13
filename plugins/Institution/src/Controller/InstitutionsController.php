@@ -148,7 +148,7 @@ class InstitutionsController extends AppController
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
 
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
-            'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
+            // 'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
             'AttendanceExport'  => ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
             'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
             'Promotion'         => ['className' => 'Institution.StudentPromotion', 'actions' => ['add']],
@@ -403,6 +403,15 @@ class InstitutionsController extends AppController
     // End
 
     // AngularJS
+    public function StudentAttendances()
+    {
+        $session = $this->request->session();
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+
+        $this->set('institution_id', $institutionId);
+        $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
+    }
+
     public function Results()
     {
         $classId = $this->ControllerAction->getQueryString('class_id');
@@ -1004,6 +1013,12 @@ class InstitutionsController extends AppController
     {
         $action = $this->request->action;
         switch ($action) {
+            case 'StudentAttendances':
+                $this->Angular->addModules([
+                    'institution.student.attendances.ctrl',
+                    'institution.student.attendances.svc'
+                ]);
+                break;
             case 'Results':
                 $this->Angular->addModules([
                     'alert.svc',
