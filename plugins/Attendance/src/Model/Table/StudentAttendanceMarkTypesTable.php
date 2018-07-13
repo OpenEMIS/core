@@ -2,6 +2,8 @@
 namespace Attendance\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\Datasource\ResultSetInterface;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Attendance\Model\Table\StudentAttendanceTypesTable as AttendanceTypes;
 
@@ -18,6 +20,9 @@ class StudentAttendanceMarkTypesTable extends AppTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'foreignKey' => 'education_grade_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('StudentAttendanceTypes', ['className' => 'Attendance.StudentAttendanceTypes', 'foreignKey' => 'attendance_type_id']);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StudentAttendances' => ['index', 'view']
+        ]);
     }
 
     public function getDefaultMarkType()
@@ -77,10 +82,28 @@ class StudentAttendanceMarkTypesTable extends AppTable
 
             $options = [];
             for ($i = 1; $i <= $attendencePerDay; ++$i) {
-                $options[$i] = $prefix . $i;
+                $options[] = [
+                    'id' => $i,
+                    'name' => __($prefix . $i)
+                ];
+                // $options[$i] = $prefix . $i;
+                // $options[$i] = $prefix . $i;
             }
 
             return $options;
         }
+    }
+
+    public function findPeriodByClass(Query $query, array $options)
+    {
+        $institionClassId = $options['institution_class_id'];
+        $academicPeriodId = $options['academic_period_id'];
+
+        $attendanceOptions = $this->getAttendancePerDayOptionsByClass($institionClassId, $academicPeriodId);
+
+        return $query
+            ->formatResults(function (ResultSetInterface $results) use ($attendanceOptions) {
+                return $attendanceOptions;
+            });
     }
 }
