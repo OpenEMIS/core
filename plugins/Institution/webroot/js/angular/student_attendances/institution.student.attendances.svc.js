@@ -127,18 +127,26 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             .ajax({success: success, defer: true});
     }
 
-    function getClassStudent() {
+    function getClassStudent(institutionId, institutionClassId, academicPeriodId, day, attendancePeriod) {
         var success = function(response, deferred) {
-            var attendancePeriodList = response.data.data;
+            var classStudents = response.data.data;
 
-            if (angular.isObject(attendancePeriodList) && attendancePeriodList.length > 0) {
-                deferred.resolve(attendancePeriodList);
+            if (angular.isObject(classStudents) && classStudents.length > 0) {
+                deferred.resolve(classStudents);
             } else {
-                deferred.reject('There was an error when retrieving the attendance period list');
+                deferred.reject('There was an error when retrieving the class student list');
             }
         };
 
-        return [];
+        return StudentAttendances
+            .find('ClassStudentsWithAbsence', {
+                institution_id: institutionId,
+                institution_class_id: institutionClassId,
+                academic_period_id: academicPeriodId,
+                day_id: day,
+                attendance_period_id: attendancePeriod
+            })
+            .ajax({success: success, defer: true});
     }
 
 };
