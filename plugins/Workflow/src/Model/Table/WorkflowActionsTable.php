@@ -436,7 +436,7 @@ class WorkflowActionsTable extends AppTable
                     return $q->where(['WorkflowModels.model' => $selectedModel]);
                 })
                 ->matching('WorkflowSteps.NextWorkflowSteps', function ($q) use ($eventKey) {
-                    return $q->where(['NextWorkflowSteps.event_key' => $eventKey]);  
+                    return $q->where(['NextWorkflowSteps.event_key LIKE' => '%'.$eventKey.'%']);  
                 })
                 ->first();
         
