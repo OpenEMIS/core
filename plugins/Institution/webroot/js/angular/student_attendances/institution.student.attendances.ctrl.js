@@ -43,12 +43,11 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             InstitutionStudentAttendancesSvc.getAcademicPeriodOptions(vm.institutionId)
             .then(function(academicPeriodOptions) {
                 // console.log('Controller - academicPeriodOptions', academicPeriodOptions);
+                vm.academicPeriodOptions = academicPeriodOptions;
                 if (academicPeriodOptions.length > 0) {
                     vm.selectedAcademicPeriod = academicPeriodOptions[0].id;
+                    return InstitutionStudentAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod);
                 }
-                vm.academicPeriodOptions = academicPeriodOptions;
-
-                return InstitutionStudentAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod);
             }, vm.error)
             .then(function(weekListOptions) {
                 // console.log('Controller - weekListOptions', weekListOptions);
@@ -68,7 +67,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                 if (dayListOptions.length > 0) {
                     for (var i = 0; i < dayListOptions.length; ++i) {
                         if (angular.isDefined(dayListOptions[i]['selected']) && dayListOptions[i]['selected']) {
-                            vm.selectedDay = dayListOptions[i].id;
+                            vm.selectedDay = dayListOptions[i].date;
                             break;
                         }
                     }
@@ -77,18 +76,25 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                 }
             }, vm.error)
             .then(function(classListOptions) {
+                vm.classListOptions = classListOptions;
                 if (classListOptions.length > 0) {
                     vm.selectedClass = classListOptions[0].id;
+                    return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
                 }
-                vm.classListOptions = classListOptions;
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
             }, vm.error)
             .then(function(attendancePeriodOptions) {
-                console.log('Controller - attendancePeriodOptions', attendancePeriodOptions);
+                // console.log('Controller - attendancePeriodOptions', attendancePeriodOptions);
+                vm.attendancePeriodOptions = attendancePeriodOptions;
                 if (attendancePeriodOptions.length > 0) {
                     vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
+                    return InstitutionStudentAttendancesSvc.getClassStudent(
+                        vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedAttendancePeriod
+                    );
                 }
-                vm.attendancePeriodOptions = attendancePeriodOptions;
+            }, vm.error)
+            .then(function(classStudents) {
+                console.log('Controller - classStudents', classStudents);
+                
             }, vm.error)
             .finally(function() {
                 UtilsSvc.isAppendLoader(false);
@@ -132,11 +138,12 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
         }, vm.error)
         .then(function(attendancePeriodOptions) {
-            console.log('Controller - attendancePeriodOptions', attendancePeriodOptions);
+            // console.log('Controller - attendancePeriodOptions', attendancePeriodOptions);
             if (attendancePeriodOptions.length > 0) {
                 vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
             }
             vm.attendancePeriodOptions = attendancePeriodOptions;
+            return InstitutionStudentAttendancesSvc.getClassStudent(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedAttendancePeriod);
         }, vm.error)
         .finally(function() {
             UtilsSvc.isAppendLoader(false);
