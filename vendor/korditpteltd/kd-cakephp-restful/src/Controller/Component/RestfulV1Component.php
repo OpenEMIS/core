@@ -231,8 +231,11 @@ class RestfulV1Component extends Component implements RestfulInterface
     public function add()
     {
         $target = $this->model;
+        $requestData = $this->request->data;
+        $requestData['action_type'] = isset($requestData['action_type']) ? $requestData['action_type'] : 'third_party';
+     
         if ($target) {
-            $entity = $target->newEntity($this->request->data);
+            $entity = $target->newEntity($requestData);
             $entity = $this->convertBase64ToBinary($entity);
             $target->save($entity);
             $this->formatData($entity);
