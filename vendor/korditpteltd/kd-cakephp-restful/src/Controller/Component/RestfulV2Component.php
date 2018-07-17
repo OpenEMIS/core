@@ -308,6 +308,7 @@ class RestfulV2Component extends Component implements RestfulInterface
         if (is_null($this->model)) {
             return;
         }
+        $requestData = $this->request->data;
         $controller = $this->controller;
         $extra = $this->extra;
         $serialize = $this->serialize;
@@ -316,8 +317,11 @@ class RestfulV2Component extends Component implements RestfulInterface
             $table->dispatchEvent('Restful.Model.add.updateSchema', [$table->getSchema(), $extra], $controller);
         }
 
+        // // if true, from angularJS, else external API call
+        $requestData['action_type'] = isset($requestData['action_type']) ? $requestData['action_type'] : 'third_party';        
         $options = ['extra' => $extra];
-        $entity = $table->newEntity($this->request->data, $options);
+
+        $entity = $table->newEntity($requestData, $options);
 
         // blob data type will be sent using based64 format
         $entity = $this->convertBase64ToBinary($entity);
