@@ -87,7 +87,10 @@ class StudentAdmissionTable extends ControllerActionTable
             ])   
             ->add('start_date', [
                 'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'end_date', false]
+                    'rule' => ['compareDate', 'end_date', false],
+                    'on' => function ($context) {  
+                        return (array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']));
+                    }
                 ],
                 'ruleCheckProgrammeEndDateAgainstStudentStartDate' => [
                     'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date']
@@ -626,14 +629,21 @@ class StudentAdmissionTable extends ControllerActionTable
         }
 
         // For third party restful call
-        if(!$data->offsetExists('status_id')) {
+        if($data->offsetExists('action_type') && $data['action_type'] == 'third_party') {
+            if($data->offsetExists('academic_period_id')) {
+                if ($this->AcademicPeriods->exists([$this->AcademicPeriods->primaryKey() => $data['academic_period_id']])) {
+                    $data['end_date'] = $this->AcademicPeriods->get($data['academic_period_id'])->end_date->format('Y-m-d');
+                }
+            }
+
+            if(!$data->offsetExists('institution_class_id')) {
+                $data['institution_class_id'] = null;                
+            }
+            
             $data['status_id'] = WorkflowBehavior::STATUS_OPEN;
-        }
-    
-        if(!$data->offsetExists('assignee_id')) {
-            $data['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
-        }
-    }
+            $data['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;        
+        }   
+   }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
