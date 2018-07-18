@@ -40,7 +40,7 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                     'type' => 'select',
                     'select' => false,
                     'after' => 'condition',
-                    'lookupModel' => 'FieldOption.EmploymentStatusTypes'
+                    'lookupModel' => 'FieldOption.EmploymentTypes'
                 ]
             ],
             'placeholder' => [
