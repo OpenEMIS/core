@@ -28,7 +28,11 @@ class ImportStudentAdmissionTable extends AppTable {
         $this->table('import_mapping');
         parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'StudentAdmission']);
+        $this->addBehavior('Import.Import', [
+            'plugin' => 'Institution',
+            'model' => 'StudentAdmission',
+            'backUrl' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']
+        ]);
         $this->addBehavior('Institution.ImportStudent');
 
         // register the target table once
