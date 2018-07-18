@@ -40,22 +40,34 @@ class StudentAttendancesTable extends AppTable
         $academicPeriodId = $options['academic_period_id'];
         $day = $options['day_id'];
         $attendancePeriodId = $options['attendance_period_id'];
+        $weekStartDay = $options['week_start_day'];
+        $weekEndDay = $options['week_end_day'];
+
+        if ($day == -1) {
+            $findDay[] = $weekStartDay;
+            $findDay[] = $weekEndDay;
+        } else {
+            $findDay = $day;
+        }
 
         $StudentAbsenceTable = TableRegistry::get('Institution.InstitutionStudentAbsences');
 
-        $query
+        return $query
+            ->select([
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.id',
+            ])
             ->contain(['Users'])
-            ->find('withAbsence', ['date' => $day])
+            ->find('withAbsence', ['date' => $findDay])
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionCLassId,
                 $this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT'),
             ]);
-
-        pr($query->sql());
-        // pr($options);xr
-        // return $query;
-        die;
     }
 
     public function findWithAbsence(Query $query, array $options)
@@ -64,8 +76,8 @@ class StudentAttendancesTable extends AppTable
 
         $conditions = ['StudentAbsences.student_id = StudentAttendances.student_id'];
         if (is_array($date)) {
-            $startDate = $date[0]->format('Y-m-d');
-            $endDate = $date[1]->format('Y-m-d');
+            $startDate = $date[0];
+            $endDate = $date[1];
 
             $conditions['OR'] = [
                 'OR' => [
@@ -96,21 +108,21 @@ class StudentAttendancesTable extends AppTable
                 ]
             ];
         } else {
-            $conditions['StudentAbsences.start_date <= '] = $date->format('Y-m-d');
-            $conditions['StudentAbsences.end_date >= '] = $date->format('Y-m-d');
+            $conditions['StudentAbsences.date <= '] = $date;
         }
         return $query
             ->select([
                 $this->aliasField('student_id'),
-                'Users.openemis_no', 'Users.first_name', 'Users.middle_name', 'Users.third_name','Users.last_name', 'Users.id',
-                'StudentAbsences.id',
+                
+                // 'StudentAbsences.id',
                 // 'StudentAbsences.start_date',
                 // 'StudentAbsences.end_date',
                 'StudentAbsences.start_time',
                 'StudentAbsences.end_time',
                 'StudentAbsences.absence_type_id',
                 // 'StudentAbsences.full_day',
-                'StudentAbsences.student_absence_reason_id'
+                'StudentAbsences.student_absence_reason_id',
+                'StudentAbsences.comment'
             ])
             ->join([
                 [
