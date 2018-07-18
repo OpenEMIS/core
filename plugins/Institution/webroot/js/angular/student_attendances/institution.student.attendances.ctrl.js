@@ -8,6 +8,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.action = 'view';
     vm.institutionId;
+    vm.absenceTypeOptions = [];
+    vm.studentAbsenceReasonOptions = [];
 
     // Options
     vm.academicPeriodOptions = [];
@@ -15,6 +17,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.weekListOptions = [];
     vm.selectedWeek = '';
+    vm.selectedWeekStartDate = '';
+    vm.selectedWeekEndDate = '';
 
     vm.dayListOptions = [];
     vm.selectedDay = '';
@@ -26,7 +30,27 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.selectedAttendancePeriod = '';
 
     // gridOptions
-    vm.gridOptions;
+    vm.gridReady = false;
+    vm.classStudentList = [];
+    vm.gridOptions = {
+        columnDefs: [],
+        rowData: [],
+        headerHeight: 38,
+        rowHeight: 135,
+        minColWidth: 200,
+        enableColResize: true,
+        enableSorting: true,
+        unSortIcon: true,
+        enableFilter: true,
+        suppressMenuHide: true,
+        suppressMovableColumns: true,
+        suppressContextMenu: true,
+        stopEditingWhenGridLosesFocus: true,
+        ensureDomOrder: true,
+        onGridSizeChanged: function() {
+            this.api.sizeColumnsToFit();
+        }
+    };
 
     // Error
     vm.error = function (error) {
@@ -40,7 +64,15 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         UtilsSvc.isAppendLoader(true);
 
         if (vm.institutionId != null) {
-            InstitutionStudentAttendancesSvc.getAcademicPeriodOptions(vm.institutionId)
+            InstitutionStudentAttendancesSvc.getAbsenceTypeOptions()
+            .then(function(absenceType) {
+                vm.absenceType = absenceType;
+                return InstitutionStudentAttendancesSvc.getStudentAbsenceReasonOptions();
+            }, vm.error)
+            .then(function(studentAbsenceReasonOptions) {
+                vm.studentAbsenceReasonOptions = studentAbsenceReasonOptions;
+                return InstitutionStudentAttendancesSvc.getAcademicPeriodOptions(vm.institutionId);
+            }, vm.error)
             .then(function(academicPeriodOptions) {
                 // console.log('Controller - academicPeriodOptions', academicPeriodOptions);
                 vm.academicPeriodOptions = academicPeriodOptions;
@@ -55,6 +87,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                     for (var i = 0; i < weekListOptions.length; ++i) {
                         if (angular.isDefined(weekListOptions[i]['selected']) && weekListOptions[i]['selected']) {
                             vm.selectedWeek = weekListOptions[i].id;
+                            vm.selectedWeekStartDate = weekListOptions[i].start_day;
+                            vm.selectedWeekEndDate = weekListOptions[i].end_day;
                             break;
                         }
                     }
@@ -87,14 +121,16 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                 vm.attendancePeriodOptions = attendancePeriodOptions;
                 if (attendancePeriodOptions.length > 0) {
                     vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
+                    vm.classStudentList = [];
                     return InstitutionStudentAttendancesSvc.getClassStudent(
-                        vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedAttendancePeriod
+                        vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedAttendancePeriod, vm.selectedDay, vm.selectedWeekStartDate, vm.selectedWeekEndDate
                     );
                 }
             }, vm.error)
             .then(function(classStudents) {
-                console.log('Controller - classStudents', classStudents);
-                
+                // console.log('Controller - classStudents', classStudents);
+                vm.classStudentList = classStudents;
+                vm.initGrid();
             }, vm.error)
             .finally(function() {
                 UtilsSvc.isAppendLoader(false);
@@ -102,9 +138,58 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }
     });
 
+    vm.initGrid = function() {
+        AggridLocaleSvc.getTranslatedGridLocale().then(
+            function(localeText) {
+                vm.gridOptions.localeText = localeText;
+                vm.gridOptions.context = {
+                    absenceType: vm.absenceType,
+                    studentAbsenceReason: vm.studentAbsenceReasonOptions,
+                    mode: vm.action
+                };
+                vm.gridOptions.onGridReady = function() {
+                    if (angular.isDefined(vm.gridOptions.api)) {
+                        vm.gridOptions.api.setRowData(vm.classStudentList);
+                        vm.setColumnDef();
+                    }
+                };
+                vm.gridReady = true;
+            },
+            function(error) {
+                vm.gridOptions.context = {
+                    absenceType: vm.absenceType,
+                    studentAbsenceReason: vm.studentAbsenceReasonOptions,
+                    mode: vm.action
+                };
+                vm.gridOptions.onGridReady = function() {
+                    if (angular.isDefined(vm.gridOptions.api)) {
+                        vm.gridOptions.api.setRowData(vm.classStudentList);
+                        vm.setColumnDef();
+                    }
+                };
+                vm.gridReady = true;
+            }
+        );
+    }
+
+    vm.setColumnDef = function() {
+        var columnDefs = [];
+        if (vm.selectedDay != -1) {
+            // single day
+            columnDefs = InstitutionStudentAttendancesSvc.getSingleDayColumnDefs();
+        } else {
+            // all day
+        }
+
+        if (angular.isDefined(vm.gridOptions.api)) {
+            console.log('vm.classStudentList', vm.classStudentList);
+            vm.gridOptions.api.setColumnDefs(columnDefs);
+            vm.gridOptions.api.sizeColumnsToFit();
+        }
+    }
+
     vm.changeAcademicPeriod = function() {
         UtilsSvc.isAppendLoader(true);
-        console.log('vm.selectedAcademicPeriod', vm.selectedAcademicPeriod);
         InstitutionStudentAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod)
         .then(function(weekListOptions) {
             if (weekListOptions.length > 0) {
@@ -122,7 +207,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             if (dayListOptions.length > 0) {
                 for (var i = 0; i < dayListOptions.length; ++i) {
                     if (angular.isDefined(dayListOptions[i]['selected']) && dayListOptions[i]['selected']) {
-                        vm.selectedDay = dayListOptions[i].id;
+                        vm.selectedDay = dayListOptions[i].date;
                         break;
                     }
                 }
@@ -143,22 +228,31 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                 vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
             }
             vm.attendancePeriodOptions = attendancePeriodOptions;
-            return InstitutionStudentAttendancesSvc.getClassStudent(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedAttendancePeriod);
+            vm.classStudentList = [];
+            return InstitutionStudentAttendancesSvc.getClassStudent(
+                vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedAttendancePeriod, vm.selectedDay, vm.selectedWeekStartDate, vm.selectedWeekEndDate
+            );
+        }, vm.error)
+        .then(function(classStudents) {
+            vm.classStudentList = classStudents;
+            vm.setGridData();
         }, vm.error)
         .finally(function() {
             UtilsSvc.isAppendLoader(false);
         });
-}
+    }
 
     vm.changeWeek = function() {
         console.log('change week!', vm.selectedWeek);
         UtilsSvc.isAppendLoader(true);
+        vm.selectedWeekStartDate = vm.weekListOptions[vm.selectedWeek].start_day;
+        vm.selectedWeekEndDate = vm.weekListOptions[vm.selectedWeek].end_day;
         InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek)
         .then(function(dayListOptions) {
             if (dayListOptions.length > 0) {
                 for (var i = 0; i < dayListOptions.length; ++i) {
                     if (angular.isDefined(dayListOptions[i]['selected']) && dayListOptions[i]['selected']) {
-                        vm.selectedDay = dayListOptions[i].id;
+                        vm.selectedDay = dayListOptions[i].date;
                         break;
                     }
                 }
@@ -172,6 +266,17 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.changeDay = function() {
         console.log('change day!', vm.selectedDay);
+        UtilsSvc.isAppendLoader(true);
+        InstitutionStudentAttendancesSvc.getClassStudent(
+            vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedAttendancePeriod, vm.selectedDay, vm.selectedWeekStartDate, vm.selectedWeekEndDate
+        )
+        .then(function(classStudents) {
+            vm.classStudentList = classStudents;
+            vm.setGridData();
+        }, vm.error)
+        .finally(function() {
+            UtilsSvc.isAppendLoader(false);
+        });
     }
 
     vm.changeClass = function() {
@@ -184,6 +289,14 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                 vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
             }
             vm.attendancePeriodOptions = attendancePeriodOptions;
+            vm.classStudentList = [];
+            return InstitutionStudentAttendancesSvc.getClassStudent(
+                vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedAttendancePeriod, vm.selectedDay, vm.selectedWeekStartDate, vm.selectedWeekEndDate
+            );
+        }, vm.error)
+        .then(function(classStudents) {
+            vm.classStudentList = classStudents;
+            vm.setGridData();
         }, vm.error)
         .finally(function() {
             UtilsSvc.isAppendLoader(false);
@@ -196,15 +309,15 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.onEditClick = function() {
         vm.action = 'edit';
+        vm.gridOptions.context.mode = vm.action;
+        vm.setColumnDef();
         AlertSvc.info($scope, 'Attendances will be automatically saved.');
     };
 
     vm.onBackClick = function() {
         vm.action = 'view';
+        vm.gridOptions.context.mode = vm.action;
+        vm.setColumnDef();
         AlertSvc.reset($scope);
     };
-
-    vm.initGrid = function() {
-
-    }
 }

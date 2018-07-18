@@ -36,6 +36,25 @@ $panelHeader = $this->fetch('panelHeader');
 
 <?= $this->element('OpenEmis.alert') ?>
 
+<style>
+.ag-cell textarea {
+	display: inline-block;
+    padding: 5px 10px;
+    margin-bottom: 15px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    font-size: 12px;
+    height: 70px;
+    width: 100%;
+    border: 1px solid #CCC;
+}
+
+.ag-cell .input-select-wrapper select {
+	background: #FFFFFF;
+	display: block;
+}
+</style>
+
 <div class="panel">
 	<div class="panel-body" style="position: relative;">
 		<bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>" float-btn="false">
@@ -73,7 +92,7 @@ $panelHeader = $this->fetch('panelHeader');
 					</div>
 				</div>
 				<div id="institution-student-attendances-table" class="table-wrapper">
-				    <div ng-if="gridOptions" kd-ag-grid="gridOptions" has-tabs="true" class="ag-height-fixed"></div>
+				    <div ng-if="$ctrl.gridReady" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
 				</div>
 			</bg-pane>
 
@@ -104,7 +123,7 @@ $panelHeader = $this->fetch('panelHeader');
 					<h5><?= __('Class') ?>: </h5>
 					<div class="input-select-wrapper">
 						<select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="class.id as class.name for class in $ctrl.classListOptions" ng-model="$ctrl.selectedClass" ng-change="$ctrl.changeClass();">
-                			<option value="" ng-if="classListOptions.length == 0"><?= __('No Options') ?></option>
+                			<option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
 						</select>
 					</div>
 					<h5><?= __('Attendance per day') ?>: </h5>
