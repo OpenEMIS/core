@@ -67,7 +67,8 @@ class ReportCardsTable extends AppTable
                 'OutcomeCriterias',
                 'StudentOutcomeResults',
                 'GroupAssessmentPeriods',
-                'GroupAssessmentItemResults'
+                'GroupAssessmentItemResults',
+                'AssessmentTermResults'
             ]
         ]);
     }
@@ -113,6 +114,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentOutcomeSubjectComments'] = 'onExcelTemplateInitialiseStudentOutcomeSubjectComments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeCriterias'] = 'onExcelTemplateInitialiseOutcomeCriterias';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentOutcomeResults'] = 'onExcelTemplateInitialiseStudentOutcomeResults';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentTermResults'] = 'onExcelTemplateInitialiseAssessmentTermResults';
 
         return $events;
     }
@@ -1384,6 +1386,104 @@ class ReportCardsTable extends AppTable
             ];
 
             return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseAssessmentTermResults(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
+            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            $query = $AssessmentItemResults->find();
+
+            $selectedColumns = [
+                $AssessmentItemResults->aliasField('education_subject_id'),
+                'marks' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)'),
+                'academic_term_value' => '(
+                    CASE
+                    WHEN AssessmentPeriods.academic_term <> \'\' THEN AssessmentPeriods.academic_term
+                        ELSE AssessmentPeriods.code
+                        END
+                    )',
+                'academic_term_name' => '(
+                    CASE
+                    WHEN AssessmentPeriods.academic_term <> \'\' THEN AssessmentPeriods.academic_term
+                        ELSE AssessmentPeriods.name
+                        END
+                    )'
+            ];
+
+            $subjectList = $AssessmentItems
+                ->find('list', [
+                    'keyField' => 'education_subject_id',
+                    'valueField' => 'education_subject_id'
+                ])
+                ->find('assessmentItemsInClass', [
+                    'assessment_id' => $extra['assessment_id'],
+                    'class_id' => $params['institution_class_id']
+                ])
+                ->toArray();
+
+            // to only process the query if the class has subjects
+            $conditions = [];
+            if (!empty($subjectList)) {
+                $conditions = [
+                    $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
+                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
+                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
+                    $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
+                    $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                    $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
+                ];
+            } else {
+                $conditions = ['1 = 0'];
+            }
+
+            $entity = $query
+                ->select($selectedColumns)
+                ->contain(['AssessmentPeriods', 'EducationSubjects'])
+                ->where($conditions)
+                ->group([
+                    'academic_term_value',
+                    $AssessmentItemResults->aliasField('education_subject_id')
+                ])
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) { 
+                        $row['marks_formatted'] = number_format($row['marks'], 2);
+                        return $row;
+                    });
+                })
+                ->hydrate(false)
+                ->toArray();
+
+            $tempResult = [];
+            foreach ($entity as $array) {
+                $termCode = $array['academic_term_value'];
+                if (array_key_exists($termCode, $tempResult)) {
+                    ++$tempResult[$termCode]['count'];
+                    $tempResult[$termCode]['total_marks'] += $array['marks'];
+                } else {
+                    $tempResult[$termCode] = [
+                        'count' => 1,
+                        'total_marks' => $array['marks'],
+                        'academic_term_value' => $array['academic_term_value'],
+                        'academic_term_name' => $array['academic_term_name']
+                    ];
+                }
+            }
+
+            $result = [];
+            foreach ($tempResult as $key => $value) {
+                $result[$key] = [
+                    'academic_term_value' => $value['academic_term_value'],
+                    'academic_term_name' => $value['academic_term_name'],
+                    'total_marks' => number_format($value['total_marks'], 2),
+                    'average_marks' => number_format($value['total_marks'] / $value['count'], 2)
+                ];
+            }
+
+            return $result;
         }
     }
 }
