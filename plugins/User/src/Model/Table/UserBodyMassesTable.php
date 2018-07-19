@@ -11,7 +11,7 @@ use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
 
-class UserBodyMassesTable extends AppTable 
+class UserBodyMassesTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -26,7 +26,7 @@ class UserBodyMassesTable extends AppTable
     {
         $validator = parent::validationDefault($validator);
 
-        return $validator       
+        return $validator
             ->add('height', [
                 'notZero' => [
                     'rule' => ['comparison', '>', 0],
@@ -63,35 +63,30 @@ class UserBodyMassesTable extends AppTable
                         $inputDate = new Date ($value);
 
                         if (!empty($context['data']['academic_period_id'])) {
-                            $academicPeriodEntity = $this->AcademicPeriods->get($context['data']['academic_period_id']);
-                            $academicStartDate = $academicPeriodEntity->start_date;
-                            $academicEndDate = $academicPeriodEntity->end_date;
+                            $academicPeriodEntity = $this->AcademicPeriods
+                                ->find()
+                                ->where([$this->AcademicPeriods->aliasField('id') => $context['data']['academic_period_id']])
+                                ->first();
 
-                            if ($inputDate >= $academicStartDate && $inputDate <= $academicEndDate) {
-                                return true;
+                            if (!is_null($academicPeriodEntity)) {
+                                $academicStartDate = $academicPeriodEntity->start_date;
+                                $academicEndDate = $academicPeriodEntity->end_date;
+
+                                if ($inputDate >= $academicStartDate && $inputDate <= $academicEndDate) {
+                                    return true;
+                                } else {
+                                    $startDate = date('d-m-Y', strtotime($academicStartDate));
+                                    $endDate = date('d-m-Y', strtotime($academicEndDate));
+
+                                    return $this->getMessage('UserBodyMasses.dateNotWithinPeriod', ['sprintf' => [$startDate, $endDate]]);
+                                }
                             } else {
-                                $startDate = date('d-m-Y', strtotime($academicStartDate));
-                                $endDate = date('d-m-Y', strtotime($academicEndDate));
-
-                                return $this->getMessage('UserBodyMasses.dateNotWithinPeriod', ['sprintf' => [$startDate, $endDate]]);
+                                return __('Invalid academic period');
                             }
                         } else {
                             return true;
                         }
                     },
-                    'on' => function($context) {
-                        if (isset($context['data']) && array_key_exists('is_imported', $context['data'])) {
-                            if ($context['data']['is_imported'] && !empty($context['data']['academic_period_id'])) {
-                                $academicPeriodId = $context['data']['academic_period_id'];
-                                $count = $this->AcademicPeriods
-                                    ->find()
-                                    ->where([$this->AcademicPeriods->aliasField('id') => $academicPeriodId])
-                                    ->count();
-                                return $count > 0;
-                            }
-                        }
-                        return true;
-                    }
                 ],    
             ]);
     }

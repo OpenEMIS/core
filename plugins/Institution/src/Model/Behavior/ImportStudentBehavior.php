@@ -11,10 +11,10 @@ use Cake\Network\Request;
 
 class ImportStudentBehavior extends Behavior 
 {
-	public $importFeatureList = [
-		'Institution.Institutions.ImportStudentAdmission' => 'Import Student',
-		'Institution.Institutions.ImportStudentBodyMasses' => 'Import Body Masses'
-	];
+    public $importFeatureList = [
+        'Institution.Institutions.ImportStudentAdmission' => 'Import Student',
+        'Institution.Institutions.ImportStudentBodyMasses' => 'Import Body Masses'
+    ];
 
     public function implementedEvents()
     {
@@ -25,10 +25,6 @@ class ImportStudentBehavior extends Behavior
 
     public function addBeforeAction(Event $event)
     {
-        $session = $this->_table->request->session();
-        if ($session->check('Institution.Institutions.id')) {
-        	$this->_table->institutionId = $session->read('Institution.Institutions.id');
-        }
         $this->_table->ControllerAction->field('feature');
         $this->_table->ControllerAction->setFieldOrder(['feature', 'select_file']);
     }
@@ -36,11 +32,11 @@ class ImportStudentBehavior extends Behavior
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-        	$request = $this->_table->request;
-	    	$plugin = $request->params['plugin'];
-	    	$controller = $request->params['controller'];
-	    	$table = $this->_table->alias();
-    		$selectedFeature =  $plugin . '.' . $controller . '.' . $table;
+            $request = $this->_table->request;
+            $plugin = $request->params['plugin'];
+            $controller = $request->params['controller'];
+            $table = $this->_table->alias();
+            $selectedFeature =  $plugin . '.' . $controller . '.' . $table;
 
             $options = $this->getFeatureOptions();
             $attr['type'] = 'select';
@@ -55,8 +51,8 @@ class ImportStudentBehavior extends Behavior
 
     public function addEditOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-    	$table = $this->_table;
-    	$request = $this->_table->request;
+        $table = $this->_table;
+        $request = $this->_table->request;
 
         if (isset($data) && isset($data[$table->alias()]) && !is_null($data[$table->alias()]['feature'])) {
             $feature = explode('.', $data[$table->alias()]['feature']) ;
@@ -81,17 +77,17 @@ class ImportStudentBehavior extends Behavior
 
     private function getFeatureOptions()
     {
-    	$acceessControl = $this->_table->AccessControl;
-    	$featureList = [];
+        $acceessControl = $this->_table->AccessControl;
+        $featureList = [];
 
-    	foreach ($this->importFeatureList as $key => $name) {
-        	$feature = explode('.', $key);
+        foreach ($this->importFeatureList as $key => $name) {
+            $feature = explode('.', $key);
             list($plugin, $controller, $action) = $feature;
 
-        	if ($acceessControl->check([$controller, $action, 'add'])) {
-        		$featureList[$key] = __($name);
-        	}
-    	}
+            if ($acceessControl->check([$controller, $action, 'add'])) {
+                $featureList[$key] = __($name);
+            }
+        }
         return $featureList;
     }
 }
