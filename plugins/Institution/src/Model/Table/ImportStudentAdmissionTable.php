@@ -17,22 +17,23 @@ use DateTime;
 use PHPExcel_Worksheet;
 use Workflow\Model\Behavior\WorkflowBehavior;
 
-class ImportStudentAdmissionTable extends AppTable {
+class ImportStudentAdmissionTable extends AppTable { 
     private $institutionId;
     private $gradesInInstitution;
     private $systemDateFormat;
     private $studentStatusId;
     private $availableClasses;
 
-    public function initialize(array $config) {
+    public function initialize(array $config) { 
         $this->table('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', [
-            'plugin'=>'Institution', 
-            'model'=>'StudentAdmission',
+            'plugin' => 'Institution',
+            'model' => 'StudentAdmission',
             'backUrl' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']
         ]);
+        $this->addBehavior('Institution.ImportStudent');
 
         // register the target table once
         $this->Institutions = TableRegistry::get('Institution.Institutions');
