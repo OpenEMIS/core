@@ -37,16 +37,34 @@ $panelHeader = $this->fetch('panelHeader');
 <?= $this->element('OpenEmis.alert') ?>
 
 <style>
+.sg-theme .ag-cell {
+    display: flex;
+    align-items: center;	
+}
+
+.ag-cell .reason-wrapper {
+	position: relative;
+    width: 100%;
+    display: inline-block;
+}
+
+.ag-cell .reason-wrapper .input-select-wrapper {
+	margin-bottom: 15px;
+}
+
 .ag-cell textarea {
-	display: inline-block;
+	display: block;
     padding: 5px 10px;
-    margin-bottom: 15px;
     -webkit-border-radius: 3px;
     border-radius: 3px;
     font-size: 12px;
     height: 70px;
     width: 100%;
     border: 1px solid #CCC;
+}
+
+.ag-cell .input-select-wrapper {
+	margin-bottom: 0;
 }
 
 .ag-cell .input-select-wrapper select {

@@ -341,12 +341,13 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                             case 'LATE':
                                 // console.log('fedit');
                                 var eCell = document.createElement('div');
+                                eCell.setAttribute("class", "reason-wrapper");
                                 var eTextarea = getCommentElement(data);
                                 eCell.appendChild(eTextarea);
                                 return eCell;
                             case 'UNEXCUSED':
                                 var eCell = document.createElement('div');
-                                eCell.setAttribute("class", "oe-select-wrapper input-select-wrapper");
+                                eCell.setAttribute("class", "reason-wrapper");
                                 var eSelect = getAbsenceReasonElement(data, studentAbsenceReasonList);
                                 var eTextarea = getCommentElement(data);
                                 eCell.appendChild(eSelect);
@@ -354,7 +355,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                                 return eCell;
                             case 'EXCUSED':
                                 var eCell = document.createElement('div');
-                                eCell.setAttribute("class", "oe-select-wrapper input-select-wrapper");
+                                eCell.setAttribute("class", "reason-wrapper");
                                 var eSelect = getAbsenceReasonElement(data, studentAbsenceReasonList);
                                 var eTextarea = getCommentElement(data);
                                 eCell.appendChild(eSelect);
@@ -373,6 +374,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
 
     function getCommentElement(data) {
         var eTextarea = document.createElement("textarea");
+        eTextarea.setAttribute("placeholder", "Comments");
         eTextarea.value = data.StudentAbsences.comment;
 
         eTextarea.addEventListener('change', function () {
@@ -383,6 +385,9 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
     }
 
     function getAbsenceReasonElement(data, studentAbsenceReasonList) {
+        var eSelectWrapper = document.createElement('div');
+        eSelectWrapper.setAttribute("class", "oe-select-wrapper input-select-wrapper");
+
         var eSelect = document.createElement("select");
         var oldValue = (data.StudentAbsences.absence_type_id == null) ? 0 : data.StudentAbsences.absence_type_id;
 
@@ -407,6 +412,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             data.StudentAbsences.absence_type_id = eSelect.value;
         })
 
-        return eSelect;
+        eSelectWrapper.appendChild(eSelect);
+        return eSelectWrapper;
     }
 };
