@@ -4,12 +4,8 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use ArrayObject;
 use Cake\I18n\Date;
-use Cake\Collection\Collection;
 use Cake\Controller\Component;
-use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\Event\Event;
-use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use DateTimeInterface;
@@ -18,7 +14,7 @@ use PHPExcel_Worksheet;
 
 class ImportStudentBodyMassesTable extends AppTable 
 {
-    public $institutionId;
+    private $institutionId;
 
     public function initialize(array $config) 
     {
@@ -31,11 +27,15 @@ class ImportStudentBodyMassesTable extends AppTable
         $this->InstitutionStudents = TableRegistry::get('Institution.Students');
     }
 
+    public function beforeAction($event) {
+        $this->institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+    }
+
     public function implementedEvents() 
     {
         $events = parent::implementedEvents();
         $newEvent = [
-            'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',            
+            'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
         ];
@@ -45,7 +45,6 @@ class ImportStudentBodyMassesTable extends AppTable
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $plugin = $toolbarButtons['back']['url']['plugin'];
-        $controller = $toolbarButtons['back']['url']['controller'];
         if ($plugin == 'Institution') {
             $toolbarButtons['back']['url']['action'] = 'Students';
         }
@@ -92,7 +91,6 @@ class ImportStudentBodyMassesTable extends AppTable
         // from string to dateObject
         $formattedDate = DateTime::createFromFormat('d/m/Y', $tempRow['date']);
         $tempRow['date'] = $formattedDate;
-
         if (empty($tempRow['date'])) {
             $rowInvalidCodeCols['date'] = __('No start date specified');
             return false;
@@ -110,16 +108,16 @@ class ImportStudentBodyMassesTable extends AppTable
         }
 
         //check Student in the institution
-        $student = $this->InstitutionStudents->find()->where([
+        $studentResult = $this->InstitutionStudents->find()->where([
             'academic_period_id' => $tempRow['academic_period_id'],
             'institution_id' => $this->institutionId,
             'student_id' => $tempRow['security_user_id'],
-        ])->first();
+        ])->all();
 
-        if (!$student) {
+        if ($studentResult->isEmpty()) {
             $rowInvalidCodeCols['security_user_id'] = __('No such student in the institution');
             $tempRow['security_user_id'] = false;
             return false;
-        }        
+        }
     }
 }

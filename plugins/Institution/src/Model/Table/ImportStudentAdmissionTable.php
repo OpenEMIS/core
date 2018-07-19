@@ -18,7 +18,7 @@ use PHPExcel_Worksheet;
 use Workflow\Model\Behavior\WorkflowBehavior;
 
 class ImportStudentAdmissionTable extends AppTable { 
-    public $institutionId;
+    private $institutionId;
     private $gradesInInstitution;
     private $systemDateFormat;
     private $studentStatusId;
@@ -41,6 +41,25 @@ class ImportStudentAdmissionTable extends AppTable {
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $this->Students = TableRegistry::get('Security.Users');
         $this->Workflows = TableRegistry::get('Workflow.Workflows'); 
+    }
+
+    public function beforeAction($event) {
+        $session = $this->request->session();
+        if ($session->check('Institution.Institutions.id')) {
+            $this->institutionId = $session->read('Institution.Institutions.id');
+            $this->gradesInInstitution = $this->InstitutionGrades
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'education_grade_id'
+                    ])
+                    ->where([
+                        $this->InstitutionGrades->aliasField('institution_id') => $this->institutionId
+                    ])
+                    ->toArray();
+        } else {
+            $this->institutionId = false;
+            $this->gradesInInstitution = [];
+        }
     }
 
     public function implementedEvents() {
