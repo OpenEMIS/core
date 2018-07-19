@@ -1,7 +1,7 @@
 ### [3.31.0] - 2018-07-??
 - Developed student pending admission API
 - Developed Potential Wrong Birthdates in Reports > Data Quality 
-- Developed a function to import height and weight for multiple students
+- Developed function to import height and weight for multiple students
 - Developed function to save the class in the following year
 
 ### [3.30.2] - 2018-07-13
