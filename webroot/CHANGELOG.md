@@ -1,3 +1,19 @@
+### [3.31.0] - 2018-07-20
+- Developed student pending admission API
+- Developed Potential Wrong Birthdates in Reports > Data Quality 
+- Developed function to import height and weight for multiple students
+
+### [3.30.2] - 2018-07-13
+- Developed additional placeholders in Student Report Card
+
+### [3.30.1] - 2018-07-05
+- Added Started On and Completed On in Institutions > Report Cards
+
+### [3.30.0] - 2018-07-02
+- Developed audit reports via feature
+- Implemented status column in Institution > Students > Import feature
+- Change date format in Audit Report to yyyy-mm-dd to enable sorting
+
 ### [3.30.0] - 2018-07-02
 - Developed audit reports via feature
 - Implemented status column in Institution > Students > Import feature
