@@ -69,7 +69,8 @@ class ReportsController extends AppController
                 'Report.Students' => __('Students'),
                 'Report.StudentIdentities' => __('Identities'),
                 'Report.StudentContacts' => __('Contacts'),
-                'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School')
+                'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
+                'Report.BodyMasses' => __('Body Masses')
             ];
         } elseif ($module == 'Staff') {
             $options = [
@@ -108,7 +109,8 @@ class ReportsController extends AppController
         } elseif ($module == 'DataQuality') {
             $options = [
                 'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
-                'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates')
+                'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates'),
+                'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates')
             ];
         } elseif ($module == 'Audits') {
             $options = [
