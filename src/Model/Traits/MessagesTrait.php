@@ -1009,7 +1009,8 @@ trait MessagesTrait
                     'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
                     'ageHint' => 'The student should be %s years old',
                     'ageRangeHint' => 'The student should be between %s to %s years old',
-                    'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
+                    'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
+                    'studentNotExists' => 'This student does not exist in the system.'
                 ],
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
@@ -1053,20 +1054,29 @@ trait MessagesTrait
                 ]
             ],
             'StudentAdmission' => [
+                'academic_period_id' => [
+                    'ruleCheckValidAcademicPeriodId' => 'Invalid Academic Period id'
+                ],
                 'student_id' => [
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
                     'ruleCheckPendingAdmissionExist' => 'Student has already been added to admission list'
                 ],
                 'institution_class_id' => [
+                    'ruleCheckValidClassId' => 'This institution does not offer the selected class for this selected education grade in the selected academic period',
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
                 'gender_id' => [
                     'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
                 ],
                 'start_date' => [
-                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.',
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'education_grade_id' => [
+                    'checkProgrammeExist' => 'This insistution does not offer the selected Education Grade',
                     'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
                 ],
                 'status_id' => [
@@ -1458,6 +1468,9 @@ trait MessagesTrait
                 ]
             ],
             'UserBodyMasses' => [
+                'date' => [
+                    'ruleUnique' => 'Repeated Date',
+                ],
                 'height' => [
                     'validateDecimal' => 'Cannot be more than two decimal place',
                     'notZero' => 'Height must be more than 0',
