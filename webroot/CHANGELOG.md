@@ -1,8 +1,7 @@
-### [3.31.0] - 2018-07-??
+### [3.31.0] - 2018-07-20
 - Developed student pending admission API
 - Developed Potential Wrong Birthdates in Reports > Data Quality 
 - Developed function to import height and weight for multiple students
-- Developed function to save student's future class before promotion in Institution > Students > Promotion page
 
 ### [3.30.2] - 2018-07-13
 - Developed additional placeholders in Student Report Card
