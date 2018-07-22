@@ -604,13 +604,13 @@ class StudentPromotionTable extends AppTable
         }
 
         $students = [];
-        $nextClassOptions = [];
+        $nextClasses = [];
         if (!empty($selectedPeriod) && $selectedPeriod != -1) {
             $selectedNextPeriod = $entity->has('next_academic_period_id') ? $entity->next_academic_period_id : null;
             $selectedGrade = $entity->has('grade_to_promote') ? $entity->grade_to_promote : null;
             $selectedNextGrade = $entity->has('education_grade_id') ? $entity->education_grade_id : null;
 
-            if (!is_null($selectedGrade)) {
+            if (!empty($selectedGrade)) {
                 $studentStatuses = $this->statuses;
                 $selectedClass = $entity->has('class') ? $entity->class : null;
 
@@ -660,7 +660,7 @@ class StudentPromotionTable extends AppTable
                 if ($students->count() > 0) {
                     if (!is_null($selectedNextPeriod) && !is_null($selectedNextGrade)) {
                         $InstitutionClassesTable = TableRegistry::get('Institution.InstitutionClasses');
-                        $nextClassOptions = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $selectedNextGrade);
+                        $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $selectedNextGrade);
                     }
 
                     $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
@@ -725,10 +725,10 @@ class StudentPromotionTable extends AppTable
             }
         }
 
-        if (empty($nextClassOptions)) {
+        if (empty($nextClasses)) {
             $nextClassOptions = ['' => $this->getMessage('general.select.noOptions')];
         } else {
-            $nextClassOptions = ['0' => '-- '.__('Select Next Class').' --'] + $nextClassOptions;
+            $nextClassOptions = ['0' => '-- '.__('Select Next Class').' --'] + $nextClasses;
         }
 
         $attr['type'] = 'element';
