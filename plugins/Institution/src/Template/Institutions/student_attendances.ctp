@@ -37,125 +37,160 @@ $panelHeader = $this->fetch('panelHeader');
 <?= $this->element('OpenEmis.alert') ?>
 
 <style>
-.sg-theme .ag-cell {
-    display: flex;
-    align-items: center;	
-}
+    .attendance-dashboard .data-section {
+        width: 32%;
+    }
 
-.ag-cell .reason-wrapper {
-	position: relative;
-    width: 100%;
-    display: inline-block;
-}
+    .sg-theme .ag-cell {
+        display: flex;
+        flex-flow: column wrap;
+        justify-content: center;
+    }
 
-.ag-cell .reason-wrapper .input-select-wrapper {
-	margin-bottom: 15px;
-}
+    .ag-cell .reason-wrapper {
+        position: relative;
+        width: 100%;
+        display: inline-block;
+    }
 
-.ag-cell textarea {
-	display: block;
-    padding: 5px 10px;
-    -webkit-border-radius: 3px;
-    border-radius: 3px;
-    font-size: 12px;
-    height: 70px;
-    width: 100%;
-    border: 1px solid #CCC;
-}
+    .ag-cell .reason-wrapper .input-select-wrapper {
+        margin-bottom: 15px;
+    }
 
-.ag-cell .input-select-wrapper {
-	margin-bottom: 0;
-}
+    .ag-cell textarea {
+        display: block;
+        padding: 5px 10px;
+        -webkit-border-radius: 3px;
+        border-radius: 3px;
+        font-size: 12px;
+        height: 70px;
+        width: 100%;
+        border: 1px solid #CCC;
+    }
 
-.ag-cell .input-select-wrapper select {
-	background: #FFFFFF;
-	display: block;
-}
+    .ag-cell .input-select-wrapper {
+        margin-bottom: 0;
+    }
+
+    .ag-cell .input-select-wrapper select {
+        background: #FFFFFF;
+        display: block;
+    }
+
+    .ag-cell .absence-reason,
+    .ag-cell .absences-comment {
+        overflow: hidden;
+        white-space: normal;
+        text-overflow: ellipsis;
+        max-height: 70px;
+        display: flex;
+        align-items: baseline;
+    }
+
+    .ag-cell .absence-reason span,
+    .ag-cell .absences-comment span {
+        margin: 0 10px;
+    }
+
+
+    .ag-cell .absence-reason + .absences-comment  {
+        margin-top: 15px;
+    }
+
+    .ag-cell textarea:focus {
+        outline: none;
+    }
+
+    .splitter-filter select[disabled] {
+        background-color: #f2f2f2!important;
+        border: 1px solid #ccc!important;
+        color: #999!important;
+    }
 </style>
 
 <div class="panel">
-	<div class="panel-body" style="position: relative;">
-		<bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>" float-btn="false">
-			<bg-pane class="main-content">
-				<div class="alert {{class}}" ng-hide="message == null">
-			        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
-			    </div>
+    <div class="panel-body" style="position: relative;">
+        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>" float-btn="false">
+            <bg-pane class="main-content">
+                <div class="alert {{class}}" ng-hide="message == null">
+                    <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
+                </div>
 
-				<div class="overview-box alert" ng-class="disableElement">
-					<a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
-					<div class="data-section">
-						<i class="kd-students icon"></i>
-						<div class="data-field">
-							<h4><?= __('Total Students') ?>:</h4>
-							<h1 class="data-header">Over 9000</h1>
-						</div>
-					</div>
-						<div class="data-section">
-						<div class="data-field">
-							<h4><?= __('No. of Students Present') ?></h4>	
-							<h1 class="data-header">Over 9000</h1>
-						</div>
-					</div>
-						<div class="data-section">
-						<div class="data-field">
-							<h4><?= __('No. of Students Absent') ?></h4>	
-							<h1 class="data-header">Over 9000</h1>
-						</div>
-					</div>
-					<div class="data-section">
-						<div class="data-field">
-							<h4><?= __('No. of Students Late') ?></h4>	
-							<h1 class="data-header">Over 9000</h1>
-						</div>
-					</div>
-				</div>
-				<div id="institution-student-attendances-table" class="table-wrapper">
-				    <div ng-if="$ctrl.gridReady" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
-				</div>
-			</bg-pane>
+                <div class="overview-box alert attendance-dashboard" ng-class="disableElement" ng-show="$ctrl.action == 'view'">
+                    <a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
+                    <div class="data-section">
+                        <i class="kd-students icon"></i>
+                        <div class="data-field">
+                            <h4><?= __('Total Students') ?>:</h4>
+                            <h1 class="data-header">{{$ctrl.totalStudents}}</h1>
+                        </div>
+                    </div>
+                        <div class="data-section">
+                        <div class="data-field">
+                            <h4><?= __('No. of Students Present') ?></h4>   
+                            <h1 class="data-header">{{$ctrl.presentCount}}</h1>
+                        </div>
+                    </div>
+                        <div class="data-section">
+                        <div class="data-field">
+                            <h4><?= __('No. of Students Absent') ?></h4>    
+                            <h1 class="data-header">{{$ctrl.absenceCount}}</h1>
+                        </div>
+                    </div>
+                    <!-- <div class="data-section">
+                        <div class="data-field">
+                            <h4><?= __('No. of Students Late') ?></h4>  
+                            <h1 class="data-header">Over 9000</h1>
+                        </div>
+                    </div> -->
+                </div>
+                <div id="institution-student-attendances-table" class="table-wrapper">
+                    <div ng-if="$ctrl.gridReady" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
+                </div>
+            </bg-pane>
 
-			<!-- With Buttons -->
-			<bg-pane class="split-content splitter-slide-out" min-size-p="20" max-size-p="20" size-p="20">
-				<div class="split-content-header" style="margin-bottom: 15px;">
-					<h3>Filter</h3>
-				</div>
-				<div class="split-content-area">
-					<h5><?= __('Academic Period') ?>: </h5>
-					<div class="input-select-wrapper">
-                		<select ng-disabled="$ctrl.action=='edit'" name="academic_period" ng-options="period.id as period.name for period in $ctrl.academicPeriodOptions" ng-model="$ctrl.selectedAcademicPeriod" ng-change="$ctrl.changeAcademicPeriod();">
-                			<option value="" ng-if="$ctrl.academicPeriodOptions.length == 0"><?= __('No Options') ?></option>
-						</select>
-					</div>
-					<h5><?= __('Week') ?>: </h5>
-					<div class="input-select-wrapper">
-						<select ng-disabled="$ctrl.action=='edit'" name="week" ng-options="week.id as week.name for week in $ctrl.weekListOptions" ng-model="$ctrl.selectedWeek" ng-change="$ctrl.changeWeek();">
-                			<option value="" ng-if="$ctrl.weekListOptions.length == 0"><?= __('No Options') ?></option>
-						</select>
-					</div>
-					<h5><?= __('Day') ?>: </h5>
-					<div class="input-select-wrapper">
-						<select ng-disabled="$ctrl.action=='edit'" name="day" ng-options="day.date as day.name for day in $ctrl.dayListOptions" ng-model="$ctrl.selectedDay" ng-change="$ctrl.changeDay();">
-                			<option value="" ng-if="$ctrl.dayListOptions.length == 0"><?= __('No Options') ?></option>
-						</select>
-					</div>
-					<h5><?= __('Class') ?>: </h5>
-					<div class="input-select-wrapper">
-						<select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="class.id as class.name for class in $ctrl.classListOptions" ng-model="$ctrl.selectedClass" ng-change="$ctrl.changeClass();">
-                			<option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
-						</select>
-					</div>
-					<h5><?= __('Attendance per day') ?>: </h5>
-					<div class="input">
-						<div class="input-selection" style="width: 100%;">
-							<div class="input" ng-repeat="attendance_period in $ctrl.attendancePeriodOptions">
-								<input kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
-							</div>
-						</div>
-					</div>	
-				</div>
-			</bg-pane>
-		</bg-splitter>
-	</div>
+            <!-- With Buttons -->
+            <bg-pane class="split-content splitter-slide-out splitter-filter" min-size-p="20" max-size-p="20" size-p="20">
+                <div class="split-content-header" style="margin-bottom: 15px;">
+                    <h3>Filter</h3>
+                </div>
+                <div class="split-content-area">
+                    <h5><?= __('Academic Period') ?>: </h5>
+                    <div class="input-select-wrapper">
+                        <select ng-disabled="$ctrl.action=='edit'" name="academic_period" ng-options="period.id as period.name for period in $ctrl.academicPeriodOptions" ng-model="$ctrl.selectedAcademicPeriod" ng-change="$ctrl.changeAcademicPeriod();">
+                            <option value="" ng-if="$ctrl.academicPeriodOptions.length == 0"><?= __('No Options') ?></option>
+                        </select>
+                    </div>
+                    <h5><?= __('Week') ?>: </h5>
+                    <div class="input-select-wrapper">
+                        <select ng-disabled="$ctrl.action=='edit'" name="week" ng-options="week.id as week.name for week in $ctrl.weekListOptions" ng-model="$ctrl.selectedWeek" ng-change="$ctrl.changeWeek();">
+                            <option value="" ng-if="$ctrl.weekListOptions.length == 0"><?= __('No Options') ?></option>
+                        </select>
+                    </div>
+                    <h5><?= __('Day') ?>: </h5>
+                    <div class="input-select-wrapper">
+                        <select ng-disabled="$ctrl.action=='edit'" name="day" ng-options="day.date as day.name for day in $ctrl.dayListOptions" ng-model="$ctrl.selectedDay" ng-change="$ctrl.changeDay();">
+                            <option value="" ng-if="$ctrl.dayListOptions.length == 0"><?= __('No Options') ?></option>
+                        </select>
+                    </div>
+                    <h5><?= __('Class') ?>: </h5>
+                    <div class="input-select-wrapper">
+                        <select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="class.id as class.name for class in $ctrl.classListOptions" ng-model="$ctrl.selectedClass" ng-change="$ctrl.changeClass();">
+                            <option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
+                        </select>
+                    </div>
+                    <h5><?= __('Attendance per day') ?>: </h5>
+                    <div class="input">
+                        <div class="input-selection" style="width: 100%;">
+                            <div class="input" ng-repeat="attendance_period in $ctrl.attendancePeriodOptions">
+                                <input kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
+                            </div>
+                        </div>
+                    </div>  
+                </div>
+            </bg-pane>
+        </bg-splitter>
+    </div>
 </div>
 
 

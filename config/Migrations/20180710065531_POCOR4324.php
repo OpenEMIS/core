@@ -167,17 +167,9 @@ class POCOR4324 extends AbstractMigration
                 'limit' => 1,
                 'null' => false
             ])
-            ->addColumn('start_time', 'time', [
-                'default' => null,
-                'null' => false
-            ])
-            ->addColumn('end_time', 'time', [
-                'default' => null,
-                'null' => false
-            ])
             ->addColumn('comment', 'text', [
                 'default' => null,
-                'null' => false
+                'null' => true
             ])
             ->addColumn('absence_type_id', 'integer', [
                 'default' => null,
@@ -188,7 +180,7 @@ class POCOR4324 extends AbstractMigration
             ->addColumn('student_absence_reason_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => false,
+                'null' => true,
                 'comment' => 'links to absence_types.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
