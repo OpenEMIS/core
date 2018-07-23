@@ -83,6 +83,15 @@ class InstitutionClassStudentsTable extends AppTable
                     $classData['academic_period_id'] = $student->academic_period_id;
 
                     $this->autoInsertClassStudent($classData);
+                } elseif ($student->has('next_institution_class_id') && $student->next_institution_class_id > 0) {
+                    $classData = [];
+                    $classData['student_id'] = $student->student_id;
+                    $classData['education_grade_id'] = $student->education_grade_id;
+                    $classData['institution_class_id'] = $student->next_institution_class_id;
+                    $classData['student_status_id'] = $student->student_status_id;
+                    $classData['institution_id'] = $student->institution_id;
+                    $classData['academic_period_id'] = $student->academic_period_id;
+                    $this->autoInsertClassStudent($classData);
                 }
             }
         } else {
@@ -97,6 +106,9 @@ class InstitutionClassStudentsTable extends AppTable
                 ])->first();
 
             if (!empty($classStudent) && $classStudent->student_status_id != $student->student_status_id) {
+                if ($student->next_institution_class_id > 0) {
+                    $classStudent->next_institution_class_id = $student->next_institution_class_id;
+                }
                 $classStudent->student_status_id = $student->student_status_id;
                 $this->save($classStudent);
             }
