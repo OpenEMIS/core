@@ -517,6 +517,7 @@ trait MessagesTrait
             'current_period' => 'Current Academic Period',
             'next_period' => 'Next Academic Period',
             'success' => 'Students have been promoted',
+            'saveDraftSuccess' => 'Student Promotion successfully saved as draft',
             'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution',
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noStudentSelected' => 'There are no students selected',
