@@ -1025,6 +1025,7 @@ class AcademicPeriodsTable extends AppTable
 
                 $dayOptions[] = [
                     'id' => $firstDayOfWeek->dayOfWeek,
+                    'day' => __($firstDayOfWeek->format('l')),
                     // 'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ') ' . $schoolClosed,
                     'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ')',
                     'date' => $firstDayOfWeek->format('Y-m-d'),

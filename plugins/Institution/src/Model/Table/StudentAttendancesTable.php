@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Datasource\ResultSetInterface;
 
 class StudentAttendancesTable extends AppTable
 {
@@ -50,10 +51,13 @@ class StudentAttendancesTable extends AppTable
             $findDay = $day;
         }
 
-        $StudentAbsenceTable = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $StudentAbsenceTable = TableRegistry::get('Institution.StudentAbsences');
 
         return $query
             ->select([
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('institution_class_id'),
+                $this->aliasField('institution_id'),
                 'Users.openemis_no',
                 'Users.first_name',
                 'Users.middle_name',
@@ -67,62 +71,48 @@ class StudentAttendancesTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionCLassId,
                 $this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT'),
-            ]);
+            ])
+            ->formatResults(function (ResultSetInterface $results) use ($StudentAbsenceTable) {
+                return $results->map(function () use ($StudentAbsenceTable) {
+
+                });
+            });
     }
 
     public function findWithAbsence(Query $query, array $options)
     {
         $date = $options['date'];
 
-        $conditions = ['StudentAbsences.student_id = StudentAttendances.student_id'];
+        $conditions = [
+            'StudentAbsences.student_id = StudentAttendances.student_id',
+            'StudentAbsences.institution_id = StudentAttendances.institution_id',
+            'StudentAbsences.institution_class_id = StudentAttendances.institution_class_id',
+            'StudentAbsences.academic_period_id = StudentAttendances.academic_period_id'
+        ];
+
         if (is_array($date)) {
             $startDate = $date[0];
             $endDate = $date[1];
 
-            $conditions['OR'] = [
-                'OR' => [
-                    [
-                        'StudentAbsences.end_date IS NOT NULL',
-                        'StudentAbsences.start_date >=' => $startDate,
-                        'StudentAbsences.start_date <=' => $endDate
-                    ],
-                    [
-                        'StudentAbsences.end_date IS NOT NULL',
-                        'StudentAbsences.start_date <=' => $startDate,
-                        'StudentAbsences.end_date >=' => $startDate
-                    ],
-                    [
-                        'StudentAbsences.end_date IS NOT NULL',
-                        'StudentAbsences.start_date <=' => $endDate,
-                        'StudentAbsences.end_date >=' => $endDate
-                    ],
-                    [
-                        'StudentAbsences.end_date IS NOT NULL',
-                        'StudentAbsences.start_date >=' => $startDate,
-                        'StudentAbsences.end_date <=' => $endDate
-                    ]
-                ],
-                [
-                    'StudentAbsences.end_date IS NULL',
-                    'StudentAbsences.start_date <=' => $endDate
+            $conditions[] = [
+                'AND' => [
+                    'StudentAbsences.date >= ' => $startDate,
+                    'StudentAbsences.date <= ' => $endDate
                 ]
             ];
         } else {
-            $conditions['StudentAbsences.date <= '] = $date;
+            $conditions['StudentAbsences.date = '] = $date;
         }
         return $query
             ->select([
                 $this->aliasField('student_id'),
                 
-                // 'StudentAbsences.id',
-                // 'StudentAbsences.start_date',
-                // 'StudentAbsences.end_date',
-                'StudentAbsences.start_time',
-                'StudentAbsences.end_time',
                 'StudentAbsences.absence_type_id',
-                // 'StudentAbsences.full_day',
+                'StudentAbsences.period',
+                'StudentAbsences.date',
                 'StudentAbsences.student_absence_reason_id',
-                'StudentAbsences.comment'
+                'StudentAbsences.comment',
+                'AbsenceTypes.code'
             ])
             ->join([
                 [
@@ -130,6 +120,16 @@ class StudentAttendancesTable extends AppTable
                     'alias' => 'StudentAbsences',
                     'type' => 'LEFT',
                     'conditions' => $conditions
+                ]
+            ])
+            ->join([
+                [
+                    'table' => 'absence_types',
+                    'alias' => 'AbsenceTypes',
+                    'type' => 'LEFT',
+                    'conditions' => [
+                        'StudentAbsences.absence_type_id = AbsenceTypes.id'
+                    ]
                 ]
             ]);
     }
