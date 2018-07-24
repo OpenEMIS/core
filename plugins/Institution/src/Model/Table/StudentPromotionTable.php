@@ -616,8 +616,10 @@ class StudentPromotionTable extends AppTable
 
                 if (!is_null($selectedStudentStatusId)) {
                     $showNextClass = in_array($selectedStudentStatusId, [$studentStatuses['PROMOTED'], $studentStatuses['REPEATED']]);
+                    if ($selectedStudentStatusId == $studentStatuses['REPEATED']) {
+                        $selectedNextGrade = $selectedGrade;
+                    }
                 }
-
                 // to retain next class selection when validation failed
                 $studentNextClassData = [];
                 if (array_key_exists('students', $requestData[$this->alias()])) {
