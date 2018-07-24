@@ -586,6 +586,7 @@ class TrainingSessionsTable extends ControllerActionTable
             // refer to addEditOnAddTrainee for http post
             if ($this->request->data("$alias.$key")) {
                 $associated = $this->request->data("$alias.$key");
+                $trainingSessionResults = $this->TraineeResults->getTrainingSessionResults($entity->id);
 
                 foreach ($associated as $i => $obj) {
                     $object = $this->paramsDecode($obj);
@@ -599,7 +600,13 @@ class TrainingSessionsTable extends ControllerActionTable
                     $name .= $Form->hidden("$alias.$key.$i", ['value' => $obj]);
                     $rowData[] = [$object['openemis_no'], ['autocomplete-exclude' => $object['trainee_id']]];
                     $rowData[] = $name;
-                    $rowData[] = $this->getDeleteButton();
+
+                    if (array_key_exists($entity->id, $trainingSessionResults) && array_key_exists($object['trainee_id'], $trainingSessionResults[$entity->id])) {                 
+                        $message = __('There are results for this trainee');
+                        $rowData[] = '<i class="fa fa-info-circle fa-lg icon-blue" data-toggle="tooltip" data-container="body" data-placement="top" data-animation="false" title="" data-html="true" data-original-title="' . $message . '"></i>';  
+                    } else {
+                        $rowData[] = $this->getDeleteButton();
+                    }
                     $tableCells[] = $rowData;
                 }
             }

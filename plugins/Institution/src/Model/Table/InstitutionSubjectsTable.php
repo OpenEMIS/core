@@ -85,7 +85,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'SubjectStudents' => ['view', 'edit'],
-            'ReportCardComments' => ['index']
+            'ReportCardComments' => ['index'],
+            'StudentOutcomes' => ['index']
         ]);
 
         $this->setDeleteStrategy('restrict');
@@ -248,7 +249,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $Classes = $this->Classes;
         $Subjects = $this;
 
-        $academicPeriodOptions = $this->AcademicPeriods->getList();
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $institutionId = $extra['institution_id'];
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
 
@@ -348,6 +349,26 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
                 return $arrResults;
             });
+    }
+
+    public function findBySubjectsInClass(Query $query, array $options)
+    {
+        $classId = $options['institution_class_id'];
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $gradeId = $options['education_grade_id'];
+
+        return $query
+            ->matching('ClassSubjects', function ($q) use ($classId) {
+                return $q->where(['ClassSubjects.institution_class_id' => $classId]);
+            })
+            ->contain(['EducationSubjects'])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('education_grade_id') => $gradeId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->order('EducationSubjects.order');
     }
 
     public function findSubjectDetails(Query $query, array $options)
@@ -547,7 +568,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $institutionId = $extra['institution_id'];
         $periodOption = ['' => '-- ' . __('Select Period') .' --'];
-        $academicPeriodOptions = $this->AcademicPeriods->getlist(['withLevels'=>false, 'isEditable'=>true]);
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['withLevels' => false, 'isEditable' => true]);
         $academicPeriodOptions = $periodOption + $academicPeriodOptions;
 
         if ($this->request->is(['post', 'put']) && $this->request->data($this->aliasField('academic_period_id'))) {
@@ -747,10 +768,19 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $Staff = TableRegistry::get('Institution.Staff');
         $query = $Staff->find('all')
-            ->find('withBelongsTo')
+            ->select([
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name'
+            ])
             ->find('byInstitution', ['Institutions.id' => $extra['institution_id']])
             ->find('byPositions', ['Institutions.id' => $extra['institution_id'], 'type' => 1]) // refer to OptionsTrait for type options
             ->find('AcademicPeriod', ['academic_period_id'=> $extra['selectedAcademicPeriodId']])
+            ->contain(['Users'])
             ->where([
                 $Staff->aliasField('institution_position_id'),
                 'OR' => [ //check teacher end date
@@ -762,8 +792,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $teachers = [0 => '-- ' . __('Select Teacher or Leave Blank') . ' --'];
         foreach ($query as $key => $value) {
-            if ($value->has('user')) {
-                $teachers[$value->user->id] = $value->user->name;
+            if ($value->has('Users')) {
+                $teachers[$value->Users->id] = $value->Users->name;
             }
         }
         $subjects = $this->getSubjectOptions($extra['selectedClassId']);
@@ -1042,22 +1072,30 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $Staff = TableRegistry::get('Institution.Staff');
         $query = $Staff->find('all')
-                        ->find('withBelongsTo')
-                        ->find('byInstitution', ['Institutions.id' => $entity->institution_id])
-                        ->find('byPositions', ['Institutions.id' => $entity->institution_id, 'type' => 1]) // refer to OptionsTrait for type options
-                        ->find('AcademicPeriod', ['academic_period_id'=>$entity->academic_period_id])
-                        ->where([
-                            $Staff->aliasField('institution_position_id'),
-                            'OR' => [ //check teacher end date
-                                [$Staff->aliasField('end_date').' > ' => new Date()],
-                                [$Staff->aliasField('end_date').' IS NULL']
-                            ]
-                        ])
-                        ;
+            ->select([
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name'
+            ])
+            ->find('byInstitution', ['Institutions.id' => $entity->institution_id])
+            ->find('byPositions', ['Institutions.id' => $entity->institution_id, 'type' => 1]) // refer to OptionsTrait for type options
+            ->find('AcademicPeriod', ['academic_period_id'=>$entity->academic_period_id])
+            ->contain(['Users'])
+            ->where([
+                $Staff->aliasField('institution_position_id'),
+                'OR' => [ //check teacher end date
+                    [$Staff->aliasField('end_date').' > ' => new Date()],
+                    [$Staff->aliasField('end_date').' IS NULL']
+                ]
+            ])
+            ;
         $options = [];
         foreach ($query->toArray() as $key => $value) {
-            if ($value->has('user')) {
-                $options[$value->user->id] = $value->user->name_with_id;
+            if ($value->has('Users')) {
+                $options[$value->Users->id] = $value->Users->name_with_id;
             }
         }
         return $options;
@@ -1376,7 +1414,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
             }
         }
-
+ 
         return $data;
     }
 }

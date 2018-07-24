@@ -30,7 +30,14 @@ class InstitutionClassesTable extends AppTable
             'dependent' => true
         ]);
 
-        $this->addBehavior('Excel', ['excludes' => ['class_number']]);
+        $this->addBehavior('Excel', [
+            'excludes' => [
+                'class_number',
+                'total_male_students',
+                'total_female_students'
+            ],
+            'autoFields' => false
+        ]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
     }
@@ -68,26 +75,62 @@ class InstitutionClassesTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $query
-        ->contain('Institutions.Areas')
-        ->contain('Institutions.AreaAdministratives')
-        ->contain('Institutions.Types')
-        ->contain('EducationGrades')
-        ->contain('InstitutionShifts.ShiftOptions')
-        ->contain('AcademicPeriods')
-        ->select([
-            'institution_code' => 'Institutions.code',
-            'institution_name' => 'Institutions.name',
-            'area_name' => 'Areas.name',
-            'area_code' => 'Areas.code',
-            'institution_type' => 'Types.name',
-            'shift_name' => 'ShiftOptions.name',
-            'area_administrative_code' => 'AreaAdministratives.code',
-            'area_administrative_name' => 'AreaAdministratives.name'
-        ])
-        ->order([
-            'AcademicPeriods.order',
-            'Institutions.code'
-        ]);
+            ->select([
+                $this->aliasField('id'),
+                'academic_period_id' => 'InstitutionClasses.academic_period_id',
+                'institution_code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',
+                'institution_type' => 'Types.name',
+                'area_name' => 'Areas.name',
+                'area_code' => 'Areas.code',
+                'area_administrative_code' => 'AreaAdministratives.code',
+                'area_administrative_name' => 'AreaAdministratives.name',
+                'shift_name' => 'ShiftOptions.name',
+                'name' => 'InstitutionClasses.name',
+                'staff_id' => 'InstitutionClasses.staff_id',
+                'secondary_staff_id' => 'InstitutionClasses.secondary_staff_id'
+            ])
+            ->contain([
+                'AcademicPeriods' => [
+                    'fields' => [
+                        'AcademicPeriods.name'
+                    ]
+                ],
+                'Institutions.Types',
+                'Institutions.Areas',
+                'Institutions.AreaAdministratives',
+                'InstitutionShifts.ShiftOptions',
+                'EducationGrades' => [
+                    'fields' => [
+                        'InstitutionClassGrades.institution_class_id',
+                        'EducationGrades.id',
+                        'EducationGrades.code',
+                        'EducationGrades.name'
+                    ]
+                ],
+                'Staff' => [
+                    'fields' => [
+                        'Staff.openemis_no',
+                        'Staff.first_name',
+                        'Staff.middle_name',
+                        'Staff.third_name',
+                        'Staff.last_name'
+                    ]
+                ],
+                'SecondaryStaff' => [
+                    'fields' => [
+                        'SecondaryStaff.openemis_no',
+                        'SecondaryStaff.first_name',
+                        'SecondaryStaff.middle_name',
+                        'SecondaryStaff.third_name',
+                        'SecondaryStaff.last_name',
+                    ]
+                ]
+            ])
+            ->order([
+                'AcademicPeriods.order',
+                'Institutions.code'
+            ]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)

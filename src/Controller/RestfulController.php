@@ -79,7 +79,7 @@ class RestfulController extends BaseController
         $this->Auth->config('authenticate', [
             'ADmad/JwtAuth.Jwt' => [
                 'parameter' => 'token',
-                'userModel' => 'Users',
+                'userModel' => 'User.Users',
                 'scope' => ['Users.status' => 1],
                 'fields' => [
                     'username' => 'id'

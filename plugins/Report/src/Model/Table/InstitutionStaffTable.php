@@ -2,38 +2,45 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\ORM\TableRegistry;
 
-class InstitutionStaffTable extends AppTable  {
+class InstitutionStaffTable extends AppTable
+{
 	use OptionsTrait;
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->table('institution_staff');
         parent::initialize($config);
 
-        $this->belongsTo('Users',           ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('Positions',       ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
-        $this->belongsTo('Institutions',    ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-        $this->belongsTo('StaffTypes',      ['className' => 'Staff.StaffTypes']);
-        $this->belongsTo('StaffStatuses',   ['className' => 'Staff.StaffStatuses']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
+        $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
+        $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
-            'excludes' => ['start_year', 'end_year', 'FTE', 'security_group_user_id'],
+            'excludes' => ['start_year', 'end_year', 'security_group_user_id'],
             'pages' => false,
             'autoFields' => false
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
         $sheets[] = [
             'name' => $this->alias(),
             'table' => $this,
@@ -42,7 +49,8 @@ class InstitutionStaffTable extends AppTable  {
         ];
     }
 
-    public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
         // Setting request data and modifying fetch condition
         $requestData = json_decode($settings['process']['params']);
         $statusId = $requestData->status;
@@ -61,81 +69,108 @@ class InstitutionStaffTable extends AppTable  {
         }
 
         $query
-        ->contain([
-            'Users.Genders',
-            'Institutions.Areas',
-            'Institutions.AreaAdministratives',
-            'Positions.StaffPositionTitles',
-            'Institutions.Types',
-            'Institutions.Sectors',
-            'Institutions.Providers',
-            'Users.Identities.IdentityTypes',
-            'Users.Contacts'
-        ])
-        ->select([
-            'openemis_no' => 'Users.openemis_no',
-            'first_name' => 'Users.first_name',
-            'middle_name' => 'Users.middle_name',
-            'last_name' => 'Users.last_name',
-            'number' => 'Users.identity_number',
-            'username' => 'Users.username',
-            'dob' => 'Users.date_of_birth',
-            'code' => 'Institutions.code',
-            'gender' => 'Genders.name',
-            'area_name' => 'Areas.name',
-            'area_code' => 'Areas.code',
-            'area_administrative_code' => 'AreaAdministratives.code',
-            'area_administrative_name' => 'AreaAdministratives.name',
-            'position_title_teaching' => 'StaffPositionTitles.type',
-            'institution_type' => 'Types.name',
-            'position_title' => 'StaffPositionTitles.name',
-            'institution_sector' => 'Sectors.name',
-            'institution_provider' => 'Providers.name'
-        ]);
-    }
-
-    public function onExcelGetFTE(Event $event, Entity $entity) {
-        return $entity->FTE*100;
-    }
-
-    public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity) {
-        $yesno = $this->getSelectOptions('general.yesno');
-        return (array_key_exists($entity->position_title_teaching, $yesno))? $yesno[$entity->position_title_teaching]: '';
-    }
-
-    public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
-        $age = '';
-        if ($entity->has('user')) {
-            if ($entity->user->has('date_of_birth')) {
-                if (!empty($entity->user->date_of_birth)) {
-                    $yearOfBirth = $entity->user->date_of_birth->format('Y');
-                    $age = date("Y")-$yearOfBirth;
-                }
-            }
-        }
-        return $age;
-    }
-
-    public function onExcelGetEducationGrades(Event $event, Entity $entity)
-    {
-        $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
-
-        $query = $ClassesTable
-            ->find()
-            ->contain(['EducationGrades'])
-            ->hydrate(false)
-            ->where([$ClassesTable->aliasField('staff_id') => $entity->staff_id]);
-
-        $classes = $query->toArray();
-        $grades = [];
-
-        foreach ($classes as $class) {
-            foreach ($class['education_grades'] as $grade) {
-                $grades[$grade['id']] = $grade['name'];
-            }
-        }
-
-        return implode(', ', array_values($grades));
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('FTE'),
+                $this->aliasField('start_date'),
+                $this->aliasField('end_date'),
+                $this->aliasField('staff_id'),  // this field is required to build value for Education Grades
+                $this->aliasField('staff_type_id'),
+                $this->aliasField('staff_status_id'),
+                $this->aliasField('institution_id')
+            ])
+            ->contain([
+                'Institutions' => [
+                    'fields' => [
+                        'code' => 'Institutions.code',
+                        'Institutions.name'
+                    ]
+                ],
+                'Institutions.Types' => [
+                    'fields' => [
+                        'institution_type' => 'Types.name'
+                    ]
+                ],
+                'Institutions.Sectors' => [
+                    'fields' => [
+                        'institution_sector' => 'Sectors.name',
+                    ]
+                ],
+                'Institutions.Providers' => [
+                    'fields' => [
+                        'institution_provider' => 'Providers.name',
+                    ]
+                ],
+                'Institutions.Areas' => [
+                    'fields' => [
+                        'area_code' => 'Areas.code',
+                        'area_name' => 'Areas.name'
+                    ]
+                ],
+                'Institutions.AreaAdministratives' => [
+                    'fields' => [
+                        'area_administrative_code' => 'AreaAdministratives.code',
+                        'area_administrative_name' => 'AreaAdministratives.name'
+                    ]
+                ],
+                'Users' => [
+                    'fields' => [
+                        'Users.id', // this field is required for Identities and IdentityTypes to appear
+                        'openemis_no' => 'Users.openemis_no',
+                        'first_name' => 'Users.first_name',
+                        'middle_name' => 'Users.middle_name',
+                        'third_name' => 'Users.third_name',
+                        'last_name' => 'Users.last_name',
+                        'preferred_name' => 'Users.preferred_name',
+                        'number' => 'Users.identity_number',
+                        'dob' => 'Users.date_of_birth', // for Date Of Birth field
+                        'Users.date_of_birth',  // for Age field
+                        'username' => 'Users.username'
+                    ]
+                ],
+                'Users.Identities.IdentityTypes' => [
+                    'fields' => [
+                        'Identities.number',
+                        'Identities.issue_date',
+                        'Identities.expiry_date',
+                        'Identities.issue_location',
+                        'IdentityTypes.name'
+                    ]
+                ],
+                'Users.Genders' => [
+                    'fields' => [
+                        'gender' => 'Genders.name'
+                    ]
+                ],
+                'Users.Contacts' => [
+                    'fields' => [
+                        'Contacts.value',
+                        'Contacts.contact_type_id',
+                        'Contacts.security_user_id'
+                    ]
+                ],
+                'StaffTypes' => [
+                    'fields' => [
+                        'StaffTypes.name'
+                    ]
+                ],
+                'StaffStatuses' => [
+                    'fields' => [
+                        'StaffStatuses.name'
+                    ]
+                ],
+                'Positions' => [
+                    'fields' => [
+                        'position_no' => 'Positions.position_no'
+                    ]
+                ],
+                'Positions.StaffPositionTitles' => [
+                    'fields' => [
+                        'position_title' => 'StaffPositionTitles.name',
+                        'position_title_teaching' => 'StaffPositionTitles.type'
+                    ]
+                ]
+            ]);
     }
 
     public function onExcelGetUserIdentities(Event $event, Entity $entity)
@@ -153,6 +188,75 @@ class InstitutionStaffTable extends AppTable  {
         }
 
         return implode(', ', array_values($return));
+    }
+
+    public function onExcelGetFTE(Event $event, Entity $entity)
+    {
+        return $entity->FTE*100;
+    }
+
+    public function onExcelRenderAge(Event $event, Entity $entity, $attr)
+    {
+        $age = '';
+        if ($entity->has('user')) {
+            if ($entity->user->has('date_of_birth')) {
+                if (!empty($entity->user->date_of_birth)) {
+                    $dateOfBirth = $entity->user->date_of_birth->format('Y-m-d');
+                    $today = date('Y-m-d');
+                    $age = date_diff(date_create($dateOfBirth), date_create($today))->y;
+                }
+            }
+        }
+        return $age;
+    }
+
+    public function onExcelGetEducationGrades(Event $event, Entity $entity)
+    {
+        $grades = [];
+
+        if ($entity->has('staff_id')) {
+            $staffId = $entity->staff_id;
+            $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
+            $query = $ClassesTable
+                ->find()
+                ->select([
+                    $ClassesTable->aliasField('id'),
+                    $ClassesTable->aliasField('staff_id'),
+                    $ClassesTable->aliasField('secondary_staff_id')
+                ])
+                ->contain([
+                    'EducationGrades' => [
+                        'fields' => [
+                            'InstitutionClassGrades.institution_class_id',
+                            'EducationGrades.id',
+                            'EducationGrades.code',
+                            'EducationGrades.name'
+                        ]
+                    ]
+                ])
+                ->hydrate(false)
+                ->where([
+                    'OR' => [
+                        [$ClassesTable->aliasField('staff_id') => $staffId],
+                        [$ClassesTable->aliasField('secondary_staff_id') => $staffId]
+                    ]
+                ]);
+
+            $classes = $query->toArray();
+            foreach ($classes as $class) {
+                foreach ($class['education_grades'] as $grade) {
+                    $grades[$grade['id']] = $grade['name'];
+                }
+            }
+        }
+
+        return implode(', ', array_values($grades));
+    }
+
+    public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity)
+    {
+        $yesno = $this->getSelectOptions('general.yesno');
+        return (array_key_exists($entity->position_title_teaching, $yesno))? $yesno[$entity->position_title_teaching]: '';
     }
 
     public function onExcelRenderContactOption(Event $event, Entity $entity, array $attr)
@@ -189,7 +293,7 @@ class InstitutionStaffTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'Staff.institution_id',
+            'key' => 'InstitutionStaff.institution_id',
             'field' => 'institution_id',
             'type' => 'integer',
             'label' => '',
@@ -273,21 +377,21 @@ class InstitutionStaffTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'AreaAdministratives.code',
+            'key' => 'Institutions.area_administrative_code',
             'field' => 'area_administrative_code',
             'type' => 'string',
             'label' => __('Area Administrative Code')
         ];
 
         $newFields[] = [
-            'key' => 'AreaAdministratives.name',
+            'key' => 'Institutions.area_administrative_name',
             'field' => 'area_administrative_name',
             'type' => 'string',
             'label' => __('Area Administrative')
         ];
 
         $newFields[] = [
-            'key' => 'Staff.FTE',
+            'key' => 'InstitutionStaff.FTE',
             'field' => 'FTE',
             'type' => 'integer',
             'label' => 'FTE (%)',
@@ -343,10 +447,10 @@ class InstitutionStaffTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionStaff.institution_position_id',
-            'field' => 'institution_position_id',
-            'type' => 'integer',
-            'label' => ''
+            'key' => 'Positions.position_no',
+            'field' => 'position_no',
+            'type' => 'string',
+            'label' => __('Position Number')
         ];
 
         $newFields[] = [
