@@ -56,7 +56,7 @@ class WorkflowComponent extends Component
     public function isActionIgnored(Event $event, $action)
     {
         $pass = $this->request->pass;
-        if (isset($pass[0]) && $pass[0] == 'processWorkflow') {
+        if (isset($pass[0]) && in_array($pass[0], ['processWorkflow', 'processReassign'])) {
             return true;
         }
     }

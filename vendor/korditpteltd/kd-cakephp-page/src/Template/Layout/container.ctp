@@ -11,7 +11,7 @@ echo $this->element('Page.page_js');
     <div class="page-header">
         <h2 id="main-header"><?= $header ?></h2>
         <div class="toolbar toolbar-search">
-            <?= $this->fetch('toolbar') ?>
+            <?= $this->element('Page.toolbars') ?>
         </div>
     </div>
 

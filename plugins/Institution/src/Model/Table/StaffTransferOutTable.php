@@ -153,7 +153,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
-        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
+        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
         $this->field('institution_position_id');
         $this->field('FTE');
         $this->field('staff_type_id');
@@ -372,7 +372,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('new_start_date', ['entity' => $entity]);
         $this->field('new_end_date', ['type' => 'hidden', 'entity' => $entity]);
 
-        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
+        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
         $this->field('comment');
     }
 
@@ -560,11 +560,42 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
             if ($action == 'add') {
                 // using institution_staff entity
+                $conditions = [];
+                $conditions[$this->NewInstitutions->aliasField('id <>')] = $entity->institution_id;
+                
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $Institutions = TableRegistry::get('Institution.Institutions');
+
+                // start: restrict staff transfer by type
+                $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_transfer_by_type');
+                if ($restrictStaffTransferByType) {
+                    if ($entity->has('institution_id')) {
+                        $institutionId = $entity->institution_id;
+
+                        $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
+                        
+                        $conditions['institution_type_id'] = $institutionTypeId;
+                    }
+                }
+                // end: restrict staff transfer by type
+
+                // start: restrict staff transfer by provider
+                $restrictStaffTransferByProvider = $ConfigItems->value('restrict_staff_transfer_by_provider');
+                if ($restrictStaffTransferByProvider) {
+                    if ($entity->has('institution_id')) {
+                        $institutionId = $entity->institution_id;
+                        $institutionProviderId = $Institutions->get($institutionId)->institution_provider_id;
+                        
+                        $conditions['institution_provider_id'] = $institutionProviderId;
+                    }
+                }
+                // end: restrict staff transfer by provider
+
                 $options = $this->NewInstitutions->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'code_name'
                     ])
-                    ->where([$this->NewInstitutions->aliasField('id <>') => $entity->institution_id])
+                    ->where($conditions)
                     ->order($this->NewInstitutions->aliasField('code'))
                     ->toArray();
 

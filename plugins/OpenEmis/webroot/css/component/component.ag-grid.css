@@ -93,7 +93,8 @@
     border-right: 0 !important;
 }*/
 
-.sg-theme .ag-cell-focus {
+.sg-theme .ag-cell-focus,
+.sg-theme .ag-cell:focus {
     outline: 0 !important;
 }
 
@@ -130,15 +131,18 @@
     border-right: 0 !important;
 }
 
-
 /* END OF AG-GRID BODY */
 
 
 /* ROW HIGHLIGHT CLASS */
 
+.sg-theme .ag-row-hover {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
 .sg-theme .ag-row-odd.ag-row-selected,
 .sg-theme .ag-row-even.ag-row-selected {
-    background-color: #F0FBFF !important;
+    background-color: #F0FBFF;
 }
 
 /* END OF ROW HIGHLIGHT CLASS */
@@ -1143,10 +1147,10 @@
     overflow: visible !important;
 }
 
-div.ag-virtual-list-container {
+/*div.ag-virtual-list-container {
     overflow: scroll !important;
     height: 100% !important;
-}
+}*/
 
 .ag-checkbox-wrapper label.ag-cell-label {
     top: -6px !important;

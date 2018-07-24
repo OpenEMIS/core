@@ -17,6 +17,7 @@ use Cake\ORM\ResultSet;
 use Cake\Network\Session;
 use Cake\Log\Log;
 use Cake\Routing\Router;
+use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -100,7 +101,8 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('StudentPromotion', ['className' => 'Institution.StudentPromotion', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentWithdraw', ['className' => 'Institution.StudentWithdraw', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('TransferApprovals', ['className' => 'Institution.TransferApprovals', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'previous_institution_id']);
+        $this->hasMany('StudentTransferOut', ['className' => 'Institution.StudentTransferOut', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'previous_institution_id']);
+        $this->hasMany('StudentTransferIn', ['className' => 'Institution.StudentTransferIn', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'previous_institution_id']);
         $this->hasMany('AssessmentItemResults', ['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionQualityVisits', ['className' => 'Quality.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -108,6 +110,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->belongsToMany('ExaminationCentresExaminations', [
             'className' => 'Examination.ExaminationCentresExaminations',
@@ -142,8 +145,19 @@ class InstitutionsTable extends ControllerActionTable
         ]);
         $this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionActivities', 'key' => 'institution_id', 'session' => 'Institution.Institutions.id']);
+
+        // specify order of advanced search fields
+        $advancedSearchFieldOrder = [
+            'shift_type', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
+            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes',
+            'code', 'name',
+        ];
         $this->addBehavior('AdvanceSearch', [
-            'display_country' => false
+            'display_country' => false,
+            'include' =>[
+                'code', 'name'
+            ],
+            'order' => $advancedSearchFieldOrder
         ]);
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
@@ -168,7 +182,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
             'Staff' => ['index', 'view'],
-            'API' => ['index', 'view']
+            'Map' => ['index']
         ]);
 
         $this->addBehavior('ControllerAction.Image');
@@ -293,7 +307,31 @@ class InstitutionsTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
+        $events['Model.AreaAdministrative.afterDelete'] = 'areaAdminstrativeAfterDelete';
         return $events;
+    }
+
+    public function areaAdminstrativeAfterDelete(Event $event, $areaAdministrative)
+    {
+        $subquery = $this->AreaAdministratives
+            ->find()
+            ->select(1)
+            ->where(function ($exp, $q) {
+                return $exp->equalFields($this->AreaAdministratives->aliasField('id'), $this->aliasField('area_administrative_id'));
+            });
+
+        $query = $this->find()
+            ->select('id')
+            ->where(function ($exp, $q) use ($subquery) {
+                return $exp->notExists($subquery);
+            });
+        
+        foreach ($query as $row) {
+            $this->updateAll(
+                ['area_administrative_id' => null],
+                ['id' => $row->id]
+            );
+        }
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -448,6 +486,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('institution_status_id');
         $this->field('institution_sector_id', ['type' => 'select', 'onChangeReload' => true]);
         if ($this->action == 'index' || $this->action == 'view') {
+            $this->field('contact_person', ['visible' => false]); 
             $this->field('institution_provider_id', ['type' => 'select']);
         }
         $this->field('institution_type_id');
@@ -601,11 +640,11 @@ class InstitutionsTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** index action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** index action methods
+    **
+    ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->Session->delete('Institutions.id');
@@ -720,7 +759,7 @@ class InstitutionsTable extends ControllerActionTable
     {
         $this->dashboardQuery = clone $query;
         $search = $this->getSearchKey();
-        if (empty($search)) {
+        if (empty($search) && !$this->isAdvancedSearchEnabled()) {
             // redirect to school dashboard if it is only one record and no add access
             $addAccess = $this->AccessControl->check(['Institutions', 'add']);
             if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
@@ -755,11 +794,11 @@ class InstitutionsTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** view action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** view action methods
+    **
+    ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
@@ -805,11 +844,11 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
-/******************************************************************************************************************
-**
-** add / addEdit action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** add / addEdit action methods
+    **
+    ******************************************************************************************************************/
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $userId = $this->Session->read('Auth.User.id');
@@ -897,11 +936,11 @@ class InstitutionsTable extends ControllerActionTable
         return $attr;
     }
 
-/******************************************************************************************************************
-**
-** essential methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** essential methods
+    **
+    ******************************************************************************************************************/
 
     // autocomplete used for UserGroups
     public function autocomplete($search, $params = [])
@@ -1004,11 +1043,11 @@ class InstitutionsTable extends ControllerActionTable
         return compact('typeOptions', 'selectedType');
     }
 
-/******************************************************************************************************************
-**
-** Security Functions
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** Security Functions
+    **
+    ******************************************************************************************************************/
 
     public function onUpdateFieldClassification(Event $event, array $attr, $action, Request $request)
     {
@@ -1117,7 +1156,7 @@ class InstitutionsTable extends ControllerActionTable
         $extra['excludedModels'] = [
             $this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),
             $this->StaffPositionProfiles->alias(), $this->InstitutionActivities->alias(), $this->StudentPromotion->alias(),
-            $this->StudentAdmission->alias(), $this->StudentWithdraw->alias(), $this->TransferApprovals->alias(),
+            $this->StudentAdmission->alias(), $this->StudentWithdraw->alias(), $this->StudentTransferIn->alias(), $this->StudentTransferOut->alias(),
             $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()
         ];
     }
@@ -1151,6 +1190,97 @@ class InstitutionsTable extends ControllerActionTable
                 ;
             return $query;
         }
+    }
+
+    public function findMap(Query $query, array $options)
+    {
+        $query
+            ->select([
+                'id',
+                'code',
+                'name',
+                'longitude',
+                'latitude'
+            ])
+            ->contain([
+                'Types' => [
+                    'fields' => [
+                        'Types.id',
+                        'Types.name',
+                        'Types.order'
+                    ],
+                    'sort' => ['Types.order' => 'ASC']
+                ]
+            ])
+            ->formatResults(function (ResultSetInterface $results) {
+                $formattedResults = [];
+                $institutionTypes = [];
+                foreach ($results as $institution) {
+                    $groupId = 'group_' . $institution->type->id;
+                    $institutionTypes[$groupId] = $institution->type->name;
+
+                    if (!array_key_exists($groupId, $formattedResults)) {
+                        $formattedResults[$groupId]['data'] = [];
+                    }
+
+                    $encodedId = $this->paramsEncode(['id' => $institution->id]);
+                    $url = Router::url([
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'Institutions',
+                        'view',
+                        'institutionId' => $encodedId,
+                        $encodedId
+                    ], true);
+                    $longitude = $institution->has('longitude') ? $institution->longitude : 0;
+                    $latitude = $institution->has('latitude') ? $institution->latitude : 0;
+
+                    $obj = [
+                        'id' => $encodedId,
+                        'lng' => $longitude,
+                        'lat' => $latitude,
+                        'content' => $institution->name."<br/>".$institution->code."<br/><br/><a href='".$url."' target='_blank'>".__('View Details')."</a>"
+                    ];
+
+                    $formattedResults[$groupId]['data'][] = $obj;
+                }
+
+                $colorIndex = 0;
+                foreach ($formattedResults as $key => &$obj) {
+                    $colors = $this->getMarkerColor();
+                    $markerColor = $colors[$colorIndex % sizeof($colors)];
+
+                    $numberOfRecords = sizeof($obj['data']);
+                    $title = $institutionTypes[$key] . ' ('.$numberOfRecords.')';
+
+                    $obj['marker'] = [
+                        'icon' => 'university',
+                        'markerColor' => $markerColor,
+                        'title' => $title,
+                        'id' => $key
+                    ];
+
+                    $colorIndex++;
+                }
+
+                return $formattedResults;
+            });
+
+        return $query;
+    }
+
+    private function getMarkerColor() {
+        $colors = [
+            'darkred',
+            'purple',
+            'orange',
+            'green',
+            'blue',
+            'darkgreen',
+            'darkblue'
+        ];
+
+        return $colors;
     }
 
     private function setInstitutionStatusId(ArrayObject $data)

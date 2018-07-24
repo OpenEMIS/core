@@ -20,7 +20,8 @@ Darker Shade Color: #476B8F
 #seriesDrag li:hover,
 #selector li:active,
 #xDrag li:active,
-#seriesDrag li:active {
+#seriesDrag li:active,
+.kdxcalendar .cal-cell-row .cal-cell:hover .cal-day-number {
     background-color: #6699CC;
 }
 
@@ -110,7 +111,8 @@ a:focus,
     border-right-color: #6699CC;
 }
 
-.switch-sec-control .active {
+.switch-sec-control .active,
+.kdx-calendar .cal-month-view .cal-day-cell.cal-today .cal-day-number {
     background-color: #6699CC !important;
     border: 1px solid #476B8F !important;
 }

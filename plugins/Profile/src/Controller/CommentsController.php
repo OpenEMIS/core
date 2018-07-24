@@ -3,6 +3,7 @@ namespace Profile\Controller;
 
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Core\Configure;
 use App\Controller\PageController;
 
 class CommentsController extends PageController
@@ -179,7 +180,7 @@ class CommentsController extends PageController
             'History' => ['text' => __('History')]
         ];
 
-        foreach ($tabElements as $action => &$obj) {
+        foreach ($tabElements as $action => $obj) {
             if (in_array($action, [$pluralPlugin, 'Accounts'])) {
                 $url = [
                     'plugin' => $plugin,
@@ -209,9 +210,15 @@ class CommentsController extends PageController
                     $url['queryString'] = $encodedUserAndNationalityId;
                 }
             }
-            $obj['url'] = $url;
+            $tabElements[$action]['url'] = $url;
         }
 
+        if ($plugin == 'Directory') {
+            if (isset($tabElements['History'])) {
+                unset($tabElements['History']);
+            }
+        }
+        
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
 
         foreach ($tabElements as $action => $obj) {
@@ -257,7 +264,8 @@ class CommentsController extends PageController
         if ($userRole == 'Student') {
             $studentTabElements = [
                 'Guardians' => ['text' => __('Guardians')],
-                'StudentSurveys' => ['text' => __('Surveys')]
+                'StudentSurveys' => ['text' => __('Surveys')],
+                'StudentTransport' => ['text' => __('Transport')]
             ];
             $tabElements = array_merge($tabElements, $studentTabElements);
         }
@@ -298,6 +306,11 @@ class CommentsController extends PageController
         }
 
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+        if (Configure::read('schoolMode')) {
+            if (isset($tabElements['StudentSurveys'])) {
+                unset($tabElements['StudentSurveys']);
+            }
+        }
 
         foreach ($tabElements as $action => $obj) {
             $page->addTab($action)

@@ -82,11 +82,26 @@ class DirectoriesTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
+    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    {
+        if ($primary) {
+            $schema = $this->schema();
+            $fields = $schema->columns();
+            foreach ($fields as $key => $field) {
+                if ($schema->column($field)['type'] == 'binary') {
+                    unset($fields[$key]);
+                }
+            }
+            return $query->select($fields);
+        }
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
         $events['AdvanceSearch.onModifyConditions'] = 'onModifyConditions';
+        $events['Model.AreaAdministrative.afterDelete'] = 'areaAdminstrativeAfterDelete';
         return $events;
     }
 
@@ -154,6 +169,54 @@ class DirectoriesTable extends ControllerActionTable
             }
             return $conditions;
         }
+    }
+
+
+    public function areaAdminstrativeAfterDelete(Event $event, $areaAdministrative)
+    {
+        $subqueryOne = $this->AddressAreas
+            ->find()
+            ->select(1)
+            ->where(function ($exp, $q) {
+                return $exp->equalFields($this->AddressAreas->aliasField('id'), $this->aliasField('address_area_id'));
+            });
+
+        $query = $this->find()
+            ->select('id')
+            ->where(function ($exp, $q) use ($subqueryOne) {
+                return $exp->notExists($subqueryOne);
+            });
+
+
+        foreach ($query as $row) {
+            $this->updateAll(
+                ['address_area_id' => null],
+                ['id' => $row->id]
+            );
+        }
+
+        $subqueryTwo = $this->BirthplaceAreas
+            ->find()
+            ->select(1)
+            ->where(function ($exp, $q) {
+                return $exp->equalFields($this->BirthplaceAreas->aliasField('id'), $this->aliasField('birthplace_area_id'));
+            });
+
+
+        $query = $this->find()
+            ->select('id')
+            ->where(function ($exp, $q) use ($subqueryTwo) {
+                return $exp->notExists($subqueryTwo);
+            });
+        
+
+        foreach ($query as $row) {
+            $this->updateAll(
+                ['birthplace_area_id' => null],
+                ['id' => $row->id]
+            );
+        }
+  
     }
 
     public function getCustomFilter(Event $event)
@@ -651,9 +714,24 @@ class DirectoriesTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'MainNationalities',
-            'MainIdentityTypes',
-            'Genders'
+            'MainNationalities' => [
+                'fields' => [
+                    'MainNationalities.id',
+                    'MainNationalities.name'
+                ]
+            ],
+            'MainIdentityTypes'  => [
+                'fields' => [
+                    'MainIdentityTypes.id',
+                    'MainIdentityTypes.name'
+                ]
+            ],
+            'Genders' => [
+                'fields' => [
+                    'Genders.id',
+                    'Genders.name'
+                ]
+            ]
         ]);
     }
 
@@ -706,6 +784,14 @@ class DirectoriesTable extends ControllerActionTable
         $this->setupTabElements($entity);
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if (!$entity->isNew() && $entity->dirty('gender_id')) {
+            $entity->errors('gender_id', __('Gender is not editable in Directories'));
+            return false;
+        }
+    }
+
     private function setupTabElements($entity)
     {
         $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
@@ -738,10 +824,8 @@ class DirectoriesTable extends ControllerActionTable
                 ->where([
                     $InstitutionStudentTable->aliasField('student_id') => $userId,
                 ])
-                ->distinct(['id'])
                 ->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name', 'student_status_name' => 'StudentStatuses.name'])
-                ->order(['(CASE WHEN '.$InstitutionStudentTable->aliasField('modified').' IS NOT NULL THEN '.$InstitutionStudentTable->aliasField('modified').' ELSE '.
-                $InstitutionStudentTable->aliasField('created').' END) DESC'])
+                ->order([$InstitutionStudentTable->aliasField('start_date') => 'DESC'])
                 ->first();
 
             $value = '';

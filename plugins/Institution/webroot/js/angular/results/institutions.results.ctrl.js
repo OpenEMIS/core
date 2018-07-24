@@ -1,5 +1,10 @@
-angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.results.svc'])
-.controller('InstitutionsResultsCtrl', function($q, $scope, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsResultsSvc) {
+angular
+    .module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.results.svc'])
+    .controller('InstitutionsResultsCtrl', InstitutionsResultsController);
+
+InstitutionsResultsController.$inject = ['$q', '$scope', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsResultsSvc'];
+
+function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsResultsSvc) {
     $scope.action = 'view';
     $scope.message = null;
     $scope.gradingTypes = null;
@@ -137,7 +142,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
-                            AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
+                            AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
                             // refreshCells function updated parameters
                             params.api.refreshCells({
                                 rowNodes: [params.node],
@@ -219,7 +224,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
-                            AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
+                            AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
                             params.api.refreshCells([params.node], [params.colDef.field, 'total_mark']);
 
                         }, function(error) {
@@ -274,7 +279,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
     $scope.onChangeSubject = function(subject = undefined) {
         AlertSvc.reset($scope);
         if ($scope.action == 'edit') {
-            AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
+            AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
         }
 
         if (typeof subject !== "undefined") {
@@ -335,7 +340,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
 
     $scope.onEditClick = function() {
         $scope.action = 'edit';
-        AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
+        AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
     };
 
     $scope.onBackClick = function() {
@@ -343,4 +348,4 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
         $scope.onChangeSubject($scope.subject);
         AlertSvc.reset($scope);
     };
-});
+}
