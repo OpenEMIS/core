@@ -128,7 +128,7 @@ class POCOR4324 extends AbstractMigration
         
         $InstitutionStudentAbsences = $this->table('institution_student_absences', [
             'id' => false,
-            'primary_key' => ['student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'date'],
+            'primary_key' => ['student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'date', 'period'],
             'collaction' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains absence records of students for day type attendance marking'
         ]);
