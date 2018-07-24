@@ -37,6 +37,7 @@
 							<?php
 							$studentCount = 0;
 							foreach ($attr['data'] as $i => $obj) :
+								$pendingRequestsCount = $obj->pendingRequestsCount;
 								if ($action == 'reconfirm') {
 									if (!in_array($obj->student_id, $onlySelectedStudents)) continue;
 								}
@@ -45,7 +46,7 @@
 									<?php if ($action != 'reconfirm') { ?>
 									<td class="checkbox-column tooltip-orange">
 										<?php
-											if ($obj->pendingRequestsCount > 0) {
+											if ($pendingRequestsCount > 0) {
 												echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-orange" data-animation="false" data-container="body" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$this->Label->get($ControllerAction['table']->alias().'.pendingRequest'). '"></i>';
 											} else {
 												$alias = $ControllerAction['table']->alias();
@@ -63,10 +64,12 @@
 									<?php if ($showNextClass) { ?>
 										<td>
 											<?php if ($action == 'add') {
-													echo $this->Form->input("$fieldPrefix.next_institution_class_id", [
-														'options' => $nextClassOptions,
-														'value' => [$obj->next_institution_class_id]
-													]);
+													if ($pendingRequestsCount == 0) {
+														echo $this->Form->input("$fieldPrefix.next_institution_class_id", [
+															'options' => $nextClassOptions,
+															'value' => [$obj->next_institution_class_id]
+														]);
+													}
 												} elseif ($action == 'reconfirm') {
 													$nextClassId = isset($attr['selectedStudents'][$i]['next_institution_class_id']) && $attr['selectedStudents'][$i]['next_institution_class_id'] != 0 ? $attr['selectedStudents'][$i]['next_institution_class_id'] : null;
 													$displayNextClassValue = isset($nextClassOptions[$nextClassId]) ? $nextClassOptions[$nextClassId] : '';
