@@ -33,7 +33,7 @@ class BodyMassesTable extends AppTable
             'pages' => false,
             'autoFields' => false
         ]);
-        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.ReportList');      
     }
 
     public function beforeAction(Event $event) 
@@ -74,6 +74,18 @@ class BodyMassesTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        $institutionId = $requestData->institution_id;
+
+        $conditions = [];
+        if (!empty($academicPeriodId)) {
+            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+        }
+        if (!empty($institutionId)) {
+            $conditions['Institutions.id'] = $institutionId;
+        }
+
         $query
             ->select([
                 $this->aliasField('student_id'),
@@ -106,6 +118,7 @@ class BodyMassesTable extends AppTable
                         'name'
                     ]
                 ],
+                'Institutions',
                 'AcademicPeriods' => [
                     'fields' => [
                         'name',
@@ -119,7 +132,8 @@ class BodyMassesTable extends AppTable
                     'UserBodyMasses.security_user_id = ' . $this->aliasField('student_id'),
                     'UserBodyMasses.academic_period_id = ' . $this->aliasField('academic_period_id')
                 ]
-            );
+            )
+             ->where($conditions);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
