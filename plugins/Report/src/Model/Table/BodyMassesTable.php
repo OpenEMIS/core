@@ -184,7 +184,7 @@ class BodyMassesTable extends AppTable
             'label' => __('Comment')
         ];            
 
-        $newFields = array_merge($extraFieldsFirst,$cloneFields,$extraFields);
+        $newFields = array_merge($extraFieldsFirst, $cloneFields, $extraFields);
         $fields->exchangeArray($newFields);
     }
 }
