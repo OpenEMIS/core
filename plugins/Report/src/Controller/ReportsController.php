@@ -58,6 +58,7 @@ class ReportsController extends AppController
                 'Report.InstitutionStaff' => __('Staff'),
                 'Report.StudentAbsences' => __('Student Absence'),
                 'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
+                'Report.BodyMasses' => __('Student Body Masses'),
                 'Report.StaffAbsences' => __('Staff Absence'),
                 'Report.StaffLeave' => __('Staff Leave'),
                 'Report.StaffTransfers' => __('Staff Transfer'),
@@ -69,8 +70,7 @@ class ReportsController extends AppController
                 'Report.Students' => __('Students'),
                 'Report.StudentIdentities' => __('Identities'),
                 'Report.StudentContacts' => __('Contacts'),
-                'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
-                'Report.BodyMasses' => __('Body Masses')
+                'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School')
             ];
         } elseif ($module == 'Staff') {
             $options = [
