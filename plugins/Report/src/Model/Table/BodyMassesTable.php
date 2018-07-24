@@ -118,7 +118,7 @@ class BodyMassesTable extends AppTable
                         'name'
                     ]
                 ],
-                'Institutions' ,
+                'Institutions',
                 'AcademicPeriods' => [
                     'fields' => [
                         'name',
