@@ -539,7 +539,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                     ])
                     ->first();
 
-            return __($query->status_name);
+                    return __($query->status_name);
         }
     }
 
