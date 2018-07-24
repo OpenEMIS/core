@@ -371,7 +371,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                             'comment' => __('On approve Staff Change In Assignment'),
                             'prev_workflow_step_name' => $prevStepEntity->name,
                             'workflow_step_name' => $closedStepEntity->name,
-                            'workflow_action_name' => __('Administration - Close Record'),
+                            'workflow_action_name' => 'Administration - Close Record',
                             'workflow_model_id' => $closedStepEntity->_matchingData['Workflows']->workflow_model_id,
                             'model_reference' => $entity->id,
                             'created_user_id' => 1,

@@ -14,10 +14,12 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
+use Page\Traits\EncodingTrait;
+
 class StaffBehavioursTable extends ControllerActionTable
 {
     use OptionsTrait;
-
+    use EncodingTrait;
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -26,7 +28,12 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->belongsTo('StaffBehaviourCategories', ['className' => 'Staff.StaffBehaviourCategories']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
-
+        $this->hasMany('StaffBehaviourAttachments', [
+            'className' => 'Institutions.StaffBehaviourAttachments', 
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Institution.Case');
@@ -42,6 +49,8 @@ class StaffBehavioursTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
         $events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
+        $events['InstitutionCase.onIncludeCustomExcelFields'] = 'onIncludeCustomExcelFields';
+        $events['InstitutionCase.onBuildCustomQuery'] = 'onBuildCustomQuery';
         return $events;
     }
 
@@ -76,6 +85,7 @@ class StaffBehavioursTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('openemis_no');
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('description', ['visible' => false]);
         $this->field('action', ['visible' => false]);
@@ -92,7 +102,7 @@ class StaffBehavioursTable extends ControllerActionTable
 
         // Setup period options
         // $periodOptions = ['0' => __('All Periods')];
-        $periodOptions = $this->AcademicPeriods->getList();
+        $periodOptions = $this->AcademicPeriods->getYearList();
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
@@ -192,7 +202,7 @@ class StaffBehavioursTable extends ControllerActionTable
             $attr['value'] = $selectedPeriod;
             $attr['attr']['value'] = $selectedPeriod;
             $attr['onChangeReload'] = 'changePeriod';
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -214,27 +224,30 @@ class StaffBehavioursTable extends ControllerActionTable
             $startDate = $academicPeriod->start_date;
             $endDate = $academicPeriod->end_date;
 
-            $todayDate = Date::now();
-            if (!empty($request->data[$this->alias()]['date_of_behaviour'])) {
-                $inputDate = Date::createfromformat('d-m-Y', $request->data[$this->alias()]['date_of_behaviour']); //string to date object
+            if ($action == 'add') {
+                $todayDate = Date::now();
 
-                // if today date is not within selected academic period, default date will be start of the year
-                if ($inputDate < $startDate || $inputDate > $endDate) {
-                    $attr['value'] = $startDate->format('d-m-Y');
+                if (!empty($request->data[$this->alias()]['date_of_behaviour'])) {
+                    $inputDate = Date::createfromformat('d-m-Y', $request->data[$this->alias()]['date_of_behaviour']); //string to date object
 
-                    // if today date is within selected academic period, default date will be current date
-                    if ($todayDate >= $startDate && $todayDate <= $endDate) {
+                    // if today date is not within selected academic period, default date will be start of the year
+                    if ($inputDate < $startDate || $inputDate > $endDate) {
+                        $attr['value'] = $startDate->format('d-m-Y');
+
+                        // if today date is within selected academic period, default date will be current date
+                        if ($todayDate >= $startDate && $todayDate <= $endDate) {
+                            $attr['value'] = $todayDate->format('d-m-Y');
+                        }
+                    }
+                } else {
+                    if ($todayDate <= $startDate || $todayDate >= $endDate) {
+                        $attr['value'] = $startDate->format('d-m-Y');
+                    } else {
                         $attr['value'] = $todayDate->format('d-m-Y');
                     }
                 }
-            } else {
-                if ($todayDate <= $startDate || $todayDate >= $endDate) {
-                    $attr['value'] = $startDate->format('d-m-Y');
-                } else {
-                    $attr['value'] = $todayDate->format('d-m-Y');
-                }
             }
-
+      
             $attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
             $attr['date_options']['todayBtn'] = false;
         }
@@ -254,7 +267,7 @@ class StaffBehavioursTable extends ControllerActionTable
                 $institutionId = $this->Session->read('Institution.Institutions.id');
                 $Staff = TableRegistry::get('Institution.Staff');
                 $staffOptions = $Staff
-                ->find('list', ['keyField' => 'staff_id', 'valueField' => 'name'])
+                ->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
                 ->matching('Users')
                 ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
                 ->where([$Staff->aliasField('institution_id') => $institutionId])
@@ -263,7 +276,7 @@ class StaffBehavioursTable extends ControllerActionTable
             }
 
             $attr['options'] = $staffOptions;
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -299,6 +312,13 @@ class StaffBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
+    public function viewBeforeAction(Event $event)
+    {
+        $tabElements = $this->getStaffBehaviourTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
+
     public function onSetCustomCaseTitle(Event $event, Entity $entity)
     {
         $recordEntity = $this->get($entity->id, [
@@ -319,5 +339,64 @@ class StaffBehavioursTable extends ControllerActionTable
         $summary .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
 
         return $summary;
+    }
+
+    public function onIncludeCustomExcelFields(Event $event, $newFields)
+    {
+        $newFields[] = [
+            'key' => 'Staff.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Staff.full_name',
+            'field' => 'full_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        return $newFields;
+    }
+
+    public function onBuildCustomQuery(Event $event, $query)
+    {
+        $query
+            ->select([
+                'openemis_no' => 'Staff.openemis_no',
+                'first_name' => 'Staff.first_name',
+                'middle_name' =>'Staff.middle_name',
+                'third_name' =>'Staff.third_name',
+                'last_name' =>'Staff.last_name',
+                'preferred_name' =>'Staff.preferred_name'
+         
+             ])
+            ->innerJoinWith('InstitutionCaseRecords.StaffBehaviours.Staff');
+        
+        return $query;
+    }
+
+    public function getStaffBehaviourTabElements($options = [])
+    {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+
+        $paramPass = $this->request->param('pass');
+        $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
+        $studentBehaviourId = $ids['id'];
+        $queryString = $this->encode(['staff_behaviour_id' => $studentBehaviourId]);
+       
+        $tabElements = [
+            'StaffBehaviours' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours', 'view', $paramPass[1]],
+                'text' => __('Overview')
+            ],
+            'StaffBehaviourAttachments' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'StaffBehaviourAttachments', 'action' => 'index', 'querystring' => $queryString, 'institutionId' => $encodedInstitutionId],
+                'text' => __('Attachments')
+            ]
+        ];
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }

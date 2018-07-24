@@ -24,6 +24,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getColumnDefs: getColumnDefs,
         getStudentData: getStudentData,
         postEnrolledStudent: postEnrolledStudent,
+        addStudentTransferRequest: addStudentTransferRequest,
         getExternalSourceUrl: getExternalSourceUrl,
         addUser: addUser,
         makeDate: makeDate,
@@ -50,7 +51,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         addUserNationality: addUserNationality,
         getExternalSourceMapping: getExternalSourceMapping,
         generatePassword: generatePassword,
-        translate: translate
+        translate: translate,
+        getStudentTransferReasons: getStudentTransferReasons
     };
 
     var models = {
@@ -68,7 +70,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         ConfigItems: 'Configuration.ConfigItems',
         Nationalities: 'FieldOption.Nationalities',
         ContactTypes: 'User.ContactTypes',
-        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes'
+        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes',
+        StudentTransferIn: 'Institution.StudentTransferIn',
+        StudentTransferReasons: 'Student.StudentTransferReasons'
     };
 
     return service;
@@ -162,7 +166,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         if (key != 'date_of_birth') {
                             params[key] = options['conditions'][key];
                         } else {
-                            params[key] = vm.formatDate(options['conditions'][key]);
+                            params[key] = vm.formatDateForSaving(options['conditions'][key]);
                         }
                         var replaceKey = '{'+key+'}';
                         replacement[replaceKey] = params[key];
@@ -591,16 +595,18 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function postEnrolledStudent(data) {
         var institutionId = this.getInstitutionId();
-        data['institution_id'] = institutionId;
-        data['student_status_id'] = 1;
-        data['previous_institution_id'] = 0;
-        data['student_transfer_reason_id'] = 0;
-        data['type'] = 1;
-        data['status'] = 0;
         data['start_date'] = this.formatDateForSaving(data['start_date']);
         data['end_date'] = this.formatDateForSaving(data['end_date']);
-        data['institution_class_id'] = data['class'];
-        return StudentRecords.save(data)
+        data['status_id'] = 0;
+        data['assignee_id'] = -1;
+        data['institution_id'] = institutionId;
+        return StudentRecords.save(data);
+    };
+
+    function addStudentTransferRequest(data) {
+        data['start_date'] = this.formatDateForSaving(data['start_date']);
+        data['end_date'] = this.formatDateForSaving(data['end_date']);
+        return StudentTransferIn.save(data);
     };
 
     function setInstitutionId(id) {
@@ -772,8 +778,15 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .contain(['IdentityTypes'])
             .ajax({defer: true});
     }
+
     function getSpecialNeedTypes() {
         return SpecialNeedTypes
+            .select()
+            .ajax({defer: true});
+    }
+
+    function getStudentTransferReasons() {
+        return StudentTransferReasons
             .select()
             .ajax({defer: true});
     }

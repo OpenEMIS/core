@@ -178,6 +178,7 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
         $this->field('mapped_date_of_birth', ['type' => 'hidden', 'attr' => ['label' => __('Date Of Birth Mapping')]]);
         $this->field('mapped_gender', ['type' => 'hidden', 'attr' => ['label' => __('Gender Mapping')]]);
         $this->field('mapped_role', ['type' => 'hidden', 'attr' => ['label' => __('Role Mapping')]]);
+        $this->field('mapped_email', ['type' => 'hidden', 'attr' => ['label' => __('Email Mapping')]]);
     }
 
     public function onUpdateFieldAuthenticationTypeId(Event $event, array $attr, $action, Request $request)

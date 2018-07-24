@@ -38,11 +38,11 @@ class RestfulV2Component extends Component implements RestfulInterface
         $this->serialize = new ArrayObject([]);
     }
 
-/******************************************************************************************************************
-**
-** Events
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** Events
+    **
+    ******************************************************************************************************************/
 
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
     public function startup(Event $event)
@@ -53,6 +53,7 @@ class RestfulV2Component extends Component implements RestfulInterface
         if (empty($request->params['_ext'])) {
             $request->params['_ext'] = 'json';
         }
+
         if (isset($request->model)) {
             $tableAlias = $request->model;
             $model = $this->instantiateModel($tableAlias);
@@ -97,11 +98,11 @@ class RestfulV2Component extends Component implements RestfulInterface
         $controller->set($serialize->getArrayCopy());
     }
 
-/******************************************************************************************************************
-**
-** Auth
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** Auth
+    **
+    ******************************************************************************************************************/
 
     public function isAuthorized($user = null)
     {
@@ -115,18 +116,67 @@ class RestfulV2Component extends Component implements RestfulInterface
         }
         $request = $this->request;
         $extra = new ArrayObject(['request' => $request]);
-        $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$scope, $action, $extra], $this);
-        if ($event->result) {
-            return $event->result;
+
+        // check if the scope has access to the action and the model
+        $apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
+        $apiSecurities = TableRegistry::get('ApiSecurities');
+        $registryAlias = $model->registryAlias();
+
+        // check if the scope is a stdObject, and converts to array
+        // check if the scope is not a array, and converts to array
+        if (is_object($scope)) {
+            $scope = (array) $scope;
+        } elseif (!is_array($scope)) {
+            $scope = [$scope];
         }
+
+        $scopeDenyValue = 0;
+        $apiSecurityEntity = $apiSecurities
+            ->find()
+            ->where([$apiSecurities->aliasField('model') => $registryAlias])
+            ->first();
+
+        // default action for the table is not deny
+        // checking of null as other restful call is not using security entity other than API
+        if (!is_null($apiSecurityEntity) && $apiSecurityEntity->{$action} != $scopeDenyValue) {
+            $denyActionCount = $apiSecuritiesScopes
+                ->find()
+                ->matching('ApiSecurities', function ($q) use ($registryAlias) {
+                    return $q->where([
+                        'ApiSecurities.model' => $registryAlias
+                    ]);
+                })
+                ->matching('ApiScopes', function ($q) use ($scope) {
+                    return $q->where([
+                        'ApiScopes.name IN ' => $scope
+                    ]);
+                })
+                ->where([
+                    $apiSecuritiesScopes->aliasField($action) => $scopeDenyValue
+                ])
+                ->count();
+
+            // if the scope has no deny value, the restful call can return as authorized
+            if ($denyActionCount == 0) {
+                return true;
+            }
+        }
+
+        foreach ($scope as $value) {
+            $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$value, $action, $extra], $this);
+            if ($event->result) {
+                return $event->result;
+            }
+        }
+        
         return false;
     }
 
-/******************************************************************************************************************
-**
-** Controller Actions
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** Controller Actions
+    **
+    ******************************************************************************************************************/
 
     public function token()
     {
@@ -258,6 +308,7 @@ class RestfulV2Component extends Component implements RestfulInterface
         if (is_null($this->model)) {
             return;
         }
+        $requestData = $this->request->data;
         $controller = $this->controller;
         $extra = $this->extra;
         $serialize = $this->serialize;
@@ -266,8 +317,11 @@ class RestfulV2Component extends Component implements RestfulInterface
             $table->dispatchEvent('Restful.Model.add.updateSchema', [$table->getSchema(), $extra], $controller);
         }
 
+        // // if true, from angularJS, else external API call
+        $requestData['action_type'] = isset($requestData['action_type']) ? $requestData['action_type'] : 'third_party';        
         $options = ['extra' => $extra];
-        $entity = $table->newEntity($this->request->data, $options);
+
+        $entity = $table->newEntity($requestData, $options);
 
         // blob data type will be sent using based64 format
         $entity = $this->convertBase64ToBinary($entity);
@@ -405,11 +459,11 @@ class RestfulV2Component extends Component implements RestfulInterface
         }
     }
 
-/******************************************************************************************************************
-**
-** Http URL instructions for database queries
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** Http URL instructions for database queries
+    **
+    ******************************************************************************************************************/
 
     private function _search($query, $value, ArrayObject $extra)
     {
@@ -703,11 +757,11 @@ class RestfulV2Component extends Component implements RestfulInterface
         $extra['blobContent'] = $value;
     }
 
-/******************************************************************************************************************
-**
-** Helper functions
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** Helper functions
+    **
+    ******************************************************************************************************************/
 
     private function initRequestQueries(Table $table)
     {
@@ -885,7 +939,7 @@ class RestfulV2Component extends Component implements RestfulInterface
     {
         if ($attribute instanceof MutableDate || $attribute instanceof Date) {
             $attribute = $attribute->format('Y-m-d');
-        } else if ($attribute == '0000-00-00') {
+        } elseif ($attribute == '0000-00-00') {
             $attribute = '1970-01-01';
         }
         return $attribute;
@@ -923,7 +977,7 @@ class RestfulV2Component extends Component implements RestfulInterface
     {
         if ($data instanceof Entity) {
             $this->convertBinaryToBase64($table, $data, $extra);
-        } else if (is_array($data)) {
+        } elseif (is_array($data)) {
             foreach ($data as $value) {
                 if ($value instanceof Entity) {
                     $this->convertBinaryToBase64($table, $value, $extra);

@@ -423,6 +423,27 @@ class WorkflowActionsTable extends AppTable
         return compact('isEditable', 'isDeletable');
     }
 
+    public function getEventTriggeringStep($selectedModel = null, $eventKey = null)
+    {
+        if(!empty($selectedModel) && !empty($eventKey)) {
+            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowResult = $Workflows
+                ->find()
+                ->select([
+                    'next_workflow_step_id' => 'NextWorkflowSteps.next_workflow_step_id'
+                ])
+                ->matching('WorkflowModels', function ($q) use ($selectedModel) {
+                    return $q->where(['WorkflowModels.model' => $selectedModel]);
+                })
+                ->matching('WorkflowSteps.NextWorkflowSteps', function ($q) use ($eventKey) {
+                    return $q->where(['NextWorkflowSteps.event_key LIKE' => '%'.$eventKey.'%']);  
+                })
+                ->first();
+        
+            return $workflowResult->next_workflow_step_id;    
+        }
+    }
+
     public function getWorkflowModelOptions()
     {
         $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');

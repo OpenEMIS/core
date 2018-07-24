@@ -1,19 +1,27 @@
-<a class="table-thumb" href="#">
-	<div class="view-image"><img data-src="holder.js/60x60" data-holder-rendered="true" data-toggle="modal" data-target="#myModal"></div>
-</a>
+<?php
+	$maxWidth = isset($attr['maxWidth']) ? $attr['maxWidth'] : 60;
+?>
 
-<!-- Modal -->
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="myModalLabel">Name of Image</h4>
-			</div>
-			
-			<div class="modal-body">
-				<img data-src="holder.js/570x570" data-holder-rendered="true">
+<?php if (isset($attr['src'])) : ?>
+	<div class="table-thumb">
+		<img src="<?= $attr['src'] ?>" data-holder-rendered="true" data-toggle="modal" data-target="#myModal" style="max-width:<?= $maxWidth ?>px;" />
+	</div>
+
+	<!-- Modal -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<?php if (isset($attr['title'])) : ?>
+						<h4 class="modal-title" id="myModalLabel"><?= __($attr['title']) ?></h4>
+					<?php endif ?>
+				</div>
+
+				<div class="modal-body">
+					<img src="<?= $attr['src'] ?>" data-holder-rendered="true" />
+				</div>
 			</div>
 		</div>
 	</div>
-</div>
+<?php endif ?>

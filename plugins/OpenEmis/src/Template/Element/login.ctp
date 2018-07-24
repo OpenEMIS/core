@@ -1,6 +1,6 @@
 <?php
 $description = __d('open_emis', $_productName);
-$icon = strpos($_productName, 'School') != -1 ? '_school' : '';
+$icon = strpos($_productName, 'School') !== false ? '_school' : '';
 ?>
 
 <!DOCTYPE html>
@@ -90,6 +90,12 @@ $icon = strpos($_productName, 'School') != -1 ? '_school' : '';
 				<?php endif; ?>
 				<button class="hidden" value="reload" name="submit" type="submit" id="reload">reload</button>
 			<?= $this->Form->end() ?>
+
+			<div class="links-wrapper">
+				<a target="_self" href="./ForgotUsername"><?php echo __('Forgot username?') ?></a>
+				<a target="_self" href="./ForgotPassword"><?php echo __('Forgot password?') ?></a>
+			</div>
+
 
 			<?php
 				if ($authentications) :

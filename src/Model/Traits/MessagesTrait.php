@@ -59,6 +59,7 @@ trait MessagesTrait
             'noRecords' => 'No Record',
             'noFile' => 'File does not exist.',
             'failConnectToExternalSource' => 'There is an issue establishing connection to the External Datasource. Please contact the administrator for assistance.',
+            'notExistsInExternalSource' => 'The record does not exist in the External Datasource. Please contact the administrator for assistance.',
             'select' => [
                 'noOptions' => 'No options'
             ],
@@ -108,6 +109,7 @@ trait MessagesTrait
             'reject' => 'Reject',
             'noClasses' => 'No Classes',
             'noSubjects' => 'No Subjects',
+            'noSurveys' => 'No Surveys',
             'noStaff' => 'No Staff',
             'type' => 'Type',
             'amount' => 'Amount',
@@ -392,6 +394,7 @@ trait MessagesTrait
         ],
         'StudentAttendances' => [
             'noClasses' => 'No Available Classes',
+            'noReasons' => 'You need to configure Student Absence Reasons first.',
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
         'InstitutionStudentAbsences' => [
@@ -401,6 +404,7 @@ trait MessagesTrait
         ],
         'StaffAttendances' => [
             'noStaff' => 'No Available Staff',
+            'noReasons' => 'You need to configure Staff Absence Reasons first.',
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
         'StaffAbsences' => [
@@ -429,7 +433,8 @@ trait MessagesTrait
         'SurveyForms' => [
             'add_question' => 'Add Question',
             'add_to_section' => 'Add to Section',
-            'notSupport' => 'Not supported in this form.'
+            'notSupport' => 'Not supported in this form.',
+            'restrictEditFilters' => 'You are not allowed to remove the following filters: %s'
         ],
         'StaffPositionTitles' => [
             'inProgress' => 'Update of staff position title roles is in process, please try again later.',
@@ -504,19 +509,6 @@ trait MessagesTrait
                 'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
             ],
         ],
-        'TransferRequests' => [
-            'request' => 'Transfer request has been submitted successfully.',
-            'enrolled' => 'This student has already been enrolled in an institution.',
-            'hasWithdrawApplication' => 'There is a pending withdraw application for this student at the moment, please reject the withdraw application before making another request.',
-            'invalidEndDate' => 'Transfer is not allowed as the student has already completed the grade.',
-            'unableToTransfer' => 'Unable to do student transfer due to associated records.'
-        ],
-        'TransferApprovals' => [
-            'existsInNewSchool' => 'Student is already exists in the new school',
-            'enrolledInInstitution' => 'Student is already enrolled in another school.',
-            'approve' => 'Transfer request has been approved successfully.',
-            'reject' => 'Transfer request has been rejected successfully.'
-        ],
         'StudentPromotion' => [
             'noGrades' => 'No Available Grades',
             'noStudents' => 'No Available Students',
@@ -577,14 +569,6 @@ trait MessagesTrait
         'EducationProgrammes' => [
             'add_next_programme' => 'Add Next Programme'
         ],
-        'StudentAdmission' => [
-            'noClass' => 'No Class Selected',
-            'existsInSchool' => 'Student is already exists in the school',
-            'enrolledInInstitution' => 'Student is already enrolled in another school.',
-            'existsInRecord' => 'Student has already been added to admission list',
-            'approve' => 'Student admission has been approved successfully.',
-            'reject' => 'Student admission has been rejected successfully.'
-        ],
         'WithdrawRequests' => [
             'request' => 'Withdraw request has been submitted successfully.',
             'configureWorkflowStatus' => 'Please configure the steps to the Approved and Pending statuses before adding any withdrawal record.',
@@ -620,6 +604,7 @@ trait MessagesTrait
             'success' => 'is successfully imported.',
             'failed' => 'failed to import.',
             'partial_failed' => 'failed to import completely.',
+            'upload_error' => 'The file cannot be imported due to errors encountered.',
             'value_not_in_list' => 'Selected value is not in the list',
             'survey_code_not_found' => 'Survey code is missing from the file. Please make sure that survey code exists on sheet "References" cell B4.',
             'survey_not_found' => 'No identifiable survey found',
@@ -630,7 +615,12 @@ trait MessagesTrait
             'identity_number_exist' => 'Identity Number for %s already exists.',
             'identity_type_required' => 'Identity Type cant be empty if Identity Number is specified.',
             'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
-            'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.'
+            'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.',
+            'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type'
+
+        ],
+        'ImportInstitutionSurveys' => [
+            'restrictImport' => 'Import operation is not allowed as the record is already Done'
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
@@ -650,7 +640,7 @@ trait MessagesTrait
         ],
         'ExaminationStudents' => [
             'restrictAdd' => 'Add operation is not allowed.',
-            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to a room.'
         ],
         'ExaminationNotRegisteredStudents' => [
             'restrictAdd' => 'Add operation is not allowed.'
@@ -694,12 +684,12 @@ trait MessagesTrait
 
         'LinkedInstitutionAddStudents' => [
             'noStudentSelected' => 'There are no students selected',
-            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to a room.'
         ],
 
         'BulkStudentRegistration' => [
             'noStudentSelected' => 'There are no students selected',
-            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to a room.'
         ],
         'ExaminationCentresExaminationsInvigilators' => [
             'noInvigilatorsSelected' => 'There are no invigilators selected'
@@ -756,12 +746,16 @@ trait MessagesTrait
             'noFilesToDownload' => 'There are no generated Report Cards to download',
             'noFilesToPublish' => 'There are no generated Report Cards to publish',
             'noFilesToUnpublish' => 'There are no published Report Cards to unpublish',
-            'generate' => 'The Report Card has been successfully generated',
+            'inProgress' => 'There is already a process running for this Report Card',
+            'generate' => 'The Report Card will be generated in the background',
             'generateAll' => 'All Report Cards will be generated in the background',
             'publish' => 'The Report Card has been successfully published',
             'publishAll' => 'All generated Report Cards have been published successfully',
             'unpublish' => 'The Report Card has been successfully unpublished',
             'unpublishAll' => 'All published Report Cards have been unpublished successfully'
+        ],
+        'RecipientPaymentStructures' => [
+            'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
         ],
         'AlertRules' => [
             'Attendance' => [
@@ -799,8 +793,16 @@ trait MessagesTrait
                     'compareWithStartDate' => 'End Date should not be earlier than Start Date'
                 ]
         ],
+        'StaffTransfers' => [
+            'restrictStaffTransfer' => 'Transfer is not allowed between different institution type or institution provider.'
+        ],
         'StaffTransferOut' => [
             'existingStaffTransfer' => 'There is an existing transfer record for this staff'
+        ],
+        'StudentTransferOut' => [
+            'existingStudentTransfer' => 'There is an existing transfer record for this student',
+            'pendingStudentWithdraw' => 'There is a pending withdraw request for this student.',
+            'unableToTransfer' => 'Unable to do student transfer due to associated records.'
         ],
 
         // Validation Messages
@@ -848,6 +850,11 @@ trait MessagesTrait
                     'ruleValidEmail' => 'Please enter a valid Email'
                 ]
             ],
+            'InstitutionContactPersons' => [
+                'email' => [
+                    'ruleValidEmail' => 'Please enter a valid Email'
+                ]
+            ],
             'InstitutionClasses' => [
                 'noGrade' => 'There is no grade selected',
                 'emptyName' => 'Class name should not be empty',
@@ -858,7 +865,10 @@ trait MessagesTrait
                 ],
                 'staff_id' => [
                     'ruleCheckHomeRoomTeachers' => 'Home Room Teacher and Secondary Teacher cannot be the same person.'
-                ]
+                ],
+                'capacity' => [
+                    'ruleCheckMaxStudentsPerClass' => 'Capacity must not exceed the maximum number of students per class.'
+                ],
             ],
 
             'InstitutionProgrammes' => [
@@ -931,7 +941,11 @@ trait MessagesTrait
                     'ruleNoSpaces' => 'Only alphabets and numbers are allowed'
                 ],
                 'is_homeroom' => [
-                    'ruleCheckHomeRoomTeacherAssignments' => 'There are homeroom teachers assigned to Classes'
+                    'ruleCheckHomeRoomTeacherAssignments' => 'There are homeroom teachers assigned to Classes',
+                    'ruleIsHomeroomEmpty' => 'Please leave this field empty for non-teaching type titles'
+                ],
+                'status_id' => [
+                    'ruleCheckStatusIdValid' => 'Invalid status id'
                 ]
             ],
             'InstitutionShifts' => [
@@ -961,22 +975,6 @@ trait MessagesTrait
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
                 ],
-            ],
-            'TransferRequests' => [
-                'end_date' => [
-                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
-                ],
-                'student_id' => [
-                    'ruleNoNewWithdrawRequestInGradeAndInstitution' => 'There is a pending withdraw application for this student at the moment, please reject the withdraw application before making another request.',
-                    'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
-                        'inTargetSchool' => 'Student is already enrolled in this school.',
-                        'inAnotherSchool' => 'Student is already enrolled in another school.',
-                    ],
-                    'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
-                ],
-                'institution_id' => [
-                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
-                ]
             ],
             'IndividualPromotion' => [
                 'effective_date' => [
@@ -1020,7 +1018,8 @@ trait MessagesTrait
                     'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
                     'ageHint' => 'The student should be %s years old',
                     'ageRangeHint' => 'The student should be between %s to %s years old',
-                    'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
+                    'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
+                    'studentNotExists' => 'This student does not exist in the system.'
                 ],
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
@@ -1051,57 +1050,52 @@ trait MessagesTrait
                     'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.'
+                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleInAllPeriod' => 'Staff start date must be within all academic period range'
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
                 ],
             ],
+            'StaffUser' => [
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ]
+            ],
             'StudentAdmission' => [
-                'student_name' => [
-                    'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
-                        'inTargetSchool' => 'Student is already enrolled in this school.',
-                        'inAnotherSchool' => 'Student is already enrolled in another school.',
-                    ],
+                'academic_period_id' => [
+                    'ruleCheckValidAcademicPeriodId' => 'Invalid Academic Period id'
+                ],
+                'student_id' => [
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
-                    'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
-                    'ageHint' => 'The student should be %s years old',
-                    'ageRangeHint' => 'The student should be between %s to %s years old',
-                    'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
                     'ruleCheckPendingAdmissionExist' => 'Student has already been added to admission list'
                 ],
-                'class' => [
+                'institution_class_id' => [
+                    'ruleCheckValidClassId' => 'This institution does not offer the selected class for this selected education grade in the selected academic period',
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
                 'gender_id' => [
                     'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
                 ],
-                'institution_id' => [
-                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
-                ],
                 'start_date' => [
-                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.',
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'education_grade_id' => [
+                    'checkProgrammeExist' => 'This insistution does not offer the selected Education Grade',
                     'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+                'status_id' => [
+                    'ruleCheckStatusIdValid' => 'Invalid status id'
                 ],
             ],
             'StaffBehaviours' => [
                 'date_of_behaviour' => [
                     'ruleInAcademicPeriod' => 'Date is not within the academic period.'
                 ]
-            ],
-            'TransferApprovals' => [
-                'start_date' => [
-                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
-                ],
-                'education_grade_id' => [
-                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
-                ],
-                'institution_id' => [
-                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
-                ],
-
             ],
             'InstitutionFeeTypes' => [
                 'amount' => [
@@ -1193,6 +1187,11 @@ trait MessagesTrait
                     'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
             ],
+            'InstitutionAssets' => [
+                'code' => [
+                    'ruleUnique' => 'Code must be unique for the same academic period',
+                ]
+            ],
             'InstitutionAssessments' => [
                 'marks' => [
                     'markHint' => 'Mark should be between %s and %s'
@@ -1242,7 +1241,47 @@ trait MessagesTrait
                 'previous_effective_date' => [
                     'ruleCompareDateReverse' => 'Effective Date should not be earlier than Position Start Date'
                 ]
-            ]
+            ],
+            'StudentTransferIn' => [
+                'education_grade_id' => [
+                    'ruleCheckInstitutionOffersGrade' => 'This institution does not offer this Education Grade.',
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
+                    'ruleCompareDateReverse' => 'Start Date should not be earlier than Requested Date.',
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'institution_id' => [
+                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
+                ],
+                'institution_class_id' => [
+                    'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+                ],
+                'student_id' => [
+                    'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
+                ]
+            ],
+            'StudentTransferOut' => [
+                'requested_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'institution_id' => [
+                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s students.'
+                ],
+                'student_id' => [
+                    'ruleNoNewWithdrawRequestInGradeAndInstitution' => 'There is a pending withdraw application for this student.',
+                    'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
+                ]
+            ],
+            'InstitutionCommittees' => [
+                'meeting_date' => [
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ],
+                'end_time' => [
+                    'ruleCompareTimeReverse' => 'End Time should not be earlier than Start Time'
+                ]
+            ],
         ],
         'User' => [
             'Users' => [
@@ -1438,10 +1477,13 @@ trait MessagesTrait
                 ]
             ],
             'UserBodyMasses' => [
+                'date' => [
+                    'ruleUnique' => 'Repeated Date',
+                ],
                 'height' => [
                     'validateDecimal' => 'Cannot be more than two decimal place',
                     'notZero' => 'Height must be more than 0',
-                    'validHeight' => 'Height must be within 0 and 3 metre',
+                    'validHeight' => 'Height must be within 0 and 300 centimetre',
                 ],
                 'weight' => [
                     'validateDecimal' => 'Cannot be more than two decimal place',
@@ -1469,7 +1511,7 @@ trait MessagesTrait
             ],
             'Guardians' => [
                 'guardian_id' => [
-                    'ruleStudentGuardianId' => 'This guardian has already added.'
+                    'ruleStudentGuardianId' => 'This guardian has already been added.'
                 ]
             ],
             'Students' => [
@@ -1502,7 +1544,7 @@ trait MessagesTrait
         'Profile' => [
             'Guardians' => [
                 'guardian_id' => [
-                    'ruleStudentGuardianId' => 'This guardian has already added.'
+                    'ruleStudentGuardianId' => 'This guardian has already been added.'
                 ]
             ],
             'Accounts' => [
@@ -1771,7 +1813,7 @@ trait MessagesTrait
         'CustomField' => [
             'text' => [
                 'minLength' => 'Text should be at least %d characters',
-                'maxLength' => 'Text should not be exceed %d characters',
+                'maxLength' => 'Text should not exceed %d characters',
                 'range' => 'Text should be between %d and %d characters'
             ],
             'number' => [
@@ -1972,19 +2014,19 @@ trait MessagesTrait
                 ]
             ]
         ],
-        'Indexes' => [
+        'Risk' => [
             'TableHeader' => [
                 'Criteria',
                 'Operator',
                 'Threshold',
-                'Index'
+                'Risk'
             ],
-            'IndexesCriterias' => [
+            'RiskCriterias' => [
                 'threshold' => [
                     'ruleRange' => 'Value must be within 1 to 99',
                     'criteriaThresholdRange' => 'Value must be within %s to %s'
                 ],
-                'index_value' => [
+                'risk_value' => [
                     'ruleRange' => 'Value must be within 1 to 99'
                 ]
             ]
@@ -1995,6 +2037,30 @@ trait MessagesTrait
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
                 ]
             ],
+        ],
+        'Scholarship' => [
+            'Scholarships' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ],
+                'application_close_date' => [
+                    'ruleCompareDateReverse' => 'Application Close Date should not be earlier than Application Open Date'
+                ]
+            ],
+            'Applications' => [
+                'requested_amount' => [
+                    'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Maximum Award Amount',
+                ]
+            ],
+            'ScholarshipRecipients' => [
+                'approved_amount' => [
+                    'comparison' => 'Approved Amount cannot be more than Maximum Award Amount',
+                    'validateDecimal' => 'Value cannot be more than two decimal places',
+                    'ruleCheckApprovedWithEstimated' => 'Approved Amount cannot be less than the Estimated Amounts',
+                    'ruleCheckApprovedWithDisbursed' => 'Approved Amount cannot be less than the Disbursed Amounts',
+                    'ruleCheckApprovedWithCollected' => 'Approved Amount cannot be less than the Collected Amounts',
+                ]
+            ]
         ],
         'Competency' => [
             'GradingOptions' => [
@@ -2066,7 +2132,17 @@ trait MessagesTrait
                 'name' => [
                     'ruleUnique' => 'This name already exists in the system',
                 ]
-            ]
+            ],
+            'GuardianRelations' => [
+                'gender_id' => [
+                    'ruleCheckGuardianGender' => 'Gender mismatch. Please check against existing records',
+                ]
+            ],
+            'StaffPositionTitles' => [
+               'position_grades' => [
+                    'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
+                ]
+            ] 
         ],
         'Configuration' => [
             'ConfigProductLists' => [
@@ -2113,6 +2189,11 @@ trait MessagesTrait
                 'name' => [
                     'ruleUnique' => 'This webhook name already exists in the system',
                 ],
+            ],
+            'ConfigStudentSettings' => [
+                'max_students_per_subject' => [
+                    'maxStudentLimit' => 'Numeric Value should be between %s to %s'
+                ],
             ]
         ],
         'Alert' => [
@@ -2137,12 +2218,27 @@ trait MessagesTrait
             ],
         ],
         'Area' => [
+            'Areas' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
             'AreaAdministratives' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
                 'is_main_country' => [
                     'ruleValidateAreaAdministrativeMainCountry' => 'There must be at least one Main Country'
                 ]
             ],
         ],
+        'Survey' => [
+            'SurveyForms' => [
+                'custom_filters' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ]
+            ]
+        ]
     ];
 
 
@@ -2171,6 +2267,6 @@ trait MessagesTrait
             }
         }
 
-        return !is_array($message) ? __(vsprintf($message, $sprintf)) : $message;
+        return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
     }
 }

@@ -29,5 +29,8 @@ class ProfileBodyMassesController extends BaseController
         $page->get('security_user_id')->setControlType('hidden')->setValue($userId); // set value and hide the user_id
 
         $this->setTooltip();
+
+        //disable add, edit and delete
+        $page->disable(['add', 'edit', 'delete']);
     }
-} 
+}
