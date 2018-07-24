@@ -1004,11 +1004,15 @@ class AcademicPeriodsTable extends AppTable
         $weeks = $model->getAttendanceWeeks($academicPeriodId);
         $week = $weeks[$weekId];
 
-        $dayOptions[] = [
-            'id' => -1,
-            'name' => __('All Days'),
-            'date' => -1
-        ];
+        if (isset($options['exclude_all']) && $options['exclude_all']) {
+            $dayOptions = [];
+        } else {
+            $dayOptions[] = [
+                'id' => -1,
+                'name' => __('All Days'),
+                'date' => -1
+            ];
+        }
 
         $schooldays = [];
         for ($i = 0; $i < $daysPerWeek; ++$i) {

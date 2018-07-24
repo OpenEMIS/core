@@ -178,7 +178,18 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             .ajax({success: success, defer: true});
     }
 
-    function getClassStudent(institutionId, institutionClassId, academicPeriodId, attendancePeriod, day, weekStartDay, weekEndDay) {
+    function getClassStudent(params) {
+        var extra = {
+            institution_id: params.institution_id,
+            institution_class_id: params.institution_class_id,
+            academic_period_id: params.academic_period_id,
+            attendance_period_id: params.attendance_period_id,
+            day_id: params.day_id,
+            week_id: params.week_id,
+            week_start_day: params.week_start_day,
+            week_end_day: params.week_end_day,
+        };
+
         var success = function(response, deferred) {
             var classStudents = response.data.data;
 
@@ -190,19 +201,11 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         };
 
         return StudentAttendances
-            .find('ClassStudentsWithAbsence', {
-                institution_id: institutionId,
-                institution_class_id: institutionClassId,
-                academic_period_id: academicPeriodId,
-                day_id: day,
-                attendance_period_id: attendancePeriod,
-                week_start_day: weekStartDay,
-                week_end_day: weekEndDay
-            })
+            .find('ClassStudentsWithAbsence', extra)
             .ajax({success: success, defer: true});
     }
 
-    function getAllDayColumnDefs(dayList) {
+    function getAllDayColumnDefs(dayList, attendancePeriodList) {
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
@@ -226,26 +229,64 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             filter: "text"
         });
 
-        angular.forEach(dayList, function(obj, key) {
-            if (obj.id != -1) {
-                    var colDef = {
-                    headerName: obj.day,
-                    field: "StudentAbsences.absence_type_id",
-                    suppressSorting: true,
-                    menuTabs: [],
-                    cellRenderer: function(params) {
-                        return '<p>' + obj.day +'</p>';
+        angular.forEach(dayList, function(dayObj, dayKey) {
+            if (dayObj.id != -1) {
+
+                console.log('dayObj', dayObj);
+                console.log('dayKey', dayKey);
+
+                var childrenColDef = [];
+                angular.forEach(attendancePeriodList, function(periodObj, periodKey) {
+                    // console.log('periodObj', periodObj);
+                    // console.log('periodKey', periodKey);
+
+                    childrenColDef.push({
+                        headerName: periodObj.id,
+                        field: 'week_attendance.' + dayObj.day + '.' + periodObj.id,
+                        cellRenderer: function(params) {
+                            if (angular.isDefined(params.value)) {
+                                var code = params.value;
+                                switch (code) {
+                                    case 'PRESENT':
+                                        html = '<div style="color: #77B576;"><i style="color: #77B576;" class="fa fa-check"></i>';
+                                        break;
+                                    case 'LATE':
+                                        html = '<div style="color: #77B576;"><i class="fa fa-check-circle-o"></i>';
+                                        break;
+                                    case 'UNEXCUSED':
+                                        // html = '<div style="color: #CC5C5C"><i class="fa fa-circle-o"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
+                                        break;
+                                    case 'EXCUSED':
+                                        // html = '<div style="color: #CC5C5C"><i class="fa fa-circle-o"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                return html;
+                            }
+                        }
                     }
+                });
+
+                var colDef = {
+                    headerName: obj.day,
+                    children: childrenColDef
+                    // field: "institution_student_absences.absence_type_id",
+                    // suppressSorting: true,
+                    // menuTabs: [],
+                    // cellRenderer: function(params) {
+                        // return '<p>' + obj.day +'</p>';
+                    // }
                 };
 
                 columnDefs.push(colDef);
             }
-        })
+        });
 
         return columnDefs;
     }
 
-    function getSingleDayColumnDefs() {
+    function getSingleDayColumnDefs(period) {
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
@@ -271,7 +312,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
 
         columnDefs.push({
             headerName: "Attendance",
-            field: "StudentAbsences.absence_type_id",
+            field: "institution_student_absences.absence_type_id",
             suppressSorting: true,
             menuTabs: [],
             cellRenderer: function(params) {
@@ -294,7 +335,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
 
         columnDefs.push({
             headerName: "Reason / Comment",
-            field: "StudentAbsences.student_absence_reason_id",
+            field: "institution_student_absences.student_absence_reason_id",
             menuTabs: [],
             suppressSorting: true,
             cellRenderer: function(params) {
@@ -305,7 +346,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                     var absenceTypeList = context.absenceType;
                     var mode = context.mode;
 
-                    var studentAbsenceTypeId = (params.data.StudentAbsences.absence_type_id == null) ? 0 : params.data.StudentAbsences.absence_type_id;
+                    var studentAbsenceTypeId = (params.data.institution_student_absences.absence_type_id == null) ? 0 : params.data.institution_student_absences.absence_type_id;
                     var absenceTypeObj = absenceTypeList.find(obj => obj.id == studentAbsenceTypeId);
 
                     if (mode == 'view') {
@@ -359,13 +400,30 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         return columnDefs;
     }
 
+    function saveAbsences(data, context) {
+        var studentAbsenceData = {
+            student_id: data.student_id,
+            institution_id: data.institution_id,
+            academic_period_id: data.academic_period_id,
+            institution_class_id: data.institution_class_id,
+            absence_type_id: data.institution_student_absences.absence_type_id,
+            student_absence_reason_id: data.institution_student_absences.student_absence_reason_id,
+            comment: data.institution_student_absences.comment,
+            period: context.period,
+            date: context.date
+        };
+
+        console.log('save - studentAbsenceData', studentAbsenceData);
+        StudentAbsences.save(studentAbsenceData);
+    } 
+
     // Cell renderer elements
     function getEditAttendanceElement(data, absenceTypeList, api, context) {
-        if (data.StudentAbsences.absence_type_id == null) {
-            data.StudentAbsences.absence_type_id = 0;
+        if (data.institution_student_absences.absence_type_id == null) {
+            data.institution_student_absences.absence_type_id = 0;
         }
 
-        var oldValue = data.StudentAbsences.absence_type_id;
+        var oldValue = data.institution_student_absences.absence_type_id;
         var eCell = document.createElement('div');
         eCell.setAttribute("class", "oe-select-wrapper input-select-wrapper");
 
@@ -381,6 +439,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         eSelect.value = oldValue;
         eSelect.addEventListener('change', function () {
             var newValue = eSelect.value;
+            data.institution_student_absences.absence_type_id = newValue;
             if (newValue != oldValue) {
                 oldValue = newValue;
                 var absenceTypeObj = absenceTypeList.find(obj => obj.id == newValue);
@@ -388,44 +447,31 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                 // reset not related data
                 switch (absenceTypeObj.code) {
                     case 'PRESENT':
-                        data.StudentAbsences.student_absence_reason_id = null;
-                        data.StudentAbsences.comment = null;
-                        data.StudentAbsences.absence_type_id = null;
+                        data.institution_student_absences.student_absence_reason_id = null;
+                        data.institution_student_absences.comment = null;
+                        data.institution_student_absences.absence_type_id = null;
                         break;
                     case 'LATE':
                     case 'UNEXCUSED':
-                        data.StudentAbsences.student_absence_reason_id = null;
-                        data.StudentAbsences.comment = null;
+                        data.institution_student_absences.student_absence_reason_id = null;
+                        data.institution_student_absences.comment = null;
                         break;
                     case 'EXCUSED':
-                        data.StudentAbsences.comment = null;
+                        data.institution_student_absences.comment = null;
                         break;
                 }
 
-                data.StudentAbsences.absence_type_id = newValue;
+                data.institution_student_absences.absence_type_id = newValue;
                 
                 // refresh student_absence_reason_id to change the input based on absence type
                 var refreshParams = {
-                    columns: ['StudentAbsences.student_absence_reason_id'],
+                    columns: ['institution_student_absences.student_absence_reason_id'],
                     force: true
                 }
                 api.refreshCells(refreshParams);
             }
 
-            var studentAbsenceData = {
-                student_id: data.student_id,
-                institution_id: data.institution_id,
-                academic_period_id: data.academic_period_id,
-                institution_class_id: data.institution_class_id,
-                absence_type_id: data.StudentAbsences.absence_type_id,
-                student_absence_reason_id: data.StudentAbsences.student_absence_reason_id,
-                comment: data.StudentAbsences.comment,
-                period: context.period,
-                date: context.date
-            };
-
-            console.log('attendance - studentAbsenceData', studentAbsenceData);
-            StudentAbsences.save(studentAbsenceData);
+            saveAbsences(data, context);
         });
 
         eCell.appendChild(eSelect);
@@ -435,29 +481,15 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
     function getEditCommentElement(data, context) {
         var eTextarea = document.createElement("textarea");
         eTextarea.setAttribute("placeholder", "Comments");
-        eTextarea.value = data.StudentAbsences.comment;
+        eTextarea.value = data.institution_student_absences.comment;
 
         eTextarea.addEventListener('change', function () {
-            data.StudentAbsences.comment = eTextarea.value;
+            data.institution_student_absences.comment = eTextarea.value;
         });
 
         eTextarea.addEventListener('blur', function () {
-            data.StudentAbsences.comment = eTextarea.value;
-
-            var studentAbsenceData = {
-                student_id: data.student_id,
-                institution_id: data.institution_id,
-                academic_period_id: data.academic_period_id,
-                institution_class_id: data.institution_class_id,
-                absence_type_id: data.StudentAbsences.absence_type_id,
-                student_absence_reason_id: data.StudentAbsences.student_absence_reason_id,
-                comment: data.StudentAbsences.comment,
-                period: context.period,
-                date: context.date
-            };
-
-            console.log('comments - studentAbsenceData', studentAbsenceData);
-            StudentAbsences.save(studentAbsenceData);
+            data.institution_student_absences.comment = eTextarea.value;
+            saveAbsences(data, context);
         });
 
         return eTextarea;
@@ -470,8 +502,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         eSelectWrapper.setAttribute("class", "oe-select-wrapper input-select-wrapper");
         var eSelect = document.createElement("select");
 
-        if (data.StudentAbsences.student_absence_reason_id == null) {
-            data.StudentAbsences.student_absence_reason_id = studentAbsenceReasonList[0].id;
+        if (data.institution_student_absences.student_absence_reason_id == null) {
+            data.institution_student_absences.student_absence_reason_id = studentAbsenceReasonList[0].id;
         }
 
         angular.forEach(studentAbsenceReasonList, function(obj, key) {
@@ -482,30 +514,9 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             eSelect.appendChild(eOption);
         });
             
-        // eSelect.value = oldValue;
-
-        // eSelect.addEventListener('blur', function () {
-        //     console.log('absence reason change!', eSelect.value);
-        // });
-
         eSelect.addEventListener('change', function () {
-            console.log('attendance - studentAbsenceData', studentAbsenceData);
-            data.StudentAbsences.student_absence_reason_id = eSelect.value;
-
-            var studentAbsenceData = {
-                student_id: data.student_id,
-                institution_id: data.institution_id,
-                academic_period_id: data.academic_period_id,
-                institution_class_id: data.institution_class_id,
-                absence_type_id: data.StudentAbsences.absence_type_id,
-                student_absence_reason_id: data.StudentAbsences.student_absence_reason_id,
-                comment: data.StudentAbsences.comment,
-                period: context.period,
-                date: context.date
-            };
-
-            console.log('reason - studentAbsenceData', studentAbsenceData);
-            StudentAbsences.save(studentAbsenceData);
+            data.institution_student_absences.student_absence_reason_id = eSelect.value;
+            saveAbsences(data, context);
         })
 
         eSelectWrapper.appendChild(eSelect);
@@ -513,7 +524,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
     }
 
     function getViewAttendanceElement(data, absenceTypeList) {
-        var id = (data.StudentAbsences.absence_type_id === null) ? 0 : data.StudentAbsences.absence_type_id;
+        var id = (data.institution_student_absences.absence_type_id === null) ? 0 : data.institution_student_absences.absence_type_id;
         var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
         var html = '';
         switch (absenceTypeObj.code) {
@@ -538,7 +549,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
     }
 
     function getViewCommentsElement(data) {
-        var comment = data.StudentAbsences.comment;
+        var comment = data.institution_student_absences.comment;
         var html = '';
         if (comment != null) {
             html = '<div class="absences-comment"><i class="fa fa-commenting"></i><span>' + comment + '</span></div>';
@@ -550,7 +561,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         // console.log('data', data);
         // console.log('studentAbsenceReasonList', studentAbsenceReasonList);
 
-        var absenceReasonId = data.StudentAbsences.student_absence_reason_id;
+        var absenceReasonId = data.institution_student_absences.student_absence_reason_id;
         var absenceReasonObj = studentAbsenceReasonList.find(obj => obj.id == absenceReasonId);
         var html = '';
 
