@@ -32,7 +32,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
-        $validator
+        return $validator
             ->requirePresence('grading_options')
             ->allowEmpty('code')
             ->add('code', [
@@ -41,7 +41,6 @@ class CompetencyGradingTypesTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ]);
-        return $validator;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
