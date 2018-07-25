@@ -659,6 +659,15 @@ trait MessagesTrait
             'noStudentSelected' => 'There are no students selected',
             'noLinkedExamCentres' => 'Please contact your administrator to set up available Examination Centres for the selected Examination'
         ],
+        'AssessmentGradingTypes' => [
+            'noGradingOptions' => 'There are no grading options for this grading type'
+        ],
+        'OutcomeGradingTypes' => [
+            'noGradingOptions' => 'There are no grading options for this grading type'
+        ],
+        'CompetencyGradingTypes' => [
+            'noGradingOptions' => 'There are no grading options for this grading type'
+        ],
         'Examinations' => [
             'noExaminationItems' => 'There are no examination items for this examination'
         ],
