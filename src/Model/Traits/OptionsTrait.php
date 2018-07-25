@@ -88,7 +88,8 @@ trait OptionsTrait
                 'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Type')]
             ],
             'InstitutionAssets' => [
-                'accessibility' => [1 => __('Accessible'), 0 => __('Not Accessible')]
+                'accessibility' => [1 => __('Accessible'), 0 => __('Not Accessible')],
+                'purpose' => [1 => __('Teaching'), 0 => __('Non-Teaching')]
             ],
             'Shifts' => [
                 'types' => [

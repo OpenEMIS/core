@@ -168,7 +168,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     Controller.gridOptions.api.setColumnDefs(response.data);
 
                     if (period != null && subject != null && student != null) {
-                        var limit = 10;
+                        var limit = 40;
                         var dataSource = {
                             pageSize: limit,
                             getRows: function (params) {
@@ -316,22 +316,22 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 rowHeight: 38,
                 minColWidth: 100,
                 enableColResize: true,
-                enableSorting: true,
+                enableSorting: false,
                 unSortIcon: true,
-                enableFilter: true,
+                enableFilter: false,
                 suppressMenuHide: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
                 rowModelType: 'infinite',
 
                 // Added options
-                suppressContextMenu: true,
+                suppressContextMenu: false,
                 stopEditingWhenGridLosesFocus: true,
                 ensureDomOrder: true,
                 pagination: true,
-                paginationPageSize: 10,
+                paginationPageSize: 40,
                 maxBlocksInCache: 1,
-                cacheBlockSize: 10,
+                cacheBlockSize: 40,
                 localeText: localeText,
                 domLayout: 'autoHeight',
                 onGridSizeChanged: function(e) {
@@ -361,13 +361,13 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 rowHeight: 38,
                 minColWidth: 100,
                 enableColResize: true,
-                enableSorting: true,
+                enableSorting: false,
                 unSortIcon: true,
-                enableFilter: true,
+                enableFilter: false,
                 suppressMenuHide: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
-                suppressContextMenu: true,
+                suppressContextMenu: false,
                 stopEditingWhenGridLosesFocus: true,
                 ensureDomOrder: true,
                 localeText: localeText,

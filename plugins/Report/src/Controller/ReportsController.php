@@ -22,7 +22,8 @@ class ReportsController extends AppController
             'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
             'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
             'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
-            'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
+            'Audits' => ['className' => 'Report.Audits', 'actions' => ['index', 'add']],
+            'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
         ];
         $this->loadComponent('Training.Training');
@@ -33,12 +34,12 @@ class ReportsController extends AppController
         parent::beforeFilter($event);
         $header = 'Reports';
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
-        $this->Navigation->addCrumb("Audit");
+        $this->Navigation->addCrumb($this->request->action);
     }
 
     public function onInitialize(Event $event, Table $table, ArrayObject $extra)
     {
-        $header = __('Reports') . ' - ' . __("Audit");
+        $header = __('Reports') . ' - ' . __($table->alias());
         $this->set('contentHeader', $header);
     }
 
@@ -56,6 +57,7 @@ class ReportsController extends AppController
                 // 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
                 'Report.InstitutionStaff' => __('Staff'),
                 'Report.StudentAbsences' => __('Student Absence'),
+                'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
                 'Report.StaffAbsences' => __('Staff Absence'),
                 'Report.StaffLeave' => __('Staff Leave'),
                 'Report.StaffTransfers' => __('Staff Transfer'),
@@ -67,7 +69,8 @@ class ReportsController extends AppController
                 'Report.Students' => __('Students'),
                 'Report.StudentIdentities' => __('Identities'),
                 'Report.StudentContacts' => __('Contacts'),
-                'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School')
+                'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
+                'Report.BodyMasses' => __('Body Masses')
             ];
         } elseif ($module == 'Staff') {
             $options = [
@@ -106,17 +109,24 @@ class ReportsController extends AppController
         } elseif ($module == 'DataQuality') {
             $options = [
                 'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
-                'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates')
+                'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates'),
+                'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates')
             ];
-        } elseif ($module == 'Audit') {
+        } elseif ($module == 'Audits') {
             $options = [
-                'Report.Audit' => __('Login')
+                'Report.AuditLogins' => __('Logins'),
+                'Report.AuditInstitutions' => __('Institutions'),
+                'Report.AuditUsers' => __('Users')
             ];
         } elseif ($module == 'Examinations') {
             $options = [
                 'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
                 'Report.NotRegisteredStudents' => __('Not Registered Students'),
                 'Report.ExaminationResults' => __('Examination Results'),
+            ];
+        } elseif ($module == 'Workflows') {
+            $options = [
+                'Report.WorkflowRecords' => __('Workflow Records')
             ];
         }
         return $options;
@@ -154,6 +164,9 @@ class ReportsController extends AppController
                     foreach ($results as $key => $entity) {
                         if ($entity->total_records > 0) {
                             $data['percent'] = intval($entity->current_records / $entity->total_records * 100);
+                            if ($data['percent'] > 100) {
+                                $data['percent'] = 100;
+                            }
                         } elseif ($entity->total_records == 0 && $entity->status == 0) {
                             // if only the status is complete, than percent will be 100, total record can still be 0 if the shell excel generation is slow, and percent should not be 100.
                             $data['percent'] = 100;
