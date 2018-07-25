@@ -87,7 +87,7 @@ class TrackDeleteBehavior extends Behavior
         }
     }
 
-    public function convertBinaryResourceToString($phpResourceFile)
+    private function convertBinaryResourceToString($phpResourceFile)
     {
         $file = '';
         while (!feof($phpResourceFile)) {

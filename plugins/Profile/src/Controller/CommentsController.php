@@ -213,6 +213,12 @@ class CommentsController extends PageController
             $tabElements[$action]['url'] = $url;
         }
 
+        if ($plugin == 'Directory') {
+            if (isset($tabElements['History'])) {
+                unset($tabElements['History']);
+            }
+        }
+        
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
 
         foreach ($tabElements as $action => $obj) {
@@ -258,7 +264,8 @@ class CommentsController extends PageController
         if ($userRole == 'Student') {
             $studentTabElements = [
                 'Guardians' => ['text' => __('Guardians')],
-                'StudentSurveys' => ['text' => __('Surveys')]
+                'StudentSurveys' => ['text' => __('Surveys')],
+                'StudentTransport' => ['text' => __('Transport')]
             ];
             $tabElements = array_merge($tabElements, $studentTabElements);
         }
