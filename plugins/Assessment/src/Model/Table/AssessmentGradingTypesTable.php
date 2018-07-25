@@ -85,8 +85,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
                 'ruleRange' => [
                     'rule' => ['range', 0, 9999.99]
                 ]
-            ]);
-			// ->requirePresence('grading_options');
+            ])
+			->requirePresence('grading_options');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -143,12 +143,12 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		$this->controller->set('gradingOptions', $gradingOptions);
 	}
 
-   // public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
-   //  {
-   //      if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
-   //          $this->Alert->warning($this->aliasField('noGradingOptions'));
-   //      }
-   //  }
+   public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
+            $this->Alert->warning($this->aliasField('noGradingOptions'));
+        }
+    }
 
 	public function addEditOnReload(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
 		$groupOptionData = $this->GradingOptions->getFormFields();
@@ -171,12 +171,12 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 ** edit action events
 **
 ******************************************************************************************************************/
-	// public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
- //    {
- //        if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
- //            $this->Alert->warning($this->aliasField('noGradingOptions'));
- //        }
- //    }
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
+            $this->Alert->warning($this->aliasField('noGradingOptions'));
+        }
+    }
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
