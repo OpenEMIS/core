@@ -1,3 +1,60 @@
+### [3.31.0] - 2018-07-20
+- Developed student pending admission API
+- Developed Potential Wrong Birthdates in Reports > Data Quality 
+- Developed function to import height and weight for multiple students
+
+### [3.30.2] - 2018-07-13
+- Developed additional placeholders in Student Report Card
+
+### [3.30.1] - 2018-07-05
+- Added Started On and Completed On in Institutions > Report Cards
+
+### [3.30.0] - 2018-07-02
+- Developed audit reports via feature
+- Implemented status column in Institution > Students > Import feature
+- Change date format in Audit Report to yyyy-mm-dd to enable sorting
+
+### [3.30.0] - 2018-07-02
+- Developed audit reports via feature
+- Implemented status column in Institution > Students > Import feature
+- Change date format in Audit Report to yyyy-mm-dd to enable sorting
+
+### [3.29.0] - 2018-06-22
+- Data patch on Positions feature
+- Develop Student Attendance Summary Report
+- Develop Workflow Report
+- Develop OpenEMIS Committees feature
+- Develop ability to add multiple attachments to Students/Staff behaviour feature
+
+### [3.28.1] - 2018-06-20
+- Rename breadcrumbs and headers to the original name under Report module 
+
+### [3.28.0] - 2018-06-14
+- Rename Scholarships sub-menu in Administration > Scholarships > Details
+- Added date range to Audit Login report
+- Added "Forgot Password" and "Forgot Username" feature 
+- Develop student capacity per class
+- Develop Workflow Rules event in Administration > Workflows > Rules
+- Develop Assets feature in Institutions > Assets
+
+### [3.27.2] - 2018-06-11
+- Added new labels to Administration > Translations
+- Changed colours for Institution > Dashboard charts
+
+### [3.27.1] - 2018-06-06
+- Optimized the generation of Student Reports Card
+
+### [3.27.0] - 2018-06-04
+- Developed Recipients feature under Administration > Scholarships
+- Removed the Title field in Staff > Career > Appraisal
+- Added additional filters and columns to Institution > Cases
+- Added Date of Birth to Report > Institutions > Student 
+- Developed import feature for Institutions > Staff > Positions
+- Developed import feature for Institutions > Positions
+
+### [3.26.1] - 2018-05-25
+- Created Deputy Principal system role in Administration > Security > Role
+
 ### [3.26.0] - 2018-05-18
 - Developed Scholarship feature under Profile and Administration
 - Implemented import feature for Staff Leave under Staff > Career > Leave

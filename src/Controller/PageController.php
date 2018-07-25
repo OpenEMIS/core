@@ -29,6 +29,7 @@ class PageController extends BaseController
 
         $this->loadComponent('Page.RenderLink');
         $this->loadComponent('RenderDate');
+        $this->loadComponent('RenderTime');
         $this->loadComponent('RenderDatetime');
     }
 
