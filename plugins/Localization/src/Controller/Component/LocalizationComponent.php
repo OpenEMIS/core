@@ -60,21 +60,6 @@ class LocalizationComponent extends Component
         $this->Cookie->time = 3600 * 24 * 30; // expires after one month
         list($this->language, $this->showLanguage) = $this->detectLanguage();
         $this->Session = $session;
-        $this->getLocaleDirection();
-    }
-
-    public function getLocaleDirection() 
-    {
-        if (empty(Cache::read('localesData'))) {
-            $Locales = TableRegistry::get('Locales');
-            $localeDirections = $Locales
-                ->find('list', [
-                    'keyField' => 'iso',
-                    'valueField' => 'direction'
-                ])
-                ->toArray();
-            Cache::write('localesData', $localeDirections);
-        }
     }
 
     public function getCookie()
