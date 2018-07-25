@@ -14,7 +14,6 @@ use Cake\I18n\I18n;
 use Cake\View\Helper\IdGeneratorTrait;
 use Cake\View\NumberHelper;
 use Cake\Network\Session;
-use Cake\Cache\Cache;
 
 use Cake\Log\Log;
 
@@ -792,11 +791,10 @@ class HtmlFieldHelper extends Helper
             'type' => 'select'
         ];
         
-        $direction = Cache::read('localesData');
-        
-        if (!empty($direction) && $direction[I18n::locale()] == 'rtl') {
+        if (I18n::locale() == 'ar') {
             $_options['class'] = 'chosen-select chosen-rtl';
         }
+        
         $_options['options'] = isset($attr['options']) ? $attr['options'] : [];
         $_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
         $options = array_merge($_options, $options);
