@@ -953,7 +953,7 @@ class StudentPromotionTable extends AppTable
 
     public function reconfirm()
     {
-        $this->Alert->info($this->aliasField('reconfirm', ['reset' => true]));
+        $this->Alert->info($this->aliasField('reconfirm'), ['reset' => true]);
 
         $sessionKey = $this->registryAlias() . '.confirm';
         if ($this->Session->check($sessionKey)) {
