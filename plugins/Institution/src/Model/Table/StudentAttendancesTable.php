@@ -170,19 +170,16 @@ class StudentAttendancesTable extends AppTable
                 $studentList = $studentListResult->toArray();
 
                 $StudentAbsenceTable = TableRegistry::get('Institution.StudentAbsences');
+                $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+
                 $result = $StudentAbsenceTable
                     ->find()
                     ->contain(['AbsenceTypes'])
                     ->select([
-                        // $StudentAbsenceTable->aliasField('academic_period_id'),
-                        // $StudentAbsenceTable->aliasField('institution_class_id'),
                         $StudentAbsenceTable->aliasField('student_id'),
-                        // $StudentAbsenceTable->aliasField('institution_id'),
                         $StudentAbsenceTable->aliasField('date'),
                         $StudentAbsenceTable->aliasField('period'),
-                        // $StudentAbsenceTable->aliasField('comment'),
                         $StudentAbsenceTable->aliasField('absence_type_id'),
-                        // $StudentAbsenceTable->aliasField('student_absence_reason_id'),
                         'code' => 'AbsenceTypes.code'
                     ])
                     ->where([
@@ -198,6 +195,20 @@ class StudentAttendancesTable extends AppTable
                     ])
                     ->toArray();
 
+                $isMarkedRecords = $StudentAttendanceMarkedRecords
+                    ->find()
+                    ->select([
+                        $StudentAttendanceMarkedRecords->aliasField('date'),
+                        $StudentAttendanceMarkedRecords->aliasField('period')
+                    ])
+                    ->where([
+                        $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
+                        $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
+                        $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
+                        $StudentAttendanceMarkedRecords->aliasField('date >= ') => $weekStartDay,
+                        $StudentAttendanceMarkedRecords->aliasField('date <= ') => $weekEndDay
+                    ])
+                    ->toArray();
 
                 $studentAttenanceData = [];
                 foreach ($studentList as $value) {
@@ -216,8 +227,18 @@ class StudentAttendancesTable extends AppTable
 
                         foreach ($periodList as $period) {
                             $periodId = $period['id'];
+
                             if (!isset($studentAttenanceData[$studentId][$dayId][$periodId])) {
-                                $studentAttenanceData[$studentId][$dayId][$periodId] = '';
+                                $studentAttenanceData[$studentId][$dayId][$periodId] = 'NOTMARKED';
+                                foreach ($isMarkedRecords as $entity) {
+                                    $entityDate = $entity->date->format('Y-m-d');
+                                    $entityPeriod = $entity->period;
+
+                                    if ($entityDate == $date && $entityPeriod == $periodId) {
+                                        $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
+                                        break;
+                                    }
+                                }
                             }
 
                             foreach ($result as $entity) {
@@ -228,8 +249,6 @@ class StudentAttendancesTable extends AppTable
                                 if ($studentId == $entityStudentId && $entityDateFormat == $date && $entityPeriod == $periodId) {
                                     $studentAttenanceData[$studentId][$dayId][$periodId] = $entity->code;
                                     break;
-                                } else {
-                                    $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
                                 }
                             }
                         }
