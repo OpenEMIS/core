@@ -785,7 +785,10 @@ EOT;
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'select';
         $options['multiple'] = 'multiple';
-        $options['class'] = (I18n::locale() == 'ar') ? 'chosen-select chosen-rtl' : 'chosen-select';
+        
+        $Locales = TableRegistry::get('Locales');
+        $langDir = $Locales->getLangDir(I18n::locale());
+        $options['class'] = ($langDir == 'rtl') ? 'chosen-select chosen-rtl' : 'chosen-select';
 
         $options['data-placeholder'] = '';
         if (array_key_exists('placeholder', $options)) {
