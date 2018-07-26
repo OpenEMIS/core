@@ -614,7 +614,7 @@ class StudentPromotionTable extends AppTable
                 $studentStatuses = $this->statuses;
                 $selectedClass = $entity->has('class') ? $entity->class : null;
 
-                if (!is_null($selectedStudentStatusId)) {
+                if (!is_null($selectedStudentStatusId) && $selectedClass != -1) {
                     $showNextClass = in_array($selectedStudentStatusId, [$studentStatuses['PROMOTED'], $studentStatuses['REPEATED']]);
                     if ($selectedStudentStatusId == $studentStatuses['REPEATED']) {
                         $selectedNextGrade = $selectedGrade;
@@ -869,7 +869,7 @@ class StudentPromotionTable extends AppTable
                         unset($studentObj['selected']);
                         if ($saveAsDraft) {
                             // only save draft if current object is not graduating and next_institution_class_id is selected
-                            if($statusToUpdate != $studentStatuses['GRADUATED'] && $studentObj['next_institution_class_id'] > 0) {
+                            if($statusToUpdate != $studentStatuses['GRADUATED']) {
                                 $classStudents = TableRegistry::get('Institution.InstitutionClassStudents');
                                 $classStudents
                                     ->query()
