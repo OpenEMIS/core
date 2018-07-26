@@ -244,7 +244,7 @@ class AccessControlComponent extends Component
 
         // we only need controller and action
         foreach ($url as $i => $val) {
-            if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val) || $this->isSHA256($val) || $this->isEncodedParam($val)) {
+            if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val) || $this->isSHA256($val) || $this->isEncodedParam($val) || $this->isHex($val)) {
                 unset($url[$i]);
             }
         }
@@ -273,6 +273,12 @@ class AccessControlComponent extends Component
                 unset($url[0]);
                 unset($url[1]);
             }
+        }
+
+        // exclude profile controllers
+        $excludedController = ['ProfileApplicationAttachments', 'ProfileApplicationInstitutionChoices', 'ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'Profiles', 'ScholarshipsDirectory'];
+        if (isset($url['controller']) && in_array($url['controller'], $excludedController)) {
+            return true;
         }
 
         if (array_key_exists('controller', $url)) {
@@ -376,6 +382,11 @@ class AccessControlComponent extends Component
             }
         }
         return false;
+    }
+
+    private function isHex($input)
+    {
+        return ctype_xdigit($input) && strpos($input, '0') !== false;
     }
 
     public function isAdmin()

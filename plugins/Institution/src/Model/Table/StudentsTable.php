@@ -14,12 +14,14 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Core\Configure;
 
 use App\Model\Table\ControllerActionTable;
 
 class StudentsTable extends ControllerActionTable
 {
-    const PENDING_TRANSFER = -2;
+    const PENDING_TRANSFERIN = -1;
+    const PENDING_TRANSFEROUT = -2;
     const PENDING_ADMISSION = -3;
     const PENDING_WITHDRAW = -4;
 
@@ -55,18 +57,21 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('HighChart', [
             'number_of_students_by_year' => [
                 '_function' => 'getNumberOfStudentsByYear',
+                '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Years')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'number_of_students_by_stage' => [
                 '_function' => 'getNumberOfStudentsByStage',
+                '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Education')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'institution_student_gender' => [
-                '_function' => 'getNumberOfStudentsByGender'
+                '_function' => 'getNumberOfStudentsByGender',
+                '_defaultColors' => false,
             ],
             'institution_student_age' => [
                 '_function' => 'getNumberOfStudentsByAge'
@@ -75,7 +80,7 @@ class StudentsTable extends ControllerActionTable
                 '_function' => 'getNumberOfStudentsByGradeByInstitution'
             ]
         ]);
-        $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStudentAdmission']);       
 
         /**
          * Advance Search Types.
@@ -112,14 +117,15 @@ class StudentsTable extends ControllerActionTable
          * End Advance Search Types
          */
         $this->addBehavior('ControllerAction.Image'); // To be verified
-
-        $this->addBehavior('Indexes.Indexes');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
     }
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
         return $events;
     }
@@ -162,7 +168,9 @@ class StudentsTable extends ControllerActionTable
             ->allowEmpty('class')
             ->add('class', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit'],
-                'on' => 'create'
+                'on' => function ($context) {  
+                    return (!empty($context['data']['class']) && $context['newRecord']);
+                }
             ])
             ->add('gender_id', 'rulecompareStudentGenderWithInstitution', [
                 'rule' => ['compareStudentGenderWithInstitution']
@@ -193,6 +201,7 @@ class StudentsTable extends ControllerActionTable
 
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $periodId = $this->request->query['academic_period_id'];
 
         $query
             ->where([$this->aliasField('institution_id') => $institutionId])
@@ -240,19 +249,10 @@ class StudentsTable extends ControllerActionTable
                     $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ]
             );
-        $periodId = $this->request->query['academic_period_id'];
+            
         if ($periodId > 0) {
             $query->where([$this->aliasField('academic_period_id') => $periodId]);
         }
-        $query->leftJoin(['ClassStudents' => 'institution_class_students'], [
-                'ClassStudents.student_id = '.$this->aliasField('student_id'),
-                'ClassStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
-                'ClassStudents.student_status_id = '.$this->aliasField('student_status_id')
-            ])->leftJoin(['Classes' => 'institution_classes'], [
-                'Classes.id = ClassStudents.institution_class_id',
-                'Classes.institution_id = '.$this->aliasField('institution_id'),
-                'Classes.academic_period_id = '.$this->aliasField('academic_period_id')
-            ])->select(['institution_class_name' => 'Classes.name']);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -565,6 +565,21 @@ class StudentsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        // permission checking for import button
+        $hasImportAdmissionPermission = $this->AccessControl->check(['Institutions', 'ImportStudentAdmission', 'add']);
+        $hasImportBodyMassPermission = $this->AccessControl->check(['Institutions', 'ImportStudentBodyMasses', 'add']);
+
+        if (!$hasImportAdmissionPermission && $hasImportBodyMassPermission) {
+            if ($this->behaviors()->has('ImportLink')) {
+                $this->behaviors()->get('ImportLink')->config([
+                   'import_model' => 'ImportStudentBodyMasses'
+                ]);
+            }
+        }
+
+        $session = $this->request->session();
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('class', ['after' => 'education_grade_id']);
         $this->field('student_status_id', ['after' => 'class']);
@@ -581,13 +596,14 @@ class StudentsTable extends ControllerActionTable
 
         // To redirect to Pending statuses page
         $pendingStatuses = [
-            $StudentStatusesTable->PENDING_ADMISSION => 'StudentAdmission',
-            $StudentStatusesTable->PENDING_TRANSFER => 'TransferRequests',
-            $StudentStatusesTable->PENDING_WITHDRAW => 'StudentWithdraw'
+            self::PENDING_ADMISSION => 'StudentAdmission',
+            self::PENDING_TRANSFERIN => 'StudentTransferIn',
+            self::PENDING_TRANSFEROUT => 'StudentTransferOut',
+            self::PENDING_WITHDRAW => 'StudentWithdraw'
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
-            $url = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId])];
             $url['action'] = $pendingStatuses[$selectedStatus];
             $event->stopPropagation();
             return $this->controller->redirect($url);
@@ -650,9 +666,10 @@ class StudentsTable extends ControllerActionTable
             ->toArray();
         $StudentStatusesTable = $this->StudentStatuses;
         $pendingStatus = [
-            $StudentStatusesTable->PENDING_TRANSFER => __('Pending Transfer'),
-            $StudentStatusesTable->PENDING_ADMISSION => __('Pending Admission'),
-            $StudentStatusesTable->PENDING_WITHDRAW => __('Pending Withdraw'),
+            self::PENDING_TRANSFERIN => __('Pending Transfer In'),
+            self::PENDING_TRANSFEROUT => __('Pending Transfer Out'),
+            self::PENDING_ADMISSION => __('Pending Admission'),
+            self::PENDING_WITHDRAW => __('Pending Withdraw'),
         ];
 
         $statusOptions = $statusOptions + $pendingStatus;
@@ -898,6 +915,8 @@ class StudentsTable extends ControllerActionTable
     {
         $listeners = [
             TableRegistry::get('Institution.StudentAdmission'),
+            TableRegistry::get('Institution.StudentTransferIn'),
+            TableRegistry::get('Institution.StudentTransferOut'),
             TableRegistry::get('Institution.InstitutionClassStudents'),
             TableRegistry::get('Institution.InstitutionSubjectStudents'),
             TableRegistry::get('Institution.StudentUser'),
@@ -972,16 +991,17 @@ class StudentsTable extends ControllerActionTable
 
             switch ($code) {
                 case 'TRANSFERRED':
-                    $TransferApprovalsTable = TableRegistry::get('Institution.TransferApprovals');
-                    $transferReason = $TransferApprovalsTable->find()
+                    $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
+                    $approvedStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('APPROVED');
+
+                    $transferReason = $StudentTransfersTable->find()
                         ->matching('StudentTransferReasons')
                         ->where([
-                            // Type = 2 is transfer type
-                            $TransferApprovalsTable->aliasField('type') => 2,
-                            $TransferApprovalsTable->aliasField('academic_period_id') => $academicPeriodId,
-                            $TransferApprovalsTable->aliasField('previous_institution_id') => $institutionId,
-                            $TransferApprovalsTable->aliasField('education_grade_id') => $educationGradeId,
-                            $TransferApprovalsTable->aliasField('academic_period_id') => $academicPeriodId
+                            $StudentTransfersTable->aliasField('student_id') => $studentId,
+                            $StudentTransfersTable->aliasField('previous_institution_id') => $institutionId,
+                            $StudentTransfersTable->aliasField('previous_education_grade_id') => $educationGradeId,
+                            $StudentTransfersTable->aliasField('previous_academic_period_id') => $academicPeriodId,
+                            $StudentTransfersTable->aliasField('status_id IN ') => $approvedStatuses
                         ])
                         ->first();
 
@@ -1196,17 +1216,21 @@ class StudentsTable extends ControllerActionTable
             ->matching('Users.Genders')
             ->select([
                 'count' => $InstitutionRecords->func()->count('DISTINCT ' . $this->aliasField('student_id')),
-                'gender' => 'Genders.name'
+                'gender' => 'Genders.name',
+                'gender_code' => 'Genders.code'
             ])
             ->group(['gender'], true);
 
         // Creating the data set
-        $dataSet = [];
+        $dataSet = [
+            'M' => [],
+            'F' => [],
+        ];
         foreach ($InstitutionStudentCount->toArray() as $value) {
             //Compile the dataset
-            $dataSet[] = [__($value['gender']), $value['count']];
+            $dataSet[$value['gender_code']] = [__($value['gender']), $value['count']];
         }
-        $params['dataSet'] = $dataSet;
+        $params['dataSet'] = array_values($dataSet);
         unset($InstitutionRecords);
         return $params;
     }
@@ -1465,7 +1489,7 @@ class StudentsTable extends ControllerActionTable
         return !($completedGradeCount == 0);
     }
 
-    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+    public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
     {
         $institutionId = $params['institution_id'];
         $studentId = $params['student_id'];

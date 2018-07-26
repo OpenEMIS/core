@@ -11,6 +11,7 @@ use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use Cake\Core\Configure;
 
 class GuardiansTable extends ControllerActionTable
 {
@@ -21,21 +22,23 @@ class GuardiansTable extends ControllerActionTable
         $this->table('student_guardians');
         parent::initialize($config);
 
-        $this->belongsTo('StudentUser',         ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
-        $this->belongsTo('Users',               ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
-        $this->belongsTo('GuardianRelations',   ['className' => 'Student.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
+        $this->belongsTo('StudentUser', ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
+        $this->belongsTo('GuardianRelations', ['className' => 'Student.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
 
         // to handle field type (autocomplete)
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('Indexes.Indexes');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
         $this->addBehavior('ControllerAction.Image');
     }
 
     public function validationDefault(Validator $validator)
     {
-    $validator = parent::validationDefault($validator);
+        $validator = parent::validationDefault($validator);
 
         return $validator
             ->add('guardian_id', 'ruleStudentGuardianId', [
@@ -139,7 +142,7 @@ class GuardiansTable extends ControllerActionTable
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
             $attr['noResults'] = __('No Guardian found.');
-            $attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
+            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $action = 'Guardians';
             if ($this->controller->name == 'Profiles') {
                 $action = 'ProfileGuardians';
@@ -182,7 +185,8 @@ class GuardiansTable extends ControllerActionTable
         }
     }
 
-    public function ajaxUserAutocomplete() {
+    public function ajaxUserAutocomplete()
+    {
         $this->controller->autoRender = false;
         $this->ControllerAction->autoRender = false;
 
@@ -209,7 +213,7 @@ class GuardiansTable extends ControllerActionTable
             $list = $query->all();
 
             $data = [];
-            foreach($list as $obj) {
+            foreach ($list as $obj) {
                 $label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
                 $data[] = ['label' => $label, 'value' => $obj->id];
             }

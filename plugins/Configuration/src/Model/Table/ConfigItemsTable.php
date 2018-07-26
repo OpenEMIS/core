@@ -34,7 +34,10 @@ class ConfigItemsTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
             'Staff' => ['index'],
-            'OpenEMIS_Classroom' => ['index']
+            'OpenEMIS_Classroom' => ['index'],
+            'Map' => ['index'],
+            'ClassStudents' => ['index'],
+            'SubjectStudents' => ['index']
         ]);
     }
 
@@ -261,6 +264,9 @@ class ConfigItemsTable extends AppTable
                         $attr['type'] = 'element';
                         $attr['element'] = 'Configurations/with_prefix';
                         $attr['data'] = [];
+                    } else if ($entity->type == 'Student Settings') {
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 1, 'max' => 100];
                     }
                 }
             }
@@ -475,7 +481,6 @@ class ConfigItemsTable extends AppTable
         return $UsersTable->generatePassword($passwordLength, $upperCase, $numerical, $specialCharacter);
     }
 
-
 /******************************************************************************************************************
 **
 ** value field validation rules based on specific codes
@@ -672,4 +677,35 @@ class ConfigItemsTable extends AppTable
             'last' => true
         ]
     ];
+
+    private $validateMaxStudentsPerClass = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Numeric Value should be between 0 to 100',
+            'last' => true
+        ],
+        'bet' => [
+            'rule'  => ['range', 0, 100],
+            'message' => 'Numeric Value should be between 0 to 100',
+            'last' => true
+        ]
+    ];
+
+    private $validateMaxStudentsPerSubject = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Numeric Value should be between 0 to 100',
+            'last' => true
+        ],
+        'bet' => [
+            'rule'  => ['range', 0, 100],
+            'message' => 'Numeric Value should be between 0 to 100',
+            'last' => true
+        ],
+        'checkMaxStudentsPerSubject' => [
+            'rule'  => ['checkMaxStudentsPerSubject'],
+            'provider' => 'table'
+        ]
+    ];
+
 }

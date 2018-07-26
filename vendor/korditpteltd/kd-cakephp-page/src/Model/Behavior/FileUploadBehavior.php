@@ -10,7 +10,9 @@ class FileUploadBehavior extends Behavior
 {
     protected $_defaultConfig = [
         'fieldMap' => ['file_name' => 'file_content'],
+        'type' => 'file', // file or image
         'size' => '1MB',
+        'compression' => 70,
         'contentEditable' => true,
         'allowable_file_types' => ['jpeg', 'jpg', 'gif', 'png', 'rtf', 'txt', 'csv', 'pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'odt', 'ods', 'key', 'pages', 'numbers']
     ];
@@ -49,14 +51,37 @@ class FileUploadBehavior extends Behavior
         $this->_config = array_merge($this->_config, $config);
     }
 
+    public function compress($source, $quality)
+    {
+        $info = getimagesize($source);
+
+        if ($info['mime'] == 'image/jpeg') {
+            $image = imagecreatefromjpeg($source);
+        } elseif ($info['mime'] == 'image/gif') {
+            $image = imagecreatefromgif($source);
+        } elseif ($info['mime'] == 'image/png') {
+            $image = imagecreatefrompng($source);
+        }
+
+        $destination = tempnam(TMP, 'image');
+        imagejpeg($image, $destination, $quality);
+        return $destination;
+    }
+
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         foreach ($this->config('fieldMap') as $fileName => $fileContent) {
             if (isset($data[$fileContent]['tmp_name']) && isset($data[$fileContent]['error']) && $data[$fileContent]['error'] == UPLOAD_ERR_OK) {
                 $data[$fileName] = $data[$fileContent]['name'];
                 $data[$fileContent.'_file_size'] = $data[$fileContent]['size'];
-                $data[$fileContent] = file_get_contents($data[$fileContent]['tmp_name']);
+                if ($this->config('type') == 'image') {
+                    $tmpPath = $this->compress($data[$fileContent]['tmp_name'], $this->config('compression'));
+                } else {
+                    $tmpPath = $data[$fileContent]['tmp_name'];
+                }
+                $data[$fileContent] = file_get_contents($tmpPath);
                 $data[$fileContent.'_content'] = base64_encode($data[$fileContent]);
+                unlink($tmpPath);
             } elseif (isset($data[$fileContent]['error']) && $data[$fileContent]['error'] == UPLOAD_ERR_NO_FILE) {
                 $data->offsetUnset($fileContent);
                 if ($data->offsetExists($fileName)) {

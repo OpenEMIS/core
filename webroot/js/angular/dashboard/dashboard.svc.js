@@ -16,16 +16,9 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         workbenchItems: {}
     };
 
+    var includedPlugins = ['Directory', 'Scholarship'];
+
     var configModels = {
-        // FIXED Workflow
-        StudentTransferApprovalTable: {
-            cols: workbenchItemTypes.FIXED,
-            model: 'Institution.TransferApprovals'
-        },
-        StudentAdmissionTable: {
-            cols: workbenchItemTypes.FIXED,
-            model: 'Institution.StudentAdmission'
-        },
         // SCHOOL_BASED Workflow
         StudentWithdrawTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
@@ -67,6 +60,22 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StaffTransferOut'
         },
+        StudentAdmissionTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StudentAdmission'
+        },
+        StudentTransferInTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StudentTransferIn'
+        },
+        StudentTransferOutTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StudentTransferOut'
+        },
+        StaffAppraisalsTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StaffAppraisals'
+        },
         // NON_SCHOOL_BASED Workflow
         TrainingCoursesTable: {
             cols: workbenchItemTypes.NON_SCHOOL_BASED,
@@ -87,6 +96,10 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         StaffLicensesTable: {
             cols: workbenchItemTypes.NON_SCHOOL_BASED,
             model: 'Staff.Licenses'
+        },
+        ScholarshipApplicationsTable: {
+            cols: workbenchItemTypes.NON_SCHOOL_BASED,
+            model: 'Scholarship.Applications'
         }
     };
 
@@ -158,6 +171,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
 
     function getWorkbenchItems() {
         var order = 1;
+        var workbenchItems = [];// convert object to Array - Required by Angular
         angular.forEach(configModels, function(obj, key) {
             var modelObj = {
                 code: key,
@@ -168,9 +182,11 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             };
 
             properties.workbenchItems[modelObj.order] = modelObj;
+            workbenchItems.push(modelObj);
         });
 
-        return properties.workbenchItems;
+
+        return workbenchItems;
     };
 
     function getWorkbenchItemsCount() {
@@ -212,7 +228,12 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                 cellRenderer: function(params) {
                     if (typeof params.data !== 'undefined') {
                         var urlParams = params.data.url;
-                        var url = [urlParams.controller, urlParams.action].join('/');
+
+                        if (includedPlugins.indexOf(urlParams.plugin) !== -1) {
+                            var url = [urlParams.plugin, urlParams.controller, urlParams.action].join('/');
+                        } else {
+                            var url = [urlParams.controller, urlParams.action].join('/');
+                        }
 
                         var queryParams = [];
                         angular.forEach(urlParams, function(obj, key) {

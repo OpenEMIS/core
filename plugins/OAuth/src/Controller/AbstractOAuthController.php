@@ -112,7 +112,7 @@ abstract class AbstractOAuthController extends Controller
                         throw new UnauthorizedException('Public Key is missing from getApiCredential()');
                     }
 
-                    $scope = '';
+                    $scope = [];
                     if (array_key_exists('scope', $credentials)) {
                         $scope = $credentials['scope'];
                     }

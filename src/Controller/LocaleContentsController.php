@@ -7,6 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\Utility\Hash;
 
 use App\Controller\PageController;
 
@@ -69,28 +70,19 @@ class LocaleContentsController extends PageController
         $modelAlias = $model->alias();
         $localeNames = $this->Locales->find('allLocale')
             ->where([$this->Locales->aliasField('name') . ' <> ' => 'English']) // English no needed
-        ;
-
-        $counter = 0;
+            ->order([$this->Locales->aliasField('id')]);
 
         parent::edit($id);
 
         $entity = $page->getVar('data');
 
-        foreach ($localeNames as $key => $value) {
-            $translation = '';
-            if (array_key_exists($counter, $entity->locales)) {
-                $translation = $entity->locales[$counter]->_joinData->translation;
-            }
-
+        foreach ($localeNames as $iso => $value) {
+            $translation = $this->extractTranslationValue($iso, $entity->locales);
             $page->addNew($value['name'], [
                     'type' => 'string',
                     'length' => 250
                 ])
-                ->setValue($translation)
-            ;
-
-            $counter++;
+                ->setValue($translation);
         }
 
         if ($request->is(['post', 'put', 'patch'])) {
@@ -141,7 +133,6 @@ class LocaleContentsController extends PageController
             ->where([$this->Locales->aliasField('name') . ' <> ' => 'English']) // English no needed
         ;
         $modelAlias = $model->alias();
-        $counter = 0;
 
         // set field to hidden
         $page->get('modified_user_id')->setControlType('hidden');
@@ -153,16 +144,15 @@ class LocaleContentsController extends PageController
 
         $entity = $page->getVar('data');
 
-        foreach ($localeNames as $key => $value) {
-            $translation = '';
-            if (array_key_exists($counter, $entity->locales)) {
-                $translation = $entity->locales[$counter]->_joinData->translation;
-            }
-
+        foreach ($localeNames as $iso => $value) {
+            $translation = $this->extractTranslationValue($iso, $entity->locales);
             $page->addNew($value['name'])
                 ->setValue($translation);
-
-            $counter++;
         }
+    }
+
+    private function extractTranslationValue($iso, array $locales)
+    {
+        return current(Hash::extract($locales, "{n}[iso=$iso]._joinData.translation"));
     }
 }

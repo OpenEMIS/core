@@ -18,7 +18,8 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         getStudentCompetencyResults: getStudentCompetencyResults,
         getStudentCompetencyComments: getStudentCompetencyComments,
         getColumnDefs: getColumnDefs,
-        renderInput: renderInput
+        renderInput: renderInput,
+        renderCommentColumns: renderCommentColumns
     };
 
     var models = {
@@ -168,57 +169,52 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         columnDef = this.renderInput(columnDef, extra);
         columnDefs.push(columnDef);
 
+        var resultCommentsColumn = {
+            headerName: 'Comments',
+            field: 'comments'
+        }
+        resultCommentsColumn = this.renderCommentColumns(resultCommentsColumn);
+        columnDefs.push(resultCommentsColumn);
+
         return {data: columnDefs};
     }
 
-    function renderInput(cols, extra) {
+    function renderCommentColumns(commentsColumn) {
         var vm = this;
 
-        cols = angular.merge(cols, {
+        commentsColumn = angular.merge(commentsColumn, {
             cellClassRules: {
                 'oe-cell-error': function(params) {
                     return params.data.save_error[params.colDef.field];
                 }
             },
-            cellRenderer: function(params) {
-                var periodEditable = params.data.period_editable;
-                var studentStatus = params.data.student_status;
-                
-                var gradingOptions = {
-                    0 : {
-                        id: 0,
-                        code: '',
-                        name: '-- Select --'
-                    }
-                };
-                if (angular.isDefined(params.data.grading_options)) {
-                    angular.forEach(params.data.grading_options, function(obj, key) {
-                        gradingOptions[obj.id] = obj;
-                    });
-                }
+            cellRenderer: function (params) {
+                if (angular.isDefined(params.data)) {
+                    var periodEditable = params.data.period_editable;
+                    var studentStatus = params.data.student_status;
 
-                if (periodEditable && studentStatus == "CURRENT") {
+                    if (periodEditable && studentStatus == "CURRENT") {
                     var oldValue = params.value;
 
                     var eCell = document.createElement('div');
-                    eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
+                    var commentInput = document.createElement('input');
+                    commentInput.setAttribute("type", "text");
+                    commentInput.setAttribute("class", "oe-cell-editable");
 
-                    var eSelect = document.createElement("select");
+                    commentInput.value = '';
+                    if (angular.isDefined(params.value)) {
+                        commentInput.value = params.value;
+                    }
 
-                    angular.forEach(gradingOptions, function(obj, key) {
-                        var eOption = document.createElement("option");
-                        var labelText = obj.name;
-                        if (obj.code.length > 0) {
-                            labelText = obj.code + ' - ' + labelText;
-                        }
-                        eOption.setAttribute("value", key);
-                        eOption.innerHTML = labelText;
-                        eSelect.appendChild(eOption);
+                    eCell.appendChild(commentInput);
+
+                    // allow keyboard shortcuts
+                    commentInput.addEventListener('keydown', function(event) {
+                        event.stopPropagation();
                     });
-                    eSelect.value = params.value;
 
-                    eSelect.addEventListener('blur', function () {
-                        var newValue = eSelect.value;
+                    commentInput.addEventListener('blur', function() {
+                        var newValue = commentInput.value;
 
                         if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
                             params.data[params.colDef.field] = newValue;
@@ -247,24 +243,19 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                         }
                     });
 
-                    eCell.appendChild(eSelect);
-
                 } else {
                     // don't allow input if period is not editable
                     var cellValue = '';
-                    if (angular.isDefined(params.value) && params.value.length != 0 && params.value != 0) {
-                        cellValue = gradingOptions[params.value]['name'];
-                        if (gradingOptions[params.value]['code'].length > 0) {
-                            cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
-                        }
+                    if (angular.isDefined(params.value) && params.value.length != 0) {
+                        cellValue = params.value;
                     }
 
                     var eCell = document.createElement('div');
                     var eLabel = document.createTextNode(cellValue);
                     eCell.appendChild(eLabel);
                 }
-
                 return eCell;
+                }
             },
             pinnedRowCellRenderer: function(params) {
                 var periodEditable = params.data.period_editable;
@@ -330,6 +321,110 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             },
             suppressMenu: true
         });
+
+        return commentsColumn;
+    }
+
+    function renderInput(cols, extra) {
+        var vm = this;
+
+        cols = angular.merge(cols, {
+            cellClassRules: {
+                'oe-cell-error': function(params) {
+                    return params.data.save_error[params.colDef.field];
+                }
+            },
+            pinnedRowCellRenderer: function(params) {
+                return params.value;
+            },
+            cellRenderer: function(params) {
+                var periodEditable = params.data.period_editable;
+                var studentStatus = params.data.student_status;
+                
+                var gradingOptions = {
+                    0 : {
+                        id: '',
+                        code: '',
+                        name: '-- Select --'
+                    }
+                };
+                if (angular.isDefined(params.data.grading_options)) {
+                    angular.forEach(params.data.grading_options, function(obj, key) {
+                        gradingOptions[obj.id] = obj;
+                    });
+                }
+
+                if (periodEditable && studentStatus == "CURRENT") {
+                    var oldValue = params.value;
+
+                    var eCell = document.createElement('div');
+                    eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
+
+                    var eSelect = document.createElement("select");
+
+                    angular.forEach(gradingOptions, function(obj, key) {
+                        var eOption = document.createElement("option");
+                        var labelText = obj.name;
+                        if (obj.code.length > 0) {
+                            labelText = obj.code + ' - ' + labelText;
+                        }
+                        eOption.setAttribute("value", obj.id);
+                        eOption.innerHTML = labelText;
+                        eSelect.appendChild(eOption);
+                    });
+                    eSelect.value = params.value;
+
+                    eSelect.addEventListener('blur', function () {
+                        var newValue = eSelect.value;
+
+                        if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                            params.data[params.colDef.field] = newValue;
+
+                            var controller = params.context._controller;
+                            vm.saveCompetencyResults(params)
+                            .then(function(response) {
+                                params.data.save_error[params.colDef.field] = false;
+                                AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
+
+                            }, function(error) {
+                                params.data.save_error[params.colDef.field] = true;
+                                console.log(error);
+                                AlertSvc.error(controller, "There was an error when saving the results");
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
+                            });
+                        }
+                    });
+
+                    eCell.appendChild(eSelect);
+
+                } else {
+                    // don't allow input if period is not editable
+                    var cellValue = '';
+                    if (angular.isDefined(params.value) && params.value.length != 0 && params.value != 0) {
+                        cellValue = gradingOptions[params.value]['name'];
+                        if (gradingOptions[params.value]['code'].length > 0) {
+                            cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
+                        }
+                    }
+
+                    var eCell = document.createElement('div');
+                    var eLabel = document.createTextNode(cellValue);
+                    eCell.appendChild(eLabel);
+                }
+
+                return eCell;
+            },
+            suppressMenu: true
+        });
         return cols;
     }
 
@@ -342,6 +437,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         var academicPeriodId = params.context.academic_period_id;
         var competencyGradingOptionId = params.data.result;
         var studentId = params.data.student_id;
+        var comments = params.data.comments;
 
         var saveObj = {
             competency_grading_option_id: parseInt(competencyGradingOptionId),
@@ -351,7 +447,8 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             competency_criteria_id: competencyCriteriaId,
             competency_period_id: competencyPeriodId,
             institution_id: institutionId,
-            academic_period_id: academicPeriodId
+            academic_period_id: academicPeriodId,
+            comments: comments
         };
         return InstitutionCompetencyResults.save(saveObj);
     }
@@ -362,7 +459,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         var competencyPeriodId = params.data.competency_period_id;
         var institutionId = params.context.institution_id;
         var academicPeriodId = params.context.academic_period_id;
-        var itemComments = params.data.result;
+        var itemComments = params.data.comments;
         var studentId = params.data.student_id;
 
         var saveObj = {

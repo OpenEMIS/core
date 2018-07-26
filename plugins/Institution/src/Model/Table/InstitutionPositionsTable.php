@@ -47,7 +47,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportInstitutionPositions']);
         $this->addBehavior('Excel', [
             'pages' => ['index']
         ]);
@@ -76,12 +76,6 @@ class InstitutionPositionsTable extends ControllerActionTable
         );
     }
 
-    // public function implementedEvents() {
- //    	$events = parent::implementedEvents();
- //    	$events['Restful.Model.index.workbench'] = 'indexAfterFindWorkbench';
- //    	return $events;
- //    }
-
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -95,11 +89,89 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => 'checkNoSpaces',
                 'provider' => 'custom'
             ])
+            ->add('staff_position_grade_id', 'custom', [
+                'rule' => function ($value, $context) {
+                    $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
+                    $staffPositionTitleId = $context['data']['staff_position_title_id'];
+
+                    $result = $StaffPositionTitlesGrades
+                        ->find()
+                        ->where([
+                            'AND' => [
+                                [$StaffPositionTitlesGrades->aliasField('staff_position_title_id') => $staffPositionTitleId],
+                                'OR' => [
+                                    [$StaffPositionTitlesGrades->aliasField('staff_position_grade_id') => $value],
+                                    [$StaffPositionTitlesGrades->aliasField('staff_position_grade_id') => -1]
+                                ]
+                            ]
+                        ])
+                        ->all();
+
+                    return !$result->isEmpty();
+                },
+                'message' => $this->getMessage('Import.staff_title_grade_not_match')
+            ])
+            ->requirePresence('is_homeroom', function ($context) {
+                if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
+                    $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+                    $titleId = $context['data']['staff_position_title_id'];
+
+                    $titleEntity = $StaffPositionTitles
+                        ->find()
+                        ->select([$StaffPositionTitles->aliasField('type')])
+                        ->where([$StaffPositionTitles->aliasField('id') => $titleId])
+                        ->first();
+
+                    if (!is_null($titleEntity)) {
+                        $positionType = $titleEntity->type;
+                        return $positionType == 1;
+                    } else {
+                        return false;
+                    }
+                }
+                return false;
+            })
             ->add('is_homeroom', 'ruleCheckHomeRoomTeacherAssignments', [
                 'rule' => 'checkHomeRoomTeacherAssignments',
                 'on' => function ($context) {
                     //trigger validation only when homeroom teacher set to no and edit operation
                     return ($context['data']['is_homeroom'] == 0 && !$context['newRecord']);
+                }
+            ])
+            ->add('is_homeroom', 'ruleIsHomeroomEmpty', [
+                // validations to ensure no value for is_homeroom field, if the selected title type is non-teaching type (0), for position import - POCOR-4258
+                'rule' => function ($value, $context) {
+                    return strlen($value) == 0;
+                },
+                'on' => function ($context) {
+                    if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
+                        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+                        $titleId = $context['data']['staff_position_title_id'];
+
+                        $titleEntity = $StaffPositionTitles
+                            ->find()
+                            ->select([$StaffPositionTitles->aliasField('type')])
+                            ->where([$StaffPositionTitles->aliasField('id') => $titleId])
+                            ->first();
+
+                        if (!is_null($titleEntity)) {
+                            $positionType = $titleEntity->type;
+                            return $positionType == 0;
+                        } else {
+                            return false;
+                        }
+                    }
+                    return false;
+                }
+            ])
+            ->add('status_id', 'ruleCheckStatusIdValid', [
+                'rule' => ['checkStatusIdValid'],
+                'provider' => 'table',
+                'on' => function ($context) {  
+                    if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
+                        return true;
+                    }
+                    return false;
                 }
             ]);
 
@@ -166,10 +238,6 @@ class InstitutionPositionsTable extends ControllerActionTable
             'visible' => true,
             'type' => 'select'
         ]);
-        $this->field('staff_position_grade_id', [
-            'visible' => true,
-            'type' => 'select'
-        ]);
         $this->field('current_staff_list', [
             'label' => '',
             'override' => true,
@@ -193,6 +261,23 @@ class InstitutionPositionsTable extends ControllerActionTable
             return $attr;
         }
     }
+
+    public function onUpdateFieldStaffPositionGradeId(Event $event, array $attr, $action, Request $request) 
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $positionGradeOptions = [];
+            if ($entity->has('staff_position_title_id')) {
+                $positionGradeOptions = $this->StaffPositionGrades->getAvailablePositionGrades($entity->staff_position_title_id);
+            }
+
+            $attr['options'] = $positionGradeOptions;
+        }
+
+        return $attr;
+    }
+
 
     public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request)
     {
@@ -249,6 +334,10 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('staff_position_grade_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
         $this->field('is_homeroom', ['entity' => $entity]);
 
         // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
@@ -317,7 +406,6 @@ class InstitutionPositionsTable extends ControllerActionTable
         } else {
             $titles = $this->StaffPositionTitles
                 ->find()
-                ->where([$this->StaffPositionTitles->aliasField('id').' >' => 1])
                 ->order([$this->StaffPositionTitles->aliasField('order')])
                 ->map(function ($row) use ($types) {
  // map() is a collection method, it executes the query
@@ -332,14 +420,43 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function getUniquePositionNo()
+    public function getUniquePositionNo($institutionId = null)
     {
         $prefix = '';
         $currentStamp = time();
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+
+        if (is_null($institutionId)) {
+            $institutionId = $this->Session->read('Institution.Institutions.id');
+        }
+
+        $latestPositionEntity = $this
+            ->find()
+            ->contain(['Institutions'])
+            ->order($this->aliasField('id') . ' DESC ')
+            ->first();
+
+        if (!is_null($latestPositionEntity)) {
+            $latestInstitutionCode = $latestPositionEntity->institution->code;
+            $latestPositionNumber = $latestPositionEntity->position_no;
+            $list = explode('-', $latestPositionNumber);
+
+            // if position number is auto generated, index 0 will be the institution code
+            if ($list[0] == $latestInstitutionCode) {
+                $latestTimestamp = $list[1];
+            }
+        }
+        
+
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $prefix .= $institutionCode;
-        $newStamp = $currentStamp;
+
+        // if latest timestamp can be found and the current timestamp is smaller/equal, set to latest + 1
+        if (isset($latestTimestamp) && $latestTimestamp >= $currentStamp) {
+            $newStamp = $latestTimestamp + 1;
+        } else {
+            $newStamp = $currentStamp;
+        }
+
         return $prefix.'-'.$newStamp;
     }
 
@@ -353,15 +470,21 @@ class InstitutionPositionsTable extends ControllerActionTable
     {
         $this->field('is_homeroom');
 
+        $this->field('created', [
+            'visible' => true,
+            'after' => 'is_homeroom'
+        ]);
+
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
 
         $this->fields['staff_position_title_id']['sort'] = ['field' => 'StaffPositionTitles.order'];
         $this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];
+        $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];
 
         $this->setFieldOrder([
             'position_no', 'staff_position_title_id',
-            'staff_position_grade_id',
+            'staff_position_grade_id'
         ]);
 
         if ($extra['auto_search']) {
@@ -370,18 +493,62 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $extra['OR'] = [$this->StaffPositionTitles->aliasField('name').' LIKE' => '%' . $search . '%'];
             }
         }
+        if (is_null($this->request->query('sort'))) {
+            $this->request->query['sort'] = 'created';
+            $this->request->query['direction'] = 'desc';
+        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // pr('model - indexBeforeQuery');
         $extra['auto_contain'] = false;
         $extra['auto_order'] = false;
 
-        $query->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'Assignees'])
-            ->autoFields(true);
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('status_id'),
+                $this->aliasField('position_no'),
+                $this->aliasField('staff_position_title_id'),
+                $this->aliasField('staff_position_grade_id'),
+                $this->aliasField('assignee_id'),
+                $this->aliasField('is_homeroom'),
+                $this->aliasField('created')
+            ])
+            ->contain([
+                'Statuses' => [
+                    'fields' => [
+                        'Statuses.id',
+                        'Statuses.name'
+                    ]
+                ],
+                'StaffPositionTitles'=> [
+                    'fields' => [
+                        'StaffPositionTitles.id',
+                        'StaffPositionTitles.name',
+                        'StaffPositionTitles.order'
+                    ]
+                ],
+                'StaffPositionGrades'=> [
+                    'fields' => [
+                        'StaffPositionGrades.id',
+                        'StaffPositionGrades.name',
+                        'StaffPositionGrades.order'
+                    ]
+                ],
+                'Assignees'=> [
+                    'fields' => [
+                        'Assignees.id',
+                        'Assignees.first_name',
+                        'Assignees.middle_name',
+                        'Assignees.third_name',
+                        'Assignees.last_name',
+                        'Assignees.preferred_name'
+                    ]
+                ]
+            ]);
 
-        $sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order'];
+        $sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order', 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
@@ -407,6 +574,10 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('staff_position_grade_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
         $this->field('is_homeroom');
     }
 
@@ -446,22 +617,34 @@ class InstitutionPositionsTable extends ControllerActionTable
         // start Current Staff List field
         $Staff = $this->Institutions->Staff;
         $currentStaff = $Staff
-                        ->find('withBelongsTo')
-                        ->where([
-                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
-                            $Staff->aliasField('institution_position_id') => $id,
-                            'OR' => [
-                                $Staff->aliasField('end_date').' IS NULL',
-                                'AND' => [
-                                    $Staff->aliasField('end_date').' IS NOT NULL',
-                                    $Staff->aliasField('end_date').' >= DATE(NOW())'
-                                ]
-                            ]
-                        ])
-                        ->order([$Staff->aliasField('start_date')]);
+            ->find()
+            ->select([
+                $Staff->aliasField('FTE'),
+                $Staff->aliasField('start_date'),
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name'
+            ])
+            ->contain(['Users'])
+            ->where([
+                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                $Staff->aliasField('institution_position_id') => $id,
+                'OR' => [
+                    $Staff->aliasField('end_date').' IS NULL',
+                    'AND' => [
+                        $Staff->aliasField('end_date').' IS NOT NULL',
+                        $Staff->aliasField('end_date').' >= DATE(NOW())'
+                    ]
+                ]
+            ])
+            ->order([$Staff->aliasField('start_date')]);
         $this->fields['current_staff_list']['data'] = $currentStaff;
         $totalCurrentFTE = '0.00';
-        if (count($currentStaff)>0) {
+        if (count($currentStaff) > 0) {
             foreach ($currentStaff as $cs) {
                 $totalCurrentFTE = number_format((floatVal($totalCurrentFTE) + floatVal($cs->FTE)), 2);
             }
@@ -471,14 +654,28 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         // start PAST Staff List field
         $pastStaff  = $Staff
-                    ->find('withBelongsTo')
-                    ->where([
-                        $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
-                        $Staff->aliasField('institution_position_id') => $id,
-                        $Staff->aliasField('end_date').' IS NOT NULL',
-                        $Staff->aliasField('end_date').' < DATE(NOW())'
-                    ])
-                    ->order([$Staff->aliasField('start_date')]);
+            ->find()
+            ->select([
+                $Staff->aliasField('FTE'),
+                $Staff->aliasField('start_date'),
+                $Staff->aliasField('end_date'),
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name',
+                'StaffStatuses.name'
+            ])
+            ->contain(['Users', 'StaffStatuses'])
+            ->where([
+                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                $Staff->aliasField('institution_position_id') => $id,
+                $Staff->aliasField('end_date').' IS NOT NULL',
+                $Staff->aliasField('end_date').' < DATE(NOW())'
+            ])
+            ->order([$Staff->aliasField('start_date')]);
         $this->fields['past_staff_list']['data'] = $pastStaff;
         // end Current Staff List field
 
@@ -513,12 +710,6 @@ class InstitutionPositionsTable extends ControllerActionTable
 ** essential methods
 **
 ******************************************************************************************************************/
-    public function findWithBelongsTo(Query $query, array $options)
-    {
-        return $query
-            ->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
-    }
-
     public function getInstitutionPositions($userId, $isAdmin, $activeStatusId = [], $institutionId, $fte, $startDate, $endDate = '')
     {
         $selectedFTE = empty($fte) ? 0 : $fte;
@@ -750,6 +941,4 @@ class InstitutionPositionsTable extends ControllerActionTable
             return $UsersTable->get($entity->staff_id)->name;
         }
     }
-
-
 }

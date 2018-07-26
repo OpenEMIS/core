@@ -3,6 +3,8 @@ namespace App\Controller;
 
 use Cake\Event\Event;
 use Cake\I18n\Time;
+use Cake\ORM\Entity;
+use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
 class CredentialsController extends PageController
@@ -11,6 +13,8 @@ class CredentialsController extends PageController
     {
         parent::initialize();
         $this->loadModel('ApiCredentials');
+        $this->loadModel('ApiScopes');
+        $this->loadModel('ApiCredentialsScopes');
         $this->Page->loadElementsFromTable($this->ApiCredentials);
     }
 
@@ -19,8 +23,29 @@ class CredentialsController extends PageController
         $page = $this->Page;
 
         parent::beforeFilter($event);
-        $page->exclude(['scope']);
         $page->addCrumb('Credentials', ['plugin' => false, 'controller' => 'Credentials', 'action' => 'index']);
+    }
+
+    public function index()
+    {
+        $page = $this->Page;
+        $page->exclude(['public_key']);
+        $page->get('client_id')->setLabel(__('Client ID'));
+
+        parent::index();
+    }
+
+    public function view($id)
+    {
+        $page = $this->Page;
+        parent::view($id);
+
+        $page->addNew('api_scopes')
+            ->setLabel('API Scopes')
+            ->setControlType('select')
+            ->setAttributes('multiple', true);
+
+        $page->move('api_scopes')->after('public_key');
     }
 
     public function add()
@@ -39,24 +64,42 @@ class CredentialsController extends PageController
         if ($this->request->data('ApiCredentials.client_id')) {
             $clientId = $this->request->data('ApiCredentials.client_id');
         }
-        $page->addNew('client')->setControlType('string')->setLabel('Client ID')->setValue($clientId)->setDisabled(true);
-        $page->move('client')->first();
-        $page->get('client_id')->setControlType('hidden')->setValue($clientId);
-    }
+        $page->addNew('client')
+            ->setControlType('string')
+            ->setLabel('Client ID')
+            ->setValue($clientId)
+            ->setDisabled(true);
 
-    public function index()
-    {
-        $page = $this->Page;
-        $page->exclude(['public_key']);
-        $page->get('client_id')->setLabel(__('Client ID'));
-        parent::index();
+        $page->move('client')->first();
+        $page->get('client_id')
+            ->setControlType('hidden')
+            ->setValue($clientId);
+
+        $this->addEdit();
     }
 
     public function edit($id)
     {
         $page = $this->Page;
+        parent::edit($id);
+
         $page->get('name')->setDisabled(true);
         $page->get('client_id')->setDisabled(true);
-        parent::edit($id);
+        $this->addEdit($id);
+    }
+
+    private function addEdit($id = 0)
+    {
+        $page = $this->Page;
+
+        $scopeOptions = $this->ApiScopes
+            ->find('optionList', ['defaultOption' => false])
+            ->toArray();
+
+        $page->addNew('api_scopes')
+            ->setLabel(__('API Scopes'))
+            ->setControlType('select')
+            ->setAttributes('multiple', true)
+            ->setOptions($scopeOptions, false);
     }
 }

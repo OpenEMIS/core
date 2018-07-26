@@ -49,6 +49,14 @@ class StudentSurveysTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.InstitutionSurveys.afterSave'] = 'institutionSurveyAfterSave';
+
+        return $events;
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         //Add controls filter to index, view and edit page
@@ -173,6 +181,18 @@ class StudentSurveysTable extends ControllerActionTable
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
+    }
+
+    public function institutionSurveyAfterSave(Event $event, Entity $institutionSurveyEntity)
+    {
+        $this->updateAll(
+            ['status_id' => $institutionSurveyEntity->status_id],
+            [
+                'institution_id' => $institutionSurveyEntity->institution_id,
+                'academic_period_id' => $institutionSurveyEntity->academic_period_id,
+                'parent_form_id' => $institutionSurveyEntity->survey_form_id
+            ]
+        );
     }
 
     /* Disabled auto-insert New Survey for Student until there is a better solution

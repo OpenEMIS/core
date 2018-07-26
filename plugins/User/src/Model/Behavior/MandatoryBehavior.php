@@ -129,6 +129,8 @@ class MandatoryBehavior extends Behavior
         if (array_key_exists('Identities', $this->_info) && $this->_info['Identities'] != 'Excluded') {
             $this->_table->field('identity_type', ['order' => $i++]);
             $this->_table->field('identity_number', ['order' => $i++]);
+        } else {
+            $this->_table->field('identity_number', ['visible' => false]);
         }
 
         if (array_key_exists('SpecialNeeds', $this->_info) && $this->_info['SpecialNeeds'] != 'Excluded') {
