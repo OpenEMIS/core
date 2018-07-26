@@ -829,7 +829,10 @@ class HtmlFieldHelper extends Helper
             'type' => 'select'
         ];
         
-        if (I18n::locale() == 'ar') {
+        $Locales = TableRegistry::get('Locales');
+        $langDir = $Locales->getLangDir(I18n::locale());
+
+        if ($langDir == 'rtl') {
             $_options['class'] = 'chosen-select chosen-rtl';
         }
         
