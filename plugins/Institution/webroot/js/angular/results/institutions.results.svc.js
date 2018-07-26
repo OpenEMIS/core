@@ -1,5 +1,10 @@
-angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd.access.svc', 'alert.svc'])
-.service('InstitutionsResultsSvc', function($http, $q, $filter, KdDataSvc, KdSessionSvc, KdAccessSvc, AlertSvc) {
+angular
+    .module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd.access.svc', 'alert.svc'])
+    .service('InstitutionsResultsSvc', InstitutionsResultsSvc);
+
+InstitutionsResultsSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'KdSessionSvc', 'KdAccessSvc', 'AlertSvc'];
+
+function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdAccessSvc, AlertSvc) {
     const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES', DURATION: 'DURATION'};
 
     var models = {
@@ -569,7 +574,7 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                                     vm.saveSingleRecordData(params, extra)
                                     .then(function(response) {
                                         params.data.save_error[params.colDef.field] = false;
-                                        AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
+                                        AlertSvc.info(scope, 'Student result will be saved after the result has been entered.');
                                         params.api.refreshCells({
                                             rowNodes: [params.node],
                                             columns: [params.colDef.field],
@@ -798,7 +803,7 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 vm.saveSingleRecordData(params, extra)
                 .then(function(response) {
                     params.data.save_error[params.colDef.field] = false;
-                    AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
+                    AlertSvc.info(scope, 'Student result will be saved after the result has been entered.');
                     params.api.refreshCells({
                         rowNodes: [params.node],
                         columns: [params.colDef.field],
@@ -1029,4 +1034,4 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
             return AssessmentItemResultsTable.save(data);
         }
     }
-});
+}

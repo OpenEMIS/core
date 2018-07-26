@@ -62,6 +62,16 @@ class SystemProcessesTable extends ControllerActionTable {
 		);
 	}
 
+	public function killProcess($pid = 0) {
+		if ($pid > 0) {
+			$pCmd = "pkill -TERM -P $pid";
+			exec($pCmd);
+
+			$cmd = "kill $pid";
+			exec($cmd);
+		}
+	}
+
 	public function getRunningProcesses($model) {
 		return $this->find()
 			->where([

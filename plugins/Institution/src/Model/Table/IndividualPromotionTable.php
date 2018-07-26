@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 
 class IndividualPromotionTable extends ControllerActionTable
@@ -26,12 +27,13 @@ class IndividualPromotionTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->addBehavior('OpenEmis.Section');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
 
         $this->toggle('index', false);
         $this->toggle('view', false);
         $this->toggle('edit', false);
-
-        $this->addBehavior('Indexes.Indexes');
     }
 
     public function implementedEvents()
@@ -92,33 +94,34 @@ class IndividualPromotionTable extends ControllerActionTable
         $studentEntity = $this->get($studentId);
 
         // check transfer requests
-        $StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+        $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
 
         $conditions = [
             'student_id' => $studentEntity->student_id,
-            'status' => $StudentAdmissionTable::NEW_REQUEST,
-            'new_education_grade_id' => $studentEntity->education_grade_id,
+            'status_id IN ' => $pendingTransferStatuses,
+            'previous_education_grade_id' => $studentEntity->education_grade_id,
             'previous_institution_id' => $studentEntity->institution_id,
-            'type' => $StudentAdmissionTable::TRANSFER,
+            'previous_academic_period_id' => $studentEntity->academic_period_id
         ];
 
-        $transferCount = $StudentAdmissionTable->find()
-         ->where($conditions)
-         ->count();
+        $transferCount = $StudentTransfersTable->find()
+            ->where($conditions)
+            ->count();
 
         if ($transferCount) {
             $this->Alert->error('IndividualPromotion.pendingTransfer', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($extra['redirect']);
         } else {
-            $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-            $pendingStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
-
             // check withdraw requests
             $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
+            $pendingWithdrawStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
+
             $conditions = [
                 'student_id' => $studentEntity->student_id,
-                'status_id IN' => $pendingStatus,
+                'status_id IN ' => $pendingWithdrawStatus,
                 'education_grade_id' => $studentEntity->education_grade_id,
                 'institution_id' => $studentEntity->institution_id,
                 'academic_period_id' => $studentEntity->academic_period_id,

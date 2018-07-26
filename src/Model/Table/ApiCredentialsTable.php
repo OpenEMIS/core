@@ -3,6 +3,7 @@ namespace App\Model\Table;
 
 use ArrayObject;
 use Cake\Event\Event;
+use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -18,6 +19,34 @@ class ApiCredentialsTable extends AppTable
     public function initialize(array $config)
     {
         parent::initialize($config);
+
+        $this->belongsToMany('ApiScopes', [
+            'className' => 'ApiScopes',
+            'joinTable' => 'api_credentials_scopes',
+            'foreignKey' => 'api_credential_id',
+            'targetForeignKey' => 'api_scope_id',
+            'through' => 'ApiCredentialsScopes',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+    }
+
+    public function findIndex(Query $query, array $options)
+    {
+        $query->contain(['ApiScopes']);
+        return $query;
+    }
+
+    public function findView(Query $query, array $options)
+    {
+        $query->contain(['ApiScopes']);
+        return $query;
+    }
+
+    public function findEdit(Query $query, array $options)
+    {
+        $query->contain(['ApiScopes']);
+        return $query;
     }
 
     /**
@@ -50,10 +79,5 @@ class ApiCredentialsTable extends AppTable
         $rules->add($rules->isUnique(['client_id']));
 
         return $rules;
-    }
-
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {
-        $data['scope'] = 'API';
     }
 }

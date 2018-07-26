@@ -211,9 +211,11 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseGroupAssessmentItems(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('assessment_id', $params)) {
+        if (array_key_exists('assessment_id', $params) && array_key_exists('class_id', $params)) {
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
 
             $query = $AssessmentItems->find();
             $selectedColumns = [
@@ -230,6 +232,13 @@ class AssessmentResultsTable extends AppTable
             $results = $AssessmentItems->find()
                 ->select($selectedColumns)
                 ->contain([$EducationSubjects->alias()])
+                ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                             $InstitutionSubjects->aliasField('education_subject_id = ') . $AssessmentItems->aliasField('education_subject_id')
+                            ])
+                ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
+                            $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
+                            $ClassSubjects->aliasField('institution_class_id') => $params['class_id']
+                        ])
                 ->where([$AssessmentItems->aliasField('assessment_id') => $params['assessment_id']])
                 ->order(['subject_order', 'subject_classification', $EducationSubjects->aliasField('code'), $EducationSubjects->aliasField('name')])
                 ->group(['subject_classification'])
@@ -459,7 +468,72 @@ class AssessmentResultsTable extends AppTable
             $entity = $this->find()
                 ->contain([
                     'Users' => [
-                        'BirthplaceAreas', 'MainNationalities'
+                        'fields' => [
+                            'id',
+                            'username',
+                            'openemis_no',
+                            'first_name',
+                            'middle_name',
+                            'third_name',
+                            'last_name',
+                            'preferred_name',
+                            'email',
+                            'address',
+                            'postal_code',
+                            'address_area_id',
+                            'birthplace_area_id',
+                            'gender_id',
+                            'date_of_birth',
+                            'date_of_death',
+                            'nationality_id',
+                            'identity_type_id',
+                            'identity_number',
+                            'external_reference',
+                            'super_admin',
+                            'status',
+                            'last_login',
+                            'photo_name',
+                            'photo_content',
+                            'preferred_language',
+                            'is_student',
+                            'is_staff',
+                            'is_guardian'
+                        ],
+                        'Genders' => [
+                            'fields' => [
+                                'id',
+                                'name',
+                                'code',
+                                'order'
+                            ]
+                        ],
+                        'BirthplaceAreas' => [
+                            'fields' => [
+                                'id',
+                                'code',
+                                'name',
+                                'is_main_country',
+                                'parent_id',
+                                'lft',
+                                'rght',
+                                'area_administrative_level_id',
+                                'order',
+                                'visible'
+                            ]
+                        ],
+                        'MainNationalities' => [
+                            'fields' => [
+                                'id',
+                                'name',
+                                'order',
+                                'visible',
+                                'editable',
+                                'identity_type_id',
+                                'default',
+                                'international_code',
+                                'national_code'
+                            ]
+                        ]
                     ]
                 ])
                 ->where([$this->aliasField('institution_class_id') => $params['class_id']])

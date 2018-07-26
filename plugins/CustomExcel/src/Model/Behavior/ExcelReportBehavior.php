@@ -14,12 +14,11 @@ use Cake\Utility\Inflector;
 use Cake\Collection\Collection;
 use Cake\Log\Log;
 
-use PHPExcel_IOFactory;
-use PHPExcel_Worksheet;
-use PHPExcel_Cell;
-use PHPExcel_Cell_DataValidation;
-use PHPExcel_Style_Alignment;
-use PHPExcel_Worksheet_MemoryDrawing;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 
 class ExcelReportBehavior extends Behavior
 {
@@ -112,16 +111,20 @@ class ExcelReportBehavior extends Behavior
         $temppath = tempnam($extra['path'], $this->config('filename') . '_');
         $extra['file_path'] = $temppath;
 
-        $objPHPExcel = $this->loadExcelTemplate($extra);
-        $this->generateExcel($objPHPExcel, $extra);
+        $objSpreadsheet = $this->loadExcelTemplate($extra);
+        $this->generateExcel($objSpreadsheet, $extra);
 
         if ($this->config('format') == 'xlsx') {
-            $this->saveExcel($objPHPExcel, $temppath);
+            $this->saveExcel($objSpreadsheet, $temppath);
         }
 
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
             $this->deleteFile($extra['temp_logo']);
+        }
+
+        if ($extra->offsetExists('image_resource')) {
+            imagedestroy($extra['image_resource']);
         }
 
         if ($extra->offsetExists('tmp_file_path')) {
@@ -144,6 +147,8 @@ class ExcelReportBehavior extends Behavior
             // delete excel file after download
             $this->deleteFile($temppath);
         }
+
+        gc_collect_cycles();
     }
 
     public function loadExcelTemplate(ArrayObject $extra)
@@ -159,9 +164,9 @@ class ExcelReportBehavior extends Behavior
         $Table = TableRegistry::get($this->config('templateTable'));
 
         if (empty($recordId)) {
-            $objPHPExcel = new \PHPExcel();
+            $objSpreadsheet = new Spreadsheet();
         } else {
-            // Read from excel template attachment then create as temporary file in server so that can read back the same file and read as PHPExcel object
+            // Read from excel template attachment then create as temporary file in server so that can read back the same file and read as Spreadsheet object
             $entity = $Table->get($recordId);
 
             if ($entity->has('excel_template_name')) {
@@ -177,9 +182,9 @@ class ExcelReportBehavior extends Behavior
                 // End create a temporary file
                 try {
                     // Read back from same temporary file
-                    $inputFileType = PHPExcel_IOFactory::identify($filepath);
-                    $objReader = PHPExcel_IOFactory::createReader($inputFileType);
-                    $objPHPExcel = $objReader->load($filepath);
+                    $inputFileType = IOFactory::identify($filepath);
+                    $objReader = IOFactory::createReader($inputFileType);
+                    $objSpreadsheet = $objReader->load($filepath);
                     // End read back from same temporary file
                 } catch(Exception $e) {
                     Log::write('debug', $e->getMessage());
@@ -187,13 +192,13 @@ class ExcelReportBehavior extends Behavior
             }
         }
 
-        return $objPHPExcel;
+        return $objSpreadsheet;
     }
 
-    public function generateExcel($objPHPExcel, ArrayObject $extra)
+    public function generateExcel($objSpreadsheet, ArrayObject $extra)
     {
-        foreach ($objPHPExcel->getWorksheetIterator() as $objWorksheet) {
-            $this->processWorksheet($objPHPExcel, $objWorksheet, $extra);
+        foreach ($objSpreadsheet->getWorksheetIterator() as $objWorksheet) {
+            $this->processWorksheet($objSpreadsheet, $objWorksheet, $extra);
 
             // lock all sheets
             if ($this->config('lockSheets')) {
@@ -202,22 +207,18 @@ class ExcelReportBehavior extends Behavior
         }
 
         // to force the first sheet active
-        $objPHPExcel->setActiveSheetIndex(0);
+        $objSpreadsheet->setActiveSheetIndex(0);
     }
 
-    public function renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
+    public function renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
     {
         $type = $attr['type'];
         $format = $attr['format'];
         $cellStyle = $attr['style'];
         $columnWidth = $attr['columnWidth'];
-        $mergeColumns = $attr['mergeColumns'];
 
         $targetCell = $objWorksheet->getCell($cellCoordinate);
         $targetColumnValue = $targetCell->getColumn();
-        $targetColumnIndex = PHPExcel_Cell::columnIndexFromString($targetColumnValue);
-        // by default will merge to the same row, but for nested row parent cell will merge until the last row of the children
-        $rangeRowValue = isset($attr['rangeRowValue']) && !empty($attr['rangeRowValue']) ? $attr['rangeRowValue'] : $targetCell->getRow();
 
         switch($type) {
             case 'number':
@@ -246,21 +247,15 @@ class ExcelReportBehavior extends Behavior
         }
 
         // set cell style to follow placeholder
-        $objWorksheet->setCellValue($cellCoordinate, __($cellValue));
+        $objWorksheet->getCell($cellCoordinate)->setValue(__($cellValue));
         $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
 
         // set column width to follow placeholder
         $objWorksheet->getColumnDimension($targetColumnValue)->setAutoSize(false);
         $objWorksheet->getColumnDimension($targetColumnValue)->setWidth($columnWidth);
-
-        if (!empty($mergeColumns)) {
-            $rangeColumnValue = $objCell->stringFromColumnIndex(($targetColumnIndex - 1) + ($mergeColumns - 1)); //merge need to be minus 1
-            $mergeRange = $cellCoordinate.":".$rangeColumnValue.$rangeRowValue;
-            $objWorksheet->mergeCells($mergeRange);
-        }
     }
 
-    public function renderDropdown($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
+    public function renderDropdown($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
     {
         $_attr = [
             'source' => '',
@@ -272,8 +267,8 @@ class ExcelReportBehavior extends Behavior
         $_attr = array_merge($_attr, $attr['dropdown']);
 
         $objValidation = $objWorksheet->getCell($cellCoordinate)->getDataValidation();
-        $objValidation->setType( PHPExcel_Cell_DataValidation::TYPE_LIST );
-        $objValidation->setErrorStyle( PHPExcel_Cell_DataValidation::STYLE_INFORMATION );
+        $objValidation->setType(DataValidation::TYPE_LIST);
+        $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
         $objValidation->setAllowBlank(false);
         $objValidation->setShowInputMessage(true);
         $objValidation->setShowErrorMessage(true);
@@ -291,7 +286,7 @@ class ExcelReportBehavior extends Behavior
             $objValidation->setFormula1($value);
         } else {
             list($sheetName, $coordinate) = explode(".", $_attr['source']);
-            $referencesWorksheet = $objPHPExcel->getSheetByName($sheetName);
+            $referencesWorksheet = $objSpreadsheet->getSheetByName($sheetName);
             $referencesCell = $referencesWorksheet->getCell($coordinate);
             $columnValue = $referencesCell->getColumn();
             $rowValue = $referencesCell->getRow();
@@ -302,57 +297,58 @@ class ExcelReportBehavior extends Behavior
         }
 
         // set to empty to remove the placeholder
-        $objWorksheet->setCellValue($cellCoordinate, $cellValue);
+        $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
     }
 
-    public function renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
+    public function renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
     {
         $imageWidth = $attr['imageWidth'];
         $imageMarginLeft = $attr['imageMarginLeft'];
         $imageMarginTop = $attr['imageMarginTop'];
 
-        $objDrawing = new PHPExcel_Worksheet_MemoryDrawing();
+        $objDrawing = new MemoryDrawing();
 
-        if ($imagePath) {
+        if (!array_key_exists('image_resource', $extra) && $imagePath) {
             switch ($attr['mime_type']) {
                 case 'image/png':
                     $imageResource = imagecreatefrompng($imagePath);
-                    $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_PNG);
-                    $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_PNG);
+                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_PNG);
+                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_PNG);
                     break;
                 case 'image/jpeg':
                     $imageResource = imagecreatefromjpeg($imagePath);
-                    $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_JPEG);
-                    $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
+                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_JPEG);
+                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_JPEG);
                     break;
                 case 'image/gif':
                     $imageResource = imagecreatefromgif($imagePath);
-                    $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_GIF);
-                    $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_GIF);
+                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_GIF);
+                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_GIF);
                     break;
                 default:
                     $imageResource = '';
                     break;
             }
+            $extra['image_resource'] = $imageResource;
         }
 
-        if ($imageResource) {
+        if (isset($extra['image_resource'])) {
             //retain transparency on png/gif file
-            imageAlphaBlending($imageResource, true);
-            imageSaveAlpha($imageResource, true);
+            imageAlphaBlending($extra['image_resource'], true);
+            imageSaveAlpha($extra['image_resource'], true);
 
-            $objDrawing->setImageResource($imageResource);
-            $objDrawing->setWidth($imageWidth); 
-            $objDrawing->setCoordinates($cellCoordinate); 
-            $objDrawing->setOffsetX($imageMarginLeft); 
-            $objDrawing->setOffsetY($imageMarginTop); 
-            $objDrawing->setWorksheet($objPHPExcel->getActiveSheet());
+            $objDrawing->setImageResource($extra['image_resource']);
+            $objDrawing->setWidth($imageWidth);
+            $objDrawing->setCoordinates($cellCoordinate);
+            $objDrawing->setOffsetX($imageMarginLeft);
+            $objDrawing->setOffsetY($imageMarginTop);
+            $objDrawing->setWorksheet($objSpreadsheet->getActiveSheet());
         }
     }
 
-    public function saveExcel($objPHPExcel, $filepath)
+    public function saveExcel($objSpreadsheet, $filepath)
     {
-        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
         $objWriter->save($filepath);
     }
 
@@ -506,7 +502,7 @@ class ExcelReportBehavior extends Behavior
         $attr['source'] = array_key_exists('source', $settings) ? $settings['source'] : null;
         $attr['showHeaders'] = array_key_exists('showHeaders', $settings) ? $settings['showHeaders'] : false;
         $attr['insertRows'] = array_key_exists('insertRows', $settings) ? $settings['insertRows'] : false;
-        $attr['mergeColumns'] = array_key_exists('mergeColumns', $settings) ? $settings['mergeColumns'] : null;
+        $attr['mergeColumns'] = array_key_exists('mergeColumns', $settings) ? $settings['mergeColumns'] : 1;
         $attr['imageWidth'] = array_key_exists('imageWidth', $settings) ? $settings['imageWidth'] : null;
         $attr['imageMarginLeft'] = array_key_exists('imageMarginLeft', $settings) ? $settings['imageMarginLeft'] : null;
         $attr['imageMarginTop'] = array_key_exists('imageMarginTop', $settings) ? $settings['imageMarginTop'] : null;
@@ -530,10 +526,9 @@ class ExcelReportBehavior extends Behavior
     {
         $attr = [];
 
-        // columnIndexFromString(): Column index start from 1
         $columnValue = $objCell->getColumn();
         $attr['columnValue'] = $columnValue;
-        $attr['columnIndex'] = PHPExcel_Cell::columnIndexFromString($columnValue);
+        $attr['columnIndex'] = Coordinate::columnIndexFromString($columnValue);
         $attr['columnWidth'] = $objWorksheet->getColumnDimension($columnValue)->getWidth();
         $attr['rowValue'] = $objCell->getRow();
         $coordinate = $objCell->getCoordinate();
@@ -577,19 +572,20 @@ class ExcelReportBehavior extends Behavior
         return [$placeholderPrefix, $placeholderSuffix];
     }
 
-    private function processWorksheet($objPHPExcel, $objWorksheet, $extra)
+    private function processWorksheet($objSpreadsheet, $objWorksheet, $extra)
     {
         $extra['placeholders'] = [];
-        $this->processBasicPlaceholder($objPHPExcel, $objWorksheet, $extra);
+        $this->processBasicPlaceholder($objSpreadsheet, $objWorksheet, $extra);
 
         if (!empty($extra['placeholders'])) {
-            $this->processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra);
+            $this->processAdvancedPlaceholder($objSpreadsheet, $objWorksheet, $extra);
         }
     }
 
-    private function processBasicPlaceholder($objPHPExcel, $objWorksheet, $extra)
+    private function processBasicPlaceholder($objSpreadsheet, $objWorksheet, $extra)
     {
-        $cells = $objWorksheet->getCellCollection();
+        $cellCollection = $objWorksheet->getCellCollection();
+        $cells = $cellCollection->getCoordinates();
 
         foreach ($cells as $cellCoordinate) {
             $objCell = $objWorksheet->getCell($cellCoordinate);
@@ -607,11 +603,11 @@ class ExcelReportBehavior extends Behavior
                     // if is basic placeholder then replace first, else added into $placeholder to process later
                     if ($this->isBasicType($cellValue)) {
                         Log::write('debug', $cellCoordinate . ' - ' . $cellValue);
-                        $this->string($objPHPExcel, $objWorksheet, $objCell, $cellValue, $extra);
+                        $this->string($objSpreadsheet, $objWorksheet, $objCell, $cellValue, $extra);
                     } else {
                         $columnValue = $objCell->getColumn();
                         $rowValue = $objCell->getRow();
-                        $columnIndex = PHPExcel_Cell::columnIndexFromString($columnValue);
+                        $columnIndex = Coordinate::columnIndexFromString($columnValue);
                         $extra['placeholders'][$columnIndex][$rowValue] = $cellValue;
                     }
                 }
@@ -619,18 +615,18 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra)
+    private function processAdvancedPlaceholder($objSpreadsheet, $objWorksheet, $extra)
     {
         // sort by column index so that to process the first column first
         ksort($extra['placeholders']);
 
         while(!empty($extra['placeholders'])) {
             $columnIndex = key($extra['placeholders']);
-            $columnValue = PHPExcel_Cell::stringFromColumnIndex($columnIndex-1);
+            $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
             $rowsObj = current($extra['placeholders']);
             $rowValue = key($rowsObj);
             $cellValue = current($rowsObj);
-            
+
             $cellCoordinate = $columnValue.$rowValue;
             $objCell = $objWorksheet->getCell($cellCoordinate);
 
@@ -647,7 +643,7 @@ class ExcelReportBehavior extends Behavior
                             $attr = array_merge($placeHolderAttr, $cellAttr);
 
                             Log::write('debug', $cellCoordinate . ' - ' . $cellValue);
-                            $this->$function($objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
+                            $this->$function($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
                         } else {
                             Log::write('debug', $cellCoordinate . ' - ' . $cellValue . ' is not a valid json format');
                         }
@@ -667,7 +663,7 @@ class ExcelReportBehavior extends Behavior
     private function updatePlaceholderCoordinate($affectedColumnValue=null, $affectedRowValue=null, $extra)
     {
         if (!is_null($affectedColumnValue)) {
-            $affectedColumnIndex = PHPExcel_Cell::columnIndexFromString($affectedColumnValue);
+            $affectedColumnIndex = Coordinate::columnIndexFromString($affectedColumnValue);
 
             $placeholders = [];
             foreach ($extra['placeholders'] as $columnIndex => $rowsObj) {
@@ -701,48 +697,87 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function string($objPHPExcel, $objWorksheet, $objCell, $search, $extra)
+    private function string($objSpreadsheet, $objWorksheet, $objCell, $search, $extra)
     {
         $format = '${%s}';
         $vars = $extra->offsetExists('vars') ? $extra['vars'] : [];
+        $placeHolderAttr = $this->convertPlaceHolderToArray($search);
 
-        $strArray = explode('${', $search);
-        array_shift($strArray); // first element will not contain the placeholder
+        if (empty($placeHolderAttr)) {
+            // basic type without formating
+            $strArray = explode('${', $search);
+            array_shift($strArray); // first element will not contain the placeholder
 
-        foreach ($strArray as $key => $str) {
-            $pos = strpos($str, '}');
+            foreach ($strArray as $key => $str) {
+                $pos = strpos($str, '}');
 
-            if ($pos !== false) {
-                $placeholder = substr($str, 0, $pos);
-                $replace = sprintf($format, $placeholder);
-                $value = Hash::get($vars, $placeholder);
+                if ($pos !== false) {
+                    $placeholder = substr($str, 0, $pos);
+                    $replace = sprintf($format, $placeholder);
+                    $value = Hash::get($vars, $placeholder);
 
-                if (!is_null($value)) {
-                    $search = str_replace($replace, $value, $search);
-                } else {
-                    // replace placeholder as blank if data is empty
-                    $search = '';
+                    if (!is_null($value)) {
+                        $search = str_replace($replace, $value, $search);
+                    } else {
+                        // replace placeholder as blank if data is empty
+                        $search = '';
+                    }
                 }
             }
+
+            $cellCoordinate = $objCell->getCoordinate();
+            $cellStyle = $objCell->getStyle($cellCoordinate);
+
+            if ($this->config('wrapText')) {
+                $cellStyle->getAlignment()->setWrapText(true);
+            }
+
+            $objWorksheet->getCell($cellCoordinate)->setValue($search);
+            $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
+        } else {
+            // basic types with formating
+            $cellCoordinate = $objCell->getCoordinate();
+            $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
+            $placeholder = $placeHolderAttr['displayValue'];
+            $replace = sprintf($format, $placeholder);
+
+            $flattenVar = Hash::flatten($vars, '.');
+            if (array_key_exists($placeholder, $flattenVar)) {
+                $value = $flattenVar[$placeholder];
+            } else {
+                $value = '';
+            }
+
+            $attr = array_merge($placeHolderAttr, $cellAttr);
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
         }
-
-        $cellCoordinate = $objCell->getCoordinate();
-        $cellStyle = $objCell->getStyle($cellCoordinate);
-
-        if ($this->config('wrapText')) {
-            $cellStyle->getAlignment()->setWrapText(true);
-        }
-
-        $objWorksheet->setCellValue($cellCoordinate, $search);
-        $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
     }
 
-    private function row($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    private function mergeRange($fromColumn, $fromRow, $toColumn, $toRow, $objWorksheet, $attr)
     {
+        if (($fromColumn != $toColumn) || ($fromRow != $toRow)) {
+            $fromColumnValue = Coordinate::stringFromColumnIndex($fromColumn);
+            $toColumnValue = Coordinate::stringFromColumnIndex($toColumn);
+            $mergeRange = $fromColumnValue.$fromRow.":".$toColumnValue.$toRow;
+
+            $objWorksheet->mergeCells($mergeRange);
+
+            // fix border doesn't set after cell is merged
+            $cellStyle = $attr['style'];
+            $cellStyle->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
+        }
+    }
+
+    private function row($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    {
+        $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];
         $columnValue = $attr['columnValue'];
-        $rowValue = $attr['rowValue'];
         $nestedRow = array_key_exists('children', $attr) ? $attr['children'] : [];
+
+        $mergeColumns = $attr['mergeColumns'];
+        $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
 
         if (!empty($attr['data'])) {
             foreach ($attr['data'] as $key => $value) {
@@ -753,37 +788,50 @@ class ExcelReportBehavior extends Behavior
                 }
 
                 $cellCoordinate = $columnValue.$rowValue;
-                $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
                 if (!empty($nestedRow)) {
-                    $rowValue = $this->nestedRow($nestedRow, $key, $rowValue, $columnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
+                    $nestedRowValue = $this->nestedRow($nestedRow, $key, $rowValue, $columnIndex, $mergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
                 }
+
+                // merge range based on mergeColumns attr and nestedRowValue
+                $mergeRowValue = isset($nestedRowValue) ? $nestedRowValue : $rowValue;
+                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+                $rowValue = $mergeRowValue;
 
                 $rowValue++;
             }
         } else {
             // replace placeholder as blank if data is empty
             $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+
+            // mergeColumns even if there is no data
+            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+
+            // set nestedRow parentKey = -1 to allow mergeColumns to apply even for empty nested cells
+            if (!empty($nestedRow)) {
+                $this->nestedRow($nestedRow, -1, $rowValue, $columnIndex, $mergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
+            }
         }
     }
 
-    private function nestedRow($nestedRow, $parentKey, $rowValue, $columnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    private function nestedRow($nestedRow, $parentKey, $parentRowValue, $parentColumnIndex, $parentMergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
     {
-        $keyword = $this->advancedTypes['row'];
-        $nestedAttr = $this->extractPlaceholderAttr($nestedRow, $keyword, $extra);
+        $nestedAttr = $this->extractPlaceholderAttr($nestedRow, $this->advancedTypes['row'], $extra);
+        $filter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null;
         $secondNestedRow = array_key_exists('children', $nestedAttr) ? $nestedAttr['children'] : [];
 
-        $nestedRowValue = $rowValue;
-        // always output children to the immediate next column
-        $nestedColumnIndex = $columnIndex + 1;
-        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-        $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
+        $nestedRowValue = $parentRowValue;
+        $nestedColumnIndex = $parentColumnIndex + ($parentMergeColumns - 1) + 1; // always output children to the immediate next column
+        $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
 
-        // set column width to width of next column
+        $nestedMergeColumns = $nestedAttr['mergeColumns'];
+        $mergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
+
+        // set column width to width of first nested column
         $attr['columnWidth'] = $objWorksheet->getColumnDimension($nestedColumnValue)->getWidth();
 
-        $filter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null;
         if (!is_null($filter)) {
             list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedAttr['displayValue']);
             $filterStr = $this->formatFilter($filter);
@@ -796,106 +844,129 @@ class ExcelReportBehavior extends Behavior
             $nestedData = $nestedAttr['data'];
         }
 
-        foreach ($nestedData as $nestedKey => $nestedValue) {
-            if ($nestedRowValue != $rowValue) {
-                $objWorksheet->insertNewRowBefore($nestedRowValue);
-                $this->updatePlaceholderCoordinate(null, $nestedRowValue, $extra);
+        if (!empty($nestedData)) {
+            foreach ($nestedData as $nestedKey => $nestedValue) {
+                // skip first row don't need to auto insert new row
+                if ($nestedRowValue != $parentRowValue) {
+                    $objWorksheet->insertNewRowBefore($nestedRowValue);
+                    $this->updatePlaceholderCoordinate(null, $nestedRowValue, $extra);
+                }
+
+                $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
+                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
+
+                if (!empty($secondNestedRow)) {
+                    $secondNestedRowValue = $this->nestedRow($secondNestedRow, $nestedKey, $nestedRowValue, $nestedColumnIndex, $nestedMergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
+                }
+
+                // merge range based on mergeColumns attr and secondNestedRowValue
+                $mergeRowValue = isset($secondNestedRowValue) ? $secondNestedRowValue : $nestedRowValue;
+                $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+                $nestedRowValue = $mergeRowValue;
+
+                $nestedRowValue++;
             }
 
+            // -1 due to the last $nestedRowValue++
+            $nestedRowValue = $nestedRowValue - 1;
+
+        } else {
+            // renderCell as empty to set style
             $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
-            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
 
+            // mergeColumns even if there is no data
+            $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
+
+            // set nestedRow parentKey = -1 to allow mergeColumns to apply even for empty nested cells
             if (!empty($secondNestedRow)) {
-                $nestedRowValue = $this->nestedRow($secondNestedRow, $nestedKey, $nestedRowValue, $nestedColumnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
+                $this->nestedRow($secondNestedRow, -1, $nestedRowValue, $nestedColumnIndex, $nestedMergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
             }
-
-            $nestedRowValue++;
         }
-
-        // if nested row occupied more rows than the parent, then merge parent cell following number of rows occupied by children
-        if ($nestedRowValue > $rowValue) {
-            $rangeRowValue = $nestedRowValue-1;
-            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
-            $mergeRange = $columnValue.$rowValue.":".$columnValue.$rangeRowValue;
-
-            $objWorksheet->mergeCells($mergeRange);
-            // fix border doesn't set after cell is merged
-            $cellStyle = $attr['style'];
-            $cellStyle->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
-            $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
-
-            $rowValue = $nestedRowValue-1;
-        }
-
-        return $rowValue;
+        return $nestedRowValue;
     }
 
-    private function column($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    private function column($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
     {
-        $columnIndex = $attr['columnIndex'];
         $rowValue = $attr['rowValue'];
+        $columnIndex = $attr['columnIndex'];
+        $columnValue = $attr['columnValue'];
+        $mergeColumns = $attr['mergeColumns'];
         $nestedColumn = array_key_exists('children', $attr) ? $attr['children'] : [];
 
         if (!empty($attr['data'])) {
             foreach ($attr['data'] as $key => $value) {
-                // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
+
+                // skip first column don't need to auto insert new column
                 if ($columnIndex != $attr['columnIndex']) {
                     $objWorksheet->insertNewColumnBefore($columnValue);
                     $this->updatePlaceholderCoordinate($columnValue, null, $extra);
                 }
+
                 $cellCoordinate = $columnValue.$rowValue;
-                $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
                 if (!empty($nestedColumn)) {
-                    $keyword = $this->advancedTypes[__FUNCTION__];
-                    $nestedAttr = $this->extractPlaceholderAttr($nestedColumn, $keyword, $extra);
-
+                    $nestedAttr = $this->extractPlaceholderAttr($nestedColumn, $this->advancedTypes[__FUNCTION__], $extra);
+                    $nestedMergeColumns = $nestedAttr['mergeColumns'];
+                    $nestedRowValue = $rowValue + 1; // always output children to the immediate next row
                     $nestedColumnIndex = $columnIndex;
-                    // always output children to the immediate next row
-                    $nestedRowValue = $rowValue + 1;
-                    foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
-                        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                        $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
-                        if ($nestedColumnIndex != $columnIndex) {
-                            $objWorksheet->insertNewColumnBefore($nestedColumnValue);
-                            $this->updatePlaceholderCoordinate($nestedColumnValue, null, $extra);
+
+                    if (!empty($nestedAttr['data'])) {
+                        foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
+                            $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
+                            if ($nestedColumnIndex != $columnIndex) {
+                                $objWorksheet->insertNewColumnBefore($nestedColumnValue);
+                                $this->updatePlaceholderCoordinate($nestedColumnValue, null, $extra);
+                            }
+
+                            $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
+                            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
+
+                            // merge range based on mergeColumns attr
+                            $nestedMergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
+                            $this->mergeRange($nestedColumnIndex, $nestedRowValue, $nestedMergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
+                            $nestedColumnIndex = $nestedMergeColumnIndex;
+
+                            $nestedColumnIndex++;
                         }
 
+                        // -1 due to the last $nestedRowValue++
+                        $nestedColumnIndex = $nestedColumnIndex - 1;
+                    } else {
+                        // renderCell as empty to set style
+                        $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
                         $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
-                        $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
+                        $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
 
-                        $nestedColumnIndex++;
-                    }
+                        // mergeColumns even if there is no data
+                        $nestedMergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
+                        $this->mergeRange($nestedColumnIndex, $nestedRowValue, $nestedMergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
 
-                    // if nested column occupied more columns than the parent, then merge parent cell following number of columns occupied by children
-                    if ($nestedColumnIndex > $columnIndex) {
-                        $rangeColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-2);
-
-                        $mergeRange = $cellCoordinate.":".$rangeColumnValue.$rowValue;
-                        $objWorksheet->mergeCells($mergeRange);
-                        // fix border doesn't set after cell is merged
-                        $cellStyle = $attr['style'];
-                        $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
-
-                        $columnIndex = $nestedColumnIndex-1;
+                        $nestedColumnIndex = $nestedMergeColumnIndex;
                     }
                 }
+
+                // mergeColumns attr from parent will only be used if there is no nested column
+                $mergeColumnIndex = isset($nestedColumnIndex) ? $nestedColumnIndex : $columnIndex + ($mergeColumns - 1);
+                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+                $columnIndex = $mergeColumnIndex;
 
                 $columnIndex++;
             }
         } else {
-            // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
-
             // replace placeholder as blank if data is empty
             $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
-        }
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
 
+            // mergeColumns even if there is no data
+            $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
+            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+        }
     }
 
-    private function table($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    private function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];
@@ -908,10 +979,9 @@ class ExcelReportBehavior extends Behavior
             foreach($displayColumns as $key => $column) {
                 $header = Inflector::humanize($key);
 
-                // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                 $cellCoordinate = $columnValue.$rowValue;
-                $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $header, $attr, $extra);
+                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $header, $attr, $extra);
                 $columnIndex++;
             }
 
@@ -941,10 +1011,9 @@ class ExcelReportBehavior extends Behavior
                     $attr['type'] = array_key_exists('type', $column) ? $column['type'] : null;
                     $attr['format'] = array_key_exists('format', $column) ? $column['format'] : null;
 
-                    // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                    $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                    $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                     $cellCoordinate = $columnValue.$rowValue;
-                    $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+                    $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
                     $columnIndex++;
                 }
@@ -955,79 +1024,52 @@ class ExcelReportBehavior extends Behavior
             // replace placeholder as blank if data is empty
             $columnValue = $attr['columnValue'];
             $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
     }
 
-    private function match($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    private function match($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
     {
         list($attr['placeholderPrefix'], $attr['placeholderSuffix']) = $this->splitDisplayValue($attr['displayValue']);
 
         $rowsArray = array_key_exists('rows', $attr) ? $attr['rows'] : [];
         $columnsArray = array_key_exists('columns', $attr) ? $attr['columns'] : [];
-        $data = array_key_exists('data', $attr) ? $attr['data'] : [];
 
         if (!empty($rowsArray)) {
-            $this->matchRows($objPHPExcel, $objWorksheet, $objCell, $attr, $rowsArray, $columnsArray, $extra);
+            $this->matchRows($objSpreadsheet, $objWorksheet, $objCell, $attr, $rowsArray, $columnsArray, $extra);
         } else {
             $columnIndex = $attr['columnIndex'];
             $rowValue = $attr['rowValue'];
-            $this->matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, null, $extra);
+            $this->matchColumns($objSpreadsheet, $objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, null, $extra);
         }
     }
 
-    private function matchRows($objPHPExcel, $objWorksheet, $objCell, $attr, $rowsArray=[], $columnsArray=[], $extra)
+    private function matchRows($objSpreadsheet, $objWorksheet, $objCell, $attr, $rowsArray=[], $columnsArray=[], $extra)
     {
         $matchFrom = array_key_exists('matchFrom', $rowsArray) ? $rowsArray['matchFrom'] : [];
         $matchTo = array_key_exists('matchTo', $rowsArray) ? $rowsArray['matchTo'] : [];
         $rowData = $this->getPlaceholderData($matchFrom, $extra);
-
-        $nestedRowsArray = isset($rowsArray['children']['rows']) ? $rowsArray['children']['rows'] : [];
-        $nestedfilter = array_key_exists('filter', $nestedRowsArray) ? $nestedRowsArray['filter'] : null;
-        $nestedMatchFrom = array_key_exists('matchFrom', $nestedRowsArray) ? $nestedRowsArray['matchFrom'] : [];
-        $nestedMatchTo = array_key_exists('matchTo', $nestedRowsArray) ? $nestedRowsArray['matchTo'] : [];
-        $nestedRowData = !empty($nestedMatchFrom) ? $this->getPlaceholderData($nestedMatchFrom, $extra) : [];
+        $nestedRow = isset($rowsArray['children']) ? $rowsArray['children'] : [];
 
         $filterStr = $this->formatFilter($matchTo);
-        if (!empty($nestedRowData)) {
-            $filterStr .= $this->formatFilter($nestedMatchTo);
-        }
         $attr['filterStr'] = array_key_exists('filterStr', $attr) ? $attr['filterStr'].$filterStr : $filterStr;
 
+        $columnIndex = $attr['columnIndex'];
         $rowValue = $attr['rowValue'];
+        $mergeColumns = $attr['mergeColumns'];
+        $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
 
         if (!empty($rowData)) {
             foreach ($rowData as $key => $value) {
                 // reset columnIndex after every loop of row
                 $columnIndex = $attr['columnIndex'];
                 if (!empty($columnsArray)) {
-                    $this->matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, $value, $extra);
+                    $this->matchColumns($objSpreadsheet, $objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, $value, $extra);
                     $rowValue++;
                 } else {
-                    if (!empty($nestedRowsArray)) {
-                        if (!is_null($nestedfilter) && !empty($nestedMatchFrom)) {
-                            $nestedDataFilter = $this->formatFilter($nestedfilter);
-                            list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedMatchFrom);
-                            $dataPlaceholderFormat = $this->formatPlaceholder($placeholderPrefix).$nestedDataFilter.".".$placeholderSuffix;
-                            $dataPlaceholder = sprintf($dataPlaceholderFormat, $value);
-                            $nestedRowData = Hash::extract($extra['vars'], $dataPlaceholder);
-                        }
-
-                        foreach ($nestedRowData as $nestedKey => $nestedValue) {
-                            $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
-                            $placeholder = sprintf($placeholderFormat, $value, $nestedValue);
-
-                            $matchData = Hash::extract($extra['vars'], $placeholder);
-                            $matchValue = !empty($matchData) ? current($matchData) : '';
-
-                            // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
-                            $nestedCellCoordinate = $columnValue.$rowValue;
-
-                            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
-                            $rowValue++;
-                        }
-
+                    if (!empty($nestedRow)) {
+                        $printedMatchFilter = sprintf($attr['filterStr'], $key);
+                        $rowValue = $this->nestedMatchRow($nestedRow, $printedMatchFilter, $key, $rowValue, $columnIndex, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
                     } else {
                         $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
                         $placeholder = sprintf($placeholderFormat, $value);
@@ -1035,11 +1077,11 @@ class ExcelReportBehavior extends Behavior
                         $matchData = Hash::extract($extra['vars'], $placeholder);
                         $matchValue = !empty($matchData) ? current($matchData) : '';
 
-                        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                        $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                        $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                         $cellCoordinate = $columnValue.$rowValue;
+                        $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
+                        $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
 
-                        $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
                         $rowValue++;
                     }
                 }
@@ -1049,11 +1091,83 @@ class ExcelReportBehavior extends Behavior
             // replace placeholder as blank if data is empty
             $columnValue = $attr['columnValue'];
             $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
         }
     }
 
-    private function matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray=[], &$columnIndex, &$rowValue, $filterValue=null, $extra)
+    private function nestedMatchRow($nestedRow, $matchFilter, $parentKey, $rowValue, $columnIndex, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    {
+        if (array_key_exists('rows', $nestedRow)) {
+            $nestedAttr = $nestedRow['rows'];
+            $nestedFilter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null; // used to filter nested match row data
+            $nestedMatchFrom = array_key_exists('matchFrom', $nestedAttr) ? $nestedAttr['matchFrom'] : [];
+            $nestedMatchTo = array_key_exists('matchTo', $nestedAttr) ? $nestedAttr['matchTo'] : [];
+            $nestedMergeBy = array_key_exists('mergeBy', $nestedAttr) ? $nestedAttr['mergeBy'] : [];
+            $secondNestedRow = array_key_exists('children', $nestedAttr) ? $nestedAttr['children'] : [];
+
+            $mergeColumns = $attr['mergeColumns'];
+            $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
+
+            $variableMatchFilter = $matchFilter.$this->formatFilter($nestedMatchTo); // used to filter matching results
+
+            $nestedData = [];
+            if (!empty($nestedMatchFrom)) {
+                if (!is_null($nestedFilter)) {
+                    list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedMatchFrom);
+                    $nestedDataFilter = $this->formatFilter($nestedFilter);
+                    $placeholderFormat = $this->formatPlaceholder($placeholderPrefix).$nestedDataFilter.".";
+
+                    $placeholder = sprintf($placeholderFormat.$placeholderSuffix, $parentKey);
+                    $placeholderId = sprintf($placeholderFormat.'id', $parentKey);
+                    $nestedData = Hash::combine($extra['vars'], $placeholderId, $placeholder);
+                } else {
+                    $nestedData = $this->getPlaceholderData($nestedMatchFrom, $extra);
+                }
+            }
+
+            if (!empty($nestedData)) {
+                foreach ($nestedData as $nestedKey => $nestedValue) {
+                    $printedMatchFilter = sprintf($variableMatchFilter, $nestedValue);
+
+                    if (!empty($secondNestedRow)) {
+                        $rowValue = $this->nestedMatchRow($secondNestedRow, $printedMatchFilter, $nestedKey, $rowValue, $columnIndex, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
+                    } else {
+                        $mergeRowCount = 0;
+                        if (!empty($nestedMergeBy)) {
+                            $mergeRowCount = $this->countMergeData($nestedMergeBy, $nestedKey, $mergeRowCount, $extra);
+                        }
+
+                        // printedMatchFilter already contains all key values, no need for sprintf again
+                        $placeholder = $this->formatPlaceholder($attr['placeholderPrefix']).$printedMatchFilter.".".$attr['placeholderSuffix'];
+
+                        $matchData = Hash::extract($extra['vars'], $placeholder);
+                        $matchValue = !empty($matchData) ? current($matchData) : '';
+
+                        $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
+                        $nestedCellCoordinate = $columnValue.$rowValue;
+
+                        $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
+
+                        $mergeRowValue = ($mergeRowCount > 1) ? $rowValue + ($mergeRowCount - 1) : $rowValue;
+                        $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+
+                        $rowValue = $mergeRowValue;
+                        $rowValue++;
+                    }
+                }
+            } else {
+                $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
+                $nestedCellCoordinate = $columnValue.$rowValue;
+                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
+                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+                $rowValue++;
+            }
+        }
+        return $rowValue;
+    }
+
+    private function matchColumns($objSpreadsheet, $objWorksheet, $objCell, $attr, $columnsArray=[], &$columnIndex, &$rowValue, $filterValue=null, $extra)
     {
         $matchFrom = array_key_exists('matchFrom', $columnsArray) ? $columnsArray['matchFrom'] : [];
         $matchTo = array_key_exists('matchTo', $columnsArray) ? $columnsArray['matchTo'] : [];
@@ -1084,11 +1198,10 @@ class ExcelReportBehavior extends Behavior
                         $matchData = Hash::extract($extra['vars'], $placeholder);
                         $matchValue = !empty($matchData) ? current($matchData) : '';
 
-                        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                        $nestedColumnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                        $nestedColumnValue = Coordinate::stringFromColumnIndex($columnIndex);
                         $nestedCellCoordinate = $nestedColumnValue.$rowValue;
 
-                        $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
+                        $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
                         $columnIndex++;
                     }
                 } else {
@@ -1101,11 +1214,10 @@ class ExcelReportBehavior extends Behavior
                     $matchData = Hash::extract($extra['vars'], $placeholder);
                     $matchValue = !empty($matchData) ? current($matchData) : '';
 
-                    // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                    $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                    $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                     $cellCoordinate = $columnValue.$rowValue;
 
-                    $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
+                    $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
                     $columnIndex++;
                 }
             }
@@ -1114,11 +1226,46 @@ class ExcelReportBehavior extends Behavior
             // replace placeholder as blank if data is empty
             $columnValue = $attr['columnValue'];
             $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
     }
 
-    private function dropdown($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    private function countMergeData($mergeAttr, $parentKey, $mergeCount, $extra)
+    {
+        $mergeFrom = array_key_exists('mergeFrom', $mergeAttr) ? $mergeAttr['mergeFrom'] : [];
+        $filter = array_key_exists('filter', $mergeAttr) ? $mergeAttr['filter'] : null;
+        $nestedMergeBy = array_key_exists('mergeBy', $mergeAttr) ? $mergeAttr['mergeBy'] : [];
+
+        $data = [];
+        if (!empty($mergeFrom)) {
+            if (!is_null($filter)) {
+                list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($mergeFrom);
+                $formattedFilter = $this->formatFilter($filter);
+                $placeholderFormat = $this->formatPlaceholder($placeholderPrefix).$formattedFilter.".";
+
+                $placeholder = sprintf($placeholderFormat.$placeholderSuffix, $parentKey);
+                $placeholderId = sprintf($placeholderFormat.'id', $parentKey);
+                $data = Hash::combine($extra['vars'], $placeholderId, $placeholder);
+            } else {
+                $data = $this->getPlaceholderData($mergeFrom, $extra);
+            }
+        }
+
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
+                if (!empty($nestedMergeBy)) {
+                    $mergeCount = $this->countMergeData($nestedMergeBy, $key, $mergeCount, $extra);
+                } else {
+                    $mergeCount++;
+                }
+            }
+        } else {
+            $mergeCount++;
+        }
+        return $mergeCount;
+    }
+
+    private function dropdown($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
     {
         $matchFrom = array_key_exists('rows', $attr) ? $attr['rows'] : [];
         $rowData = $this->getPlaceholderData($matchFrom, $extra);
@@ -1128,16 +1275,16 @@ class ExcelReportBehavior extends Behavior
             $rowValue = $attr['rowValue'];
             foreach ($rowData as $key => $value) {
                 $cellCoordinate = $columnValue.$rowValue;
-                $this->renderDropdown($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+                $this->renderDropdown($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
                 $rowValue++;
             }
         } else {
             $cellCoordinate = $attr['coordinate'];
-            $this->renderDropdown($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+            $this->renderDropdown($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
     }
 
-    private function image($objPHPExcel, $objWorksheet, $objCell, $attr,ArrayObject $extra)
+    private function image($objSpreadsheet, $objWorksheet, $objCell, $attr, ArrayObject $extra)
     {
         $columnValue = $attr['columnValue'];
         $rowValue = $attr['rowValue'];
@@ -1174,9 +1321,9 @@ class ExcelReportBehavior extends Behavior
             }
         }
 
-        $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $tempImagePath, $attr, $extra);
+        $this->renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $tempImagePath, $attr, $extra);
 
         // set to empty to remove the placeholder
-        $objWorksheet->setCellValue($cellCoordinate, '');
+        $objWorksheet->getCell($cellCoordinate)->setValue('');
     }
 }

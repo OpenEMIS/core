@@ -5,6 +5,7 @@ use ArrayObject;
 use DateInterval;
 use DateTime;
 use DateTimeInterface;
+use Exception;
 use InvalidArgumentException;
 use Cake\Event\Event;
 use Cake\I18n\Time;
@@ -16,11 +17,15 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use Cake\Utility\Hash;
+use Cake\Validation\Validator;
 use ControllerAction\Model\Traits\EventTrait;
+use Cake\Log\Log;
 use PHPExcel_Worksheet;
 use PHPExcel_Style_NumberFormat;
 use PHPExcel_Shared_Date;
 use PHPExcel_IOFactory;
+use PHPExcel_Cell;
 
 /**
  * ImportBehavior is to be used with import_mapping table.
@@ -248,6 +253,29 @@ class ImportBehavior extends Behavior
         ]);
     }
 
+    public function validationImportFile(Validator $validator)
+    {
+        $validator = $this->_table->validationDefault($validator);
+        $supportedFormats = array_values(Hash::flatten($this->_fileTypesMap));
+        $maxSize = $this->config('max_size') < $this->file_upload_max_size() ? $this->config('max_size') : $this->file_upload_max_size();
+
+        return $validator
+            ->add('select_file', 'ruleUploadFileError', [
+                'rule' => 'uploadError',
+                'last' => true,
+                'message' => $this->_table->getMessage('Import.upload_error') // will be overwritten in addBeforeSave if message exists
+            ])
+            ->add('select_file', 'ruleInvalidFileType', [
+                'rule' => ['mimeType', $supportedFormats],
+                'message' => $this->_table->getMessage('Import.not_supported_format'),
+                'last' => true
+            ])
+            ->add('select_file', 'ruleInvalidFileSize', [
+                'rule' => ['fileSize', '<=', $maxSize],
+                'message' => $this->_table->getMessage('Import.over_max')
+            ]);
+    }
+
     /**
      * addBeforePatch turns off the validation when patching entity with post data, and check the uploaded file size.
      * @param Event       $event   [description]
@@ -259,67 +287,7 @@ class ImportBehavior extends Behavior
      */
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $options['validate'] = false;
-        if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
-            $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
-            $options['validate'] = true;
-        }
-        if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
-            $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
-            $options['validate'] = true;
-        }
-        if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
-            $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
-            $options['validate'] = true;
-        }
-        if (!array_key_exists($this->_table->alias(), $data)) {
-            $options['validate'] = true;
-        }
-        if (!array_key_exists('select_file', $data[$this->_table->alias()])) {
-            $options['validate'] = true;
-        }
-        if (empty($data[$this->_table->alias()]['select_file'])) {
-            $options['validate'] = true;
-        }
-        if ($data[$this->_table->alias()]['select_file']['error']==4) {
-            $options['validate'] = true;
-        } elseif ($data[$this->_table->alias()]['select_file']['error']>0) {
-            $options['validate'] = true;
-            $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
-        }
-
-        if ($options['validate']) {
-            return $event->response;
-        }
-
-        $fileObj = $data[$this->_table->alias()]['select_file'];
-        $supportedFormats = $this->_fileTypesMap;
-
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $fileFormat = finfo_file($finfo, $fileObj['tmp_name']);
-        finfo_close($finfo);
-        $formatFound = false;
-        foreach ($supportedFormats as $eachformat) {
-            if (in_array($fileFormat, $eachformat)) {
-                $formatFound = true;
-            }
-        }
-        if (!$formatFound) {
-            if (!empty($fileFormat)) {
-                $entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
-                $options['validate'] = true;
-            }
-        }
-
-        $fileExt = $fileObj['name'];
-        $fileExt = explode('.', $fileExt);
-        $fileExt = $fileExt[count($fileExt)-1];
-        if (!array_key_exists($fileExt, $supportedFormats)) {
-            if (!empty($fileFormat)) {
-                $entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
-                $options['validate'] = true;
-            }
-        }
+        $options['validate'] = 'importFile';
     }
 
     /**
@@ -343,6 +311,15 @@ class ImportBehavior extends Behavior
         return function ($model, $entity) {
             $errors = $entity->errors();
             if (!empty($errors)) {
+                // set error message for php file upload errors
+                $fileError = Hash::get($entity->invalid(), 'select_file.error');
+                if (!empty($fileError)) {
+                    $errorMessage = $model->getMessage("fileUpload.$fileError");
+                    if ($errorMessage != '[Message Not Found]') {
+                        $entity->errors('select_file', $errorMessage, true);
+                    }
+                }
+
                 return false;
             }
 
@@ -436,11 +413,45 @@ class ImportBehavior extends Behavior
                 }
 
                 if ($extra['entityValidate'] == true) {
+                    // added for POCOR-4577 import staff leave for workflow related record to save the transition record
+                    $tempRow['action_type'] = 'imported';
                     $activeModel->patchEntity($tableEntity, $tempRow);
                 }
 
                 $errors = $tableEntity->errors();
                 $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
+
+                // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
+                $isNew = $tableEntity->isNew();
+
+                if ($extra['entityValidate'] == true) {
+                    // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
+                    try {
+                        $newEntity = $activeModel->save($tableEntity);
+                    } catch (Exception $e) {
+                        $newEntity = false;
+                        $message = $e->getMessage();
+                        $matches = '';
+                        // regex to find values in 2 quotes without the quotes
+                        if (preg_match("/(?<=\')(.*?)+(?=\')/", $message, $matches)) {
+                            $errorRow = $matches[0];
+                        } else {
+                            $errorRow = 'row' . $row;
+                        }
+                        $rowInvalidCodeCols[$errorRow] = $message;
+                    }
+
+                    if ($newEntity) {
+                        if ($isNew) {
+                            $totalImported++;
+                        } else {
+                            $totalUpdated++;
+                        }
+                        // update importedUniqueCodes either a single key or composite primary keys
+                        $this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
+                    }
+                }
+
                 if (!empty($rowInvalidCodeCols) || $errors) { // row contains error or record is a duplicate based on unique key(s)
                     $rowCodeError = '';
                     $rowCodeErrorForExcel = [];
@@ -491,22 +502,6 @@ class ImportBehavior extends Behavior
                     $this->dispatchEvent($this->_table, $this->eventKey('onImportSetModelPassedRecord'), 'onImportSetModelPassedRecord', $params);
 
                     $dataPassed[] = $tempPassedRecord->getArrayCopy();
-                }
-
-                // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
-                $isNew = $tableEntity->isNew();
-
-                if ($extra['entityValidate'] == true) {
-                    $newEntity = $activeModel->save($tableEntity);
-                    if ($newEntity) {
-                        if ($isNew) {
-                            $totalImported++;
-                        } else {
-                            $totalUpdated++;
-                        }
-                        // update importedUniqueCodes either a single key or composite primary keys
-                        $this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
-                    }
                 }
 
                 // $model->log('ImportBehavior: '.$row.' records imported', 'info');
@@ -614,7 +609,7 @@ class ImportBehavior extends Behavior
 ** Import Functions
 **
 ******************************************************************************************************************/
-    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $lastRowToAlign = 2, $title = '')
+    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = '')
     {
         if (empty($title)) {
             $title = $dataSheetName;
@@ -638,19 +633,10 @@ class ImportBehavior extends Behavior
 
         ($this->isCustomText()) ? $activeSheet->getRowDimension(3)->setRowHeight(25) : '';
 
-        $headerLastAlpha = $this->getExcelColumnAlpha('last');
-        $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
         $activeSheet->setCellValue("C1", $title);
-        $style = [
-            'alignment' => [
-                'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER
-            ]
-        ];
-        $activeSheet->getStyle("A1:". $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
     }
 
-    public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $applyFillFontSetting = [], $applyCellBorder = [])
+    public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign = 2, $applyFillFontSetting = [], $applyCellBorder = [])
     {
         if (empty($applyFillFontSetting)) {
             ($this->isCustomText()) ? $applyFillFontSetting = ['s'=>3, 'e'=>3] : $applyFillFontSetting = ['s'=>2, 'e'=>2];
@@ -666,6 +652,15 @@ class ImportBehavior extends Behavior
         if (!in_array($headerLastAlpha, ['A','B','C'])) {
             $activeSheet->mergeCells('C1:'. $headerLastAlpha .'1');
         }
+
+        $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
+        $style = [
+            'alignment' => [
+                'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER
+            ]
+        ];
+        $activeSheet->getStyle("A1:". $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
         $activeSheet->getStyle("A". $applyFillFontSetting['s'] .":". $headerLastAlpha . $applyFillFontSetting['e'])->getFont()->setBold(true)->getColor()->setARGB('FFFFFF');
         $activeSheet->getStyle("A". $applyFillFontSetting['s'] .":". $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
         $activeSheet->getStyle("A". $applyCellBorder['s'] .":". $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
@@ -701,7 +696,7 @@ class ImportBehavior extends Behavior
             $activeSheet->setCellValue("A2", $this->customText);
         }
 
-        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $lastRowToAlign, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
+        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName,  __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
 
         $currentRowHeight = $activeSheet->getRowDimension($lastRowToAlign)->getRowHeight();
 
@@ -724,7 +719,7 @@ class ImportBehavior extends Behavior
         }
         $headerLastAlpha = $this->getExcelColumnAlpha(count($header)-1);
 
-        $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha);
+        $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign);
     }
 
     public function suggestRowHeight($stringLen, $currentRowHeight)
@@ -747,7 +742,7 @@ class ImportBehavior extends Behavior
         $objPHPExcel->createSheet(1);
         $objPHPExcel->setActiveSheetIndex(1);
 
-        $this->beginExcelHeaderStyling($objPHPExcel, $sheetName, 3);
+        $this->beginExcelHeaderStyling($objPHPExcel, $sheetName);
 
         $objPHPExcel->getActiveSheet()->getRowDimension(3)->setRowHeight(25);
 
@@ -804,9 +799,9 @@ class ImportBehavior extends Behavior
         }
 
         if ($lastColumn > -1) { //if got no reference data.
-            $headerLastAlpha = $this->getExcelColumnAlpha( $lastColumn );
+            $headerLastAlpha = $this->getExcelColumnAlpha($lastColumn);
             $objPHPExcel->getActiveSheet()->getStyle( "A2:" . $headerLastAlpha . "2" )->getFont()->setBold(true)->setSize(12);
-            $this->endExcelHeaderStyling( $objPHPExcel, $headerLastAlpha, ['s'=>3, 'e'=>3], ['s'=>2, 'e'=>3] );
+            $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, 3, ['s'=>3, 'e'=>3], ['s'=>2, 'e'=>3] );
         }
     }
 
@@ -898,19 +893,7 @@ class ImportBehavior extends Behavior
      */
     public function getExcelColumnAlpha($column_number)
     {
-        $alpha = [
-            'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
-            'AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN','AO','AP','AQ','AR','AS','AT','AU','AV','AW','AX','AY','AZ',
-            'BA','BB','BC','BD','BE','BF','BG','BH','BI','BJ','BK','BL','BM','BN','BO','BP','BQ','BR','BS','BT','BU','BV','BW','BX','BY','BZ',
-            'CA','CB','CC','CD','CE','CF','CG','CH','CI','CJ','CK','CL','CM','CN','CO','CP','CQ','CR','CS','CT','CU','CV','CW','CX','CY','CZ',
-            'DA','DB','DC','DD','DE','DF','DG','DH','DI','DJ','DK','DL','DM','DN','DO','DP','DQ','DR','DS','DT','DU','DV','DW','DX','DY','DZ',
-            'EA','EB','EC','ED','EE','EF','EG','EH','EI','EJ','EK','EL','EM','EN','EO','EP','EQ','ER','ES','ET','EU','EV','EW','EX','EY','EZ',
-            'FA','FB','FC','FD','FE','FF','FG','FH','FI','FJ','FK','FL','FM','FN','FO','FP','FQ','FR','FS','FT','FU','FV','FW','FX','FY','FZ'
-        ];
-        if ($column_number === 'last') {
-            $column_number = count($alpha) - 1;
-        }
-        return $alpha[$column_number];
+        return PHPExcel_Cell::stringFromColumnIndex($column_number);
     }
 
     /**
@@ -1369,10 +1352,10 @@ class ImportBehavior extends Behavior
                     $val = $cellValue;
                 }
             } elseif ($foreignKey == self::NON_TABLE_LIST) {
-                if (!empty($cellValue)) {
+                if (strlen($cellValue) > 0) {
                     $getIdEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
                     $recordId = $getIdEvent->result;
-                    if (!empty($recordId)) {
+                    if (strlen($recordId) > 0) {
                         $val = $recordId;
                     } else {
                         $rowPass = false;
@@ -1399,7 +1382,7 @@ class ImportBehavior extends Behavior
                     $tempRow['customColumns'][$columnName] = $val;
                 }
             }
-            if (!$isOptional || ($isOptional && !empty($val))) {
+            if (!$isOptional || ($isOptional && strlen($val) > 0)) {
                 $tempRow[$columnName] = $val;
             }
         }

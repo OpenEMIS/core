@@ -34,6 +34,8 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->fields['homeroom_teacher_comments']['visible'] = false;
         $this->fields['file_name']['visible'] = false;
         $this->fields['file_content']['visible'] = false;
+        $this->fields['started_on']['visible'] = false;
+        $this->fields['completed_on']['visible'] = false;
         $this->fields['status']['visible'] = false;
         $this->fields['report_card_id']['type'] = 'integer';
         $this->fields['education_grade_id']['type'] = 'integer';

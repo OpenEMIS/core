@@ -10,6 +10,7 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
+use Workflow\Model\Behavior\WorkflowBehavior;
 
 class StaffTrainingApplicationsTable extends ControllerActionTable
 {
@@ -94,7 +95,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $application = [];
         $application['staff_id'] = $staffId;
         $application['training_session_id'] = $sessionId;
-        $application['status_id'] = 0;
+        $application['status_id'] = WorkflowBehavior::STATUS_OPEN;
+        $application['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
         $application['institution_id'] = $institutionId;
         $entity = $this->newEntity($application);
 

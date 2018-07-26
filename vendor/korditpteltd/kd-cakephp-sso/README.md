@@ -186,3 +186,34 @@ If the enable local login option is not necessary, you may exclude the patch for
 You will be required to change the Redirection URI or the Assertion Consumer Service URL on the identity provider side the match the new value after running the migration patch.
 
 By default, local login will be turn off after the migration if there is an active IDP configured (assuming that the patch is executed as it is).
+
+## Single Logout Implementation
+Please execute the following SQL on your database to add the table for the single logout. This table will keep track of your user login session on top of the PHP session on the application.
+
+```sql
+CREATE TABLE `security_user_sessions` (
+  `id` VARCHAR(40) NOT NULL default '',
+  `username` VARCHAR(50) NOT NULL default '',
+  PRIMARY KEY (`id`, `username`)
+);
+```
+
+### Adding a record to the security user sessions table
+You may add the following line after the authentication to add an entry to your security user sessions table to keep track of the logon user.
+
+```php
+$SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
+$SecurityUserSessions->addEntry($user['username'], $this->request->session()->id());
+```
+
+
+### Removing record from security user sessions table
+To logout, your api should trigger the deleteEntries function to trigger the logout of the application. You may use the following code as the example to trigger your logout in your own api function.
+
+```php
+$SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
+$SecurityUserSessions->deleteEntries($username);
+```
+
+### More examples
+You may use the Single Logout api together with the webhooks plugin to trigger mass logout from applications that are already logon. You may go to [https://bitbucket.org/korditpteltd/kd-cakephp-webhooks](https://bitbucket.org/korditpteltd/kd-cakephp-webhooks) to see more example on how this can be implemented with the webhooks plugin.

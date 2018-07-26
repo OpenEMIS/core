@@ -955,11 +955,15 @@ class StaffAttendancesTable extends ControllerActionTable
 
                     // Save button, only can save if there is data
                     if ($dataCount > 0) {
-                        $extra['toolbarButtons']['indexEdit'] = $btnTemplate;
-                        $extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Save');
-                        $extra['toolbarButtons']['indexEdit']['attr']['onclick'] = 'jsForm.submit();';
-                        $extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-save"></i>';
-                        $extra['toolbarButtons']['indexEdit']['url'] = '#';
+                        if(empty($this->reasonOptions)) {
+                            $this->Alert->warning('StaffAttendances.noReasons');
+                        } else {
+                            $extra['toolbarButtons']['indexEdit'] = $btnTemplate;
+                            $extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Save');
+                            $extra['toolbarButtons']['indexEdit']['attr']['onclick'] = 'jsForm.submit();';
+                            $extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-save"></i>';
+                            $extra['toolbarButtons']['indexEdit']['url'] = '#';  
+                        }
                     }
 
                     // unset export button
