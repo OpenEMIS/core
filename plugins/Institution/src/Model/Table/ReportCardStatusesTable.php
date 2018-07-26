@@ -14,6 +14,10 @@ use Cake\Log\Log;
 use ZipArchive;
 use App\Model\Table\ControllerActionTable;
 
+use Cake\Mailer\Email;
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
+
 class ReportCardStatusesTable extends ControllerActionTable
 {
     private $statusOptions = [];
@@ -39,6 +43,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
         $this->addBehavior('User.AdvancedNameSearch');
+        // Added
+        $this->addBehavior('ReportCard.EmailTemplate');
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -66,6 +72,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
         $events['ControllerAction.Model.unpublishAll'] = 'unpublishAll';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+        $events['ControllerAction.Model.emailAll'] = 'emailAll';
         return $events;
     }
 
@@ -334,6 +341,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $unpublishButton['attr']['title'] = __('Unpublish All');
                     $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
                 }
+
+                // Email all button is published
+                if ($publishedCount > 0) {
+                    $emailButton['url'] = $this->setQueryString($this->url('emailAll'), $params);
+                    $emailButton['type'] = 'button';
+                    $emailButton['label'] = '<i class="fa fa-envelope"></i>';
+                    $emailButton['attr'] = $toolbarAttr;
+                    $emailButton['attr']['title'] = __('Email All');
+                    $extra['toolbarButtons']['EmailAll'] = $emailButton;
+                }
             }
         }
     }
@@ -349,6 +366,12 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('institution_class_id', ['type' => 'integer']);
         $this->setFieldOrder(['academic_period_id', 'status', 'started_on', 'completed_on', 'openemis_no', 'student_id',  'report_card', 'institution_class_id']);
     }
+
+    // Added
+    // public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    // {
+    //     $this->setupTabElements($entity);
+    // }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -587,6 +610,203 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
+    public function emailAll(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
+
+        // Run Shell liao
+        $this->triggerEmailShell('Email', $params);
+
+        // Only email report cards with published status
+        // Getting the student email
+        $emailProccessEntity = $this->StudentsReportCards
+            ->find()
+            ->contain(['Students', 'ReportCards'])
+            ->where([
+                $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
+                $this->StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
+                $this->StudentsReportCards->aliasField('status IN ') => self::PUBLISHED,
+                $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
+                $this->StudentsReportCards->aliasField('file_content IS NOT NULL'),
+                $this->StudentsReportCards->Students->aliasField('email IS NOT NULL'),
+                $this->StudentsReportCards->Students->aliasField('email <> ""')
+
+            ])
+            ->select([
+                        // $this->StudentsReportCards->Students->aliasField('first_name'),
+                        // $this->StudentsReportCards->Students->aliasField('middle_name'),
+                        // $this->StudentsReportCards->Students->aliasField('third_name'),
+                        // $this->StudentsReportCards->Students->aliasField('last_name'),
+                        // $this->StudentsReportCards->Students->aliasField('preferred_name'),
+                        // $this->StudentsReportCards->Students->aliasField('email'),
+                        // $this->StudentsReportCards->aliasField('file_name'),
+                        // $this->StudentsReportCards->aliasField('file_content')
+                    
+                        $this->StudentsReportCards->Students->aliasField('email')
+                    ])
+            ->toArray();
+
+            if(!empty($emailProccessEntity)) {
+                foreach ($emailProccessEntity as $studentEmail) {
+
+                }
+            }
+
+            pr($emailProccessEntity);die;
+
+            if (!empty($files)) {
+                // Loop thru each of the student to get their email addresses
+                foreach ($files as $student) {
+                    // If student have an email
+                    if(!is_null($student->student->email) && !empty($student->student->email)) {
+
+                        $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
+                        $filepath = $path.$student->file_name;
+
+                        // // Create the file into the system so that it can attach to the email.
+                        $studentReportFile = new File($filepath);
+                        $studentReportFile->write($this->getFile($student->file_content));
+
+                        $email = new Email('openemis');
+                        $email
+                            ->to($student->student->email)
+                            ->subject('Abou1313131231t')
+                            ->attachments($filepath)
+                            ->send('alibababasdadasd');
+
+                        // Delete file after sending the email to the student
+                        unlink($filepath);
+                    }
+                }
+                $this->Alert->success('ReportCardStatuses.emailAllSuccess');
+            } else {
+                $event->stopPropagation();
+                $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
+                return $this->controller->redirect($this->url('index'));
+            }
+
+        return $this->controller->redirect($this->url('index'));
+    }
+
+    private function triggerEmailShell($shellName, $params)
+    {
+        // Only email report cards with published status
+        // Getting the student email
+        $emailProccessEntity = $this->StudentsReportCards
+            ->find()
+            ->contain(['Students', 'ReportCards'])
+            ->where([
+                $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
+                $this->StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
+                $this->StudentsReportCards->aliasField('status IN ') => self::PUBLISHED,
+                $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
+                $this->StudentsReportCards->aliasField('file_content IS NOT NULL'),
+                $this->StudentsReportCards->Students->aliasField('email IS NOT NULL'),
+                $this->StudentsReportCards->Students->aliasField('email <> ""')
+
+            ])
+            ->select([
+                        // $this->StudentsReportCards->Students->aliasField('first_name'),
+                        // $this->StudentsReportCards->Students->aliasField('middle_name'),
+                        // $this->StudentsReportCards->Students->aliasField('third_name'),
+                        // $this->StudentsReportCards->Students->aliasField('last_name'),
+                        // $this->StudentsReportCards->Students->aliasField('preferred_name'),
+                        // $this->StudentsReportCards->Students->aliasField('email'),
+                        // $this->StudentsReportCards->aliasField('file_name'),
+                        // $this->StudentsReportCards->aliasField('file_content')
+                    
+                        $this->StudentsReportCards->Students->aliasField('email')
+                    ])
+            ->toArray();
+
+
+        $institutionId = $params['institution_id'];
+        $institutionClassId = $params['institution_class_id'];
+        $reportCardId = $params['report_card_id'];
+        $createdUserId = $this->Auth->user('id');
+
+        $modelAlias = TableRegistry::get('ReportCard.ReportCardEmail');
+
+        // Shell command
+        $args = '';
+        // pr($params);
+        // $args .= ' '.$institutionId.' '.$institutionClassId.' '.$reportCardId.' '.$createdUserId.' '.$modelAlias->registryAlias();
+        $args .= ' '.$modelAlias->registryAlias().' '.$reportCardId.' '.$institutionId.' '.$institutionClassId.' '.$createdUserId;
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        pr($shellCmd);die;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+
+
+
+    }
+
+    // public function emailAll(Event $event, ArrayObject $extra)
+    // {
+    //     $params = $this->getQueryString();
+
+    //     // Only email report cards with published status
+    //     $files = $this->StudentsReportCards
+    //         ->find()
+    //         ->contain(['Students', 'ReportCards'])
+    //         ->where([
+    //             $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
+    //             $this->StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+    //             $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
+    //             $this->StudentsReportCards->aliasField('status IN ') => self::PUBLISHED,
+    //             $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
+    //             $this->StudentsReportCards->aliasField('file_content IS NOT NULL')
+    //         ])
+    //         ->select([
+    //                     $this->StudentsReportCards->Students->aliasField('first_name'),
+    //                     $this->StudentsReportCards->Students->aliasField('middle_name'),
+    //                     $this->StudentsReportCards->Students->aliasField('third_name'),
+    //                     $this->StudentsReportCards->Students->aliasField('last_name'),
+    //                     $this->StudentsReportCards->Students->aliasField('preferred_name'),
+    //                     $this->StudentsReportCards->Students->aliasField('email'),
+    //                     $this->StudentsReportCards->aliasField('file_name'),
+    //                     $this->StudentsReportCards->aliasField('file_content')
+    //                 ])
+    //         ->toArray();
+
+    //         if (!empty($files)) {
+    //             // Loop thru each of the student to get their email addresses
+    //             foreach ($files as $student) {
+    //                 // If student have an email
+    //                 if(!is_null($student->student->email) && !empty($student->student->email)) {
+
+    //                     $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
+    //                     $filepath = $path.$student->file_name;
+
+    //                     // // Create the file into the system so that it can attach to the email.
+    //                     $studentReportFile = new File($filepath);
+    //                     $studentReportFile->write($this->getFile($student->file_content));
+
+    //                     $email = new Email('openemis');
+    //                     $email
+    //                         ->to($student->student->email)
+    //                         ->subject('Abou1313131231t')
+    //                         ->attachments($filepath)
+    //                         ->send('alibababasdadasd');
+
+    //                     // Delete file after sending the email to the student
+    //                     unlink($filepath);
+    //                 }
+    //             }
+    //             $this->Alert->success('ReportCardStatuses.emailAllSuccess');
+    //         } else {
+    //             $event->stopPropagation();
+    //             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
+    //             return $this->controller->redirect($this->url('index'));
+    //         }
+
+    //     return $this->controller->redirect($this->url('index'));
+    // } 
+
     private function addReportCardsToProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
         Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
@@ -707,7 +927,6 @@ class ReportCardStatusesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards'.$args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
-
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);
@@ -726,4 +945,12 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         return $file;
     }
+
+    // Added
+    // private function setupTabElements($entity)
+    // {
+    //     $tabElements = $this->controller->getReportCardStatusesTab($entity->user->id);
+    //     $this->controller->set('tabElements', $tabElements);
+    //     $this->controller->set('selectedAction', $this->alias());
+    // }
 }

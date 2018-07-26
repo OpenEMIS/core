@@ -117,6 +117,8 @@ class InstitutionsController extends AppController
         'ReportCardComments',
         'ReportCardStatuses',
         'InstitutionStudentsReportCards',
+        // Added
+        // 'ReportCardStatusesEmail',  
 
         // outcomes
         'StudentOutcomes',
@@ -364,6 +366,11 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
     }
+    // Added
+    // public function ReportCardStatusesEmail()
+    // {
+    //     $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatusesEmail']);
+    // }
     public function StaffTransferIn()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferIn']);
@@ -1761,4 +1768,28 @@ class InstitutionsController extends AppController
             }
         }
     }
+
+    // Added
+    // public function getReportCardStatusesTab($id)
+    // {
+    //     $encodedParam = $this->request->params['pass'][1];
+    //     $queryClassId = $this->request->query['class_id'];
+    //     $queryAcademicPeriodId = $this->request->query['academic_period_id'];
+    //     $queryReportCardId = $this->request->query['report_card_id'];
+
+    //     $queryString = '?class_id='.$queryClassId.'&academic_period_id='.$queryAcademicPeriodId.'&report_card_id='.$queryReportCardId;
+
+    //     $tabElements = [
+    //         'ReportCardStatuses' => [
+    //             'text' => __('Overview'),
+    //             'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ReportCardStatuses', 'view', $encodedParam, $queryString]
+    //         ],
+    //         'ReportCardStatusesEmail' => [
+    //             'text' => __('Email'),
+    //             'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ReportCardStatusesEmail', 'view', $encodedParam, $queryString]
+    //         ]
+    //     ];
+
+    //     return $tabElements;
+    // }
 }
