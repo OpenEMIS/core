@@ -210,12 +210,54 @@ class POCOR4324 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
+
+        // student_attendance_marked_records
+        $StudentAttendanceMarkRecords = $this->table('student_attendance_marked_records', [
+            'id' => false,
+            'primary_key' => ['institution_id', 'academic_period_id', 'institution_class_id', 'date', 'period'],
+            'collaction' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains attendance marking records'
+        ]);
+
+        $StudentAttendanceMarkRecords
+            ->addColumn('institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to instututions.id'
+            ])
+            ->addColumn('academic_period_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to academic_periods.id'
+            ])
+            ->addColumn('institution_class_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_classes.id'
+            ])
+            ->addColumn('date', 'date', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('period', 'integer', [
+                'default' => null,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addIndex('institution_id')
+            ->addIndex('academic_period_id')
+            ->addIndex('institution_class_id')
+            ->save();
     }
 
     public function down()
     {
         $this->dropTable('student_attendance_types');
         $this->dropTable('student_attendance_mark_types');
+        $this->dropTable('student_attendance_marked_records');
 
         $this->execute('DROP TABLE IF EXISTS `institution_student_absences`');
         $this->execute('RENAME TABLE `z_4234_institution_student_absences` TO `institution_student_absences`');

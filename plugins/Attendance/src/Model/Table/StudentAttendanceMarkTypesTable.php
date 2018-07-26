@@ -86,8 +86,6 @@ class StudentAttendanceMarkTypesTable extends AppTable
                     'id' => $i,
                     'name' => __($prefix . $i)
                 ];
-                // $options[$i] = $prefix . $i;
-                // $options[$i] = $prefix . $i;
             }
 
             return $options;

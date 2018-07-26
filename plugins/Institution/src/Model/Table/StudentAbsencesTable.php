@@ -34,5 +34,15 @@ class StudentAbsencesTable extends AppTable
         if ($entity->absence_type_id == 0) {
             $this->delete($entity);
         }
+
+        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+        $recordEntity = $StudentAttendanceMarkedRecords->newEntity([
+            'institution_id' => $entity->institution_id,
+            'academic_period_id' => $entity->academic_period_id,
+            'institution_class_id' => $entity->institution_class_id,
+            'date' => $entity->date,
+            'period' => $entity->period
+        ]);
+        $StudentAttendanceMarkedRecords->save($recordEntity);
     }
 }
