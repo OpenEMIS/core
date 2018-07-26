@@ -10,7 +10,7 @@ use Cake\Network\Request;
 use Cake\Collection\Collection;
 use Cake\Validation\Validator;
 use Cake\View\Helper\UrlHelper;
-
+use Cake\Routing\Router;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
@@ -97,15 +97,13 @@ class AssessmentsTable extends ControllerActionTable {
             ]);
     }
 
-
-
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('excel_template_name', ['visible' => false]);
         $this->field('excel_template', ['visible' => true]);
 
         $this->setFieldOrder(['code', 'name', 'description', 'excel_template_name', 'excel_template', 'academic_period_id', 'education_grade_id']);
-    }
+    } 
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -158,6 +156,20 @@ class AssessmentsTable extends ControllerActionTable {
 
         $this->setupFields($entity);
     }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.downloadTemplate'] = 'downloadTemplate';
+        return $events;
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        // to set template download button
+        $downloadUrl = $this->url('downloadTemplate');
+        $this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
+    }    
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -221,8 +233,11 @@ class AssessmentsTable extends ControllerActionTable {
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
+        } else {
+            // attr for template download button
+            $attr['startWithOneLeftButton'] = 'download';
+            $attr['type'] = 'binary';
         }
-
         return $attr;
     }
 
@@ -252,15 +267,12 @@ class AssessmentsTable extends ControllerActionTable {
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add' || $action == 'edit') {
-
             $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
             if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-                    ->find('visible')
-                    ->contain(['EducationCycles'])
-                    ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
+                    ->find('availableProgrammes')
                     ->toArray();
 
                 $attr['options'] = $programmeOptions;
@@ -425,4 +437,22 @@ class AssessmentsTable extends ControllerActionTable {
             }
         }
     }
+
+    public function downloadTemplate()
+    {
+        $filename = 'assessment_report_template';
+        $fileType = 'xlsx';
+        $filepath = WWW_ROOT . 'export' . DS . 'customexcel'. DS . 'default_templates'. DS . $filename . '.' . $fileType;
+
+        header("Pragma: public", true);
+        header("Expires: 0"); // set expiration time
+        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+        header("Content-Type: application/force-download");
+        header("Content-Type: application/octet-stream");
+        header("Content-Type: application/download");
+        header("Content-Disposition: attachment; filename=".basename($filepath));
+        header("Content-Transfer-Encoding: binary");
+        header("Content-Length: ".filesize($filepath));
+        echo file_get_contents($filepath);
+    }    
 }

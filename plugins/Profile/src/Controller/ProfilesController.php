@@ -69,6 +69,7 @@ class ProfilesController extends AppController
 
         $this->loadComponent('Training.Training');
         $this->loadComponent('User.Image');
+        $this->loadComponent('Scholarship.ScholarshipTabs');
         $this->attachAngularModules();
 
         $this->set('contentHeader', 'Profiles');
@@ -110,6 +111,7 @@ class ProfilesController extends AppController
     public function StaffSalaries()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']); }
     public function StaffBehaviours()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']); }
     public function StudentOutcomes()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']); }
+    public function ScholarshipApplications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipApplications']); }
 
     // health
     public function Healths()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
@@ -226,15 +228,18 @@ class ProfilesController extends AppController
                 $model->removeBehavior('ImportLink');
             }
 
-            $model->toggle('add', false);
-            $model->toggle('edit', false);
-            $model->toggle('remove', false);
-
             $alias = $model->alias();
+            $excludedModel = ['ScholarshipApplications'];
 
-            // redirected view feature is to cater for the link that redirected to institution
-            if (in_array($alias, $this->redirectedViewFeature)) {
-                $model->toggle('view', false);
+            if (!in_array($alias, $excludedModel)) {
+                $model->toggle('add', false);
+                $model->toggle('edit', false);
+                $model->toggle('remove', false);
+
+                // redirected view feature is to cater for the link that redirected to institution
+                if (in_array($alias, $this->redirectedViewFeature)) {
+                    $model->toggle('view', false);
+                }
             }
         } else if ($model instanceof \App\Model\Table\AppTable) { // CAv3
             $alias = $model->alias();
@@ -330,6 +335,8 @@ class ProfilesController extends AppController
             $query->where([$model->aliasField('student_id') => $loginUserId]);
         } else if ($model->hasField('staff_id')) {
             $query->where([$model->aliasField('staff_id') => $loginUserId]);
+        } else if ($model->hasField('applicant_id')) {
+            $query->where([$model->aliasField('applicant_id') => $loginUserId]);
         }
     }
 

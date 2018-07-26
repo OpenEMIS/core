@@ -59,6 +59,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
     Controller.className = '';
     Controller.academicPeriodName = '';
     Controller.postError = [];
+    Controller.maxStudentsPerClass = null;
+    Controller.classCapacity = null;
 
     // Function mapping
     Controller.setTop = setTop;
@@ -80,6 +82,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 Controller.academicPeriodId = response.academic_period_id;
                 Controller.institutionId = response.institution_id;
                 Controller.academicPeriodName = response.academic_period.name;
+                Controller.classCapacity = response.capacity;
+
                 var assignedStudents = [];
                 angular.forEach(response.class_students, function(value, key) {
                     var toPush = {
@@ -109,6 +113,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 promises[0] = InstitutionClassStudentsSvc.getUnassignedStudent(Controller.classId);
                 promises[1] = InstitutionClassStudentsSvc.getInstitutionShifts(response.institution_id, response.academic_period_id);
                 promises[2] = InstitutionClassStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
+                promises[3] = InstitutionClassStudentsSvc.getConfigItemValue('max_students_per_class');
                 return $q.all(promises);
             }, function(error) {
                 console.log(error);
@@ -140,6 +145,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 Controller.unassignedStudents = unassignedStudentsArr;
                 Controller.shiftOptions = promises[1];
                 Controller.mainTeacherOptions = promises[2];
+                Controller.maxStudentsPerClass = parseInt(promises[3]);
+  
                 Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
                 Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
 
@@ -240,28 +247,37 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         postData.classStudents = classStudents;
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;
-        InstitutionClassStudentsSvc.saveClass(postData)
-        .then(function(response) {
-            var error = response.data.error;
-            if (error instanceof Array && error.length == 0) {
-                Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
-                Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
-                $http.get(Controller.alertUrl)
-                .then(function(response) {
-                    $window.location.href = Controller.redirectUrl;
-                }, function (error) {
-                    console.log(error);
-                });
-            } else {
-                AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
-                angular.forEach(error, function(value, key) {
-                    Controller.postError[key] = value;
-                })
-            }
-        }, function(error){
-            console.log(error);
-        });
+        postData.capacity = parseInt(Controller.classCapacity);
 
+        if(postData.capacity > Controller.maxStudentsPerClass) {
+            Controller.postError.capacity = {
+                'error': 'The capacity per class has exceeded the maximum capacity limit of '+Controller.maxStudentsPerClass+' students.'
+            };
+        } else if(classStudents.length > postData.capacity) {
+            AlertSvc.error(Controller, 'The number of students has reached the capacity limit of '+postData.capacity+' students.');
+        } else {
+            InstitutionClassStudentsSvc.saveClass(postData)
+            .then(function(response) {
+                var error = response.data.error;
+                if (error instanceof Array && error.length == 0) {
+                    Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
+                    Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
+                    $http.get(Controller.alertUrl)
+                    .then(function(response) {
+                        $window.location.href = Controller.redirectUrl;
+                    }, function (error) {
+                        console.log(error);
+                    });
+                } else {
+                    AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
+                    angular.forEach(error, function(value, key) {
+                        Controller.postError[key] = value;
+                    })
+                }
+            }, function(error){
+                console.log(error);
+            });
+        }
     }
 
     function updateQueryStringParameter(uri, key, value) {

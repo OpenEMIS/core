@@ -285,7 +285,7 @@ Plugin::load('Report', ['routes' => true, 'autoload' => true]);
 Plugin::load('Rubric', ['routes' => true, 'autoload' => true]);
 Plugin::load('Workflow', ['routes' => true, 'autoload' => true]);
 Plugin::load('CustomField', ['routes' => true, 'autoload' => true]);
-Plugin::load('Indexes', ['routes' => true, 'autoload' => true]);
+Plugin::load('Risk', ['routes' => true, 'autoload' => true]);
 Plugin::load('InstitutionCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StudentCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StaffCustomField', ['routes' => true, 'autoload' => true]);
@@ -317,6 +317,8 @@ Plugin::load('Cases', ['autoload' => true]);
 Plugin::load('Counselling', ['autoload' => true]);
 Plugin::load('Outcome', ['routes' => true, 'autoload' => true]);
 Plugin::load('Theme', ['routes' => true, 'autoload' => true]);
+Plugin::load('StaffAppraisal', ['routes' => true, 'autoload' => true]);
+Plugin::load('Scholarship', ['routes' => true, 'autoload' => true]);
 
 $pluginPath = Configure::read('plugins');
 foreach ($pluginPath as $key => $path) {

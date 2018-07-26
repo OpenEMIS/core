@@ -22,8 +22,9 @@ class InstitutionStudentsTable extends AppTable  {
 		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['start_year', 'end_year'], 
-			'pages' => false
+			'excludes' => ['start_year', 'end_year', 'previous_institution_student_id'],
+			'pages' => false,
+            'autoFields' => false
 		]);
 		$this->addBehavior('Report.InstitutionSecurity');
 
@@ -39,12 +40,13 @@ class InstitutionStudentsTable extends AppTable  {
 		];
 	}
 
-	public function onExcelBeforeWrite(Event $event, ArrayObject $settings, $rowProcessed, $percentCount) {
-		if (empty($settings['entity']->user)) {
-			$entity = $settings['entity'];
-			return $this->delete($entity);
-		}
-	}
+    // Thed-to-do: We should write data patch to delete orphan institution student records instead of auto delete from this report
+    // public function onExcelBeforeWrite(Event $event, ArrayObject $settings, $rowProcessed, $percentCount) {
+    //     if (empty($settings['entity']->user)) {
+    //         $entity = $settings['entity'];
+    //         return $this->delete($entity);
+    //     }
+    // }
 
 	public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
 		// Setting request data and modifying fetch condition
@@ -71,13 +73,104 @@ class InstitutionStudentsTable extends AppTable  {
         $statusOptions = $this->StudentStatuses
             ->find('list', ['keyField' => 'id', 'valueField' => 'code'])
             ->toArray();
-		
+
 		$query
-			->contain(['Users.Genders', 'Users.MainNationalities', 'Users.Nationalities.NationalitiesLookUp', 'Institutions.Areas', 'Institutions.AreaAdministratives', 'Institutions.Types', 'Institutions.Providers','EducationGrades.EducationProgrammes'])
 			->select([
-                'openemis_no' => 'Users.openemis_no', 'number' => 'Users.identity_number', 'username' => 'Users.username', 'code' => 'Institutions.code', 'preferred_nationality' => 'MainNationalities.name',
-                'gender_name' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name', 'institution_type' => 'Types.name', 'institution_provider' => 'Providers.name',
+                $this->aliasField('id'),
+                $this->aliasField('student_id'),
+                $this->aliasField('student_status_id'),
+                $this->aliasField('education_grade_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('start_date'),
+                $this->aliasField('end_date'),
                 'class_name' => 'InstitutionClasses.name'
+            ])
+            ->contain([
+                'Users' => [
+                    'fields' => [
+                        'openemis_no' => 'Users.openemis_no',
+                        'Users.id', // this field is needed for Nationalities and NationalitiesLookUp to appear
+                        'Users.first_name',
+                        'Users.middle_name',
+                        'Users.third_name',
+                        'Users.last_name',
+                        'Users.preferred_name',
+                        'date_of_birth' => 'Users.date_of_birth',
+                        'username' => 'Users.username',
+                        'number' => 'Users.identity_number'
+                    ]
+                ],
+                'Users.Genders' => [
+                    'fields' => [
+                        'gender_name' => 'Genders.name'
+                    ]
+                ],
+                'Users.MainNationalities' => [
+                    'fields' => [
+                        'preferred_nationality' => 'MainNationalities.name'
+                    ]
+                ],
+                'Users.Nationalities' => [
+                    'fields' => [
+                        'Nationalities.security_user_id'
+                    ],
+                ],
+                'Users.Nationalities.NationalitiesLookUp' => [
+                    'fields' => [
+                        'NationalitiesLookUp.name'
+                    ]
+                ],
+                'Institutions' => [
+                    'fields' => [
+                        'code' => 'Institutions.code',
+                        'Institutions.name'
+                    ]
+                ],
+                'Institutions.Types' => [
+                    'fields' => [
+                        'institution_type' => 'Types.name'
+                    ]
+                ],
+                'Institutions.Providers' => [
+                    'fields' => [
+                        'institution_provider' => 'Providers.name',
+                    ]
+                ],
+                'Institutions.Areas' => [
+                    'fields' => [
+                        'area_code' => 'Areas.code',
+                        'area_name' => 'Areas.name'
+                    ]
+                ],
+                'Institutions.AreaAdministratives' => [
+                    'fields' => [
+                        'area_administrative_code' => 'AreaAdministratives.code',
+                        'area_administrative_name' => 'AreaAdministratives.name'
+                    ]
+                ],
+                'StudentStatuses' => [
+                    'fields' => [
+                        'StudentStatuses.name'
+                    ]
+                ],
+                'EducationGrades' => [
+                    'fields' => [
+                        'EducationGrades.code',
+                        'EducationGrades.name'
+                    ]
+                ],
+                'EducationGrades.EducationProgrammes' => [
+                    'fields' => [
+                        'EducationProgrammes.id'
+                    ]
+                ],
+                'AcademicPeriods' => [
+                    'fields' => [
+                        'AcademicPeriods.code',
+                        'AcademicPeriods.name'
+                    ]
+                ]
             ])
             ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
@@ -100,15 +193,17 @@ class InstitutionStudentsTable extends AppTable  {
 
                     switch ($statusCode) {
                         case 'TRANSFERRED':
-                            $StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
-                            $query = $StudentAdmission->find()
+                            $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+                            $approvedStatuses = $StudentTransfers->getStudentTransferWorkflowStatuses('APPROVED');
+
+                            $query = $StudentTransfers->find()
                                     ->contain(['StudentTransferReasons', 'Institutions.Areas', 'Institutions.AreaAdministratives'])
                                     ->where([
-                                        $StudentAdmission->aliasField('student_id') => $studentId,
-                                        $StudentAdmission->aliasField('previous_institution_id') => $institutionId,
-                                        $StudentAdmission->aliasField('education_grade_id') => $educationGradeId,
-                                        $StudentAdmission->aliasField('academic_period_id') => $academicPeriodId,
-                                        $StudentAdmission->aliasField('status') => 1 //approved
+                                        $StudentTransfers->aliasField('student_id') => $studentId,
+                                        $StudentTransfers->aliasField('previous_institution_id') => $institutionId,
+                                        $StudentTransfers->aliasField('previous_education_grade_id') => $educationGradeId,
+                                        $StudentTransfers->aliasField('previous_academic_period_id') => $academicPeriodId,
+                                        $StudentTransfers->aliasField('status_id IN ') => $approvedStatuses
                                     ])
                                     ->first();
                             
@@ -125,6 +220,8 @@ class InstitutionStudentsTable extends AppTable  {
 
                         case 'WITHDRAWN':
                             $StudentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
+                            $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                            $approvedStatuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
                             $studentWithdrawEntity = $StudentWithdraw
                                 ->find()
                                 ->contain(['StudentWithdrawReasons'])
@@ -133,7 +230,7 @@ class InstitutionStudentsTable extends AppTable  {
                                     $StudentWithdraw->aliasField('institution_id') => $institutionId,
                                     $StudentWithdraw->aliasField('education_grade_id') => $educationGradeId,
                                     $StudentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
-                                    $StudentWithdraw->aliasField('status') => 1 //approved
+                                    $StudentWithdraw->aliasField('status_id IN') => $approvedStatuses
                                 ])
                                 ->first();
                             
@@ -163,14 +260,11 @@ class InstitutionStudentsTable extends AppTable  {
 
 	public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
 		$age = '';
-		if ($entity->has('user')) {
-			if ($entity->user->has('date_of_birth')) {
-				if (!empty($entity->user->date_of_birth)) {
-					$yearOfBirth = $entity->user->date_of_birth->format('Y');
-					$age = date("Y")-$yearOfBirth;
-				}
-			}
-		}
+        if ($entity->has('date_of_birth') && !empty($entity->date_of_birth)) {
+            $dateOfBirth = $entity->date_of_birth->format('Y-m-d');
+            $today = date('Y-m-d');
+            $age = date_diff(date_create($dateOfBirth), date_create($today))->y;
+        }
 		return $age;
 	}
 
@@ -205,7 +299,7 @@ class InstitutionStudentsTable extends AppTable  {
 		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 
 		foreach ($fields as $key => $field) {
-			if ($field['field'] == 'institution_id' || $field['field'] == 'previous_institution_student_id') {
+			if ($field['field'] == 'institution_id') {
 				unset($fields[$key]);
 				// break;
 			}
@@ -280,6 +374,13 @@ class InstitutionStudentsTable extends AppTable  {
 			'label' => ''
 		];
 
+        $extraField[] = [
+            'key' => 'Users.date_of_birth',
+            'field' => 'date_of_birth',
+            'type' => 'date',
+            'label' => ''
+        ];
+
         if ($statusId == $this->statuses['TRANSFERRED']) {
             $extraField[] = [
                 'key' => 'Institutions.area_code',
@@ -297,7 +398,7 @@ class InstitutionStudentsTable extends AppTable  {
 
             $extraField[] = [
                 'key' => 'Institutions.area_administrative_code',
-                'field' => 'area_administrativecode',
+                'field' => 'area_administrative_code',
                 'type' => 'string',
                 'label' => __('Area Administrative Code Transferred From')
             ];
@@ -326,15 +427,15 @@ class InstitutionStudentsTable extends AppTable  {
             ];
 
             $extraField[] = [
-                'key' => 'Institutions.area_code',
-                'field' => 'area_code',
+                'key' => 'Institutions.area_administrative_code',
+                'field' => 'area_administrative_code',
                 'type' => 'string',
                 'label' => __('Area Administrative Code')
             ];
 
             $extraField[] = [
-                'key' => 'Institutions.area_name',
-                'field' => 'area_name',
+                'key' => 'Institutions.area_administrative_name',
+                'field' => 'area_administrative_name',
                 'type' => 'string',
                 'label' => __('Area Administrative')
             ];
@@ -342,8 +443,8 @@ class InstitutionStudentsTable extends AppTable  {
 
 		$extraField[] = [
 			'key' => 'Age',
-			'field' => 'Age',
-			'type' => 'Age',
+			'field' => 'age',
+			'type' => 'age',
 			'label' => 'Age',
 		];
 

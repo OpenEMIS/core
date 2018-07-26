@@ -39,6 +39,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('WorkflowStatuses' , [
 			'className' => 'Workflow.WorkflowStatuses',
 			'joinTable' => 'workflow_statuses_steps',
@@ -56,7 +57,7 @@ class WorkflowStepsTable extends AppTable {
 			'dependent' => true
 		]);
 
-		$this->addBehavior('Workflow.StaffTransfer');
+		$this->addBehavior('Workflow.Transfer');
 	}
 
 	public function validationDefault(Validator $validator) {

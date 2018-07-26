@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 
 class GuardiansTable extends ControllerActionTable
@@ -29,7 +30,9 @@ class GuardiansTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('Indexes.Indexes');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
         $this->addBehavior('ControllerAction.Image');
     }
 
@@ -54,34 +57,45 @@ class GuardiansTable extends ControllerActionTable
 
     private function setupTabElements($entity = null)
     {
-        if ($this->action != 'view') {
-            if ($this->controller->name == 'Directories') {
-                $options['type'] = 'student';
-                $tabElements = $this->controller->getStudentGuardianTabElements($options);
-            } else {
-                $tabElements = $this->controller->getUserTabElements();
-            }
-            $this->controller->set('tabElements', $tabElements);
-            $this->controller->set('selectedAction', $this->alias());
-        } elseif ($this->action == 'view') {
-            $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+        if ($this->controller->name == 'Scholarships') {
+            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+        } else {
+            if ($this->action != 'view') {
+                if ($this->controller->name == 'Directories') {
+                    $options['type'] = 'student';
+                    $tabElements = $this->controller->getStudentGuardianTabElements($options);
+                } else {
+                    $tabElements = $this->controller->getUserTabElements();
+                }
+            } elseif ($this->action == 'view') {
+                $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
 
-            $tabElements = [
-                'Guardians' => ['text' => __('Relation')],
-                'GuardianUser' => ['text' => __('General')]
-            ];
-            $action = $this->alias();
-            $actionUser = 'GuardianUser';
-            if ($this->controller->name == 'Directories') {
-                $action = 'StudentGuardians';
-                $actionUser = 'StudentGuardianUser';
+                $tabElements = [
+                    'Guardians' => ['text' => __('Relation')],
+                    'GuardianUser' => ['text' => __('General')]
+                ];
+                $action = $this->alias();
+                $actionUser = 'GuardianUser';
+                if ($this->controller->name == 'Directories') {
+                    $action = 'StudentGuardians';
+                    $actionUser = 'StudentGuardianUser';
+                }
+                $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $entity->id])]);
+                $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->guardian_id, 'StudentGuardians.id' => $entity->id])]);
+                $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
             }
-            $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $entity->id])]);
-            $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->guardian_id, 'StudentGuardians.id' => $entity->id])]);
-            $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
-            $this->controller->set('tabElements', $tabElements);
-            $this->controller->set('selectedAction', $this->alias());
         }
+
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [
+            TableRegistry::get('Student.GuardianUser')
+        ];
+        $this->dispatchEventToModels('Model.Guardian.afterSave', [$entity], $this, $listeners);
     }
 
     public function afterAction(Event $event, $data)
@@ -111,7 +125,6 @@ class GuardiansTable extends ControllerActionTable
         }
         $this->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
         $this->field('guardian_id');
-        $this->field('guardian_relation_id', ['type' => 'select']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -135,6 +148,10 @@ class GuardiansTable extends ControllerActionTable
     public function addAfterAction(Event $event, Entity $entity)
     {
         $this->field('id', ['value' => Text::uuid()]);
+        $this->field('guardian_relation_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
     }
 
     public function viewBeforeAction(Event $event)
@@ -160,6 +177,10 @@ class GuardiansTable extends ControllerActionTable
             'order' => 10,
             'attr' => ['value' => $entity->user->name_with_id]
         ]);
+        $this->field('guardian_relation_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
     }
 
     public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request)
@@ -168,7 +189,7 @@ class GuardiansTable extends ControllerActionTable
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
             $attr['noResults'] = __('No Guardian found.');
-            $attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
+            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $action = 'Guardians';
             if ($this->controller->name == 'Directories') {
                 $action = 'StudentGuardians';
@@ -187,9 +208,28 @@ class GuardiansTable extends ControllerActionTable
             $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
             $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
             $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+            $attr['onSelect'] = "$('#reload').click();";
         } elseif ($action == 'index') {
             $attr['sort'] = ['field' => 'Guardians.first_name'];
         }
+        return $attr;
+    }
+
+    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, Request $request) 
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+            $guardianGenderId = null;
+            $guardianRelationOptions = [];
+
+            if ($entity->has('guardian_id')) {
+                $guardianGenderId = $this->Users->get($entity->guardian_id)->gender_id;
+            }
+
+            $guardianRelationOptions = $this->GuardianRelations->getAvailableGuardianRelations($guardianGenderId);
+            $attr['options'] = $guardianRelationOptions;
+        }
+
         return $attr;
     }
 
@@ -228,7 +268,6 @@ class GuardiansTable extends ControllerActionTable
 
             $UserIdentitiesTable = TableRegistry::get('User.Identities');
 
-            // only search for guardian
             $query = $this->Users
                 ->find()
                 ->select([
@@ -248,9 +287,6 @@ class GuardiansTable extends ControllerActionTable
                 )
                 ->group([
                     $this->Users->aliasField('id')
-                ])
-                ->where([
-                    $this->Users->aliasField('is_guardian') => 1
                 ])
                 ->limit(100);
 

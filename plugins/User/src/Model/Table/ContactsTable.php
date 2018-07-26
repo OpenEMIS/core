@@ -41,19 +41,24 @@ class ContactsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        $options = [
-            'userRole' => '',
-        ];
+        if ($this->controller->name == 'Scholarships') {
+            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+        } else {
+            $options = [
+                'userRole' => '',
+            ];
 
-        switch ($this->controller->name) {
-            case 'Students':
-                $options['userRole'] = 'Students';
-                break;
-            case 'Staff':
-                $options['userRole'] = 'Staff';
-                break;
+            switch ($this->controller->name) {
+                case 'Students':
+                    $options['userRole'] = 'Students';
+                    break;
+                case 'Staff':
+                    $options['userRole'] = 'Staff';
+                    break;
+            }
+            $tabElements = $this->controller->getUserTabElements($options);    
         }
-        $tabElements = $this->controller->getUserTabElements($options);
+        
         if ($this->controller->name != 'Preferences') {
             $this->controller->set('selectedAction', $this->alias());
         } else {
@@ -229,10 +234,11 @@ class ContactsTable extends ControllerActionTable
                 'rule' => ['numericPositive'],
                 'provider' => 'table',
                 'on' => function ($context) {
+
+                    $contactTypeId = $context['data']['contact_type_id'];
                     $contactOptionId = (array_key_exists('contact_option_id', $context['data']))? $context['data']['contact_option_id']: null;
                     if (is_null($contactOptionId)) {
                         if (array_key_exists('contact_type_id', $context['data'])) {
-                            $contactTypeId = $context['data']['contact_type_id'];
                             $query = $this->ContactTypes
                                 ->find()
                                 ->where([$this->ContactTypes->aliasField($this->ContactTypes->primaryKey()) => $contactTypeId])
@@ -241,6 +247,20 @@ class ContactsTable extends ControllerActionTable
                             if ($query) {
                                 $contactOptionId = $query->contact_option_id;
                             }
+                        }
+                    } else {
+                        $query = $this->ContactTypes
+                                ->find()
+                                ->where([
+                                    $this->ContactTypes->aliasField($this->ContactTypes->primaryKey()) => $contactTypeId,
+                                    $this->ContactTypes->aliasField('validation_pattern').' IS NULL'
+                                ])
+                                ->first();
+
+                        // if Contact Types Validation Pattern is not NULL,
+                        // skip numericPositive validation check because the validation pattern will check via regex
+                        if (!$query) {
+                            $contactOptionId = null;
                         }
                     }
                     return in_array($contactOptionId, [$this->contactOptionsArray['MOBILE'], $this->contactOptionsArray['PHONE'], $this->contactOptionsArray['FAX']]);
