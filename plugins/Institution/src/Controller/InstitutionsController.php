@@ -26,13 +26,15 @@ class InstitutionsController extends AppController
     public $activeObj = null;
 
     private $features = [
+        // general
+        'InstitutionAttachments',
+
         // academic
         'InstitutionShifts',
         'InstitutionGrades',
         'InstitutionClasses',
         'InstitutionSubjects',
         'InstitutionTextbooks',
-        'InstitutionAttachments',
 
         // students
         'Programmes',
@@ -126,9 +128,6 @@ class InstitutionsController extends AppController
         // misc
         // 'IndividualPromotion',
         // 'CourseCatalogue',
-
-        //Attachments
-        'InstitutionAttachments',
     ];
 
     public function initialize()
