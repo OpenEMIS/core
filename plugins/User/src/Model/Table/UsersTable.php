@@ -68,8 +68,7 @@ class UsersTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StaffRoom' => ['index', 'add'],
             'ClassStudents' => ['index'],
-            'OpenEMIS_Classroom' => ['view', 'edit'],
-            'API' => ['index', 'view']
+            'OpenEMIS_Classroom' => ['view', 'edit']
         ]);
 
         $this->displayField('first_name');
@@ -153,6 +152,7 @@ class UsersTable extends AppTable
             'openemis_no' => $openemisNo,
             'first_name' => $userInfo['firstName'],
             'last_name' => $userInfo['lastName'],
+            'email' => $userInfo['email'],
             'gender_id' => $gender,
             'date_of_birth' => $dateOfBirth,
             'super_admin' => 0,
@@ -210,7 +210,9 @@ class UsersTable extends AppTable
         $this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
         $this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 
-        $this->ControllerAction->field('date_of_birth', [
+        $this->ControllerAction->field(
+            'date_of_birth',
+            [
                 'date_options' => [
                     'endDate' => date('d-m-Y', strtotime("-2 year"))
                 ],
@@ -883,6 +885,34 @@ class UsersTable extends AppTable
         return $data;
     }
 
+    public function findAuth(Query $query, array $options)
+    {
+        $query
+            ->select([
+                'id',
+                'username',
+                'password',
+                'openemis_no',
+                'first_name',
+                'middle_name',
+                'third_name',
+                'last_name',
+                'preferred_name',
+                'super_admin',
+                'status',
+                'last_login',
+                'preferred_language',
+                'is_student',
+                'is_staff',
+                'is_guardian'
+            ])
+            ->where([
+                'status' => 1
+            ]);
+
+        return $query;
+    }
+
     public function findStaff(Query $query, array $options)
     {
         // is_staff == 1
@@ -1051,7 +1081,8 @@ class UsersTable extends AppTable
             SET
                 `SU`.`identity_type_id` = ?,
                 `SU`.`identity_number` = `UI`.`number`',
-            [$nationalityId,$identityTypeId,$identityTypeId], ['integer','integer','integer']
+            [$nationalityId,$identityTypeId,$identityTypeId],
+            ['integer','integer','integer']
         );
     }
 

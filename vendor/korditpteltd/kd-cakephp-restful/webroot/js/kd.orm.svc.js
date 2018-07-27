@@ -1,5 +1,5 @@
 angular.module('kd.orm.svc', [])
-.service('KdOrmSvc', function($q, $http) {
+.service('KdOrmSvc', ['$q', '$http', function($q, $http) {
     var query = {
         responseType: 'json',
         _base: '',
@@ -248,6 +248,7 @@ angular.module('kd.orm.svc', [])
         },
 
         save: function(data) {
+            data['action_type'] = 'default'; // flag to distinguish between angular & external API call
             this._method = 'POST';
             var settings = {
                 headers: {'Content-Type': 'application/json'},
@@ -265,15 +266,15 @@ angular.module('kd.orm.svc', [])
             return this.ajax(settings);
         },
 
-        translate: function(data, options = undefined) {
+        translate: function(data, options) {
             this._method = 'POST';
             this._className = 'translate';
             var settings = {
                 headers: {'Content-Type': 'application/json'},
                 data: data
             };
-            if (options != undefined) {
-                if (options.defer != undefined) {
+            if (options !== undefined) {
+                if (options.defer !== undefined) {
                     settings.defer = options.defer;
                     settings.success = options.success;
                     settings.error = options.error;
@@ -343,4 +344,4 @@ angular.module('kd.orm.svc', [])
             return newObject;
         }
     };
-});
+}]);

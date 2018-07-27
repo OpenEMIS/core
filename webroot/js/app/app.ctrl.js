@@ -1,5 +1,5 @@
 angular.module('app.ctrl', ['app.svc', 'utils.svc'])
-    .controller('AppCtrl', function($rootScope, $scope) {
+    .controller('AppCtrl', ['$rootScope', '$scope', function($rootScope, $scope) {
         $scope.getSplitterElements = function(_response) {
             $scope.splitElems = _response;
         };
@@ -10,4 +10,4 @@ angular.module('app.ctrl', ['app.svc', 'utils.svc'])
             });
             // console.log("- >on spliter resize");
         });
-    });
+    }]);

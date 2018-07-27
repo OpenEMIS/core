@@ -1,12 +1,6 @@
 <?php
 $this->extend('Page.Layout/container');
 
-$this->start('toolbar');
-
-echo $this->element('Page.button', ['url' => ['action' => 'index'], 'linkOptions' => ['title' => __('Back'), 'id' => 'btn-back'], 'iconClass' => 'fa kd-back']);
-
-$this->end();
-
 $this->start('contentBody');
 
 $formOptions = $this->Page->getFormOptions();

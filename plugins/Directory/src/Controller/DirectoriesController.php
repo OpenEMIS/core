@@ -182,7 +182,10 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
     }
-
+    public function StudentRisks()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentRisks']);
+    }
     // health
     public function Healths()
     {
@@ -325,7 +328,7 @@ class DirectoriesController extends AppController
         }
 
         if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'index')) {
-            $session->delete('Directory.Directories');
+            $session->delete('Directory.Directories.id');
             $session->delete('Staff.Staff.id');
             $session->delete('Staff.Staff.name');
             $session->delete('Student.Students.id');
@@ -576,14 +579,16 @@ class DirectoriesController extends AppController
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
-            'Textbooks' => ['text' => __('Textbooks')]
+            'Textbooks' => ['text' => __('Textbooks')],
+            'Risks' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);   
         }
+
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 

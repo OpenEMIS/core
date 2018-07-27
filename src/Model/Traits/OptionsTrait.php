@@ -42,14 +42,28 @@ trait OptionsTrait
                 'types' => [1 => __('Section Break'), 2 => __('Criteria')],
                 'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
             ],
+            'StaffTransfers' => [
+                'institution_type_selection' => [1 => __('Select Institution Types'), '-1' => __('Select All Institution Types')],
+                'institution_sector_selection' => [1 => __('Select Institution Sectors'), '-1' => __('Select All Institution Sectors')]
+            ],
             'TrainingCourses' => [
                 'target_population_selection' => [1 => __('Select Target Populations'), '-1' => __('Select All Target Populations')]
             ],
             'TrainingSessions' => [
                 'trainer_types' => ['Staff' => __('Staff'), 'Others' => __('Others')]
             ],
+            'StaffPositionTitles' => [
+                'position_grade_selection' => [1 => __('Select Position Grades'), '-1' => __('Select All Position Grades')]
+            ],
             'StaffTrainingNeeds' => [
                 'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
+            ],
+            'Scholarships' => [
+                'field_of_study_selection' => [1 => __('Select Field Of Studies'), '-1' => __('Select All Field Of Studies')],
+                'interest_rate' => [0 => __('Fixed'), '1' => __('Variable')]
+            ],
+            'InstitutionChoices' => [
+                'location_type' => ['DOMESTIC' => __('Domestic'), 'INTERNATIONAL' => __('International')]
             ],
             'Health' => [
                 'blood_types' => [
@@ -72,6 +86,10 @@ trait OptionsTrait
             ],
             'InstitutionInfrastructure' => [
                 'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Type')]
+            ],
+            'InstitutionAssets' => [
+                'accessibility' => [1 => __('Accessible'), 0 => __('Not Accessible')],
+                'purpose' => [1 => __('Teaching'), 0 => __('Non-Teaching')]
             ],
             'Shifts' => [
                 'types' => [

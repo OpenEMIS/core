@@ -62,6 +62,10 @@ input:focus {
     font-size: 12px;
 }
 
+.form-horizontal .error .chosen-choices {
+    border-color: #CC5C5C !important;
+}
+
 .form-horizontal input,
 .form-horizontal textarea {
     border: 1px solid #CCC;

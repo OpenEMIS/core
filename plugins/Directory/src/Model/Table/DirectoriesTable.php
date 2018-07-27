@@ -101,6 +101,7 @@ class DirectoriesTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
         $events['AdvanceSearch.onModifyConditions'] = 'onModifyConditions';
+        $events['Model.AreaAdministrative.afterDelete'] = 'areaAdminstrativeAfterDelete';
         return $events;
     }
 
@@ -168,6 +169,54 @@ class DirectoriesTable extends ControllerActionTable
             }
             return $conditions;
         }
+    }
+
+
+    public function areaAdminstrativeAfterDelete(Event $event, $areaAdministrative)
+    {
+        $subqueryOne = $this->AddressAreas
+            ->find()
+            ->select(1)
+            ->where(function ($exp, $q) {
+                return $exp->equalFields($this->AddressAreas->aliasField('id'), $this->aliasField('address_area_id'));
+            });
+
+        $query = $this->find()
+            ->select('id')
+            ->where(function ($exp, $q) use ($subqueryOne) {
+                return $exp->notExists($subqueryOne);
+            });
+
+
+        foreach ($query as $row) {
+            $this->updateAll(
+                ['address_area_id' => null],
+                ['id' => $row->id]
+            );
+        }
+
+        $subqueryTwo = $this->BirthplaceAreas
+            ->find()
+            ->select(1)
+            ->where(function ($exp, $q) {
+                return $exp->equalFields($this->BirthplaceAreas->aliasField('id'), $this->aliasField('birthplace_area_id'));
+            });
+
+
+        $query = $this->find()
+            ->select('id')
+            ->where(function ($exp, $q) use ($subqueryTwo) {
+                return $exp->notExists($subqueryTwo);
+            });
+        
+
+        foreach ($query as $row) {
+            $this->updateAll(
+                ['birthplace_area_id' => null],
+                ['id' => $row->id]
+            );
+        }
+  
     }
 
     public function getCustomFilter(Event $event)
@@ -733,6 +782,14 @@ class DirectoriesTable extends ControllerActionTable
         }
 
         $this->setupTabElements($entity);
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if (!$entity->isNew() && $entity->dirty('gender_id')) {
+            $entity->errors('gender_id', __('Gender is not editable in Directories'));
+            return false;
+        }
     }
 
     private function setupTabElements($entity)

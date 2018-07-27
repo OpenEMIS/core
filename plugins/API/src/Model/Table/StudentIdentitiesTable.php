@@ -32,7 +32,7 @@ class StudentIdentitiesTable extends AppTable {
 					],
 					'IdentityType' => [
 						'type' => 'LEFT',
-						'table' => 'field_option_values',
+						'table' => 'identity_types',
 						'conditions' => [
 							'IdentityType.id = '.$this->aliasField('identity_type_id')
 						]
