@@ -27,7 +27,9 @@ function SgTreeSvc($q, KdDataSvc) {
         return translation.translate(data, {success:success, defer: true});
     }
 
-    function getRecords(model, userId, displayCountry = 0, selected, recordOnly = 0) {
+    function getRecords(model, userId, displayCountry, selected, recordOnly) {
+        displayCountry = (displayCountry === undefined)? 0: displayCountry;
+        recordOnly = (recordOnly === undefined)? 0: recordOnly;
         KdDataSvc.init({area: model});
         var success = function(response, deferred) {
             var returnData = response.data.data;

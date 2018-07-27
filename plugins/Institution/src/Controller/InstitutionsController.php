@@ -168,10 +168,13 @@ class InstitutionsController extends AppController
             'ImportStaffAttendances'    => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
             'ImportStudentAttendances'  => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
             'ImportInstitutionSurveys'  => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
-            'ImportStudents'            => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
+            'ImportStudentAdmission'    => ['className' => 'Institution.ImportStudentAdmission', 'actions' => ['add']],
             'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
             'ImportInstitutionTextbooks'=> ['className' => 'Institution.ImportInstitutionTextbooks', 'actions' => ['add']],
-            'ImportOutcomeResults'      => ['className' => 'Institution.ImportOutcomeResults', 'actions' => ['add']]
+            'ImportOutcomeResults'      => ['className' => 'Institution.ImportOutcomeResults', 'actions' => ['add']],
+            'ImportStaffLeave'          => ['className' => 'Institution.ImportStaffLeave', 'actions' => ['add']],
+            'ImportInstitutionPositions'=> ['className' => 'Institution.ImportInstitutionPositions', 'actions' => ['add']],
+            'ImportStudentBodyMasses'   => ['className' => 'Institution.ImportStudentBodyMasses', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -185,6 +188,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAttachments']);
     }
+
+    public function StaffAppraisals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
+    }
+
     public function Surveys()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSurveys']);
@@ -303,10 +312,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Quality.InstitutionQualityVisits']);
     }
-    public function StaffAppraisals()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
-    }
     public function Programmes()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionGrades']);
@@ -345,7 +350,7 @@ class InstitutionsController extends AppController
     }
     public function StudentRisks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentRisks']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentRisks']);
     }
     public function InstitutionStudentRisks()
     {
@@ -1166,12 +1171,15 @@ class InstitutionsController extends AppController
                 if ($model->table() == 'security_users' && !$isDownload) {
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
-                } elseif ($model->table() == 'staff_appraisals'  && !$isDownload) {
-                    $ids = array_key_exists('user_id', $requestQuery) ? $requestQuery['user_id']: $session->read('Staff.Staff.id');
-                    $persona = $model->Users->get($ids);
                 }
-            } elseif (isset($requestQuery['user_id'][1])) {
-                $persona = $model->Users->get($requestQuery['user_id']);
+            } elseif (isset($requestQuery['user_id'])) {
+                // POCOR-4577 - to check if Users association existed in model - for staff leave import
+                if ($model->association('Users')) {
+                    $persona = $model->Users->get($requestQuery['user_id']);
+                } else {
+                    $Users = TableRegistry::get('Security.Users');
+                    $persona = $Users->get($requestQuery['user_id']);
+                }
             }
 
             if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
@@ -1185,9 +1193,9 @@ class InstitutionsController extends AppController
                 $header .= ' - '. __('Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
             } elseif ($model->alias() == 'InstitutionStudentRisks') {
-                $header .= ' - '. __('Institution Student Risks'); 
-                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks')); 
-            }else {
+                $header .= ' - '. __('Institution Student Risks');
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
+            } else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
 
@@ -1436,13 +1444,15 @@ class InstitutionsController extends AppController
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'Guardians' => ['text' => __('Guardians')],
-            'StudentSurveys' => ['text' => __('Surveys')]
+            'StudentSurveys' => ['text' => __('Surveys')],
+            'StudentTransport' => ['text' => __('Transport')]
         ];
 
         if ($type == 'Staff') {
             $studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
             unset($studentTabElements['Guardians']);
             unset($studentTabElements['StudentSurveys']);   // Only Student has Survey tab
+            unset($studentTabElements['StudentTransport']);   // Only Student has Transport tab
         }
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -1530,19 +1540,16 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'StudentRisks' => ['text' => __('Risks')]
+            'Risks' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if ($key == 'Programmes' || $key == 'Textbooks') {
+            if (in_array($key, ['Programmes', 'Textbooks', 'Risks'])) {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
-            } elseif ($key == 'StudentRisks') {
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             } else {
                 $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);

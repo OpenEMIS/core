@@ -4,17 +4,12 @@
 		<div class="dashboard-content margin-top-10">
 			<div>
 				<ul class="list-group">
-					<li class="list-group-item" ng-if="DashboardController.notices && DashboardController.notices.length == 0">
-						<div class="notice-message">
-							<p><?= __('Loading'); ?> ...</p>
-						</div>
-					</li>
-					<li class="list-group-item" ng-if="!DashboardController.notices">
+					<li class="list-group-item" ng-if="!DashboardController.notices" ng-cloak>
 						<div class="notice-message">
 							<p><?= __('No Notices'); ?></p>
 						</div>
 					</li>
-					<li class="list-group-item" ng-repeat="notice in DashboardController.notices | orderBy:'order'">
+					<li class="list-group-item" ng-repeat="notice in DashboardController.notices | orderBy:'order'" ng-cloak>
 						<div class="notice-message">
 							<p>{{notice.message}}</p>
 						</div>
@@ -24,6 +19,11 @@
 							<ul>
 								<li> <!-- Link for Attachments Here --> </li>
 							</ul>
+						</div>
+					</li>
+					<li class="list-group-item" ng-if="DashboardController.notices && DashboardController.notices.length == 0">
+						<div class="notice-message">
+							<p><?= __('Loading'); ?> ...</p>
 						</div>
 					</li>
 				</ul>

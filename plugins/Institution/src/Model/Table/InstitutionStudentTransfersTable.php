@@ -416,7 +416,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                             'comment' => __('On Student Transfer into another Institution'),
                             'prev_workflow_step_name' => $prevStepEntity->name,
                             'workflow_step_name' => $rejectedStepEntity->name,
-                            'workflow_action_name' => __('Administration - Reject Record'),
+                            'workflow_action_name' => 'Administration - Reject Record',
                             'workflow_model_id' => $workflowEntity->workflow_model_id,
                             'model_reference' => $entity->id,
                             'created_user_id' => 1,

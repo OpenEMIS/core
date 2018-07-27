@@ -215,6 +215,50 @@ class ValidationBehavior extends Behavior
         }
     }
 
+    public static function checkMaxStudentsPerClass($capacity, array $globalData)
+    {   
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $maxCapacity = $ConfigItems->value('max_students_per_class');
+
+        if($capacity > $maxCapacity){
+            $errorMsg = $model->getMessage('Institution.InstitutionClasses.capacity.ruleCheckMaxStudentsPerClass');
+            return $errorMsg;
+        }
+        
+        return true;
+    }
+
+    public static function checkMaxStudentsPerSubject($check, array $globalData)
+    {   
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $model = $globalData['providers']['table'];
+        $validationErrorMsg = '';
+        
+        $InstitutionClassSubjectTable = TableRegistry::get('Institution.InstitutionSubjects');
+        $MaxStudentSysConfig = $ConfigItems->value('max_students_per_subject');
+     
+        $query = $InstitutionClassSubjectTable->find();
+        $query->select([
+            'total_number_of_students' => $query->func()->sum('total_male_students + total_female_students'),
+            'id','name', 'total_male_students', 'total_female_students'
+        ])
+        ->group('id','name', 'total_male_students', 'total_female_students')
+        ->having(['total_number_of_students >' => $check]);
+        
+        $count = $query->count();
+
+        if($count){
+            $max = $query->max('total_number_of_students');
+            $validationErrorMsg = $model->getMessage('Configuration.ConfigStudentSettings.max_students_per_subject.maxStudentLimit', ['sprintf' => [$max['total_number_of_students'], $MaxStudentSysConfig]]);
+        }
+        if (!empty($validationErrorMsg)) {
+            return $validationErrorMsg;
+        } else {
+            return true;
+        }
+    }
+
     public static function checkLatitude($check)
     {
 
@@ -642,7 +686,7 @@ class ValidationBehavior extends Behavior
 
     // Return false if not enrolled in other education system
     public static function checkInstitutionClassMaxLimit($class_id, array $globalData)
-    {
+    {    
         $ClassStudents = TableRegistry::get("Institution.InstitutionClassStudents");
         $currentNumberOfStudents = $ClassStudents->find()->where([
                 $ClassStudents->aliasField('institution_class_id') => $class_id,
@@ -652,7 +696,10 @@ class ValidationBehavior extends Behavior
          * @todo  add this max limit to config
          * This limit value is being used in InstitutionClasses->editAfterAction()
          */
-        return ($currentNumberOfStudents < 100);
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $classCapacity = $Classes->get($class_id)->capacity;
+
+        return ($currentNumberOfStudents < $classCapacity);
     }
 
     public static function studentNotEnrolledInAnyInstitutionAndSameEducationSystem($field, $options = [], array $globalData)
@@ -1528,17 +1575,30 @@ class ValidationBehavior extends Behavior
         if (array_key_exists('params', $globalData['data']) && !empty($globalData['data']['params'])) {
             $model = $globalData['providers']['table'];
             $params = json_decode($globalData['data']['params'], true);
-            foreach ($params as $key => $value) {
-                if ($key == 'min_value' && $field < $value) {
-                    return $model->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
+
+            foreach ($params as $key => $obj) {
+                if ($key == 'number') {
+                    // table type
+                    $numberValidation = is_array($obj) ? key($obj) : null;
+                    $value = isset($numberValidation, $obj) ? $obj[$numberValidation] : null;
+                } else {
+                    // number type
+                    $numberValidation = $key;
+                    $value = $obj;
                 }
-                if ($key == 'max_value' && $field > $value) {
-                    return $model->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
-                }
-                if ($key == 'range' && is_array($value)) {
-                    if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
-                        if ($field < $value['lower'] || $field > $value['upper']) {
-                            return $model->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+
+                if (!is_null($numberValidation)) {
+                    if ($numberValidation == 'min_value' && $field < $value) {
+                        return $model->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
+                    }
+                    if ($numberValidation == 'max_value' && $field > $value) {
+                        return $model->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
+                    }
+                    if ($numberValidation == 'range' && is_array($value)) {
+                        if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+                            if ($field < $value['lower'] || $field > $value['upper']) {
+                                return $model->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+                            }
                         }
                     }
                 }
@@ -1554,8 +1614,15 @@ class ValidationBehavior extends Behavior
             $model = $globalData['providers']['table'];
             $params = json_decode($globalData['data']['params'], true);
 
-            $length = $params['length'];
-            $precision = $params['precision'];
+            if (array_key_exists('decimal', $params)) {
+                // table type
+                $length = $params['decimal']['length'];
+                $precision = $params['decimal']['precision'];
+            } else {
+                // decimal type
+                $length = $params['length'];
+                $precision = $params['precision'];
+            }
 
             if ($precision == 0) {
                 $pattern = '/^[0-9]{1,'.$length.'}$/';
@@ -2249,6 +2316,67 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    public static function checkValidAcademicPeriodId($field, array $globalData)
+    {
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    
+        $periodLevel = $AcademicPeriods
+                    ->find()
+                    ->where([
+                        $AcademicPeriods->aliasField('id') => $globalData['data']['academic_period_id']
+                    ])
+                    ->extract('academic_period_level_id')
+                    ->first();
+
+        if($periodLevel != 1) {
+            return false;
+        }
+        return true; 
+    }
+
+    public static function checkEducationGradeExist($field, array $globalData)
+    {
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $model = $globalData['providers']['table'];
+        $registryAlias = $model->registryAlias();
+        
+        $gradesInInstitution = $InstitutionGrades
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'education_grade_id'
+                ])
+                ->where([
+                    $InstitutionGrades->aliasField('institution_id') => $globalData['data']['institution_id']
+                ])
+                ->toArray();
+       
+        if (!in_array($globalData['data']['education_grade_id'], $gradesInInstitution)) {
+            return $model->getMessage("$registryAlias.education_grade_id.checkProgrammeExist");
+        }
+        return true;
+    }
+
+    public static function checkValidClassId($field, array $globalData) 
+    {
+        $data = $globalData['data'];
+        $educationGradeId = $data['education_grade_id'];
+
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $availableClass = $InstitutionClasses
+                ->find()
+                ->innerJoinWith('ClassGrades', function ($q) use ($educationGradeId) {
+                    return $q->where(['ClassGrades.education_grade_id' => $educationGradeId]);
+                })
+                ->where([
+                    $InstitutionClasses->aliasField('id') => $data['institution_class_id'],
+                    $InstitutionClasses->aliasField('institution_id') => $data['institution_id'],
+                    $InstitutionClasses->aliasField('academic_period_id') => $data['academic_period_id'],  
+                ])
+                ->count();
+       
+        return !($availableClass == 0);
+    }
+
     public static function checkProgrammeEndDate($field, $caller, array $globalData)
     {
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
@@ -2402,6 +2530,30 @@ class ValidationBehavior extends Behavior
         }
     }
 
+    public static function checkGuardianGender($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+    
+        $StudentGuardians = TableRegistry::get('Student.Guardians');
+        $genderId = $globalData['data']['gender_id'];
+
+        $mismatchCount = $StudentGuardians
+            ->find()
+            ->matching('Users', function ($q) use ($genderId) {
+                return $q->where(['Users.gender_id <> ' => $genderId]);
+            })
+            ->where([
+                $StudentGuardians->aliasField('guardian_relation_id') => $globalData['data']['id']
+            ])
+            ->count();
+
+        if ($mismatchCount > 0) {
+            return $model->getMessage('FieldOption.GuardianRelations.gender_id.ruleCheckGuardianGender');
+        }
+
+        return true;
+    }
+
     public static function checkAssessmentMarks($field, array $globalData)
     {
         if (strlen($field) > 0) {
@@ -2448,6 +2600,120 @@ class ValidationBehavior extends Behavior
             }
         }
         return true;
+    }
+
+    public static function checkPositionGrades($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
+
+        $institutionPositionGrades = $InstitutionPositions->find()
+                            ->distinct('staff_position_grade_id')
+                            ->where([
+                                $InstitutionPositions->aliasField('staff_position_title_id') => $globalData['data']['id']
+                            ])
+                            ->extract('staff_position_grade_id')
+                            ->toArray();
+
+        if(!empty($institutionPositionGrades)) {  // not empty means position title in use & there's associated grade
+            $postPositionGrades = $globalData['data']['position_grades']['_ids'];
+            if (array_intersect($institutionPositionGrades, $postPositionGrades) == $institutionPositionGrades) {
+                return true;
+            } else {
+                $arr = array_diff($institutionPositionGrades, $postPositionGrades);
+                $results = $StaffPositionGrades->find()
+                    ->where([$StaffPositionGrades->aliasField('id IN ') => $arr])
+                    ->extract('name')
+                    ->toArray();
+
+                $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades', ['sprintf' => [implode(", ", $results)]]);
+                
+                return $errorMsg;
+            }
+        }
+
+        return true;
+    }
+
+    public static function checkRequestedAmount($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $entity = TableRegistry::get('Scholarship.Scholarships')->get($globalData['data']['scholarship_id']);
+        $requestAmount = $globalData['data']['requested_amount'];
+        $maxAwardAmount = $entity->maximum_award_amount;
+
+        if($requestAmount > $maxAwardAmount) {
+            return $model->getMessage('Scholarship.Applications.requested_amount.ruleCheckRequestedAmount');
+        }
+        
+        return true; 
+    }
+
+    public static function checkApprovedAmount($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $RecipientPaymentStructureEstimates = TableRegistry::get('Scholarship.RecipientPaymentStructureEstimates');
+        $RecipientDisbursements = TableRegistry::get('Scholarship.RecipientDisbursements');
+        $RecipientCollections = TableRegistry::get('Scholarship.RecipientCollections');
+
+        $approvedAmount = $globalData['data']['approved_amount'];
+        $conditions = [
+            'recipient_id' => $globalData['data']['recipient_id'],
+            'scholarship_id' => $globalData['data']['scholarship_id']
+        ];
+
+        $estimatedAmount = $RecipientPaymentStructureEstimates->find()
+            ->where([$conditions])
+            ->select([
+                'total' => $RecipientPaymentStructureEstimates->find()->func()->sum('estimated_amount')
+            ])
+            ->first();
+
+        $disbursedAmount = $RecipientDisbursements->find()
+            ->where([$conditions])
+            ->select([
+                'total' => $RecipientDisbursements->find()->func()->sum('amount')
+            ])
+            ->first();
+
+        $collectedAmount = $RecipientCollections->find()
+            ->where([$conditions])
+            ->select([
+                'total' => $RecipientCollections->find()->func()->sum('amount')
+            ])
+            ->first();
+
+        if ($approvedAmount < $estimatedAmount->total) {
+            return $model->getMessage('Scholarship.ScholarshipRecipients.approved_amount.ruleCheckApprovedWithEstimated');
+        } elseif ($approvedAmount < $disbursedAmount->total) {
+            return $model->getMessage('Scholarship.ScholarshipRecipients.approved_amount.ruleCheckApprovedWithDisbursed');
+        } else if ($approvedAmount < $collectedAmount->total) {
+            return $model->getMessage('Scholarship.ScholarshipRecipients.approved_amount.ruleCheckApprovedWithCollected');
+        }
+        
+        return true; 
+    }
+
+    public static function checkChoiceStatus($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $statusId = $globalData['data']['scholarship_institution_choice_status_id'];
+        $InstitutionChoiceStatuses = TableRegistry::get('Scholarship.InstitutionChoiceStatuses');
+        
+        $institutionChoiceStatusesOptions = $InstitutionChoiceStatuses
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'code'
+            ])
+            ->order([$InstitutionChoiceStatuses->aliasField('id')])
+            ->toArray();
+
+        if($institutionChoiceStatusesOptions[$statusId] != 'ACCEPTED') {
+            return false;
+        }
+        
+        return true; 
     }
 
     //check whether position assigned to class(es)
@@ -2498,5 +2764,23 @@ class ValidationBehavior extends Behavior
             }
         }
         return false;
+    }
+
+    public static function checkStatusIdValid($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+
+        $Workflows = TableRegistry::get('Workflow.Workflows');
+        $workflowResult = $Workflows
+            ->find()
+            ->matching('WorkflowModels', function ($q) use ($model) {
+                return $q->where(['WorkflowModels.model' => $model->registryAlias()]);
+            })
+            ->matching('WorkflowSteps', function ($q) use ($field) {
+                return $q->where(['WorkflowSteps.id' => $field]);
+            })
+            ->all();
+
+        return !$workflowResult->isEmpty();
     }
 }

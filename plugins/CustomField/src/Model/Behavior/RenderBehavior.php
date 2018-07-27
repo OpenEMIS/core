@@ -35,7 +35,6 @@ class RenderBehavior extends Behavior {
             'Render.process'.$this->fieldType.'Values' => 'process'.$this->fieldType.'Values',
             'Render.onSave' => 'onSave',
             'ControllerAction.Model.onUpdateIncludes' => 'onUpdateIncludes',
-            'Workflow.updateWorkflowStatus' => 'updateWorkflowStatus',
             // 'Render.deleteCustomFieldValues' => 'deleteCustomFieldValues'
         ];
 
@@ -55,7 +54,7 @@ class RenderBehavior extends Behavior {
         $customValue = $settings['customValue'];
         $fieldValues = $settings['fieldValues'];
 
-        if (strlen($customValue[$valueKey]) == 0) {
+        if (isset($customValue[$valueKey]) && strlen($customValue[$valueKey]) == 0) {
             if (isset($entity->id)) {
                 $settings['deleteFieldIds'][] = $customValue[$fieldKey];
             }

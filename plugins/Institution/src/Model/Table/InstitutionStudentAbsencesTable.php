@@ -14,6 +14,7 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
@@ -27,6 +28,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     ];
     private $absenceList;
     private $absenceCodeList;
+
+    private $workflowRuleEvents = [
+        [
+            'value' => 'Workflow.onAssignToHomeRoomTeacher',
+            'text' => 'Assign to Home Room Teacher',
+            'description' => 'Triggering this rule will assign the case to the respective Home Room Teacher or Secondary Teacher',
+            'method' => 'onAssignToHomeRoomTeacher'
+        ]
+    ];
 
     public function initialize(array $config)
     {
@@ -54,12 +64,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ],
             'pages' => ['index']
         ]);
-        $this->addBehavior('Institution.Case');
+        if (!in_array('Cases', (array) Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Institution.Case');
+        }
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
-
-        $this->addBehavior('Risk.Risks');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
 
         $this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
         $this->absenceCodeList = $this->AbsenceTypes->getCodeList();
@@ -75,7 +88,67 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
         $events['InstitutionCase.onSetCaseRecord'] = 'onSetCaseRecord';
         $events['Model.afterSaveCommit'] = ['callable' => 'afterSaveCommit', 'priority' => '9'];
+        $events['InstitutionCase.onBuildCustomQuery'] = 'onBuildCustomQuery';
+        $events['InstitutionCase.onIncludeCustomExcelFields'] = 'onIncludeCustomExcelFields';
+        $events['InstitutionCase.onSetFilterToolbarElement'] = 'onSetFilterToolbarElement';
+        $events['InstitutionCase.onCaseIndexBeforeQuery'] = 'onCaseIndexBeforeQuery';
+
+        // workflow rule events
+        $events['Workflow.getRuleEvents'] = 'getWorkflowRuleEvents';
+        foreach($this->workflowRuleEvents as $event) {
+            $events[$event['value']] = $event['method'];
+        }
         return $events;
+    }
+
+    public function getWorkflowRuleEvents(Event $event, ArrayObject $eventsObject)
+    {
+        foreach ($this->workflowRuleEvents as $key => $attr) {
+            $attr['text'] = __($attr['text']);
+            $attr['description'] = __($attr['description']);
+            $eventsObject[] = $attr;
+        }
+    }
+
+    public function onAssignToHomeRoomTeacher(Event $event, Entity $caseEntity, Entity $linkedRecordEntity)
+    {
+        $Students = TableRegistry::get('Institution.Students');
+        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $Cases = TableRegistry::get('Cases.InstitutionCases');
+
+        $classTeachers = $Students->find()
+            ->select([
+                'homeroom_staff_id' => $Classes->aliasField('staff_id'),
+                'secondary_staff_id' => $Classes->aliasField('secondary_staff_id')
+            ])
+            ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                $ClassStudents->aliasField('student_id = ') . $Students->aliasField('student_id'),
+                $ClassStudents->aliasField('institution_id = ') . $Students->aliasField('institution_id'),
+                $ClassStudents->aliasField('education_grade_id = ') . $Students->aliasField('education_grade_id'),
+                $ClassStudents->aliasField('student_status_id = ') . $Students->aliasField('student_status_id'),
+                $ClassStudents->aliasField('academic_period_id = ') . $Students->aliasField('academic_period_id')
+            ])
+            ->innerJoin([$Classes->alias() => $Classes->table()], [
+                $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
+            ])
+            ->where([
+                $Students->aliasField('student_id') => $linkedRecordEntity->student_id,
+                $Students->aliasField('institution_id') => $linkedRecordEntity->institution_id,
+                $Students->aliasField('academic_period_id') => $linkedRecordEntity->academic_period_id,
+                $Students->aliasField('start_date <= ') => $linkedRecordEntity->start_date,
+                $Students->aliasField('end_date >= ') => $linkedRecordEntity->end_date
+            ])
+            ->first();
+
+        if (!empty($classTeachers)) {
+            $staffId = !empty($classTeachers->homeroom_staff_id) ? $classTeachers->homeroom_staff_id : $classTeachers->secondary_staff_id;
+
+            if (!empty($staffId)) {
+                $caseEntity->assignee_id = $staffId;
+                $Cases->save($caseEntity);
+            }
+        }
     }
 
     private function addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate)
@@ -252,6 +325,150 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         return $title;
     }
 
+    public function onSetFilterToolbarElement(Event $event, ArrayObject $params, $institutionId)
+    {
+        $requestQuery = $params['query'];
+
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
+
+        // academic_period_id
+        if (empty($requestQuery['academic_period_id'])) {
+            $requestQuery['academic_period_id'] = $AcademicPeriods->getCurrent();
+        }
+        $selectedAcademicPeriod = $requestQuery['academic_period_id'];
+        $academicPeriodOptions = $AcademicPeriods->getYearList();
+
+        // education_grade_id
+        if (empty($requestQuery['education_grade_id'])) {
+            $requestQuery['education_grade_id'] = -1;
+        }
+        $selectedEducationGrades = $requestQuery['education_grade_id'];
+        $result = $InstitutionEducationGrades
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->select([
+                'id' => 'EducationGrades.id',
+                'name' => 'EducationGrades.name'
+            ])
+            ->contain(['EducationGrades'])
+            ->where(['institution_id' => $institutionId])
+            ->group('education_grade_id')
+            ->all();
+
+        if (!$result->isEmpty()) {
+            $gradeList = $result->toArray();
+            $educationGradesOptions = ['-1' => __('-- Select Grade --')] + $gradeList;
+        } else {
+            $educationGradesOptions = ['-1' => __('No Grades')];
+        }
+
+        // institution_class_id
+        if (empty($requestQuery['institution_class_id'])) {
+            $requestQuery['institution_class_id'] = -1;
+        }
+        if ($selectedEducationGrades != -1) {
+            $selectedClassId = $requestQuery['institution_class_id'];
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $result = $InstitutionClasses
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'name'
+                ])
+                ->find('byGrades', ['education_grade_id' => $selectedEducationGrades])
+                ->select([
+                    'id' => $InstitutionClasses->aliasField('id'),
+                    'name' => $InstitutionClasses->aliasField('name')
+                ])
+                ->where([
+                    [$InstitutionClasses->aliasField('academic_period_id') => $selectedAcademicPeriod],
+                    [$InstitutionClasses->aliasField('institution_id') => $institutionId]
+                ])
+                ->all();
+
+            if (!$result->isEmpty()) {
+                $classList = $result->toArray();
+                $institutionClassOptions = ['-1' => __('-- Select Class --')] + $classList;
+            } else {
+                $institutionClassOptions = ['-1' => __('No Classes')];
+            }
+        } else {
+            $selectedClassId = -1;
+            $institutionClassOptions = ['-1' => __('-- Select Class --')];
+        }
+
+        $params['element'] = ['filter' => ['name' => 'Cases.StudentAbsences/controls', 'order' => 2]];
+        $params['query'] = $requestQuery;
+        $params['options'] = [
+            'selectedAcademicPeriod' => $selectedAcademicPeriod,
+            'academicPeriodOptions' => $academicPeriodOptions,
+            'selectedEducationGrades' => $selectedEducationGrades,
+            'educationGradesOptions' => $educationGradesOptions,
+            'selectedClassId' => $selectedClassId,
+            'institutionClassOptions' => $institutionClassOptions
+        ];
+    }
+
+    public function onCaseIndexBeforeQuery(Event $event, $requestQuery, Query $query)
+    {
+        if (array_key_exists('institution_class_id', $requestQuery) && $requestQuery['institution_class_id'] != -1) {
+            $institutionClassId = $requestQuery['institution_class_id'];
+            $educationGradeId = $requestQuery['education_grade_id'];
+            $academicPeriodId = $requestQuery['academic_period_id'];
+
+            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
+            $periodEntity = $AcademicPeriods
+                ->find()
+                ->select([
+                    $AcademicPeriods->aliasField('start_date'),
+                    $AcademicPeriods->aliasField('end_date')
+                ])
+                ->where([$AcademicPeriods->aliasField('id') => $academicPeriodId])
+                ->first();
+
+            if (!is_null($periodEntity)) {
+                $startDate = $periodEntity->start_date->format('Y-m-d');
+                $endDate = $periodEntity->end_date->format('Y-m-d');
+            }
+
+            $result = $InstitutionClassStudents
+                ->find('list', [
+                    'keyField' => 'student_id',
+                    'valueField' => 'student_id'
+                ])
+                ->select([$InstitutionClassStudents->aliasField('student_id')])
+                ->where([
+                    $InstitutionClassStudents->aliasField('institution_class_id') => $institutionClassId,
+                    $InstitutionClassStudents->aliasField('education_grade_id') => $educationGradeId,
+                    $InstitutionClassStudents->aliasField('academic_period_id') => $academicPeriodId
+                ])
+                ->all();
+
+            if (!$result->isEmpty() && isset($startDate)) {
+                $studentList = $result->toArray();
+
+                $query
+                    ->innerJoin(
+                        [$this->alias() => $this->table()],
+                        [$this->aliasField('id = ') . 'LinkedRecords.record_id']
+                    )
+                    ->where([
+                        $this->aliasField('student_id IN ') => $studentList,
+                        $this->aliasField('start_date >= ') => $startDate,
+                        $this->aliasField('start_date <= ') => $endDate
+                    ]);
+            } else {
+                $query->where(['1 = 0']);
+            }
+        } else {
+            $query->where(['1 = 0']);
+        }
+    }
+
     public function onSetCustomCaseSummary(Event $event, int $id)
     {
         try {
@@ -330,7 +547,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
         $InstitutionCases = TableRegistry::get('Cases.InstitutionCases');
 
-        $newData = [
+        $caseData = [
             'case_number' => '',
             'title' => $title,
             'status_id' => $statusId,
@@ -340,10 +557,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             'linked_records' => $linkedRecords
         ];
 
-        $patchOptions = ['validate' => false];
-
-        $newEntity = $InstitutionCases->newEntity($newData, $patchOptions);
-        return $InstitutionCases->save($newEntity);
+        return $caseData;
     }
 
     public function onSetLinkedRecordsCheckCondition(Event $event, Query $query, array $where)
@@ -361,6 +575,60 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
 
         return false;
+    }
+
+    public function onBuildCustomQuery(Event $event, $query)
+    {
+        $query
+            ->select([
+                'absent_days' => 'InstitutionStudentAbsenceDays.absent_days',
+                'absence_type' => 'AbsenceTypes.name',
+                'openemis_no' => 'Users.openemis_no',
+                'first_name' => 'Users.first_name',
+                'middle_name' => 'Users.middle_name',
+                'third_name' => 'Users.third_name',
+                'last_name' => 'Users.last_name',
+                'preferred_name' => 'Users.preferred_name'
+             ])
+            ->innerJoinWith('InstitutionCaseRecords.StudentAttendances.Users')
+            ->innerJoinWith('InstitutionCaseRecords.StudentAttendances.AbsenceTypes')
+            ->innerJoinWith('InstitutionCaseRecords.StudentAttendances.InstitutionStudentAbsenceDays')
+            ->group(['WorkflowTransitions.id','InstitutionCaseRecords.institution_case_id']);
+        
+        return $query;
+    }
+
+    public function onIncludeCustomExcelFields(Event $event, $newFields)
+    {
+        $newFields[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.full_name',
+            'field' => 'full_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+  
+        $newFields[] = [
+            'key' => 'InstitutionStudentAbsenceDays.absent_days',
+            'field' => 'absent_days',
+            'type' => 'string',
+            'label' => __('Number of Days')
+        ];
+
+        $newFields[] = [
+            'key' => 'AbsenceTypes.name',
+            'field' => 'absence_type',
+            'type' => 'string',
+            'label' => __('Absence Type')
+        ];
+
+        return $newFields;
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)

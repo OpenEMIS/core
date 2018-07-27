@@ -166,7 +166,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         if (key != 'date_of_birth') {
                             params[key] = options['conditions'][key];
                         } else {
-                            params[key] = vm.formatDate(options['conditions'][key]);
+                            params[key] = vm.formatDateForSaving(options['conditions'][key]);
                         }
                         var replaceKey = '{'+key+'}';
                         replacement[replaceKey] = params[key];
@@ -598,6 +598,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         data['start_date'] = this.formatDateForSaving(data['start_date']);
         data['end_date'] = this.formatDateForSaving(data['end_date']);
         data['status_id'] = 0;
+        data['assignee_id'] = -1;
         data['institution_id'] = institutionId;
         return StudentRecords.save(data);
     };

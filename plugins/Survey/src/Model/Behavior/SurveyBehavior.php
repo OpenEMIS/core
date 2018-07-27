@@ -26,7 +26,7 @@ class SurveyBehavior extends Behavior {
 		}
 	}
 
-	public function getForms() {
+	public function getForms($surveyFormId = null) {
 		$module = $this->config('module');
 		$customModule = $this->CustomModules
 			->find('all')
@@ -39,9 +39,14 @@ class SurveyBehavior extends Behavior {
 			->first();
 		$customModuleId = $customModule->id;
 
+		$condition = [$this->SurveyForms->aliasField('custom_module_id') => $customModuleId];
+		if (!is_null($surveyFormId)) {
+			$condition[] = [$this->SurveyForms->aliasField('id') => $surveyFormId];
+		}
+
 		$surveyForms = $this->SurveyForms
 			->find('list')
-			->where([$this->SurveyForms->aliasField('custom_module_id') => $customModuleId])
+			->where($condition)
 			->toArray();
 
 		return $surveyForms;

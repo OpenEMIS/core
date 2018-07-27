@@ -34,6 +34,7 @@ class FieldOptionComponent extends Component
         'ShiftOptions' => ['className' => 'Institution.ShiftOptions', 'parent' => 'Institution'],
         'TextbookConditions' => ['className' => 'Textbook.TextbookConditions', 'parent' => 'Institution'],
         'ReportCardCommentCodes' => ['className' => 'ReportCard.ReportCardCommentCodes', 'parent' => 'Institution'],
+        'InstitutionCommitteeTypes' => ['className' => 'Institution.InstitutionCommitteeTypes', 'parent' => 'Institution'],
 
     // Student
         'StudentAbsenceReasons' => ['className' => 'Institution.StudentAbsenceReasons', 'parent' => 'Student'],
@@ -48,8 +49,6 @@ class FieldOptionComponent extends Component
         'StaffLeaveTypes' => ['className' => 'Staff.StaffLeaveTypes', 'parent' => 'Staff'],
         'StaffTypes' => ['className' => 'Staff.StaffTypes', 'parent' => 'Staff'],
         'StaffTrainingCategories' => ['className' => 'Staff.StaffTrainingCategories', 'parent' => 'Staff'],
-        'Competencies' => ['className' => 'Staff.Competencies', 'parent' => 'Staff'],
-        'CompetencySets' => ['className' => 'Staff.CompetencySets', 'parent' => 'Staff'],
 
     // Finance
         'Banks' => ['className' => 'FieldOption.Banks', 'parent' => 'Finance'],
@@ -136,6 +135,8 @@ class FieldOptionComponent extends Component
         'UtilityInternetBandwidths' => ['className' => 'Institution.UtilityInternetBandwidths', 'parent' => 'Infrastructure'],
         'UtilityTelephoneTypes' => ['className' => 'Institution.UtilityTelephoneTypes', 'parent' => 'Infrastructure'],
         'UtilityTelephoneConditions' => ['className' => 'Institution.UtilityTelephoneConditions', 'parent' => 'Infrastructure'],
+        'AssetTypes' => ['className' => 'Institution.AssetTypes', 'parent' => 'Infrastructure'],
+        'AssetConditions' => ['className' => 'Institution.AssetConditions', 'parent' => 'Infrastructure'],
 
     // Health
         'AllergyTypes' => ['className' => 'Health.AllergyTypes', 'parent' => 'Health'],
@@ -144,11 +145,21 @@ class FieldOptionComponent extends Component
         'ImmunizationTypes' => ['className' => 'Health.ImmunizationTypes', 'parent' => 'Health'],
         'Relationships' => ['className' => 'Health.Relationships', 'parent' => 'Health'],
         'TestTypes' => ['className' => 'Health.TestTypes', 'parent' => 'Health'],
+        'InsuranceProviders' => ['className' => 'Health.InsuranceProviders', 'parent' => 'Health'],
+        'InsuranceTypes' => ['className' => 'Health.InsuranceTypes', 'parent' => 'Health'],
 
     // Transport
         'TransportFeatures' => ['className' => 'Transport.TransportFeatures', 'parent' => 'Transport'],
         'BusTypes' => ['className' => 'Transport.BusTypes', 'parent' => 'Transport'],
         'TripTypes' => ['className' => 'Transport.TripTypes', 'parent' => 'Transport'],
+
+    // Scholarship
+        'ScholarshipFundingSources' => ['className' => 'Scholarship.FundingSources', 'parent' => 'Scholarship'],
+        'ScholarshipAttachmentTypes' => ['className' => 'Scholarship.AttachmentTypes', 'parent' => 'Scholarship'],
+        'ScholarshipPaymentFrequencies' => ['className' => 'Scholarship.PaymentFrequencies', 'parent' => 'Scholarship'],
+        'ScholarshipRecipientActivityStatuses' => ['className' => 'Scholarship.RecipientActivityStatuses', 'parent' => 'Scholarship'],
+        'ScholarshipDisbursementCategories' => ['className' => 'Scholarship.DisbursementCategories', 'parent' => 'Scholarship'],
+        'ScholarshipSemesters' => ['className' => 'Scholarship.Semesters', 'parent' => 'Scholarship'],
     ];
 
     public $components = ['AccessControl'];

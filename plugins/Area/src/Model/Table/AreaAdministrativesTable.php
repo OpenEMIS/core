@@ -45,6 +45,10 @@ class AreaAdministrativesTable extends ControllerActionTable
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
         return $validator
+            ->add('code', 'ruleUniqueCode', [
+                'rule' => 'validateUnique',
+                'provider' => 'table'
+            ])
             ->add('is_main_country', 'ruleValidateAreaAdministrativeMainCountry', [
                 'rule' => ['validateAreaAdministrativeMainCountry'],
                 'on' => function ($context) {
@@ -526,4 +530,15 @@ class AreaAdministrativesTable extends ControllerActionTable
             }
         }
     }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [
+            TableRegistry::get('Institution.Institutions'),
+            TableRegistry::get('Directory.Directories')
+        ];
+
+        $this->dispatchEventToModels('Model.AreaAdministrative.afterDelete', [$entity], $this, $listeners);    
+    }
+
 }
