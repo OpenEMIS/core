@@ -356,11 +356,13 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $id = $entity->institution_class_id;
-        $countMale = $this->getMaleCountByClass($id);
-        $countFemale = $this->getFemaleCountByClass($id);
-        $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
-
+        if($entity->isNew() || $entity->dirty('student_status_id')) {
+            $id = $entity->institution_class_id;
+            $countMale = $this->getMaleCountByClass($id);
+            $countFemale = $this->getFemaleCountByClass($id);
+            $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+        }
+  
         $listeners = [
             TableRegistry::get('Institution.InstitutionSubjectStudents')
         ];
