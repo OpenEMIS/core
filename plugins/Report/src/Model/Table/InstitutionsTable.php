@@ -579,7 +579,7 @@ class InstitutionsTable extends AppTable
                     $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
 
                     $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-                    $institutionList = $InstitutionsTable
+                    $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
                             'valueField' => 'code_name'
@@ -590,8 +590,15 @@ class InstitutionsTable extends AppTable
                         ->order([
                             $this->aliasField('code') => 'ASC',
                             $this->aliasField('name') => 'ASC'
-                        ])
-                        ->toArray();
+                        ]);
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
                 }
 
                 if (empty($institutionList)) {
