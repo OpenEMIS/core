@@ -2441,7 +2441,7 @@ class ValidationBehavior extends Behavior
     }
 
     public static function checkPendingWorkbench($field, array $globalData)
-    {        
+    {
         $data = $globalData['data'];
         if (isset($data['id'])) {
             $institutionId = $data['id'];
@@ -2450,7 +2450,7 @@ class ValidationBehavior extends Behavior
 
             // fixed workflow
             $models = [];
-            
+
             foreach ($models as $model) {
                 $subject = TableRegistry::get($model);
                 $method = 'getPendingRecords';
@@ -2489,6 +2489,7 @@ class ValidationBehavior extends Behavior
                 }
             }
         }
+
         return true;
     }
 
