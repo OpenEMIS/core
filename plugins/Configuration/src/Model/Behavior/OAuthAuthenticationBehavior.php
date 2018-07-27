@@ -60,8 +60,9 @@ class OAuthAuthenticationBehavior extends Behavior
         $this->model->fields['mapped_date_of_birth']['type'] = 'string';
         $this->model->fields['mapped_gender']['type'] = 'string';
         $this->model->fields['mapped_role']['type'] = 'string';
+        $this->model->fields['mapped_email']['type'] = 'string';
 
-        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'well_known_uri', 'authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer', 'jwks_uri', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
+        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'well_known_uri', 'authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer', 'jwks_uri', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role', 'mapped_email']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -81,7 +82,8 @@ class OAuthAuthenticationBehavior extends Behavior
         $this->model->fields['mapped_date_of_birth']['type'] = 'string';
         $this->model->fields['mapped_gender']['type'] = 'string';
         $this->model->fields['mapped_role']['type'] = 'string';
-        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'well_known_uri', 'authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer', 'jwks_uri', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
+        $this->model->fields['mapped_email']['type'] = 'string';
+        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'well_known_uri', 'authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer', 'jwks_uri', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role', 'mapped_email']);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)

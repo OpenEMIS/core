@@ -11,7 +11,6 @@ class TrainingRequirementsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->hasMany('TrainingCourses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_requirement_id']);
-        $this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'training_requirement_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
     }

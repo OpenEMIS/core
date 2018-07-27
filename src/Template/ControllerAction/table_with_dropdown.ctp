@@ -2,6 +2,7 @@
     <?php
         $tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
         $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+        $tableFooters = isset($attr['tableFooters']) ? $attr['tableFooters'] : [];
     ?>
 
     <?php if (!empty($tableCells)) : ?>
@@ -10,6 +11,9 @@
                 <table class="table">
                     <thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
                     <tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+                <?php if (!empty($tableFooters)) : ?>
+                    <tfoot><?= $this->Html->tableCells($tableFooters) ?></tfoot>
+                <?php endif ?>
                 </table>
             </div>
         </div>
@@ -22,6 +26,7 @@
     <?php
         $tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
         $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+        $tableFooters = isset($attr['tableFooters']) ? $attr['tableFooters'] : [];
 
         $label = $attr['label'];
         $inputField = implode('.', [$ControllerAction['table']->alias(), $attr['field']]);
@@ -31,11 +36,18 @@
             $attr['options'] = [];
         }
 
-        $selectOptions = ['' => '-- ' . __('Select ' . $label) . ' --'];
-        if (array_key_exists('addAll', $attr) && $attr['addAll'] && !empty($attr['options'])) {
-            $selectOptions['-1'] = '-- ' . __('Add all ' . $label) . ' --';
+        $selectOptions = [];
+        if (!empty($attr['options'])) {
+            $selectOptions[] = '-- ' . __('Select ' . $label) . ' --';
+
+            if (array_key_exists('addAll', $attr) && $attr['addAll'] && !empty($attr['options'])) {
+                $selectOptions['-1'] = '-- ' . __('Add all ' . $label) . ' --';
+            }
+
+            $selectOptions += $attr['options'];
+        } else {
+            $selectOptions[] = $this->Label->get('general.select.noOptions');
         }
-        $selectOptions += $attr['options'];
 
         $_inputOptions = [
             'type' => 'select',
@@ -50,6 +62,9 @@
         <table class="table table-curved table-input">
             <thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
             <tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+        <?php if (!empty($tableFooters)) : ?>
+            <tfoot><?= $this->Html->tableCells($tableFooters) ?></tfoot>
+        <?php endif ?>
         </table>
     </div>
 <?php endif ?>

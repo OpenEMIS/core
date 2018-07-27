@@ -1,3 +1,113 @@
+### [3.31.0] - 2018-07-20
+- Developed student pending admission API
+- Developed Potential Wrong Birthdates in Reports > Data Quality 
+- Developed function to import height and weight for multiple students
+
+### [3.30.2] - 2018-07-13
+- Developed additional placeholders in Student Report Card
+
+### [3.30.1] - 2018-07-05
+- Added Started On and Completed On in Institutions > Report Cards
+
+### [3.30.0] - 2018-07-02
+- Developed audit reports via feature
+- Implemented status column in Institution > Students > Import feature
+- Change date format in Audit Report to yyyy-mm-dd to enable sorting
+
+### [3.30.0] - 2018-07-02
+- Developed audit reports via feature
+- Implemented status column in Institution > Students > Import feature
+- Change date format in Audit Report to yyyy-mm-dd to enable sorting
+
+### [3.29.0] - 2018-06-22
+- Data patch on Positions feature
+- Develop Student Attendance Summary Report
+- Develop Workflow Report
+- Develop OpenEMIS Committees feature
+- Develop ability to add multiple attachments to Students/Staff behaviour feature
+
+### [3.28.1] - 2018-06-20
+- Rename breadcrumbs and headers to the original name under Report module 
+
+### [3.28.0] - 2018-06-14
+- Rename Scholarships sub-menu in Administration > Scholarships > Details
+- Added date range to Audit Login report
+- Added "Forgot Password" and "Forgot Username" feature 
+- Develop student capacity per class
+- Develop Workflow Rules event in Administration > Workflows > Rules
+- Develop Assets feature in Institutions > Assets
+
+### [3.27.2] - 2018-06-11
+- Added new labels to Administration > Translations
+- Changed colours for Institution > Dashboard charts
+
+### [3.27.1] - 2018-06-06
+- Optimized the generation of Student Reports Card
+
+### [3.27.0] - 2018-06-04
+- Developed Recipients feature under Administration > Scholarships
+- Removed the Title field in Staff > Career > Appraisal
+- Added additional filters and columns to Institution > Cases
+- Added Date of Birth to Report > Institutions > Student 
+- Developed import feature for Institutions > Staff > Positions
+- Developed import feature for Institutions > Positions
+
+### [3.26.1] - 2018-05-25
+- Created Deputy Principal system role in Administration > Security > Role
+
+### [3.26.0] - 2018-05-18
+- Developed Scholarship feature under Profile and Administration
+- Implemented import feature for Staff Leave under Staff > Career > Leave
+- Added Nationality and Identity Type fields when adding a new Guardian under Students > Guardian
+- Fixed a bug where the Assignee is Unassigned upon creation of Cases under Institution > Cases
+
+### [3.25.0] - 2018-04-20
+- Added Column sorting to Administration > Education Structure > Grade Subjects
+- Change height metric from Metres to Centimetres in Health > Body Mass feature
+- Implemented rule for staff transfer in Administration > System configuration
+- Implemented workflow for Staff Appraisal feature in Staff > Career > Appraisals
+- Implemented score number in Staff Appraisals feature in Staff > Career > Appraisals
+- Implemented Student limit per class and subject in Administration > System Configuration
+
+### [3.24.3] - 2018-04-20
+- Implemented "Note" in Administration > Survey > Forms
+
+### [3.24.0] - 2018-04-20
+- Input type validation has been added for Table field type under Administration > Survey > Questions
+- Implemented links between Staff Position Titles and Staff Position Grades under Administration > Field Options > Staff Position Titles
+- Implemented Gender for Guardian Relations under Administration > Field Options > Guardian Relations
+- Health Insurances feature has been implemented under Institution > Student/Staff > Health
+- Average and Total Marks columns have been added under Institutions > Report Cards > Comments
+- Custom Filters field has been added under Administration > Survey > Forms
+
+### [3.23.0] - 2018-04-06
+- Implemented a non-mandatory field called 'Position' under Institutions > Students > Academic > Extracurriculars
+- Updated placeholders for Competency sheets in the Report Card template
+- Implemented import function in Institutions > Survey > Forms
+- Developed 'Dropdown' field type under Administration > Appraisals > Criterias
+- Implemented 'URL Validation' as a new Validation Rule for 'Text' field type under Administration > System Setup > Custom Field
+- Replaced the map in Reports > Map from Google Maps to OpenStreetMap
+
+### [3.22.0] - 2018-03-29
+- Implemented Institutions search by Code and Name under Institutions > Advanced Search
+- Implemented Placeholders for Total Marks & Average for each Academic Term in the Report Card template
+- Implemented Outcome features in the Report Card template
+- Added Positions with Staff report under Reports > Institutions > Positions
+- Added Description field under Institutions > Survey > Forms
+- Image file will now be displayed as thumbnail for "File" field type under Administration > System Setup > Custom Field
+
+### [3.21.0] - 2018-03-16
+- Developed Student Attendance Report to see classes that have not been marked
+- Default attendance is shown as not marked now
+- Enabled multiple contact details under Institutions > General > Contacts
+- Added Reports > Institutions > Cases - Student Attendances report
+- Updated the format for Institution > Performance > Outcomes - Import template
+
+### [3.20.0] - 2018-03-02
+- Implemented Staff Appraisals feature enhancements
+- Implemented security management API
+- Fixed a bug where pagination does not retain the selected value
+
 ### [3.19.0] - 2018-02-23
 - Implemented customisable workflow for Student Transfers and Admissions
 - Marks below "Pass Mark" will now be displayed in red
@@ -8,7 +118,7 @@
 - Fixed a 404 error when performing individual promotion
 
 ### [3.17.0] - 2018-01-26
-- The system now allow multiple classes to share the same subject
+- The system allows multiple classes to share the same subject now
 - A new Student Attendances workflow rule (Absentee Intervention) has been added
 
 ### [3.16.0] - 2018-01-19

@@ -77,20 +77,24 @@ class IdentitiesTable extends ControllerActionTable
 
 	private function setupTabElements()
 	{
-		$options = [
-			'userRole' => '',
-		];
+		if ($this->controller->name == 'Scholarships') {
+			$tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+		} else {
+			$options = [
+				'userRole' => '',
+			];
 
-		switch ($this->controller->name) {
-			case 'Students':
-				$options['userRole'] = 'Students';
-				break;
-			case 'Staff':
-				$options['userRole'] = 'Staff';
-				break;
+			switch ($this->controller->name) {
+				case 'Students':
+					$options['userRole'] = 'Students';
+					break;
+				case 'Staff':
+					$options['userRole'] = 'Staff';
+					break;
+			}
+			$tabElements = $this->controller->getUserTabElements($options);
 		}
 
-		$tabElements = $this->controller->getUserTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
@@ -155,6 +159,8 @@ class IdentitiesTable extends ControllerActionTable
 
 	public function getLatestDefaultIdentityNo($userId) 
 	{
+
+		die;
         //check identity type that ties to the nationality
 		$UserNationalityTable = TableRegistry::get('User.UserNationalities');
 

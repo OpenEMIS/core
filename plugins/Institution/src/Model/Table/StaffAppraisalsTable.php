@@ -9,26 +9,74 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\Utility\Inflector;
 use Cake\Network\Session;
 use Cake\ORM\TableRegistry;
-
+use Cake\Network\Request;
+use Cake\Utility\Hash;
+use Cake\Datasource\ResultSetInterface;
+use Cake\Log\Log;
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
 
 class StaffAppraisalsTable extends ControllerActionTable
 {
+    private $periodList = [];
+    private $staff;
+
     public function initialize(array $config)
     {
-        $this->table('staff_appraisals');
+        $this->table('institution_staff_appraisals');
         parent::initialize($config);
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->belongsTo('Assignees', ['className' => 'User.Users']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms']);
+        $this->belongsTo('AppraisalTypes', ['className' => 'StaffAppraisal.AppraisalTypes']);
+        $this->belongsTo('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods']);
+        $this->hasMany('AppraisalTextAnswers', [
+            'className' => 'StaffAppraisal.AppraisalTextAnswers',
+            'foreignKey' => 'institution_staff_appraisal_id',
+            // 'saveStrategy' => 'replace',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('AppraisalSliderAnswers', [
+            'className' => 'StaffAppraisal.AppraisalSliderAnswers',
+            'foreignKey' => 'institution_staff_appraisal_id',
+            // 'saveStrategy' => 'replace',
+            'dependent' => true,
+            'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalDropdownAnswers', [
+            'className' => 'StaffAppraisal.AppraisalDropdownAnswers',
+            'foreignKey' => 'institution_staff_appraisal_id',
+            // 'saveStrategy' => 'replace',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('AppraisalNumberAnswers', [
+            'className' => 'StaffAppraisal.AppraisalNumberAnswers',
+            'foreignKey' => 'institution_staff_appraisal_id',
+            // 'saveStrategy' => 'replace',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         // for file upload
         $this->addBehavior('ControllerAction.FileUpload', [
-            // 'name' => 'file_name',
-            // 'content' => 'file_content',
+            'name' => 'file_name',
+            'content' => 'file_content',
             'size' => '2MB',
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
+        ]);
+        $this->addBehavior('Workflow.Workflow');
+        $this->addBehavior('OpenEmis.Section');
+        $this->addBehavior('Institution.StaffProfile'); // POCOR-4047 to get staff profile data
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Dashboard' => ['index']
         ]);
 
         // setting this up to be overridden in viewAfterAction(), this code is required for file download
@@ -36,46 +84,377 @@ class StaffAppraisalsTable extends ControllerActionTable
             'actions.download.show',
             true
         );
-
-        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('StaffAppraisalTypes', ['className' => 'Staff.StaffAppraisalTypes']);
-        $this->belongsTo('CompetencySets', ['className' => 'Staff.CompetencySets']);
-
-        $this->belongsToMany('Competencies', [
-            'className' => 'Staff.Competencies',
-            'joinTable' => 'staff_appraisal_competencies',
-            'foreignKey' => 'staff_appraisal_id',
-            'targetForeignKey' => 'competency_id',
-            'through' => 'Staff.StaffAppraisalsCompetencies',
-            'dependent' => true,
-            'cascadeCallbacks' => true
-        ]);
-
-        $this->addBehavior('AcademicPeriod.AcademicPeriod');
-
-        // POCOR-4047 to get staff profile data
-        $this->addBehavior('Institution.StaffProfile');
     }
 
     public function validationDefault(Validator $validator)
     {
-        $validator = parent::validationDefault($validator);
-
         return $validator
-            ->add('from', [
-                'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'to', false]
+            ->allowEmpty('file_content')
+            ->add('appraisal_period_from', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'message' => __('Date range is not within the academic period.')
                 ]
             ])
-            ->allowEmpty('file_content')
-        ;
+            ->add('appraisal_period_to', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'message' => __('Date range is not within the academic period.')
+                ],
+                'ruleCompareDateReverse' => [
+                    'rule' => ['compareDateReverse', 'appraisal_period_from', true],
+                    'message' => __('Appraisal Period To Date should not be earlier than Appraisal Period From Date')
+                ]
+            ]);
     }
 
-    public function implementedEvents()
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $events = parent::implementedEvents();
-        return $events;
+        if (in_array($this->action, ['view', 'edit', 'delete'])) {
+            $modelAlias = 'Staff Appraisals';
+            $userType = 'StaffUser';
+            $this->controller->changeUserHeader($this, $modelAlias, $userType);
+        }
+
+        if ($this->action != 'download') {
+            if (!is_null($this->request->query('user_id'))) {
+                $userId = $this->request->query('user_id');
+            } else {
+                $session = $this->request->session();
+                if ($session->check('Staff.Staff.id')) {
+                    $userId = $session->read('Staff.Staff.id');
+                }
+            }
+
+            if (!is_null($userId)) {
+                $staff = $this->Users->get($userId);
+                $this->staff = $staff;
+                $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
+            }
+        }
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('staff_id', ['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['visible' => false]);
+        $this->field('comment', ['visible' => false]);
+        $this->field('appraisal_period_id', ['visible' => false]);
+        $this->setFieldOrder(['appraisal_type_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised']);
+        $this->setupTabElements();
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->where([$this->aliasField('staff_id') => $this->staff->id]);
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'AppraisalPeriods.AcademicPeriods', 'AppraisalForms',
+            'AppraisalTypes'
+        ]);
+    }
+
+    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $entity->staff_id]);
+        $this->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period->academic_period_id, 'attr' => ['value' => $entity->appraisal_period->academic_period->name]]);
+        $this->field('appraisal_period_from');
+        $this->field('appraisal_period_to');
+        $this->field('appraisal_type_id', ['type' => 'readonly', 'value' => $entity->appraisal_type_id, 'attr' => ['label' => __('Type'), 'value' => $entity->appraisal_type->name]]);
+        $this->field('appraisal_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period_id, 'attr' => ['value' => $entity->appraisal_period->name]]);
+        $this->field('appraisal_form_id', ['type' => 'readonly', 'value' => $entity->appraisal_form_id, 'attr' => ['value' => $entity->appraisal_form->name]]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment')]]);
+        $this->field('comment');
+        $this->printAppraisalCustomField($entity->appraisal_form_id, $entity);
+    }
+
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $this->staff->id]);
+        $this->field('academic_period_id', ['type' => 'select', 'attr' => ['required' => true]]);
+        $this->field('appraisal_period_from');
+        $this->field('appraisal_period_to');
+        $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')], 'type' => 'select']);
+        $this->field('appraisal_period_id', ['type' => 'select', 'options' => $this->periodList, 'onChangeReload' => true]);
+        $this->field('appraisal_form_id', ['type' => 'readonly']);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment')]]);
+        $this->field('comment');
+
+        $entity = $this->newEntity();
+        $appraisalFormId = $this->request->data($this->aliasField('appraisal_form_id'));
+        $this->printAppraisalCustomField($appraisalFormId, $entity);
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFieldOrder();
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // determine if download button is shown
+        $showFunc = function () use ($entity) {
+            $filename = $entity->file_content;
+            return !empty($filename);
+        };
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            $showFunc
+        );
+        // End
+        $this->field('staff_id', ['visible' => false]);
+        $this->field('academic_period_id', ['fieldName' => 'appraisal_period.academic_period.name']);
+        $this->field('appraisal_period_from');
+        $this->field('appraisal_period_to');
+        $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')]]);
+        $this->field('appraisal_period_id');
+        $this->field('appraisal_form_id');
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['visible' => false]);
+        $this->field('comment');
+        $this->printAppraisalCustomField($entity->appraisal_form_id, $entity);
+        $this->setupFieldOrder();
+    }
+ 
+    private function setupFieldOrder()
+    {
+        $this->setFieldOrder(['academic_period_id', 'appraisal_type_id', 'appraisal_period_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised', 'file_content', 'comment']);
+    }
+
+    private function printAppraisalCustomField($appraisalFormId, Entity $entity)
+    {
+        if ($appraisalFormId) {
+            $section = null;
+            $sectionCount = 0;
+            $criteriaCounter = new ArrayObject();
+            $staffAppraisalId = $entity->has('id') ? $entity->id : -1;
+
+            // retrieve all form criterias containing results
+            $AppraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
+            $query = $AppraisalFormsCriterias->find()
+                ->contain([
+                    'AppraisalCriterias' => [
+                        'FieldTypes',
+                        'AppraisalSliders',
+                        'AppraisalNumbers',
+                        'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
+                    ],
+                    'AppraisalTextAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalTextAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalSliderAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalSliderAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalDropdownAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalDropdownAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalNumberAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalNumberAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    }
+                ])
+                ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
+                ->order($AppraisalFormsCriterias->aliasField('order'));
+
+            $tabElements = [];
+
+            $action = $this->action;
+            $url = $this->url($action);
+           
+            //section tab
+            $formsCriterias = $query->toArray();
+            foreach ($formsCriterias as $key => $formCritieria) {
+                if ($section != $formCritieria->section) {
+                    $section = $formCritieria->section;
+                    $tabName = Inflector::slug($section);
+                    if (empty($tabElements)) {
+                            $selectedAction = $tabName;
+                    }
+                    $url['tab_section'] = $tabName;
+                    $tabElements[$tabName] = [
+                        'url' => $url,
+                        'text' => $section,
+                    ];
+                }
+            }
+            //end
+
+            if (!empty($tabElements)) {
+                $selectedAction = !is_null($this->request->query('tab_section')) ? $this->request->query('tab_section') : $selectedAction;
+                if ($action != 'add') {
+                    $this->controller->set('tabElements', $tabElements);
+                    $this->controller->set('selectedAction', $selectedAction);
+                }
+                $query
+                    ->where([
+                    $AppraisalFormsCriterias->aliasField('section') => $tabElements[$selectedAction]['text']
+                    ]);
+            }
+
+            if (($action != 'add' &&  !empty($tabElements)) || empty($tabElements)) {
+                $formsCriterias = $query->toArray();
+                foreach ($formsCriterias as $key => $formsCriteria) {
+                    $details = new ArrayObject([
+                        'appraisal_form_id' => $formsCriteria->appraisal_form_id,
+                        'appraisal_criteria_id' => $formsCriteria->appraisal_criteria_id,
+                        'section' => $formsCriteria->section,
+                        'field_type' => $formsCriteria->appraisal_criteria->field_type->code,
+                        'criteria_name' => $formsCriteria->appraisal_criteria->name,
+                        'is_mandatory' => $formsCriteria->is_mandatory
+                    ]);
+                    
+                    $this->appraisalCustomFieldExtra($details, $formsCriteria, $criteriaCounter, $entity);
+                }
+            }
+        }
+    }
+
+    private function appraisalCustomFieldExtra(ArrayObject $details, Entity $formCritieria, ArrayObject $criteriaCounter, Entity $entity)
+    {
+        $fieldTypeCode = $details['field_type'];
+        if (!$criteriaCounter->offsetExists($fieldTypeCode)) {
+            $criteriaCounter[$fieldTypeCode] = 0;
+        }
+
+        $key = [];
+        $attr = [];
+        $criteria = $formCritieria->appraisal_criteria;
+
+        switch ($fieldTypeCode) {
+            case 'SLIDER':
+                $key = 'appraisal_slider_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
+                $attr['type'] = 'slider';
+                $attr['max'] = $criteria->appraisal_slider->max;
+                $attr['min'] = $criteria->appraisal_slider->min;
+                $attr['step'] = $criteria->appraisal_slider->step;
+                break;
+            case 'TEXTAREA':
+                $key = 'appraisal_text_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
+                $attr['type'] = 'text';
+                break;
+            case 'DROPDOWN':
+                $key = 'appraisal_dropdown_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
+                $attr['type'] = 'select';
+                $attr['options'] = Hash::combine($criteria->appraisal_dropdown_options, '{n}.id', '{n}.name');
+                $attr['default'] = current(Hash::extract($criteria->appraisal_dropdown_options, '{n}[is_default=1].id'));
+                break;
+            case 'NUMBER':
+                $key = 'appraisal_number_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
+                $attr['type'] = 'integer';
+
+                if ($criteria->has('appraisal_number')) {
+                    $this->field($fieldKey.'.validation_rule', ['type' => 'hidden', 'value' => $criteria->appraisal_number->validation_rule]);
+                }
+                break;
+        }
+
+        // build custom fields
+        $attr['attr']['label'] = $details['criteria_name'];
+        $attr['attr']['required'] = $details['is_mandatory'];
+
+        // set each answer in entity
+        if (!$entity->offsetExists($key)) {
+            $entity->{$key} = [];
+        }
+        $entity->{$key}[$criteriaCounter[$fieldTypeCode]] = !empty($formCritieria->{$key}) ? current($formCritieria->{$key}) : [];
+
+        $this->field($fieldKey.'.answer', $attr);
+        $this->field($fieldKey.'.is_mandatory', ['type' => 'hidden', 'value' => $details['is_mandatory']]);
+        $this->field($fieldKey.'.appraisal_form_id', ['type' => 'hidden', 'value' => $details['appraisal_form_id']]);
+        $this->field($fieldKey.'.appraisal_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_criteria_id']]);
+
+        $criteriaCounter[$fieldTypeCode]++;
+    }
+
+    private function getAppraisalPeriods($academicPeriodId, $appraisalTypeId)
+    {
+        return $this->AppraisalPeriods->find()
+            ->innerJoinWith('AppraisalTypes')
+            ->where(['AppraisalTypes.id' => $appraisalTypeId, 'AcademicPeriods.id' => $academicPeriodId])
+            ->contain(['AppraisalForms', 'AcademicPeriods'])
+            ->formatResults(function ($results) {
+                $list = [];
+                foreach ($results as $r) {
+                    $list[$r->id] = $r->period_form_name;
+                }
+                return $list;
+            })
+            ->toArray();
+    }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $attr['onChangeReload'] = true;
+            $attr['options'] = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getYearList();
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldAppraisalTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $attr['onChangeReload'] = true;
+            if ($request->data($this->aliasField('academic_period_id')) && $request->data($this->aliasField('appraisal_type_id'))) {
+                $appraisalTypeId = $request->data($this->aliasField('appraisal_type_id'));
+                $academicPeriodId = $request->data($this->aliasField('academic_period_id'));
+                $this->periodList = $this->AppraisalPeriods->find('list')
+                    ->innerJoinWith('AppraisalTypes')
+                    ->where([
+                        'AppraisalTypes.id' => $appraisalTypeId,
+                        $this->AppraisalPeriods->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->AppraisalPeriods->aliasField('date_enabled').' <=' => new Date(),
+                        $this->AppraisalPeriods->aliasField('date_disabled').' >=' => new Date()
+                    ])
+                    ->toArray();
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldAppraisalFormId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            if ($request->data($this->aliasField('appraisal_period_id'))) {
+                $appraisalPeriodId = $request->data($this->aliasField('appraisal_period_id'));
+                $appraisalPeriodEntity = $this->AppraisalPeriods->get($appraisalPeriodId, ['contain' => ['AppraisalForms']]);
+                $attr['value'] = $appraisalPeriodEntity->appraisal_form_id;
+                $attr['attr']['value'] = $appraisalPeriodEntity->appraisal_form->code_name;
+                $request->data[$this->alias()]['appraisal_form_id'] = $appraisalPeriodEntity->appraisal_form_id;
+            // This part ensures that the form belonging to the previously selected Appraisal Period will not populate at the bottom when user choose "Select" from the dropdown next. It should be empty.
+            }else{
+                   $request->data[$this->alias()]['appraisal_form_id'] = "";
+            }
+            return $attr;
+        }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        $errors = $entity->errors();
+
+        $fileErrors = [];
+        $session = $this->request->session();
+        $sessionErrors = $this->registryAlias().'.parseFileError';
+
+        if ($session->check($sessionErrors)) {
+            $fileErrors = $session->read($sessionErrors);
+        }
+
+        if (empty($errors) && empty($fileErrors)) {
+            // redirect only when no errors
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('view'));
+        }
     }
 
     private function setupTabElements()
@@ -88,570 +467,94 @@ class StaffAppraisalsTable extends ControllerActionTable
 
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', 'StaffAppraisals');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function findWorkbench(Query $query, array $options)
     {
-        $session = $this->request->session();
-        $staffId = $session->read('Staff.Staff.id');
+        $controller = $options['_controller'];
+        $session = $controller->request->session();
 
-        $this->field('modified_user_id',    ['visible' => ['index' => true, 'view' => true], 'after' => 'final_rating']);
-        $this->field('modified',            ['visible' => ['index' => true, 'view' => true], 'after' => 'modified_user_id']);
-        $this->field('staff_id',            ['type' => 'hidden', 'value' => $staffId]);
+        $userId = $session->read('Auth.User.id');
+        $Statuses = $this->Statuses;
+        $doneStatus = WorkflowSteps::DONE;
 
-        if (!empty($this->paramsPass(0))) {
-
-            $staffAppraisalId = $this->paramsDecode($this->paramsPass(0));
-
-            $loginUserId = $this->Auth->user('id');
-            $createdUserId = $this->get($staffAppraisalId)->created_user_id;
-
-            // if not admin and not his own appraisal remove and edit button will be remove
-            if (!$this->AccessControl->isAdmin()) {
-                if ($loginUserId != $createdUserId) {
-                    $this->toggle('remove', false);
-                    $this->toggle('edit', false);
-                }
-            }
-        }
-
-        $this->setupTabElements();
-    }
-
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('comment', ['visible' => false]);
-        $this->field('academic_period_id', ['visible' => false]);
-        $this->field('competency_set_id', ['visible' => false]);
-        $this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['visible' => false]);
-
-        $this->setFieldOrder(['staff_appraisal_type_id', 'title', 'from', 'to', 'final_rating']);
-    }
-
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $session = $this->request->session();
-        $staffId = $session->read('Staff.Staff.id');
-        $query = $query->where([$this->aliasField('staff_id') => $staffId]);
-
-        //Add controls filter to index page
-        $academicPeriodList = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period')) ? $this->request->query('academic_period') : $this->AcademicPeriods->getCurrent();
-
-        $extra['elements']['controls'] = ['name' => 'Institution.StaffAppraisals/controls', 'data' => [], 'options' => [], 'order' => 1];
-        $this->controller->set(compact('academicPeriodList', 'selectedAcademicPeriod'));
-        $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
-    }
-
-    public function viewEditBeforeQuery(Event $event, Query $query)
-    {
-        $query->contain(['Competencies']);
-    }
-
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        // determine if download button is shown
-        $showFunc = function() use ($entity) {
-            $filename = $entity->file_content;
-            return !empty($filename);
-        };
-        $this->behaviors()->get('ControllerAction')->config(
-            'actions.download.show',
-            $showFunc
-        );
-        // End
-
-        $this->setupFields($entity);
-    }
-
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $this->setupFields($entity);
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $entity['final_rating'] = $this->getFinalRating($entity);
-    }
-
-    private function getFinalRating(Entity $entity)
-    {
-        $finalRating = 0.00;
-
-        if (isset($entity->competencies)) {
-            $competenciesRating = $entity->competencies;
-            foreach ($competenciesRating as $key => $obj) {
-                $finalRating = $finalRating + $obj->_joinData->rating;
-            }
-        }
-
-        return $finalRating;
-    }
-
-    public function addEditOnChangeCompetencySet(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        if (array_key_exists($this->alias(), $data)) {
-            $data[$this->alias()]['competencies'] = [];
-
-            if (array_key_exists('competency_set_id', $data[$this->alias()]) && !empty($data[$this->alias()]['competency_set_id'])) {
-                $competencySetId = $data[$this->alias()]['competency_set_id'];
-
-                $CompetencySets = $this->CompetencySets;
-                $competencySetResults = $CompetencySets
-                    ->find()
-                    ->contain(['Competencies'])
-                    ->where([$CompetencySets->aliasField('id') => $competencySetId])
-                    ->first();
-
-                if (!empty($competencySetResults)) {
-                    foreach ($competencySetResults->competencies as $key => $obj) {
-                        $data[$this->alias()]['competencies'][] = [
-                            'id' => $obj['id'],
-                            'name' => $obj['name'],
-                            'min' => $obj['min'],
-                            'max' => $obj['max'],
-                            'default' => $obj['default'],
-                            'visible' => $obj['visible'],
-                            '_joinData' => ['rating' => 0]
-                        ];
-                    }
-                }
-            }
-        }
-    }
-
-    // to rename the field header
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    {
-        if ($field == 'staff_appraisal_type_id') {
-            return __('Type');
-        } elseif ($field == 'file_content') {
-            return __('Attachment');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
-    public function onGetModifiedUserId(Event $event, Entity $entity)
-    {
-        if ($this->action == 'index') {
-            $entity['modified_user'] = !empty($entity['modified_user']) ? $entity['modified_user'] : $entity['created_user'];
-        }
-    }
-
-    public function onGetModified(Event $event, Entity $entity)
-    {
-        if ($this->action == 'index') {
-            $entity['modified'] = date('d-M-Y', strtotime(!empty($entity['modified']) ? $entity['modified'] : $entity['created']));
-        }
-    }
-
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
-
-            $attr['options'] = $academicPeriodOptions;
-            $attr['onChangeReload'] = true;
-        } else if ($action == 'view') {
-            $attr['visible'] = false;
-        }
-
-        return $attr;
-    }
-
-    public function onUpdateFieldFrom(Event $event, array $attr, $action, $request)
-    {
-        $dateAttr = ['from' => Date::now(), 'to' => Date::now()];
-        $requestData = $request->data;
-        $fromDate = '';
-
-        if ($action == 'add') {
-            if (!empty($requestData[$this->alias()]['academic_period_id'])) {
-                $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
-                $fromDate = new Chronos($requestData[$this->alias()]['from']);
-            } else {
-                $attr['value'] = $dateAttr['from'];
-            }
-        } else if ($action == 'edit') {
-            $staffAppraisalId = $this->paramsDecode($this->paramsPass(0));
-            $academicPeriodId = !empty($requestData[$this->alias()]['academic_period_id']) ? $requestData[$this->alias()]['academic_period_id'] : $this->get($staffAppraisalId)->academic_period_id;
-            $fromDate = $this->get($staffAppraisalId)->from;
-        }
-
-        if (!empty($fromDate && $academicPeriodId)) {
-            $dateAttr['from'] = $this->AcademicPeriods->get($academicPeriodId)->start_date;
-            $dateAttr['to'] = $this->AcademicPeriods->get($academicPeriodId)->end_date;
-
-            // will compare the date, if the form-date is within the academic period will not change when reload.
-            if ($fromDate->between($dateAttr['from'], $dateAttr['to'])) {
-                $attr['value'] = $fromDate;
-            } else {
-                $attr['value'] = $dateAttr['from'];
-            }
-
-            // add restriction to from-date-picker, only within selected academic period
-            $attr['date_options']['startDate'] = $dateAttr['from']->format('d-m-Y');
-            $attr['date_options']['endDate'] = $dateAttr['to']->format('d-m-Y');
-        }
-
-        // remove the from-today-date-picker
-        $attr['date_options']['todayBtn'] = false;
-
-        return $attr;
-    }
-
-    public function onUpdateFieldTo(Event $event, array $attr, $action, $request)
-    {
-        $dateAttr = ['from' => Date::now(), 'to' => Date::now()];
-        $requestData = $request->data;
-        $toDate = '';
-
-        if ($action == 'add') {
-            if (!empty($requestData[$this->alias()]['academic_period_id'])) {
-                $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
-                $toDate = new Chronos($requestData[$this->alias()]['to']);
-            } else {
-                $attr['value'] = $dateAttr['to'];
-            }
-        } else if ($action == 'edit') {
-            $staffAppraisalId = $this->paramsDecode($this->paramsPass(0));
-            $academicPeriodId = !empty($requestData[$this->alias()]['academic_period_id']) ? $requestData[$this->alias()]['academic_period_id'] : $this->get($staffAppraisalId)->academic_period_id;
-            $toDate = $this->get($staffAppraisalId)->to;
-        }
-
-        if (!empty($toDate && $academicPeriodId)) {
-            $dateAttr['from'] = $this->AcademicPeriods->get($academicPeriodId)->start_date;
-            $dateAttr['to'] = $this->AcademicPeriods->get($academicPeriodId)->end_date;
-
-            // will compare the date, if the form-date is within the academic period will not change when reload.
-            if ($toDate->between($dateAttr['from'], $dateAttr['to'])) {
-                $attr['value'] = $toDate;
-            } else {
-                $attr['value'] = $dateAttr['to'];
-            }
-
-            // add restriction to from-date-picker, only within selected academic period
-            $attr['date_options']['startDate'] = $dateAttr['from']->format('d-m-Y');
-            $attr['date_options']['endDate'] = $dateAttr['to']->format('d-m-Y');
-        }
-
-        // remove the from-today-date-picker
-        $attr['date_options']['todayBtn'] = false;
-
-        return $attr;
-    }
-
-    public function onUpdateFieldStaffAppraisalTypeId(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            // type only self if choose to appraise himself, if appraise other staff will be only supervisor or peer.
-            $staffAppraisalType = $this->StaffAppraisalTypes;
-            $session = $this->request->session();
-            $loginUserId = $this->Auth->user('id');
-            $staffId = $session->read('Staff.Staff.id');
-
-            if (!$this->AccessControl->isAdmin()) {
-                if ($loginUserId == $staffId) {
-                    $typeId = $this->StaffAppraisalTypes->getIdByCode('SELF');
-
-                    $attr['type'] = 'readOnly';
-                    $attr['attr']['value'] = 'Self';
-                    $attr['value'] = $typeId;
-                } else {
-                    $typeOptions = $staffAppraisalType
-                        ->find('list')
-                        ->where([[$staffAppraisalType -> aliasField('code != ') => 'SELF']])
-                        ->toArray();
-                    $attr['options'] = $typeOptions;
-                }
-            }
-
-        return $attr;
-        }
-    }
-
-    public function onUpdateFieldCompetencySetId(Event $event, array $attr, $action, $request)
-    {
-        $CompetencySetsCompetencies = TableRegistry::get('Staff.CompetencySetsCompetencies');
-
-        if ($action == 'add' || $action == 'edit') {
-            $competencySetOptionsArray = $this->CompetencySets
-                ->find('CompetencySetsOptions')
-                ->toArray()
-                ;
-
-            $attr['options'] = [];
-            if (!empty($competencySetOptionsArray)) {
-                // if competency set doesnt have any competency will not be shown on the list.
-                foreach ($competencySetOptionsArray as $key => $obj) {
-                    $competencyCount = $CompetencySetsCompetencies
-                        ->find()
-                        ->where([$CompetencySetsCompetencies->aliasField('competency_set_id') => $key])
-                        ->count();
-
-                    if ($competencyCount > 0) {
-                        $attr['options'][$key] = $obj;
-                    }
-                }
-            }
-
-            $attr['onChangeReload'] = 'changeCompetencySet';
-        }
-
-        return $attr;
-    }
-
-    public function onGetCustomRatingElement(Event $event, $action, $entity, $attr, $options=[])
-    {
-        $staffAppraisalId = $entity->id;
-
-        if ($action == 'view') {
-            $tableHeaders = [
-                $this->getMessage('Staff.Appraisal.competencies_goals'),
-                $this->getMessage('Staff.Appraisal.rating')
-            ];
-            $tableCells = [];
-
-            $competencyItems = $this
-                ->find()
-                ->contain(['Competencies'])
-                ->where([$this->aliasField('id') => $entity->id])
-                ->first()->competencies;
-
-            foreach ($competencyItems as $key => $obj) {
-                $rowData = [];
-                $rowData[] = $obj->name;
-                $rowData[] = $obj->_joinData->rating;
-
-                $tableCells[] = $rowData;
-            }
-
-            $attr['tableHeaders'] = $tableHeaders;
-            $attr['tableCells'] = $tableCells;
-            $attr['finalRating'] = $entity->final_rating;
-
-            if ($entity->has('competency_set_id')) {
-                return $event->subject()->renderElement('Staff.Staff/competency_table', ['attr' => $attr]);
-            }
-        } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
-            $tableCells = [];
-            $cellCount = 0;
-
-            $arrayCompetencies = [];
-            if ($this->request->is(['get'])) {
-                if ($entity->has('competency_set_id')) {
-                    $competencySetId = $entity->competency_set_id;
-
-                    $competencies = TableRegistry::get('Staff.Competencies');
-                    $StaffAppraisalsCompetencies = TableRegistry::get('Staff.StaffAppraisalsCompetencies');
-                    $CompetencySetsCompetencies = TableRegistry::get('Staff.CompetencySetsCompetencies');
-                    $leftJoinConditions = [
-                        $StaffAppraisalsCompetencies->aliasField('competency_id = ') . $CompetencySetsCompetencies->aliasField('competency_id')
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('status_id'),
+                $this->aliasField('staff_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created'),
+                $this->Statuses->aliasField('name'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name'),
+                $this->AppraisalTypes->aliasField('name'),
+                $this->AppraisalForms->aliasField('name'),
+                $this->AppraisalPeriods->aliasField('name'),
+                $this->Institutions->aliasField('code'),
+                $this->Institutions->aliasField('name'),
+                $this->CreatedUser->aliasField('openemis_no'),
+                $this->CreatedUser->aliasField('first_name'),
+                $this->CreatedUser->aliasField('middle_name'),
+                $this->CreatedUser->aliasField('third_name'),
+                $this->CreatedUser->aliasField('last_name'),
+                $this->CreatedUser->aliasField('preferred_name')
+            ])
+            ->contain([
+                $this->Users->alias(),
+                $this->AppraisalTypes->alias(),
+                $this->AppraisalForms->alias(),
+                $this->AppraisalPeriods->alias(),
+                $this->Institutions->alias(),
+                $this->CreatedUser->alias()
+            ])
+            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+                return $q->where([
+                    $Statuses->aliasField('category <> ') => $doneStatus
+                ]);
+            })
+            ->where([
+                $this->aliasField('assignee_id') => $userId
+            ])
+            ->order([
+                $this->aliasField('created') => 'DESC'
+            ])
+            ->formatResults(function (ResultSetInterface $results) {
+                return $results->map(function ($row) {
+                    $url = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffAppraisals',
+                        'view',
+                        $this->paramsEncode(['id' => $row->id]),
+                        'user_id' => $row->staff_id,
+                        'institution_id' => $row->institution_id
                     ];
-                    if (isset($entity->id)) {
-                        $leftJoinConditions[$StaffAppraisalsCompetencies->aliasField('staff_appraisal_id')] = $entity->id;
-                    }
 
-                    $competencyResults = $CompetencySetsCompetencies
-                        ->find()
-                        ->select([
-                            'id' => $CompetencySetsCompetencies->aliasField('competency_id'),
-                            'name' => 'Competencies.name',
-                            'min' => 'Competencies.min',
-                            'max' => 'Competencies.max',
-                            'default' => 'Competencies.default',
-                            'visible' => 'Competencies.visible',
-                            'rating' => $StaffAppraisalsCompetencies->aliasField('rating')
-                        ])
-                        ->contain(['Competencies'])
-                        ->leftJoin(
-                            [$StaffAppraisalsCompetencies->alias() => $StaffAppraisalsCompetencies->table()],
-                            $leftJoinConditions
-                        )
-                        ->where([$CompetencySetsCompetencies->aliasField('competency_set_id') => $competencySetId])
-                        ->order([$CompetencySetsCompetencies->aliasField('competency_id')])
-                        ->toArray();
-
-                    foreach ($competencyResults as $key => $competencyObj) {
-                        $arrayCompetencies[$competencyObj->id] = [
-                            'id' => $competencyObj->id,
-                            'name' => $competencyObj->name,
-                            'min' => $competencyObj->min,
-                            'max' => $competencyObj->max,
-                            'default' => $competencyObj->default,
-                            'visible' => $competencyObj->visible,
-                            'rating' => $competencyObj->rating
-                        ];
-                    }
-
-                    $missingCompetency = $this->getMissingCompetency($competencySetId, $staffAppraisalId);
-                    if (!empty($missingCompetency)) {
-                        foreach ($missingCompetency as $key => $obj) {
-                            $arrayCompetencies[$obj['competency_id']] = [
-                                'id' => $obj['competency_id'],
-                                'name' => $competencies->get($obj['competency_id'])->name,
-                                'min' => $competencies->get($obj['competency_id'])->min,
-                                'max' => $competencies->get($obj['competency_id'])->max,
-                                'default' => $competencies->get($obj['competency_id'])->default,
-                                'visible' => $competencies->get($obj['competency_id'])->visible,
-                                'rating' => 'Deleted'
-                            ];
-                        }
-                        sort($arrayCompetencies);
-                    }
-                }
-            } else if ($this->request->is(['post', 'put'])) {
-                $requestData = $this->request->data;
-                if (array_key_exists('competencies', $requestData[$this->alias()])) {
-                    foreach ($requestData[$this->alias()]['competencies'] as $key => $obj) {
-                        $arrayCompetencies[$obj['id']] = [
-                            'id' => $obj['id'],
-                            'name' => $obj['name'],
-                            'min' => $obj['min'],
-                            'max' => $obj['max'],
-                            'default' => $obj['default'],
-                            'visible' => $obj['visible'],
-                            'rating' => $obj['_joinData']['rating']
-                        ];
-                    }
-                }
-            }
-
-            $ngModel = [];
-            $totalNgModel = '';
-            if (!empty($arrayCompetencies)) {
-                foreach ($arrayCompetencies as $key => $obj) {
-                    $fieldPrefix = $attr['model'] . '.competencies.' . $cellCount++;
-                    $joinDataPrefix = $fieldPrefix . '._joinData';
-                    $rating = !empty($obj['rating']) ? $obj['rating'] : 0;
-                    $ngModel[] = 'rating_' . $key;
-
-                    $form->unlockField($joinDataPrefix.".rating");
-                    $cellData = "";
-                    if ($rating === 'Deleted') {
-                        $cellData = $this->getMessage('Staff.Appraisal.deleted_competencies');
+                    if (is_null($row->modified)) {
+                        $receivedDate = $this->formatDate($row->created);
                     } else {
-                        $cellData .= '<div class="slider-wrapper input-slider"><slider ng-model="rating_'.$key.'" value='.$rating.' min='.$obj['min'].' step="0.5" max='.$obj['max'].'></div>';
-                        $cellData .= $form->hidden($joinDataPrefix.".rating", [
-                            'label' => false,
-                            'type' => 'number',
-                            'value' => '{{rating_'.$key.'}}'
-                        ]);
-                        $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
-                        $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
-                        $cellData .= $form->hidden($fieldPrefix.".min", ['value' => $obj['min']]);
-                        $cellData .= $form->hidden($fieldPrefix.".max", ['value' => $obj['max']]);
-                        $cellData .= $form->hidden($fieldPrefix.".default", ['value' => $obj['default']]);
-                        $cellData .= $form->hidden($fieldPrefix.".visible", ['value' => $obj['visible']]);
+                        $receivedDate = $this->formatDate($row->modified);
                     }
 
-                    $rowData = [];
-                    $rowData[] = $obj['name'];
-                    $rowData[] = $cellData;
-                    $rowData[] = '{{rating_'.$key.' | number : 1}}'; // "| number : 1"  means the digit after decimal
+                    $row['url'] = $url;
+                    $row['status'] = __($row->_matchingData['Statuses']->name);
+                    // Name (Type) for OpenEMIS ID - Staff Name in Appraisal Period
+                    $row['request_title'] = sprintf(__('%s (%s) for %s in %s'), $row->appraisal_form->name, $row->appraisal_type->name, $row->user->name_with_id, $row->appraisal_period->name);
+                    $row['institution'] = $row->institution->code_name;
+                    $row['received_date'] = $receivedDate;
+                    $row['requester'] = $row->created_user->name_with_id;
 
-                    $tableCells[] = $rowData;
-                }
+                    return $row;
+                });
+            });
 
-                // angular to sum all the rating '{{rating_1+rating_2+.....}}'
-                for ($i=0; $i < count($ngModel) ; $i++) {
-                    if ($i < count($ngModel) - 1) {
-                        $totalNgModel .= $ngModel[$i] . ' + ';
-                    } else {
-                        $totalNgModel .= $ngModel[$i];
-                    }
-                }
-
-                $attr['tableCells'] = $tableCells;
-                $attr['finalRating'] = '{{'.$totalNgModel.' | number : 1}}'; // "| number : 1"  means the digit after decimal
-
-                if ($entity->has('competency_set_id')) {
-                    return $event->subject()->renderElement('Staff.Staff/competency_table', ['attr' => $attr]);
-                }
-            }
-        }
-    }
-
-    public function onUpdateFieldFinalRating(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $attr['attr']['value'] = 0;
-        }
-
-        return $attr;
-    }
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
-        $session = $this->request->session();
-        $loginUserId = $this->Auth->user('id');
-        $createdUserId = $entity->created_user_id;
-
-        // if not admin and not his own appraisal remove and edit button will be remove
-        if (!$this->AccessControl->isAdmin()) {
-            if ($loginUserId != $createdUserId) {
-                unset($buttons['edit']);//remove edit action from the action button
-                unset($buttons['remove']);// remove delete action from the action button
-            }
-        }
-
-        return $buttons;
-    }
-
-    public function setupFields(Entity $entity)
-    {
-        $this->field('academic_period_id');
-        $this->field('from');
-        $this->field('to');
-        $this->field('staff_appraisal_type_id', ['type' => 'select']);
-        $this->field('competency_set_id');
-        $this->field('rating', ['type' => 'custom_rating']);
-        $this->field('final_rating', ['type' => 'hidden']);
-        $this->field('file_name', [
-            'type' => 'hidden',
-            'visible' => ['view' => false, 'edit' => true]
-        ]);
-        $this->field('file_content', ['visible' => ['view' => false, 'edit' => true]]);
-
-        $this->setFieldOrder(['title', 'academic_period_id', 'from', 'to', 'staff_appraisal_type_id', 'competency_set_id', 'rating', 'final_rating', 'comment', 'file_name', 'file_content']);
-    }
-
-    public function getMissingCompetency($competencySetId, $staffAppraisalId)
-    {
-        $StaffAppraisalsCompetencies = TableRegistry::get('Staff.StaffAppraisalsCompetencies');
-        $CompetencySetsCompetencies = TableRegistry::get('Staff.CompetencySetsCompetencies');
-
-        $oldSetData = $StaffAppraisalsCompetencies
-            ->find()
-            ->where([$StaffAppraisalsCompetencies->aliasField('staff_appraisal_id') => $staffAppraisalId])
-            ->toArray()
-            ;
-
-        $newSetData = $CompetencySetsCompetencies
-            ->find()
-            ->select([$CompetencySetsCompetencies->aliasField('competency_id')])
-            ->where([$CompetencySetsCompetencies->aliasField('competency_set_id') => $competencySetId])
-            ->toArray()
-            ;
-
-        $newSet = [];
-        foreach ($newSetData as $key => $obj) {
-            $newSet[$obj['competency_id']] = $obj['rating'];
-        }
-
-        $missingCompetency = [];
-        foreach ($oldSetData as $key => $obj) {
-           if ((!empty($oldSetData)) && (!array_key_exists($obj['competency_id'], $newSet))) {
-                $missingCompetency[$key] = $obj;
-            }
-        }
-
-        return $missingCompetency;
+        return $query;
     }
 }

@@ -12,6 +12,8 @@ use Cake\Validation\Validator;
 use Cake\Controller\Component;
 use Cake\I18n\Date;
 use App\Model\Table\ControllerActionTable;
+use Workflow\Model\Behavior\WorkflowBehavior;
+
 
 class StudentTransferTable extends ControllerActionTable
 {
@@ -167,7 +169,7 @@ class StudentTransferTable extends ControllerActionTable
 					foreach ($requestData[$this->alias()]['students'] as $key => $studentObj) {
 						if (isset($studentObj['selected']) && $studentObj['selected']) {
 							unset($studentObj['selected']);
-                            $studentObj['status_id'] = 0;
+                            $studentObj['status_id'] = WorkflowBehavior::STATUS_OPEN;
                             $studentObj['institution_id'] = $nextInstitutionId;
 							$studentObj['academic_period_id'] = $nextAcademicPeriodId;
 							$studentObj['education_grade_id'] = $nextEducationGradeId;

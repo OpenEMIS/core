@@ -1,33 +1,57 @@
+var ids = [];
+var rowIdIndex = {};
+var downloadText = '';
+
 $(document).ready(function() {
-    ReportList.init();
+	downloadText = $('#ReportList').attr('data-downloadtext');
+	ReportList.init(); 
 });
 
-var ids = [];
 var ReportList = {
+	promises: [],
 	init: function() {
 		var selector = '.progress .progress-bar';
+		ReportList.promises = [];
+		rowIdIndex = {};
 
-		$(selector).progressbar({
-			display_text: 'center',
-			done: function(e) {
-				var current = $(e).attr('data-transitiongoal');
-				var rowId = $(e).closest('tr').attr('row-id');
+		$(selector).each(function(index, element) {
+			var rowId = $(element).closest('tr').attr('row-id');
+			rowIdIndex[rowId] = index;
+			ReportList.promises[index] = new $.Deferred();
 
-				if (current < 100 || $(e).closest('tr').find('.modified').html() == '') {
-					if ($.inArray(rowId, ids) == -1) {
-						ids.push(rowId);
+			$(element).progressbar({
+				display_text: 'center',
+				percent_format: function(percent) { 
+					return (percent < 100) ? percent + '%' : downloadText; 
+				},
+				done: function(e) {
+					var current = $(e).attr('data-transitiongoal');
+					var status = $(e).attr('data-status');
+					var rowId = $(e).closest('tr').attr('row-id');
+
+					if (current < 100 || $(e).closest('tr').find('.modified').html() == '') {
+						if ($.inArray(rowId, ids) == -1) {
+							ids.push(rowId);
+						}
+					} else if (status == 0) {
+						$(e).closest('.progress').fadeOut(1000, function() {
+							$(e).closest('td').find('a.download').removeClass('none');
+							$(e).closest('.progress').remove();
+							ids.splice($.inArray(rowId, ids), 1);
+						});
 					}
 
-					if (ids.length > 0) {
-						ReportList.getProgress(ids);
-					}
-				} else {
-					$(e).closest('.progress').fadeOut(1000, function() {
-						$(e).closest('td').find('a.download').removeClass('none');
-						$(e).closest('.progress').remove();
-						ids.splice( $.inArray(rowId, ids), 1 );
-					});
-				}
+					var resolveIndex = rowIdIndex[rowId];
+					ReportList.promises[resolveIndex].resolve();
+				}	
+			});
+		});
+
+		$.when.apply($, ReportList.promises).done(function() {
+			if (ids.length > 0) {
+				setTimeout(function() {
+					ReportList.getProgress(ids);
+				}, 1000);
 			}
 		});
 	},
@@ -47,11 +71,11 @@ var ReportList = {
 					if (data['percent'] != undefined) {
 						var progressbar = $('[row-id="' + id + '"] [role="progressbar"]');
 						progressbar.attr('data-transitiongoal', data['percent']);
+						progressbar.attr('data-status', data['status']);
 
 						if (data['status'] != -1 && data['percent'] == 100 && data['modified'] != null) {
 							$(selector).find('.modified').html(data['modified']);
 							$(selector).find('.expiryDate').html(data['expiry_date']);
-							ReportList.init();
 						} else if (data['status'] == -1) {
 							progressbar.closest('.progress').fadeOut(1000, function() {
 								$('[data-toggle="tooltip"]').removeClass('none').tooltip();
@@ -61,10 +85,7 @@ var ReportList = {
 					}
 				});
 
-				// delay 5s before send another ajax request again
-				setTimeout(function() {
-					ReportList.init();
-				}, 5000);
+			    ReportList.init();
 			}
 		});
 	}
