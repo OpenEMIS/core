@@ -1991,13 +1991,18 @@ class WorkflowBehavior extends Behavior
     {
         $institutionKey = $this->config('institution_key');
         $model = $this->_table;
-        $doneStatus = WorkflowSteps::DONE;
+
+        $doneStatus = new ArrayObject();
+        $doneStatus[] = WorkflowSteps::DONE;
         $institutionId = $params['institution_id'];
 
+        $model->dispatchEvent('Workflow.getDoneStatus', [$doneStatus], $model);
         $count = $model
             ->find()
              ->matching('Statuses', function ($q) use ($doneStatus) {
-                return $q->where(['category <> ' => $doneStatus]);
+                return $q->where([
+                    'category NOT IN ' => $doneStatus
+                ]);
              })
             ->where([
                 $model->aliasField($institutionKey) => $institutionId
