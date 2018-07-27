@@ -29,6 +29,11 @@ class StudentAttendancesTable extends AppTable
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
         // $this->addBehavior('Institution.Calendar');
+
+        $this->addBehavior('Excel', [
+            'excludes' => ['status', 'education_grade_id', 'id', 'academic_period_id', 'institution_id'],
+            'pages' => ['index']
+        ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentAttendances' => ['index', 'view']
         ]);
