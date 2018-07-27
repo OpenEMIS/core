@@ -2463,9 +2463,9 @@ class ValidationBehavior extends Behavior
                     }
                 }
             }
+
             // school_based workflow
             $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
-
             $schoolBasedModels = $WorkflowModels
                 ->find()
                 ->where([
