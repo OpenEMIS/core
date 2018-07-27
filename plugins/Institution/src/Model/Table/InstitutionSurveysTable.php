@@ -78,6 +78,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Workflow.getFilterOptions'] = 'getWorkflowFilterOptions';
+        $events['Workflow.getDoneStatus'] = 'getWorkflowDoneStatus';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
 
         return $events;
@@ -168,6 +169,15 @@ class InstitutionSurveysTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect($this->url('edit'));
         }
+    }
+
+    public function getWorkflowDoneStatus(Event $event, ArrayObject $doneStatus)
+    {
+        $surveyDoneStatus = [];
+        $surveyDoneStatus[] = WorkflowSteps::DONE;
+        $surveyDoneStatus[] = self::EXPIRED;
+
+        $doneStatus->exchangeArray($surveyDoneStatus);
     }
 
     public function getWorkflowFilterOptions(Event $event, array $extra = null)
