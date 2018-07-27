@@ -34,6 +34,7 @@ class BodyMassesTable extends AppTable
             'autoFields' => false
         ]);
         $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity');
     }
 
     public function beforeAction(Event $event) 
