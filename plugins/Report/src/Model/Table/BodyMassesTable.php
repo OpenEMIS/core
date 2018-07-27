@@ -28,12 +28,12 @@ class BodyMassesTable extends AppTable
         // Behaviors
         $this->addBehavior('Excel', [
             'excludes' => [
-                'student_status_id', 'academic_period_id', 'start_date', 'start_year', 'end_date', 'end_year', 'institution_id', 'previous_institution_student_id'
+                'student_status_id', 'academic_period_id', 'start_date', 'start_year', 'end_date', 'end_year', 'previous_institution_student_id'
             ],
             'pages' => false,
             'autoFields' => false
         ]);
-        $this->addBehavior('Report.ReportList');      
+        $this->addBehavior('Report.ReportList');
     }
 
     public function beforeAction(Event $event) 
@@ -90,6 +90,7 @@ class BodyMassesTable extends AppTable
             ->select([
                 $this->aliasField('student_id'),
                 $this->aliasField('education_grade_id'),
+                $this->aliasField('institution_id'),
                 $this->aliasField('academic_period_id'),
                 'bm_date' => 'UserBodyMasses.date',
                 'bm_height' => 'UserBodyMasses.height',
@@ -118,7 +119,11 @@ class BodyMassesTable extends AppTable
                         'name'
                     ]
                 ],
-                'Institutions',
+                'Institutions' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
                 'AcademicPeriods' => [
                     'fields' => [
                         'name',
