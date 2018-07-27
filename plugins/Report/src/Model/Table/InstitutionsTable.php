@@ -585,11 +585,11 @@ class InstitutionsTable extends AppTable
                             'valueField' => 'code_name'
                         ])
                         ->where([
-                            $this->aliasField('institution_type_id') => $institutionTypeId
+                            $InstitutionsTable->aliasField('institution_type_id') => $institutionTypeId
                         ])
                         ->order([
-                            $this->aliasField('code') => 'ASC',
-                            $this->aliasField('name') => 'ASC'
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
                         ]);
 
                     $superAdmin = $this->Auth->user('super_admin');
