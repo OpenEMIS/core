@@ -324,15 +324,11 @@ class InstitutionSubjectStudentsTable extends AppTable
     
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew()) { 
-            $id = $entity->institution_subject_id;
-            $countMale = $this->getMaleCountBySubject($id);
-            $countFemale = $this->getFemaleCountBySubject($id);
-            $this->InstitutionSubjects->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
-        }
-
+        $id = $entity->institution_subject_id;
+        $countMale = $this->getMaleCountBySubject($id);
+        $countFemale = $this->getFemaleCountBySubject($id);
+        $this->InstitutionSubjects->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
     }
-
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {   
