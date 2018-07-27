@@ -1,4 +1,4 @@
-<<?php
+<?php
 use Cake\Routing\Router;
 
 Router::scope('/Feeders', ['plugin' => 'Feeder'], function ($routes) {

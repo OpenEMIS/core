@@ -401,6 +401,15 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentAbsences']);
     }
+    public function FeederOutgoingInstitutions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.FeederOutgoingInstitutions']);
+    }
+
+    public function FeederIncomingInstitutions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.FeederIncomingInstitutions']);
+    }    
     // End
 
     // AngularJS
@@ -1224,6 +1233,9 @@ class InstitutionsController extends AppController
                             $model->aliasField('institution_id') => $institutionId,
                             $model->aliasField('location_institution_id') => $institutionId
                         ];
+                        $exists = $model->exists($params);
+                    } elseif (in_array($model->alias(), ['FeederOutgoingInstitutions'])) {
+                        $params[$model->aliasField('feeder_institution_id')] = $institutionId;
                         $exists = $model->exists($params);
                     } else {
                         $checkExists = function ($model, $params) {
