@@ -1,10 +1,53 @@
 angular
-    .module('institution.student.attendances.svc', ['kd.data.svc'])
+    .module('institution.student.attendances.svc', ['kd.data.svc', 'alert.svc'])
     .service('InstitutionStudentAttendancesSvc', InstitutionStudentAttendancesSvc);
 
-InstitutionStudentAttendancesSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc'];
+InstitutionStudentAttendancesSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc'];
 
 function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
+    const attendanceType = {
+        'NOTMARKED': {
+            code: 'NOTMARKED',
+            icon: 'fa fa-minus',
+            color: '#999999'
+        },
+        'PRESENT': {
+            code: 'PRESENT',
+            icon: 'fa fa-check',
+            color: '#77B576'
+        },
+        'LATE': {
+            code: 'LATE',
+            icon: 'fa fa-check-circle-o',
+            color: '#77B576'
+        },
+        'UNEXCUSED': {
+            code: 'UNEXCUSED',
+            icon: 'fa fa-circle-o',
+            color: '#CC5C5C'
+        },
+        'EXCUSED': {
+            code: 'EXCUSED',
+            icon: 'fa fa-circle-o',
+            color: '#CC5C5C'
+        },
+    };
+
+    const icons = {
+        'REASON': 'fa fa-commenting',
+        'COMMENT': 'fa fa-commenting'
+    };
+
+    var models = {
+        AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
+        StudentAttendances: 'Institution.StudentAttendances',
+        InstitutionClasses: 'Institution.InstitutionClasses',
+        StudentAttendanceMarkTypes: 'Attendance.StudentAttendanceMarkTypes',
+        AbsenceTypes: 'Institution.AbsenceTypes',
+        StudentAbsenceReasons: 'Institution.StudentAbsenceReasons',
+        StudentAbsences: 'Institution.StudentAbsences',
+        StudentAttendanceMarkedRecords: 'Attendance.StudentAttendanceMarkedRecords'
+    };
 
     var service = {
         init: init,
@@ -22,18 +65,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         getIsMarked: getIsMarked,
 
         getSingleDayColumnDefs: getSingleDayColumnDefs,
-        getAllDayColumnDefs: getAllDayColumnDefs
-    };
-
-    var models = {
-        AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
-        StudentAttendances: 'Institution.StudentAttendances',
-        InstitutionClasses: 'Institution.InstitutionClasses',
-        StudentAttendanceMarkTypes: 'Attendance.StudentAttendanceMarkTypes',
-        AbsenceTypes: 'Institution.AbsenceTypes',
-        StudentAbsenceReasons: 'Institution.StudentAbsenceReasons',
-        StudentAbsences: 'Institution.StudentAbsences',
-        StudentAttendanceMarkedRecords: 'Attendance.StudentAttendanceMarkedRecords'
+        getAllDayColumnDefs: getAllDayColumnDefs,
+        getAttendanceTypeList: getAttendanceTypeList
     };
 
     return service;
@@ -42,7 +75,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         KdDataSvc.base(baseUrl);
         KdDataSvc.controllerAction('StudentAttendances');
         KdDataSvc.init(models);
-    };
+    }
 
     function translate(data) {
         KdDataSvc.init({translation: 'translate'});
@@ -51,8 +84,13 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             deferred.resolve(translated);
         };
         return translation.translate(data, {success: success, defer: true});
-    };
+    }
 
+    function getAttendanceTypeList() {
+        return attendanceType;
+    }
+
+    // data service
     function getAbsenceTypeOptions() {
         var success = function(response, deferred) {
             var absenceType = response.data.data;
@@ -229,7 +267,27 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             .find('PeriodIsMarked', extra)
             .ajax({success: success, defer: true});
     }
+    // save
+    function saveAbsences(data, context) {
+        var studentAbsenceData = {
+            student_id: data.student_id,
+            institution_id: data.institution_id,
+            academic_period_id: data.academic_period_id,
+            institution_class_id: data.institution_class_id,
+            absence_type_id: data.institution_student_absences.absence_type_id,
+            student_absence_reason_id: data.institution_student_absences.student_absence_reason_id,
+            comment: data.institution_student_absences.comment,
+            period: context.period,
+            date: context.date
+        };
 
+        var scope = context.scope;
+
+        // console.log('save - studentAbsenceData', studentAbsenceData);
+        return StudentAbsences.save(studentAbsenceData);
+    } 
+
+    // column definitions
     function getAllDayColumnDefs(dayList, attendancePeriodList) {
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
@@ -256,7 +314,6 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
 
         angular.forEach(dayList, function(dayObj, dayKey) {
             if (dayObj.id != -1) {
-
                 var childrenColDef = [];
                 angular.forEach(attendancePeriodList, function(periodObj, periodKey) {
                     childrenColDef.push({
@@ -270,28 +327,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                         cellClass: 'children-cell',
                         cellRenderer: function(params) {
                             if (angular.isDefined(params.value)) {
-                                var html = '';
                                 var code = params.value;
-                                switch (code) {
-                                    case 'NOTMARKED':
-                                        html = '<i class="fa fa-minus"></i>';
-                                        break;
-                                    case 'PRESENT':
-                                        html = '<i style="color: #77B576;" class="fa fa-check"></i>';
-                                        break;
-                                    case 'LATE':
-                                        html = '<i style="color: #77B576;" class="fa fa-check-circle-o"></i>';
-                                        break;
-                                    case 'UNEXCUSED':
-                                        html = '<i style="color: #CC5C5C;" class="fa fa-circle-o"></i>';
-                                        break;
-                                    case 'EXCUSED':
-                                        html = '<i style="color: #CC5C5C;" class="fa fa-circle-o"></i>';
-                                        break;
-                                    default:
-                                        break;
-                                }
-                                return html;
+                                return getViewAllDayAttendanceElement(code);
                             }
                         }
                     });
@@ -343,11 +380,12 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                     var context = params.context;
                     var absenceTypeList = context.absenceType;
                     var isMarked = context.isMarked;
+                    var isSchoolClosed = params.context.schoolClosed;
                     var mode = params.context.mode;
                     var data = params.data;
 
                     if (mode == 'view') {
-                        return getViewAttendanceElement(data, absenceTypeList, isMarked);
+                        return getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed);
                     } 
                     else if (mode == 'edit') {
                         var api = params.api;
@@ -376,14 +414,14 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
 
                         if (mode == 'view') {
                             switch (absenceTypeObj.code) {
-                                case 'PRESENT':
+                                case attendanceType.PRESENT.code:
                                     return '<i class="fa fa-minus"></i>';
-                                case 'LATE':
-                                case 'UNEXCUSED':
+                                case attendanceType.LATE.code:
+                                case attendanceType.UNEXCUSED.code:
                                     var html = '';
                                     html += getViewCommentsElement(data);
                                     return html;
-                                case 'EXCUSED':
+                                case attendanceType.EXCUSED.code:
                                     var html = '';
                                     html += getViewAbsenceReasonElement(data, studentAbsenceReasonList);
                                     html += getViewCommentsElement(data);
@@ -391,21 +429,16 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                             }   
                         } else if (mode == 'edit') {
                             switch (absenceTypeObj.code) {
-                                case 'PRESENT':
+                                case attendanceType.PRESENT.code:
                                     return '<i class="fa fa-minus"></i>';
-                                case 'LATE':
+                                case attendanceType.LATE.code:
+                                case attendanceType.UNEXCUSED.code:
                                     var eCell = document.createElement('div');
                                     eCell.setAttribute("class", "reason-wrapper");
                                     var eTextarea = getEditCommentElement(data, context);
                                     eCell.appendChild(eTextarea);
                                     return eCell;
-                                case 'UNEXCUSED':
-                                    var eCell = document.createElement('div');
-                                    eCell.setAttribute("class", "reason-wrapper");
-                                    var eTextarea = getEditCommentElement(data, context);
-                                    eCell.appendChild(eTextarea);
-                                    return eCell;
-                                case 'EXCUSED':
+                                case attendanceType.EXCUSED.code:
                                     var eCell = document.createElement('div');
                                     eCell.setAttribute("class", "reason-wrapper");
                                     var eSelect = getEditAbsenceReasonElement(data, studentAbsenceReasonList, context);
@@ -425,24 +458,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         return columnDefs;
     }
 
-    function saveAbsences(data, context) {
-        var studentAbsenceData = {
-            student_id: data.student_id,
-            institution_id: data.institution_id,
-            academic_period_id: data.academic_period_id,
-            institution_class_id: data.institution_class_id,
-            absence_type_id: data.institution_student_absences.absence_type_id,
-            student_absence_reason_id: data.institution_student_absences.student_absence_reason_id,
-            comment: data.institution_student_absences.comment,
-            period: context.period,
-            date: context.date
-        };
-
-        // console.log('save - studentAbsenceData', studentAbsenceData);
-        StudentAbsences.save(studentAbsenceData);
-    } 
-
-    // Cell renderer elements
+    // cell renderer elements
     function getEditAttendanceElement(data, absenceTypeList, api, context) {
         if (data.institution_student_absences.absence_type_id == null) {
             data.institution_student_absences.absence_type_id = 0;
@@ -451,6 +467,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         var oldValue = data.institution_student_absences.absence_type_id;
         var eCell = document.createElement('div');
         eCell.setAttribute("class", "oe-select-wrapper input-select-wrapper");
+        eCell.setAttribute("id", "attendace");
 
         var eSelect = document.createElement("select");
         angular.forEach(absenceTypeList, function(obj, key) {
@@ -472,17 +489,17 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                 oldValue = newValue;
                 // reset not related data
                 switch (absenceTypeObj.code) {
-                    case 'PRESENT':
+                    case attendanceType.PRESENT.code:
                         data.institution_student_absences.student_absence_reason_id = null;
                         data.institution_student_absences.comment = null;
                         data.institution_student_absences.absence_type_id = null;
                         break;
-                    case 'LATE':
-                    case 'UNEXCUSED':
+                    case attendanceType.LATE.code:
+                    case attendanceType.UNEXCUSED.code:
                         data.institution_student_absences.student_absence_reason_id = null;
                         data.institution_student_absences.comment = null;
                         break;
-                    case 'EXCUSED':
+                    case attendanceType.EXCUSED.code:
                         data.institution_student_absences.comment = null;
                         break;
                 }
@@ -497,7 +514,14 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                 api.refreshCells(refreshParams);
             }
 
-            saveAbsences(data, context);
+            saveAbsences(data, context).then(
+                function (response) {
+                    console.log('response', response);
+                },
+                function (error) {
+                    console.log('error', error);
+                }
+            );
         });
 
         eCell.appendChild(eSelect);
@@ -507,31 +531,38 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
     function getEditCommentElement(data, context) {
         var eTextarea = document.createElement("textarea");
         eTextarea.setAttribute("placeholder", "Comments");
+        eTextarea.setAttribute("id", "comments");
         eTextarea.value = data.institution_student_absences.comment;
 
-        eTextarea.addEventListener('change', function () {
-            data.institution_student_absences.comment = eTextarea.value;
-        });
-
         eTextarea.addEventListener('blur', function () {
+            var tempValue = data.institution_student_absences.comment;
             data.institution_student_absences.comment = eTextarea.value;
-            saveAbsences(data, context);
+            console.log('old value: ', angular.copy(tempValue));
+            console.log('new value: ', angular.copy(data.institution_student_absences.comment));
+
+            saveAbsences(data, context).then(
+                function (response) {
+                    console.log('response', response);
+                },
+                function (error) {
+                    console.log('error', error);
+                }
+            );;
         });
 
         return eTextarea;
     }
 
-    
-
     function getEditAbsenceReasonElement(data, studentAbsenceReasonList, context) {
         var eSelectWrapper = document.createElement('div');
         eSelectWrapper.setAttribute("class", "oe-select-wrapper input-select-wrapper");
+        eSelectWrapper.setAttribute("id", "absence_reason");
         var eSelect = document.createElement("select");
 
         if (data.institution_student_absences.student_absence_reason_id == null) {
             data.institution_student_absences.student_absence_reason_id = studentAbsenceReasonList[0].id;
         }
-
+        
         angular.forEach(studentAbsenceReasonList, function(obj, key) {
             var eOption = document.createElement("option");
             var labelText = obj.name;
@@ -540,6 +571,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             eSelect.appendChild(eOption);
         });
             
+        eSelect.value = data.institution_student_absences.student_absence_reason_id;
         eSelect.addEventListener('change', function () {
             data.institution_student_absences.student_absence_reason_id = eSelect.value;
             saveAbsences(data, context);
@@ -549,31 +581,35 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         return eSelectWrapper;
     }
 
-    function getViewAttendanceElement(data, absenceTypeList, isMarked) {
+    function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed) {
         if (angular.isDefined(data.institution_student_absences)) {
             var html = '';
             if (isMarked) {
                 var id = (data.absence_type_id === null) ? 0 : data.institution_student_absences.absence_type_id;
                 var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
                 switch (absenceTypeObj.code) {
-                    case 'PRESENT':
-                        html = '<div style="color: #77B576;"><i class="fa fa-check"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
+                    case attendanceType.PRESENT.code:
+                        html = '<div style="color: ' + attendanceType.PRESENT.color + ';"><i class="' + attendanceType.PRESENT.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
                         break;
-                    case 'LATE':
-                        html = '<div style="color: #77B576;"><i class="fa fa-check-circle-o"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
+                    case attendanceType.LATE.code:
+                        html = '<div style="color: ' + attendanceType.LATE.color + ';"><i class="' + attendanceType.LATE.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
                         break;
-                    case 'UNEXCUSED':
-                        html = '<div style="color: #CC5C5C"><i class="fa fa-circle-o"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
+                    case attendanceType.UNEXCUSED.code:
+                        html = '<div style="color: ' + attendanceType.UNEXCUSED.color + '"><i class="' + attendanceType.UNEXCUSED.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
                         break;
-                    case 'EXCUSED':
-                        html = '<div style="color: #CC5C5C"><i class="fa fa-circle-o"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
+                    case attendanceType.EXCUSED.code:
+                        html = '<div style="color: ' + attendanceType.EXCUSED.color + '"><i class="' + attendanceType.EXCUSED.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
                         break;
                     default:
                         break;
                 }
                 return html;
             } else {
-                html = '<i class="fa fa-minus"></i>';
+                if (isSchoolClosed) {
+                    html = '<i style="color: #999999;" class="fa fa-minus"></i>';
+                } else {
+                    html = '<i class="fa fa-minus"></i>';
+                }
             }
             return html;
         }
@@ -583,7 +619,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         var comment = data.institution_student_absences.comment;
         var html = '';
         if (comment != null) {
-            html = '<div class="absences-comment"><i class="fa fa-commenting"></i><span>' + comment + '</span></div>';
+            html = '<div class="absences-comment"><i class="' + icons.COMMENT + '"></i><span>' + comment + '</span></div>';
         }
         return html;
     }
@@ -597,9 +633,34 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             html = '<i class="fa fa-minus"></i>';
         } else {
             var reasonName = absenceReasonObj.name;
-            html = '<div class="absence-reason"><i class="fa fa-commenting"></i><span>' + reasonName + '</span></div>';
+            html = '<div class="absence-reason"><i class="' + icons.REASON + '"></i><span>' + reasonName + '</span></div>';
         }
 
+        return html;
+    }
+
+    function getViewAllDayAttendanceElement(code) {
+        var html = '';
+        switch (code) {
+            case attendanceType.NOTMARKED.code:
+                // html = '<i style="color: #999999;" class="fa fa-minus"></i>';
+                html = '<i class="' + attendanceType.NOTMARKED.icon + '"></i>';
+                break;
+            case attendanceType.PRESENT.code:
+                html = '<i style="color: ' + attendanceType.PRESENT.color + ';" class="' + attendanceType.PRESENT.icon + '"></i>';
+                break;
+            case attendanceType.LATE.code:
+                html = '<i style="color: ' + attendanceType.LATE.color + ';" class="' + attendanceType.LATE.icon + '"></i>';
+                break;
+            case attendanceType.UNEXCUSED.code:
+                html = '<i style="color: ' + attendanceType.UNEXCUSED.color + ';" class="' + attendanceType.UNEXCUSED.icon + '"></i>';
+                break;
+            case attendanceType.EXCUSED.code:
+                html = '<i style="color: ' + attendanceType.EXCUSED.color + ';" class="' + attendanceType.EXCUSED.icon + '"></i>';
+                break;
+            default:
+                break;
+        }
         return html;
     }
 };

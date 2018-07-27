@@ -85,6 +85,8 @@ class AcademicPeriodsTable extends AppTable
             'OpenEMIS_Classroom' => ['index', 'view'],
             'StudentAttendances' => ['index', 'view']
         ]);
+
+        $this->addBehavior('Institution.Calendar');
     }
 
     public function validationDefault(Validator $validator)
@@ -1025,15 +1027,21 @@ class AcademicPeriodsTable extends AppTable
 
         do {
             if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
-                // $schoolClosed = $this->isSchoolClosed($firstDayOfWeek) ? __('School Closed') : '';
+                $schoolClosed = $this->isSchoolClosed($firstDayOfWeek);
+                $suffix = $schoolClosed ? __('School Closed') : '';
 
-                $dayOptions[] = [
+                $data = [
                     'id' => $firstDayOfWeek->dayOfWeek,
                     'day' => __($firstDayOfWeek->format('l')),
-                    // 'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ') ' . $schoolClosed,
-                    'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ')',
+                    'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ') ' . $suffix,
                     'date' => $firstDayOfWeek->format('Y-m-d'),
                 ];
+
+                if ($schoolClosed) {
+                    $data['closed'] = true;
+                }
+
+                $dayOptions[] = $data;
 
                 if (is_null($today) || $firstDayOfWeek->isToday()) {
                     end($dayOptions);
