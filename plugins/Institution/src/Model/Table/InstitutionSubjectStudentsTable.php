@@ -302,6 +302,9 @@ class InstitutionSubjectStudentsTable extends AppTable
         $count = $this
             ->find()
             ->contain('Users')
+            ->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
+            })
             ->where([$this->Users->aliasField('gender_id') => $gender_id])
             ->where([$this->aliasField('institution_subject_id') => $subjectId])
             ->count()
@@ -315,6 +318,9 @@ class InstitutionSubjectStudentsTable extends AppTable
         $count = $this
             ->find()
             ->contain('Users')
+            ->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
+            })
             ->where([$this->Users->aliasField('gender_id') => $gender_id])
             ->where([$this->aliasField('institution_subject_id') => $subjectId])
             ->count()
