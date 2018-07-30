@@ -20,7 +20,7 @@ class POCOR4704 extends AbstractMigration
                 inner join `security_users` on `security_users`.`id` = `institution_class_students`.`student_id`
                 inner join `genders` on `genders`.`id` = `security_users`.`gender_id`
                 where `institution_class_students`.`institution_class_id` = `institution_classes`.`id`
-                and `student_statuses`.`code` = 'CURRENT'
+                and `student_statuses`.`code` NOT IN ('TRANSFERRED', 'WITHDRAWN')
                 and `genders`.`code` = 'M'
             )");
 
@@ -32,7 +32,7 @@ class POCOR4704 extends AbstractMigration
                 inner join `security_users` on `security_users`.`id` = `institution_class_students`.`student_id`
                 inner join `genders` on `genders`.`id` = `security_users`.`gender_id`
                 where `institution_class_students`.`institution_class_id` = `institution_classes`.`id`
-                and `student_statuses`.`code` = 'CURRENT'
+                and `student_statuses`.`code` NOT IN ('TRANSFERRED', 'WITHDRAWN')
                 and `genders`.`code` = 'F'
             )");
 
@@ -44,7 +44,7 @@ class POCOR4704 extends AbstractMigration
                 inner join `security_users` on `security_users`.`id` = `institution_subject_students`.`student_id`
                 inner join `genders` on `genders`.`id` = `security_users`.`gender_id`
                 where `institution_subject_students`.`institution_subject_id` = `institution_subjects`.`id`
-                and `student_statuses`.`code` = 'CURRENT'
+                and `student_statuses`.`code` NOT IN ('TRANSFERRED', 'WITHDRAWN')
                 and `genders`.`code` = 'M'
             )");
 
@@ -56,7 +56,7 @@ class POCOR4704 extends AbstractMigration
                 inner join `security_users` on `security_users`.`id` = `institution_subject_students`.`student_id`
                 inner join `genders` on `genders`.`id` = `security_users`.`gender_id`
                 where `institution_subject_students`.`institution_subject_id` = `institution_subjects`.`id`
-                and `student_statuses`.`code` = 'CURRENT'
+                and `student_statuses`.`code` NOT IN ('TRANSFERRED', 'WITHDRAWN')
                 and `genders`.`code` = 'F'
             )");
     }
