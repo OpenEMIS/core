@@ -4,7 +4,7 @@ angular
 
 InstitutionStudentAttendancesSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc'];
 
-function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
+function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
     const attendanceType = {
         'NOTMARKED': {
             code: 'NOTMARKED',
@@ -35,7 +35,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
 
     const icons = {
         'REASON': 'fa fa-commenting',
-        'COMMENT': 'fa fa-commenting'
+        'COMMENT': 'fa fa-commenting',
+        'PRESENT': 'fa fa-minus',
     };
 
     var models = {
@@ -66,7 +67,10 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
 
         getSingleDayColumnDefs: getSingleDayColumnDefs,
         getAllDayColumnDefs: getAllDayColumnDefs,
-        getAttendanceTypeList: getAttendanceTypeList
+        getAttendanceTypeList: getAttendanceTypeList,
+
+        saveAbsences: saveAbsences,
+        savePeriodMarked: savePeriodMarked
     };
 
     return service;
@@ -102,7 +106,11 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         };
 
         return AbsenceTypes
-            .find('AbsenceTypeList')
+            .find('AbsenceTypeList', {
+                institution_id: 1
+            })
+            .where()
+            .select()
             .ajax({success: success, defer: true});
     }
 
@@ -121,7 +129,11 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             .order(['order'])
             .ajax({success: success, defer: true});
     }
-    
+
+    function fdf() {
+        return Promise();
+    }
+
     function getAcademicPeriodOptions(institutionId) {
         var success = function(response, deferred) {
             var periods = response.data.data;
@@ -263,10 +275,29 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                 deferred.reject('There was an error when retrieving the is_marked record');
             }
         };
+
         return StudentAttendanceMarkedRecords
             .find('PeriodIsMarked', extra)
             .ajax({success: success, defer: true});
     }
+
+    // save error
+    function clearError(data, skipKey) {
+        if (angular.isUndefined(data.save_error)) {
+            data.save_error = {};
+        }
+
+        angular.forEach(data.save_error, function(error, key) {
+            if (key != skipKey) {
+                data.save_error[key] = false;
+            }
+        })
+    }
+
+    function hasError(data, key) {
+        return (angular.isDefined(data.save_error) && angular.isDefined(data.save_error[key]) && data.save_error[key]);
+    }
+
     // save
     function saveAbsences(data, context) {
         var studentAbsenceData = {
@@ -281,11 +312,28 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             date: context.date
         };
 
-        var scope = context.scope;
-
         // console.log('save - studentAbsenceData', studentAbsenceData);
         return StudentAbsences.save(studentAbsenceData);
     } 
+
+    function savePeriodMarked(params, scope) {
+        var extra = {
+            institution_id: params.institution_id,
+            institution_class_id: params.institution_class_id,
+            academic_period_id: params.academic_period_id,
+            date: params.day_id,
+            period: params.attendance_period_id
+        };
+
+        StudentAttendanceMarkedRecords.save(extra).then(
+            function(response) {
+                AlertSvc.info(scope, 'Attendances will be automatically saved.');
+            },
+            function(error) {
+                AlertSvc.error(scope, 'There was an error when saving the record');
+            }
+        );
+    }
 
     // column definitions
     function getAllDayColumnDefs(dayList, attendancePeriodList) {
@@ -415,7 +463,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                         if (mode == 'view') {
                             switch (absenceTypeObj.code) {
                                 case attendanceType.PRESENT.code:
-                                    return '<i class="fa fa-minus"></i>';
+                                    return '<i class="' + icons.PRESENT + '"></i>';
                                 case attendanceType.LATE.code:
                                 case attendanceType.UNEXCUSED.code:
                                     var html = '';
@@ -428,21 +476,22 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                                     return html;
                             }   
                         } else if (mode == 'edit') {
+                            var api = params.api;
                             switch (absenceTypeObj.code) {
                                 case attendanceType.PRESENT.code:
-                                    return '<i class="fa fa-minus"></i>';
+                                    return '<i class="' + icons.PRESENT + '"></i>';
                                 case attendanceType.LATE.code:
                                 case attendanceType.UNEXCUSED.code:
                                     var eCell = document.createElement('div');
                                     eCell.setAttribute("class", "reason-wrapper");
-                                    var eTextarea = getEditCommentElement(data, context);
+                                    var eTextarea = getEditCommentElement(data, context, api);
                                     eCell.appendChild(eTextarea);
                                     return eCell;
                                 case attendanceType.EXCUSED.code:
                                     var eCell = document.createElement('div');
                                     eCell.setAttribute("class", "reason-wrapper");
-                                    var eSelect = getEditAbsenceReasonElement(data, studentAbsenceReasonList, context);
-                                    var eTextarea = getEditCommentElement(data, context);
+                                    var eSelect = getEditAbsenceReasonElement(data, studentAbsenceReasonList, context, api);
+                                    var eTextarea = getEditCommentElement(data, context, api);
                                     eCell.appendChild(eSelect);
                                     eCell.appendChild(eTextarea);
                                     return eCell;
@@ -460,14 +509,15 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
 
     // cell renderer elements
     function getEditAttendanceElement(data, absenceTypeList, api, context) {
-        if (data.institution_student_absences.absence_type_id == null) {
-            data.institution_student_absences.absence_type_id = 0;
-        }
-
-        var oldValue = data.institution_student_absences.absence_type_id;
+        var dataKey = 'absence_type_id';
+        var scope = context.scope;
         var eCell = document.createElement('div');
         eCell.setAttribute("class", "oe-select-wrapper input-select-wrapper");
-        eCell.setAttribute("id", "attendace");
+        eCell.setAttribute("id", dataKey);
+
+        if (data.institution_student_absences[dataKey] == null) {
+            data.institution_student_absences[dataKey] = 0;
+        }
 
         var eSelect = document.createElement("select");
         angular.forEach(absenceTypeList, function(obj, key) {
@@ -478,35 +528,52 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             eSelect.appendChild(eOption);
         });
 
-        eSelect.value = oldValue;
+        if (hasError(data, dataKey)) {
+            eSelect.setAttribute("class", "error");
+        }
+
+        eSelect.value = data.institution_student_absences[dataKey];
         eSelect.addEventListener('change', function () {
+            var oldValue = data.institution_student_absences[dataKey];
             var newValue = eSelect.value;
+            
             var absenceTypeObj = absenceTypeList.find(obj => obj.id == newValue);
-            data.institution_student_absences.absence_type_id = newValue;
-            data.institution_student_absences.absence_type_code = absenceTypeObj.code;
+            // data.institution_student_absences.absence_type_id = newValue;
 
             if (newValue != oldValue) {
-                oldValue = newValue;
-                // reset not related data
+                var oldParams = {
+                    absence_type_id: oldValue
+                };
+
+                // reset not related data, store old params for reset purpose
                 switch (absenceTypeObj.code) {
                     case attendanceType.PRESENT.code:
+                        oldParams.student_absence_reason_id = data.institution_student_absences.student_absence_reason_id;
+                        oldParams.comment = data.institution_student_absences.comment;
+
                         data.institution_student_absences.student_absence_reason_id = null;
                         data.institution_student_absences.comment = null;
                         data.institution_student_absences.absence_type_id = null;
                         break;
                     case attendanceType.LATE.code:
                     case attendanceType.UNEXCUSED.code:
+                        oldParams.student_absence_reason_id = data.institution_student_absences.student_absence_reason_id;
+                        oldParams.comment = data.institution_student_absences.comment;
+
                         data.institution_student_absences.student_absence_reason_id = null;
                         data.institution_student_absences.comment = null;
                         break;
                     case attendanceType.EXCUSED.code:
+                        oldParams.comment = data.institution_student_absences.comment;
+
                         data.institution_student_absences.comment = null;
                         break;
                 }
 
+                oldValue = newValue;
                 data.institution_student_absences.absence_type_id = newValue;
+                data.institution_student_absences.absence_type_code = absenceTypeObj.code;
                 
-                // refresh student_absence_reason_id to change the input based on absence type
                 var refreshParams = {
                     columns: ['institution_student_absences.student_absence_reason_id'],
                     force: true
@@ -514,53 +581,97 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                 api.refreshCells(refreshParams);
             }
 
-            saveAbsences(data, context).then(
-                function (response) {
-                    console.log('response', response);
+            saveAbsences(data, context)
+            .then(
+                function(response) {
+                    clearError(data, dataKey);
+                    data.save_error[dataKey] = false;
+                    AlertSvc.info(scope, 'Attendances will be automatically saved.');
                 },
-                function (error) {
-                    console.log('error', error);
+                function(error) {
+                    clearError(data, dataKey);
+                    data.save_error[dataKey] = true;
+                    angular.forEach(oldParams, function(value, key) {
+                        data.institution_student_absences[key] = value;
+                    });
+                    AlertSvc.error(scope, 'There was an error when saving the record - Attendance');
                 }
-            );
+            )
+            .finally(function() {
+                var refreshParams = {
+                    columns: [
+                        'institution_student_absences.student_absence_reason_id',
+                        'institution_student_absences.absence_type_id'
+                    ],
+                    force: true
+                };
+                api.refreshCells(refreshParams);
+            });
         });
 
         eCell.appendChild(eSelect);
         return eCell;
     }
 
-    function getEditCommentElement(data, context) {
+    function getEditCommentElement(data, context, api) {
+        var dataKey = 'comment';
+        var scope = context.scope;
         var eTextarea = document.createElement("textarea");
         eTextarea.setAttribute("placeholder", "Comments");
-        eTextarea.setAttribute("id", "comments");
-        eTextarea.value = data.institution_student_absences.comment;
+        eTextarea.setAttribute("id", dataKey);
 
+        if (hasError(data, dataKey)) {
+            eTextarea.setAttribute("class", "error");
+        }
+
+        eTextarea.value = data.institution_student_absences[dataKey];
         eTextarea.addEventListener('blur', function () {
-            var tempValue = data.institution_student_absences.comment;
-            data.institution_student_absences.comment = eTextarea.value;
-            console.log('old value: ', angular.copy(tempValue));
-            console.log('new value: ', angular.copy(data.institution_student_absences.comment));
+            var oldValue = data.institution_student_absences.comment;
+            data.institution_student_absences[dataKey] = eTextarea.value;
 
-            saveAbsences(data, context).then(
-                function (response) {
-                    console.log('response', response);
+            saveAbsences(data, context)
+            .then(
+                function(response) {
+                    clearError(data, dataKey);
+                    data.save_error[dataKey] = false;
+                    AlertSvc.info(scope, 'Attendances will be automatically saved.');
                 },
-                function (error) {
-                    console.log('error', error);
+                function(error) {
+                    clearError(data, dataKey);
+                    data.save_error[dataKey] = true;
+                    AlertSvc.error(scope, 'There was an error when saving the record - Comments');
+                    data.institution_student_absences[dataKey] = oldValue;
                 }
-            );;
+            )
+            .finally(function() {
+                var refreshParams = {
+                    columns: [
+                        'institution_student_absences.student_absence_reason_id',
+                        'institution_student_absences.absence_type_id'
+                    ],
+                    force: true
+                };
+                api.refreshCells(refreshParams);
+            });
         });
 
         return eTextarea;
     }
 
-    function getEditAbsenceReasonElement(data, studentAbsenceReasonList, context) {
+    function getEditAbsenceReasonElement(data, studentAbsenceReasonList, context, api) {
+        var dataKey = 'student_absence_reason_id';
+        var scope = context.scope;
         var eSelectWrapper = document.createElement('div');
         eSelectWrapper.setAttribute("class", "oe-select-wrapper input-select-wrapper");
-        eSelectWrapper.setAttribute("id", "absence_reason");
-        var eSelect = document.createElement("select");
+        eSelectWrapper.setAttribute("id", dataKey);
 
-        if (data.institution_student_absences.student_absence_reason_id == null) {
-            data.institution_student_absences.student_absence_reason_id = studentAbsenceReasonList[0].id;
+        var eSelect = document.createElement("select");
+        if (hasError(data, dataKey)) {
+            eSelect.setAttribute("class", "error");
+        }
+
+        if (data.institution_student_absences[dataKey] == null) {
+            data.institution_student_absences[dataKey] = studentAbsenceReasonList[0].id;
         }
         
         angular.forEach(studentAbsenceReasonList, function(obj, key) {
@@ -571,10 +682,32 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
             eSelect.appendChild(eOption);
         });
             
-        eSelect.value = data.institution_student_absences.student_absence_reason_id;
+        eSelect.value = data.institution_student_absences[dataKey];
         eSelect.addEventListener('change', function () {
-            data.institution_student_absences.student_absence_reason_id = eSelect.value;
-            saveAbsences(data, context);
+            var oldValue = data.institution_student_absences[dataKey];
+            data.institution_student_absences[dataKey] = eSelect.value;
+            saveAbsences(data, context).then(
+                function(response) {
+                    clearError(data, dataKey);
+                    data.save_error[dataKey] = false;
+                    AlertSvc.info(scope, 'Attendances will be automatically saved.');
+                },
+                function(error) {
+                    clearError(data, dataKey);
+                    data.save_error[dataKey] = true;
+                    AlertSvc.error(scope, 'There was an error when saving the record - AbsenceReason');
+                    data.institution_student_absences[dataKey] = oldValue;
+                }
+            ).finally(function() {
+                var refreshParams = {
+                    columns: [
+                        'institution_student_absences.student_absence_reason_id',
+                        'institution_student_absences.absence_type_id'
+                    ],
+                    force: true
+                };
+                api.refreshCells(refreshParams);
+            });
         })
 
         eSelectWrapper.appendChild(eSelect);
@@ -608,11 +741,26 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
                 if (isSchoolClosed) {
                     html = '<i style="color: #999999;" class="fa fa-minus"></i>';
                 } else {
-                    html = '<i class="fa fa-minus"></i>';
+                    html = '<i class="' + icons.PRESENT + '"></i>';
                 }
             }
             return html;
         }
+    }
+
+    function getViewAbsenceReasonElement(data, studentAbsenceReasonList) {
+        var absenceReasonId = data.institution_student_absences.student_absence_reason_id;
+        var absenceReasonObj = studentAbsenceReasonList.find(obj => obj.id == absenceReasonId);
+        var html = '';
+
+        if (absenceReasonId === null) {
+            html = '<i class="' + icons.PRESENT + '"></i>';
+        } else {
+            var reasonName = absenceReasonObj.name;
+            html = '<div class="absence-reason"><i class="' + icons.REASON + '"></i><span>' + reasonName + '</span></div>';
+        }
+
+        return html;
     }
 
     function getViewCommentsElement(data) {
@@ -624,26 +772,10 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc) {
         return html;
     }
 
-    function getViewAbsenceReasonElement(data, studentAbsenceReasonList) {
-        var absenceReasonId = data.institution_student_absences.student_absence_reason_id;
-        var absenceReasonObj = studentAbsenceReasonList.find(obj => obj.id == absenceReasonId);
-        var html = '';
-
-        if (absenceReasonId === null) {
-            html = '<i class="fa fa-minus"></i>';
-        } else {
-            var reasonName = absenceReasonObj.name;
-            html = '<div class="absence-reason"><i class="' + icons.REASON + '"></i><span>' + reasonName + '</span></div>';
-        }
-
-        return html;
-    }
-
     function getViewAllDayAttendanceElement(code) {
         var html = '';
         switch (code) {
             case attendanceType.NOTMARKED.code:
-                // html = '<i style="color: #999999;" class="fa fa-minus"></i>';
                 html = '<i class="' + attendanceType.NOTMARKED.icon + '"></i>';
                 break;
             case attendanceType.PRESENT.code:

@@ -20,7 +20,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StudentAttendances' => ['index']
+            'StudentAttendances' => ['index', 'add']
         ]);
     }
 
