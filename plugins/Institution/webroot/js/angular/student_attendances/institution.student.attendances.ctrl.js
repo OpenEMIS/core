@@ -17,7 +17,12 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     // Dashboards
     vm.totalStudents = '-';
     vm.presentCount = '-';
-    vm.absenceCount = '-'
+    vm.absenceCount = '-';
+
+    vm.allAttendances = '-';
+    vm.allPresentCount = '-';
+    vm.allAbsenceCount = '-';
+    vm.allLateCount = '-';
 
     // Options
     vm.academicPeriodOptions = [];
@@ -37,9 +42,10 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.attendancePeriodOptions = [];
     vm.selectedAttendancePeriod = '';
 
+    vm.classStudentList = [];
+
     // gridOptions
     vm.gridReady = false;
-    vm.classStudentList = [];
     vm.gridOptions = {
         columnDefs: [],
         rowData: [],
@@ -234,7 +240,6 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         if (vm.selectedDay != -1) {
             columnDefs = InstitutionStudentAttendancesSvc.getSingleDayColumnDefs(vm.selectedAttendancePeriod);
         } else {
-            // vm.gridOptions.headerHeight = vm.groupColumnHeight;
             columnDefs = InstitutionStudentAttendancesSvc.getAllDayColumnDefs(vm.dayListOptions, vm.attendancePeriodOptions);
         }
 
@@ -249,38 +254,87 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     // dashboard count
     vm.countStudentData = function() {
-        vm.totalStudents = vm.classStudentList.length;
+        var attendanceType = InstitutionStudentAttendancesSvc.getAttendanceTypeList();
+        if (vm.selectedDay != -1) {
+            // single day
+            vm.totalStudents = vm.classStudentList.length;
+            if (vm.isMarked) {
+                var presentCount = 0;
+                var absenceCount = 0;
 
-        if (vm.isMarked) {
-            var presentCount = 0;
-            var absenceCount = 0;
-            var attendanceType = InstitutionStudentAttendancesSvc.getAttendanceTypeList();
+                if (vm.totalStudents > 0) {
+                    angular.forEach(vm.classStudentList, function(obj, key) {
+                        if (angular.isDefined(obj['institution_student_absences']) && angular.isDefined(obj['institution_student_absences']['absence_type_code'])) {
+                            var code = obj['institution_student_absences']['absence_type_code'];
+
+                            switch (code) {
+                                case null:
+                                case attendanceType.PRESENT.code:
+                                case attendanceType.LATE.code:
+                                    ++presentCount;
+                                    break;
+                                case attendanceType.UNEXCUSED.code:
+                                case attendanceType.EXCUSED.code:
+                                    ++absenceCount;
+                                    break;
+                            }
+                        } 
+                    });
+                }
+
+                vm.presentCount = presentCount;
+                vm.absenceCount = absenceCount;
+            } else {
+                vm.presentCount = '-';
+                vm.absenceCount = '-';
+            }
+        } else {
+            // all day
+            var allAttendances = '-';
+            var allPresentCount = '-';
+            var allAbsenceCount = '-';
+            var allLateCount = '-';
 
             if (vm.totalStudents > 0) {
-                angular.forEach(vm.classStudentList, function(obj, key) {
-                    if (angular.isDefined(obj['institution_student_absences']) && angular.isDefined(obj['institution_student_absences']['absence_type_code'])) {
-                        var code = obj['institution_student_absences']['absence_type_code'];
+                allAttendances = 0;
+                allPresentCount = 0;
+                allAbsenceCount = 0;
+                allLateCount = 0;
 
-                        switch (code) {
-                            case null:
-                            case attendanceType.PRESENT.code:
-                            case attendanceType.LATE.code:
-                                ++presentCount;
-                                break;
-                            case attendanceType.UNEXCUSED.code:
-                            case attendanceType.EXCUSED.code:
-                                ++absenceCount;
-                                break;
-                        }
-                    } 
+                angular.forEach(vm.classStudentList, function(obj, studentKey) {
+                    if (angular.isDefined(obj.week_attendance) && Object.keys(obj.week_attendance).length > 0) {
+                        var weekAttendance = obj.week_attendance;
+                        angular.forEach(weekAttendance, function(day, dayKey) {
+                            if (Object.keys(day).length > 0) {
+                                angular.forEach(day, function(period, periodKey) {
+                                    switch(period) {
+                                        case attendanceType.NOTMARKED.code:
+                                            break;
+                                        case attendanceType.PRESENT.code:
+                                            ++allAttendances;
+                                            ++allPresentCount;
+                                            break;
+                                        case attendanceType.LATE.code:
+                                            ++allAttendances;
+                                            ++allLateCount;
+                                            break;
+                                        case attendanceType.UNEXCUSED.code:
+                                        case attendanceType.EXCUSED.code:
+                                            ++allAttendances;
+                                            ++allAbsenceCount;
+                                            break;
+                                    }
+                                });
+                            }
+                        });
+                    }
                 });
             }
 
-            vm.presentCount = presentCount;
-            vm.absenceCount = absenceCount;
-        } else {
-            vm.presentCount = '-';
-            vm.absenceCount = '-';
+            vm.allAttendances = allAttendances;
+            vm.allPresentCount = allPresentCount;
+            vm.allAbsenceCount = allAbsenceCount;
+            vm.allLateCount = allLateCount;
         }
     }
 
@@ -303,6 +357,16 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             institution_id: vm.institutionId,
             institution_class_id: vm.selectedClass,
             academic_period_id: vm.selectedAcademicPeriod,
+            day_id: vm.selectedDay,
+            attendance_period_id: vm.selectedAttendancePeriod
+        };
+    }
+
+    vm.getPeriodMarkedParams = function() {
+        return {
+            institution_id: vm.institutionId,
+            academic_period_id: vm.selectedAcademicPeriod,
+            institution_class_id: vm.selectedClass,
             day_id: vm.selectedDay,
             attendance_period_id: vm.selectedAttendancePeriod
         };
@@ -437,6 +501,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         vm.gridOptions.context.mode = vm.action;
         vm.setColumnDef();
         AlertSvc.info($scope, 'Attendances will be automatically saved.');
+        InstitutionStudentAttendancesSvc.savePeriodMarked(vm.getPeriodMarkedParams(), $scope);
     };
 
     vm.onBackClick = function() {

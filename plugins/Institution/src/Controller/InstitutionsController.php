@@ -406,8 +406,10 @@ class InstitutionsController extends AppController
     public function StudentAttendances()
     {
         $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
-        $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
-        $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
+        // $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
+        // $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
+        $_excel = false;
+        $_import = false;
         
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
