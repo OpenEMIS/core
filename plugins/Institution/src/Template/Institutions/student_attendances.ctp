@@ -16,19 +16,19 @@ $this->start('toolbar');
 
 <?php if ($_import) : ?>
     <a href="<?=$importUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Import') ?>" >
+        <button class="btn btn-xs btn-default" data-toggle="{{test()}}" data-placement="bottom" data-container="body" title="<?= __('Import') ?>" >
             <i class="fa kd-import"></i>
         </button>
     </a>
-</button> -->
+</button>
 <?php endif; ?>
 
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed" ng-click="$ctrl.onEditClick()">
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
     </button>
 
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit'" ng-click="$ctrl.onBackClick()">
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
         <i class="fa kd-back"></i>
     </button>
 <?php endif; ?>
@@ -48,7 +48,7 @@ $panelHeader = $this->fetch('panelHeader');
 <?= $this->element('OpenEmis.alert') ?>
 
 <style>
-    .attendance-dashboard .data-section {
+    .attendance-dashboard .data-section.single-day {
         width: 32%;
     }
 
@@ -82,7 +82,17 @@ $panelHeader = $this->fetch('panelHeader');
         margin-bottom: 15px;
     }
 
-    #institution-student-attendances-table .ag-cell textarea {
+    #institution-student-attendances-table .ag-cell textarea#comment.error,
+    #institution-student-attendances-table .ag-cell #student_absence_reason_id select.error,
+    #institution-student-attendances-table .ag-cell #absence_type_id select.error {
+        border-color: #CC5C5C !important;
+    }
+    
+    #institution-student-attendances-table .ag-cell textarea#comment:focus {
+        outline: none;
+    }
+
+    #institution-student-attendances-table .ag-cell textarea#comment {
         display: block;
         padding: 5px 10px;
         -webkit-border-radius: 3px;
@@ -121,11 +131,6 @@ $panelHeader = $this->fetch('panelHeader');
     #institution-student-attendances-table .ag-cell .absence-reason + .absences-comment  {
         margin-top: 15px;
     }
-
-    #institution-student-attendances-table .ag-cell textarea:focus {
-        outline: none;
-    }
-
     
     #institution-student-attendances-table .sg-theme .ag-header-cell.children-period .ag-header-cell-label {
         display: flex;
@@ -165,38 +170,56 @@ $panelHeader = $this->fetch('panelHeader');
 
                 <div class="overview-box alert attendance-dashboard" ng-class="disableElement" ng-show="$ctrl.action == 'view'">
                     <a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
-                    <div class="data-section">
+                    <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
                         <i class="kd-students icon"></i>
                         <div class="data-field">
                             <h4><?= __('Total Students') ?>:</h4>
                             <h1 class="data-header">{{$ctrl.totalStudents}}</h1>
                         </div>
                     </div>
-                        <div class="data-section">
+                    <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
                         <div class="data-field">
                             <h4><?= __('No. of Students Present') ?></h4>   
                             <h1 class="data-header">{{$ctrl.presentCount}}</h1>
                         </div>
                     </div>
-                        <div class="data-section">
+                    <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
                         <div class="data-field">
                             <h4><?= __('No. of Students Absent') ?></h4>    
                             <h1 class="data-header">{{$ctrl.absenceCount}}</h1>
                         </div>
                     </div>
-                    <!-- <div class="data-section">
+                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                        <i class="kd-students icon"></i>
                         <div class="data-field">
-                            <h4><?= __('No. of Students Late') ?></h4>  
-                            <h1 class="data-header">Over 9000</h1>
+                            <h4><?= __('Total Attendance') ?></h4>    
+                            <h1 class="data-header">{{$ctrl.allAttendances}}</h1>
                         </div>
-                    </div> -->
+                    </div>
+                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                        <div class="data-field">
+                            <h4><?= __('No. of Present') ?></h4>    
+                            <h1 class="data-header">{{$ctrl.allPresentCount}}</h1>
+                        </div>
+                    </div>
+                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                        <div class="data-field">
+                            <h4><?= __('No. of Late') ?></h4>    
+                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
+                        </div>
+                    </div>
+                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                        <div class="data-field">
+                            <h4><?= __('No. of Absence') ?></h4>    
+                            <h1 class="data-header">{{$ctrl.allAbsenceCount}}</h1>
+                        </div>
+                    </div>
                 </div>
                 <div id="institution-student-attendances-table" class="table-wrapper">
                     <div ng-if="$ctrl.gridReady" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
                 </div>
             </bg-pane>
 
-            <!-- With Buttons -->
             <bg-pane class="split-content splitter-slide-out splitter-filter" min-size-p="20" max-size-p="20" size-p="20">
                 <div class="split-content-header">
                     <h3><?= __('Filter') ?></h3>
