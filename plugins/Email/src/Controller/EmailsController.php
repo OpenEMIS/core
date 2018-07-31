@@ -3,7 +3,7 @@ namespace Email\Controller;
 
 use App\Controller\AppController;
 
-class EmailController extends AppController
+class EmailsController extends AppController
 {
 	public function initialize()
 	{
