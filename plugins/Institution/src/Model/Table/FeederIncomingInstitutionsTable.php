@@ -6,19 +6,21 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
+
 use App\Model\Table\ControllerActionTable;
 
 class FeederIncomingInstitutionsTable  extends ControllerActionTable
 {
-    private $institutionId = null;
-
     public function initialize(array $config)
     {
         $this->table('feeders_institutions');
         parent::initialize($config);
-        $this->belongsTo('FeederInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.FeederInstitutions', 'foreignKey' => 'feeder_institution_id']);
+
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('FeederInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'feeder_institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -27,28 +29,40 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
 
     public function onGetCode(Event $event, Entity $entity)
     {
-        return $entity->institution->code;
-    }
-
-    public function onGetFeederInstitution(Event $event, Entity $entity)
-    {
-        return $entity->institution->name;
+        $value = '';
+        if ($entity->has('institution') && $entity->institution->has('code')) {
+            $value = $entity->institution->code;
+        }
+        return $value;
     }
 
     public function onGetAreaEducation(Event $event, Entity $entity)
     {
-        return $entity->institution->area->name;
+        $value = '';
+        if ($entity->has('feeder_institution') && $entity->feeder_institution->has('area') && $entity->feeder_institution->area->has('name')) {
+            $value = $entity->feeder_institution->area->name;
+        }
+        return $value;
     }
 
-    public function onGetAcademicPeriod(Event $event, Entity $entity)
+    public function onGetNoOfStudents(Event $event, Entity $entity)
     {
-        return $entity->academic_period->name;
-    }       
+        $noOfStudents = 0;
 
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        $session = $this->request->session();
-        $this->institutionId = $session->read('Institution.Institutions.id');
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $noOfStudents = $InstitutionStudents
+            ->find()
+            ->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code NOT IN ' => ['TRANSFERRED', 'WITHDRAWN']]);
+            })
+            ->where([
+                $InstitutionStudents->aliasField('institution_id') => $entity->feeder_institution_id,
+                $InstitutionStudents->aliasField('academic_period_id') => $entity->academic_period_id,
+                $InstitutionStudents->aliasField('education_grade_id') => $entity->education_grade_id
+            ])
+            ->count();
+
+        return $noOfStudents;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -65,8 +79,13 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         ];
 
         $this->field('code');
-        $this->field('feeder_institution');
+        $this->field('feeder_institution_id', [
+            'type' => 'select'
+        ]);
         $this->field('area_education');
+        $this->field('education_grade_id', [
+            'type' => 'select'
+        ]);
         $this->field('no_of_students');
     }
 
@@ -75,19 +94,38 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         $extra['auto_contain'] = false;
 
         $query
-        ->contain([
-            'Institutions' => [
-                'fields' => [
-                    'name',
-                    'code'
+            ->select([
+                'institution_id',
+                'feeder_institution_id',
+                'academic_period_id',
+                'education_grade_id'
+            ])
+            ->contain([
+                'Institutions' => [
+                    'fields' => [
+                        'name',
+                        'code'
+                    ]
+                ],
+                'FeederInstitutions' => [
+                    'fields' => [
+                        'name',
+                        'code'
+                    ]
+                ],
+                'FeederInstitutions.Areas' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'EducationGrades' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
                 ]
-            ],
-            'Institutions.Areas' => [
-                'fields' => [
-                    'name'
-                ]
-            ],
-        ]);
+            ]);
 
         $conditions = [];
         if ($extra->offsetExists('selectedAcademicPeriod')) {
@@ -102,43 +140,56 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('academic_period');
+        $this->field('academic_period_id', [
+            'type' => 'select'
+        ]);
         $this->field('code');
-        $this->field('feeder_institution');
+        $this->field('feeder_institution_id', [
+            'type' => 'select'
+        ]);
         $this->field('area_education');
+        $this->field('education_grade_id', [
+            'type' => 'select'
+        ]);
         $this->field('no_of_students');
-        $this->setFieldOrder(['academic_period', 'code', 'feeder_institution', 'area_education', 'no_of_students', 'modified', 'modified_user_id','created','created_user_id']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-        ->contain([
-            'Institutions' => [
-                'fields' => [
-                    'name',
-                    'code'
-                ]
-            ],
-            'AcademicPeriods',
-            'Institutions.Areas' => [
-                'fields' => [
-                    'name'
-                ]
-            ],
-        ]);
+            ->contain([
+                'Institutions' => [
+                    'fields' => [
+                        'name',
+                        'code'
+                    ]
+                ],
+                'FeederInstitutions' => [
+                    'fields' => [
+                        'name',
+                        'code'
+                    ]
+                ],
+                'FeederInstitutions.Areas' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'EducationGrades' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'AcademicPeriods' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],                
+            ]);
     }
-
-    // public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
- //    {
-        // $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        // if (!$this->AccessControl->isAdmin()) {
-        //     if (array_key_exists('remove', $buttons)) {
-        //         unset($buttons['remove']);
-        //     }
-        // }
-        // return $buttons;
-    // }
 
     private function getSelectedAcademicPeriod($request)
     {
