@@ -82,7 +82,8 @@ class AcademicPeriodsTable extends AppTable
             'Staff' => ['index'],
             'Results' => ['index'],
             'StudentExaminationResults' => ['index'],
-            'OpenEMIS_Classroom' => ['index', 'view']
+            'OpenEMIS_Classroom' => ['index', 'view'],
+            'InstitutionStaffAttendances' => ['index', 'view']
         ]);
     }
 
@@ -921,5 +922,56 @@ class AcademicPeriodsTable extends AppTable
         $academicPeriodId = $academicPeriod->id;
 
         return $academicPeriodId;
+    }
+    
+    public function findWeeksForPeriod(Query $query, array $options)
+    {
+        $academicPeriodId = $options['academic_period_id'];
+        $model = $this;
+        
+        return $query
+            ->where([$this->aliasField('id') => $academicPeriodId])
+            ->formatResults(function (ResultSetInterface $results) use ($model) {
+                return $results->map(function ($row) use ($model) {
+                    $academicPeriodId = $row->id;
+
+                    $todayDate = date("Y-m-d");
+                    $weekOptions = [];
+                    $selectedIndex = 0;
+
+                    $weeks = $model->getAttendanceWeeks($academicPeriodId);
+                    $weekStr = __('Week') . ' %d (%s - %s)';
+                    $currentWeek = null;
+
+                    foreach ($weeks as $index => $dates) {
+                        $startDay = $dates[0]->format('Y-m-d');
+                        $endDay = $dates[1]->format('Y-m-d');
+                        $weekAttr = [];
+                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                            $weekStr = __('Current Week') . ' %d (%s - %s)';
+                            // $weekAttr['selected'] = true;
+                            $currentWeek = $index;
+                        } else {
+                            $weekStr = __('Week') . ' %d (%s - %s)';
+                        }
+
+                        $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+                        $weekAttr['start_day'] = $startDay;
+                        $weekAttr['end_day'] = $endDay;
+                        $weekAttr['id'] = $index;
+                        $weekOptions[] = $weekAttr;
+
+                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                            end($weekOptions);
+                            $selectedIndex = key($weekOptions);
+                        }
+                    }
+
+                    $weekOptions[$selectedIndex]['selected'] = true;
+                    $row->weeks = $weekOptions;
+
+                    return $row;
+                });
+            });
     }
 }
