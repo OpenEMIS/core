@@ -45,6 +45,11 @@ class ExcelReportBehavior extends Behavior
         'image' => 'image'
     ];
 
+    private $libraryTypes = [
+        'xlsx' => 'Xlsx',
+        'pdf' => 'Dompdf'
+    ];
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -93,6 +98,7 @@ class ExcelReportBehavior extends Behavior
     public function renderExcelTemplate(ArrayObject $extra)
     {
         $model = $this->_table;
+        $format = $this->config('format');
 
         if (array_key_exists('requestQuery', $extra)) {
             $params = $extra['requestQuery'];
@@ -105,7 +111,7 @@ class ExcelReportBehavior extends Behavior
 
         $extra['vars'] = $this->getVars($params, $extra);
 
-        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('format');
+        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
 
         $temppath = tempnam($extra['path'], $this->config('filename') . '_');
@@ -114,9 +120,7 @@ class ExcelReportBehavior extends Behavior
         $objSpreadsheet = $this->loadExcelTemplate($extra);
         $this->generateExcel($objSpreadsheet, $extra);
 
-        if ($this->config('format') == 'xlsx') {
-            $this->saveExcel($objSpreadsheet, $temppath);
-        }
+        $this->saveFile($objSpreadsheet, $temppath, $format);
 
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
@@ -346,9 +350,14 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    public function saveExcel($objSpreadsheet, $filepath)
+    public function saveFile($objSpreadsheet, $filepath, $format)
     {
-        $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+        $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
+
+        if ($format == 'pdf') {
+            $objWriter->writeAllSheets();
+        }
+
         $objWriter->save($filepath);
     }
 
