@@ -368,13 +368,13 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew()) {
+        if($entity->isNew() || $entity->dirty('student_status_id')) {
             $id = $entity->institution_class_id;
             $countMale = $this->getMaleCountByClass($id);
             $countFemale = $this->getFemaleCountByClass($id);
             $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
         }
-
+  
         $listeners = [
             TableRegistry::get('Institution.InstitutionSubjectStudents')
         ];
@@ -518,6 +518,9 @@ class InstitutionClassStudentsTable extends AppTable
         $count = $this
             ->find()
             ->contain('Users')
+            ->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
+            })
             ->where([$this->Users->aliasField('gender_id') => $gender_id])
             ->where([$this->aliasField('institution_class_id') => $classId])
             ->count()
@@ -531,6 +534,9 @@ class InstitutionClassStudentsTable extends AppTable
         $count = $this
             ->find()
             ->contain('Users')
+            ->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
+            })
             ->where([$this->Users->aliasField('gender_id') => $gender_id])
             ->where([$this->aliasField('institution_class_id') => $classId])
             ->count()
