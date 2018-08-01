@@ -6,6 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 use App\Controller\AppController;
 
 class StaffController extends AppController
@@ -49,6 +50,9 @@ class StaffController extends AppController
         'Immunizations',
         'Medications',
         'Tests',
+
+        // staff attendances
+        'InstitutionStaffAttendances',
     ];
 
     public function initialize()
@@ -78,6 +82,8 @@ class StaffController extends AppController
         $this->loadComponent('Institution.InstitutionAccessControl');
 
         $this->set('contentHeader', 'Staff');
+
+        $this->attachAngularModules();
     }
 
     // CAv4
@@ -196,6 +202,38 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
     // End Health
+
+    // AngularJS
+    public function InstitutionStaffAttendances()
+    {
+        $_edit = $this->AccessControl->check(['Staff', 'StaffAttendances', 'edit']);
+        
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+
+        $this->set('institution_id', $institutionId);
+        $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
+    }
+
+    private function attachAngularModules()
+    {
+        $action = $this->request->action;
+        switch ($action) {
+            case 'InstitutionStaffAttendances':
+                $this->Angular->addModules([
+                    'staff.attendances.ctrl',
+                    'staff.attendances.svc'
+                ]);
+                break;
+        }
+    }
     // End
 
     public function beforeFilter(Event $event)
