@@ -1,15 +1,14 @@
 <?php
 namespace ReportCard\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
+use ArrayObject;
+
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use ArrayObject;
-use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
-use Cake\Datasource\EntityInterface;
-use Cake\I18n\Date;
 
+use App\Model\Table\ControllerActionTable;
 
 class ReportCardEmailTable extends ControllerActionTable
 {
@@ -17,83 +16,80 @@ class ReportCardEmailTable extends ControllerActionTable
 
 	public function initialize(array $config)
     {
-    	$this->table('report_cards');
+        $this->table('report_cards');
+        parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('ReportCardSubjects', ['className' => 'ReportCard.ReportCardSubjects', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']);
         $this->hasMany('StudentReportCards', ['className' => 'Institution.InstitutionStudentsReportCards', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        // Main table should be email_template.
-
-        // $this->hasOne('email_templates', ['className' => 'ReportCard.ReportCardEmail', 'foreignKey' => 'id']);
-
-        // pr($this);
-        // pr('----------------------');
-        // pr($this->find()->first()->toArray());die;
-
-        /*
-        $this->hasMany('email_templates', ['className' => 'ReportCard.TableName???']);
-        
-        Q1) How to link to the email_templates table ?
-
-        Q2) Why when I try $this->table('email_templates') they undefined index must I create an entity in the entity folder for this email_template table?
-
-        Q3) Shouldnt be the model_alias be "ReportCardEmail" ? How come "ReportCard.ReportCardEmail" << How they determine the value before the DOT?
-
-
-        */
-
-        parent::initialize($config);
-
         $this->addBehavior('OpenEmis.Section');
-        $this->addBehavior('ReportCard.EmailTemplate');
-    }
-
-    public function viewBeforeAction(Event $event, ArrayObject $extra) {
-        // $this->field('description', ['visible' => false]);
-        // $this->field('start_date', ['visible' => false]);
-        // $this->field('end_date', ['visible' => false]);
-        $this->field('principal_comments_required', ['visible' => false]);
-        $this->field('homeroom_teacher_comments_required', ['visible' => false]);
-        $this->field('teacher_comments_required', ['visible' => false]);
-        $this->field('excel_template_name', ['visible' => false]);
-        $this->field('excel_template', ['visible' => false]);
-        // $this->field('academic_period_id', ['visible' => false]);
-        // $this->field('education_grade_id', ['visible' => false]);
-        $this->field('modified_user_id', ['visible' => false]);
-        $this->field('modified', ['visible' => false]);
-        $this->field('created_user_id', ['visible' => false]);
-        $this->field('created', ['visible' => false]);
+        $this->addBehavior('ReportCard.EmailTemplate', [
+            'placeholder' => [
+                '${student.openemis_no}' => 'Student OpenEMIS ID.',
+                '${student.first_name}' => 'Student first name.',
+                '${student.middle_name}' => 'Student middle name.',
+                '${student.third_name}' => 'Student third name.',
+                '${student.last_name}' => 'Student last name.',
+                '${student.preferred_name}' => 'Student preferred name.',
+                '${student.address}' => 'Student address.',
+                '${student.postal_code}' => 'Student postal code.',
+                '${student.date_of_birth}' => 'Student date of birth.',
+                '${student.identity_number}' => 'Student identity number.',
+                '${student.main_identity_type.name}' => 'Student identity type.',
+                '${student.main_nationality.name}' => 'Student nationality.',
+                '${institution.name}' => 'Institution name.',
+                '${institution.code}' => 'Institution code.',
+                '${institution.contact_person}' => 'Institution contact person.',
+                '${institution.telephone}' => 'Institution telephone number.',
+                '${institution.email}' => 'Institution email.',
+                '${academic_period.code}' => 'Academic period code.',
+                '${academic_period.name}' => 'Academic period name.',
+                '${education_grade.code}' => 'Education grade code.',
+                '${education_grade.name}' => 'Education grade name.',
+            ]
+        ]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->setupTabElements($entity);
-        $this->setupFields($event, $entity);
-
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        unset($toolbarButtonsArray['remove']);
+        if (array_key_exists('back', $toolbarButtonsArray)) {
+            $encodedParam = $this->request->params['pass'][1];
+
+            $backUrl = [
+                'plugin' => $this->controller->plugin,
+                'controller' => $this->controller->name,
+                'action' => 'Templates',
+                'view',
+                $encodedParam
+            ];
+
+            $toolbarButtonsArray['back']['url'] = $backUrl;
+        }
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
-        $this->field('keyword_remarks', ['visible' => false]);
+        $this->setupTabElements($entity);
+        $this->setupFields($event, $entity);
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra) {
-        $this->field('description', ['type' => 'readonly', 'after' => 'name']);
-        $this->field('start_date', ['type' => 'readonly', 'after' => 'description', 'attr' => ['required' => false]]);
-        $this->field('end_date', ['type' => 'readonly', 'after' => 'start_date', 'attr' => ['required' => false]]);
-        $this->field('academic_period_id', ['type' => 'readonly', 'after' => 'end_date', 'attr' => ['required' => false]]);
-        $this->field('education_grade_id', ['type' => 'readonly', 'after' => 'academic_period_id', 'attr' => ['required' => false]]);
-
-        $this->field('principal_comments_required', ['visible' => false]);
-        $this->field('homeroom_teacher_comments_required', ['visible' => false]);
-        $this->field('teacher_comments_required', ['visible' => false]);
-        $this->field('excel_template_name', ['visible' => false]);
-        $this->field('excel_template', ['visible' => false]);
-        $this->field('modified_user_id', ['visible' => false]);
-        $this->field('modified', ['visible' => false]);
-        $this->field('created_user_id', ['visible' => false]);
-        $this->field('created', ['visible' => false]);
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query
+            ->contain([
+                'AcademicPeriods' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'EducationGrades' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ]
+            ]);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -101,103 +97,59 @@ class ReportCardEmailTable extends ControllerActionTable
         $this->setupTabElements($entity);
         $this->setupFields($event, $entity);
     }
-    
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
-    {
-        if ($action == 'edit') {
-            $tableHeaders =[__('Keywords'), __('Remarks')];
-            $tableCells = [];
-            $fieldKey = 'keyword_remarks';
-
-            $featureKey = 'ReportCardEmail';
-            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($featureKey);
-            $placeholder = $alertTypeDetails[$featureKey]['placeholder'];
-
-            if (!empty($placeholder)) {
-                foreach ($placeholder as $placeholderKey => $placeholderObj) {
-                    $rowData = [];
-                    $rowData[] = __($placeholderKey);
-                    $rowData[] = __($placeholderObj);
-
-                    $tableCells[] = $rowData;
-                }
-            }
-
-            $attr['tableHeaders'] = $tableHeaders;
-            $attr['tableCells'] = $tableCells;
-            return $event->subject()->renderElement($fieldKey, ['attr' => $attr]);
-        }
-    }
-
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {
-        $startEndDate = $this
-                        ->find()
-                        ->where([
-                            'id' => $event->data['data']['id']
-                        ])
-                        ->select([
-                            'start_date',
-                            'end_date'
-                        ])
-                        ->first();
-
-        $data['start_date'] = $startEndDate->start_date->format('Y-m-d');
-        $data['end_date'] = $startEndDate->end_date->format('Y-m-d');
-    }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
-        $reportCardId = $this->paramsDecode($request->params['pass'][1]);
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
 
-        $academicPeriodEntity = $this->find()->where(['ReportCardEmail.id' => $reportCardId['id']])->contain(['AcademicPeriods'])->first();
-
-        $attr['attr']['value'] = $academicPeriodEntity->academic_period->name;
-
-        return $attr;
-    }
-
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
-    {
-        $reportCardId = $this->paramsDecode($request->params['pass'][1]);
-
-        $academicGradeEntity= $this->find()->where(['ReportCardEmail.id' => $reportCardId['id']])->contain(['EducationGrades'])->first();
-
-        $attr['attr']['value'] = $academicGradeEntity->education_grade->name;
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->academic_period_id;
+            $attr['attr']['value'] = $entity->academic_period->name;
+        }
 
         return $attr;
     }
 
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
     {
-        $reportCardId = $this->paramsDecode($request->params['pass'][1]);
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
 
-        $startDateEntity= $this->find()->where(['ReportCardEmail.id' => $reportCardId['id']])->first();
-
-        $startDate = new Date($startDateEntity->start_date);
-        $startDate = $this->formatDate($startDate);
-
-        $attr['attr']['value'] = $startDate;
+            $startDate = $this->formatDate($entity->start_date);
+            $attr['type'] = 'readonly';
+            $attr['value'] = $startDate;
+            $attr['attr']['value'] = $startDate;
+        }
 
         return $attr;
     }
 
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
     {
-        $reportCardId = $this->paramsDecode($request->params['pass'][1]);
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
 
-        $endDateEntity= $this->find()->where(['ReportCardEmail.id' => $reportCardId['id']])->first();
-
-        $endDateEntity = new Date($endDateEntity->end_date);
-        $endDateEntity = $this->formatDate($endDateEntity);
-
-        $attr['attr']['value'] = $endDateEntity;
+            $endDate = $this->formatDate($entity->end_date);
+            $attr['type'] = 'readonly';
+            $attr['value'] = $endDate;
+            $attr['attr']['value'] = $endDate;
+        }
 
         return $attr;
     }
 
-    public function addAlertRuleType($newAlertRuleType, $_config) {
-        $this->alertTypeFeatures[$newAlertRuleType] = $_config;
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->education_grade_id;
+            $attr['attr']['value'] = $entity->education_grade->name;
+        }
+
+        return $attr;
     }
 
     private function setupTabElements($entity)
@@ -212,21 +164,28 @@ class ReportCardEmailTable extends ControllerActionTable
         $this->field('report_card_information', ['type' => 'section']);
         $this->field('code', ['type' => 'readonly', 'attr' => ['required' => false]]);
         $this->field('name', ['type' => 'readonly', 'attr' => ['required' => false]]);
-        $this->field('email_content', ['type' => 'section', 'after' => 'education_grade_id']);
-        $this->field('subject', ['type' => 'string', 'after' => 'email_content']);
-        $this->field('message', ['type' => 'text', 'after' => 'subject']);
-        $this->field('keyword_remarks', ['type' => 'custom_criterias', 'after' => 'message']);
-    }
+        $this->field('description', ['attr' => ['disabled' => 'disabled']]);
+        $this->field('academic_period_id', ['entity' => $entity]);
+        
+        $this->field('start_date', ['entity' => $entity]);
+        $this->field('end_date', ['entity' => $entity]);
 
-    private function getAlertTypeDetailsByFeature($feature)
-    {
-        $alertTypeDetails = [];
-        foreach ($this->alertTypeFeatures as $key => $obj) {
-            if ($obj['feature'] == $feature) {
-                $alertTypeDetails[$obj['feature']] = $obj;
-            }
-        }
+        $this->field('education_grade_id', ['entity' => $entity]);
+        $this->field('principal_comments_required', ['visible' => false]);
+        $this->field('homeroom_teacher_comments_required', ['visible' => false]);
+        $this->field('teacher_comments_required', ['visible' => false]);
+        $this->field('excel_template_name', ['visible' => false]);
+        $this->field('excel_template', ['visible' => false]);
 
-        return $alertTypeDetails;
+        $this->setFieldOrder([
+            'report_card_information',
+            'code',
+            'name',
+            'description',
+            'academic_period_id',
+            'start_date',
+            'end_date',
+            'education_grade_id'
+        ]);
     }
 }
