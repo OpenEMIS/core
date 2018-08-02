@@ -3,177 +3,211 @@ namespace ReportCard\Model\Behavior;
 
 use ArrayObject;
 
-// use Alert\Model\Behavior\AlertRuleBehavior;
-use Cake\ORM\Behavior;
-
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
-use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use Cake\I18n\Time;
-use Cake\Log\Log;
+use Cake\Event\Event;
+use Cake\Datasource\ResultSetInterface;
+use Cake\Validation\Validator;
+use Cake\ORM\Behavior;
 
-// class EmailReportCardStatusesBehavior extends AlertRuleBehavior
 class EmailTemplateBehavior extends Behavior
 {
     protected $_defaultConfig = [
-        'feature' => 'ReportCardEmail', 
-        'name' => 'Report Card Email',
-        'method' => 'Email',
-        'threshold' => [],
-        'placeholder' => [
-            // '${total_days}' => 'Total number of unexcused absence.',
-            // '${threshold}' => 'Threshold value.',
-            '${user.openemis_no}' => 'Student OpenEMIS ID.',
-            '${user.first_name}' => 'Student first name.',
-            '${user.middle_name}' => 'Student middle name.',
-            '${user.third_name}' => 'Student third name.',
-            '${user.last_name}' => 'Student last name.',
-            '${user.preferred_name}' => 'Student preferred name.',
-            // '${user.email}' => 'Student email.',
-            '${user.address}' => 'Student address.',
-            '${user.postal_code}' => 'Student postal code.',
-            '${user.date_of_birth}' => 'Student date of birth.',
-            '${user.identity_number}' => 'Student identity number.',
-            // '${user.photo_name}' => 'Student photo name.',
-            // '${user.photo_content}' => 'Student photo content.',
-            '${user.main_identity_type.name}' => 'Student identity type.',
-            '${user.main_nationality.name}' => 'Student nationality.',
-            // '${user.gender.name}' => 'Student gender.',
-            '${institution.name}' => 'Institution name.',
-            '${institution.code}' => 'Institution code.',
-            // '${institution.address}' => 'Institution address.',
-            // '${institution.postal_code}' => 'Institution postal code.',
-            '${institution.contact_person}' => 'Institution contact person.',
-            '${institution.telephone}' => 'Institution telephone number.',
-            // '${institution.fax}' => 'Institution fax number.',
-            '${institution.email}' => 'Institution email.',
-            // '${institution.website}' => 'Institution website.',
-        ]
+        'placeholder' => []
     ];
 
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $class = basename(str_replace('\\', '/', get_class($this)));
-        $class = str_replace('AlertRule', '', $class);
-        $class = str_replace('Behavior', '', $class);
 
-        switch ($this->_table->Alias()) {
-            case "ReportCardEmail":
-                $this->_table->addAlertRuleType($class, $this->config());
-                break;
-            default:
-                // Do nothing
+        $model = $this->_table;
+        if (!$model->hasBehavior('Section')) {
+            $model->addBehavior('OpenEmis.Section');
         }
 
+        $model->toggle('remove', false);
+    }
 
-        
+    public function buildValidator(Event $event, Validator $validator, $name)
+    {
+        $validator
+            ->requirePresence('subject')
+            ->requirePresence('message');
     }
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $newEvent = [
-            'ControllerAction.Model.edit.afterSave' => 'editAfterSave'
-        ];
-        $events = array_merge($events, $newEvent);
+        $events['ControllerAction.Model.viewEdit.beforeQuery'] = 'viewEditBeforeQuery';
+        $events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterAction', 'priority' => 100];
+        $events['ControllerAction.Model.edit.onInitialize'] = 'editOnInitialize';
+        $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction', 'priority' => 100];
+        $events['ControllerAction.Model.edit.beforeSave'] = 'editBeforeSave';
+
         return $events;
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        if($data['submit'] == 'save') {
-            $email_templates = TableRegistry::get('email_templates');
-            $updateRecord = $email_templates->get(['model_alias' => $this->_table->registryAlias(),'model_reference' => $entity->id]);
+        $model = $this->_table;
+        $EmailTemplatesTable = TableRegistry::get('Email.EmailTemplates');
 
-            $updateRecord->subject = $data['ReportCardEmail']['subject'];
-            $updateRecord->message = $data['ReportCardEmail']['message'];
-            $updateRecord->modified = Time::now();
-            $updateRecord->modified_user_id = $this->_table->Auth->user('id');
+        // append email_template to entity
+        $query->formatResults(function (ResultSetInterface $results) use ($model, $EmailTemplatesTable) {
+            return $results->map(function ($row) use ($model, $EmailTemplatesTable) {
+                $emailTemplateEntity = $EmailTemplatesTable
+                    ->find()
+                    ->where([
+                        'model_alias' => $model->registryAlias(),
+                        'model_reference' => $row->{$model->primaryKey()}
+                    ])
+                    ->first();
+                $row->email_template = $emailTemplateEntity;
 
-            $email_templates->save($updateRecord);    
+                return $row;
+            });
+        });
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($event, $entity, $extra);
+    }
+
+    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if ($entity->has('email_template')) {
+            if ($entity->email_template->has('subject')) {
+                $entity->subject = $entity->email_template->subject;
+            }
+
+            if ($entity->email_template->has('message')) {
+                $entity->message = $entity->email_template->message;
+            }
         }
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        if (array_key_exists('list', $toolbarButtonsArray)) {
+            unset($toolbarButtonsArray['list']);
+        }
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
+        $this->setupFields($event, $entity, $extra);
+    }
+
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        $process = function ($model, $entity) use ($data) {
+            $errors = $entity->errors();
+
+            if (empty($errors)) {
+                $EmailTemplatesTable = TableRegistry::get('Email.EmailTemplates');
+                $requestData = $data[$model->alias()];
+
+                $emailTemplateData = [
+                    'model_alias' => $model->registryAlias(),
+                    'model_reference' => $entity->{$model->primaryKey()},
+                    'subject' => $requestData['subject'],
+                    'message' => $requestData['message']
+                ];
+                $emailTemplateEntity = $EmailTemplatesTable->newEntity();
+                $emailTemplateEntity = $EmailTemplatesTable->patchEntity($emailTemplateEntity, $emailTemplateData);
+
+                return $EmailTemplatesTable->save($emailTemplateEntity);
+            } else {
+                return false;
+            }
+        };
+
+        return $process;
+
     }
 
     public function onGetSubject(Event $event, Entity $entity)
     {
-        $model = $this->_table->paramsDecode($this->_table->request->params['pass'][1]);
-
-        $email_templates = TableRegistry::get('email_templates')
-                ->find()
-                ->where([
-                    'model_alias' => $this->_table->registryAlias(),
-                    'model_reference' => $model['id']
-                ])
-                ->select(['subject'])
-                ->first();
-
-        if(!is_null($email_templates) && !is_null($email_templates->subject)) {
-            return $email_templates->subject;
+        if($entity->has('email_template')) {
+            return $entity->email_template->subject;
         }
-        return '';
     }
 
     public function onGetMessage(Event $event, Entity $entity)
     {
-        $model = $this->_table->paramsDecode($this->_table->request->params['pass'][1]);
-
-        $email_templates = TableRegistry::get('email_templates')
-                            ->find()
-                            ->where([
-                                'model_alias' => $this->_table->registryAlias(),
-                                'model_reference' => $model['id']
-                            ])
-                            ->select(['message'])
-                            ->first();
-
-
-        if(!is_null($email_templates) && !is_null($email_templates->message)) {
-            return $email_templates->message;
-        }
-        return '';
-    }
-
-    public function onUpdateFieldSubject(Event $event, array $attr, $action, Request $request)
-    {
-        if($action == 'edit') {
-            $model = $this->_table->paramsDecode($request->params['pass'][1]);
-            $email_templates = TableRegistry::get('email_templates')
-                                ->find()
-                                ->where([
-                                    'model_alias' => $this->_table->registryAlias(),
-                                    'model_reference' => $model['id']
-                                ])
-                                ->select(['subject'])
-                                ->first();
-
-            if(!is_null($email_templates) && !is_null($email_templates->subject)) {
-                $attr['attr']['value'] = $email_templates->subject;
-            }
-            return $attr;
+        if($entity->has('email_template')) {
+            return $entity->email_template->message;
         }
     }
 
-    public function onUpdateFieldMessage(Event $event, array $attr, $action, Request $request)
+    public function onGetCustomEmailTemplatePlaceholdersElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        if($action == 'edit') {
-            $model = $this->_table->paramsDecode($request->params['pass'][1]);
-            $email_templates = TableRegistry::get('email_templates')
-                                ->find()
-                                ->where([
-                                    'model_alias' => $this->_table->registryAlias(),
-                                    'model_reference' => $model['id']
-                                ])
-                                ->select(['message'])
-                                ->first();
+        if ($action == 'edit') {
+            $tableHeaders =[__('Keywords'), __('Remarks')];
+            $tableCells = [];
+            $fieldKey = 'keyword_remarks';
 
+            $placeholder = $this->config('placeholder');
 
-            if(!is_null($email_templates) && !is_null($email_templates->message)) {
-                $attr['attr']['value'] = $email_templates->message;
+            if (!empty($placeholder)) {
+                foreach ($placeholder as $placeholderKey => $placeholderObj) {
+                    $rowData = [];
+                    $rowData[] = __($placeholderKey);
+                    $rowData[] = __($placeholderObj);
+
+                    $tableCells[] = $rowData;
+                }
             }
-            return $attr;
+
+            $attr['tableHeaders'] = $tableHeaders;
+            $attr['tableCells'] = $tableCells;
+            return $event->subject()->renderElement($fieldKey, ['attr' => $attr]);
         }
+    }
+
+    private function setupFields(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        $model->field('email_content', ['type' => 'section']);
+        $model->field('subject', ['entity' => $entity]);
+        $model->field('message', ['type' => 'text', 'entity' => $entity]);
+        $model->field('keyword_remarks', [
+            'type' => 'custom_email_template_placeholders',
+            'visible' => [
+                'view' => false,
+                'edit' => true
+            ]
+        ]);
+
+        $this->reorderFields();
+    }
+
+    private function reorderFields()
+    {
+        $order = 0;
+        $fieldsOrder = [];
+        $fields = $this->_table->fields;
+        uasort($fields, function ($a, $b) {
+            return $a['order']-$b['order'];
+        });
+
+        $newFields = ['email_content', 'subject', 'message', 'keyword_remarks', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+        foreach ($fields as $fieldName => $fieldAttr) {
+            if (!in_array($fieldName, $newFields)) {
+                $order = $fieldAttr['order'] > $order ? $fieldAttr['order'] : $order;
+                if (array_key_exists($order, $fieldsOrder)) {
+                    $order++;
+                }
+                $fieldsOrder[$order] = $fieldName;
+            }
+        }
+
+        ksort($fieldsOrder);
+        foreach ($newFields as $fieldName) {
+            $fieldsOrder[++$order] = $fieldName;
+        }
+
+        $this->_table->setFieldOrder($fieldsOrder);
     }
 }
