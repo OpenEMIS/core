@@ -1001,7 +1001,7 @@ trait MessagesTrait
             ],
             'FeederOutgoingInstitutions' => [
                 'institution_id' => [
-                    'ruleUnique' => 'Feeder institution must be unique for the same academic period and education grade'
+                    'ruleUnique' => 'Recipient institution must be unique for the same academic period and education grade'
                 ]
             ],
             'Students' => [
