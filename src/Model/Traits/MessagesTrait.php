@@ -999,6 +999,11 @@ trait MessagesTrait
                     'compareWithDateStarted' => 'Date completed should not be earlier than date started'
                 ],
             ],
+            'FeederOutgoingInstitutions' => [
+                'institution_id' => [
+                    'ruleUnique' => 'Feeder institution must be unique for the same academic period and education grade'
+                ]
+            ],
             'Students' => [
                 'student_name' => [
                     'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
