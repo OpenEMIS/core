@@ -74,16 +74,13 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         context: {
             scope: $scope,
             mode: vm.action,
-            absenceType: vm.absenceTypeOptions,
-            studentAbsenceReason: vm.studentAbsenceReasonOptions,
+            absenceTypes: vm.absenceTypeOptions,
+            studentAbsenceReasons: vm.studentAbsenceReasonOptions,
             date: vm.selectedDay,
             schoolClosed: vm.schoolClosed,
             week: vm.selectedWeek,
             period: vm.selectedAttendancePeriod,
-            absenceType: vm.absenceType,
-            isMarked: vm.isMarked,
-            // saveError: {},
-            // originalData: {}
+            isMarked: vm.isMarked
         },
     };
 
@@ -96,14 +93,15 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         UtilsSvc.isAppendLoader(true);
         if (vm.institutionId != null) {
             InstitutionStudentAttendancesSvc.getAbsenceTypeOptions()
-            .then(function(absenceType) {
-                vm.absenceType = absenceType;
-                vm.gridOptions.context.absenceType = vm.absenceType;
+            .then(function(absenceTypeOptions) {
+                vm.absenceType = absenceTypeOptions;
+                vm.gridOptions.context.absenceTypes = vm.absenceType;
                 return InstitutionStudentAttendancesSvc.getStudentAbsenceReasonOptions();
             }, vm.error)
             .then(function(studentAbsenceReasonOptions) {
+                // console.log('Controller - studentAbsenceReasonOptions', studentAbsenceReasonOptions);
                 vm.studentAbsenceReasonOptions = studentAbsenceReasonOptions;
-                vm.gridOptions.context.studentAbsenceReason = vm.studentAbsenceReasonOptions;
+                vm.gridOptions.context.studentAbsenceReasons = vm.studentAbsenceReasonOptions;
                 return InstitutionStudentAttendancesSvc.getAcademicPeriodOptions(vm.institutionId);
             }, vm.error)
             .then(function(academicPeriodOptions) {
@@ -478,7 +476,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     }
 
     vm.changeAttendancePeriod = function() {
-        console.log('Change - attendance', vm.selectedClass);
+        console.log('Change - attendance', vm.selectedAttendancePeriod);
         vm.gridOptions.context.period = vm.selectedAttendancePeriod;
         UtilsSvc.isAppendLoader(true);
         InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams())

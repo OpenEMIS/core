@@ -82,33 +82,33 @@ class StudentAttendancesTable extends AppTable
             // single day
             $query
                 ->formatResults(function (ResultSetInterface $results) use ($findDay, $attendancePeriodId) {
-                    $StudentAbsenceTable = TableRegistry::get('Institution.StudentAbsences');
-                    return $results->map(function ($row) use ($StudentAbsenceTable, $findDay, $attendancePeriodId) {
+                    $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+                    return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId) {
                         $academicPeriodId = $row->academic_period_id;
                         $institutionClassId = $row->institution_class_id;
                         $studentId = $row->student_id;
                         $institutionId = $row->institution_id;
 
-                        $PERSENT = 0;
+                        $PRESENT = 0;
 
                         $conditions = [
-                            $StudentAbsenceTable->aliasField('academic_period_id = ') => $academicPeriodId,
-                            $StudentAbsenceTable->aliasField('institution_class_id = ') => $institutionClassId,
-                            $StudentAbsenceTable->aliasField('student_id = ') => $studentId,
-                            $StudentAbsenceTable->aliasField('institution_id = ') => $institutionId,
-                            $StudentAbsenceTable->aliasField('period = ') => $attendancePeriodId,
-                            $StudentAbsenceTable->aliasField('date = ') => $findDay,
+                            $StudentAbsencesPeriodDetails->aliasField('academic_period_id = ') => $academicPeriodId,
+                            $StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') => $institutionClassId,
+                            $StudentAbsencesPeriodDetails->aliasField('student_id = ') => $studentId,
+                            $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
+                            $StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId,
+                            $StudentAbsencesPeriodDetails->aliasField('date = ') => $findDay,
                         ];
 
-                        $result = $StudentAbsenceTable
+                        $result = $StudentAbsencesPeriodDetails
                             ->find()
                             ->contain(['AbsenceTypes'])
                             ->select([
-                                $StudentAbsenceTable->aliasField('date'),
-                                $StudentAbsenceTable->aliasField('period'),
-                                $StudentAbsenceTable->aliasField('comment'),
-                                $StudentAbsenceTable->aliasField('absence_type_id'),
-                                $StudentAbsenceTable->aliasField('student_absence_reason_id'),
+                                $StudentAbsencesPeriodDetails->aliasField('date'),
+                                $StudentAbsencesPeriodDetails->aliasField('period'),
+                                $StudentAbsencesPeriodDetails->aliasField('comment'),
+                                $StudentAbsencesPeriodDetails->aliasField('absence_type_id'),
+                                $StudentAbsencesPeriodDetails->aliasField('student_absence_reason_id'),
                                 'AbsenceTypes.code'
                             ])
                             ->where($conditions)
@@ -129,7 +129,7 @@ class StudentAttendancesTable extends AppTable
                                 'date' => $findDay,
                                 'period' => $attendancePeriodId,
                                 'comment' => null,
-                                'absence_type_id' => $PERSENT,
+                                'absence_type_id' => $PRESENT,
                                 'student_absence_reason_id' => null,
                                 'absence_type_code' => null
                             ];
@@ -174,27 +174,27 @@ class StudentAttendancesTable extends AppTable
             if (!$studentListResult->isEmpty()) {
                 $studentList = $studentListResult->toArray();
 
-                $StudentAbsenceTable = TableRegistry::get('Institution.StudentAbsences');
+                $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
                 $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
 
-                $result = $StudentAbsenceTable
+                $result = $StudentAbsencesPeriodDetails
                     ->find()
                     ->contain(['AbsenceTypes'])
                     ->select([
-                        $StudentAbsenceTable->aliasField('student_id'),
-                        $StudentAbsenceTable->aliasField('date'),
-                        $StudentAbsenceTable->aliasField('period'),
-                        $StudentAbsenceTable->aliasField('absence_type_id'),
+                        $StudentAbsencesPeriodDetails->aliasField('student_id'),
+                        $StudentAbsencesPeriodDetails->aliasField('date'),
+                        $StudentAbsencesPeriodDetails->aliasField('period'),
+                        $StudentAbsencesPeriodDetails->aliasField('absence_type_id'),
                         'code' => 'AbsenceTypes.code'
                     ])
                     ->where([
-                        $StudentAbsenceTable->aliasField('academic_period_id = ') => $academicPeriodId,
-                        $StudentAbsenceTable->aliasField('institution_class_id = ') => $institutionClassId,
-                        $StudentAbsenceTable->aliasField('student_id IN ') => $studentList,
-                        $StudentAbsenceTable->aliasField('institution_id = ') => $institutionId,
+                        $StudentAbsencesPeriodDetails->aliasField('academic_period_id = ') => $academicPeriodId,
+                        $StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') => $institutionClassId,
+                        $StudentAbsencesPeriodDetails->aliasField('student_id IN ') => $studentList,
+                        $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
                         'AND' => [
-                            $StudentAbsenceTable->aliasField('date >= ') => $weekStartDay,
-                            $StudentAbsenceTable->aliasField('date <= ') => $weekEndDay,
+                            $StudentAbsencesPeriodDetails->aliasField('date >= ') => $weekStartDay,
+                            $StudentAbsencesPeriodDetails->aliasField('date <= ') => $weekEndDay,
 
                         ]
                     ])

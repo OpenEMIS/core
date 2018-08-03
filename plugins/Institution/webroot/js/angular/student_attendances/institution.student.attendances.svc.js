@@ -43,10 +43,10 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         StudentAttendances: 'Institution.StudentAttendances',
         InstitutionClasses: 'Institution.InstitutionClasses',
-        StudentAttendanceMarkTypes: 'Attendance.StudentAttendanceMarkTypes',
         AbsenceTypes: 'Institution.AbsenceTypes',
         StudentAbsenceReasons: 'Institution.StudentAbsenceReasons',
-        StudentAbsences: 'Institution.StudentAbsences',
+        StudentAbsencesPeriodDetails: 'Institution.StudentAbsencesPeriodDetails',
+        StudentAttendanceMarkTypes: 'Attendance.StudentAttendanceMarkTypes',
         StudentAttendanceMarkedRecords: 'Attendance.StudentAttendanceMarkedRecords'
     };
 
@@ -62,8 +62,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getDayListOptions: getDayListOptions,
         getClassOptions: getClassOptions,
         getPeriodOptions: getPeriodOptions,
-        getClassStudent: getClassStudent,
         getIsMarked: getIsMarked,
+        getClassStudent: getClassStudent,
 
         getSingleDayColumnDefs: getSingleDayColumnDefs,
         getAllDayColumnDefs: getAllDayColumnDefs,
@@ -106,11 +106,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return AbsenceTypes
-            .find('AbsenceTypeList', {
-                institution_id: 1
-            })
-            .where()
-            .select()
+            .find('AbsenceTypeList')
             .ajax({success: success, defer: true});
     }
 
@@ -244,7 +240,6 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         var success = function(response, deferred) {
             var classStudents = response.data.data;
-
             if (angular.isObject(classStudents)) {
                 deferred.resolve(classStudents);
             } else {
@@ -313,7 +308,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         // console.log('save - studentAbsenceData', studentAbsenceData);
-        return StudentAbsences.save(studentAbsenceData);
+        return StudentAbsencesPeriodDetails.save(studentAbsenceData);
     } 
 
     function savePeriodMarked(params, scope) {
@@ -426,7 +421,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             cellRenderer: function(params) {
                 if (angular.isDefined(params.value)) {
                     var context = params.context;
-                    var absenceTypeList = context.absenceType;
+                    var absenceTypeList = context.absenceTypes;
                     var isMarked = context.isMarked;
                     var isSchoolClosed = params.context.schoolClosed;
                     var mode = params.context.mode;
@@ -452,8 +447,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 if (angular.isDefined(params.value)) {
                     var data = params.data;
                     var context = params.context;
-                    var studentAbsenceReasonList = context.studentAbsenceReason;
-                    var absenceTypeList = context.absenceType;
+                    var studentAbsenceReasonList = context.studentAbsenceReasons;
+                    var absenceTypeList = context.absenceTypes;
                     var mode = context.mode;
 
                     if (angular.isDefined(params.data.institution_student_absences)) {
