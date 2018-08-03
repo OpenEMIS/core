@@ -1,12 +1,12 @@
-/* KORDIT FONT PACK v.1.0.13 */
+/* KORDIT FONT PACK v.1.0.14 */
 
 @font-face {
   font-family: 'kordit-fonts';
-  src:  url('fonts/kordit-fonts.eot?84ftaf');
-  src:  url('fonts/kordit-fonts.eot?84ftaf#iefix') format('embedded-opentype'),
-    url('fonts/kordit-fonts.ttf?84ftaf') format('truetype'),
-    url('fonts/kordit-fonts.woff?84ftaf') format('woff'),
-    url('fonts/kordit-fonts.svg?84ftaf#kordit-fonts') format('svg');
+  src:  url('fonts/kordit-fonts.eot?om6xam');
+  src:  url('fonts/kordit-fonts.eot?om6xam#iefix') format('embedded-opentype'),
+    url('fonts/kordit-fonts.ttf?om6xam') format('truetype'),
+    url('fonts/kordit-fonts.woff?om6xam') format('woff'),
+    url('fonts/kordit-fonts.svg?om6xam#kordit-fonts') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -26,292 +26,76 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.kd-assign:before {
-  content: "\e91d";
+.kd-graduate:before {
+  content: "\e93a";
 }
-.kd-reassign:before {
-  content: "\e91e";
-}
-.kd-upload-success:before {
-  content: "\e91f";
-}
-.kd-iso:before {
+.kd-process:before {
   content: "\e900";
 }
-.kd-opensource:before {
+.kd-process-error:before {
   content: "\e901";
 }
-.kd-secure:before {
+.kd-reason:before {
   content: "\e902";
 }
-.kd-interoperable:before {
+.kd-comment:before {
   content: "\e903";
 }
-.kd-404-error:before {
-  content: "\e600";
-}
-.kd-preview:before {
-  content: "\e601";
-}
-.kd-staff:before {
-  content: "\e602";
-}
-.kd-institutions:before {
-  content: "\e603";
-}
-.kd-students:before {
-  content: "\e604";
-}
-.kd-dashboard_icon:before {
-  content: "\e605";
-}
-.kd-upload-download:before {
-  content: "\e606";
-}
-.kd-export:before {
-  content: "\e607";
-}
-.kd-import:before {
-  content: "\e608";
-}
-.kd-download:before {
-  content: "\e609";
-}
-.kd-upload:before {
-  content: "\e60a";
-}
-.kd-text:before {
-  content: "\e60b";
-}
-.kd-resolution:before {
-  content: "\e60c";
-}
-.kd-html:before {
-  content: "\e60d";
-}
-.kd-audio:before {
-  content: "\e60e";
-}
-.kd-iframe:before {
-  content: "\e60f";
-}
-.kd-video:before {
-  content: "\e610";
-}
-.kd-image:before {
-  content: "\e611";
-}
-.kd-y-axis:before {
-  content: "\e612";
-}
-.kd-x-axis:before {
-  content: "\e613";
-}
-.kd-redo:before {
-  content: "\e614";
-}
-.kd-undo:before {
-  content: "\e615";
-}
-.kd-save:before {
-  content: "\e616";
-}
-.kd-label:before {
-  content: "\e617";
-}
-.kd-series:before {
-  content: "\e618";
-}
-.kd-legend:before {
-  content: "\e619";
-}
-.kd-grid2:before {
-  content: "\e61a";
-}
-.kd-axis:before {
-  content: "\e61b";
-}
-.kd-customize:before {
-  content: "\e61c";
-}
-.kd-title:before {
-  content: "\e61d";
-}
-.kd-check:before {
-  content: "\e61e";
-}
-.kd-cross:before {
-  content: "\e61f";
-}
-.kd-back:before {
-  content: "\e620";
-}
-.kd-lists:before {
-  content: "\e621";
-}
-.kd-edit:before {
-  content: "\e622";
-}
-.kd-trash:before {
-  content: "\e623";
-}
-.kd-add:before {
-  content: "\e624";
-}
-.kd-data_collection_icon:before {
-  content: "\e625";
-}
-.kd-openemis:before {
-  content: "\e626";
-}
-.kd-administration:before {
-  content: "\e627";
-}
-.kd-web_icon:before {
-  content: "\e628";
-}
-.kd-results:before {
-  content: "\e629";
-}
-.kd-reports:before {
-  content: "\e62a";
-}
-.kd-play:before {
-  content: "\e62b";
-}
-.kd-packages:before {
-  content: "\e62c";
-}
-.kd-mobile_icon:before {
-  content: "\e62d";
-}
-.kd-items:before {
-  content: "\e62e";
-}
-.kd-data_management_icon:before {
-  content: "\e62f";
-}
-.kd-ellipsis:before {
-  content: "\e630";
-}
-.kd-grid:before {
-  content: "\e631";
-}
-.kd-arrow-down:before {
-  content: "\e632";
-}
-.kd-arrow-up:before {
-  content: "\e633";
-}
-.kd-arrow-last:before {
-  content: "\e634";
-}
-.kd-arrow-first:before {
-  content: "\e635";
-}
-.kd-403-error:before {
-  content: "\e636";
-}
-.kd-role:before {
-  content: "\e637";
-}
-.kd-reject:before {
-  content: "\e638";
-}
-.kd-approve:before {
-  content: "\e639";
-}
-.kd-dropout:before {
-  content: "\e63a";
-}
-.kd-transfer:before {
-  content: "\e63b";
-}
-.kd-graduate:before {
-  content: "\e63c";
-}
-.kd-guardian:before {
-  content: "\e63d";
-}
-.kd-compile:before {
-  content: "\e63e";
-}
-.kd-reorder:before {
-  content: "\e63f";
-}
-.kd-draggable:before {
-  content: "\e640";
-}
-.kd-draggable-line:before {
-  content: "\e641";
-}
-.kd-header:before {
-  content: "\e642";
-}
-.kd-rows:before {
-  content: "\e643";
-}
-.kd-table:before {
-  content: "\e644";
-}
-.kd-shipment:before {
-  content: "\e800";
-}
-.kd-sort-date-desc:before {
+.kd-assign:before {
   content: "\e904";
 }
-.kd-sort-date-asc:before {
+.kd-reassign:before {
   content: "\e905";
 }
-.kd-sort-alphabet-asc:before {
+.kd-upload-success:before {
   content: "\e906";
 }
-.kd-sort-alphabet-desc:before {
+.kd-upload:before {
   content: "\e907";
 }
-.kd-download-fail:before {
+.kd-behaviour-o:before {
   content: "\e908";
 }
-.kd-download-success:before {
+.kd-server:before {
   content: "\e909";
 }
-.kd-alphabet:before {
+.kd-server-shadow:before {
   content: "\e90a";
 }
-.kd-alphanumeric:before {
+.kd-user-profile-shadow:before {
   content: "\e90b";
 }
-.kd-numeric:before {
+.kd-key:before {
   content: "\e90c";
 }
-.kd-add-column:before {
+.kd-bubble:before {
   content: "\e90d";
 }
-.kd-add-row:before {
+.kd-user-profile:before {
   content: "\e90e";
 }
-.kd-header-row-col:before {
+.kd-tablet:before {
   content: "\e90f";
 }
-.kd-header-row:before {
+.kd-class:before {
   content: "\e910";
 }
-.kd-header-col:before {
+.kd-assessment:before {
   content: "\e911";
 }
-.kd-remove:before {
+.kd-attendance:before {
   content: "\e912";
 }
-.kd-validate-row:before {
+.kd-reports:before {
   content: "\e913";
 }
-.kd-validate-col:before {
+.kd-grid:before {
   content: "\e914";
 }
-.kd-add-tab:before {
+.kd-add:before {
   content: "\e915";
 }
-.kd-tab:before {
+.kd-add-multiple:before {
   content: "\e916";
 }
 .kd-close-round:before {
@@ -320,15 +104,264 @@
 .kd-close:before {
   content: "\e918";
 }
-.kd-user:before {
+.kd-tab:before {
   content: "\e919";
 }
-.kd-add-multiple:before {
+.kd-add-tab:before {
   content: "\e91a";
 }
-.kd-publish:before {
+.kd-validate-row:before {
   content: "\e91b";
 }
-.kd-unpublish:before {
+.kd-validate-col:before {
   content: "\e91c";
+}
+.kd-alphabet:before {
+  content: "\e91d";
+}
+.kd-alphanumeric:before {
+  content: "\e91e";
+}
+.kd-numeric:before {
+  content: "\e91f";
+}
+.kd-header-row:before {
+  content: "\e920";
+}
+.kd-header-col:before {
+  content: "\e921";
+}
+.kd-header-row-col:before {
+  content: "\e922";
+}
+.kd-add-column:before {
+  content: "\e923";
+}
+.kd-add-row:before {
+  content: "\e924";
+}
+.kd-remove:before {
+  content: "\e925";
+}
+.kd-clear:before {
+  content: "\e926";
+}
+.kd-import:before {
+  content: "\e927";
+}
+.kd-download-success:before {
+  content: "\e928";
+}
+.kd-download-fail:before {
+  content: "\e929";
+}
+.kd-sort-date-desc:before {
+  content: "\e92a";
+}
+.kd-sort-date-asc:before {
+  content: "\e92b";
+}
+.kd-sort-alphabet-desc:before {
+  content: "\e92c";
+}
+.kd-sort-alphabet-asc:before {
+  content: "\e92d";
+}
+.kd-user:before {
+  content: "\e92e";
+}
+.kd-staff:before {
+  content: "\e92f";
+}
+.kd-students:before {
+  content: "\e930";
+}
+.kd-shipment:before {
+  content: "\e931";
+}
+.kd-unpublish:before {
+  content: "\e932";
+}
+.kd-publish:before {
+  content: "\e933";
+}
+.kd-draggable-line:before {
+  content: "\e934";
+}
+.kd-draggable:before {
+  content: "\e935";
+}
+.kd-reorder:before {
+  content: "\e936";
+}
+.kd-guardian:before {
+  content: "\e937";
+}
+.kd-dropout:before {
+  content: "\e938";
+}
+.kd-transfer:before {
+  content: "\e939";
+}
+.kd-reject:before {
+  content: "\e942";
+}
+.kd-approve:before {
+  content: "\e943";
+}
+.kd-compile:before {
+  content: "\e944";
+}
+.kd-404-error:before {
+  content: "\e945";
+}
+.kd-403-error:before {
+  content: "\e946";
+}
+.kd-preview:before {
+  content: "\e947";
+}
+.kd-cross:before {
+  content: "\e948";
+}
+.kd-status:before {
+  content: "\e949";
+}
+.kd-institutions:before {
+  content: "\e94a";
+}
+.kd-dashboard_icon:before {
+  content: "\e94b";
+}
+.kd-upload-download:before {
+  content: "\e94c";
+}
+.kd-export:before {
+  content: "\e94d";
+}
+.kd-download:before {
+  content: "\e94e";
+}
+.kd-text:before {
+  content: "\e94f";
+}
+.kd-resolution:before {
+  content: "\e950";
+}
+.kd-html:before {
+  content: "\e951";
+}
+.kd-audio:before {
+  content: "\e952";
+}
+.kd-iframe:before {
+  content: "\e953";
+}
+.kd-video:before {
+  content: "\e954";
+}
+.kd-image:before {
+  content: "\e955";
+}
+.kd-y-axis:before {
+  content: "\e956";
+}
+.kd-x-axis:before {
+  content: "\e957";
+}
+.kd-redo:before {
+  content: "\e958";
+}
+.kd-undo:before {
+  content: "\e959";
+}
+.kd-save:before {
+  content: "\e95a";
+}
+.kd-label:before {
+  content: "\e95b";
+}
+.kd-series:before {
+  content: "\e95c";
+}
+.kd-legend:before {
+  content: "\e95d";
+}
+.kd-grid-2:before {
+  content: "\e95e";
+}
+.kd-axis:before {
+  content: "\e95f";
+}
+.kd-customize:before {
+  content: "\e960";
+}
+.kd-title:before {
+  content: "\e961";
+}
+.kd-check:before {
+  content: "\e962";
+}
+.kd-back:before {
+  content: "\e963";
+}
+.kd-lists:before {
+  content: "\e964";
+}
+.kd-edit:before {
+  content: "\e965";
+}
+.kd-trash:before {
+  content: "\e966";
+}
+.kd-data_collection_icon:before {
+  content: "\e967";
+}
+.kd-openemis:before {
+  content: "\e968";
+}
+.kd-administration:before {
+  content: "\e969";
+}
+.kd-web_icon:before {
+  content: "\e96a";
+}
+.kd-user-role:before {
+  content: "\e96b";
+}
+.kd-role:before {
+  content: "\e96c";
+}
+.kd-results:before {
+  content: "\e96d";
+}
+.kd-play:before {
+  content: "\e96e";
+}
+.kd-packages:before {
+  content: "\e96f";
+}
+.kd-mobile_icon:before {
+  content: "\e970";
+}
+.kd-items:before {
+  content: "\e971";
+}
+.kd-data_management_icon:before {
+  content: "\e972";
+}
+.kd-ellipsis:before {
+  content: "\e973";
+}
+.kd-arrow-down:before {
+  content: "\e974";
+}
+.kd-arrow-up:before {
+  content: "\e975";
+}
+.kd-arrow-last:before {
+  content: "\e976";
+}
+.kd-arrow-first:before {
+  content: "\e977";
 }
