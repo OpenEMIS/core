@@ -517,6 +517,7 @@ trait MessagesTrait
             'current_period' => 'Current Academic Period',
             'next_period' => 'Next Academic Period',
             'success' => 'Students have been promoted',
+            'saveDraftSuccess' => 'Student Promotion successfully saved as draft',
             'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution',
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noStudentSelected' => 'There are no students selected',
@@ -657,6 +658,15 @@ trait MessagesTrait
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
             'noLinkedExamCentres' => 'Please contact your administrator to set up available Examination Centres for the selected Examination'
+        ],
+        'AssessmentGradingTypes' => [
+            'noGradingOptions' => 'There are no grading options for this grading type'
+        ],
+        'OutcomeGradingTypes' => [
+            'noGradingOptions' => 'There are no grading options for this grading type'
+        ],
+        'CompetencyGradingTypes' => [
+            'noGradingOptions' => 'There are no grading options for this grading type'
         ],
         'Examinations' => [
             'noExaminationItems' => 'There are no examination items for this examination'
@@ -998,6 +1008,11 @@ trait MessagesTrait
                 'date_completed' => [
                     'compareWithDateStarted' => 'Date completed should not be earlier than date started'
                 ],
+            ],
+            'FeederOutgoingInstitutions' => [
+                'institution_id' => [
+                    'ruleUnique' => 'Recipient institution must be unique for the same academic period and education grade'
+                ]
             ],
             'Students' => [
                 'student_name' => [

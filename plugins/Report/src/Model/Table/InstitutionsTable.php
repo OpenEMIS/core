@@ -107,6 +107,15 @@ class InstitutionsTable extends AppTable
         return $validator;
     }
 
+    public function validationBodyMasses(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('institution_type_id')
+            ->notEmpty('institution_id');
+        return $validator;
+    }    
+
     public function validationStudents(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
@@ -174,7 +183,9 @@ class InstitutionsTable extends AppTable
             $options['validate'] = 'staff';
         } elseif ($data[$this->alias()]['feature'] == 'Report.StudentAttendanceSummary') {
             $options['validate'] = 'studentAttendanceSummary';
-        }
+        } elseif ($data[$this->alias()]['feature'] == 'Report.BodyMasses') {
+            $options['validate'] = 'bodyMasses';
+        }       
     }
 
     public function addAfterAction(Event $event, Entity $entity)
@@ -436,7 +447,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects', 'Report.StudentAttendanceSummary']))
+            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.BodyMasses']))
                 ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
@@ -541,7 +552,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary'])) {
+            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.BodyMasses'])) {
                 $TypesTable = TableRegistry::get('Institution.Types');
                 $typeOptions = $TypesTable
                     ->find('list')
@@ -562,25 +573,32 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary'])) {
+            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.BodyMasses'])) {
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
                     $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
 
                     $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-                    $institutionList = $InstitutionsTable
+                    $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
                             'valueField' => 'code_name'
                         ])
                         ->where([
-                            $this->aliasField('institution_type_id') => $institutionTypeId
+                            $InstitutionsTable->aliasField('institution_type_id') => $institutionTypeId
                         ])
                         ->order([
-                            $this->aliasField('code') => 'ASC',
-                            $this->aliasField('name') => 'ASC'
-                        ])
-                        ->toArray();
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
                 }
 
                 if (empty($institutionList)) {
