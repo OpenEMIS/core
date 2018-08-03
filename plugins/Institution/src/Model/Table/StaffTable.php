@@ -15,10 +15,13 @@ use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
+use DateInterval;
+use DatePeriod;
 use Cake\Log\Log;
 use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Datasource\ResultSetInterface;
 
 class StaffTable extends ControllerActionTable
 {
@@ -71,7 +74,8 @@ class StaffTable extends ControllerActionTable
             'Staff' => ['index', 'add'],
             'ClassStudents' => ['index'],
             'SubjectStudents' => ['index'],
-            'ReportCardComments' => ['index']
+            'ReportCardComments' => ['index'],
+            'InstitutionStaffAttendances' => ['index', 'view']
         ]);
 
         $this->addBehavior('HighChart', [
@@ -1782,5 +1786,83 @@ class StaffTable extends ControllerActionTable
             ;
 
         return $licenseData->toArray();
+    }
+
+    public function findStaffAttendances(Query $query, array $options)
+    {
+        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
+        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
+        $staffId = $options['staff_id'];
+        $institutionId = $options['institution_id'];
+        // $academicPeriodId = $options['academic_period_id'];
+        $weekStartDate = $options['week_start_day'];
+        $weekEndDate = $options['week_end_day'];
+
+        //Gets all the days in the selected week based on its start date end date
+        $startDate = new DateTime($weekStartDate);
+        $endDate = new DateTime($weekEndDate);
+        $interval = new DateInterval('P1D');
+        $daterange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
+
+        // To get all the dates of the working days only
+        $workingDaysArr = [];
+        $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
+        foreach ($daterange as $date) {
+            $dayText = $date->format('l');
+            if (in_array($dayText, $workingDays)) {
+                $workingDaysArr[] = $date;
+            }
+        }
+
+        $query = $query
+            ->select([
+                $this->aliasField('institution_id'),
+                $this->aliasField('staff_id'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name'),
+                $InstitutionStaffAttendances->aliasField('start_time'),
+                $InstitutionStaffAttendances->aliasField('end_time'),
+                $InstitutionStaffAttendances->aliasField('date'),
+            ])
+            ->leftJoin(
+                [$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
+                [
+                    $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+                    $InstitutionStaffAttendances->aliasField('institution_id = ') . $this->aliasField('institution_id')
+                ]
+            )
+            ->matching('Users')
+            ->where([
+                $this->aliasField('staff_id') => $staffId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('staff_status_id') => 1
+            ])
+            ->group([
+                $this->aliasField('staff_id'),
+                $this->aliasField('institution_id')
+            ])
+            ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr) {
+                $results = $results->toArray();
+
+                $formatResultDates = [];
+                foreach ($workingDaysArr as $date) {
+                    foreach ($results as $result) {
+                        $dayDate = $date->format('l, d F Y');
+                        $cloneResult = clone $result;
+                        $cloneResult['date'] = $dayDate;
+                        $formatResultDates[] = $cloneResult;
+                    }
+                }
+                Log::write('debug', $formatResultDates);
+                return $formatResultDates;
+            });
+
+        Log::write('debug', $query);
+        return $query;
     }
 }

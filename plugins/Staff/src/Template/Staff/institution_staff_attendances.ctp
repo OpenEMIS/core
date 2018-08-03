@@ -1,7 +1,8 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Staff.angular/staff_attendances/staff.attendances.svc', ['block' => true]); ?>
 <?= $this->Html->script('Staff.angular/staff_attendances/staff.attendances.ctrl', ['block' => true]); ?>
-
+<?= $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min', ['block' => true]); ?>
+<?= $this->Html->css('ControllerAction.../plugins/timepicker/css/bootstrap-timepicker.min', ['block' => true]); ?>
 <?php
 $this->start('toolbar');
 ?>
@@ -12,26 +13,26 @@ $this->start('toolbar');
             <i class="fa kd-export" ></i>
         </button>
     </a>
-<?php endif; ?>
+<?php endif; ?> -->
 
-<?php if ($_import) : ?>
+<!-- <?php if ($_import) : ?>
     <a href="<?=$importUrl ?>" ng-show="$ctrl.action == 'view'">
         <button class="btn btn-xs btn-default" data-toggle="{{test()}}" data-placement="bottom" data-container="body" title="<?= __('Import') ?>" >
             <i class="fa kd-import"></i>
         </button>
     </a>
 </button>
-<?php endif; ?>
+<?php endif; ?> -->
 
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onEditClick()">
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view'" ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
     </button>
 
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit'" ng-click="$ctrl.onBackClick()">
         <i class="fa kd-back"></i>
     </button>
-<?php endif; ?> -->
+<?php endif; ?>
 
 <?php
 $this->end();
@@ -47,9 +48,9 @@ $paramsQuery = $this->ControllerAction->getQueryString();
 $classId = $paramsQuery['institution_class_id'];
 $reportCardId = $paramsQuery['report_card_id'];
 $institutionId = $paramsQuery['institution_id'];
-pr($this->ControllerAction);
 ?>
-<div ng-init="classId=<?= $classId; ?>;reportCardId=<?= $reportCardId; ?>;institutionId=<?= $institutionId; ?>;">
+
+<div ng-init="">
     <div class="scrolltabs sticky-content">
         <scrollable-tabset show-tooltips="false" show-drop-down="false">
             <uib-tabset justified="true">
@@ -58,10 +59,6 @@ pr($this->ControllerAction);
             </uib-tabset>
             <div class="tabs-divider"></div>
         </scrollable-tabset>
-
-        <div id="institution-comment-table" class="table-wrapper">
-            <div ng-if="InstitutionCommentsController.gridOptions" kd-ag-grid="InstitutionCommentsController.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
-        </div>
     </div>
 </div>
 <?= $this->element('OpenEmis.alert') ?>
@@ -81,6 +78,12 @@ pr($this->ControllerAction);
                 </select>
             </div>
         </div>
+    </div>
+</div>
+<div ng-init="$ctrl.institutionId=<?= $institution_id ?>;$ctrl.staffId=<?= $staff_id ?>;">
+    <div id="staff-attendances-table" class="table-wrapper">
+        <!-- <div style="width: initial; height: initial;" ng-if="$ctrl.gridOptions" kd-ag-grid="$ctrl.gridOptions" has-tabs="true"></div> -->
+        <div ng-if="$ctrl.gridOptions" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
     </div>
 </div>
 <!-- <style>
