@@ -207,18 +207,20 @@ class StaffController extends AppController
     public function InstitutionStaffAttendances()
     {
         $_edit = $this->AccessControl->check(['Staff', 'StaffAttendances', 'edit']);
-        
+
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
         } else {
             $session = $this->request->session();
+            $staffId = $session->read('Staff.Staff.id');
             $institutionId = $session->read('Institution.Institutions.id');
         }
 
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
         $this->Navigation->addCrumb($crumbTitle);
-
+        $this->set('_edit', $_edit);
         $this->set('institution_id', $institutionId);
+        $this->set('staff_id', $staffId);
         $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
     }
 
