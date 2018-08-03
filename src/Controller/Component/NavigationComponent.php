@@ -1168,6 +1168,11 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            'Reports.Scholarships' => [
+                'title' => 'Scholarships',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
             'Reports.Surveys' => [
                 'title' => 'Surveys',
                 'parent' => 'Reports',
