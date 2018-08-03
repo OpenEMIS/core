@@ -52,6 +52,12 @@ $panelHeader = $this->fetch('panelHeader');
         width: 32%;
     }
 
+    .attendance-dashboard .data-section i.fa-address-book-o {
+        background-color: transparent;
+        border: none;
+        color: #999;
+    }
+
     .splitter-filter select[disabled] {
         background-color: #f2f2f2!important;
         border: 1px solid #ccc!important;
@@ -64,6 +70,10 @@ $panelHeader = $this->fetch('panelHeader');
 
     .splitter-filter .input-selection.attendance {
         width: 100%;
+    }
+
+    .splitter-filter .input-selection.attendance.disabled {
+        background-color: #f2f2f2!important;
     }
 
     #institution-student-attendances-table .sg-theme .ag-cell {
@@ -190,7 +200,7 @@ $panelHeader = $this->fetch('panelHeader');
                         </div>
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
-                        <i class="kd-students icon"></i>
+                        <i class="fa fa-address-book-o"></i>
                         <div class="data-field">
                             <h4><?= __('Total Attendance') ?></h4>    
                             <h1 class="data-header">{{$ctrl.allAttendances}}</h1>
@@ -251,9 +261,9 @@ $panelHeader = $this->fetch('panelHeader');
                     </div>
                     <h5><?= __('Attendance per day') ?>: </h5>
                     <div class="input">
-                        <div class="input-selection attendance">
+                        <div class="input-selection attendance" ng-class="{'disabled': $ctrl.action=='edit' || $ctrl.selectedDay==-1}">
                             <div class="input" ng-repeat="attendance_period in $ctrl.attendancePeriodOptions">
-                                <input kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
+                                <input ng-disabled="$ctrl.action=='edit' || $ctrl.selectedDay==-1" kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
                             </div>
                         </div>
                     </div>  
