@@ -34,8 +34,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     };
 
     const icons = {
-        'REASON': 'fa fa-commenting',
-        'COMMENT': 'fa fa-commenting',
+        'REASON': 'kd kd-reason',
+        'COMMENT': 'kd kd-comment',
         'PRESENT': 'fa fa-minus',
     };
 
