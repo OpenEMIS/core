@@ -2,21 +2,17 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use ZipArchive;
+
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
-use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
 use Cake\Log\Log;
-use ZipArchive;
-use App\Model\Table\ControllerActionTable;
 
-use Cake\Mailer\Email;
-use Cake\Filesystem\Folder;
-use Cake\Filesystem\File;
+use App\Model\Table\ControllerActionTable;
 
 class ReportCardStatusesTable extends ControllerActionTable
 {
@@ -242,7 +238,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'report_card_status' => $this->StudentsReportCards->aliasField('status'),
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
-                'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status')
+                'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
+                'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message')
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -481,13 +478,9 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         if ($entity->has('email_status_id')) {
             $value = $emailStatuses[$entity->email_status_id];
-            if($entity->email_status_id == $this->ReportCardEmailProcesses::ERROR) {
-                $reportCardId = $entity->report_card_id;
-                $institutionClassId = $entity->institution_class_id;
-                $studentId = $entity->student_id;
 
-                $errorMsg = $this->ReportCardEmailProcesses->getEmailErrorMsg($reportCardId, $institutionClassId, $studentId);
-                $value .= '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $errorMsg->error_message . '"></i>';
+            if ($entity->has('email_error_message')) {
+                $value .= '&nbsp&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $entity->email_error_message . '"></i>';
             }
         }
 
@@ -727,6 +720,16 @@ class ReportCardStatusesTable extends ControllerActionTable
             $ReportCardProcesses->save($newEntity);
             // end
 
+            // Report card email processes
+            $emailIdKeys = $idKeys;
+            if ($this->ReportCardEmailProcesses->exists($emailIdKeys)) {
+                $reportCardEmailProcessEntity = $this->ReportCardEmailProcesses->find()
+                    ->where($emailIdKeys)
+                    ->first();
+                $this->ReportCardEmailProcesses->delete($reportCardEmailProcessEntity);
+            }
+            // end
+
             // Student report card
             $recordIdKeys = [
                 'report_card_id' => $reportCardId,
@@ -818,7 +821,6 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
 
-        // $reportCardEmailProcessesTable = TableRegistry::get('ReportCard.ReportCardEmailProcesses');
         $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
 
         $where = [];
