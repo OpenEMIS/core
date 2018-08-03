@@ -26,8 +26,6 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
-        $this->addBehavior('Area.Areapicker');
-
         $this->toggle('edit', false);
     }
 
@@ -150,13 +148,10 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         $this->field('education_grade_id', [
             'type' => 'select',
             'entity' => $entity
-        ]);        
+        ]);
         $this->field('area_education_id', [
-            'type' => 'areapicker',
-            'source_model' => 'Area.Areas',
-            'displayCountry' => false,
-            'null' => false,
-            'onchange' => true
+            'type' => 'select',
+            'entity' => $entity
         ]);
         $this->field('institution_id', [
             'type' => 'select',
@@ -309,6 +304,68 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         return $attr;
     }
 
+    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action = 'add') {
+            $areaEducationList = [];
+            $entity = $attr['entity'];
+
+            $nextAcademicPeriodId = 0;
+            $nextEducationGrades = [];
+
+            if ($entity->has('academic_period_id')) {
+                $nextAcademicPeriodId = $this->AcademicPeriods->getNextAcademicPeriodId($entity->academic_period_id);
+            }
+
+            if ($entity->has('education_grade_id')) {
+                $selectedEducationGrade =$entity->education_grade_id;
+                $nextEducationGrades = array_keys($this->EducationGrades->getNextAvailableEducationGrades($selectedEducationGrade, true, true));
+            }
+
+            if (!empty($nextAcademicPeriodId) && !empty($nextEducationGrades)) {
+                $nextPeriodData = $this->AcademicPeriods->get($nextAcademicPeriodId);
+                if ($nextPeriodData->start_date instanceof Time) {
+                    $nextPeriodStartDate = $nextPeriodData->start_date->format('Y-m-d');
+                } else {
+                    $nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
+                }
+
+                $AreasTable = TableRegistry::get('Area.Areas');
+                $areaEducationList = $AreasTable->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'code_name'
+                    ])
+                    ->innerJoinWith('Institutions.InstitutionGrades')
+                    ->where([
+                        'InstitutionGrades.education_grade_id IN ' => $nextEducationGrades,
+                        $this->Institutions->aliasField('id').' <> ' => $this->institutionId,
+                        'InstitutionGrades.start_date <=' => $nextPeriodStartDate,
+                        'OR' => [
+                                'InstitutionGrades.end_date IS NULL',
+                                'InstitutionGrades.end_date >=' => $nextPeriodStartDate
+                        ]
+                    ])
+                    ->order([$AreasTable->aliasField('order')])
+                    ->toArray();
+            }
+
+            if (empty($areaEducationList)) {
+                $areaEducationOptions = ['' => $this->getMessage('general.select.noOptions')];
+
+                $attr['type'] = 'select';
+                $attr['options'] = $areaEducationOptions;
+            } else {
+                $areaEducationOptions = ['' => '-- '.__('Select').' --'] + $areaEducationList;
+                $attr['type'] = 'chosenSelect';
+                $attr['attr']['multiple'] = false;
+                $attr['options'] = $areaEducationOptions;
+                $attr['onChangeReload'] = true;
+            }
+        }
+
+        return $attr;
+    }
+
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
         if ($action = 'add') {
@@ -333,48 +390,53 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
             }
 
             if (!empty($nextAcademicPeriodId) && !empty($nextEducationGrades) && !empty($areaEducationId)) {
-                $AreasTable = TableRegistry::get('Area.Areas');
-                $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
-                $areaEducationEntity = $AreasTable->get($areaEducationId);
+                $nextPeriodData = $this->AcademicPeriods->get($nextAcademicPeriodId);
+                if ($nextPeriodData->start_date instanceof Time) {
+                    $nextPeriodStartDate = $nextPeriodData->start_date->format('Y-m-d');
+                } else {
+                    $nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
+                }
 
-                $institutionList = $InstitutionGradesTable
+                $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
+                $InstitutionStatusesTable = TableRegistry::get('Institution.Statuses');
+                $activeStatus = $InstitutionStatusesTable->getIdByCode('ACTIVE');
+
+                $institutionList = $this->Institutions
                     ->find('list', [
-                        'keyField' => 'institution_id',
-                        'valueField' => 'institution.code_name',
-                        'groupField' => 'institution.type.name'
+                        'keyField' => 'id',
+                        'valueField' => 'code_name',
+                        'groupField' => 'type.name'
                     ])
                     ->contain([
-                        'Institutions' => [
-                                'fields' => [
-                                    'id',
-                                    'code',
-                                    'name'
-                                ]
-                            ],
-                        'Institutions.Areas' => [
-                            'fields' => [
-                                'lft',
-                                'rght'
-                            ]
-                        ],
-                        'Institutions.Types' => [
+                        'Types' => [
                             'fields' => [
                                 'name',
                                 'order'
                             ]
                         ]
                     ])
-                    ->where([
-                        $InstitutionGradesTable->aliasField('education_grade_id IN ') => $nextEducationGrades,
-                        $InstitutionGradesTable->aliasField('institution_id <> ') => $this->institutionId,
-                        'Areas.lft >=' => $areaEducationEntity->lft,
-                        'Areas.rght <=' => $areaEducationEntity->rght
+                    ->join([
+                        'table' => $InstitutionGradesTable->table(),
+                        'alias' => $InstitutionGradesTable->alias(),
+                        'conditions' => [
+                            $InstitutionGradesTable->aliasField('institution_id = ') . $this->Institutions->aliasField('id'),
+                            $InstitutionGradesTable->aliasField('education_grade_id IN ') => $nextEducationGrades,
+                            $InstitutionGradesTable->aliasField('start_date <=') => $nextPeriodStartDate,
+                            'OR' => [
+                                $InstitutionGradesTable->aliasField('end_date IS NULL'),
+                                $InstitutionGradesTable->aliasField('end_date >=') => $nextPeriodStartDate
+                            ]
+                        ]
                     ])
-                    ->find('academicPeriod', ['academic_period_id' => $nextAcademicPeriodId])
+                    ->where([
+                        $this->Institutions->aliasField('id <>') => $this->institutionId,
+                        $this->Institutions->aliasField('area_id') => $areaEducationId,
+                        $this->Institutions->aliasField('institution_status_id') => $activeStatus
+                    ])
                     ->order([
                         'Types.order' => 'ASC',
-                        'Institutions.code' => 'ASC',
-                        'Institutions.name' => 'ASC'
+                        $this->Institutions->aliasField('name') => 'ASC',
+                        $this->Institutions->aliasField('code') => 'ASC'
                     ])
                     ->toArray();
             }
