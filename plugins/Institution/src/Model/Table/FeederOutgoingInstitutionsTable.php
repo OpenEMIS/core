@@ -5,10 +5,11 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
-use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -220,7 +221,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
                     }
                 }
             } catch (InvalidPrimaryKeyException $ex) {
-                $this->log($ex->getMessage(), 'error');
+                Log::write('error', $ex->getMessage());
             }
             return $areaName;
         }
@@ -365,7 +366,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
                     ])
                     ->where([
                         $InstitutionGradesTable->aliasField('education_grade_id IN ') => $nextEducationGrades,
-                        $InstitutionGradesTable->aliasField('institution_id !=') => $entity->feeder_institution_id,
+                        $InstitutionGradesTable->aliasField('institution_id <> ') => $this->institutionId,
                         'Areas.lft >=' => $areaEducationEntity->lft,
                         'Areas.rght <=' => $areaEducationEntity->rght
                     ])
