@@ -123,8 +123,8 @@ class EmailAllReportCardsShell extends Shell
                     if (!empty($studentsReportCardEntity)) {
                         $emailProcessesObj = new ArrayObject([
                             'recipients' => '',
-                            'subject' => 'xx',
-                            'message' => 'yy',
+                            'subject' => '',
+                            'message' => '',
                             'email_process_attachments' => []
                         ]);
 
@@ -135,6 +135,7 @@ class EmailAllReportCardsShell extends Shell
 
                         $emailProcessesData = $emailProcessesObj->getArrayCopy();
 
+                        // default email status is error
                         $emailStatus = $this->ReportCardEmailProcesses::ERROR;
                         $errorMsg = NULL;
                         if (empty($emailProcessesData['recipients'])) {
