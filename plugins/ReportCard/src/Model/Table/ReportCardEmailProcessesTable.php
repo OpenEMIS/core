@@ -31,18 +31,4 @@ class ReportCardEmailProcessesTable extends AppTable
 
         return $statuses;
     }
-
-    public function getEmailErrorMsg($reportCardId, $institutionClassId, $studentId) {
-        return $this
-            ->find()
-            ->where([
-                $this->aliasField('report_card_id') => $reportCardId,
-                $this->aliasField('institution_class_id') => $institutionClassId,
-                $this->aliasField('student_id') => $studentId
-            ])
-            ->select([
-                $this->aliasField('error_message')
-            ])
-            ->first();
-    }
 }
