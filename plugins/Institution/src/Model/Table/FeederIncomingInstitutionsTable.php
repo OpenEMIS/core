@@ -5,8 +5,9 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Event\Event;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -61,12 +62,11 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
                     }
                 }
             } catch (InvalidPrimaryKeyException $ex) {
-                $this->log($ex->getMessage(), 'error');
+                Log::write('error', $ex->getMessage());
             }
             return $areaName;
         }
         return $entity->feeder_institution->area->name;
-
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
