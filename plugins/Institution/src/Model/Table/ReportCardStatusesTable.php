@@ -43,7 +43,6 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('ReportCard.EmailTemplate');
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -477,11 +476,19 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function onGetEmailStatus(Event $event, Entity $entity)
     {
+        $emailStatuses = $this->ReportCardEmailProcesses->getEmailStatus();
         $value = '<i class="fa fa-minus"></i>';
 
-        $emailStatuses = $this->ReportCardEmailProcesses->getEmailStatus();
         if ($entity->has('email_status_id')) {
             $value = $emailStatuses[$entity->email_status_id];
+            if($entity->email_status_id == $this->ReportCardEmailProcesses::ERROR) {
+                $reportCardId = $entity->report_card_id;
+                $institutionClassId = $entity->institution_class_id;
+                $studentId = $entity->student_id;
+
+                $errorMsg = $this->ReportCardEmailProcesses->getEmailErrorMsg($reportCardId, $institutionClassId, $studentId);
+                $value .= '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $errorMsg->error_message . '"></i>';
+            }
         }
 
         return $value;
@@ -896,7 +903,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake EmailAllReportCards'.$args;
             $logs = ROOT . DS . 'logs' . DS . 'EmailAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
-
+            
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);

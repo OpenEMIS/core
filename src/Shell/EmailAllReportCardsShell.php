@@ -18,6 +18,7 @@ class EmailAllReportCardsShell extends Shell
         $this->loadModel('Institution.InstitutionStudentsReportCards');
         $this->loadModel('Email.EmailProcesses');
         $this->loadModel('Email.EmailProcessAttachments');
+        $this->loadModel('Email.EmailTemplates');
     }
 
     public function main()
@@ -133,36 +134,48 @@ class EmailAllReportCardsShell extends Shell
                         $this->setAttachments($studentsReportCardEntity, $emailProcessesObj);
 
                         $emailProcessesData = $emailProcessesObj->getArrayCopy();
-                        if (!empty($emailProcessesData['recipients']) && !empty($emailProcessesData['subject']) && !empty($emailProcessesData['message'])) {
-                            $emailProcessesEntity = $this->EmailProcesses->newEntity($emailProcessesData);
 
-                            if ($this->EmailProcesses->save($emailProcessesEntity)) {
-                                $emailProcessesId = $emailProcessesEntity->id;
+                        $emailStatus = $this->ReportCardEmailProcesses::ERROR;
+                        $errorMsg = NULL;
+                        if (empty($emailProcessesData['recipients'])) {
+                            $errorMsg = 'Email address is not configured';
 
-                                try {
-                                    $result = $this->EmailProcesses->sendEmail($emailProcessesId);
-                                    if ($result) {
-                                        $emailStatus = $this->ReportCardEmailProcesses::SENT;
-                                    } else {
-                                        $emailStatus = $this->ReportCardEmailProcesses::ERROR;
+                            $this->out($errorMsg);
+                        } else {
+                            if (!empty($emailProcessesData['subject']) && !empty($emailProcessesData['message'])) {
+                                $emailProcessesEntity = $this->EmailProcesses->newEntity($emailProcessesData);
+
+                                if ($this->EmailProcesses->save($emailProcessesEntity)) {
+                                    $emailProcessesId = $emailProcessesEntity->id;
+
+                                    try {
+                                        $result = $this->EmailProcesses->sendEmail($emailProcessesId);
+                                        if ($result) {
+                                            $emailStatus = $this->ReportCardEmailProcesses::SENT;
+                                        } else {
+                                            $errorMsg = "Failed to sent email.";
+                                        }
+                                    } catch (\Exception $e) {
+                                        $errorMsg = $e->getMessage();
+
+                                        $this->out('Error sending Report Card for Student ' . $recordToProcess['student_id']);
+                                        $this->out($errorMsg);
                                     }
-                                } catch (\Exception $e) {
-                                    $emailStatus = $this->ReportCardEmailProcesses::ERROR;
-
-                                    $this->out('Error sending Report Card for Student ' . $recordToProcess['student_id']);
-                                    $this->out($e->getMessage());
+                                } else {
+                                    $this->out('Student Report Cards email process is not saved');
+                                    $this->out($emailProcessesEntity->errors());
                                 }
-
-                                $this->ReportCardEmailProcesses->updateAll(['status' => $emailStatus], [
-                                    'report_card_id' => $recordToProcess['report_card_id'],
-                                    'institution_class_id' => $recordToProcess['institution_class_id'],
-                                    'student_id' => $recordToProcess['student_id']
-                                ]);
-                            } else {
-                                $this->out('Student Report Cards email process is not saved');
-                                $this->out($emailProcessesEntity->errors());
                             }
                         }
+
+                        $this->ReportCardEmailProcesses->updateAll([
+                            'status' => $emailStatus,
+                            'error_message' => $errorMsg
+                        ], [
+                            'report_card_id' => $recordToProcess['report_card_id'],
+                            'institution_class_id' => $recordToProcess['institution_class_id'],
+                            'student_id' => $recordToProcess['student_id']
+                        ]);
                     } else {
                         $this->out('Student Report Cards not found');
                     }
@@ -172,8 +185,7 @@ class EmailAllReportCardsShell extends Shell
                     $exit = true;
                     $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
                 }
-            }
-
+            }   // end while
             $this->out('End Email All Report Cards ('.Time::now().')');
         }
     }
@@ -193,8 +205,11 @@ class EmailAllReportCardsShell extends Shell
     private function setSubject(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
     {
         $subject = '';
-        // to-do
-        $subject = 'default subject template';
+        $ReportCardEmailTable = TableRegistry::get('ReportCard.ReportCardEmail');
+        $modelAlias = $ReportCardEmailTable->registryAlias();
+        $reportCardId = $studentsReportCardEntity->report_card_id;
+        $emailTemplate = $this->EmailTemplates->getTemplate($modelAlias, $reportCardId);
+        $subject = $this->studentReportCardReplaceKeywordToActualValue($emailTemplate->subject, $studentsReportCardEntity);
 
         if (!empty($subject)) {
             $emailProcessesObj['subject'] = $subject;
@@ -204,8 +219,9 @@ class EmailAllReportCardsShell extends Shell
     private function setMessage(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
     {
         $message = '';
-        // to-do
-        $message  = 'default message template';
+        $modelAlias = 'ReportCard.ReportCardEmail';
+        $template = $this->EmailTemplates->getTemplate($modelAlias, $studentsReportCardEntity->report_card_id);
+        $message = $this->studentReportCardReplaceKeywordToActualValue($template->message, $studentsReportCardEntity);
 
         if (!empty($message)) {
             $emailProcessesObj['message'] = $message;
@@ -226,5 +242,42 @@ class EmailAllReportCardsShell extends Shell
         if (!empty($attachments)) {
             $emailProcessesObj['email_process_attachments'] = $attachments;
         }
+    }
+
+    private function studentReportCardReplaceKeywordToActualValue($message, Entity $studentsReportCardEntity) {
+        $format = '${%s}';
+        $strArray = explode('${', $message);
+        $value = '';
+
+        foreach ($strArray as $key => $str) {
+            $pos = strpos($str, '}');
+            if ($pos !== false) {
+                $placeholder = substr($str, 0, $pos);
+                $replace = sprintf($format, $placeholder);
+
+                $strArray2 = explode('.', $placeholder);
+
+                switch ($strArray2[0]) {
+                    case "student":
+                        $value = $studentsReportCardEntity->student[$strArray2[1]];
+                        break;
+                    case "institution":
+                        $value = $studentsReportCardEntity->institution[$strArray2[1]];
+                        break;
+                    case "academic_period":
+                        $value = $studentsReportCardEntity->academic_period[$strArray2[1]];
+                        break;
+                    case "education_grade":
+                        $value = $studentsReportCardEntity->education_grade[$strArray2[1]];
+                        break;
+                    default:
+                        // Do nothing
+                }
+
+                $message = str_replace($replace, $value, $message);
+            }
+        }
+        return $message;
+
     }
 }
