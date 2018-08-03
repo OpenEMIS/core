@@ -4,7 +4,7 @@ use Phinx\Migration\AbstractMigration;
 
 class POCOR4684 extends AbstractMigration
 {
-public function up() 
+    public function up()
     {
         $this->table('email_templates', [
                 'collation' => 'utf8mb4_unicode_ci',
@@ -28,11 +28,11 @@ public function up()
             ->addColumn('subject', 'string', [
                 'default' => null,
                 'limit' => 255,
-                'null' => true
+                'null' => false
             ])
             ->addColumn('message', 'text', [
                 'default' => null,
-                'null' => true
+                'null' => false
             ])
 
             ->addColumn('modified_user_id', 'integer', [
@@ -63,8 +63,8 @@ public function up()
                 'model_reference' => 0,
                 'subject' => 'Default Template Subject',
                 'message' => 'Default Template Message',
-                'created_user_id' => 2,
-                'created' => '2018-07-25 21:16:12'
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('email_templates', $data);
@@ -89,7 +89,6 @@ public function up()
                 'default' => null,
                 'null' => true
             ])
-
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -131,7 +130,6 @@ public function up()
                 'null' => false,
                 'comment' => 'links to email_processes.id'
             ])
-
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -209,8 +207,6 @@ public function up()
                 'null' => false,
                 'comment' => 'links to academic_periods.id'
             ])
-
-            
             ->addColumn('created', 'datetime', [
                 'default' => null,
                 'null' => false
