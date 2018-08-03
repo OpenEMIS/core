@@ -19,6 +19,7 @@ class ReportsController extends AppController
             'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
             'Trainings' 	=> ['className' => 'Report.Trainings', 'actions' => ['index', 'add']],
             'Examinations'	=> ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
+            'Scholarships'  => ['className' => 'Report.Scholarships', 'actions' => ['index', 'add']],
             'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
             'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
             'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
@@ -97,6 +98,13 @@ class ReportsController extends AppController
                 'Report.StaffTrainingApplications' => __('Applications'),
                 'Report.TrainingTrainers' => __('Trainers'),
                 'Report.TrainingSessionParticipants' => __('Session Participants')
+            ];
+        } elseif ($module == 'Scholarships') {
+            $options = [
+                'Report.Scholarships' => __('Scholarships'),
+                'Report.ScholarshipApplications' => __('Scholarship Applications'),
+                'Report.RecipientPaymentStructures' => __('Recipient Payment Structures'),
+                'Report.RecipientAcademicStandings' => __('Recipient Academic Standings')
             ];
         } elseif ($module == 'Surveys') {
             $options = [
