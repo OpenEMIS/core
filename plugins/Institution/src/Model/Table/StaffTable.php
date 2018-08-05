@@ -1804,7 +1804,10 @@ class StaffTable extends ControllerActionTable
         $endDate = new DateTime($weekEndDate);
         $interval = new DateInterval('P1D');
         $daterange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
-
+        // Log::write('debug', $weekStartDate);
+        // Log::write('debug', $weekEndDate);
+        // Log::write('debug', $startDate);
+        // Log::write('debug', $endDate);
         // To get all the dates of the working days only
         $workingDaysArr = [];
         $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
@@ -1833,7 +1836,9 @@ class StaffTable extends ControllerActionTable
                 [$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
                 [
                     $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('staff_id'),
-                    $InstitutionStaffAttendances->aliasField('institution_id = ') . $this->aliasField('institution_id')
+                    $InstitutionStaffAttendances->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate."'",
+                    $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate."'",
                 ]
             )
             ->matching('Users')
@@ -1843,26 +1848,47 @@ class StaffTable extends ControllerActionTable
                 $this->aliasField('staff_status_id') => 1
             ])
             ->group([
-                $this->aliasField('staff_id'),
-                $this->aliasField('institution_id')
+                $InstitutionStaffAttendances->aliasField('staff_id'),
+                $InstitutionStaffAttendances->aliasField('institution_id'),
+                $InstitutionStaffAttendances->aliasField('academic_period_id'),
+                $InstitutionStaffAttendances->aliasField('date')
             ])
             ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr) {
                 $results = $results->toArray();
-
+                $resultsCount = count($results);
+                Log::write('debug', '$resultsCount');
+                Log::write('debug', $resultsCount);
+                // $i = 1;
                 $formatResultDates = [];
                 foreach ($workingDaysArr as $date) {
+                    $i = 1;
+                    $found = false;
+                    $workingDay = $date->format('Y-m-d');
+                    Log::write('debug', $workingDay);
                     foreach ($results as $result) {
-                        $dayDate = $date->format('l, d F Y');
                         $cloneResult = clone $result;
-                        $cloneResult['date'] = $dayDate;
-                        $formatResultDates[] = $cloneResult;
+                        $InstitutionStaffAttendanceDate = $cloneResult->InstitutionStaffAttendances['date'];
+                        if ($InstitutionStaffAttendanceDate == $workingDay){
+                            Log::write('debug', $cloneResult);
+                            $cloneResult['date'] = date("l, d F Y", strtotime($InstitutionStaffAttendanceDate));
+                            $formatResultDates[] = $cloneResult;
+                            $found = true;
+                        }
+
+                        //if last index of cloneResult and date still cannot be found, insert the date in
+                        if ($i == $resultsCount && !$found) {
+                            $cloneResult['date'] = $date->format('l, d F Y');
+                            $cloneResult->InstitutionStaffAttendances['date'] = $workingDay;
+                            $formatResultDates[] = $cloneResult;
+                        }
+                        $i++;
                     }
                 }
-                Log::write('debug', $formatResultDates);
+                // Log::write('debug', $formatResultDates);
                 return $formatResultDates;
             });
 
-        Log::write('debug', $query);
+        // Log::write('debug', $query);
         return $query;
     }
 }
