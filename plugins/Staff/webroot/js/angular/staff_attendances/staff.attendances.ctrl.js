@@ -23,7 +23,7 @@ function StaffAttendancesController($scope, $q, $window, $http, UtilsSvc, AlertS
     vm.gridOptions = {
         context: {
             week: vm.selectedWeek,
-            period: vm.selectedAttendancePeriod,
+            period: vm.selectedAcademicPeriod,
             action: vm.action,
             scope: $scope,
         },
@@ -90,7 +90,7 @@ function StaffAttendancesController($scope, $q, $window, $http, UtilsSvc, AlertS
             angular.forEach(academicPeriods, function(academicPeriod) {
                 if (academicPeriod.current == 1) {
                    vm.selectedAcademicPeriod = academicPeriod.id;
-                   vm.gridOptions.context.period = vm.selectedAttendancePeriod;
+                   vm.gridOptions.context.period = vm.selectedAcademicPeriod;
                 }
             });
         }
