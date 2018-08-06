@@ -32,7 +32,8 @@ class CompetencyGradingTypesTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
-        $validator
+        return $validator
+            ->requirePresence('grading_options')
             ->allowEmpty('code')
             ->add('code', [
                 'ruleUniqueCode' => [
@@ -40,7 +41,6 @@ class CompetencyGradingTypesTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ]);
-        return $validator;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -119,19 +119,21 @@ class CompetencyGradingTypesTable extends ControllerActionTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        if (isset($requestData[$this->alias()]['grading_options']) && is_array($requestData[$this->alias()]['grading_options'])) {
-            $gradingOptions = $requestData[$this->alias()]['grading_options'];
-            $codes = array_column($gradingOptions, 'code');
-            $codes = array_filter($codes);
-            $vals = array_count_values($codes);
-            foreach ($vals as $count) {
-                if ($count > 1) {
-                    $entity->errors('grading_options', __('Duplicated Code'));
-                    $this->Alert->error('general.uniqueCodeForm');
-                    break;
+        if (!isset($requestData[$this->alias()]['grading_options']) || empty($requestData[$this->alias()]['grading_options'])) {
+                $this->Alert->warning($this->aliasField('noGradingOptions'));
+            } else if (isset($requestData[$this->alias()]['grading_options']) && is_array($requestData[$this->alias()]['grading_options'])) {
+                $gradingOptions = $requestData[$this->alias()]['grading_options'];
+                $codes = array_column($gradingOptions, 'code');
+                $codes = array_filter($codes);
+                $vals = array_count_values($codes);
+                foreach ($vals as $count) {
+                    if ($count > 1) {
+                        $entity->errors('grading_options', __('Duplicated Code'));
+                        $this->Alert->error('general.uniqueCodeForm');
+                        break;
+                    }
                 }
             }
-        }
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
@@ -148,18 +150,21 @@ class CompetencyGradingTypesTable extends ControllerActionTable
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        if (isset($requestData[$this->alias()]['grading_options']) && is_array($requestData[$this->alias()]['grading_options'])) {
-            $gradingOptions = $requestData[$this->alias()]['grading_options'];
-            $codes = array_column($gradingOptions, 'code');
-            $vals = array_count_values($codes);
-            foreach ($vals as $count) {
-                if ($count > 1) {
-                    $entity->errors('grading_options', __('Duplicated Code'));
-                    $this->Alert->error('general.uniqueCodeForm');
-                    break;
+
+        if (!isset($requestData[$this->alias()]['grading_options']) || empty($requestData[$this->alias()]['grading_options'])) {
+            $this->Alert->warning($this->aliasField('noGradingOptions'));
+            } else if (isset($requestData[$this->alias()]['grading_options']) && is_array($requestData[$this->alias()]['grading_options'])) {
+                $gradingOptions = $requestData[$this->alias()]['grading_options'];
+                $codes = array_column($gradingOptions, 'code');
+                $vals = array_count_values($codes);
+                foreach ($vals as $count) {
+                    if ($count > 1) {
+                        $entity->errors('grading_options', __('Duplicated Code'));
+                        $this->Alert->error('general.uniqueCodeForm');
+                        break;
+                    }
                 }
             }
-        }
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
