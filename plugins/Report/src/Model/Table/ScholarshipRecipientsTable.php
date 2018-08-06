@@ -204,7 +204,6 @@ class ScholarshipRecipientsTable extends AppTable  {
             ->leftJoin([$ApplicationInstitutionChoices->alias() => $ApplicationInstitutionChoices->table()], [
                 $ApplicationInstitutionChoices->aliasField('is_selected = 1'),$this->aliasField('recipient_id =') . $ApplicationInstitutionChoices->aliasField('applicant_id')
             ])
-
             ->leftJoin([$Country->alias() => $Country->table()], [
                 $Country->aliasField('id =') . $ApplicationInstitutionChoices->aliasField('country_id'),
             ])
@@ -306,7 +305,7 @@ class ScholarshipRecipientsTable extends AppTable  {
             'field' => 'country',
             'type' => 'string',
             'label' => __('Country')
-        ];          
+        ];
 
         $newFields[] = [
             'key' => 'ApplicationInstitutionChoices.institution_name',
@@ -320,28 +319,28 @@ class ScholarshipRecipientsTable extends AppTable  {
             'field' => 'approvedAmount',
             'type' => 'string',
             'label' => __('Approved Amount')
-        ];        
+        ];
 
         $newFields[] = [
             'key' => 'ScholarshipApplications.education_field_of_study_id',
             'field' => 'fieldOfStudy',
             'type' => 'string',
             'label' => __('Field Of Study')
-        ];      
+        ];
 
         $newFields[] = [
             'key' => 'ScholarshipApplications.course',
             'field' => 'course',
             'type' => 'string',
             'label' => __('Course')
-        ];  
+        ];
 
         $newFields[] = [
             'key' => 'ScholarshipApplications.qualification_level_id',
             'field' => 'qualificationLevel',
             'type' => 'string',
             'label' => __('Level Of Study')
-        ];      
+        ];
 
         $newFields[] = [
             'key' => 'ApplicationInstitutionChoices.start_date',
@@ -355,7 +354,7 @@ class ScholarshipRecipientsTable extends AppTable  {
             'field' => 'endDate',
             'type' => 'string',
             'label' => __('End Date')
-        ];                              
+        ];
 
         $fields->exchangeArray($newFields);
     }
