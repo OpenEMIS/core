@@ -218,6 +218,60 @@ class POCOR4684 extends AbstractMigration
             ->addIndex('education_grade_id')
             ->addIndex('academic_period_id')
             ->save();
+
+        // Create backup for security_functions     
+        $this->execute('CREATE TABLE `z_4684_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_4684_security_functions` SELECT * FROM `security_functions`');
+
+        // Gets the current order for MAP
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 5072');
+        $order = $row['order'] + 1;
+
+        //Updates all the order by +1
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > ' . $order);
+
+        //Insert adminisration >> report card >> email template into it
+        $this->insert('security_functions', [
+            'id' => 7061,
+            'name' => 'Email Templates',
+            'controller' => 'ReportCards',
+            'module' => 'Administration',
+            'category' => 'Report Cards',
+            'parent_id' => 5000,
+            '_view' => 'ReportCardEmail.index|ReportCardEmail.view',
+            '_add' => 'ReportCardEmail.edit',
+            '_execute' => null,
+            'order' => $order,
+            'visible' => 1,
+            'description' => null,
+            'created_user_id' => 1,
+            'created' => date('Y-m-d H:i:s')
+        ]);
+
+        // Gets the current order for MAP
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 5072');
+        $order = $row['order'];
+
+        //Updates all the order by +1
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` >= ' . $order);
+
+        //Insert adminisration >> report card >> email template into it
+        $this->insert('security_functions', [
+            'id' => 7062,
+            'name' => 'Email/Email All',
+            'controller' => 'Email',
+            'module' => 'Institutions',
+            'category' => 'Report Cards',
+            'parent_id' => 1000,
+            '_view' => null,
+            '_add' => null,
+            '_execute' => 'ReportCardStatuses.email|ReportCardStatuses.emailAll',
+            'order' => $order,
+            'visible' => 1,
+            'description' => null,
+            'created_user_id' => 1,
+            'created' => date('Y-m-d H:i:s')
+        ]);
     }
 
     public function down()
@@ -226,5 +280,8 @@ class POCOR4684 extends AbstractMigration
         $this->dropTable('email_processes');
         $this->dropTable('email_process_attachments');
         $this->dropTable('report_card_email_processes');
+
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('RENAME TABLE `z_4684_security_functions` TO `security_functions`');
     }
 }
