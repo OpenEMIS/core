@@ -111,8 +111,7 @@ class ScholarshipDisbursementsTable extends AppTable  {
                 if (!isset($recipientList[$recipientId][$scholarshipId])) {
                     $recipientList[$recipientId][$scholarshipId] = [
                         'estimated_amount' => NULL,
-                        'total_disbursement' => NULL,
-                        'outstanding_amount' => NULL
+                        'total_disbursement' => NULL
                     ];
                 }
             }
@@ -164,10 +163,6 @@ class ScholarshipDisbursementsTable extends AppTable  {
                     $scholarshipId = $entity->scholarship_id;
 
                     $recipientList[$recipientId][$scholarshipId]['estimated_amount'] = $entity->estimated_amount;
-
-                    if (!is_null($recipientList[$recipientId][$scholarshipId]['total_disbursement']) && !is_null($recipientList[$recipientId][$scholarshipId]['estimated_amount'])) {
-                            $recipientList[$recipientId][$scholarshipId]['outstanding_amount'] = $recipientList[$recipientId][$scholarshipId]['estimated_amount'] - $recipientList[$recipientId][$scholarshipId]['total_disbursement'];
-                    }
                 }
             }
         }
@@ -246,7 +241,7 @@ class ScholarshipDisbursementsTable extends AppTable  {
                             $amount = $recipientList[$recipientId][$scholarshipId];
                             $row->estimated_amount = $amount['estimated_amount'];
                             $row->total_disbursement = $amount['total_disbursement'];
-                            $row->outstanding_amount = $amount['outstanding_amount'];
+                            $row->outstanding_amount = ($row->approved_amount - $amount['total_disbursement']);
                     }
 
                     return $row;
