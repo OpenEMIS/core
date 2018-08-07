@@ -645,8 +645,6 @@ class NavigationComponent extends Component
                     'title' => 'Statuses',
                     'parent' => 'Institutions.ReportCards',
                     'params' => ['plugin' => 'Institution'],
-                    // Added
-                    // 'selected' => ['Institutions.ReportCardStatuses', 'Institutions.ReportCardStatusesEmail'],
                     'selected' => ['Institutions.ReportCardStatuses'],
                 ],
 
@@ -1548,7 +1546,6 @@ class NavigationComponent extends Component
                 'title' => 'Report Cards',
                 'parent' => 'Administration',
                 'params' => ['plugin' => 'ReportCard'],
-                // Added
                 'selected' => ['ReportCards.Templates', 'ReportCards.ReportCardEmail']
             ],
             'Workflows.Workflows' => [
