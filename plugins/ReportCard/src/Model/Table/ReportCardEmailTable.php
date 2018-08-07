@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -27,6 +28,7 @@ class ReportCardEmailTable extends ControllerActionTable
         $this->addBehavior('ReportCard.EmailTemplate', [
             'placeholder' => [
                 '${student.openemis_no}' => 'Student OpenEMIS ID.',
+                '${student.name}' => 'Student full name.',
                 '${student.first_name}' => 'Student first name.',
                 '${student.middle_name}' => 'Student middle name.',
                 '${student.third_name}' => 'Student third name.',
@@ -38,8 +40,8 @@ class ReportCardEmailTable extends ControllerActionTable
                 '${student.identity_number}' => 'Student identity number.',
                 '${student.main_identity_type.name}' => 'Student identity type.',
                 '${student.main_nationality.name}' => 'Student nationality.',
-                '${institution.name}' => 'Institution name.',
                 '${institution.code}' => 'Institution code.',
+                '${institution.name}' => 'Institution name.',
                 '${institution.contact_person}' => 'Institution contact person.',
                 '${institution.telephone}' => 'Institution telephone number.',
                 '${institution.email}' => 'Institution email.',
@@ -49,6 +51,16 @@ class ReportCardEmailTable extends ControllerActionTable
                 '${education_grade.name}' => 'Education grade name.',
             ]
         ]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->allowEmpty('academic_period_id')
+            ->allowEmpty('start_date')
+            ->allowEmpty('end_date')
+            ->allowEmpty('education_grade_id');
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -118,7 +130,7 @@ class ReportCardEmailTable extends ControllerActionTable
 
             $startDate = $this->formatDate($entity->start_date);
             $attr['type'] = 'readonly';
-            $attr['value'] = $startDate;
+            $attr['value'] = $entity->start_date->format('Y-m-d');
             $attr['attr']['value'] = $startDate;
         }
 
@@ -132,7 +144,7 @@ class ReportCardEmailTable extends ControllerActionTable
 
             $endDate = $this->formatDate($entity->end_date);
             $attr['type'] = 'readonly';
-            $attr['value'] = $endDate;
+            $attr['value'] = $entity->end_date->format('Y-m-d');
             $attr['attr']['value'] = $endDate;
         }
 
