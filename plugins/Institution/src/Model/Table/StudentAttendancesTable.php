@@ -28,12 +28,10 @@ class StudentAttendancesTable extends AppTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
-        // $this->addBehavior('Institution.Calendar');
-
-        $this->addBehavior('Excel', [
-            'excludes' => ['status', 'education_grade_id', 'id', 'academic_period_id', 'institution_id'],
-            'pages' => ['index']
-        ]);
+        // $this->addBehavior('Excel', [
+        //     'excludes' => ['status', 'education_grade_id', 'id', 'academic_period_id', 'institution_id'],
+        //     'pages' => ['index']
+        // ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentAttendances' => ['index', 'view']
         ]);
@@ -72,10 +70,14 @@ class StudentAttendancesTable extends AppTable
                 $this->Users->aliasField('preferred_name')
             ])
             ->contain([$this->Users->alias()])
+            ->matching($this->StudentStatuses->alias(), function($q) {
+                return $q->where([
+                    $this->StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN']
+                ]);
+            })
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionClassId,
-                $this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
             ]);
 
         if ($day != -1) {
@@ -141,6 +143,7 @@ class StudentAttendancesTable extends AppTable
                 }
             );
         } else {
+            // all day
             $StudentAttendanceMarkTypesTable = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
             $AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
@@ -164,10 +167,14 @@ class StudentAttendancesTable extends AppTable
                     'keyField' => 'student_id',
                     'valueField' => 'student_id'
                 ])
+                ->matching($this->StudentStatuses->alias(), function($q) {
+                    return $q->where([
+                        $this->StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN']
+                    ]);
+                })
                 ->where([
                     $this->aliasField('academic_period_id') => $academicPeriodId,
                     $this->aliasField('institution_class_id') => $institutionClassId,
-                    $this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
                 ])
                 ->all();
 
