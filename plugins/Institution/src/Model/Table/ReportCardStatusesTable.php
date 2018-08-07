@@ -161,6 +161,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('report_card');
         $this->field('email_status');
+        $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
     }
 
@@ -390,12 +391,16 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $params = $this->getQueryString();
+
         $query
             ->select([
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
                 'report_card_status' => $this->StudentsReportCards->aliasField('status'),
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
-                'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on')
+                'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
+                'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
+                'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message')
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -404,6 +409,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
+                ]
+            )
+            ->leftJoin([$this->ReportCardEmailProcesses->alias() => $this->ReportCardEmailProcesses->table()],
+                [
+                    $this->ReportCardEmailProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $this->ReportCardEmailProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    $this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $params['report_card_id']
                 ]
             )
             ->autoFields(true);
@@ -479,7 +494,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         if ($entity->has('email_status_id')) {
             $value = $emailStatuses[$entity->email_status_id];
 
-            if ($entity->has('email_error_message')) {
+            if ($entity->email_status_id == $this->ReportCardEmailProcesses::ERROR && $entity->has('email_error_message')) {
                 $value .= '&nbsp&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $entity->email_error_message . '"></i>';
             }
         }

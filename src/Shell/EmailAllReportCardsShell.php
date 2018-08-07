@@ -206,11 +206,12 @@ class EmailAllReportCardsShell extends Shell
     private function setSubject(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
     {
         $subject = '';
+
         $ReportCardEmailTable = TableRegistry::get('ReportCard.ReportCardEmail');
         $modelAlias = $ReportCardEmailTable->registryAlias();
         $reportCardId = $studentsReportCardEntity->report_card_id;
-        $emailTemplate = $this->EmailTemplates->getTemplate($modelAlias, $reportCardId);
-        $subject = $this->studentReportCardReplaceKeywordToActualValue($emailTemplate->subject, $studentsReportCardEntity);
+        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, $reportCardId);
+        $subject = $this->replacePlaceholders($emailTemplateEntity->subject, $studentsReportCardEntity);
 
         if (!empty($subject)) {
             $emailProcessesObj['subject'] = $subject;
@@ -220,9 +221,12 @@ class EmailAllReportCardsShell extends Shell
     private function setMessage(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
     {
         $message = '';
-        $modelAlias = 'ReportCard.ReportCardEmail';
-        $template = $this->EmailTemplates->getTemplate($modelAlias, $studentsReportCardEntity->report_card_id);
-        $message = $this->studentReportCardReplaceKeywordToActualValue($template->message, $studentsReportCardEntity);
+
+        $ReportCardEmailTable = TableRegistry::get('ReportCard.ReportCardEmail');
+        $modelAlias = $ReportCardEmailTable->registryAlias();
+        $reportCardId = $studentsReportCardEntity->report_card_id;
+        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, $reportCardId);
+        $message = $this->replacePlaceholders($emailTemplateEntity->message, $studentsReportCardEntity);
 
         if (!empty($message)) {
             $emailProcessesObj['message'] = $message;
@@ -245,7 +249,7 @@ class EmailAllReportCardsShell extends Shell
         }
     }
 
-    private function studentReportCardReplaceKeywordToActualValue($message, Entity $studentsReportCardEntity) {
+    private function replacePlaceholders($message, Entity $studentsReportCardEntity) {
         $format = '${%s}';
         $strArray = explode('${', $message);
         $value = '';
@@ -278,7 +282,7 @@ class EmailAllReportCardsShell extends Shell
                 $message = str_replace($replace, $value, $message);
             }
         }
-        return $message;
 
+        return $message;
     }
 }
