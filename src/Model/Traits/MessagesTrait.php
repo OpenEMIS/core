@@ -753,7 +753,10 @@ trait MessagesTrait
             'publish' => 'The Report Card has been successfully published',
             'publishAll' => 'All generated Report Cards have been published successfully',
             'unpublish' => 'The Report Card has been successfully unpublished',
-            'unpublishAll' => 'All published Report Cards have been unpublished successfully'
+            'unpublishAll' => 'All published Report Cards have been unpublished successfully',
+            'email' => 'The Report Card will be sent in the background',
+            'emailAll' => 'All Report Cards will be sent in the background',
+            'emailInProgress' => 'There is already a email process sending in the background',
         ],
         'RecipientPaymentStructures' => [
             'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
