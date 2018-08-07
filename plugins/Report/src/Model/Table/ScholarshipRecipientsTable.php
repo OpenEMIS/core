@@ -27,9 +27,6 @@ class ScholarshipRecipientsTable extends AppTable  {
         $this->belongsTo('RecipientActivityStatuses', ['className' => 'Scholarship.RecipientActivityStatuses', 'foreignKey' => 'scholarship_recipient_activity_status_id']);
         
          $this->addBehavior('Excel', [
-            'excludes' => [
-            'scholarship_recipient_activity_status_id'
-            ],
             'pages' => false,
             'autoFields' => false
         ]);
@@ -188,6 +185,12 @@ class ScholarshipRecipientsTable extends AppTable  {
                         'code',
                         'name'
                     ]
+                ],                
+                'RecipientActivityStatuses' => [
+                    'fields' => [
+                        'id',
+                        'name'
+                    ]
                 ],
                 'Scholarships' => [
                     'fields' => [
@@ -217,6 +220,7 @@ class ScholarshipRecipientsTable extends AppTable  {
                 $this->aliasField('recipient_id'),
                 $this->aliasField('scholarship_id'),
                 $this->aliasField('approved_amount'),
+                $this->aliasField('scholarship_recipient_activity_status_id'),
                 $ApplicationInstitutionChoices->aliasField('location_type'),
                 $ApplicationInstitutionChoices->aliasField('country_id'),
                 $ApplicationInstitutionChoices->aliasField('institution_name'),
@@ -241,21 +245,28 @@ class ScholarshipRecipientsTable extends AppTable  {
             'key' => 'Scholarships.AcademicPeriods',
             'field' => 'academic',
             'type' => 'string',
-            'label' => __('Academic Periods')
+            'label' => __('Academic Period')
         ];
+
+        $newFields[] = [
+            'key' => 'Recipients.scholarship_recipient_activity_status_id',
+            'field' => 'scholarship_recipient_activity_status_id',
+            'type' => 'string',
+            'label' => __('Status')
+        ];        
 
         $newFields[] = [
             'key' => 'Recipients.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => __('Student')
+            'label' => __('OpenEMIS ID')
         ];
 
         $newFields[] = [
             'key' => 'Recipients.recipient_id',
             'field' => 'recipient_id',
             'type' => 'integer',
-            'label' => 'Student'
+            'label' => __('Recipient')
         ];
 
         $newFields[] = [
@@ -294,6 +305,13 @@ class ScholarshipRecipientsTable extends AppTable  {
         ];
 
         $newFields[] = [
+            'key' => 'ApplicationInstitutionChoices.approved_amount',
+            'field' => 'approvedAmount',
+            'type' => 'string',
+            'label' => __('Approved Amount')
+        ];        
+
+        $newFields[] = [
             'key' => 'ApplicationInstitutionChoices.location_type',
             'field' => 'location',
             'type' => 'string',
@@ -315,13 +333,6 @@ class ScholarshipRecipientsTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'ApplicationInstitutionChoices.approved_amount',
-            'field' => 'approvedAmount',
-            'type' => 'string',
-            'label' => __('Approved Amount')
-        ];
-
-        $newFields[] = [
             'key' => 'ScholarshipApplications.education_field_of_study_id',
             'field' => 'fieldOfStudy',
             'type' => 'string',
@@ -332,14 +343,14 @@ class ScholarshipRecipientsTable extends AppTable  {
             'key' => 'ScholarshipApplications.course',
             'field' => 'course',
             'type' => 'string',
-            'label' => __('Course')
+            'label' => __('Course Name')
         ];
 
         $newFields[] = [
             'key' => 'ScholarshipApplications.qualification_level_id',
             'field' => 'qualificationLevel',
             'type' => 'string',
-            'label' => __('Level Of Study')
+            'label' => __('Qualification Level')
         ];
 
         $newFields[] = [
