@@ -183,13 +183,14 @@ function StaffAttendancesController($scope, $q, $window, $http, UtilsSvc, AlertS
         vm.action = 'edit';
         vm.gridOptions.context.action = vm.action;
         vm.setColumnDef();
-
+        AlertSvc.info($scope, 'Time in and Time Out will be automatically saved.');
     };
 
     vm.onBackClick = function() {
         vm.action = 'view';
         vm.gridOptions.context.action = vm.action;
         vm.setColumnDef();
+        AlertSvc.reset($scope);
     };
 
 }

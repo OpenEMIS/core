@@ -45,23 +45,20 @@ $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this-
 $this->start('contentBody');
 $panelHeader = $this->fetch('panelHeader');
 $paramsQuery = $this->ControllerAction->getQueryString();
-$classId = $paramsQuery['institution_class_id'];
-$reportCardId = $paramsQuery['report_card_id'];
 $institutionId = $paramsQuery['institution_id'];
 ?>
-
-<div ng-init="">
-    <div class="scrolltabs sticky-content">
-        <scrollable-tabset show-tooltips="false" show-drop-down="false">
-            <uib-tabset justified="true">
-                <uib-tab heading="{{tab.tabName}}" ng-repeat="tab in InstitutionCommentsController.tabs" ng-click="InstitutionCommentsController.onChangeSubject(tab)">
-                </uib-tab>
-            </uib-tabset>
-            <div class="tabs-divider"></div>
-        </scrollable-tabset>
-    </div>
-</div>
 <?= $this->element('OpenEmis.alert') ?>
+<div class="alert {{class}}" ng-hide="message == null">
+    <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
+</div>
+<?php if (isset($tabElements)) : ?>
+    <?php $selectedAction = isset($selectedAction) ? $selectedAction : null; ?>
+    <div id="tabs" class="nav nav-tabs horizontal-tabs">
+        <?php foreach($tabElements as $element => $attr): ?>
+            <span role="presentation" class="<?php echo ($element == $selectedAction) ? 'tab-active' : ''; ?>"><?php echo $this->Html->link(__($attr['text']), $attr['url']); ?></span>
+        <?php endforeach; ?>
+    </div>
+<?php endif ?>
 <div class="toolbar-responsive panel-toolbar">
     <div class="toolbar-wrapper">
             <div class="input select">

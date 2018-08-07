@@ -1856,28 +1856,31 @@ class StaffTable extends ControllerActionTable
             ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr) {
                 $results = $results->toArray();
                 $resultsCount = count($results);
-                Log::write('debug', '$resultsCount');
-                Log::write('debug', $resultsCount);
+                // Log::write('debug', '$resultsCount');
+                // Log::write('debug', $resultsCount);
+                // Log::write('debug', $results);
                 // $i = 1;
                 $formatResultDates = [];
                 foreach ($workingDaysArr as $date) {
                     $i = 1;
                     $found = false;
                     $workingDay = $date->format('Y-m-d');
-                    Log::write('debug', $workingDay);
+                    // Log::write('debug', $workingDay);
                     foreach ($results as $result) {
                         $cloneResult = clone $result;
                         $InstitutionStaffAttendanceDate = $cloneResult->InstitutionStaffAttendances['date'];
                         if ($InstitutionStaffAttendanceDate == $workingDay){
-                            Log::write('debug', $cloneResult);
+                            // Log::write('debug', $cloneResult);
                             $cloneResult['date'] = date("l, d F Y", strtotime($InstitutionStaffAttendanceDate));
                             $formatResultDates[] = $cloneResult;
                             $found = true;
                         }
 
-                        //if last index of cloneResult and date still cannot be found, insert the date in
+                        //if iteration is in the last index of cloneResult and the date still cannot be found, insert the date in and also set the start_time and end_time to null
                         if ($i == $resultsCount && !$found) {
                             $cloneResult['date'] = $date->format('l, d F Y');
+                            $cloneResult->InstitutionStaffAttendances['start_time'] = null;
+                            $cloneResult->InstitutionStaffAttendances['end_time'] = null;
                             $cloneResult->InstitutionStaffAttendances['date'] = $workingDay;
                             $formatResultDates[] = $cloneResult;
                         }
