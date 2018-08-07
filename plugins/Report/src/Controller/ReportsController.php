@@ -105,7 +105,8 @@ class ReportsController extends AppController
                 'Report.ScholarshipApplications' => __('Scholarship Applications'),
                 'Report.RecipientPaymentStructures' => __('Recipient Payment Structures'),
                 'Report.RecipientAcademicStandings' => __('Recipient Academic Standings'),
-                'Report.ScholarshipRecipients' => __('Scholarship Recipients')
+                'Report.ScholarshipRecipients' => __('Scholarship Recipients'),
+                'Report.ScholarshipDisbursements' => __('Scholarship Disbursements')
             ];
         } elseif ($module == 'Surveys') {
             $options = [
