@@ -223,8 +223,8 @@ class POCOR4324 extends AbstractMigration
 
         // institution_student_absences - start
         // backup 
-        $this->execute('CREATE TABLE `z_4234_institution_student_absences` LIKE `institution_student_absences`');
-        $this->execute('INSERT INTO `z_4234_institution_student_absences` SELECT * FROM `institution_student_absences`');
+        $this->execute('CREATE TABLE `z_4324_institution_student_absences` LIKE `institution_student_absences`');
+        $this->execute('INSERT INTO `z_4324_institution_student_absences` SELECT * FROM `institution_student_absences`');
         $this->execute('DROP TABLE IF EXISTS `institution_student_absences`');
 
         $InstitutionStudentAbsences = $this->table('institution_student_absences', [
@@ -415,7 +415,7 @@ class POCOR4324 extends AbstractMigration
         $absenceMainData = [];
         $absenceDetailData = [];
 
-        $rows = $this->fetchAll('SELECT * FROM `z_4234_institution_student_absences`');
+        $rows = $this->fetchAll('SELECT * FROM `z_4324_institution_student_absences`');
         if (count($rows) > 0) {
             foreach ($rows as $value) {
                 $data = [];
@@ -481,8 +481,8 @@ class POCOR4324 extends AbstractMigration
 
         // locale_contents - start
         // backup
-        $this->execute('CREATE TABLE `z_4234_locale_contents` LIKE `locale_contents`');
-        $this->execute('INSERT INTO `z_4234_locale_contents` SELECT * FROM `locale_contents`');
+        $this->execute('CREATE TABLE `z_4324_locale_contents` LIKE `locale_contents`');
+        $this->execute('INSERT INTO `z_4324_locale_contents` SELECT * FROM `locale_contents`');
         $today = date('Y-m-d H:i:s');
         $localeContent = [
             [
@@ -550,6 +550,61 @@ class POCOR4324 extends AbstractMigration
                 'created_user_id' => 1,
                 'created' => $today
             ],
+            [
+                'en' => 'Monday',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Tuesday',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Wednesday',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Thursday',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Friday',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Saturday',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Sunday',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Present',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Absence - Excused',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Absence - Unexcused',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Late',
+                'created_user_id' => 1,
+                'created' => $today
+            ]
         ];
 
         $this->insert('locale_contents', $localeContent);
@@ -558,8 +613,8 @@ class POCOR4324 extends AbstractMigration
 
         // security_functions - start
         // backup
-        $this->execute('CREATE TABLE `z_4234_security_functions` LIKE `security_functions`');
-        $this->execute('INSERT INTO `z_4234_security_functions` SELECT * FROM `security_functions`');
+        $this->execute('CREATE TABLE `z_4324_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_4324_security_functions` SELECT * FROM `security_functions`');
         $this->execute('
             UPDATE `security_functions` SET
             `_view` = "StudentAttendances.index|StudentAbsences.view",
@@ -573,12 +628,12 @@ class POCOR4324 extends AbstractMigration
 
         // security_role_functions
         // backup
-        $this->execute('CREATE TABLE `z_4234_security_role_functions` LIKE `security_role_functions`');
-        $this->execute('INSERT INTO `z_4234_security_role_functions` SELECT * FROM `security_role_functions`');
+        $this->execute('CREATE TABLE `z_4324_security_role_functions` LIKE `security_role_functions`');
+        $this->execute('INSERT INTO `z_4324_security_role_functions` SELECT * FROM `security_role_functions`');
         $this->execute('
             UPDATE `security_role_functions` SET
             `_add` = 0,
-            `_delete` = 0,
+            `_delete` = 0
             WHERE `security_role_id` = 1014
         ');
         // security_role_functions - end
@@ -592,15 +647,15 @@ class POCOR4324 extends AbstractMigration
 
         $this->dropTable('institution_student_absence_details');
         $this->dropTable('institution_student_absences');
-        $this->execute('RENAME TABLE `z_4234_institution_student_absences` TO `institution_student_absences`');
+        $this->execute('RENAME TABLE `z_4324_institution_student_absences` TO `institution_student_absences`');
 
         $this->dropTable('locale_contents');
-        $this->execute('RENAME TABLE `z_4234_locale_contents` TO `locale_contents`');
+        $this->execute('RENAME TABLE `z_4324_locale_contents` TO `locale_contents`');
 
         $this->dropTable('security_functions');
-        $this->execute('RENAME TABLE `z_4234_security_functions` TO `security_functions`');
+        $this->execute('RENAME TABLE `z_4324_security_functions` TO `security_functions`');
 
         $this->dropTable('security_role_functions');
-        $this->execute('RENAME TABLE `z_4234_security_role_functions` TO `security_role_functions`');
+        $this->execute('RENAME TABLE `z_4324_security_role_functions` TO `security_role_functions`');
     }
 }

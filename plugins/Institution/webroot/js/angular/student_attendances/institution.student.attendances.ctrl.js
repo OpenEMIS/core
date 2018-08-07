@@ -92,6 +92,10 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
         UtilsSvc.isAppendLoader(true);
         if (vm.institutionId != null) {
+            InstitutionStudentAttendancesSvc.getTranslatedText().
+            then(function(isTranslated) {
+                return InstitutionStudentAttendancesSvc.getAbsenceTypeOptions();
+            }, vm.error)
             InstitutionStudentAttendancesSvc.getAbsenceTypeOptions()
             .then(function(absenceTypeOptions) {
                 vm.absenceType = absenceTypeOptions;
@@ -115,7 +119,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                 return InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek);
             }, vm.error)
             .then(function(dayListOptions) {
-                console.log('Controller - dayListOptions', dayListOptions);
+                // console.log('Controller - dayListOptions', dayListOptions);
                 vm.updateDayList(dayListOptions);
                 return InstitutionStudentAttendancesSvc.getClassOptions(vm.institutionId, vm.selectedAcademicPeriod);
             }, vm.error)
