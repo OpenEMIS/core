@@ -167,6 +167,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         var rowIndex = params.rowIndex;
         var timepickerId = 'time-in-' + rowIndex;
         var startTime = params.data.InstitutionStaffAttendances.start_time;
+        var scope = params.context.scope;
         if(action == 'edit') {
             if(startTime == null){
                 startTime = 'current';
@@ -198,13 +199,21 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                     .then(
                         function(response) {
                             console.log('SAVING SUCCESS LEY CHECK DB');
+                            AlertSvc.success(scope, 'Time in record successfully saved.');
                         },
                         function(error) {
                             console.log(error);
+                            AlertSvc.error(scope, 'There was an error when saving record');
                         }
                     )
                     .finally(function() {
-                        api.refreshCells();
+                        // var refreshParams = {
+                        //     columns: [
+                        //         'start_time',
+                        //     ],
+                        //     force: true
+                        // };
+                        // params.api.refreshCells(refreshParams);
                     });
                 });
                 $(document).on('DOMMouseScroll mousewheel scroll', function() {
@@ -241,7 +250,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         var rowIndex = params.rowIndex;
         var timepickerId = 'time-out-' + rowIndex;
         var endTime = params.data.InstitutionStaffAttendances.end_time;
-        
+        var scope = params.context.scope;
         if(action == 'edit') {
             if(endTime == null){
                 endTime = 'current';
@@ -273,9 +282,11 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                     .then(
                         function(response) {
                             console.log('SAVING SUCCESS LEY CHECK DB');
+                            AlertSvc.success(scope, 'Time out record successfully saved.');
                         },
                         function(error) {
                             console.log(error);
+                            AlertSvc.error(scope, 'There was an error when saving record');
                         }
                     )
                     .finally(function() {

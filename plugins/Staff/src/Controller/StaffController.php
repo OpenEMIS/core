@@ -215,12 +215,15 @@ class StaffController extends AppController
             $staffId = $session->read('Staff.Staff.id');
             $institutionId = $session->read('Institution.Institutions.id');
         }
+        $tabElements = $this->getCareerTabElements();
 
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
         $this->Navigation->addCrumb($crumbTitle);
         $this->set('_edit', $_edit);
         $this->set('institution_id', $institutionId);
         $this->set('staff_id', $staffId);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', 'InstitutionStaffAttendances');
         $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
     }
 
