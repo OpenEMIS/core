@@ -56,6 +56,7 @@ class EmailTemplateBehavior extends Behavior
         // append email_template to entity
         $query->formatResults(function (ResultSetInterface $results) use ($model, $EmailTemplatesTable) {
             return $results->map(function ($row) use ($model, $EmailTemplatesTable) {
+                // email template
                 $emailTemplateEntity = $EmailTemplatesTable
                     ->find()
                     ->where([
@@ -64,6 +65,18 @@ class EmailTemplateBehavior extends Behavior
                     ])
                     ->first();
                 $row->email_template = $emailTemplateEntity;
+                // end
+
+                // default email template
+                $defaultEmailTemplateEntity = $EmailTemplatesTable
+                    ->find()
+                    ->where([
+                        'model_alias' => $model->registryAlias(),
+                        'model_reference' => 0
+                    ])
+                    ->first();
+                $row->default_email_template = $defaultEmailTemplateEntity;
+                // end
 
                 return $row;
             });
@@ -141,6 +154,20 @@ class EmailTemplateBehavior extends Behavior
         }
     }
 
+    public function onGetDefaultSubject(Event $event, Entity $entity)
+    {
+        if($entity->has('default_email_template')) {
+            return $entity->default_email_template->subject;
+        }
+    }
+
+    public function onGetDefaultMessage(Event $event, Entity $entity)
+    {
+        if($entity->has('default_email_template')) {
+            return $entity->default_email_template->message;
+        }
+    }
+
     public function onGetCustomEmailTemplatePlaceholdersElement(Event $event, $action, $entity, $attr, $options=[])
     {
         if ($action == 'edit') {
@@ -170,8 +197,21 @@ class EmailTemplateBehavior extends Behavior
     {
         $model = $this->_table;
         $model->field('email_content', ['type' => 'section']);
-        $model->field('subject', ['entity' => $entity]);
-        $model->field('message', ['type' => 'text', 'entity' => $entity]);
+        $model->field('subject');
+        $model->field('message', ['type' => 'text']);
+        $model->field('default_subject', [
+            'visible' => [
+                'view' => true,
+                'edit' => false
+            ]
+        ]);
+        $model->field('default_message', [
+            'type' => 'text',
+            'visible' => [
+                'view' => true,
+                'edit' => false
+            ]
+        ]);
         $model->field('keyword_remarks', [
             'type' => 'custom_email_template_placeholders',
             'visible' => [
@@ -192,7 +232,18 @@ class EmailTemplateBehavior extends Behavior
             return $a['order']-$b['order'];
         });
 
-        $newFields = ['email_content', 'subject', 'message', 'keyword_remarks', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+        $newFields = [
+            'email_content',
+            'subject',
+            'message',
+            'default_subject',
+            'default_message',
+            'keyword_remarks',
+            'modified_user_id',
+            'modified',
+            'created_user_id',
+            'created'
+        ];
         foreach ($fields as $fieldName => $fieldAttr) {
             if (!in_array($fieldName, $newFields)) {
                 $order = $fieldAttr['order'] > $order ? $fieldAttr['order'] : $order;
