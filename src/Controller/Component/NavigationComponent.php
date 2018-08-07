@@ -494,6 +494,26 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution']
                 ],
 
+                'Institution.Feeders' => [
+                    'title' => 'Feeders',
+                    'parent' => 'Institution.Academic',
+                    'link' => false
+                ],
+
+                    'Institutions.FeederOutgoingInstitutions' => [
+                        'title' => 'Outgoing',
+                        'parent' => 'Institution.Feeders',
+                        'selected' => ['Institutions.FeederOutgoingInstitutions'],
+                        'params' => ['plugin' => 'Institution']
+                    ],
+
+                    'Institutions.FeederIncomingInstitutions' => [
+                        'title' => 'Incoming',
+                        'parent' => 'Institution.Feeders',
+                        'selected' => ['Institutions.FeederIncomingInstitutions'],
+                        'params' => ['plugin' => 'Institution']
+                    ],
+                    
             'Institutions.Students.index' => [
                 'title' => 'Students',
                 'parent' => 'Institutions.Institutions.index',
@@ -1167,6 +1187,11 @@ class NavigationComponent extends Component
             ],
             'Reports.Trainings' => [
                 'title' => 'Trainings',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
+            'Reports.Scholarships' => [
+                'title' => 'Scholarships',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],

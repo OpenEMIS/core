@@ -9,7 +9,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Page\Model\Entity\PageElement;
-
 use App\Controller\PageController;
 
 class CalendarsController extends PageController
@@ -27,6 +26,9 @@ class CalendarsController extends PageController
         $this->loadModel('Calendars');
         $this->Page->loadElementsFromTable($this->Calendars);
         $this->Page->disable(['search']); // to disable the search function
+
+        // POCOR-4347 Disable CRUD once the institution is inactive
+        $this->loadComponent('Institution.InstitutionInactive');
     }
 
     public function implementedEvents()
@@ -199,7 +201,7 @@ class CalendarsController extends PageController
             // set default academic period to current year
             $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
             $page->get('academic_period_id')->setValue($academicPeriodId);
-        } else if ($this->request->is(['post', 'put'])) {
+        } elseif ($this->request->is(['post', 'put'])) {
             $entity = $page->getData();
             $error = $entity->errors();
 
@@ -238,7 +240,7 @@ class CalendarsController extends PageController
 
             $entity->start_date = $startDate;
             $entity->end_date = $endDate;
-        } else if ($this->request->is(['post', 'put'])) {
+        } elseif ($this->request->is(['post', 'put'])) {
             $error = $entity->errors();
 
             if (empty($error)) {

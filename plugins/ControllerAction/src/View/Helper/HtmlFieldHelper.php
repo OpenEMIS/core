@@ -828,9 +828,14 @@ class HtmlFieldHelper extends Helper
             'multiple' => 'true',
             'type' => 'select'
         ];
-        if (I18n::locale() == 'ar') {
+        
+        $Locales = TableRegistry::get('Locales');
+        $langDir = $Locales->getLangDir(I18n::locale());
+
+        if ($langDir == 'rtl') {
             $_options['class'] = 'chosen-select chosen-rtl';
         }
+        
         $_options['options'] = isset($attr['options']) ? $attr['options'] : [];
         $_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
         $options = array_merge($_options, $options);
