@@ -39,6 +39,23 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         'PRESENT': 'fa fa-minus',
     };
 
+    var translateText = {
+        'original': {
+            'Name': 'Name',
+            'Attendance': 'Attendance',
+            'ReasonComment': 'Reason / Comment',
+            'Monday': 'Monday',
+            'Tuesday': 'Tuesday',
+            'Wednesday': 'Wednesday',
+            'Thursday': 'Thursday',
+            'Friday': 'Friday',
+            'Saturday': 'Saturday',
+            'Sunday': 'Sunday'
+        },
+        'translated': {
+        }
+    };
+
     var models = {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         StudentAttendances: 'Institution.StudentAttendances',
@@ -57,6 +74,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getAbsenceTypeOptions: getAbsenceTypeOptions,
         getStudentAbsenceReasonOptions: getStudentAbsenceReasonOptions,
 
+        getTranslatedText: getTranslatedText,
         getAcademicPeriodOptions: getAcademicPeriodOptions,
         getWeekListOptions: getWeekListOptions,
         getDayListOptions: getDayListOptions,
@@ -95,6 +113,23 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     }
 
     // data service
+    function getTranslatedText() {
+        var success = function(response, deferred) {
+            console.log(response);
+            var translatedObj = response.data;
+            if (angular.isDefined(translatedObj)) {
+                translateText = translatedObj;
+            }
+            deferred.resolve(angular.isDefined(translatedObj));
+        };
+
+        KdDataSvc.init({translation: 'translate'});
+        return translation.translate(translateText.original, {
+            success: success,
+            defer: true
+        });
+    }
+
     function getAbsenceTypeOptions() {
         var success = function(response, deferred) {
             var absenceType = response.data.data;
@@ -352,7 +387,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         }
 
         columnDefs.push({
-            headerName: "Name",
+            headerName: translateText.translated.Name,
             field: "user.name_with_id",
             filterParams: filterParams,
             pinned: direction,
@@ -382,8 +417,13 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                     });
                 });
 
+                var dayText = dayObj.day;
+                if (angular.isDefined(translateText.translated[dayText])) {
+                    dayText = translateText.translated[dayText];
+                }
+                
                 var colDef = {
-                    headerName: dayObj.day,
+                    headerName: dayText,
                     children: childrenColDef
                 };
 
@@ -410,7 +450,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         }
 
         columnDefs.push({
-            headerName: "Name",
+            headerName: translateText.translated.Name,
             field: "user.name_with_id",
             filterParams: filterParams,
             pinned: direction,
@@ -419,7 +459,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         });
 
         columnDefs.push({
-            headerName: "Attendance",
+            headerName: translateText.translated.Attendance,
             field: "institution_student_absences.absence_type_id",
             suppressSorting: true,
             menuTabs: [],
@@ -444,7 +484,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         });
 
         columnDefs.push({
-            headerName: "Reason / Comment",
+            headerName: translateText.translated.ReasonComment,
             field: "institution_student_absences.student_absence_reason_id",
             menuTabs: [],
             suppressSorting: true,

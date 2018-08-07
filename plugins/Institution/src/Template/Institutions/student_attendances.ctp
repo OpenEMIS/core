@@ -168,6 +168,10 @@ $panelHeader = $this->fetch('panelHeader');
         border-right: 0;
         border-left: 1px solid #DDDDDD;
     }
+
+    .rtl #institution-student-attendances-table .ag-cell textarea#comment {
+        font-size: 14px;
+    }
 </style>
 
 <div class="panel">
