@@ -229,6 +229,7 @@ class ScholarshipDisbursementsTable extends AppTable  {
                 $this->aliasField('recipient_id'),
                 $this->aliasField('scholarship_id'),
                 'recipients_openemis_no' => 'Recipients.openemis_no',
+                'recipients_identity_number' => 'Recipients.identity_number',
                 'recipients_geneder' => 'Genders.name',
                 'main_nationality' => 'MainNationalities.name',
                 'identity_type' => 'IdentityTypes.name',
@@ -251,7 +252,6 @@ class ScholarshipDisbursementsTable extends AppTable  {
                     return $row;
                 });
            });
-
     }
     
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
@@ -267,7 +267,7 @@ class ScholarshipDisbursementsTable extends AppTable  {
             'key' => 'recipient.id',
             'field' => 'recipient_id',
             'type' => 'string',
-            'label' =>  __('Student')
+            'label' =>  __('Recipient')
         ];
         $newArray[] = [
             'key' => 'recipients_geneder',
@@ -286,6 +286,12 @@ class ScholarshipDisbursementsTable extends AppTable  {
             'field' => 'identity_type',
             'type' => 'string',
             'label' =>  __('Identity Type')
+        ];
+        $newArray[] = [
+            'key' => 'recipients_identity_number',
+            'field' => 'recipients_identity_number',
+            'type' => 'string',
+            'label' =>  __('Identity Number')
         ];
         $newArray[] = [
             'key' => 'scholarship_award',
