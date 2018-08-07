@@ -52,7 +52,16 @@ class AbsenceTypesTable extends ControllerActionTable {
             ])
             ->formatResults(function (ResultSetInterface $results) {
                 $result[] = ['id' => 0, 'name' => __('Present'), 'code' => 'PRESENT'];
-                return array_merge($result, $results->toArray());
+
+                $resultList = $results->toArray();
+                foreach ($resultList as $entity) {
+                    $result[] = [
+                        'id' => $entity->id,
+                        'name' => __($entity->name),
+                        'code' => $entity->code
+                    ];
+                }
+                return $result;
             });
     }
 }
