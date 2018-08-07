@@ -2,9 +2,9 @@ angular
     .module('institution.student.attendances.svc', ['kd.data.svc', 'alert.svc'])
     .service('InstitutionStudentAttendancesSvc', InstitutionStudentAttendancesSvc);
 
-InstitutionStudentAttendancesSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc'];
+InstitutionStudentAttendancesSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc', 'UtilsSvc'];
 
-function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
+function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     const attendanceType = {
         'NOTMARKED': {
             code: 'NOTMARKED',
@@ -320,14 +320,19 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             period: params.attendance_period_id
         };
 
-        StudentAttendanceMarkedRecords.save(extra).then(
+        UtilsSvc.isAppendSpinner(true, 'institution-student-attendances-table');
+        StudentAttendanceMarkedRecords.save(extra)
+        .then(
             function(response) {
                 AlertSvc.info(scope, 'Attendances will be automatically saved.');
             },
             function(error) {
                 AlertSvc.error(scope, 'There was an error when saving the record');
             }
-        );
+        )
+        .finally(function() {
+            UtilsSvc.isAppendSpinner(false, 'institution-student-attendances-table');
+        });
     }
 
     // column definitions
@@ -576,6 +581,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 api.refreshCells(refreshParams);
             }
 
+            UtilsSvc.isAppendSpinner(true, 'institution-student-attendances-table');
             saveAbsences(data, context)
             .then(
                 function(response) {
@@ -601,6 +607,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                     force: true
                 };
                 api.refreshCells(refreshParams);
+                UtilsSvc.isAppendSpinner(false, 'institution-student-attendances-table');
             });
         });
 
@@ -624,6 +631,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             var oldValue = data.institution_student_absences.comment;
             data.institution_student_absences[dataKey] = eTextarea.value;
 
+            UtilsSvc.isAppendSpinner(true, 'institution-student-attendances-table');
             saveAbsences(data, context)
             .then(
                 function(response) {
@@ -647,6 +655,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                     force: true
                 };
                 api.refreshCells(refreshParams);
+                UtilsSvc.isAppendSpinner(false, 'institution-student-attendances-table');
             });
         });
 
@@ -681,6 +690,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         eSelect.addEventListener('change', function () {
             var oldValue = data.institution_student_absences[dataKey];
             data.institution_student_absences[dataKey] = eSelect.value;
+
+            UtilsSvc.isAppendSpinner(true, 'institution-student-attendances-table');
             saveAbsences(data, context).then(
                 function(response) {
                     clearError(data, dataKey);
@@ -702,6 +713,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                     force: true
                 };
                 api.refreshCells(refreshParams);
+                UtilsSvc.isAppendSpinner(false, 'institution-student-attendances-table');
             });
         })
 
