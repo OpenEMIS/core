@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Datasource\ResultSetInterface;
 
 class ScholarshipDisbursementsTable extends AppTable  {
 
@@ -87,13 +88,95 @@ class ScholarshipDisbursementsTable extends AppTable  {
         $academicPeriodId = $requestData->academic_period_id;
         $financialAssistanceType = $requestData->scholarship_financial_assistance_type_id;
 
-        $conditions = [];
+        $recipientList = [];
+        $recipientScholarshipResult = $this
+            ->find('list', [
+                'keyField' => 'recipient_id',
+                'valueField' => 'scholarship_id'
+            ])
+            ->select([
+                'recipient_id' => $this->aliasField('recipient_id'),
+                'scholarship_id' => $this->aliasField('scholarship_id')
+            ])
+            ->all();
 
-        if ($financialAssistanceType != -1) {
-            $conditions[$this->aliasField('scholarship_recipient_activity_status_id')] = $financialAssistanceType;
+        if (!$recipientScholarshipResult->isEmpty()) {
+            $resultSet = $recipientScholarshipResult->toArray();
+
+            foreach ($resultSet as $recipientId => $scholarshipId) {
+                if (!isset($recipientList[$recipientId])) {
+                    $recipientList[$recipientId] = [];
+                }
+    
+                if (!isset($recipientList[$recipientId][$scholarshipId])) {
+                    $recipientList[$recipientId][$scholarshipId] = [
+                        'estimated_amount' => NULL,
+                        'total_disbursement' => NULL,
+                        'outstanding_amount' => NULL
+                    ];
+                }
+            }
         }
 
-        $query->where('AcademicPeriods.id = '.$academicPeriodId);
+        if (!empty($recipientList)) {
+            $disbursementQuery = $this->RecipientDisbursements->find();
+            $disbursementResult = $disbursementQuery
+                ->select([
+                    $this->RecipientDisbursements->aliasField('recipient_id'),
+                    $this->RecipientDisbursements->aliasField('scholarship_id'),
+                    'total_disbursement' => $disbursementQuery->func()->sum('amount')  
+                ])
+                ->group([
+                    $this->RecipientDisbursements->aliasField('recipient_id'),
+                    $this->RecipientDisbursements->aliasField('scholarship_id')                
+                ])
+                ->all();
+
+            if (!$disbursementResult->isEmpty()) {
+                $resultSet = $disbursementResult->toArray();
+
+                foreach ($resultSet as $entity) {
+                    $recipientId = $entity->recipient_id;
+                    $scholarshipId = $entity->scholarship_id;
+
+                    $recipientList[$recipientId][$scholarshipId]['total_disbursement'] = $entity->total_disbursement;
+                }
+            }
+
+            $structureEstimateQuery = $this->RecipientPaymentStructureEstimates->find();
+            $structureEstimateResult = $structureEstimateQuery
+                ->select([
+                    $this->RecipientPaymentStructureEstimates->aliasField('recipient_id'),
+                    $this->RecipientPaymentStructureEstimates->aliasField('scholarship_id'),
+                    'estimated_amount' => $structureEstimateQuery->func()->sum('estimated_amount')  
+                ])
+                ->group([
+                    $this->RecipientPaymentStructureEstimates->aliasField('recipient_id'),
+                    $this->RecipientPaymentStructureEstimates->aliasField('scholarship_id'),
+                ])
+                ->all();
+
+            if (!$structureEstimateResult->isEmpty()) {
+                $resultSet = $structureEstimateResult->toArray();
+
+                foreach ($resultSet as $entity) {
+                    $recipientId = $entity->recipient_id;
+                    $scholarshipId = $entity->scholarship_id;
+
+                    $recipientList[$recipientId][$scholarshipId]['estimated_amount'] = $entity->estimated_amount;
+
+                    if (!is_null($recipientList[$recipientId][$scholarshipId]['total_disbursement']) && !is_null($recipientList[$recipientId][$scholarshipId]['estimated_amount'])) {
+                            $recipientList[$recipientId][$scholarshipId]['outstanding_amount'] = $recipientList[$recipientId][$scholarshipId]['estimated_amount'] - $recipientList[$recipientId][$scholarshipId]['total_disbursement'];
+                    }
+                }
+            }
+        }
+        
+
+        $conditions = [];
+        if ($financialAssistanceType != -1) {
+            $conditions['Scholarships.scholarship_financial_assistance_type_id'] = $financialAssistanceType;
+        }  
 
         $query
             ->contain([
@@ -142,32 +225,32 @@ class ScholarshipDisbursementsTable extends AppTable  {
                     ]
                 ]
             ])
-            ->matching('RecipientPaymentStructureEstimates', function ($q) {
-                return $q->select([
-                    'estimated_amount' => 'SUM(RecipientPaymentStructureEstimates.estimated_amount)'
-                ]);
-            })
-            ->matching('RecipientDisbursements', function ($q) {
-                return $q->select([
-                    'total_disbursed_amount' => 'SUM(RecipientDisbursements.amount)'
-                ]);
-            })
             ->select([
                 $this->aliasField('recipient_id'),
-                'recipient_scholarship_id' => $this->aliasField('scholarship_id'),
+                $this->aliasField('scholarship_id'),
                 'recipients_openemis_no' => 'Recipients.openemis_no',
                 'recipients_geneder' => 'Genders.name',
                 'main_nationality' => 'MainNationalities.name',
                 'identity_type' => 'IdentityTypes.name',
                 'scholarship_award' => 'Scholarships.name',
                 'approved_amount' => $this->aliasField('approved_amount'),
-                'outstanding_amount' => $query->newExpr('SUM(RecipientPaymentStructureEstimates.estimated_amount - RecipientDisbursements.amount)')
             ])
             ->where($conditions)
-                ->group([
-                'RecipientPaymentStructureEstimates.recipient_id', 
-                'RecipientPaymentStructureEstimates.scholarship_id'
-                ]);
+            ->formatResults(function (ResultSetInterface $results) use ($recipientList) {
+                return $results->map(function ($row) use ($recipientList) {
+                    $recipientId = $row->recipient_id;
+                    $scholarshipId = $row->scholarship_id;
+
+                    if (!empty($recipientList) && isset($recipientList[$recipientId]) && isset($recipientList[$recipientId][$scholarshipId])) {
+                            $amount = $recipientList[$recipientId][$scholarshipId];
+                            $row->estimated_amount = $amount['estimated_amount'];
+                            $row->total_disbursement = $amount['total_disbursement'];
+                            $row->outstanding_amount = $amount['outstanding_amount'];
+                    }
+
+                    return $row;
+                });
+           });
 
     }
     
@@ -223,8 +306,8 @@ class ScholarshipDisbursementsTable extends AppTable  {
             'label' =>  __('Estimated Amount')
         ];
         $newArray[] = [
-            'key' => 'total_disbursed_amount',
-            'field' => 'total_disbursed_amount',
+            'key' => 'total_disbursement',
+            'field' => 'total_disbursement',
             'type' => 'decimal',
             'label' =>  __('Total Disbursed Amount')
         ];
