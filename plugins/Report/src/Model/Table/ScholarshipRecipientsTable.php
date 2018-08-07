@@ -44,6 +44,26 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $gender;
     }
 
+    public function onExcelGetNationality(Event $event, Entity $entity)
+    {
+        $nationality = '';
+        if (!is_null($entity->recipient->main_nationality->name)) {
+            $nationality = $entity->recipient->main_nationality->name;
+        }
+
+        return $nationality;
+    }
+
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $identityType = '';
+        if (!is_null($entity->recipient->main_identity_type->name)) {
+            $identityType = $entity->recipient->main_identity_type->name;
+        }
+
+        return $identityType;
+    }
+
     public function onExcelGetAcademic(Event $event, Entity $entity)
     {
         $academic = '';
@@ -177,7 +197,7 @@ class ScholarshipRecipientsTable extends AppTable  {
                         'gender_id',
                         'nationality_id' => 'Recipients.nationality_id',
                         'identity_type_id' => 'Recipients.identity_type_id',
-                        'identity_number'=> 'Recipients.identity_number',
+                        'identity_number' => 'Recipients.identity_number',
                     ]
                 ],
                 'Recipients.Genders' => [
@@ -185,7 +205,19 @@ class ScholarshipRecipientsTable extends AppTable  {
                         'code',
                         'name'
                     ]
-                ],                
+                ],
+                'Recipients.MainNationalities' => [
+                    'fields' => [
+                        'id',
+                        'name'
+                    ]
+                ],
+                'Recipients.MainIdentityTypes' => [
+                    'fields' => [
+                        'id',
+                        'name'
+                    ]
+                ],
                 'RecipientActivityStatuses' => [
                     'fields' => [
                         'id',
@@ -246,14 +278,7 @@ class ScholarshipRecipientsTable extends AppTable  {
             'field' => 'academic',
             'type' => 'string',
             'label' => __('Academic Period')
-        ];
-
-        $newFields[] = [
-            'key' => 'Recipients.scholarship_recipient_activity_status_id',
-            'field' => 'scholarship_recipient_activity_status_id',
-            'type' => 'string',
-            'label' => __('Status')
-        ];        
+        ];  
 
         $newFields[] = [
             'key' => 'Recipients.openemis_no',
@@ -278,23 +303,30 @@ class ScholarshipRecipientsTable extends AppTable  {
         
         $newFields[] = [
             'key' => 'Recipients.nationality_id',
-            'field' => 'Recipients.nationality_id',
+            'field' => 'nationality',
             'type' => 'string',
             'label' => __('Nationality')
         ];
 
         $newFields[] = [
             'key' => 'Recipients.identity_type_id',
-            'field' => 'Recipients.identity_type_id',
+            'field' => 'identityType',
             'type' => 'string',
             'label' => __('Identity Type')
         ];
 
         $newFields[] = [
             'key' => 'Recipients.identity_number',
-            'field' => 'Recipients.identity_number',
+            'field' => 'identity_number',
             'type' => 'string',
             'label' => __('Identity Number')
+        ];
+
+        $newFields[] = [
+            'key' => 'Recipients.scholarship_recipient_activity_status_id',
+            'field' => 'scholarship_recipient_activity_status_id',
+            'type' => 'string',
+            'label' => __('Status')
         ];
 
         $newFields[] = [
