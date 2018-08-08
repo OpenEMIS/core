@@ -24,11 +24,6 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         ]);
     }
 
-    // public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    // {
-    //     pr('after save');
-    // }
-
     public function findPeriodIsMarked(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
