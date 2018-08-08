@@ -71,6 +71,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         init: init,
         translate: translate,
 
+        getAttendanceTypeList: getAttendanceTypeList,
         getAbsenceTypeOptions: getAbsenceTypeOptions,
         getStudentAbsenceReasonOptions: getStudentAbsenceReasonOptions,
 
@@ -85,7 +86,6 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         getSingleDayColumnDefs: getSingleDayColumnDefs,
         getAllDayColumnDefs: getAllDayColumnDefs,
-        getAttendanceTypeList: getAttendanceTypeList,
 
         saveAbsences: saveAbsences,
         savePeriodMarked: savePeriodMarked
@@ -140,7 +140,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return AbsenceTypes
-            .find('AbsenceTypeList')
+            .find('absenceTypeList')
             .ajax({success: success, defer: true});
     }
 
@@ -160,10 +160,6 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             .ajax({success: success, defer: true});
     }
 
-    function fdf() {
-        return Promise();
-    }
-
     function getAcademicPeriodOptions(institutionId) {
         var success = function(response, deferred) {
             var periods = response.data.data;
@@ -175,7 +171,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return AcademicPeriods
-            .find('PeriodHasClass', {
+            .find('periodHasClass', {
                 institution_id: institutionId
             })
             .ajax({success: success, defer: true});
@@ -198,7 +194,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return AcademicPeriods
-            .find('WeeksForPeriod', {
+            .find('weeksForPeriod', {
                 academic_period_id: academicPeriodId
             })
             .ajax({success: success, defer: true});
@@ -215,7 +211,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return AcademicPeriods
-            .find('DaysForPeriodWeek', {
+            .find('daysForPeriodWeek', {
                 academic_period_id: academicPeriodId,
                 week_id: weekId
             })
@@ -233,7 +229,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return InstitutionClasses
-            .find('ClassesByInstitutionAndAcademicPeriod', {
+            .find('classesByInstitutionAndAcademicPeriod', {
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
             })
@@ -253,7 +249,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return StudentAttendanceMarkTypes
-            .find('PeriodByClass', {
+            .find('periodByClass', {
                 institution_class_id: institutionClassId,
                 academic_period_id: academicPeriodId
             })
@@ -282,7 +278,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return StudentAttendances
-            .find('ClassStudentsWithAbsence', extra)
+            .find('classStudentsWithAbsence', extra)
             .ajax({success: success, defer: true});
     }
 
@@ -306,7 +302,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return StudentAttendanceMarkedRecords
-            .find('PeriodIsMarked', extra)
+            .find('periodIsMarked', extra)
             .ajax({success: success, defer: true});
     }
 

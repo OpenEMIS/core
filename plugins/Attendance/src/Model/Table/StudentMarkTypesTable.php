@@ -31,15 +31,6 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->defaultMarkType = $this->StudentAttendanceMarkTypes->getDefaultMarkType();
     }
 
-    public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-
-        // add validations to per day value field not to be bigger than the mark attendance
-
-        return $validator;
-    }
-
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
