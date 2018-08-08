@@ -1828,6 +1828,7 @@ class StaffTable extends ControllerActionTable
                 $this->Users->aliasField('third_name'),
                 $this->Users->aliasField('last_name'),
                 $this->Users->aliasField('preferred_name'),
+                $InstitutionStaffAttendances->aliasField('id'),
                 $InstitutionStaffAttendances->aliasField('start_time'),
                 $InstitutionStaffAttendances->aliasField('end_time'),
                 $InstitutionStaffAttendances->aliasField('date'),
@@ -1871,6 +1872,7 @@ class StaffTable extends ControllerActionTable
                         $InstitutionStaffAttendanceDate = $cloneResult->InstitutionStaffAttendances['date'];
                         if ($InstitutionStaffAttendanceDate == $workingDay){
                             // Log::write('debug', $cloneResult);
+                            $cloneResult['isNew'] = false;
                             $cloneResult['date'] = date("l, d F Y", strtotime($InstitutionStaffAttendanceDate));
                             $formatResultDates[] = $cloneResult;
                             $found = true;
@@ -1878,6 +1880,7 @@ class StaffTable extends ControllerActionTable
 
                         //if iteration is in the last index of cloneResult and the date still cannot be found, insert the date in and also set the start_time and end_time to null
                         if ($i == $resultsCount && !$found) {
+                            $cloneResult['isNew'] = true;
                             $cloneResult['date'] = $date->format('l, d F Y');
                             $cloneResult->InstitutionStaffAttendances['start_time'] = null;
                             $cloneResult->InstitutionStaffAttendances['end_time'] = null;

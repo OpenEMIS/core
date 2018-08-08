@@ -29,6 +29,10 @@ $this->start('toolbar');
         <i class="fa kd-edit"></i>
     </button>
 
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('History');?>" ng-show="$ctrl.action == 'view'" ng-click="$ctrl.onHistoryClick()">
+        <i class="fa fa-file-text"></i>
+    </button>
+
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit'" ng-click="$ctrl.onBackClick()">
         <i class="fa kd-back"></i>
     </button>
