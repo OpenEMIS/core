@@ -626,7 +626,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                         angular.forEach(oldParams, function(value, key) {
                             data.institution_student_absences[key] = value;
                         });
-                        AlertSvc.error(scope, 'There was an error when saving the record - Attendance');
+                        AlertSvc.error(scope, 'There was an error when saving the record');
                     } else {
                         data.save_error[dataKey] = false;
                         AlertSvc.info(scope, 'Attendances will be automatically saved.');
@@ -638,7 +638,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                     angular.forEach(oldParams, function(value, key) {
                         data.institution_student_absences[key] = value;
                     });
-                    AlertSvc.error(scope, 'There was an error when saving the record - Attendance');
+                    AlertSvc.error(scope, 'There was an error when saving the record');
                 }
             )
             .finally(function() {
@@ -682,7 +682,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                     if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
                         data.save_error[dataKey] = true;
                         data.institution_student_absences[dataKey] = oldValue;
-                        AlertSvc.error(scope, 'There was an error when saving the record - Comments');
+                        AlertSvc.error(scope, 'There was an error when saving the record');
                     } else {
                         data.save_error[dataKey] = false;
                         AlertSvc.info(scope, 'Attendances will be automatically saved.');
@@ -691,7 +691,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 function(error) {
                     clearError(data, dataKey);
                     data.save_error[dataKey] = true;
-                    AlertSvc.error(scope, 'There was an error when saving the record - Comments');
+                    AlertSvc.error(scope, 'There was an error when saving the record');
                     data.institution_student_absences[dataKey] = oldValue;
                 }
             )
@@ -744,13 +744,19 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             saveAbsences(data, context).then(
                 function(response) {
                     clearError(data, dataKey);
-                    data.save_error[dataKey] = false;
-                    AlertSvc.info(scope, 'Attendances will be automatically saved.');
+                    if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
+                        data.save_error[dataKey] = true;
+                        data.institution_student_absences[dataKey] = oldValue;
+                        AlertSvc.error(scope, 'There was an error when saving the record');
+                    } else {
+                        data.save_error[dataKey] = false;
+                        AlertSvc.info(scope, 'Attendances will be automatically saved.');
+                    }
                 },
                 function(error) {
                     clearError(data, dataKey);
                     data.save_error[dataKey] = true;
-                    AlertSvc.error(scope, 'There was an error when saving the record - AbsenceReason');
+                    AlertSvc.error(scope, 'There was an error when saving the record');
                     data.institution_student_absences[dataKey] = oldValue;
                 }
             ).finally(function() {
