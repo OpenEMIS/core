@@ -168,7 +168,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => ['checkStatusIdValid'],
                 'provider' => 'table',
                 'on' => function ($context) {  
-                    if (array_key_exists('is_imported', $context['data']) && $context['data']['is_imported']) {
+                    if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
                         return true;
                     }
                     return false;

@@ -39,6 +39,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         return $validator
+            ->requirePresence('grading_options')
             ->allowEmpty('code')
             ->add('code', 'ruleUniqueCode', [
                 'rule' => 'validateUnique',
@@ -78,6 +79,13 @@ class OutcomeGradingTypesTable extends ControllerActionTable
                 $toolbarButtons['back']['url'][0] = 'add';
             }
             $extra['criteriaForm'] = $criteriaForm;
+        }
+    }
+
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
+            $this->Alert->warning($this->aliasField('noGradingOptions'));
         }
     }
 
@@ -123,6 +131,13 @@ class OutcomeGradingTypesTable extends ControllerActionTable
             $url = $this->url('add');
             $url['action'] = 'Criterias';
             $extra['redirect'] = $this->setQueryString($url, $criteriaParams, 'criteriaForm');
+        }
+    }
+    
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
+            $this->Alert->warning($this->aliasField('noGradingOptions'));
         }
     }
 

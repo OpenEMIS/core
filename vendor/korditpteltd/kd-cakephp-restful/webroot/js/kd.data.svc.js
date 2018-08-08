@@ -292,6 +292,7 @@ angular.module('kd.data.svc', [])
         },
 
         save: function(data) {
+            data['action_type'] = 'default'; // flag to distinguish between angular & external API call
             var settings = {
                 headers: {'Content-Type': 'application/json'},
                 data: data,
