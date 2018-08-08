@@ -115,7 +115,6 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     // data service
     function getTranslatedText() {
         var success = function(response, deferred) {
-            console.log(response);
             var translatedObj = response.data;
             if (angular.isDefined(translatedObj)) {
                 translateText = translatedObj;
@@ -421,7 +420,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 if (angular.isDefined(translateText.translated[dayText])) {
                     dayText = translateText.translated[dayText];
                 }
-                
+
                 var colDef = {
                     headerName: dayText,
                     children: childrenColDef
@@ -626,8 +625,16 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             .then(
                 function(response) {
                     clearError(data, dataKey);
-                    data.save_error[dataKey] = false;
-                    AlertSvc.info(scope, 'Attendances will be automatically saved.');
+                    if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
+                        data.save_error[dataKey] = true;
+                        angular.forEach(oldParams, function(value, key) {
+                            data.institution_student_absences[key] = value;
+                        });
+                        AlertSvc.error(scope, 'There was an error when saving the record - Attendance');
+                    } else {
+                        data.save_error[dataKey] = false;
+                        AlertSvc.info(scope, 'Attendances will be automatically saved.');
+                    }
                 },
                 function(error) {
                     clearError(data, dataKey);
@@ -676,8 +683,14 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             .then(
                 function(response) {
                     clearError(data, dataKey);
-                    data.save_error[dataKey] = false;
-                    AlertSvc.info(scope, 'Attendances will be automatically saved.');
+                    if (angular.isDefined(response.data.error) && response.data.error.length > 0) {
+                        data.save_error[dataKey] = true;
+                        data.institution_student_absences[dataKey] = oldValue;
+                        AlertSvc.error(scope, 'There was an error when saving the record - Comments');
+                    } else {
+                        data.save_error[dataKey] = false;
+                        AlertSvc.info(scope, 'Attendances will be automatically saved.');
+                    }
                 },
                 function(error) {
                     clearError(data, dataKey);
