@@ -6,6 +6,7 @@ use Exception;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
+use Cake\Utility\Hash;
 use Cake\Console\Shell;
 
 class EmailAllReportCardsShell extends Shell
@@ -209,9 +210,11 @@ class EmailAllReportCardsShell extends Shell
 
         $ReportCardEmailTable = TableRegistry::get('ReportCard.ReportCardEmail');
         $modelAlias = $ReportCardEmailTable->registryAlias();
+        $availablePlaceholders = $ReportCardEmailTable->getPlaceholders();
         $reportCardId = $studentsReportCardEntity->report_card_id;
         $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, $reportCardId);
-        $subject = $this->replacePlaceholders($emailTemplateEntity->subject, $studentsReportCardEntity);
+
+        $subject = $this->replacePlaceholders($emailTemplateEntity->subject, $availablePlaceholders, $studentsReportCardEntity);
 
         if (!empty($subject)) {
             $emailProcessesObj['subject'] = $subject;
@@ -224,9 +227,10 @@ class EmailAllReportCardsShell extends Shell
 
         $ReportCardEmailTable = TableRegistry::get('ReportCard.ReportCardEmail');
         $modelAlias = $ReportCardEmailTable->registryAlias();
+        $availablePlaceholders = $ReportCardEmailTable->getPlaceholders();
         $reportCardId = $studentsReportCardEntity->report_card_id;
         $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, $reportCardId);
-        $message = $this->replacePlaceholders($emailTemplateEntity->message, $studentsReportCardEntity);
+        $message = $this->replacePlaceholders($emailTemplateEntity->message, $availablePlaceholders, $studentsReportCardEntity);
 
         if (!empty($message)) {
             $emailProcessesObj['message'] = $message;
@@ -249,37 +253,22 @@ class EmailAllReportCardsShell extends Shell
         }
     }
 
-    private function replacePlaceholders($message, Entity $studentsReportCardEntity) {
+    private function replacePlaceholders($message, $availablePlaceholders, $vars) {
         $format = '${%s}';
         $strArray = explode('${', $message);
-        $value = '';
+        array_shift($strArray); // first element will not contain the placeholder
 
         foreach ($strArray as $key => $str) {
             $pos = strpos($str, '}');
+
             if ($pos !== false) {
                 $placeholder = substr($str, 0, $pos);
                 $replace = sprintf($format, $placeholder);
 
-                $strArray2 = explode('.', $placeholder);
-
-                switch ($strArray2[0]) {
-                    case "student":
-                        $value = $studentsReportCardEntity->student[$strArray2[1]];
-                        break;
-                    case "institution":
-                        $value = $studentsReportCardEntity->institution[$strArray2[1]];
-                        break;
-                    case "academic_period":
-                        $value = $studentsReportCardEntity->academic_period[$strArray2[1]];
-                        break;
-                    case "education_grade":
-                        $value = $studentsReportCardEntity->education_grade[$strArray2[1]];
-                        break;
-                    default:
-                        // Do nothing
+                if (!empty($availablePlaceholders)) {
+                    $value = Hash::get($vars, $placeholder);
+                    $message = str_replace($replace, $value, $message);
                 }
-
-                $message = str_replace($replace, $value, $message);
             }
         }
 
