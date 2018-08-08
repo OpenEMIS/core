@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 
 use Cake\Log\Log;
 
@@ -29,6 +30,23 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentAttendances' => ['index', 'view', 'add']
         ]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $absencesList = $this->AbsenceTypes->getCodeList();
+        $validator
+            ->allowEmpty('student_absence_reason_id', function ($context) use ($absencesList) {
+                if (isset($context['data']['absence_type_id']) && $context['data']['absence_type_id'] != 0) {
+                    $absenceTypeId = $context['data']['absence_type_id'];
+                    $code = $absencesList[$absenceTypeId];
+                    return ($code != 'EXCUSED');
+                }
+                return true;
+            });
+
+        return $validator;
     }
 
     public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
