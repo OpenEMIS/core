@@ -36,6 +36,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('NextInstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' =>'next_institution_class_id']);
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
         $this->addBehavior('User.AdvancedNameSearch');
@@ -347,7 +348,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('institution_class_id', ['type' => 'integer']);
-        $this->setFieldOrder(['academic_period_id', 'status', 'openemis_no', 'student_id',  'report_card', 'institution_class_id']);
+        $this->setFieldOrder(['academic_period_id', 'status', 'started_on', 'completed_on', 'openemis_no', 'student_id',  'report_card', 'institution_class_id']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -355,7 +356,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         $query
             ->select([
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
-                'report_card_status' => $this->StudentsReportCards->aliasField('status')
+                'report_card_status' => $this->StudentsReportCards->aliasField('status'),
+                'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
+                'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on')
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
