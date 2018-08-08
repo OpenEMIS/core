@@ -193,6 +193,11 @@ class EmailTemplateBehavior extends Behavior
         }
     }
 
+    public function getPlaceholders()
+    {
+        return $this->config('placeholder');
+    }
+
     private function setupFields(Event $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
