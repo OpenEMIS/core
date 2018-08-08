@@ -240,7 +240,6 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             }
 
             return startTime;
-
         }
     }
 
@@ -318,7 +317,6 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                 endTime = '-';
             }
             return endTime;
-
         }
     }
 
@@ -354,14 +352,24 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
     }
 
     function saveStaffAttendanceTimeIn(data, context, time) {
+        var isNew = data.isNew;
         var staffAttendanceData = {
+            id: data.InstitutionStaffAttendances.id,
             staff_id: data.staff_id,
             institution_id: data.institution_id,
             academic_period_id: context.context.period,
             date: data.InstitutionStaffAttendances.date,
             start_time: time,
+            // old_start_time: oldValue
         };
-        return InstitutionStaffAttendances.save(staffAttendanceData);
+        if(data.isNew){
+            console.log('is new entity');
+            return InstitutionStaffAttendances.save(staffAttendanceData);
+        }else{
+            console.log('is not new entity');
+            return InstitutionStaffAttendances.edit(staffAttendanceData);
+        }
+        // return InstitutionStaffAttendances.save(staffAttendanceData);
     }
 
     function saveStaffAttendanceTimeOut(data, context, time) {
