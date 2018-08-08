@@ -17,7 +17,9 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'InstitutionStaffAttendances' => ['index', 'view', 'add'],
+            'InstitutionStaffAttendances' => ['index', 'view', 'add', 'edit'],
         ]);
+        $this->addBehavior('CompositeKey');
+        $this->addBehavior('TrackActivity', ['target' => 'User.InstitutionStaffAttendanceActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
 	}
 }
