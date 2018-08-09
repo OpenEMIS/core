@@ -1,3 +1,8 @@
+### [3.32.0] - 2018-08-03
+- Developed School Feeder feature in Institutions Module
+- Developed function to save class for next academic period in Institution > Students > Promotions page
+- Developed feature to email student report card in Institution > Report Card
+
 ### [3.31.0] - 2018-07-20
 - Developed student pending admission API
 - Developed Potential Wrong Birthdates in Reports > Data Quality 
