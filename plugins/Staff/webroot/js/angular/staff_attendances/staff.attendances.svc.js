@@ -199,7 +199,13 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                     .then(
                         function(response) {
                             console.log('SAVING SUCCESS LEY CHECK DB');
-                            AlertSvc.success(scope, 'Time in record successfully saved.');
+                            // console.log(response.data.error.length);
+                            if(response.data.error.length == 0){
+                                AlertSvc.success(scope, 'Time in record successfully saved.');
+                                data.isNew = false;
+                            }else{
+                                 AlertSvc.error(scope, 'There was an error when saving record');
+                            }
                         },
                         function(error) {
                             console.log(error);
@@ -281,7 +287,13 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                     .then(
                         function(response) {
                             console.log('SAVING SUCCESS LEY CHECK DB');
-                            AlertSvc.success(scope, 'Time out record successfully saved.');
+                            console.log(response.data.error.length);
+                            if(response.data.error.length == 0){
+                                AlertSvc.success(scope, 'Time in record successfully saved.');
+                                data.isNew = false;
+                            }else{
+                                 AlertSvc.error(scope, 'There was an error when saving record');
+                            }
                         },
                         function(error) {
                             console.log(error);
@@ -354,13 +366,11 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
     function saveStaffAttendanceTimeIn(data, context, time) {
         var isNew = data.isNew;
         var staffAttendanceData = {
-            id: data.InstitutionStaffAttendances.id,
             staff_id: data.staff_id,
             institution_id: data.institution_id,
             academic_period_id: context.context.period,
             date: data.InstitutionStaffAttendances.date,
             start_time: time,
-            // old_start_time: oldValue
         };
         if(data.isNew){
             console.log('is new entity');

@@ -203,6 +203,11 @@ class StaffController extends AppController
     }
     // End Health
 
+    public function InstitutionStaffAttendanceActivities()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendanceActivities']);
+    }
+
     // AngularJS
     public function InstitutionStaffAttendances()
     {
