@@ -166,5 +166,6 @@ class POCOR3906 extends AbstractMigration
     public function down()
     {   
         $this->dropTable('institution_staff_attendances');
+        $this->dropTable('institution_staff_attendance_activities');
     }
 }
