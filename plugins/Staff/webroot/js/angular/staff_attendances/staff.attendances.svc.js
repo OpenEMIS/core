@@ -195,6 +195,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                     // convertTimeformat(e.time.hours, e.time.minutes, e.time.seconds);
                     var start_time = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
                     console.log(start_time);
+                    data.InstitutionStaffAttendances.start_time = start_time;
                     saveStaffAttendanceTimeIn(data, params, start_time)
                     .then(
                         function(response) {
@@ -213,13 +214,13 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                         }
                     )
                     .finally(function() {
-                        // var refreshParams = {
-                        //     columns: [
-                        //         'start_time',
-                        //     ],
-                        //     force: true
-                        // };
-                        // params.api.refreshCells(refreshParams);
+                        var refreshParams = {
+                            columns: [
+                                'start_time',
+                            ],
+                            force: true
+                        };
+                        params.api.refreshCells(refreshParams);
                     });
                 });
                 $(document).on('DOMMouseScroll mousewheel scroll', function() {

@@ -39,13 +39,11 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
         $this->field('old_value');
         $this->field('new_value');
         $this->field('model', ['visible' => false]);
-        $this->field('created', ['visible' => false]);
-        $this->field('created_user_id', ['visible' => false]);
-        $this->field('modified', ['visible' => true]);
-        $this->field('modified_user_id', ['visible' => true]);
+        $this->field('created', ['visible' => true]);
+        $this->field('created_user_id', ['visible' => true]);
 
         $this->setFieldOrder(['field', 'old_value', 'new_value', 'modified', 'modified_user_id']);
-		$this->setupTabElements();
+		// $this->setupTabElements();
 	}
 
 	//might need to remove this cause wireframe never set

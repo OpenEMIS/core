@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use App\Controller\AppController;
+use Cake\Routing\Router;
 
 class StaffController extends AppController
 {
@@ -224,6 +225,14 @@ class StaffController extends AppController
 
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
         $this->Navigation->addCrumb($crumbTitle);
+
+        $historyUrl = $this->ControllerAction->url('index');
+        $historyUrl['plugin'] = 'Staff';
+        $historyUrl['controller'] = 'Staff';
+        $historyUrl['action'] = 'InstitutionStaffAttendanceActivities';
+
+        // pr($url);die;
+        $this->set('historyUrl', Router::url($historyUrl));
         $this->set('_edit', $_edit);
         $this->set('institution_id', $institutionId);
         $this->set('staff_id', $staffId);
