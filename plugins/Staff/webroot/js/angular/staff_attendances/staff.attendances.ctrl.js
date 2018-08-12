@@ -22,7 +22,6 @@ function StaffAttendancesController($scope, $q, $window, $http, UtilsSvc, AlertS
     vm.gridReady = false;
     vm.gridOptions = {
         context: {
-            week: vm.selectedWeek,
             period: vm.selectedAcademicPeriod,
             action: vm.action,
             scope: $scope,
@@ -114,6 +113,7 @@ function StaffAttendancesController($scope, $q, $window, $http, UtilsSvc, AlertS
         UtilsSvc.isAppendLoader(true);
         StaffAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod)
         .then(function(weekListOptions) {
+            vm.gridOptions.context.period = vm.selectedAcademicPeriod;
             vm.setWeekList(weekListOptions);
             return StaffAttendancesSvc.getStaffAttendances(vm.getStaffAttendancesParams());
         }, vm.error)
