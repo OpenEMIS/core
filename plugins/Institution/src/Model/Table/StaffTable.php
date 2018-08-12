@@ -1829,8 +1829,8 @@ class StaffTable extends ControllerActionTable
                 $this->Users->aliasField('last_name'),
                 $this->Users->aliasField('preferred_name'),
                 $InstitutionStaffAttendances->aliasField('id'),
-                $InstitutionStaffAttendances->aliasField('start_time'),
-                $InstitutionStaffAttendances->aliasField('end_time'),
+                $InstitutionStaffAttendances->aliasField('time_in'),
+                $InstitutionStaffAttendances->aliasField('time_out'),
                 $InstitutionStaffAttendances->aliasField('date'),
             ])
             ->leftJoin(
@@ -1882,8 +1882,8 @@ class StaffTable extends ControllerActionTable
                         if ($i == $resultsCount && !$found) {
                             $cloneResult['isNew'] = true;
                             $cloneResult['date'] = $date->format('l, d F Y');
-                            $cloneResult->InstitutionStaffAttendances['start_time'] = null;
-                            $cloneResult->InstitutionStaffAttendances['end_time'] = null;
+                            $cloneResult->InstitutionStaffAttendances['time_in'] = null;
+                            $cloneResult->InstitutionStaffAttendances['time_out'] = null;
                             $cloneResult->InstitutionStaffAttendances['date'] = $workingDay;
                             $formatResultDates[] = $cloneResult;
                         }
