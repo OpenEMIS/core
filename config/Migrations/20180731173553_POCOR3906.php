@@ -116,14 +116,14 @@ class POCOR3906 extends AbstractMigration
                 ]
             )
             ->addColumn(
-                'start_time', 'time', [
+                'time_in', 'time', [
                 'default' => null,
                 'limit' => null,
                 'null' => true,
                 ]
             )
             ->addColumn(
-                'end_time', 'time', [
+                'time_out', 'time', [
                 'default' => null,
                 'limit' => null,
                 'null' => true,

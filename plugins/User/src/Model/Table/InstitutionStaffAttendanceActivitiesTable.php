@@ -36,13 +36,13 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
         $this->field('field');
-        $this->field('old_value');
-        $this->field('new_value');
+        $this->field('old_value', ['sort' => false]);
+        $this->field('new_value', ['sort' => false]);
+        $this->field('created', ['sort' => false]);
+        $this->field('created_user_id');
         $this->field('model', ['visible' => false]);
-        $this->field('created', ['visible' => true]);
-        $this->field('created_user_id', ['visible' => true]);
 
-        $this->setFieldOrder(['field', 'old_value', 'new_value', 'modified', 'modified_user_id']);
+        $this->setFieldOrder(['field', 'old_value', 'new_value', 'created_user_id', 'created']);
 		// $this->setupTabElements();
 	}
 
@@ -179,30 +179,43 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
             $this->controller->set(compact('dayOptions', 'selectedDay'));
             // End setup days
 
+            $conditions = [
+                    $InstitutionStaffAttendances->aliasField('staff_id') => $staffId,
+                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $selectedPeriod,
+                    $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                ];
             if ($selectedDay == -1) {
                 $startDate = $weekStartDate;
                 $endDate = $weekEndDate;
+
+                $selectedFormatStartDate = date_format($startDate, 'Y-m-d');
+                $selectedFormatEndDate = date_format($endDate, 'Y-m-d');
+                $dateConditions = [
+                    $InstitutionStaffAttendances->aliasField('date >=') => $selectedFormatStartDate,
+                    $InstitutionStaffAttendances->aliasField('date <=') => $selectedFormatEndDate
+                ];
+                $conditions = array_merge($conditions, $dateConditions);
             } else {
                 $startDate = $this->selectedDate;
                 $endDate = $startDate;
+
+                $selectedFormatStartDate = date_format($startDate, 'Y-m-d');
+                $dateConditions = [
+                    $InstitutionStaffAttendances->aliasField('date') => $selectedFormatStartDate
+                ];
+                $conditions = array_merge($conditions, $dateConditions);
             }
-            $selectedFormatDate = date_format($this->selectedDate, 'Y-m-d');
 
             $query
             	->find('all')
             	->innerJoin([$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()], [
             		$this->aliasField('model_reference = ') .  $InstitutionStaffAttendances->aliasField('id'),
             	])
-                ->where([
-                    $InstitutionStaffAttendances->aliasField('staff_id') => $staffId,
-                    $InstitutionStaffAttendances->aliasField('date') => $selectedFormatDate,
-                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $selectedPeriod,
-                    $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
-                ]);
+                ->where($conditions);
 
             $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
         } else {
-        	//need to add alert here if no data
+        	//To-Do: Add alert here if no data
             // $query->where([$this->aliasField('staff_id') => 0]);
 
             // $this->field('type');
@@ -211,4 +224,17 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
             // $this->Alert->warning('StaffAttendances.noStaff');
         }
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'created_user_id') {
+            return __('Last Modified By');
+        } else if ($field == 'created') {
+            return  __('Last Modified On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    // To-Do: Create new function to convert time to 12hour format if function does not exists
 }
