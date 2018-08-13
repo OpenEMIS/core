@@ -1,6 +1,3 @@
-### [3.32.2] - 2018-08-13
-- Bug fix on deleting rows and columns for table question type in Survey module
-
 ### [3.32.0] - 2018-08-03
 - Developed School Feeder feature in Institutions Module
 - Developed function to save class for next academic period in Institution > Students > Promotions page
