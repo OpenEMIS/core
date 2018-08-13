@@ -17,8 +17,8 @@ class SurveyQuestionsTable extends CustomFieldsTable
     {
         parent::initialize($config);
         $this->hasMany('CustomFieldOptions', ['className' => 'Survey.SurveyQuestionChoices', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('CustomTableColumns', ['className' => 'Survey.SurveyTableColumns', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('CustomTableRows', ['className' => 'Survey.SurveyTableRows', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CustomTableColumns', ['className' => 'Survey.SurveyTableColumns', 'saveStrategy' => 'replace', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CustomTableRows', ['className' => 'Survey.SurveyTableRows', 'saveStrategy' => 'replace', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('CustomFieldValues', ['className' => 'Institution.InstitutionSurveyAnswers', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('CustomTableCells', ['className' => 'Institution.InstitutionSurveyTableCells', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('CustomForms', [
