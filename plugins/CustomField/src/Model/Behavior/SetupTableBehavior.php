@@ -2,6 +2,7 @@
 namespace CustomField\Model\Behavior;
 
 use ArrayObject;
+use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -391,6 +392,19 @@ class SetupTableBehavior extends SetupBehavior
         if ($entity->field_type == $this->fieldTypeCode) {
             $query->contain(['CustomTableColumns', 'CustomTableRows']);
         }
+
+        $queryCopy = clone($query);
+        $cellAnswerCount = $queryCopy
+            ->matching('CustomTableCells')
+            ->count();
+        $editable = $cellAnswerCount == 0;
+
+        $query->formatResults(function (ResultSetInterface $results) use ($editable) {
+            return $results->map(function ($row) use ($editable) {
+                $row->editable = $editable;
+                return $row;
+            });
+        });
     }
 
     public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
