@@ -1552,9 +1552,8 @@ class NavigationComponent extends Component
                 'title' => 'Report Cards',
                 'parent' => 'Administration',
                 'params' => ['plugin' => 'ReportCard'],
-                'selected' => ['ReportCards.Templates']
+                'selected' => ['ReportCards.Templates', 'ReportCards.ReportCardEmail']
             ],
-
             'Workflows.Workflows' => [
                 'title' => 'Workflow',
                 'parent' => 'Administration',

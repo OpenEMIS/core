@@ -2,16 +2,16 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use ZipArchive;
+
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
-use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
 use Cake\Log\Log;
-use ZipArchive;
+
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardStatusesTable extends ControllerActionTable
@@ -47,6 +47,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         $this->ReportCards = TableRegistry::get('ReportCard.ReportCards');
         $this->StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $this->ReportCardEmailProcesses = TableRegistry::get('ReportCard.ReportCardEmailProcesses');
 
         $this->statusOptions = [
             self::NEW_REPORT => __('New'),
@@ -67,6 +68,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
         $events['ControllerAction.Model.unpublishAll'] = 'unpublishAll';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+        $events['ControllerAction.Model.email'] = 'email';
+        $events['ControllerAction.Model.emailAll'] = 'emailAll';
         return $events;
     }
 
@@ -134,6 +137,18 @@ class ReportCardStatusesTable extends ControllerActionTable
                     'url' => $unpublishUrl
                 ];
             }
+
+            // Single email button, status must be published
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'email']) && $entity->has('report_card_status') && $entity->report_card_status == self::PUBLISHED) {
+                if (empty($entity->email_status_id) || ($entity->has('email_status_id') && $entity->email_status_id != $this->ReportCardEmailProcesses::SENDING)) {
+                    $emailUrl = $this->setQueryString($this->url('email'), $params);
+                    $buttons['email'] = [
+                        'label' => '<i class="fa fa-envelope"></i>'.__('Email'),
+                        'attr' => $indexAttr,
+                        'url' => $emailUrl
+                    ];
+                }
+            }
         }
         return $buttons;
     }
@@ -146,12 +161,14 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('report_card');
+        $this->field('email_status');
+        $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder(['status', 'started_on', 'completed_on', 'openemis_no', 'student_id', 'academic_period_id', 'report_card']);
+        $this->setFieldOrder(['status', 'started_on', 'completed_on', 'openemis_no', 'student_id', 'academic_period_id', 'report_card', 'email_status']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -222,7 +239,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
                 'report_card_status' => $this->StudentsReportCards->aliasField('status'),
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
-                'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on')
+                'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
+                'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
+                'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message')
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -232,6 +251,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
                     $this->StudentsReportCards->aliasField('report_card_id = ') . $selectedReportCard
+                ]
+            )
+            ->leftJoin([$this->ReportCardEmailProcesses->alias() => $this->ReportCardEmailProcesses->table()],
+                [
+                    $this->ReportCardEmailProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $this->ReportCardEmailProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    $this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
             ->autoFields(true)
@@ -335,6 +364,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $unpublishButton['attr']['title'] = __('Unpublish All');
                     $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
                 }
+
+                // Email all button is published
+                if ($publishedCount > 0) {
+                    $emailButton['url'] = $this->setQueryString($this->url('emailAll'), $params);
+                    $emailButton['type'] = 'button';
+                    $emailButton['label'] = '<i class="fa fa-envelope"></i>';
+                    $emailButton['attr'] = $toolbarAttr;
+                    $emailButton['attr']['title'] = __('Email All');
+                    $extra['toolbarButtons']['emailAll'] = $emailButton;
+                }
             }
         }
     }
@@ -353,12 +392,16 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $params = $this->getQueryString();
+
         $query
             ->select([
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
                 'report_card_status' => $this->StudentsReportCards->aliasField('status'),
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
-                'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on')
+                'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
+                'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
+                'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message')
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -367,6 +410,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
+                ]
+            )
+            ->leftJoin([$this->ReportCardEmailProcesses->alias() => $this->ReportCardEmailProcesses->table()],
+                [
+                    $this->ReportCardEmailProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $this->ReportCardEmailProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    $this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $params['report_card_id']
                 ]
             )
             ->autoFields(true);
@@ -431,6 +484,22 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $value = $reportCardEntity->code_name;
             }
         }
+        return $value;
+    }
+
+    public function onGetEmailStatus(Event $event, Entity $entity)
+    {
+        $emailStatuses = $this->ReportCardEmailProcesses->getEmailStatus();
+        $value = '<i class="fa fa-minus"></i>';
+
+        if ($entity->has('email_status_id')) {
+            $value = $emailStatuses[$entity->email_status_id];
+
+            if ($entity->email_status_id == $this->ReportCardEmailProcesses::ERROR && $entity->has('email_error_message')) {
+                $value .= '&nbsp&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $entity->email_error_message . '"></i>';
+            }
+        }
+
         return $value;
     }
 
@@ -588,6 +657,43 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
+    public function email(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
+
+        $this->addReportCardsToEmailProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
+        $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
+        $this->Alert->warning('ReportCardStatuses.email');
+
+        $event->stopPropagation();
+        return $this->controller->redirect($this->url('index'));
+    }
+
+    public function emailAll(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
+
+        $inProgress = $this->ReportCardEmailProcesses->find()
+            ->where([
+                $this->ReportCardEmailProcesses->aliasField('report_card_id') => $params['report_card_id'],
+                $this->ReportCardEmailProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->ReportCardEmailProcesses->aliasField('status') => $this->ReportCardEmailProcesses::SENDING
+            ])
+            ->count();
+
+        if (!$inProgress) {
+            $this->addReportCardsToEmailProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
+            $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
+
+            $this->Alert->warning('ReportCardStatuses.emailAll');
+        } else {
+            $this->Alert->warning('ReportCardStatuses.emailInProgress');
+        }
+
+        $event->stopPropagation();
+        return $this->controller->redirect($this->url('index'));
+    }
+
     private function addReportCardsToProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
         Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
@@ -628,6 +734,16 @@ class ReportCardStatusesTable extends ControllerActionTable
             $obj = array_merge($idKeys, $data);
             $newEntity = $ReportCardProcesses->newEntity($obj);
             $ReportCardProcesses->save($newEntity);
+            // end
+
+            // Report card email processes
+            $emailIdKeys = $idKeys;
+            if ($this->ReportCardEmailProcesses->exists($emailIdKeys)) {
+                $reportCardEmailProcessEntity = $this->ReportCardEmailProcesses->find()
+                    ->where($emailIdKeys)
+                    ->first();
+                $this->ReportCardEmailProcesses->delete($reportCardEmailProcessEntity);
+            }
             // end
 
             // Student report card
@@ -708,12 +824,109 @@ class ReportCardStatusesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards'.$args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
-
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);
             } catch(\Exception $ex) {
                 Log::write('error', __METHOD__ . ' exception when generate all report cards : '. $ex);
+            }
+        }
+    }
+
+    private function addReportCardsToEmailProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
+    {
+        Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
+
+        $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+
+        $where = [];
+        $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
+        if (!is_null($studentId)) {
+            $where[$classStudentsTable->aliasField('student_id')] = $studentId;
+        }
+        $classStudents = $classStudentsTable->find()
+            ->select([
+                $classStudentsTable->aliasField('student_id'),
+                $classStudentsTable->aliasField('institution_id'),
+                $classStudentsTable->aliasField('academic_period_id'),
+                $classStudentsTable->aliasField('education_grade_id'),
+                $classStudentsTable->aliasField('institution_class_id')
+            ])
+            ->innerJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
+                [
+                    $this->StudentsReportCards->aliasField('student_id = ') . $classStudentsTable->aliasField('student_id'),
+                    $this->StudentsReportCards->aliasField('institution_id = ') . $classStudentsTable->aliasField('institution_id'),
+                    $this->StudentsReportCards->aliasField('academic_period_id = ') . $classStudentsTable->aliasField('academic_period_id'),
+                    $this->StudentsReportCards->aliasField('education_grade_id = ') . $classStudentsTable->aliasField('education_grade_id'),
+                    $this->StudentsReportCards->aliasField('institution_class_id = ') . $classStudentsTable->aliasField('institution_class_id'),
+                    $this->StudentsReportCards->aliasField('report_card_id = ') . $reportCardId,
+                    $this->StudentsReportCards->aliasField('status') => self::PUBLISHED
+                ]
+            )
+            ->where($where)
+            ->toArray();
+
+        foreach ($classStudents as $student) {
+            // Report card email processes
+            $idKeys = [
+                'report_card_id' => $reportCardId,
+                'institution_class_id' => $student->institution_class_id,
+                'student_id' => $student->student_id
+            ];
+
+            $data = [
+                'status' => $this->ReportCardEmailProcesses::SENDING,
+                'institution_id' => $student->institution_id,
+                'education_grade_id' => $student->education_grade_id,
+                'academic_period_id' => $student->academic_period_id,
+                'created' => date('Y-m-d H:i:s')
+            ];
+            $obj = array_merge($idKeys, $data);
+            $newEntity = $this->ReportCardEmailProcesses->newEntity($obj);
+            $this->ReportCardEmailProcesses->save($newEntity);
+            // end
+        }
+
+        Log::write('debug', 'End Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
+    }
+
+    private function triggerEmailAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
+    {
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->ReportCardEmailProcesses->registryAlias());
+
+        // to-do: add logic to purge shell which is 30 minutes old
+
+        if (count($runningProcess) <= self::MAX_PROCESSES) {
+            $name = 'EmailAllReportCards';
+            $pid = '';
+            $processModel = $this->ReportCardEmailProcesses->registryAlias();
+            $eventName = '';
+            $passArray = [
+                'institution_id' => $institutionId,
+                'institution_class_id' => $institutionClassId,
+                'report_card_id' => $reportCardId
+            ];
+            if (!is_null($studentId)) {
+                $name = 'EmailReportCards';
+                $passArray['student_id'] = $studentId;
+            }
+            $params = json_encode($passArray);
+            $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
+            $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, 0);
+
+            $args = '';
+            $args .= !is_null($systemProcessId) ? ' '.$systemProcessId : '';
+
+            $cmd = ROOT . DS . 'bin' . DS . 'cake EmailAllReportCards'.$args;
+            $logs = ROOT . DS . 'logs' . DS . 'EmailAllReportCards.log & echo $!';
+            $shellCmd = $cmd . ' >> ' . $logs;
+            
+            try {
+                $pid = exec($shellCmd);
+                Log::write('debug', $shellCmd);
+            } catch(\Exception $ex) {
+                Log::write('error', __METHOD__ . ' exception when email all report cards : '. $ex);
             }
         }
     }
