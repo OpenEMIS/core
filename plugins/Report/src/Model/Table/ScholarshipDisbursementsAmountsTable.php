@@ -10,7 +10,8 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
-class ScholarshipDisbursementsAmountsTable extends AppTable  {
+class ScholarshipDisbursementsAmountsTable extends AppTable
+{
 
     use OptionsTrait;
 
@@ -83,9 +84,6 @@ class ScholarshipDisbursementsAmountsTable extends AppTable  {
                         'Recipients.third_name',
                         'Recipients.last_name',
                         'Recipients.preferred_name',
-                        'gender_id',
-                        'nationality_id' => 'Recipients.nationality_id',
-                        'identity_type_id' => 'Recipients.identity_type_id',
                         'identity_number' => 'Recipients.identity_number',
                     ]
                 ],
@@ -149,7 +147,7 @@ class ScholarshipDisbursementsAmountsTable extends AppTable  {
     }
 
    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
-    {       
+   {
        $newFields = [];
 
         $newFields[] = [
@@ -213,7 +211,7 @@ class ScholarshipDisbursementsAmountsTable extends AppTable  {
             'field' => 'scholarship_recipient_payment_structure_id',
             'type' => 'integer',
             'label' => __('Payment Structure')
-        ];          
+        ];
 
         $newFields[] = [
             'key' => 'EstimatedAmount',
