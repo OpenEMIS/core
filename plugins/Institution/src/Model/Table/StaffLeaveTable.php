@@ -32,7 +32,7 @@ class StaffLeaveTable extends ControllerActionTable
         $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
-
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->addBehavior('ControllerAction.FileUpload', [
             // 'name' => 'file_name',
             // 'content' => 'file_content',
@@ -50,6 +50,7 @@ class StaffLeaveTable extends ControllerActionTable
 
         // POCOR-4047 to get staff profile data
         $this->addBehavior('Institution.StaffProfile');
+        $this->fullDayOptions = $this->getSelectOptions('general.yesno');
     }
 
     public function validationDefault(Validator $validator)
@@ -96,9 +97,24 @@ class StaffLeaveTable extends ControllerActionTable
         $this->field('file_content', [
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         ]);
+        $this->field('full_day', [
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+        ]);
+        $this->field('academic_period_id', [
+            'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true]
+        ]);
+        $this->field('start_time', [
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+        ]);
+        $this->field('end_time', [
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+        ]);
+        $this->field('time', [
+            'visible' => ['index' => true, 'view' => false, 'edit' => false, 'add' => false]
+        ]);
         $this->field('staff_id', ['type' => 'hidden']);
 
-        $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'number_of_days', 'comments', 'file_name', 'file_content']);
+        $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'time', 'start_time', 'full_day', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -118,9 +134,22 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $this->field('staff_leave_type_id');
         $this->field('assignee_id', ['entity' => $entity]); //send entity information
-
+        
         // after $this->field(), field ordering will mess up, so need to reset the field order
-        $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
+        $this->setFieldOrder(['staff_leave_type_id', 'academic_period_id','date_from', 'date_to', 'full_day', 'start_time', 'end_time','number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
+    }
+
+    public function onGetTime(Event $event, Entity $entity) {
+        if($entity->full_day == 0){
+            $start_time = $this->formatTime($entity->start_time);
+            $end_time = $this->formatTime($entity->end_time);
+            return $start_time .' - '. $end_time;
+        }
+    }
+
+    public function onGetFullDay(Event $event, Entity $entity)
+    {
+        return $this->fullDayOptions[$entity->full_day];
     }
 
     public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request)
@@ -149,10 +178,59 @@ class StaffLeaveTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
-            $attr['onChangeReload'] = 'changeStaffLeaveType';
+            $attr['onChangeReload'] = true;
         }
 
         return $attr;
+    }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+            $attr['type'] = 'select';
+            $attr['options'] = $periodOptions;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldFullDay(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            // $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = $this->fullDayOptions;
+            $attr['onChangeReload'] = true;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            if (isset($request->data[$this->alias()]['full_day'])) {
+                if ($request->data[$this->alias()]['full_day'] == 1) {
+                    $attr['type'] = 'hidden';
+                }
+            } else {
+                $attr['type'] = 'hidden';
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            if (isset($request->data[$this->alias()]['full_day'])) {
+                if ($request->data[$this->alias()]['full_day'] == 1) {
+                    $attr['type'] = 'hidden';
+                }
+            } else {
+                $attr['type'] = 'hidden';
+            }
+            return $attr;
+        }
     }
 
     private function setupTabElements()
