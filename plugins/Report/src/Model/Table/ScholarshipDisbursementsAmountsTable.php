@@ -15,8 +15,7 @@ class ScholarshipDisbursementsAmountsTable extends AppTable  {
     use OptionsTrait;
 
     public function initialize(array $config) 
-    {
-        
+    {        
         $this->table('scholarship_recipient_disbursements');
         parent::initialize($config);
 
@@ -31,48 +30,7 @@ class ScholarshipDisbursementsAmountsTable extends AppTable  {
             'pages' => false,
             'autoFields' => false
         ]);
-        $this->addBehavior('Excel', ['pages' => false]);
-        $this->addBehavior('Report.ReportList');
-    }
-
-    public function onExcelGetGender(Event $event, Entity $entity)
-    {
-        $gender = '';
-        if (!is_null($entity->recipient->gender->name)) {
-            $gender = $entity->recipient->gender->name;
-        }
-
-        return $gender;
-    }
-
-    public function onExcelGetNationality(Event $event, Entity $entity)
-    {
-        $nationality = '';
-        if (!is_null($entity->recipient->main_nationality->name)) {
-            $nationality = $entity->recipient->main_nationality->name;
-        }
-
-        return $nationality;
-    }
-
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
-    {
-        $identityType = '';
-        if (!is_null($entity->recipient->main_identity_type->name)) {
-            $identityType = $entity->recipient->main_identity_type->name;
-        }
-
-        return $identityType;
-    }
-
-    public function onExcelGetAcademicPeriods(Event $event, Entity $entity)
-    {   
-        $academicPeriods = '';
-        if (!is_null($entity->academic_periods)) {
-            $academicPeriods = $entity->academic_periods;
-        }
-
-        return $academicPeriods;
+        $this->addBehavior('Report.ReportList');   
     }
 
     public function onExcelGetEstimatedAmount(Event $event, Entity $entity)
@@ -104,12 +62,15 @@ class ScholarshipDisbursementsAmountsTable extends AppTable  {
         $academicPeriodId = $requestData->academic_period_id;
         $financialAssistanceType = $requestData->scholarship_financial_assistance_type_id;
 
-        $conditions = [
+        $conditions = [];
+        $conditions[] = [
             $this->Scholarships->aliasField('academic_period_id') => $academicPeriodId
         ];
 
         if ($financialAssistanceType != -1) {
-            $conditions[$this->Scholarships->aliasField('scholarship_financial_assistance_type_id')] = $financialAssistanceType;
+            $conditions[] = [
+                $this->Scholarships->aliasField('scholarship_financial_assistance_type_id') => $financialAssistanceType
+            ];
         }
 
        $query
@@ -130,20 +91,17 @@ class ScholarshipDisbursementsAmountsTable extends AppTable  {
                 ],
                 'Recipients.Genders' => [
                     'fields' => [
-                        'code',
-                        'name'
+                        'gender' => 'Genders.name'
                     ]
                 ],
                 'Recipients.MainNationalities' => [
                     'fields' => [
-                        'id',
-                        'name'
+                        'nationality_name' => 'MainNationalities.name',
                     ]
                 ],
                 'Recipients.MainIdentityTypes' => [
                     'fields' => [
-                        'id',
-                        'name'
+                        'identity_type_name' => 'MainIdentityTypes.name',
                     ]
                 ],
                 'Scholarships' => [
@@ -153,25 +111,21 @@ class ScholarshipDisbursementsAmountsTable extends AppTable  {
                 ],
                 'DisbursementCategories' => [
                     'fields' => [
-                        'id',
                         'name'
                     ]
                 ],
                 'Semesters' => [
                     'fields' => [
-                        'id',
                         'name'
                     ]
                 ],
                 'RecipientPaymentStructures' => [
                     'fields' => [
-                        'id',
                         'name'
                     ]
-                ],                
+                ],
                 'RecipientPaymentStructures.AcademicPeriods' => [
                     'fields' => [
-                        'id',
                         'academic_periods'  => 'AcademicPeriods.name'
                     ]
                 ],
@@ -221,14 +175,14 @@ class ScholarshipDisbursementsAmountsTable extends AppTable  {
         
         $newFields[] = [
             'key' => 'Recipients.nationality_id',
-            'field' => 'nationality',
+            'field' => 'nationality_name',
             'type' => 'string',
             'label' => __('Nationality')
         ];
 
         $newFields[] = [
             'key' => 'Recipients.identity_type_id',
-            'field' => 'identityType',
+            'field' => 'identity_type_name',
             'type' => 'string',
             'label' => __('Identity Type')
         ];
@@ -249,7 +203,7 @@ class ScholarshipDisbursementsAmountsTable extends AppTable  {
 
         $newFields[] = [
             'key' => 'AcademicPeriods.name',
-            'field' => 'academicPeriods',
+            'field' => 'academic_periods',
             'type' => 'string',
             'label' => __('Academic Periods')
         ];
