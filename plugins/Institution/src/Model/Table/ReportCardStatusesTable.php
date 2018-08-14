@@ -389,9 +389,10 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'status', 'started_on', 'completed_on', 'openemis_no', 'student_id',  'report_card', 'institution_class_id']);
     }
 
+
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $params = $this->getQueryString();
+        $params = $this->request->query;
 
         $query
             ->select([

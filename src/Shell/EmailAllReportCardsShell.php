@@ -82,6 +82,16 @@ class EmailAllReportCardsShell extends Shell
                                     'email'
                                 ]
                             ],
+                            'Students.MainIdentityTypes' => [
+                                'fields' => [
+                                    'name'
+                                ]
+                            ],
+                            'Students.MainNationalities' => [
+                                'fields' => [
+                                    'name'
+                                ]
+                            ],
                             'Institutions' => [
                                 'fields' => [
                                     'name',
@@ -266,7 +276,7 @@ class EmailAllReportCardsShell extends Shell
                 $replace = sprintf($format, $placeholder);
 
                 if (!empty($availablePlaceholders)) {
-                    $value = Hash::get($vars, $placeholder);
+                    $value = Hash::get($vars, $placeholder);                    
                     $message = str_replace($replace, $value, $message);
                 }
             }
