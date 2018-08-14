@@ -31,38 +31,7 @@ class ScholarshipEnrollmentsTable extends AppTable  {
             'pages' => false,
             'autoFields' => false
         ]);
-        $this->addBehavior('Excel', ['pages' => false]);
         $this->addBehavior('Report.ReportList');      
-    }
-
-    public function onExcelGetGender(Event $event, Entity $entity)
-    {
-        $gender = '';
-        if (!is_null($entity->applicant->gender->name)) {
-            $gender = $entity->applicant->gender->name;
-        }
-
-        return $gender;
-    }
-
-    public function onExcelGetNationality(Event $event, Entity $entity)
-    {
-        $nationality = '';
-        if (!is_null($entity->applicant->main_nationality->name)) {
-            $nationality = $entity->applicant->main_nationality->name;
-        }
-
-        return $nationality;
-    }
-
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
-    {
-        $identityType = '';
-        if (!is_null($entity->applicant->main_identity_type->name)) {
-            $identityType = $entity->applicant->main_identity_type->name;
-        }
-
-        return $identityType;
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
@@ -71,12 +40,15 @@ class ScholarshipEnrollmentsTable extends AppTable  {
         $academicPeriodId = $requestData->academic_period_id;
         $financialAssistanceType = $requestData->scholarship_financial_assistance_type_id;
 
-        $conditions = [
+        $conditions = [];
+        $conditions[] = [
             $this->Scholarships->aliasField('academic_period_id') => $academicPeriodId
         ];
 
         if ($financialAssistanceType != -1) {
-            $conditions[$this->Scholarships->aliasField('scholarship_financial_assistance_type_id')] = $financialAssistanceType;
+            $conditions[] = [
+                $this->Scholarships->aliasField('scholarship_financial_assistance_type_id') => $financialAssistanceType
+            ];
         }
 
        $query
@@ -96,21 +68,18 @@ class ScholarshipEnrollmentsTable extends AppTable  {
                     ]
                 ],
                 'Applicants.Genders' => [
-                    'fields' => [
-                        'code',
-                        'name'
+                      'fields' => [
+                        'gender' => 'Genders.name'
                     ]
                 ],
                 'Applicants.MainNationalities' => [
-                    'fields' => [
-                        'id',
-                        'name'
+                      'fields' => [
+                        'nationality_name' => 'MainNationalities.name',
                     ]
                 ],
                 'Applicants.MainIdentityTypes' => [
                     'fields' => [
-                        'id',
-                        'name'
+                        'identity_type_name' => 'MainIdentityTypes.name',
                     ]
                 ],
                 'Scholarships' => [
@@ -177,14 +146,14 @@ class ScholarshipEnrollmentsTable extends AppTable  {
         
         $newFields[] = [
             'key' => 'Applicants.nationality_id',
-            'field' => 'nationality',
+            'field' => 'nationality_name',
             'type' => 'string',
             'label' => __('Nationality')
         ];
 
         $newFields[] = [
             'key' => 'Applicants.identity_type_id',
-            'field' => 'identityType',
+            'field' => 'identity_type_name',
             'type' => 'string',
             'label' => __('Identity Type')
         ];
