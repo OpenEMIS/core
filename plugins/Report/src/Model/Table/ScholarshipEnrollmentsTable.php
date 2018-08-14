@@ -118,7 +118,6 @@ class ScholarshipEnrollmentsTable extends AppTable
                 $this->aliasField('education_field_of_study_id'),
                 $this->aliasField('qualification_level_id'),
             ]);
-
     }
 
    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 

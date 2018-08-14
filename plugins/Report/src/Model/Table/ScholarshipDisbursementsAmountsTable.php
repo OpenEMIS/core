@@ -143,7 +143,6 @@ class ScholarshipDisbursementsAmountsTable extends AppTable
                 $this->aliasField('disbursement_date'),
             ])
             ->where($conditions);
-
     }
 
    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
