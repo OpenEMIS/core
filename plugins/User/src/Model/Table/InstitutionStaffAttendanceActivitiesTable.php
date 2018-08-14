@@ -43,7 +43,25 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
         $this->field('model', ['visible' => false]);
 
         $this->setFieldOrder(['field', 'old_value', 'new_value', 'created_user_id', 'created']);
-		// $this->setupTabElements();
+        $toolbarButtons = $extra['toolbarButtons'];
+        $extra['toolbarButtons']['back'] = [
+            'url' => [
+                'plugin' => 'Staff',
+                'controller' => 'Staff',
+                'action' => 'InstitutionStaffAttendances',
+                '0' => 'index',
+            ],
+            'type' => 'button',
+            'label' => '<i class="fa kd-back"></i>',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Back')
+            ]
+        ];
+        // $this->setupTabElements();
 	}
 
 	//might need to remove this cause wireframe never set
