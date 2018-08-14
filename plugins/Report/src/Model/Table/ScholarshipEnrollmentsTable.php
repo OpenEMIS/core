@@ -10,7 +10,8 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
-class ScholarshipEnrollmentsTable extends AppTable  {
+class ScholarshipEnrollmentsTable extends AppTable
+{
 
     use OptionsTrait;
 
@@ -45,6 +46,10 @@ class ScholarshipEnrollmentsTable extends AppTable  {
             $this->Scholarships->aliasField('academic_period_id') => $academicPeriodId
         ];
 
+        $conditions[] = [
+            $this->aliasField('is_selected') => 1
+        ];        
+
         if ($financialAssistanceType != -1) {
             $conditions[] = [
                 $this->Scholarships->aliasField('scholarship_financial_assistance_type_id') => $financialAssistanceType
@@ -61,9 +66,6 @@ class ScholarshipEnrollmentsTable extends AppTable  {
                         'Applicants.third_name',
                         'Applicants.last_name',
                         'Applicants.preferred_name',
-                        'gender_id',
-                        'nationality_id' => 'Applicants.nationality_id',
-                        'identity_type_id' => 'Applicants.identity_type_id',
                         'identity_number' => 'Applicants.identity_number',
                     ]
                 ],
@@ -104,7 +106,6 @@ class ScholarshipEnrollmentsTable extends AppTable  {
                 ],
             ])
             ->where([
-                $this->aliasField('is_selected') => 1,
                 $conditions
             ])
             ->select([
@@ -117,11 +118,11 @@ class ScholarshipEnrollmentsTable extends AppTable  {
                 $this->aliasField('education_field_of_study_id'),
                 $this->aliasField('qualification_level_id'),
             ]);
-            
+
     }
 
    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
-    {       
+   {
        $newFields = [];
         $newFields[] = [
             'key' => 'Applicants.openemis_no',
@@ -177,7 +178,7 @@ class ScholarshipEnrollmentsTable extends AppTable  {
             'field' => 'location_type',
             'type' => 'string',
             'label' => __('Location')
-        ];        
+        ];
 
         $newFields[] = [
             'key' => 'institution_name',
@@ -212,7 +213,7 @@ class ScholarshipEnrollmentsTable extends AppTable  {
             'field' => 'qualification_level_id',
             'type' => 'string',
             'label' => __('Qualification Level')
-        ];        
+        ];
 
         $fields->exchangeArray($newFields);
     }
