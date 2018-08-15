@@ -769,7 +769,8 @@ trait MessagesTrait
                 'value' => 'Days within %d to %d'
             ],
             'StaffLeave' => [
-                'value' => 'Days within %d to %d'
+                'value' => 'Days within %d to %d',
+                'leavePeriodOverlap' => 'Leave period applied overlaps existing records.'
             ],
             'StaffType' => [
                 'value' => 'Days within %d to %d'

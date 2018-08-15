@@ -2,7 +2,8 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-
+use DatePeriod;
+use DateInterval;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -75,9 +76,65 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $dateFrom = date_create($entity->date_from);
         $dateTo = date_create($entity->date_to);
-        $diff = date_diff($dateFrom, $dateTo, true);
-        $numberOfDays = $diff->format("%a");
-        $entity->number_of_days = ++$numberOfDays;
+        $dateFromMonth = date('m', strtotime($entity->date_from));
+        $dateToMonth = date('m', strtotime($entity->dateTo));
+
+        $staffId = $entity->staff_id;
+        $institutionId = $entity->institution_id;
+        $academicPeriodId = $entity->academic_period_id;
+
+        $exisitingLeaveRecords = $this
+            ->find()
+            ->select([
+                $this->aliasField('date_from'),
+                $this->aliasField('date_to')
+            ])
+            ->where([
+                $this->aliasField('staff_id') => $staffId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+            ])
+            ->toArray();
+
+        $workingDaysOfWeek = $this->AcademicPeriods->getWorkingDaysOfWeek();
+
+        // get date period between 2 date
+        $startDate = $dateFrom;
+        $endDate = $dateTo;
+        $endDate = $endDate->modify('+1 day');
+        $interval = new DateInterval('P1D');
+        $datePeriod = new DatePeriod($startDate, $interval, $endDate);
+
+        //Leave period applied must not overlap any exisiting leave records
+        $count = 0;
+        $overlap = false;
+        foreach ($datePeriod as $key => $date) {
+            $dayText = $date->format('l');
+            if (in_array($dayText, $workingDaysOfWeek)) {
+                $count++;
+                foreach ($exisitingLeaveRecords as $key => $value) {
+                    $dateFromStr = $value->date_from->format("Y-m-d");
+                    $dateToStr = $value->date_to->format("Y-m-d");
+                    $comparisonDateStr = $date->format("Y-m-d");
+                    $overlap = $this->checkDateInRange($dateFromStr, $dateToStr, $comparisonDateStr);
+                    if ($overlap) {
+                        break;
+                    }
+                }
+            }
+            if ($overlap) {
+                break;
+            }
+        }
+
+        if ($overlap) {
+            // Error message to tell that leave period applied has overlapped exisiting leave records.
+            $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
+            return false;
+        } else {
+            //The number of leave days calculation only includes working day
+            $entity->number_of_days = $count;
+        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -390,5 +447,10 @@ class StaffLeaveTable extends ControllerActionTable
             ;
 
         return $licenseData->toArray();
+    }
+
+    private function checkDateInRange($start_date, $end_date, $comparison_date)
+    {
+        return (($comparison_date >= $start_date) && ($comparison_date <= $end_date));
     }
 }
