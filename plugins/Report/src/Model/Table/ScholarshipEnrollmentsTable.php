@@ -4,7 +4,6 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
@@ -28,11 +27,11 @@ class ScholarshipEnrollmentsTable extends AppTable
         $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
 
-        $this->addBehavior('Excel', [        
+        $this->addBehavior('Excel', [
             'pages' => false,
             'autoFields' => false
         ]);
-        $this->addBehavior('Report.ReportList');      
+        $this->addBehavior('Report.ReportList');
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
@@ -112,12 +111,14 @@ class ScholarshipEnrollmentsTable extends AppTable
                 $this->aliasField('applicant_id'),
                 $this->aliasField('scholarship_id'),
                 $this->aliasField('institution_name'),
-                $this->aliasField('location_type'),                
+                $this->aliasField('location_type'),
                 $this->aliasField('course_name'),
+                $this->aliasField('start_date'),
+                $this->aliasField('end_date'),
                 $this->aliasField('country_id'),
                 $this->aliasField('education_field_of_study_id'),
                 $this->aliasField('qualification_level_id'),
-            ]);
+            ]);          
     }
 
    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
@@ -176,21 +177,7 @@ class ScholarshipEnrollmentsTable extends AppTable
             'key' => 'location_type',
             'field' => 'location_type',
             'type' => 'string',
-            'label' => __('Location')
-        ];
-
-        $newFields[] = [
-            'key' => 'institution_name',
-            'field' => 'institution_name',
-            'type' => 'string',
-            'label' => __('Institution')
-        ];
-        
-        $newFields[] = [
-            'key' => 'course_name',
-            'field' => 'course_name',
-            'type' => 'string',
-            'label' => __('Course')
+            'label' => __('Location Type')
         ];
 
         $newFields[] = [
@@ -201,6 +188,13 @@ class ScholarshipEnrollmentsTable extends AppTable
         ];
 
         $newFields[] = [
+            'key' => 'institution_name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution')
+        ];        
+
+        $newFields[] = [
             'key' => 'education_field_of_study_id',
             'field' => 'education_field_of_study_id',
             'type' => 'string',
@@ -208,10 +202,31 @@ class ScholarshipEnrollmentsTable extends AppTable
         ];
 
         $newFields[] = [
+            'key' => 'course_name',
+            'field' => 'course_name',
+            'type' => 'string',
+            'label' => __('Course')
+        ];        
+
+        $newFields[] = [
             'key' => 'qualification_level_id',
             'field' => 'qualification_level_id',
             'type' => 'string',
             'label' => __('Qualification Level')
+        ];
+
+        $newFields[] = [
+            'key' => 'StartDate',
+            'field' => 'start_date',
+            'type' => 'date',
+            'label' => __('Start Date')
+        ];
+
+        $newFields[] = [
+            'key' => 'EndDate',
+            'field' => 'end_date',
+            'type' => 'date',
+            'label' => __('End Date')
         ];
 
         $fields->exchangeArray($newFields);
