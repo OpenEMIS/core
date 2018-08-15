@@ -31,7 +31,7 @@ class ScholarshipDisbursementsAmountsTable extends AppTable
             'pages' => false,
             'autoFields' => false
         ]);
-        $this->addBehavior('Report.ReportList');   
+        $this->addBehavior('Report.ReportList');
     }
 
     public function onExcelGetEstimatedAmount(Event $event, Entity $entity)
@@ -199,24 +199,10 @@ class ScholarshipDisbursementsAmountsTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'AcademicPeriods.name',
-            'field' => 'academic_periods',
-            'type' => 'string',
-            'label' => __('Academic Periods')
-        ];
-
-        $newFields[] = [
             'key' => 'scholarship_recipient_payment_structure',
             'field' => 'scholarship_recipient_payment_structure_id',
             'type' => 'integer',
             'label' => __('Payment Structure')
-        ];
-
-        $newFields[] = [
-            'key' => 'EstimatedAmount',
-            'field' => 'estimatedAmount',
-            'type' => 'string',
-            'label' => __('Estimated Amount')
         ];
 
         $newFields[] = [
@@ -237,15 +223,29 @@ class ScholarshipDisbursementsAmountsTable extends AppTable
             'key' => 'Amount',
             'field' => 'amount',
             'type' => 'integer',
-            'label' => __('Disbursement Amount')
+            'label' => __('Disbursed Amount')
+        ];
+
+        $newFields[] = [
+            'key' => 'EstimatedAmount',
+            'field' => 'estimatedAmount',
+            'type' => 'string',
+            'label' => __('Estimated Amount')
         ];
 
         $newFields[] = [
             'key' => 'Semesters',
             'field' => 'scholarship_semester_id',
             'type' => 'integer',
-            'label' => __('Semesters')
+            'label' => __('Semester')
         ];
+
+        $newFields[] = [
+            'key' => 'AcademicPeriods.name',
+            'field' => 'academic_periods',
+            'type' => 'string',
+            'label' => __('Academic Period')
+        ];        
 
         $newFields[] = [
             'key' => 'Comments',
@@ -253,6 +253,7 @@ class ScholarshipDisbursementsAmountsTable extends AppTable
             'type' => 'string',
             'label' => __('Comments')
         ];
+
         $fields->exchangeArray($newFields);
     }
 }
