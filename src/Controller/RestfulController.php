@@ -113,6 +113,6 @@ class RestfulController extends BaseController
         if (is_null($tempId)) {
             $tempId = $id;
         }
-        return parent::download($id, $fileNameField, $fileContentField);
+        return parent::download($tempId, $fileNameField, $fileContentField);
     }
 }
