@@ -228,6 +228,12 @@ class InstitutionsTable extends ControllerActionTable
                     'rule' => 'checkLatitude'
                 ])
 
+            ->add('classification', [
+                'validClassification' => [
+                    'rule' => ['range', 1, 2],
+                ]
+            ])
+            
             // ->add('address', 'ruleMaximum255', [
             // 		'rule' => ['maxLength', 255],
             // 		'message' => 'Maximum allowable character is 255',
