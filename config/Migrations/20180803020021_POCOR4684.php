@@ -259,7 +259,7 @@ class POCOR4684 extends AbstractMigration
         $this->insert('security_functions', [
             'id' => 7062,
             'name' => 'Email/Email All',
-            'controller' => 'Email',
+            'controller' => 'Institutions',
             'module' => 'Institutions',
             'category' => 'Report Cards',
             'parent_id' => 1000,
