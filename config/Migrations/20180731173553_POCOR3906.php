@@ -240,9 +240,10 @@ class POCOR3906 extends AbstractMigration
                 'limit' => 11,
                 'null' => false,
             ])
-            ->addColumn('number_of_days', 'integer', [
+            ->addColumn('number_of_days', 'decimal', [
                 'default' => null,
-                'limit' => 3,
+                'precision' => 3,
+                'scale' => 1,
                 'null' => false,
             ])
             ->addColumn('file_name', 'string', [

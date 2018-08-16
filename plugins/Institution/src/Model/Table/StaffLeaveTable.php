@@ -76,18 +76,37 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $dateFrom = date_create($entity->date_from);
         $dateTo = date_create($entity->date_to);
-        $dateFromMonth = date('m', strtotime($entity->date_from));
-        $dateToMonth = date('m', strtotime($entity->dateTo));
-
         $staffId = $entity->staff_id;
         $institutionId = $entity->institution_id;
         $academicPeriodId = $entity->academic_period_id;
+        $isFullDayLeave = $entity->full_day;
+        $entityId = $entity->id;
+        /* 
+            Non full day leave is always assume to be 0.5 since staff can only apply 2 non full day leave
+            Set start_time and end_time to null, in the case when user first choose Full Day = No and then Full Day = Yes. If start_time and end_time is not set to null, the start_time and end_time will be saved which shouldn't be the case.
+
+        */
+        if ($isFullDayLeave == 1) {
+            $day = 1;
+            $entity->start_time = null;
+            $entity->end_time = null;
+        } else {
+            $day = 0.5;
+        }
+
+        $entityStartTime = $entity->start_time;
+        $entityEndTime = $entity->end_time;
+
 
         $exisitingLeaveRecords = $this
             ->find()
             ->select([
+                 $this->aliasField('id'),
                 $this->aliasField('date_from'),
-                $this->aliasField('date_to')
+                $this->aliasField('date_to'),
+                $this->aliasField('full_day'),
+                $this->aliasField('start_time'),
+                $this->aliasField('end_time'),
             ])
             ->where([
                 $this->aliasField('staff_id') => $staffId,
@@ -98,27 +117,55 @@ class StaffLeaveTable extends ControllerActionTable
 
         $workingDaysOfWeek = $this->AcademicPeriods->getWorkingDaysOfWeek();
 
-        // get date period between 2 date
         $startDate = $dateFrom;
         $endDate = $dateTo;
         $endDate = $endDate->modify('+1 day');
         $interval = new DateInterval('P1D');
         $datePeriod = new DatePeriod($startDate, $interval, $endDate);
 
-        //Leave period applied must not overlap any exisiting leave records
         $count = 0;
         $overlap = false;
         foreach ($datePeriod as $key => $date) {
             $dayText = $date->format('l');
             if (in_array($dayText, $workingDaysOfWeek)) {
-                $count++;
+                $count = $count + $day;
                 foreach ($exisitingLeaveRecords as $key => $value) {
+                    $comparisonId = $value->id;
+                    $isUpdate = $comparisonId == $entityId;
                     $dateFromStr = $value->date_from->format("Y-m-d");
                     $dateToStr = $value->date_to->format("Y-m-d");
                     $comparisonDateStr = $date->format("Y-m-d");
-                    $overlap = $this->checkDateInRange($dateFromStr, $dateToStr, $comparisonDateStr);
-                    if ($overlap) {
-                        break;
+                    $comparisonStartTime = $this->formatTime($value->start_time);
+                    $comparisonEndTime = $this->formatTime($value->end_time);
+                    $comparisonFullDay = $value->full_day;
+                    $isDateInRange = $this->checkDateInRange($dateFromStr, $dateToStr, $comparisonDateStr);
+
+                    if ($isDateInRange && !$isUpdate) {
+                        //If leave date applied overlaps existing records and both are non full day leave, check for overlapping in time.
+                        if($comparisonFullDay == 0 && $isFullDayLeave == 0){
+                            $count = $this
+                            ->find()
+                            ->where([
+                                $this->aliasField('staff_id') => $staffId,
+                                $this->aliasField('institution_id') => $institutionId,
+                                $this->aliasField('academic_period_id') => $academicPeriodId,
+                                $this->aliasField('date_from >=') => $comparisonDateStr,
+                                $this->aliasField('date_to <=') => $comparisonDateStr,
+                                $this->aliasField('id !=') => $entityId,
+                            ])
+                            ->count();
+                            if ($count >= 2) {
+                                $overlap = true;
+                                break;
+                            } else if (($comparisonStartTime <= $entityEndTime) && ($comparisonEndTime >= $entityStartTime)) {
+                               // Overlapping in time found
+                               $overlap = true;
+                               break;
+                            }
+                        } else {
+                            $overlap = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -126,7 +173,6 @@ class StaffLeaveTable extends ControllerActionTable
                 break;
             }
         }
-
         if ($overlap) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
@@ -160,18 +206,16 @@ class StaffLeaveTable extends ControllerActionTable
         $this->field('academic_period_id', [
             'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true]
         ]);
-        $this->field('start_time', [
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-        ]);
-        $this->field('end_time', [
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-        ]);
-        $this->field('time', [
-            'visible' => ['index' => true, 'view' => false, 'edit' => false, 'add' => false]
-        ]);
         $this->field('staff_id', ['type' => 'hidden']);
 
         $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'time', 'start_time', 'full_day', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('start_time', ['visible' => false]);
+        $this->field('end_time', ['visible' => false]);
+        $this->field('time', ['after' => 'date_to']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -191,6 +235,8 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $this->field('staff_leave_type_id');
         $this->field('assignee_id', ['entity' => $entity]); //send entity information
+        $this->field('start_time', ['entity' => $entity]);
+        $this->field('end_time', ['entity' => $entity]);
         
         // after $this->field(), field ordering will mess up, so need to reset the field order
         $this->setFieldOrder(['staff_leave_type_id', 'academic_period_id','date_from', 'date_to', 'full_day', 'start_time', 'end_time','number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
@@ -264,30 +310,40 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
             if (isset($request->data[$this->alias()]['full_day'])) {
-                if ($request->data[$this->alias()]['full_day'] == 1) {
+                if ($request->data[$this->alias()]['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
                 $attr['type'] = 'hidden';
             }
-            return $attr;
+        } else if ($action == 'edit') {
+            $fullDay = $attr['entity']->full_day;
+            if ($fullDay) {
+                $attr['type'] = 'hidden';
+            }
         }
+        return $attr;
     }
 
     public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
             if (isset($request->data[$this->alias()]['full_day'])) {
-                if ($request->data[$this->alias()]['full_day'] == 1) {
+                if ($request->data[$this->alias()]['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
                 $attr['type'] = 'hidden';
             }
-            return $attr;
+        } else if ($action == 'edit') {
+            $fullDay = $attr['entity']->full_day;
+            if ($fullDay) {
+                $attr['type'] = 'hidden';
+            }
         }
+        return $attr;
     }
 
     private function setupTabElements()
