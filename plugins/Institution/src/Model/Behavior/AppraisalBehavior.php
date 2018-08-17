@@ -20,10 +20,12 @@ class AppraisalBehavior extends Behavior
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
-        $events['ControllerAction.Model.viewEdit.beforeQuery'] = ['callable' => 'viewEditBeforeQuery'];
+        $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
+        $events['ControllerAction.Model.viewEdit.beforeQuery'] = 'viewEditBeforeQuery';
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
+        $events['ControllerAction.Model.addEdit.afterAction'] = 'addEditAfterAction';
         $events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQuery';
+        $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 
         return $events;
     }
@@ -44,6 +46,33 @@ class AppraisalBehavior extends Behavior
     {
         $model = $this->_table;
         $query->where([$model->aliasField('staff_id') => $model->staff->id]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        // determine if download button is shown
+        $showFunc = function () use ($entity) {
+            $filename = $entity->file_content;
+            return !empty($filename);
+        };
+        $model->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            $showFunc
+        );
+        // End
+        $model->field('staff_id', ['visible' => false]);
+        $model->field('academic_period_id', ['fieldName' => 'appraisal_period.academic_period.name']);
+        $model->field('appraisal_period_from');
+        $model->field('appraisal_period_to');
+        $model->field('appraisal_type_id', ['attr' => ['label' => __('Type')]]);
+        $model->field('appraisal_period_id');
+        $model->field('appraisal_form_id');
+        $model->field('file_name', ['visible' => false]);
+        $model->field('file_content', ['visible' => false]);
+        $model->field('comment');
+        $model->printAppraisalCustomField($entity->appraisal_form_id, $entity);
+        $model->setupFieldOrder();
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -188,95 +217,6 @@ class AppraisalBehavior extends Behavior
         }
     }
 
-    public function findWorkbench(Query $query, array $options)
-    {
-        $model = $this->_table;
-        $controller = $options['_controller'];
-        $session = $controller->request->session();
-
-        $userId = $session->read('Auth.User.id');
-        $Statuses = $model->Statuses;
-        $doneStatus = WorkflowSteps::DONE;
-
-        $query
-            ->select([
-                $model->aliasField('id'),
-                $model->aliasField('status_id'),
-                $model->aliasField('staff_id'),
-                $model->aliasField('institution_id'),
-                $model->aliasField('modified'),
-                $model->aliasField('created'),
-                $model->Statuses->aliasField('name'),
-                $model->Users->aliasField('openemis_no'),
-                $model->Users->aliasField('first_name'),
-                $model->Users->aliasField('middle_name'),
-                $model->Users->aliasField('third_name'),
-                $model->Users->aliasField('last_name'),
-                $model->Users->aliasField('preferred_name'),
-                $model->AppraisalTypes->aliasField('name'),
-                $model->AppraisalForms->aliasField('name'),
-                $model->AppraisalPeriods->aliasField('name'),
-                $model->Institutions->aliasField('code'),
-                $model->Institutions->aliasField('name'),
-                $model->CreatedUser->aliasField('openemis_no'),
-                $model->CreatedUser->aliasField('first_name'),
-                $model->CreatedUser->aliasField('middle_name'),
-                $model->CreatedUser->aliasField('third_name'),
-                $model->CreatedUser->aliasField('last_name'),
-                $model->CreatedUser->aliasField('preferred_name')
-            ])
-            ->contain([
-                $model->Users->alias(),
-                $model->AppraisalTypes->alias(),
-                $model->AppraisalForms->alias(),
-                $model->AppraisalPeriods->alias(),
-                $model->Institutions->alias(),
-                $model->CreatedUser->alias()
-            ])
-            ->matching($model->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
-                return $q->where([
-                    $Statuses->aliasField('category <> ') => $doneStatus
-                ]);
-            })
-            ->where([
-                $model->aliasField('assignee_id') => $userId
-            ])
-            ->order([
-                $model->aliasField('created') => 'DESC'
-            ])
-            ->formatResults(function (ResultSetInterface $results) {
-                return $results->map(function ($row) {
-                    $url = [
-                        'plugin' => 'Institution',
-                        'controller' => 'Institutions',
-                        'action' => 'StaffAppraisals',
-                        'view',
-                        $model->paramsEncode(['id' => $row->id]),
-                        'user_id' => $row->staff_id,
-                        'institution_id' => $row->institution_id
-                    ];
-
-                    if (is_null($row->modified)) {
-                        $receivedDate = $model->formatDate($row->created);
-                    } else {
-                        $receivedDate = $model->formatDate($row->modified);
-                    }
-
-                    $row['url'] = $url;
-                    $row['status'] = __($row->_matchingData['Statuses']->name);
-                    // Name (Type) for OpenEMIS ID - Staff Name in Appraisal Period
-                    $row['request_title'] = sprintf(__('%s (%s) for %s in %s'), $row->appraisal_form->name, $row->appraisal_type->name, $row->user->name_with_id, $row->appraisal_period->name);
-                    $row['institution'] = $row->institution->code_name;
-                    $row['received_date'] = $receivedDate;
-                    $row['requester'] = $row->created_user->name_with_id;
-
-                    return $row;
-                });
-            });
-
-        return $query;
-    }
-
     public function printAppraisalCustomField($appraisalFormId, Entity $entity)
     {
         $model = $this->_table;
@@ -362,7 +302,7 @@ class AppraisalBehavior extends Behavior
                         'is_mandatory' => $formsCriteria->is_mandatory
                     ]);
                     
-                    $model->appraisalCustomFieldExtra($details, $formsCriteria, $criteriaCounter, $entity);
+                    $this->appraisalCustomFieldExtra($details, $formsCriteria, $criteriaCounter, $entity);
                 }
             }
         }
