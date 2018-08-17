@@ -39,7 +39,6 @@ class AppraisalBehavior extends Behavior
         $model->field('comment', ['visible' => false]);
         $model->field('appraisal_period_id', ['visible' => false]);
         $model->setFieldOrder(['appraisal_type_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised']);
-        $model->setupTabElements();
     }
 
    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
