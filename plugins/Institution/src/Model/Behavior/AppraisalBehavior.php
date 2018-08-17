@@ -4,7 +4,16 @@ namespace Institution\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
+use Cake\ORM\TableRegistry;
+use Cake\ORM\Query;
 use Cake\Event\Event;
+use Cake\Network\Request;
+use Cake\Utility\Inflector;
+use Cake\Utility\Hash;
+use Cake\Chronos\Date;
+use Cake\Chronos\Chronos;
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
+use App\Model\Table\ControllerActionTable;
 
 class AppraisalBehavior extends Behavior 
 {
@@ -12,6 +21,10 @@ class AppraisalBehavior extends Behavior
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
+        $events['ControllerAction.Model.viewEdit.beforeQuery'] = ['callable' => 'viewEditBeforeQuery'];
+        $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
+        $events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQuery';
+
         return $events;
     }
 
@@ -24,6 +37,332 @@ class AppraisalBehavior extends Behavior
         $model->field('comment', ['visible' => false]);
         $model->field('appraisal_period_id', ['visible' => false]);
         $model->setFieldOrder(['appraisal_type_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised']);
+        $model->setupTabElements();
+    }
+
+   public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        $query->where([$model->aliasField('staff_id') => $model->staff->id]);
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'AppraisalPeriods.AcademicPeriods', 'AppraisalForms',
+            'AppraisalTypes'
+        ]);
+    }
+
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        $model->field('staff_id', ['type' => 'hidden', 'value' => $model->staff->id]);
+        $model->field('academic_period_id', ['type' => 'select', 'attr' => ['required' => true]]);
+        $model->field('appraisal_period_from');
+        $model->field('appraisal_period_to');
+        $model->field('appraisal_type_id', ['attr' => ['label' => __('Type')], 'type' => 'select']);
+        $model->field('appraisal_period_id', ['type' => 'select', 'options' => $model->periodList, 'onChangeReload' => true]);
+        $model->field('appraisal_form_id', ['type' => 'readonly']);
+        $model->field('file_name', ['visible' => false]);
+        $model->field('file_content', ['attr' => ['label' => __('Attachment')]]);
+        $model->field('comment');
+
+        $entity = $model->newEntity();
+        $appraisalFormId = $model->request->data($model->aliasField('appraisal_form_id'));
+        $model->printAppraisalCustomField($appraisalFormId, $entity);
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        $model->setupFieldOrder();
+    }
+
+    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        $model->field('staff_id', ['type' => 'hidden', 'value' => $entity->staff_id]);
+        $model->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period->academic_period_id, 'attr' => ['value' => $entity->appraisal_period->academic_period->name]]);
+        $model->field('appraisal_period_from');
+        $model->field('appraisal_period_to');
+        $model->field('appraisal_type_id', ['type' => 'readonly', 'value' => $entity->appraisal_type_id, 'attr' => ['label' => __('Type'), 'value' => $entity->appraisal_type->name]]);
+        $model->field('appraisal_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period_id, 'attr' => ['value' => $entity->appraisal_period->name]]);
+        $model->field('appraisal_form_id', ['type' => 'readonly', 'value' => $entity->appraisal_form_id, 'attr' => ['value' => $entity->appraisal_form->name]]);
+        $model->field('file_name', ['visible' => false]);
+        $model->field('file_content', ['attr' => ['label' => __('Attachment')]]);
+        $model->field('comment');
+        $model->printAppraisalCustomField($entity->appraisal_form_id, $entity);
+    }
+
+    public function setupFieldOrder()
+    {
+        $model = $this->_table;
+        $model->setFieldOrder(['academic_period_id', 'appraisal_type_id', 'appraisal_period_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised', 'file_content', 'comment']);
+    }
+
+
+    public function getAppraisalPeriods($academicPeriodId, $appraisalTypeId)
+    {
+        $model = $this->_table;
+        return $model->AppraisalPeriods->find()
+            ->innerJoinWith('AppraisalTypes')
+            ->where(['AppraisalTypes.id' => $appraisalTypeId, 'AcademicPeriods.id' => $academicPeriodId])
+            ->contain(['AppraisalForms', 'AcademicPeriods'])
+            ->formatResults(function ($results) {
+                $list = [];
+                foreach ($results as $r) {
+                    $list[$r->id] = $r->period_form_name;
+                }
+                return $list;
+            })
+            ->toArray();
+    }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $attr['onChangeReload'] = true;
+            $attr['options'] = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getYearList();
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldAppraisalTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        $model = $this->_table;
+        if ($action == 'add') {
+            $attr['onChangeReload'] = true;
+            if ($request->data($model->aliasField('academic_period_id')) && $request->data($model->aliasField('appraisal_type_id'))) {
+                $appraisalTypeId = $request->data($model->aliasField('appraisal_type_id'));
+                $academicPeriodId = $request->data($model->aliasField('academic_period_id'));
+                $model->periodList = $model->AppraisalPeriods->find('list')
+                    ->innerJoinWith('AppraisalTypes')
+                    ->where([
+                        'AppraisalTypes.id' => $appraisalTypeId,
+                        $model->AppraisalPeriods->aliasField('academic_period_id') => $academicPeriodId,
+                        $model->AppraisalPeriods->aliasField('date_enabled').' <=' => new Date(),
+                        $model->AppraisalPeriods->aliasField('date_disabled').' >=' => new Date()
+                    ])
+                    ->toArray();
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldAppraisalFormId(Event $event, array $attr, $action, Request $request)
+    {
+        $model = $this->_table;
+        if ($action == 'add') {
+            if ($request->data($model->aliasField('appraisal_period_id'))) {
+                $appraisalPeriodId = $request->data($model->aliasField('appraisal_period_id'));
+                $appraisalPeriodEntity = $model->AppraisalPeriods->get($appraisalPeriodId, ['contain' => ['AppraisalForms']]);
+                $attr['value'] = $appraisalPeriodEntity->appraisal_form_id;
+                $attr['attr']['value'] = $appraisalPeriodEntity->appraisal_form->code_name;
+                $request->data[$model->alias()]['appraisal_form_id'] = $appraisalPeriodEntity->appraisal_form_id;
+            // This part ensures that the form belonging to the previously selected Appraisal Period will not populate at the bottom when user choose "Select" from the dropdown next. It should be empty.
+            }else{
+                   $request->data[$model->alias()]['appraisal_form_id'] = "";
+            }
+            return $attr;
+        }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        $errors = $entity->errors();
+
+        $fileErrors = [];
+        $session = $model->request->session();
+        $sessionErrors = $model->registryAlias().'.parseFileError';
+
+        if ($session->check($sessionErrors)) {
+            $fileErrors = $session->read($sessionErrors);
+        }
+
+        if (empty($errors) && empty($fileErrors)) {
+            // redirect only when no errors
+            $event->stopPropagation();
+            return $model->controller->redirect($model->url('view'));
+        }
+    }
+
+    public function findWorkbench(Query $query, array $options)
+    {
+        $model = $this->_table;
+        $controller = $options['_controller'];
+        $session = $controller->request->session();
+
+        $userId = $session->read('Auth.User.id');
+        $Statuses = $model->Statuses;
+        $doneStatus = WorkflowSteps::DONE;
+
+        $query
+            ->select([
+                $model->aliasField('id'),
+                $model->aliasField('status_id'),
+                $model->aliasField('staff_id'),
+                $model->aliasField('institution_id'),
+                $model->aliasField('modified'),
+                $model->aliasField('created'),
+                $model->Statuses->aliasField('name'),
+                $model->Users->aliasField('openemis_no'),
+                $model->Users->aliasField('first_name'),
+                $model->Users->aliasField('middle_name'),
+                $model->Users->aliasField('third_name'),
+                $model->Users->aliasField('last_name'),
+                $model->Users->aliasField('preferred_name'),
+                $model->AppraisalTypes->aliasField('name'),
+                $model->AppraisalForms->aliasField('name'),
+                $model->AppraisalPeriods->aliasField('name'),
+                $model->Institutions->aliasField('code'),
+                $model->Institutions->aliasField('name'),
+                $model->CreatedUser->aliasField('openemis_no'),
+                $model->CreatedUser->aliasField('first_name'),
+                $model->CreatedUser->aliasField('middle_name'),
+                $model->CreatedUser->aliasField('third_name'),
+                $model->CreatedUser->aliasField('last_name'),
+                $model->CreatedUser->aliasField('preferred_name')
+            ])
+            ->contain([
+                $model->Users->alias(),
+                $model->AppraisalTypes->alias(),
+                $model->AppraisalForms->alias(),
+                $model->AppraisalPeriods->alias(),
+                $model->Institutions->alias(),
+                $model->CreatedUser->alias()
+            ])
+            ->matching($model->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+                return $q->where([
+                    $Statuses->aliasField('category <> ') => $doneStatus
+                ]);
+            })
+            ->where([
+                $model->aliasField('assignee_id') => $userId
+            ])
+            ->order([
+                $model->aliasField('created') => 'DESC'
+            ])
+            ->formatResults(function (ResultSetInterface $results) {
+                return $results->map(function ($row) {
+                    $url = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffAppraisals',
+                        'view',
+                        $model->paramsEncode(['id' => $row->id]),
+                        'user_id' => $row->staff_id,
+                        'institution_id' => $row->institution_id
+                    ];
+
+                    if (is_null($row->modified)) {
+                        $receivedDate = $model->formatDate($row->created);
+                    } else {
+                        $receivedDate = $model->formatDate($row->modified);
+                    }
+
+                    $row['url'] = $url;
+                    $row['status'] = __($row->_matchingData['Statuses']->name);
+                    // Name (Type) for OpenEMIS ID - Staff Name in Appraisal Period
+                    $row['request_title'] = sprintf(__('%s (%s) for %s in %s'), $row->appraisal_form->name, $row->appraisal_type->name, $row->user->name_with_id, $row->appraisal_period->name);
+                    $row['institution'] = $row->institution->code_name;
+                    $row['received_date'] = $receivedDate;
+                    $row['requester'] = $row->created_user->name_with_id;
+
+                    return $row;
+                });
+            });
+
+        return $query;
+    }
+
+    public function printAppraisalCustomField($appraisalFormId, Entity $entity)
+    {
+        $model = $this->_table;
+        if ($appraisalFormId) {
+            $section = null;
+            $sectionCount = 0;
+            $criteriaCounter = new ArrayObject();
+            $staffAppraisalId = $entity->has('id') ? $entity->id : -1;
+
+            // retrieve all form criterias containing results
+            $AppraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
+            $query = $AppraisalFormsCriterias->find()
+                ->contain([
+                    'AppraisalCriterias' => [
+                        'FieldTypes',
+                        'AppraisalSliders',
+                        'AppraisalNumbers',
+                        'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
+                    ],
+                    'AppraisalTextAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalTextAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalSliderAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalSliderAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalDropdownAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalDropdownAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalNumberAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalNumberAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    }
+                ])
+                ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
+                ->order($AppraisalFormsCriterias->aliasField('order'));
+
+            $tabElements = [];
+
+            $action = $model->action;
+            $url = $model->url($action);
+           
+            //section tab
+            $formsCriterias = $query->toArray();
+            foreach ($formsCriterias as $key => $formCritieria) {
+                if ($section != $formCritieria->section) {
+                    $section = $formCritieria->section;
+                    $tabName = Inflector::slug($section);
+                    if (empty($tabElements)) {
+                            $selectedAction = $tabName;
+                    }
+                    $url['tab_section'] = $tabName;
+                    $tabElements[$tabName] = [
+                        'url' => $url,
+                        'text' => $section,
+                    ];
+                }
+            }
+            //end
+
+            if (!empty($tabElements)) {
+                $selectedAction = !is_null($model->request->query('tab_section')) ? $model->request->query('tab_section') : $selectedAction;
+                if ($action != 'add') {
+                    $model->controller->set('tabElements', $tabElements);
+                    $model->controller->set('selectedAction', $selectedAction);
+                }
+                $query
+                    ->where([
+                    $AppraisalFormsCriterias->aliasField('section') => $tabElements[$selectedAction]['text']
+                    ]);
+            }
+
+            if (($action != 'add' &&  !empty($tabElements)) || empty($tabElements)) {
+                $formsCriterias = $query->toArray();
+                foreach ($formsCriterias as $key => $formsCriteria) {
+                    $details = new ArrayObject([
+                        'appraisal_form_id' => $formsCriteria->appraisal_form_id,
+                        'appraisal_criteria_id' => $formsCriteria->appraisal_criteria_id,
+                        'section' => $formsCriteria->section,
+                        'field_type' => $formsCriteria->appraisal_criteria->field_type->code,
+                        'criteria_name' => $formsCriteria->appraisal_criteria->name,
+                        'is_mandatory' => $formsCriteria->is_mandatory
+                    ]);
+                    
+                    $model->appraisalCustomFieldExtra($details, $formsCriteria, $criteriaCounter, $entity);
+                }
+            }
+        }
     }
 
     public function appraisalCustomFieldExtra(ArrayObject $details, Entity $formCritieria, ArrayObject $criteriaCounter, Entity $entity)
