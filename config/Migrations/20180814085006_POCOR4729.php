@@ -8,7 +8,7 @@ class POCOR4729 extends AbstractMigration
     {
         $this->execute("UPDATE import_mapping SET `order` = `order` + 1 WHERE `model` = 'Institution.Institutions' AND `order` >= 4");
 
-        $singleRow = [
+        $data = [
             'model'          => 'Institution.Institutions',
             'column_name'    => 'classification',
             'order'          => 4,
@@ -18,7 +18,7 @@ class POCOR4729 extends AbstractMigration
         ];
 
         $table = $this->table('import_mapping');
-        $table->insert($singleRow);
+        $table->insert($data);
         $table->saveData();
     }
 
