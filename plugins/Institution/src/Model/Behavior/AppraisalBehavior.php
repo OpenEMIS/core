@@ -324,7 +324,7 @@ class AppraisalBehavior extends Behavior
                     $section = $formCritieria->section;
                     $tabName = Inflector::slug($section);
                     if (empty($tabElements)) {
-                            $selectedAction = $tabName;
+                        $selectedAction = $tabName;
                     }
                     $url['tab_section'] = $tabName;
                     $tabElements[$tabName] = [
@@ -336,7 +336,10 @@ class AppraisalBehavior extends Behavior
             //end
 
             if (!empty($tabElements)) {
-                $selectedAction = !is_null($model->request->query('tab_section')) ? $model->request->query('tab_section') : $selectedAction;
+                $queryTabSection = $model->request->query('tab_section');
+                if (!is_null($queryTabSection) && array_key_exists($queryTabSection, $tabElements)) {
+                    $selectedAction = $queryTabSection;
+                }
                 if ($action != 'add') {
                     $model->controller->set('tabElements', $tabElements);
                     $model->controller->set('selectedAction', $selectedAction);
