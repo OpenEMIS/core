@@ -62,28 +62,7 @@ class AppraisalsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // determine if download button is shown
-        $showFunc = function () use ($entity) {
-            $filename = $entity->file_content;
-            return !empty($filename);
-        };
-        $this->behaviors()->get('ControllerAction')->config(
-            'actions.download.show',
-            $showFunc
-        );
-        // End
-        $this->field('staff_id', ['visible' => false]);
-        $this->field('academic_period_id', ['fieldName' => 'appraisal_period.academic_period.name']);
         $this->field('institution_id');
-        $this->field('appraisal_period_from');
-        $this->field('appraisal_period_to');
-        $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')]]);
-        $this->field('appraisal_period_id');
-        $this->field('appraisal_form_id');
-        $this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['visible' => false]);
-        $this->field('comment');
-        $this->printAppraisalCustomField($entity->appraisal_form_id, $entity);
         $this->setFieldOrder(['academic_period_id', 'appraisal_type_id', 'appraisal_period_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised', 'file_content', 'comment']);
     }
 
