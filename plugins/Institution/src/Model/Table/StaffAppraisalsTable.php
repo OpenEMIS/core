@@ -77,7 +77,7 @@ class StaffAppraisalsTable extends ControllerActionTable
             'actions.download.show',
             true
         );
-    } 
+    }
 
     public function validationDefault(Validator $validator)
     {
@@ -125,7 +125,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
             }
         }
-    }       
+    }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
