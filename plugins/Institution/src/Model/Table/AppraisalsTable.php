@@ -47,7 +47,12 @@ class AppraisalsTable extends ControllerActionTable
         );
     }
 
-    public function setupTabElements()
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->setupTabElements();
+    }
+
+    private function setupTabElements()
     {
         $options['type'] = 'staff';
         $userId = $this->Auth->user('id');
