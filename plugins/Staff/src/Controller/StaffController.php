@@ -231,7 +231,6 @@ class StaffController extends AppController
         $historyUrl['controller'] = 'Staff';
         $historyUrl['action'] = 'InstitutionStaffAttendanceActivities';
 
-        // pr($url);die;
         $this->set('historyUrl', Router::url($historyUrl));
         $this->set('_edit', $_edit);
         $this->set('institution_id', $institutionId);

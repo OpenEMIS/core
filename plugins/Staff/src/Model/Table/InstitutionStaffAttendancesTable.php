@@ -29,22 +29,10 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
 
         return $validator
             ->add('time_in', 'ruleCompareTime', [
-                'rule' => ['compareTime', 'time_out', false]
-            ])
-            ->add('time_in', 'ruleCheckTimeRange', [
-                'rule' => ['checkTimeRange'],
-                // 'provider' => 'table',
-                // 'on' => function ($context) {
-                //     if (array_key_exists('params', $context['data'])) {
-                //         return !empty($context['data']['params']);
-                //     }
-                // }
+                'rule' => ['compareTime', 'time_out', false],
+                'on' => function ($context) {
+                    return !empty($context['data']['time_out']);
+                }
             ]);
-            // ->add('time_in', 'ruleInAcademicPeriod', [
-            //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-            // ])
-            // ->add('time_out', 'ruleCompareTimeReverse', [
-            //     'rule' => ['compareDateReverse', 'start_time', false]
-            // ]);
     }
 }
