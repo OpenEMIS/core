@@ -354,6 +354,15 @@ class ScholarshipsTable extends ControllerActionTable
         }
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Scholarship Name');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     public function onGetFieldOfStudies(Event $event, Entity $entity)
     {
         $isSelectAll = $this->checkIsSelectAll($entity);
@@ -635,6 +644,10 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function setupFields($entity = null)
     {
+        $this->field('name', [
+            'attr' => ['label' => __('Scholarship name')],
+            'after' => 'code',
+        ]);
         $this->field('scholarship_financial_assistance_type_id', [
             'type' => 'select',
             'attr' => ['label' => __('Financial Assistance Type')],
