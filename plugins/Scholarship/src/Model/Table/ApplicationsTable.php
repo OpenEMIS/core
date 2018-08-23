@@ -473,6 +473,15 @@ class ApplicationsTable extends ControllerActionTable
     }
 
     // index fields
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'scholarship_id') {
+            return __('Scholarship name');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
         return $entity->applicant->openemis_no;
