@@ -17,6 +17,8 @@ use App\Model\Table\ControllerActionTable;
 
 class AppraisalBehavior extends Behavior 
 {
+    public $periodList = [];
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -90,7 +92,7 @@ class AppraisalBehavior extends Behavior
         $model->field('appraisal_period_from');
         $model->field('appraisal_period_to');
         $model->field('appraisal_type_id', ['attr' => ['label' => __('Type')], 'type' => 'select']);
-        $model->field('appraisal_period_id', ['type' => 'select', 'options' => $model->periodList, 'onChangeReload' => true]);
+        $model->field('appraisal_period_id', ['type' => 'select', 'options' => $this->periodList, 'onChangeReload' => true]);
         $model->field('appraisal_form_id', ['type' => 'readonly']);
         $model->field('file_name', ['visible' => false]);
         $model->field('file_content', ['attr' => ['label' => __('Attachment')]]);
@@ -164,7 +166,7 @@ class AppraisalBehavior extends Behavior
             if ($request->data($model->aliasField('academic_period_id')) && $request->data($model->aliasField('appraisal_type_id'))) {
                 $appraisalTypeId = $request->data($model->aliasField('appraisal_type_id'));
                 $academicPeriodId = $request->data($model->aliasField('academic_period_id'));
-                $model->periodList = $model->AppraisalPeriods->find('list')
+                $this->periodList = $model->AppraisalPeriods->find('list')
                     ->innerJoinWith('AppraisalTypes')
                     ->where([
                         'AppraisalTypes.id' => $appraisalTypeId,
