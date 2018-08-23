@@ -754,7 +754,7 @@ class ApplicationsTable extends ControllerActionTable
             'fieldName' => 'scholarship.maximum_award_amount',
             'attr' => [
                 'require' => false,
-                'label' => $this->addCurrencySuffix('Maximum Award Amount')
+                'label' => $this->addCurrencySuffix('Annual Award Amount')
             ]
         ]);
         $this->field('bond', [
