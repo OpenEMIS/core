@@ -2058,12 +2058,12 @@ trait MessagesTrait
             ],
             'Applications' => [
                 'requested_amount' => [
-                    'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Maximum Award Amount',
+                    'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Annual Award Amount',
                 ]
             ],
             'ScholarshipRecipients' => [
                 'approved_amount' => [
-                    'comparison' => 'Approved Amount cannot be more than Maximum Award Amount',
+                    'comparison' => 'Approved Amount cannot be more than Total Award Amount',
                     'validateDecimal' => 'Value cannot be more than two decimal places',
                     'ruleCheckApprovedWithEstimated' => 'Approved Amount cannot be less than the Estimated Amounts',
                     'ruleCheckApprovedWithDisbursed' => 'Approved Amount cannot be less than the Disbursed Amounts',
