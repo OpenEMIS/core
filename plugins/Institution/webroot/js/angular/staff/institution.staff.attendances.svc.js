@@ -213,6 +213,24 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                 }
             }
         });
+        //might need to query staff leave at resultformat because staff can apply
+        //more than one leave at a time.
+        columnDefs.push({
+            headerName: "Comments",
+            field: "StaffLeave.comments",
+            menuTabs: [],
+            filter: "text",
+            // cellRenderer: function(params) {
+            //     console.log('params', params);
+            //     if (angular.isDefined(params.context.action)) {
+            //         // var action = params.context.action;
+            //         // var data = params.data;
+            //         // var rowIndex = params.rowIndex;
+            //         var StaffLeave = params.data.StaffLeave;
+            //         return getStaffLeaveElement(params);
+            //     }
+            // }
+        });
         // columnDefs.push({
         //     headerName: "Time out",
         //     field: "time_out",
