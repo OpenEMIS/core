@@ -19,8 +19,9 @@ class ScholarshipsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    CONST SELECT_FIELD_OF_STUDIES = 1;
-    CONST SELECT_ALL_FIELD_OF_STUDIES = -1;
+    const SELECT_FIELD_OF_STUDIES = 1;
+    const SELECT_ALL_FIELD_OF_STUDIES = -1;
+    const MAX_YEARS = 20;
 
     private $fieldOfStudySelection = [];
     private $interestRateOptions = [];
@@ -488,7 +489,7 @@ class ScholarshipsTable extends ControllerActionTable
                             'attr' => [
                                 'label' => __('Loan Term'),
                                 'select' => true,
-                                'options' => $this->getLoanTermOptions(20)
+                                'options' => $this->getLoanTermOptions(self::MAX_YEARS)
                             ],
                             'after' => 'loan.scholarship_payment_frequency_id'
                         ]);
@@ -503,7 +504,7 @@ class ScholarshipsTable extends ControllerActionTable
     public function onUpdateFieldBond(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $attr['options'] = $this->getBondOptions(20);
+            $attr['options'] = $this->getBondOptions(self::MAX_YEARS);
         }
         return $attr;
     }
@@ -511,7 +512,7 @@ class ScholarshipsTable extends ControllerActionTable
     public function onUpdateFieldDuration(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $attr['options'] = $this->getDurationOptions(20);
+            $attr['options'] = $this->getDurationOptions(self::MAX_YEARS);
         }
         return $attr;
     }
