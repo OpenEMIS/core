@@ -1903,6 +1903,7 @@ class StaffTable extends ControllerActionTable
 
         $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
 
@@ -1952,6 +1953,13 @@ class StaffTable extends ControllerActionTable
                 $InstitutionStaffAttendances->aliasField('time_in'),
                 $InstitutionStaffAttendances->aliasField('time_out'),
                 $InstitutionStaffAttendances->aliasField('date'),
+                $StaffLeaveTable->aliasField('status_id'),
+                $StaffLeaveTable->aliasField('staff_leave_type_id'),
+                $StaffLeaveTable->aliasField('date_from'),
+                $StaffLeaveTable->aliasField('date_to'),
+                $StaffLeaveTable->aliasField('start_time'),
+                $StaffLeaveTable->aliasField('end_time'),
+                $StaffLeaveTable->aliasField('full_day'),
             ])
             ->leftJoin(
                 [$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
@@ -1963,6 +1971,12 @@ class StaffTable extends ControllerActionTable
                 ]
             )
             ->matching('Users')
+            ->leftJoin([$StaffLeaveTable->alias() => $StaffLeaveTable->table()], [
+                $StaffLeaveTable->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+                $StaffLeaveTable->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                $StaffLeaveTable->aliasField("date_to >= '") . $dayDate. "'",
+                $StaffLeaveTable->aliasField("date_from <= '") . $dayDate. "'"
+            ])
             ->where([
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('staff_status_id') => 1
@@ -1992,13 +2006,13 @@ class StaffTable extends ControllerActionTable
                         // $cloneResult->InstitutionStaffAttendances['time_out'] = null;
                         $cloneResult->InstitutionStaffAttendances['date'] = $dayDate;
                     }
-                    // Log::write('debug', $cloneResult);
+                    Log::write('debug', $cloneResult);
                     $formatResultDates[] = $cloneResult;
                 }
                 return $formatResultDates;
             });
 
-        // Log::write('debug', $query);
+        Log::write('debug', $query);
         return $query;
     }
 }
