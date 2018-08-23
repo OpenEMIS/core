@@ -1967,13 +1967,15 @@ class StaffTable extends ControllerActionTable
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('staff_status_id') => 1
             ])
-            // ->group([
-            //     $InstitutionStaffAttendances->aliasField('staff_id'),
-            //     $InstitutionStaffAttendances->aliasField('institution_id'),
-            //     $InstitutionStaffAttendances->aliasField('academic_period_id'),
-            //     $InstitutionStaffAttendances->aliasField('date')
-            // ])
-            // ;
+            ->order([
+                $this->Users->aliasField('first_name')
+            ])
+            ->group([
+                $this->aliasField('staff_id'),
+                $this->aliasField('institution_id'),
+                $InstitutionStaffAttendances->aliasField('academic_period_id'),
+                $InstitutionStaffAttendances->aliasField('date')
+            ])
             ->formatResults(function (ResultSetInterface $results) use ($dayDate) {
                 $results = $results->toArray();
                 $formatResultDates = [];
