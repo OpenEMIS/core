@@ -974,4 +974,62 @@ class AcademicPeriodsTable extends AppTable
                 });
             });
     }
+
+    public function findDaysForPeriodWeek(Query $query, array $options)
+    {
+        $academicPeriodId = $options['academic_period_id'];
+        $weekId = $options['week_id'];
+
+        $model = $this;
+
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+        $daysPerWeek = $ConfigItems->value('days_per_week');
+        $weeks = $model->getAttendanceWeeks($academicPeriodId);
+        $week = $weeks[$weekId];
+
+        $dayOptions[] = [
+            'id' => -1,
+            'name' => __('All Days'),
+            'date' => -1
+        ];
+
+        $schooldays = [];
+        for ($i = 0; $i < $daysPerWeek; ++$i) {
+            // sunday should be '7' in order to be displayed
+            $schooldays[] = 1 + ($firstDayOfWeek + 6 + $i) % 7;
+        }
+
+        $firstDayOfWeek = $week[0]->copy();
+        $today = null;
+
+        do {
+            if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
+                // $schoolClosed = $this->isSchoolClosed($firstDayOfWeek) ? __('School Closed') : '';
+
+                $dayOptions[] = [
+                    'id' => $firstDayOfWeek->dayOfWeek,
+                    // 'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ') ' . $schoolClosed,
+                    'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ')',
+                    'date' => $firstDayOfWeek->format('Y-m-d'),
+                ];
+
+                if (is_null($today) || $firstDayOfWeek->isToday()) {
+                    end($dayOptions);
+                    $today = key($dayOptions);
+                }
+            }
+            $firstDayOfWeek->addDay();
+        } while ($firstDayOfWeek->lte($week[1]));
+
+        if (!is_null($today)) {
+            $dayOptions[$today]['selected'] = true;
+        }
+
+        return $query
+            ->where([$this->aliasField('id') => $academicPeriodId])
+            ->formatResults(function (ResultSetInterface $results) use ($dayOptions) {
+                return $dayOptions;
+            });
+    }
 }

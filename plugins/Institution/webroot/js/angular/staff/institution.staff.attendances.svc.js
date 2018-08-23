@@ -17,7 +17,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
 
         getAcademicPeriodOptions: getAcademicPeriodOptions,
         getWeekListOptions: getWeekListOptions,
+        getDayListOptions:getDayListOptions,
         getStaffAttendances: getStaffAttendances,
+        getAllStaffAttendances: getAllStaffAttendances,
         getColumnDefs: getColumnDefs,
         saveStaffAttendanceTimeIn:saveStaffAttendanceTimeIn,
         saveStaffAttendanceTimeOut:saveStaffAttendanceTimeOut,
@@ -78,6 +80,24 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             .ajax({success: success, defer: true});
     }
 
+    function getDayListOptions(academicPeriodId, weekId) {
+        var success = function(response, deferred) {
+            var dayList = response.data.data;
+            if (angular.isObject(dayList) && dayList.length > 0) {
+                deferred.resolve(dayList);
+            } else {
+                deferred.reject('There was an error when retrieving the day list');
+            }
+        };
+
+        return AcademicPeriods
+            .find('DaysForPeriodWeek', {
+                academic_period_id: academicPeriodId,
+                week_id: weekId
+            })
+            .ajax({success: success, defer: true});
+    }
+
     function getStaffAttendances(params) {
         var extra = {
             staff_id : params.staff_id,
@@ -103,6 +123,33 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             .ajax({success: success, defer: true});
     }
 
+
+    function getAllStaffAttendances(params) {
+        var extra = {
+            institution_id: params.institution_id,
+            academic_period_id: params.academic_period_id,
+            week_id: params.week_id,
+            week_start_day: params.week_start_day,
+            week_end_day: params.week_end_day,
+            day_id: params.day_id,
+            day_date: params.day_date,
+        };
+
+        var success = function(response, deferred) {
+            var staffAttendances = response.data.data;
+
+            if (angular.isObject(staffAttendances)) {
+                deferred.resolve(staffAttendances);
+            } else {
+                deferred.reject('ERROR');
+            }
+        };
+
+        return Staff
+            .find('AllStaffAttendances', extra)
+            .ajax({success: success, defer: true});
+    }
+
     function getColumnDefs(staffAttendances) {
         var columnDefs = [];
         var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
@@ -118,6 +165,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             headerName: "Date",
             field: "date",
             filter: "text",
+            hide: true,
+            menuTabs: []
+        });
+
+        columnDefs.push({
+            headerName: "Name",
+            field: "_matchingData.Users.name_with_id",
+            filter: "text",
             menuTabs: []
         });
 
@@ -128,7 +183,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         });
 
         columnDefs.push({
-            headerName: "Time in",
+            headerName: "Time in - Time Out",
             field: "time_in",
             menuTabs: [],
             cellRenderer: function(params) {

@@ -224,7 +224,7 @@ $institutionId = $paramsQuery['institution_id'];
                     </div>
                     <h5><?= __('Day') ?>: </h5>
                     <div class="input-select-wrapper">
-                        <select ng-disabled="$ctrl.action=='edit'" name="day" ng-options="day.date as day.name for day in $ctrl.dayListOptions" ng-model="$ctrl.selectedDay" ng-change="$ctrl.changeDay();">
+                        <select ng-disabled="$ctrl.action=='edit'" name="day" ng-options="day.id as day.name for day in $ctrl.dayListOptions" ng-model="$ctrl.selectedDay" ng-change="$ctrl.changeDay();">
                             <option value="" ng-if="$ctrl.dayListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
