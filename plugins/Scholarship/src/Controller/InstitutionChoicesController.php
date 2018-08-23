@@ -104,7 +104,6 @@ class InstitutionChoicesController extends PageController
 
         $page->get('country_id')
             ->setControlType('select')
-            ->setDependentOn('location_type')
             ->setParams('Countries');
 
         $page->get('qualification_level_id')
