@@ -76,8 +76,11 @@ class ScholarshipsTable extends ControllerActionTable
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
 
         $this->addBehavior('Excel', [
+            'excludes' => [
+            'name', 'code'
+            ],
             'pages' => ['index']
-        ]);
+        ]);    
     }
 
     public function implementedEvents()
@@ -165,7 +168,20 @@ class ScholarshipsTable extends ControllerActionTable
 
      public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
      {
+            $newFirstArray = [];
             $newArray = [];
+            $newFirstArray[] = [
+                'key' => 'Scholarships.code',
+                'field' => 'scholarships_code',
+                'type' => 'string',
+                'label' =>  __('Code')
+            ];               
+            $newFirstArray[] = [
+                'key' => 'Scholarships.name',
+                'field' => 'scholarships',
+                'type' => 'string',
+                'label' =>  __('Scholarship name')
+            ];            
             $newArray[] = [
                 'key' => 'FieldOfStudies.name',
                 'field' => 'all_field_of_studies',
@@ -201,9 +217,19 @@ class ScholarshipsTable extends ControllerActionTable
                 'type' => 'string',
                 'label' => __('Payment Frequency')
             ];
-       
-            $newFields = array_merge($fields->getArrayCopy(), $newArray);
+
+            $newFields = array_merge($newFirstArray, $fields->getArrayCopy(), $newArray);
             $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetScholarships(Event $event, Entity $entity)
+    {
+        return $entity->name;
+    }
+
+    public function onExcelGetScholarshipsCode(Event $event, Entity $entity)
+    { 
+        return $entity->code;
     }
 
     public function onExcelGetInterestRateType(Event $event, Entity $entity)
