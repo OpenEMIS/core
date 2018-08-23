@@ -1897,4 +1897,106 @@ class StaffTable extends ControllerActionTable
         // Log::write('debug', $query);
         return $query;
     }
+
+    public function findAllStaffAttendances(Query $query, array $options)
+    {
+
+        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
+        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+
+        $weekStartDate = $options['week_start_day'];
+        $weekEndDate = $options['week_end_day'];
+        
+        $dayId = $options['day_id'];
+        $dayDate = $options['day_date'];
+
+        // $where = [];
+
+        if ($dayId != -1) {
+            $weekStartDate = $dayDate;
+            $weekEndDate = $dayDate;
+        }
+        
+        //Gets all the days in the selected week based on its start date end date
+        $startDate = new DateTime($weekStartDate);
+        $endDate = new DateTime($weekEndDate);
+        $interval = new DateInterval('P1D');
+        $daterange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
+        // Log::write('debug', $weekStartDate);
+        // Log::write('debug', $weekEndDate);
+        // Log::write('debug', $startDate);
+        // Log::write('debug', $endDate);
+        // To get all the dates of the working days only
+        $workingDaysArr = [];
+        $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
+        foreach ($daterange as $date) {
+            $dayText = $date->format('l');
+            if (in_array($dayText, $workingDays)) {
+                $workingDaysArr[] = $date;
+            }
+        }
+
+        $query = $query
+            ->select([
+                $this->aliasField('institution_id'),
+                $this->aliasField('staff_id'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name'),
+                $InstitutionStaffAttendances->aliasField('id'),
+                $InstitutionStaffAttendances->aliasField('time_in'),
+                $InstitutionStaffAttendances->aliasField('time_out'),
+                $InstitutionStaffAttendances->aliasField('date'),
+            ])
+            ->leftJoin(
+                [$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
+                [
+                    $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+                    $InstitutionStaffAttendances->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate."'",
+                    $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate."'",
+                ]
+            )
+            ->matching('Users')
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('staff_status_id') => 1
+            ])
+            // ->group([
+            //     $InstitutionStaffAttendances->aliasField('staff_id'),
+            //     $InstitutionStaffAttendances->aliasField('institution_id'),
+            //     $InstitutionStaffAttendances->aliasField('academic_period_id'),
+            //     $InstitutionStaffAttendances->aliasField('date')
+            // ])
+            // ;
+            ->formatResults(function (ResultSetInterface $results) use ($dayDate) {
+                $results = $results->toArray();
+                $formatResultDates = [];
+                foreach ($results as $result) {
+                    $cloneResult = clone $result;
+                    $cloneResult['date'] = date("l, d F Y", strtotime($dayDate));
+                    // Log::write('debug', $cloneResult);
+
+                    if ($cloneResult->InstitutionStaffAttendances['date']) {
+                        $cloneResult['isNew'] = false;
+                    }else{
+                        $cloneResult['isNew'] = true;
+                        // $cloneResult->InstitutionStaffAttendances['time_in'] = null;
+                        // $cloneResult->InstitutionStaffAttendances['time_out'] = null;
+                        $cloneResult->InstitutionStaffAttendances['date'] = $dayDate;
+                    }
+                    // Log::write('debug', $cloneResult);
+                    $formatResultDates[] = $cloneResult;
+                }
+                return $formatResultDates;
+            });
+
+        // Log::write('debug', $query);
+        return $query;
+    }
 }
