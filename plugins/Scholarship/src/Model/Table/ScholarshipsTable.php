@@ -19,8 +19,9 @@ class ScholarshipsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    CONST SELECT_FIELD_OF_STUDIES = 1;
-    CONST SELECT_ALL_FIELD_OF_STUDIES = -1;
+    const SELECT_FIELD_OF_STUDIES = 1;
+    const SELECT_ALL_FIELD_OF_STUDIES = -1;
+    const MAX_YEARS = 20;
 
     private $fieldOfStudySelection = [];
     private $interestRateOptions = [];
@@ -113,6 +114,7 @@ class ScholarshipsTable extends ControllerActionTable
             ])
             ->requirePresence('field_of_studies')
             ->requirePresence('bond')
+            ->requirePresence('duration')
             ->add('field_of_studies', 'notEmpty', [
                 'rule' => function ($value, $context) {
                     return isset($value['_ids']) ? !empty($value['_ids']) : true;
@@ -263,6 +265,7 @@ class ScholarshipsTable extends ControllerActionTable
         $this->field('total_amount', ['visible' => false]);
         $this->field('requirements', ['visible' => false]);
         $this->field('instructions', ['visible' => false]);
+        $this->field('duration', ['visible' => false]);
     }
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -383,6 +386,11 @@ class ScholarshipsTable extends ControllerActionTable
         return $entity->bond . ' ' . __('Years');
     }
 
+    public function onGetDuration(Event $event, Entity $entity)
+    {
+        return $entity->duration . ' ' . __('Years');
+    }
+
     public function onGetInterestRate(Event $event, Entity $entity)
     {
         return $entity->loan->interest_rate;
@@ -490,7 +498,7 @@ class ScholarshipsTable extends ControllerActionTable
                             'attr' => [
                                 'label' => __('Loan Term'),
                                 'select' => true,
-                                'options' => $this->getLoanTermOptions(20)
+                                'options' => $this->getLoanTermOptions(self::MAX_YEARS)
                             ],
                             'after' => 'loan.scholarship_payment_frequency_id'
                         ]);
@@ -505,7 +513,15 @@ class ScholarshipsTable extends ControllerActionTable
     public function onUpdateFieldBond(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $attr['options'] = $this->getBondOptions(20);
+            $attr['options'] = $this->getBondOptions(self::MAX_YEARS);
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldDuration(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['options'] = $this->getDurationOptions(self::MAX_YEARS);
         }
         return $attr;
     }
@@ -687,9 +703,13 @@ class ScholarshipsTable extends ControllerActionTable
             'attr' => ['label' => $this->addCurrencySuffix('Total Award Amount')],
             'after' => 'maximum_award_amount'
         ]);
-        $this->field('bond', [
+        $this->field('duration', [
             'type' => 'select',
             'after' => 'total_amount'
+        ]);
+        $this->field('bond', [
+            'type' => 'select',
+            'after' => 'duration'
         ]);
         $this->field('attachment_type_id', [
             'type' => 'custom_attachment_type',
@@ -723,6 +743,17 @@ class ScholarshipsTable extends ControllerActionTable
         }
 
         return $bondOptions;
+    }
+
+    public function getDurationOptions($maxYears)
+    {
+        $durationOptions = [];
+
+        for ($i=0; $i<=$maxYears; $i++) {
+            $durationOptions[$i] = $i . ' ' . __('Years');
+        }
+
+        return $durationOptions;
     }
 
     public function getLoanTermOptions($maxYears)
