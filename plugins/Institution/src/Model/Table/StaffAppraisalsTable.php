@@ -13,7 +13,6 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffAppraisalsTable extends ControllerActionTable
 {    
-    public $periodList = [];
     public $staff;
 
     public function initialize(array $config)
