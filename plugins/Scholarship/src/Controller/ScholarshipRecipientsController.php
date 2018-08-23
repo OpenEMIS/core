@@ -109,9 +109,9 @@ class ScholarshipRecipientsController extends PageController
         $page->addNew('maximum_award_amount')
             ->setDisplayFrom('scholarship.maximum_award_amount')
             ->setLabel($maximumAwardAmountLabel);
-        $approvedAmountLabel = $this->Scholarships->addCurrencySuffix('Approved Amount');
-        $page->get('approved_amount')
-            ->setLabel($approvedAmountLabel);            
+        $approvedAwardAmountLabel = $this->Scholarships->addCurrencySuffix('Approved Award Amount');
+        $page->addNew('approved_amount')
+            ->setLabel($approvedAwardAmountLabel);
 
         $activityStatusData = $this->getActivityStatusData($entity);
         $page->addNew('activity_status')
@@ -155,7 +155,7 @@ class ScholarshipRecipientsController extends PageController
             ->setDisplayFrom('scholarship.maximum_award_amount')
             ->setLabel($maximumAwardAmountLabel)
             ->setValue($maximumAwardAmountValue);
-        $approvedAmountLabel = $this->Scholarships->addCurrencySuffix('Approved Amount');
+        $approvedAmountLabel = $this->Scholarships->addCurrencySuffix('Approved Award Amount');
         $page->get('approved_amount')
             ->setLabel($approvedAmountLabel)
             ->setRequired(true)
