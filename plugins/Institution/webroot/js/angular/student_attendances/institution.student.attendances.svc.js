@@ -337,7 +337,6 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             date: context.date
         };
 
-        // console.log('save - studentAbsenceData', studentAbsenceData);
         return StudentAbsencesPeriodDetails.save(studentAbsenceData);
     } 
 
@@ -411,11 +410,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                         }
                     });
                 });
-
-                var dayText = dayObj.day;
-                if (angular.isDefined(translateText.translated[dayText])) {
-                    dayText = translateText.translated[dayText];
-                }
+                
+                var dayText = dayObj.name;
 
                 var colDef = {
                     headerName: dayText,

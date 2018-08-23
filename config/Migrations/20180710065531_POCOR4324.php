@@ -624,6 +624,27 @@ class POCOR4324 extends AbstractMigration
             `_execute` = "StudentAttendances.excel"
             WHERE `id` = 1014
         ');
+
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 202');
+        $securityData = [
+            'id' => 5106,
+            'name' => 'Attendances',
+            'controller' => 'Attendances',
+            'module' => 'Administration',
+            'category' => 'Attendances',
+            'parent_id' => 5000,
+            '_view' => 'StudentMarkTypes.view',
+            '_edit' => 'StudentMarkTypes.edit',
+            '_add' => null,
+            '_delete' => null,
+            '_execute' => null,
+            'order' => 202,
+            'visible' => 1,
+            'description' => null,
+            'created_user_id' => 1,
+            'created' => $today
+        ];
+        $this->insert('security_functions', $securityData);
         // security_functions - end
 
         // security_role_functions
