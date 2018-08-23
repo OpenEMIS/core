@@ -929,6 +929,7 @@ class AcademicPeriodsTable extends AppTable
     public function findPeriodHasClass(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
+        $currentYearId = $this->getCurrent();
 
         return $query
             ->select([
@@ -939,7 +940,15 @@ class AcademicPeriodsTable extends AppTable
             ->matching('InstitutionClasses', function ($q) use ($institutionId) {
                 return $q->where(['InstitutionClasses.institution_id' => $institutionId]);
             })
-            ->group([$this->aliasField('id')]);
+            ->group([$this->aliasField('id')])
+            ->formatResults(function (ResultSetInterface $results) use ($currentYearId) {
+                return $results->map(function ($row) use ($currentYearId) {
+                    if ($row->id == $currentYearId) {
+                        $row->selected = true;
+                    }
+                    return $row;
+                });
+            });
     }
 
     public function findWeeksForPeriod(Query $query, array $options)

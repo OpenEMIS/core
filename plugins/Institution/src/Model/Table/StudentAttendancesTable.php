@@ -73,7 +73,7 @@ class StudentAttendancesTable extends AppTable
             ->contain([$this->Users->alias()])
             ->matching($this->StudentStatuses->alias(), function($q) {
                 return $q->where([
-                    $this->StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN']
+                    $this->StudentStatuses->aliasField('code') => 'CURRENT'
                 ]);
             })
             ->where([
@@ -170,7 +170,7 @@ class StudentAttendancesTable extends AppTable
                 ])
                 ->matching($this->StudentStatuses->alias(), function($q) {
                     return $q->where([
-                        $this->StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN']
+                        $this->StudentStatuses->aliasField('code') => 'CURRENT'
                     ]);
                 })
                 ->where([
