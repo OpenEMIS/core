@@ -126,7 +126,7 @@ class RecipientPaymentsTable extends ControllerActionTable
             'after' => 'estimated_amount',
             'visible' => ['view' => false, 'edit' => true],
             'attr' => [
-                'label' => $this->Scholarships->addCurrencySuffix('Approved Amount'), 
+                'label' => $this->Scholarships->addCurrencySuffix('Approved Award Amount'), 
                 'value' => $entity->scholarship_recipient->approved_amount
             ]
         ]);
