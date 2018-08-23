@@ -1960,6 +1960,7 @@ class StaffTable extends ControllerActionTable
                 $StaffLeaveTable->aliasField('start_time'),
                 $StaffLeaveTable->aliasField('end_time'),
                 $StaffLeaveTable->aliasField('full_day'),
+                $StaffLeaveTable->aliasField('comments'),
             ])
             ->leftJoin(
                 [$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
