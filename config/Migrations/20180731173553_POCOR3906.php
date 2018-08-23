@@ -195,7 +195,7 @@ class POCOR3906 extends AbstractMigration
                 'null' => true,
             ])
             ->addColumn('full_day', 'integer', [
-                'default' => null,
+                'default' => 1,
                 'limit' => 1,
                 'null' => false,
             ])
@@ -228,8 +228,9 @@ class POCOR3906 extends AbstractMigration
                 'limit' => 11,
                 'null' => false,
             ])
+            //need to remove the hard coded id.
             ->addColumn('academic_period_id', 'integer', [
-                'default' => null,
+                'default' => 27,
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to academic_periods.id'
@@ -242,7 +243,7 @@ class POCOR3906 extends AbstractMigration
             ])
             ->addColumn('number_of_days', 'decimal', [
                 'default' => null,
-                'precision' => 3,
+                'precision' => 5,
                 'scale' => 1,
                 'null' => false,
             ])
