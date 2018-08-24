@@ -84,7 +84,7 @@ class ScholarshipRecipientsController extends PageController
         $page->get('recipient_id')->setSortable(true);
         $page->get('scholarship_id')
             ->setSortable(true)
-            ->setLabel('Scholarship Name');;
+            ->setLabel('Scholarship Name');
 
         $page->move('status')->first();
         $page->move('openemis_no')->after('status');
