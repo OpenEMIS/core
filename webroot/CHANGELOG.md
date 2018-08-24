@@ -1,3 +1,9 @@
+### [3.32.3] - 2018-08-23
+- Developed a feature to email all students their report card in Institutions > Report Card > Status
+- Added Partial Scholarships and Grants to Scholarship module in Administration > Scholarships
+- Added Scholarships Disbursement (Detailed) and Scholarship Enrollment reports in Reports module
+- Developed a feature to retrieve Institution image through API
+
 ### [3.32.2] - 2018-08-13
 - Bug fix on deleting rows and columns for table question type in Survey module
 
