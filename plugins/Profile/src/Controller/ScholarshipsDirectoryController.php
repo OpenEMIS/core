@@ -56,8 +56,8 @@ class ScholarshipsDirectoryController extends PageController
         // set labels
         $page->get('scholarship_financial_assistance_type_id')->setLabel('Financial Assistance Type');
         $page->get('scholarship_funding_source_id')->setLabel('Funding Source');
-        $page->get('maximum_award_amount')->setLabel(__('Maximum Award Amount') . ' (' . $currency . ')');
-        $page->get('total_amount')->setLabel(__('Total Amount') . ' (' . $currency . ')');
+        $page->get('maximum_award_amount')->setLabel(__('Annual Award Amount') . ' (' . $currency . ')');
+        $page->get('total_amount')->setLabel(__('Total Award Amount') . ' (' . $currency . ')');
     }
 
     public function index()
