@@ -217,6 +217,9 @@ class InstitutionChoicesController extends PageController
     {
         $page = $this->Page;
 
+        $page->get('education_field_of_study_id')
+             ->setLabel('Area of Study');
+
         $page->move('country_id')->after('location_type');
         $page->move('scholarship_institution_choice_status_id')->after('institution_name');
         $page->move('education_field_of_study_id')->after('estimated_cost');
