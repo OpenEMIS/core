@@ -128,7 +128,7 @@ class ScholarshipsTable extends ControllerActionTable
             ->add('total_amount', [
                 'ruleCompareMaximumAwardAmount' => [
                     'rule' => ['compareValues', 'maximum_award_amount'],
-                    'message' => __('Total Amount must be greater than Maximum Award Amount')
+                    'message' => __('Total Award Amount must be greater than Annual Award Amount')
                 ],
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
@@ -705,12 +705,12 @@ class ScholarshipsTable extends ControllerActionTable
         ]);
         $this->field('maximum_award_amount', [
             'type' => 'integer',
-            'attr' => ['label' => $this->addCurrencySuffix('Maximum Award Amount')],
+            'attr' => ['label' => $this->addCurrencySuffix('Annual Award Amount')],
             'after' => 'application_close_date'
         ]);
         $this->field('total_amount', [
             'type' => 'integer',
-            'attr' => ['label' => $this->addCurrencySuffix('Total Amount')],
+            'attr' => ['label' => $this->addCurrencySuffix('Total Award Amount')],
             'after' => 'maximum_award_amount'
         ]);
         $this->field('bond', [
