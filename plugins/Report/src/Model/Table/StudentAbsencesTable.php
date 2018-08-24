@@ -18,7 +18,7 @@ class StudentAbsencesTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
-        $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons', 'foreignKey' =>'student_absence_reason_id']);
+        // $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons', 'foreignKey' =>'student_absence_reason_id']);
         $this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
         $this->belongsTo('InstitutionStudentAbsenceDays', ['className' => 'Institution.InstitutionStudentAbsenceDays', 'foreignKey' =>'institution_student_absence_day_id']);
         $this->addBehavior('Report.ReportList');
@@ -68,17 +68,20 @@ class StudentAbsencesTable extends AppTable
                 'area_administrative_name' => 'AreaAdministratives.name',
                 'area_level_name' => 'AreaLevels.name',
                 'absence_type' => 'AbsenceTypes.name',
-                'student_absence_reason' => 'StudentAbsenceReasons.name',
-                'comment' => 'StudentAbsences.comment',
-                'full_day' => 'StudentAbsences.full_day',
-                'start_date' => 'StudentAbsences.start_date',
-                'end_date' => 'StudentAbsences.end_date',
-                'start_time' => 'StudentAbsences.start_time',
-                'end_time' => 'StudentAbsences.end_time'
+                // 'student_absence_reason' => 'StudentAbsenceReasons.name',
+                'date' => 'StudentAbsences.date',
+                // 'comment' => 'StudentAbsences.comment',
+                // 'full_day' => 'StudentAbsences.full_day',
+                // 'start_date' => 'StudentAbsences.start_date',
+                // 'end_date' => 'StudentAbsences.end_date',
+                // 'start_time' => 'StudentAbsences.start_time',
+                // 'end_time' => 'StudentAbsences.end_time'
             ])
             ->where([
-                $this->aliasField('start_date >= ') => $startDate,
-                $this->aliasField('end_date <= ') => $endDate
+                $this->aliasField('date >= ') => $startDate,
+                $this->aliasField('date <= ') => $endDate
+                // $this->aliasField('start_date >= ') => $startDate,
+                // $this->aliasField('end_date <= ') => $endDate
             ])
             ->contain([
                 'Users',
@@ -89,7 +92,7 @@ class StudentAbsencesTable extends AppTable
             ->order([
                 $this->aliasField('student_id'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('start_date')
+                $this->aliasField('date')
             ]);
     }
 
@@ -155,73 +158,84 @@ class StudentAbsencesTable extends AppTable
             'label' => __('Area Level')
         ];
         $newArray[] = [
-            'key' => 'StudentAbsences.absences',
-            'field' => 'absences',
+            'key' => 'StudentAbsences.date',
+            'field' => 'date',
             'type' => 'string',
-            'label' => __('Absences')
+            'label' => __('Date')
         ];
-        $newArray[] = [
-            'key' => 'StudentAbsences.comment',
-            'field' => 'comment',
-            'type' => 'text',
-            'label' => __('Comment')
-        ];
+        // $newArray[] = [
+        //     'key' => 'StudentAbsences.absences',
+        //     'field' => 'absences',
+        //     'type' => 'string',
+        //     'label' => __('Absences')
+        // ];
+        // $newArray[] = [
+        //     'key' => 'StudentAbsences.comment',
+        //     'field' => 'comment',
+        //     'type' => 'text',
+        //     'label' => __('Comment')
+        // ];
         $newArray[] = [
             'key' => 'StudentAbsences.absence_type_id',
             'field' => 'absence_type_id',
             'type' => 'integer',
             'label' => __('Absence Type'),
         ];
-        $newArray[] = [
-            'key' => 'StudentAbsences.student_absence_reason_id',
-            'field' => 'student_absence_reason_id',
-            'type' => 'string',
-            'label' => __('Absence Reason')
-        ];
+        // $newArray[] = [
+        //     'key' => 'StudentAbsences.student_absence_reason_id',
+        //     'field' => 'student_absence_reason_id',
+        //     'type' => 'string',
+        //     'label' => __('Absence Reason')
+        // ];
 
         // $newFields = array_merge($newArray, $fields->getArrayCopy());
         $fields->exchangeArray($newArray);
     }
 
-    public function onExcelGetAbsences(Event $event, Entity $entity)
+    public function onExcelGetDate(Event $event, Entity $entity)
     {
-        $startDate = "";
-        $endDate = "";
-
-        if (!empty($entity->start_date)) {
-            $startDate = $this->formatDate($entity->start_date);
-        } else {
-            $startDate = $entity->start_date;
-        }
-
-        if (!empty($entity->end_date)) {
-            $endDate = $this->formatDate($entity->end_date);
-        } else {
-            $endDate = $entity->end_date;
-        }
-
-        if ($entity->full_day) {
-            return sprintf('%s %s (%s - %s)', __('Full'), __('Day'), $startDate, $endDate);
-        } else {
-            $startTime = $entity->start_time;
-            $endTime = $entity->end_time;
-            return sprintf('%s (%s - %s) %s (%s - %s)', __('Non Full Day'), $startDate, $endDate, __('Time'), $startTime, $endTime);
-        }
+        return $this->formatDate($entity->date);
     }
+
+    // public function onExcelGetAbsences(Event $event, Entity $entity)
+    // {
+    //     $startDate = "";
+    //     $endDate = "";
+
+    //     if (!empty($entity->start_date)) {
+    //         $startDate = $this->formatDate($entity->start_date);
+    //     } else {
+    //         $startDate = $entity->start_date;
+    //     }
+
+    //     if (!empty($entity->end_date)) {
+    //         $endDate = $this->formatDate($entity->end_date);
+    //     } else {
+    //         $endDate = $entity->end_date;
+    //     }
+
+    //     if ($entity->full_day) {
+    //         return sprintf('%s %s (%s - %s)', __('Full'), __('Day'), $startDate, $endDate);
+    //     } else {
+    //         $startTime = $entity->start_time;
+    //         $endTime = $entity->end_time;
+    //         return sprintf('%s (%s - %s) %s (%s - %s)', __('Non Full Day'), $startDate, $endDate, __('Time'), $startTime, $endTime);
+    //     }
+    // }
 
     public function onExcelGetAbsenceTypeId(Event $event, Entity $entity)
     {
         return $entity->absence_type;
     }
 
-    public function onExcelGetStudentAbsenceReasonId(Event $event, Entity $entity)
-    {
-        if (empty($entity->student_absence_reason)) {
-            return __('Unexcused');
-        } else {
-            return $entity->student_absence_reason;
-        }
-    }
+    // public function onExcelGetStudentAbsenceReasonId(Event $event, Entity $entity)
+    // {
+    //     if (empty($entity->student_absence_reason)) {
+    //         return __('Unexcused');
+    //     } else {
+    //         return $entity->student_absence_reason;
+    //     }
+    // }
 
     public function onExcelGetInstitutionName(Event $event, Entity $entity)
     {
