@@ -43,12 +43,6 @@ class AppraisalBehavior extends Behavior
         $model->setFieldOrder(['appraisal_type_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised']);
     }
 
-   public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $model = $this->_table;
-        $query->where([$model->aliasField('staff_id') => $model->staff->id]);
-    }
-
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
