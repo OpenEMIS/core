@@ -203,7 +203,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             field: "StaffLeave",
             menuTabs: [],
             cellRenderer: function(params) {
-                console.log('params', params);
+                // console.log('params', params);
                 if (angular.isDefined(params.context.action)) {
                     // var action = params.context.action;
                     // var data = params.data;
@@ -213,11 +213,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                 }
             }
         });
-        //might need to query staff leave at resultformat because staff can apply
-        //more than one leave at a time.
+        // comments for attendance
         columnDefs.push({
             headerName: "Comments",
-            field: "StaffLeave.comments",
+            field: "",
             menuTabs: [],
             filter: "text",
             // cellRenderer: function(params) {
@@ -250,24 +249,29 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
     }
 
     function getStaffLeaveElement(params) {
-        // var action = params.context.action;
-        // var data = params.data;
-        // var rowIndex = params.rowIndex;
-        // var timepickerId = 'time-in-' + rowIndex;
-        var statusId = params.data.StaffLeave.status_id;
-        var leaveTypeId = params.data.StaffLeave.staff_leave_type_id;
-        var start_time = params.data.StaffLeave.start_time;
-        var end_time = params.data.StaffLeave.end_time;
-        var full_day = params.data.StaffLeave.full_day;
+        var staffLeaves = params.data.StaffLeave;
+        var data = '';
+        var leaveIndexURL = params.data.url;
+        if (staffLeaves.length > 0) {
+            angular.forEach(staffLeaves, function(staffLeave) {
+                // console.log(staffLeave);
+                var statusId = staffLeave.status_id;
+                var leaveTypeId = staffLeave.staff_leave_type_id;
+                var start_time = staffLeave.start_time;
+                var end_time = staffLeave.end_time;
+                var full_day = staffLeave.full_day;
+                var leaveStatusName = staffLeave._matchingData.Statuses.name;
+                var leaveTypeName = staffLeave._matchingData.StaffLeaveTypes.name;
+                data += leaveTypeName + '<br>';
 
-        var data = statusId + leaveTypeId;
-
-        if (!full_day){
-            data += start_time + end_time;
-        }
-        // var date_from = params.data.StaffLeave.date_from;
-        // var date_to = params.data.StaffLeave.date_to;
-        if (!data){
+                if (!full_day){
+                    data += start_time + '<br>' + end_time + '<br>';
+                }
+                // data += 'end of an index <br>';
+            });
+            data += '<a href= "'+leaveIndexURL+ '"target="_blank">View Details</a>';
+        } else {
+            // console.log('none');
             data = '-';
         }
         return data;
@@ -286,7 +290,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                 timeIn = 'current';
             }else{
                 timeIn = convert12Timeformat(timeIn);
-                console.log(timeIn);
+                // console.log(timeIn);
             }
             var divElement = document.createElement('div');
             divElement.setAttribute('class', 'input');
