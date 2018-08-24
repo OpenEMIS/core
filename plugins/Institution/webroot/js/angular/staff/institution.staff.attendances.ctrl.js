@@ -33,7 +33,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         columnDefs: [],
         rowData: [],
         headerHeight: 38,
-        rowHeight: 50,
+        rowHeight: 90,
         minColWidth: 200,
         enableColResize: true,
         enableSorting: false,
@@ -161,7 +161,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
             return InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams());
         }, vm.error)
         .then(function(allStaffAttendances) {
-            console.log(allStaffAttendances);
+            // console.log(allStaffAttendances);
             vm.setAllStaffAttendances(allStaffAttendances);
             vm.setGridData();
             vm.setColumnDef();
@@ -176,7 +176,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         UtilsSvc.isAppendLoader(true);
         var dayObj = vm.dayListOptions.find(obj => obj.id == vm.selectedDay);
         vm.selectedDayDate = dayObj.date;
-        console.log(dayObj);
+        // console.log(dayObj);
         // vm.schoolClosed = (angular.isDefined(dayObj.closed) && dayObj.closed) ? true : false;
         // vm.gridOptions.context.schoolClosed = vm.schoolClosed;
         vm.gridOptions.context.date = vm.selectedDay;
