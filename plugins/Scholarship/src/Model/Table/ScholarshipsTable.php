@@ -457,15 +457,6 @@ class ScholarshipsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    {
-        if ($field == 'name') {
-            return __('Scholarship Name');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
     public function onGetFieldOfStudies(Event $event, Entity $entity)
     {
         $isSelectAll = $this->checkIsSelectAll($entity);
@@ -485,6 +476,8 @@ class ScholarshipsTable extends ControllerActionTable
     {
         if ($field == 'maximum_award_amount') {
             return __('Annual Award Amount');
+        } elseif ($field == 'name') {
+            return __('Scholarship Name');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
