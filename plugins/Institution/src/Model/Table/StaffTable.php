@@ -22,6 +22,7 @@ use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Routing\Router;
 
 class StaffTable extends ControllerActionTable
 {
@@ -1890,11 +1891,11 @@ class StaffTable extends ControllerActionTable
                         $i++;
                     }
                 }
-                // Log::write('debug', $formatResultDates);
+                Log::write('debug', $formatResultDates);
                 return $formatResultDates;
             });
 
-        // Log::write('debug', $query);
+        Log::write('debug', $query);
         return $query;
     }
 
@@ -1993,9 +1994,35 @@ class StaffTable extends ControllerActionTable
             ])
             ->formatResults(function (ResultSetInterface $results) use ($dayDate) {
                 $results = $results->toArray();
+                $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
                 $formatResultDates = [];
                 foreach ($results as $result) {
                     $cloneResult = clone $result;
+                    $tmp = [];
+                    $tmp['StaffLeave'] = $StaffLeaveTable
+                        ->find()
+                        ->matching('StaffLeaveTypes')
+                        ->matching('Statuses')
+                        ->where([
+                            $StaffLeaveTable->aliasField('staff_id = ') . $cloneResult->staff_id,
+                            $StaffLeaveTable->aliasField('institution_id = ') . $cloneResult->institution_id,
+                            $StaffLeaveTable->aliasField("date_to >= '") . $dayDate. "'",
+                            $StaffLeaveTable->aliasField("date_from <= '") . $dayDate. "'"
+                        ])
+                        ->order([$StaffLeaveTable->aliasField('created DESC')])
+                        ->limit(2);
+                    // end
+                    $url = Router::url([
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffLeave',
+                        'index',
+                        'user_id' => $cloneResult->staff_id
+                    ]);
+                    // end
+
+                    $cloneResult['StaffLeave'] = $tmp['StaffLeave'];
+                    $cloneResult['url'] = $url;
                     $cloneResult['date'] = date("l, d F Y", strtotime($dayDate));
                     // Log::write('debug', $cloneResult);
 
@@ -2007,13 +2034,14 @@ class StaffTable extends ControllerActionTable
                         // $cloneResult->InstitutionStaffAttendances['time_out'] = null;
                         $cloneResult->InstitutionStaffAttendances['date'] = $dayDate;
                     }
-                    Log::write('debug', $cloneResult);
+                    // Log::write('debug', $cloneResult);
                     $formatResultDates[] = $cloneResult;
                 }
+                // Log::write('debug', $formatResultDates);
                 return $formatResultDates;
             });
 
-        Log::write('debug', $query);
+        // Log::write('debug', $query);
         return $query;
     }
 }
