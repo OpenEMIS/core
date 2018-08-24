@@ -129,7 +129,12 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setupTabElements();
-    }    
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->where([$this->aliasField('staff_id') => $this->staff->id]);
+    }
 
     private function setupTabElements()
     {
