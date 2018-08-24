@@ -721,11 +721,12 @@ class ReportCardsTable extends AppTable
                 ])
                 ->formatResults(function (ResultSetInterface $results) {
                     return $results->map(function ($row) {
-                        $startDate = $row['start_date'];
-                        $endDate = $row['end_date'];
-                        $interval = $endDate->diff($startDate);
-                        // plus 1 day because if absence for the same day, interval diff return zero
-                        $row['number_of_days'] = $interval->days + 1;
+                        // $startDate = $row['start_date'];
+                        // $endDate = $row['end_date'];
+                        // $interval = $endDate->diff($startDate);
+                        // // plus 1 day because if absence for the same day, interval diff return zero
+                        // $row['number_of_days'] = $interval->days + 1;
+                        $row['number_of_days'] = 1;
                         return $row;
                     });
                 })
