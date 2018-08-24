@@ -148,6 +148,9 @@ class ReportCardsTable extends ControllerActionTable
 
         $this->setupFields($entity);
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
+
+        // Added
+        $this->setupTabElements($entity);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -191,6 +194,10 @@ class ReportCardsTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
+
+        // Added
+        $this->setupTabElements($entity);
+
         // populate subjects data
         if ($entity->has('report_card_subjects') && !empty($entity->report_card_subjects)) {
             foreach ($entity->report_card_subjects as $subject) {
@@ -498,5 +505,13 @@ class ReportCardsTable extends ControllerActionTable
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($filepath));
         echo file_get_contents($filepath);
+    }
+
+    // Added
+    private function setupTabElements($entity)
+    {
+        $tabElements = $this->controller->getReportCardTab($entity->id);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
     }
 }

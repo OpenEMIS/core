@@ -100,13 +100,19 @@ class RestfulController extends BaseController
 
     public function image($id, $fileNameField, $fileContentField)
     {
-        $id = $this->decode($id);
-        return parent::image($id, $fileNameField, $fileContentField);
+        $tempId = $this->decode($id);
+        if (is_null($tempId)) {
+            $tempId = $id;
+        }
+        return parent::image($tempId, $fileNameField, $fileContentField);
     }
 
     public function download($id, $fileNameField, $fileContentField)
     {
-        $id = $this->decode($id);
-        return parent::download($id, $fileNameField, $fileContentField);
+        $tempId = $this->decode($id);
+        if (is_null($tempId)) {
+            $tempId = $id;
+        }
+        return parent::download($tempId, $fileNameField, $fileContentField);
     }
 }

@@ -29,6 +29,7 @@ class ScholarshipsDirectoryController extends PageController
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderFieldOfStudies'] = 'onRenderFieldOfStudies';
         $event['Controller.Page.onRenderBond'] = 'onRenderBond';
+        $event['Controller.Page.onRenderDuration'] = 'onRenderDuration';
         return $event;
     }
 
@@ -56,8 +57,8 @@ class ScholarshipsDirectoryController extends PageController
         // set labels
         $page->get('scholarship_financial_assistance_type_id')->setLabel('Financial Assistance Type');
         $page->get('scholarship_funding_source_id')->setLabel('Funding Source');
-        $page->get('maximum_award_amount')->setLabel(__('Maximum Award Amount') . ' (' . $currency . ')');
-        $page->get('total_amount')->setLabel(__('Total Amount') . ' (' . $currency . ')');
+        $page->get('maximum_award_amount')->setLabel(__('Annual Award Amount') . ' (' . $currency . ')');
+        $page->get('total_amount')->setLabel(__('Total Award Amount') . ' (' . $currency . ')');
     }
 
     public function index()
@@ -67,6 +68,8 @@ class ScholarshipsDirectoryController extends PageController
 
         $page->exclude(['description', 'scholarship_financial_assistance_type_id', 'scholarship_funding_source_id', 'academic_period_id', 'total_amount', 'requirements', 'instructions']);
 
+        $page->get('name')
+            ->setLabel('Scholarship Name');
         // back button
         $page->addToolbar('back', [
             'type' => 'element',
@@ -96,6 +99,8 @@ class ScholarshipsDirectoryController extends PageController
         $page->addNew('field_of_studies')
             ->setControlType('select')
             ->setAttributes('multiple', true);
+        $page->get('name')
+            ->setLabel('Scholarship Name');
 
         $page->move('scholarship_financial_assistance_type_id')->after('description');
         $page->move('scholarship_funding_source_id')->after('scholarship_financial_assistance_type_id');
@@ -189,6 +194,15 @@ class ScholarshipsDirectoryController extends PageController
 
         if ($page->is(['index', 'view'])) {
             return $entity->bond . ' ' . __('Years');
+        }
+    }
+
+    public function onRenderDuration(Event $event, Entity $entity, PageElement $element)
+    {
+        $page = $this->Page;
+
+        if ($page->is(['index', 'view'])) {
+            return $entity->duration . ' ' . __('Years');
         }
     }
 }

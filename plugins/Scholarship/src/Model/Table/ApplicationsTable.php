@@ -473,6 +473,15 @@ class ApplicationsTable extends ControllerActionTable
     }
 
     // index fields
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'scholarship_id') {
+            return __('Scholarship Name');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
         return $entity->applicant->openemis_no;
@@ -754,7 +763,7 @@ class ApplicationsTable extends ControllerActionTable
             'fieldName' => 'scholarship.maximum_award_amount',
             'attr' => [
                 'require' => false,
-                'label' => $this->addCurrencySuffix('Maximum Award Amount')
+                'label' => $this->addCurrencySuffix('Annual Award Amount')
             ]
         ]);
         $this->field('bond', [
