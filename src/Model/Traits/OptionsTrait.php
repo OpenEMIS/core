@@ -63,7 +63,7 @@ trait OptionsTrait
                 'interest_rate' => [0 => __('Fixed'), '1' => __('Variable')]
             ],
             'InstitutionChoices' => [
-                'location_type' => ['DOMESTIC' => __('Domestic'), 'INTERNATIONAL' => __('International')]
+                'location_type' => ['DOMESTIC' => __('Domestic'), 'REGIONAL' => __('Regional'), 'INTERNATIONAL' => __('International'), 'ONLINE' => __('Online')]
             ],
             'Health' => [
                 'blood_types' => [

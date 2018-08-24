@@ -142,7 +142,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             'type' => 'disabled',
             'fieldName' => 'scholarship_recipient.approved_amount',
             'after' => 'scholarship_name',
-            'attr' => ['label' => $this->Scholarships->addCurrencySuffix('Approved Amount')]
+            'attr' => ['label' => $this->Scholarships->addCurrencySuffix('Approved Award Amount')]
         ]);
 
         $this->field('balance_amount', [
