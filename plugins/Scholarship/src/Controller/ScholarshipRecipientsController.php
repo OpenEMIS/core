@@ -82,7 +82,9 @@ class ScholarshipRecipientsController extends PageController
             ->setDisplayFrom('scholarship.financial_assistance_type.name')
             ->setSortable(true);
         $page->get('recipient_id')->setSortable(true);
-        $page->get('scholarship_id')->setSortable(true);
+        $page->get('scholarship_id')
+            ->setSortable(true)
+            ->setLabel('Scholarship Name');
 
         $page->move('status')->first();
         $page->move('openemis_no')->after('status');
@@ -105,6 +107,9 @@ class ScholarshipRecipientsController extends PageController
             ->setDisplayFrom('recipient.openemis_no');
         $page->addNew('financial_assistance_type')
             ->setDisplayFrom('scholarship.financial_assistance_type.name');
+
+        $page->get('scholarship_id')
+            ->setLabel('Scholarship Name');
         $maximumAwardAmountLabel = $this->Scholarships->addCurrencySuffix('Total Award Amount');
         $page->addNew('maximum_award_amount')
             ->setDisplayFrom('scholarship.maximum_award_amount')
@@ -149,6 +154,8 @@ class ScholarshipRecipientsController extends PageController
             ->setDisplayFrom('recipient.openemis_no');
         $page->addNew('financial_assistance_type')
             ->setDisplayFrom('scholarship.financial_assistance_type.name');
+        $page->get('scholarship_id')
+            ->setLabel('Scholarship Name');
         $maximumAwardAmountLabel = $this->Scholarships->addCurrencySuffix('Total Award Amount');
         $maximumAwardAmountValue = $entity->scholarship->maximum_award_amount;
         $page->addNew('maximum_award_amount')

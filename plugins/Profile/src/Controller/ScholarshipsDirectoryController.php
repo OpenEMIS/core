@@ -68,6 +68,8 @@ class ScholarshipsDirectoryController extends PageController
 
         $page->exclude(['description', 'scholarship_financial_assistance_type_id', 'scholarship_funding_source_id', 'academic_period_id', 'total_amount', 'requirements', 'instructions']);
 
+        $page->get('name')
+            ->setLabel('Scholarship Name');
         // back button
         $page->addToolbar('back', [
             'type' => 'element',
@@ -97,6 +99,8 @@ class ScholarshipsDirectoryController extends PageController
         $page->addNew('field_of_studies')
             ->setControlType('select')
             ->setAttributes('multiple', true);
+        $page->get('name')
+            ->setLabel('Scholarship Name');
 
         $page->move('scholarship_financial_assistance_type_id')->after('description');
         $page->move('scholarship_funding_source_id')->after('scholarship_financial_assistance_type_id');
