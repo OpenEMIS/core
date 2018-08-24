@@ -180,7 +180,7 @@ class ScholarshipsTable extends ControllerActionTable
                 'key' => 'Scholarships.name',
                 'field' => 'scholarships',
                 'type' => 'string',
-                'label' =>  __('Scholarship name')
+                'label' =>  __('Scholarship Name')
             ];            
             $newArray[] = [
                 'key' => 'FieldOfStudies.name',
@@ -671,7 +671,7 @@ class ScholarshipsTable extends ControllerActionTable
     public function setupFields($entity = null)
     {
         $this->field('name', [
-            'attr' => ['label' => __('Scholarship name')],
+            'attr' => ['label' => __('Scholarship Name')],
             'after' => 'code',
         ]);
         $this->field('scholarship_financial_assistance_type_id', [
