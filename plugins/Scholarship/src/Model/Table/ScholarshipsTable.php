@@ -265,7 +265,6 @@ class ScholarshipsTable extends ControllerActionTable
         $this->field('total_amount', ['visible' => false]);
         $this->field('requirements', ['visible' => false]);
         $this->field('instructions', ['visible' => false]);
-        $this->field('duration', ['visible' => false]);
     }
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
