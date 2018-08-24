@@ -369,6 +369,15 @@ class ScholarshipsTable extends ControllerActionTable
         }
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'maximum_award_amount') {
+            return __('Annual Award Amount');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     public function onGetBond(Event $event, Entity $entity)
     {
         return $entity->bond . ' ' . __('Years');
