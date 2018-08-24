@@ -29,6 +29,7 @@ class ScholarshipsDirectoryController extends PageController
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderFieldOfStudies'] = 'onRenderFieldOfStudies';
         $event['Controller.Page.onRenderBond'] = 'onRenderBond';
+        $event['Controller.Page.onRenderDuration'] = 'onRenderDuration';
         return $event;
     }
 
@@ -189,6 +190,15 @@ class ScholarshipsDirectoryController extends PageController
 
         if ($page->is(['index', 'view'])) {
             return $entity->bond . ' ' . __('Years');
+        }
+    }
+
+    public function onRenderDuration(Event $event, Entity $entity, PageElement $element)
+    {
+        $page = $this->Page;
+
+        if ($page->is(['index', 'view'])) {
+            return $entity->duration . ' ' . __('Years');
         }
     }
 }
