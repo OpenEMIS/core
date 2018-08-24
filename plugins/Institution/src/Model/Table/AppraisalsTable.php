@@ -7,6 +7,8 @@ use Cake\Chronos\Date;
 use Cake\Chronos\Chronos;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -37,7 +39,11 @@ class AppraisalsTable extends ControllerActionTable
                 'remove' => false,
                 'edit' => false
             ],
-            'disableWorkflow' => true
+            'disableWorkflow' => true,
+            'filter' => [
+                'type' => true,
+                'category' => false
+            ]
         ]);
 
         // setting this up to be overridden in viewAfterAction(), this code is required for file download
@@ -50,6 +56,16 @@ class AppraisalsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setupTabElements();
+    }
+
+   public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {   
+        $doneStatus = WorkflowSteps::DONE;
+        $Statuses = $this->Statuses;
+        $query
+            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+                return $q->where([$Statuses->aliasField('category') => $doneStatus]);
+            });
     }
 
     private function setupTabElements()
