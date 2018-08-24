@@ -273,7 +273,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'scholarship_id') {
-            return __('Scholarship name');
+            return __('Scholarship Name');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
