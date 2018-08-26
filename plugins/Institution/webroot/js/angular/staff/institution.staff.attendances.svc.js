@@ -262,14 +262,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                 var full_day = staffLeave.full_day;
                 var leaveStatusName = staffLeave._matchingData.Statuses.name;
                 var leaveTypeName = staffLeave._matchingData.StaffLeaveTypes.name;
-                data += leaveTypeName + '<br>';
+                data += '<i class="fa kd-attendance"></i> <font color="#CC5C5C">'+leaveTypeName + '</font><br>';
 
                 if (!full_day){
                     data += start_time + '<br>' + end_time + '<br>';
                 }
                 // data += 'end of an index <br>';
             });
-            data += '<a href= "'+leaveIndexURL+ '"target="_blank">View Details</a>';
+            data += '<i class="fa fa-file-text" style=" color: #FFFFFF; background-color:  #6699CC; border: 1px solid #6699CC;"></i><a href= "'+leaveIndexURL+ '"target="_blank"> View Details</a>';
         } else {
             // console.log('none');
             data = '-';

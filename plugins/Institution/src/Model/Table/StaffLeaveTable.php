@@ -361,17 +361,17 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function getUserId()
     {
-        // pr($this->request->query('user_id'));
-        // if ($this->request->query('user_id')) {
-        //     $userId = $this->request->query('user_id');
-        // }
-        $session = $this->request->session();
-        if ($session->check('Staff.Staff.id')) {
-            $userId = $session->read('Staff.Staff.id');
-            return $userId;
+        $userId = null;
+        if (!is_null($this->request->query('user_id'))) {
+            $userId = $this->request->query('user_id');
+        } else {
+            $session = $this->request->session();
+            if ($session->check('Staff.Staff.id')) {
+                $userId = $session->read('Staff.Staff.id');
+            }
         }
 
-        return null;
+        return $userId;
     }
 
     public function institutionStaffAfterDelete(Event $event, Entity $institutionStaffEntity)
