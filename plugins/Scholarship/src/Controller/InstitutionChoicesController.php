@@ -3,6 +3,7 @@ namespace Scholarship\Controller;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 use App\Model\Traits\OptionsTrait;
@@ -54,7 +55,7 @@ class InstitutionChoicesController extends PageController
         $page->get('is_selected')
             ->setLabel('Selection');
 
-        $page->exclude(['order']);
+        $page->exclude(['scholarship_institution_choice_type_id', 'order']);
     }
 
     public function index()
@@ -68,7 +69,7 @@ class InstitutionChoicesController extends PageController
         
         $page->exclude(['estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id']);
         
-        $this->reorderFields();        
+        $this->reorderFields();
     }
 
     public function view($id)
@@ -93,6 +94,9 @@ class InstitutionChoicesController extends PageController
 
     private function addEdit($id=0)
     {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ScholarshipInstitutionChoiceType = $ConfigItems->value('scholarship_institution_choice_type');
+        // pr($ScholarshipInstitutionChoiceType);
         $page = $this->Page;
 
         $scholarshipId = $page->getQueryString('scholarship_id');
@@ -105,6 +109,15 @@ class InstitutionChoicesController extends PageController
         $page->get('country_id')
             ->setControlType('select')
             ->setParams('Countries');
+        
+        if ($ScholarshipInstitutionChoiceType) {
+            $ScholarshipInstitutionChoiceTypes = TableRegistry::get('Scholarship.InstitutionChoiceTypes');
+            $institutionChoiceOptions = $ScholarshipInstitutionChoiceTypes->getList()->toArray();
+
+            $page->get('institution_name')
+                ->setControlType('select')
+                ->setOptions($institutionChoiceOptions);;
+        }
 
         $page->get('qualification_level_id')
             ->setControlType('select');

@@ -28,7 +28,8 @@ class ConfigurationComponent extends Component
         'AdministrativeBoundaries' => ['className' => 'Configuration.AdministrativeBoundaries'],
         'CustomValidation' => ['className' => 'Configuration.CustomValidation'],
         'Themes' => ['className' => 'Configuration.Themes'],
-        'StaffTransfers' => ['className' => 'Configuration.ConfigStaffTransfers']
+        'StaffTransfers' => ['className' => 'Configuration.ConfigStaffTransfers'],
+        'ScholarshipInstitutionChoices' => ['className' => 'Configuration.ConfigScholarshipInstitutionChoices']
     ];
 
     public $components = ['AccessControl'];
