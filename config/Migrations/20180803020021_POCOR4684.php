@@ -62,7 +62,13 @@ class POCOR4684 extends AbstractMigration
                 'model_alias' => 'ReportCard.ReportCardEmail',
                 'model_reference' => 0,
                 'subject' => 'Student Report Card of ${student.openemis_no} for ${academic_period.name}',
-                'message' => 'Dear ${student.first_name},\nAttached herewith student report card for ${academic_period.name}.\n[This is an automated message - please do not reply directly to this email]',
+                'message' => 'Dear ${student.first_name},
+
+Attached is your student report card for ${academic_period.name}.
+
+Thank you.
+
+[This is an auto-generated email. Please do not reply directly to this email.]',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ]
@@ -259,7 +265,7 @@ class POCOR4684 extends AbstractMigration
         $this->insert('security_functions', [
             'id' => 7062,
             'name' => 'Email/Email All',
-            'controller' => 'Email',
+            'controller' => 'Institutions',
             'module' => 'Institutions',
             'category' => 'Report Cards',
             'parent_id' => 1000,
