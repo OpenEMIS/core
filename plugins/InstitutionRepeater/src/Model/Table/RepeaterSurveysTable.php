@@ -39,7 +39,7 @@ class RepeaterSurveysTable extends ControllerActionTable
 			// 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
 			'recordKey' => 'institution_repeater_survey_id',
 			'fieldValueClass' => ['className' => 'InstitutionRepeater.RepeaterSurveyAnswers', 'foreignKey' => 'institution_repeater_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'InstitutionRepeater.RepeaterSurveyTableCells', 'foreignKey' => 'institution_repeater_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'tableCellClass' => ['className' => 'InstitutionRepeater.RepeaterSurveyTableCells', 'foreignKey' => 'institution_repeater_survey_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
 		]);
 	}
 

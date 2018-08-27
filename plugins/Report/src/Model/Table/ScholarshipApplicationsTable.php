@@ -109,7 +109,8 @@ class ScholarshipApplicationsTable extends AppTable  {
                 'academic_period_id' => 'AcademicPeriods.name',
                 'financial_assistance_type' => 'FinancialAssistanceTypes.name',
                 'maximum_award_amount' => 'Scholarships.maximum_award_amount',
-                'bond' => 'Scholarships.bond'
+                'bond' => 'Scholarships.bond',
+                'duration' => 'Scholarships.duration'
             ])
             ->where($conditions); 
 
@@ -167,12 +168,18 @@ class ScholarshipApplicationsTable extends AppTable  {
             'label' => ''
         ];
         $newArray[] = [
+            'key' => 'Scholarships.duration',
+            'field' => 'duration',
+            'type' => 'string',
+            'label' => __('Duration (Years)')
+        ];
+        $newArray[] = [
             'key' => 'Scholarships.bond',
             'field' => 'bond',
             'type' => 'string',
             'label' => __('Bond (Years)')
         ];
-   
+
         $fields->exchangeArray($newArray);
     }
 }

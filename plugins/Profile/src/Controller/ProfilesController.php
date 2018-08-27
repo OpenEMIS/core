@@ -27,7 +27,6 @@ class ProfilesController extends AppController
         'StaffSubjects',
         'StaffBehaviours',
         'Licenses',
-        'Appraisals',
     ];
 
     public function initialize()
