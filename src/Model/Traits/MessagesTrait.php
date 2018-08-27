@@ -847,7 +847,10 @@ trait MessagesTrait
                 ],
                 'institution_provider_id' => [
                     'ruleLinkedSector' => 'Please select a provider linked to the chosen Sector'
-                ]
+                ],
+                'classification' => [
+                    'validClassification' => 'Please enter a valid Classification',
+                ],
             ],
             'InstitutionContacts' => [
                 'email' => [
