@@ -55,7 +55,7 @@ class InstitutionChoicesController extends PageController
         $page->get('is_selected')
             ->setLabel('Selection');
 
-        $page->exclude(['scholarship_institution_choice_type_id', 'order']);
+        $page->exclude(['order']);
     }
 
     public function index()
@@ -112,11 +112,18 @@ class InstitutionChoicesController extends PageController
         
         if ($ScholarshipInstitutionChoiceType) {
             $ScholarshipInstitutionChoiceTypes = TableRegistry::get('Scholarship.InstitutionChoiceTypes');
-            $institutionChoiceOptions = $ScholarshipInstitutionChoiceTypes->getList()->toArray();
+
+            // is it okay to set to name - name instead of id - name? 
+            // data type for institution_name is NOT NULL, can page controller set the value based on the selected institution type id when the field is hidden??
+            // else patch data at model? but there are other models and controller using this model.
+            $institutionChoiceOptions = $ScholarshipInstitutionChoiceTypes
+                ->find('list', ['keyField' => 'name', 'valueField' => 'name'])
+                ->find('visible')
+                ->toArray();
 
             $page->get('institution_name')
                 ->setControlType('select')
-                ->setOptions($institutionChoiceOptions);;
+                ->setOptions($institutionChoiceOptions);
         }
 
         $page->get('qualification_level_id')
