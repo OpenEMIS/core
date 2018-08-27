@@ -46,6 +46,9 @@ trait OptionsTrait
                 'institution_type_selection' => [1 => __('Select Institution Types'), '-1' => __('Select All Institution Types')],
                 'institution_sector_selection' => [1 => __('Select Institution Sectors'), '-1' => __('Select All Institution Sectors')]
             ],
+            'ScholarshipInstitutionChoices' => [
+                'institution_field_type_selection' => [1 => __('List'), '-1' => __('Text')]
+            ],
             'TrainingCourses' => [
                 'target_population_selection' => [1 => __('Select Target Populations'), '-1' => __('Select All Target Populations')]
             ],
