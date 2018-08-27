@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 use ArrayObject;
 use Cake\Collection\Collection;
 use Cake\Event\Event;
@@ -11,6 +12,8 @@ use PHPExcel_Worksheet;
 
 class ImportInstitutionsTable extends AppTable
 {
+    use OptionsTrait;
+    
     public function initialize(array $config)
     {
         $this->table('import_mapping');
@@ -28,8 +31,10 @@ class ImportInstitutionsTable extends AppTable
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
+            'Model.import.onImportGetClassificationId' => 'onImportGetClassificationId',
             'Model.import.onImportPopulateAreasData' => 'onImportPopulateAreasData',
             'Model.import.onImportPopulateAreaAdministrativesData' => 'onImportPopulateAreaAdministrativesData',
+            'Model.import.onImportPopulateClassificationData' => 'onImportPopulateClassificationData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons'
         ];
@@ -64,6 +69,17 @@ class ImportInstitutionsTable extends AppTable
             $tempRow['entity'] = $institution;
         }
     }
+
+    public function onImportGetClassificationId(Event $event, $cellValue)
+    {
+        $options = $this->getSelectOptions('Institutions.classifications');
+        foreach ($options as $key => $value) {
+            if ($cellValue == $key) {
+                return $cellValue;
+            }
+        }
+        return null;
+    }    
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
     {
@@ -115,6 +131,21 @@ class ImportInstitutionsTable extends AppTable
                     $row->{$lookupColumn}
                 ];
             }
+        }
+    }
+
+    public function onImportPopulateClassificationData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $translatedReadableCol = $this->getExcelLabel('Classification', 'name');
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+
+        $options = $this->getSelectOptions('Institutions.classifications');
+        foreach ($options as $key => $value) {
+            $data[$columnOrder]['data'][] = [
+                $value,
+                $key
+            ];
         }
     }
 
