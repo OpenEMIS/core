@@ -12,7 +12,7 @@ class POCOR4749 extends AbstractMigration
         $this->execute('CREATE TABLE `scholarships` LIKE `z_4749_scholarships`');
         $this->execute('INSERT INTO `scholarships` SELECT * FROM `z_4749_scholarships`');
 
-        $datas = [
+        $data = [
             [
               'id'  => 1,
               'code'  => 'FULLSCHOLARSHIP',
@@ -35,7 +35,7 @@ class POCOR4749 extends AbstractMigration
             ]
         ];
 
-        $this->table('scholarship_financial_assistance_types')->insert($datas)->save(); 
+        $this->table('scholarship_financial_assistance_types')->insert($data)->save(); 
 
         $sql = "UPDATE `scholarships` SET `scholarship_financial_assistance_type_id`=4 WHERE scholarship_financial_assistance_type_id =2";
 
