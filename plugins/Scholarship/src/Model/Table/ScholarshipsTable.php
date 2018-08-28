@@ -856,7 +856,7 @@ class ScholarshipsTable extends ControllerActionTable
         $durationOptions = [];
 
         for ($i=0; $i<=$maxYears; $i++) {
-            $durationOptions[] =  $i . ' ';
+            $durationOptions[] = $i . ' ';
         }
 
         return $durationOptions;
