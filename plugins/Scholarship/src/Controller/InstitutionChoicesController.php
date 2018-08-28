@@ -67,7 +67,7 @@ class InstitutionChoicesController extends PageController
 
         parent::index();
         
-        $page->exclude(['estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id']);
+        $page->exclude(['scholarship_institution_choice_type_id','estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id']);
         
         $this->reorderFields();
     }
@@ -77,6 +77,8 @@ class InstitutionChoicesController extends PageController
         parent::view($id);
         
         $page = $this->Page;
+        $page->get('scholarship_institution_choice_type_id')
+                ->setControlType('hidden');
         $this->reorderFields();
     }
 
@@ -110,20 +112,28 @@ class InstitutionChoicesController extends PageController
             ->setControlType('select')
             ->setParams('Countries');
         
-        if ($ScholarshipInstitutionChoiceType) {
+        if ($ScholarshipInstitutionChoiceType == 1) {
             $ScholarshipInstitutionChoiceTypes = TableRegistry::get('Scholarship.InstitutionChoiceTypes');
 
-            // is it okay to set to name - name instead of id - name? 
-            // data type for institution_name is NOT NULL, can page controller set the value based on the selected institution type id when the field is hidden??
-            // else patch data at model? but there are other models and controller using this model.
-            $institutionChoiceOptions = $ScholarshipInstitutionChoiceTypes
-                ->find('list', ['keyField' => 'name', 'valueField' => 'name'])
-                ->find('visible')
-                ->toArray();
+            $institutionChoiceOptions = $ScholarshipInstitutionChoiceTypes->getList()->toArray();
 
             $page->get('institution_name')
+                ->setControlType('hidden');
+
+            $page->get('scholarship_institution_choice_type_id')
                 ->setControlType('select')
-                ->setOptions($institutionChoiceOptions);
+                ->setOptions($institutionChoiceOptions)
+                ->setLabel('Institution')
+                ->setRequired(true);
+
+            $page->move('scholarship_institution_choice_type_id')
+                ->after('location_type');
+        } else {
+            $page->get('scholarship_institution_choice_type_id')
+                ->setControlType('hidden');
+
+            $page->get('institution_name')
+                ->setRequired(true);
         }
 
         $page->get('qualification_level_id')
