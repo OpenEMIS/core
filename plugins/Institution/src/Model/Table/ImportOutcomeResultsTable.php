@@ -127,31 +127,63 @@ class ImportOutcomeResultsTable extends AppTable
 
         $userId = $this->Auth->user('id');
         $AccessControl = $this->AccessControl;
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            $query = $InstitutionClasses->find();
-            $classOptions = $InstitutionClasses
-                ->find('list')
-                ->find('byGrades', [
-                    'education_grade_id' => -1, // All Grades
-                ])
-                ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller]) // restrict user to see own class if permission is set
-                ->select([
-                    'id',
-                    'name',
-                    'education_stage_order' => $query->func()->min('EducationStages.order')
-                ])
-                ->where([
-                    $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
-                    $InstitutionClasses->aliasField('institution_id') => $institutionId
-                ])
-                ->order([
-                    'education_stage_order',
-                    $InstitutionClasses->aliasField('name') => 'ASC'
-                ])
-                ->group([
-                    $InstitutionClasses->aliasField('id')
-                ])
-                ->toArray();
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $roles = $Institutions->getInstitutionRoles($userId, $institutionId);
+        $query = $InstitutionClasses->find();
+        if (!$AccessControl->isAdmin()) {
+            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
+                $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+                $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
+                if (!$classPermission && !$subjectPermission) {
+                    $query->where(['1 = 0'], [], true);
+                } else {
+                    // If only class permission is available but no subject permission available
+                    if ($classPermission && !$subjectPermission) {
+                        $query->where([
+                                'OR' => [
+                                    ['InstitutionClasses.staff_id' => $userId],
+                                    ['InstitutionClasses.secondary_staff_id' => $userId]
+                                ]
+                            ]);
+                    } else {
+                        $query
+                            ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                                'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
+                                'InstitutionClassSubjects.status = 1'
+                            ])
+                            ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+                                'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+                            ]);
+
+                        // If both class and subject permission is available
+                        if ($classPermission && $subjectPermission) {
+                            $query->where([
+                                'OR' => [
+                                    ['InstitutionClasses.staff_id' => $userId],
+                                    ['InstitutionClasses.secondary_staff_id' => $userId],
+                                    ['InstitutionSubjectStaff.staff_id' => $userId]
+                                ]
+                            ]);
+                        }
+                        // If only subject permission is available
+                        else {
+                            $query->where(['InstitutionSubjectStaff.staff_id' => $userId]);
+                        }
+                    }
+                }
+            }
+        }
+
+        $classOptions = $query
+            ->find('list')
+            ->where([
+                $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
+                $InstitutionClasses->aliasField('institution_id') => $institutionId])
+            ->group([
+                $InstitutionClasses->aliasField('id')
+            ])            
+            ->toArray();
 
             $attr['options'] = $classOptions;
             $attr['onChangeReload'] = 'changeClass';
@@ -289,6 +321,21 @@ class ImportOutcomeResultsTable extends AppTable
 
     public function onImportPopulateOutcomeCriteriasData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
+        $userId = $this->Auth->user('id');
+        $AccessControl = $this->AccessControl;
+        $classId = $this->request->query('class');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $allowedEducationSubjectList = $InstitutionSubjects
+            ->find('list', [
+                'keyField' => 'education_subject_id',
+                'valueField' => 'education_subject_id'
+            ])
+            ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller])
+            ->matching('ClassSubjects', function ($q) use ($classId) {
+                return $q->where(['ClassSubjects.institution_class_id' => $classId]);
+            })
+            ->toArray();
+
         $templateId = $this->request->query('template');
         $academicPeriodId = !is_null($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
 
@@ -307,6 +354,7 @@ class ImportOutcomeResultsTable extends AppTable
             ->where([
                 $lookedUpTable->aliasField('outcome_template_id') => $templateId,
                 $lookedUpTable->aliasField('academic_period_id') => $academicPeriodId,
+                $this->EducationSubjects->aliasField('id IN') => $allowedEducationSubjectList,
             ])
             ->order([
                 $this->EducationSubjects->aliasField('name'),
