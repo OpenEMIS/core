@@ -9,10 +9,7 @@ class InstitutionChoiceTypesTable extends ControllerActionTable
     {
     	$this->table('scholarship_institution_choice_types');
         parent::initialize($config);
-
-        // $this->hasMany('RecipientDisbursements', ['className' => 'Scholarship.RecipientDisbursements', 'foreignKey' => 'scholarship_disbursement_category_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        // $this->hasMany('RecipientPaymentStructureEstimates', ['className' => 'Scholarship.RecipientPaymentStructureEstimates', 'foreignKey' => 'scholarship_disbursement_category_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices', 'foreignKey' => 'scholarship_institution_choice_type_id']);
         $this->addBehavior('FieldOption.FieldOption');
         $this->setDeleteStrategy('restrict');
     }
