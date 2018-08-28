@@ -298,7 +298,7 @@ class ScholarshipDisbursementsTable extends AppTable  {
             'key' => 'approved_amount',
             'field' => 'approved_amount',
             'type' => 'decimal',
-            'label' =>  __('Approved Amount')
+            'label' =>  __('Approved Award Amount')
         ];
         $newArray[] = [
             'key' => 'estimated_amount',
