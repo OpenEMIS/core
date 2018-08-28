@@ -845,7 +845,7 @@ class ScholarshipsTable extends ControllerActionTable
         $bondOptions = [];
 
         for ($i=0; $i<=$maxYears; $i++) {
-            $bondOptions[$i] = $i . ' ';
+            $bondOptions[] = $i . ' ';
         }
 
         return $bondOptions;
@@ -867,7 +867,7 @@ class ScholarshipsTable extends ControllerActionTable
         $loanTermOptions = [];
 
         for ($i=1; $i<=$maxYears; $i++) {
-            $loanTermOptions[$i] = $i;
+            $loanTermOptions[] = $i;
         }
 
         return $loanTermOptions;
