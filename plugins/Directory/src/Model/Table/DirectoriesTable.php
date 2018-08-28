@@ -373,7 +373,7 @@ class DirectoriesTable extends ControllerActionTable
                         'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
                         'recordKey' => 'student_id',
                         'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
-                        'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
+                        'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
                     ]);
                     break;
                 case self::STAFF:
@@ -391,7 +391,7 @@ class DirectoriesTable extends ControllerActionTable
                         'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
                         'recordKey' => 'staff_id',
                         'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
-                        'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
+                        'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
                     ]);
                     break;
                 case self::GUARDIAN:
