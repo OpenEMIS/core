@@ -600,7 +600,7 @@ class ScholarshipsTable extends ControllerActionTable
                         $this->field('loan.loan_term', [
                             'type' => 'select',
                             'attr' => [
-                                'label' => __('Loan Term'),
+                                'label' => __('Loan Term (Year)'),
                                 'select' => true,
                                 'options' => $this->getLoanTermOptions(self::MAX_YEARS)
                             ],
@@ -809,10 +809,12 @@ class ScholarshipsTable extends ControllerActionTable
         ]);
         $this->field('duration', [
             'type' => 'select',
+            'attr' => ['label' => __('Duration (Year)')],
             'after' => 'total_amount'
         ]);
         $this->field('bond', [
             'type' => 'select',
+            'attr' => ['label' => __('Bond (Year)')],
             'after' => 'duration'
         ]);
         $this->field('attachment_type_id', [
@@ -843,7 +845,7 @@ class ScholarshipsTable extends ControllerActionTable
         $bondOptions = [];
 
         for ($i=0; $i<=$maxYears; $i++) {
-            $bondOptions[$i] = $i . ' ' . __('Years');
+            $bondOptions[$i] = $i . ' ';
         }
 
         return $bondOptions;
@@ -854,7 +856,7 @@ class ScholarshipsTable extends ControllerActionTable
         $durationOptions = [];
 
         for ($i=0; $i<=$maxYears; $i++) {
-            $durationOptions[$i] = $i . ' ' . __('Years');
+            $durationOptions[] =  $i . ' ';
         }
 
         return $durationOptions;
@@ -865,7 +867,7 @@ class ScholarshipsTable extends ControllerActionTable
         $loanTermOptions = [];
 
         for ($i=1; $i<=$maxYears; $i++) {
-            $loanTermOptions[$i] = $i . ' ' . __('Years');
+            $loanTermOptions[$i] = $i;
         }
 
         return $loanTermOptions;
