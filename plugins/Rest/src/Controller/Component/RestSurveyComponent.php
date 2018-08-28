@@ -1438,15 +1438,8 @@ class RestSurveyComponent extends Component
 
     private function twentyFourHourFormat($value)
     {
-        $values = explode(' ', $value);
-        if (strtolower($values[1])=='am') {
-            return $values[0] . ':00';
-        } else {
-            $time = explode(':', $values[0]);
-            $time[] = '00';
-            $time[0] = intval($time[0]) + 12;
-            return implode(':', $time);
-        }
+        $time = date("H:i:s", strtotime($value));
+        return $time;
     }
 
     private function deleteExpiredResponse()

@@ -58,7 +58,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             // 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
             'recordKey' => 'institution_survey_id',
             'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
+            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
         $this->addBehavior('Excel', ['pages' => ['view']]);
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
