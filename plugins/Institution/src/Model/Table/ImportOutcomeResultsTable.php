@@ -182,7 +182,7 @@ class ImportOutcomeResultsTable extends AppTable
                 $InstitutionClasses->aliasField('institution_id') => $institutionId])
             ->group([
                 $InstitutionClasses->aliasField('id')
-            ])            
+            ])
             ->toArray();
 
             $attr['options'] = $classOptions;
