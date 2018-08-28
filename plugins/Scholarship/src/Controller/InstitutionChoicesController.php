@@ -3,7 +3,6 @@ namespace Scholarship\Controller;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 use App\Model\Traits\OptionsTrait;
@@ -17,11 +16,16 @@ class InstitutionChoicesController extends PageController
     public function initialize()
     {
         parent::initialize();
+        //this is not used can delete?
         $this->loadModel('Security.Users');
+        //this is not used can delete?
         $this->loadModel('FieldOption.Countries');
+        //this is not used can delete?
         $this->loadModel('Area.AreaAdministratives');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Scholarship.ApplicationInstitutionChoices');
+        $this->loadModel('Configuration.ConfigItems');
+        $this->loadModel('Scholarship.InstitutionChoiceTypes');
 
         $this->loadComponent('Scholarship.ScholarshipTabs');
 
@@ -96,9 +100,7 @@ class InstitutionChoicesController extends PageController
 
     private function addEdit($id=0)
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $ScholarshipInstitutionChoiceType = $ConfigItems->value('scholarship_institution_choice_type');
-        // pr($ScholarshipInstitutionChoiceType);
+        $ScholarshipInstitutionChoiceType = $this->ConfigItems->value('scholarship_institution_choice_type');
         $page = $this->Page;
 
         $scholarshipId = $page->getQueryString('scholarship_id');
@@ -113,9 +115,7 @@ class InstitutionChoicesController extends PageController
             ->setParams('Countries');
         
         if ($ScholarshipInstitutionChoiceType == 1) {
-            $ScholarshipInstitutionChoiceTypes = TableRegistry::get('Scholarship.InstitutionChoiceTypes');
-
-            $institutionChoiceOptions = $ScholarshipInstitutionChoiceTypes->getList()->toArray();
+            $institutionChoiceOptions = $this->InstitutionChoiceTypes->getList()->toArray();
 
             $page->get('institution_name')
                 ->setControlType('hidden');
