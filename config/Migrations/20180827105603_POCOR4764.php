@@ -81,6 +81,7 @@ class POCOR4764 extends AbstractMigration
         // scholarship_application_institution_choices
         $this->execute('CREATE TABLE `z_4764_scholarship_application_institution_choices` LIKE `scholarship_application_institution_choices`');
         $this->execute('INSERT INTO `z_4764_scholarship_application_institution_choices` SELECT * FROM `scholarship_application_institution_choices`');
+        $this->execute('ALTER TABLE `scholarship_application_institution_choices` MODIFY COLUMN `institution_name`  varchar(150) NULL');
         $this->table('scholarship_application_institution_choices')
             ->addColumn('scholarship_institution_choice_type_id', 'integer', [
                 'default' => null,

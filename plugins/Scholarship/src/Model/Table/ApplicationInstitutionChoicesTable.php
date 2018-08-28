@@ -4,6 +4,7 @@ namespace Scholarship\Model\Table;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
@@ -48,6 +49,15 @@ class ApplicationInstitutionChoicesTable extends AppTable
                 }
             ]);
     }
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->scholarship_institution_choice_type_id) {
+            $ScholarshipInstitutionChoiceTypes = TableRegistry::get('Scholarship.InstitutionChoiceTypes');
+            $institutionChoiceOptions = $ScholarshipInstitutionChoiceTypes->getList()->toArray();
+            $entity->institution_name = $institutionChoiceOptions[$entity->scholarship_institution_choice_type_id];
+        }
+    }
+
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
