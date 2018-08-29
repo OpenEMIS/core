@@ -9,11 +9,9 @@ class POCOR4764 extends AbstractMigration
         // config_items
         $this->execute('CREATE TABLE `z_4764_config_items` LIKE `config_items`');
         $this->execute('INSERT INTO `z_4764_config_items` SELECT * FROM `config_items`');
-
-        // check if id is correct
         $this->execute('INSERT INTO `config_items` 
             (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) VALUES 
-            (1019, "Scholarship Institution Choices", "scholarship_institution_choice_type", "Scholarship Institution Choices", "Scholarship Institution Choices", "", "-1", 1, 1, "", "", 1, CURRENT_DATE())');
+            (1019, "Institution Choices", "scholarship_institution_choice_type", "Scholarships", "Institution Choices", "", "0", 1, 1, "", "", 1, CURRENT_DATE())');
 
        // scholarship_institution_choice_types
         $table = $this->table('scholarship_institution_choice_types', [
