@@ -152,10 +152,18 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             'attr' => ['label' => $this->Scholarships->addCurrencySuffix('Balance Amount')],
             'entity' => $entity
         ]);
+
+        $this->field('annual_award_amount', [
+            'type' => 'disabled',
+            'after' => 'balance_amount',
+            'visible' => ['view' => false, 'add' => true, 'edit' => true],
+            'attr' => ['label' => $this->Scholarships->addCurrencySuffix('Annual Award Amount')],
+            'entity' => $entity
+        ]);
        
         $this->field('disbursement_category_id', [
             'type' => 'custom_disbursement_category',
-            'after' => 'balance_amount'
+            'after' => 'annual_award_amount'
         ]);
     }
 
@@ -393,6 +401,18 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         }
 
         return $attr;
+    }
+
+    public function onUpdateFieldAnnualAwardAmount(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $annualAmount = $entity->scholarship->maximum_award_amount;
+            $attr['attr']['value'] =  $annualAmount;
+
+            return $attr;
+        }
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
