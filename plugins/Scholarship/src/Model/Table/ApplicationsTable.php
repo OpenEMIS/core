@@ -409,6 +409,7 @@ class ApplicationsTable extends ControllerActionTable
                         'description',
                         'maximum_award_amount',
                         'total_amount',
+                        'duration',
                         'bond',
                         'requirements',
                         'instructions',
@@ -528,6 +529,11 @@ class ApplicationsTable extends ControllerActionTable
     public function onGetMaximumAwardAmount(Event $event, Entity $entity)
     {
         return $entity->scholarship->maximum_award_amount;
+    }
+
+    public function onGetDuration(Event $event, Entity $entity)
+    {
+        return $entity->scholarship->duration . ' ' . __('Years');
     }
 
     public function onGetBond(Event $event, Entity $entity)
@@ -657,6 +663,23 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
+    public function onUpdateFieldDuration(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $value = '';
+            if (isset($entity->scholarship->duration) && strlen($entity->scholarship->duration) > 0) {
+                $value = $entity->scholarship->duration . ' ' . __('Years');
+            }
+
+            $attr['value'] = $value;
+            $attr['attr']['value'] = $value;
+        }
+
+        return $attr;
+    }    
+
     public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -765,6 +788,10 @@ class ApplicationsTable extends ControllerActionTable
                 'require' => false,
                 'label' => $this->addCurrencySuffix('Annual Award Amount')
             ]
+        ]);
+        $this->field('duration', [
+            'type' => 'disabled',
+            'entity' => $entity
         ]);
         $this->field('bond', [
             'type' => 'disabled',
