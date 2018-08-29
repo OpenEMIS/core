@@ -459,7 +459,7 @@ class StudentAttendancesTable extends AppTable
             $html .= $Form->hidden($fieldPrefix.".start_date", ['value' => $selectedDate]);
             $html .= $Form->hidden($fieldPrefix.".end_date", ['value' => $selectedDate]);
         } else {
-            if ($this->isSchoolClosed($this->selectedDate)) {
+            if ($this->isSchoolClosed($this->selectedDate, $institutionId)) {
                 $html = '<i style="color: #999" class="fa fa-minus"></i>';
             } else {
                 $classId = $this->request->query['class_id'];
@@ -605,6 +605,7 @@ class StudentAttendancesTable extends AppTable
         $requestQuery = $this->request->query;
         $selectedPeriod = $requestQuery['academic_period_id'];
         $selectedWeek = $requestQuery['week'];
+        $institutionId = $this->Session->read('Institution.Institutions.id');
 
         $label = Inflector::humanize(__($field));
         if ($field == 'openemis_no') {
@@ -616,7 +617,7 @@ class StudentAttendancesTable extends AppTable
         if ($field == 'type') {
             $selectedDay = $requestQuery['day'];
             $date = $this->getSelectedDate($selectedPeriod, $selectedWeek, $selectedDay);
-            if ($this->isSchoolClosed($date)) {
+            if ($this->isSchoolClosed($date, $institutionId)) {
                 return '<span style="color: #999">' . $label . '</span>';
             }
         } elseif ($field == 'monday' ||
@@ -627,7 +628,7 @@ class StudentAttendancesTable extends AppTable
             $field == 'saturday' ||
             $field == 'sunday') {
             $date = $this->getDateFromPeriodWeekDay($selectedPeriod, $selectedWeek, $label);
-            if ($this->isSchoolClosed($date)) {
+            if ($this->isSchoolClosed($date, $institutionId)) {
                 return '<span style="color: #999">' . $label . '</span>';
             }
         }
@@ -707,7 +708,8 @@ class StudentAttendancesTable extends AppTable
 
     public function getAbsenceData(Event $event, Entity $entity, $key, $date)
     {
-        if ($this->isSchoolClosed($date)) {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        if ($this->isSchoolClosed($date, $institutionId)) {
             $value = '<i style="color: #999" class="fa fa-minus"></i>';
         } else {
             $classId = $this->request->query['class_id'];
@@ -846,7 +848,7 @@ class StudentAttendancesTable extends AppTable
                     }
 
                     // POCOR-2377 adding the school closed text
-                    $schoolClosed = $this->isSchoolClosed($firstDayOfWeek) ? __('School Closed') : '';
+                    $schoolClosed = $this->isSchoolClosed($firstDayOfWeek, $institutionId) ? __('School Closed') : '';
                     ;
 
                     $dayOptions[$firstDayOfWeek->dayOfWeek] = [
@@ -890,7 +892,7 @@ class StudentAttendancesTable extends AppTable
                 }
 
                 if (!is_null($this->request->query('mode'))) {
-                    if ($this->isSchoolClosed($this->selectedDate)) {
+                    if ($this->isSchoolClosed($this->selectedDate, $institutionId)) {
                         unset($this->request->query['mode']);
                     }
                 }
@@ -1181,7 +1183,8 @@ class StudentAttendancesTable extends AppTable
                 }
 
                 // POCOR-2377 hide the edit button if school is closed
-                if ($this->isSchoolClosed($this->selectedDate)) {
+                $institutionId = $this->Session->read('Institution.Institutions.id');
+                if ($this->isSchoolClosed($this->selectedDate, $institutionId)) {
                     $toolbarButtons->offsetUnset('edit');
                 }
             } else { // if user selected All Days, Edit operation will not be allowed
