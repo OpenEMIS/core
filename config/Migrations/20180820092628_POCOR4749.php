@@ -32,6 +32,11 @@ class POCOR4749 extends AbstractMigration
               'id'  => 4,
               'code'  => 'LOAN',
               'name'  => 'Loan'
+            ],
+            [
+              'id'  => 5,
+              'code'  => 'DISTANCELEARNING',
+              'name'  => 'Distance Learning'
             ]
         ];
 
