@@ -29,7 +29,24 @@ class ApplicationInstitutionChoicesTable extends AppTable
     {
         $validator = parent::validationDefault($validator);
 
+        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $this->ScholarshipInstitutionChoiceType = $configItems->value('scholarship_institution_choice_type');
+
         return $validator
+            ->notEmpty('scholarship_institution_choice_type_id', __('This field cannot be left empty'), function ($context) {
+                if ($this->ScholarshipInstitutionChoiceType == 1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            })
+            ->notEmpty('institution_name', __('This field cannot be left empty'), function ($context) {
+                if ($this->ScholarshipInstitutionChoiceType == 1) {
+                    return false;
+                } else {
+                    return true;
+                }
+            })
             ->requirePresence('country_id')
             ->add('end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'start_date', true],
