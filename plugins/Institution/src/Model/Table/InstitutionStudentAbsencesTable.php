@@ -737,9 +737,10 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                         $CalendarEventDates = TableRegistry::get('CalendarEventDates');
                         $startDate = new Date($context['data']['start_date']);
                         $endDate = new Date($value);
+                        $institutionId = $context['data']['institution_id'];
 
                         if ($startDate == $endDate) {
-                            $isSchoolClosed = $CalendarEventDates->isSchoolClosed($startDate);
+                            $isSchoolClosed = $CalendarEventDates->isSchoolClosed($startDate, $institutionId);
                             if ($isSchoolClosed) {
                                 $message = __('School closed on this date');
                                 return $message;
@@ -754,7 +755,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
                             $records = [];
                             foreach ($datePeriod as $key => $date) {
-                                $isSchoolClosed = $CalendarEventDates->isSchoolClosed($date);
+                                $isSchoolClosed = $CalendarEventDates->isSchoolClosed($date, $institutionId);
                                 if ($isSchoolClosed) {
                                     $records[$date->format('d-m-Y')] = 'closed';
                                 } else {

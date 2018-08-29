@@ -10,11 +10,11 @@ use Cake\ORM\TableRegistry;
 
 class CalendarBehavior extends Behavior
 {
-    public function isSchoolClosed($date)
+    public function isSchoolClosed($date, $institutionId = null)
     {
         $CalendarEventDates = TableRegistry::get('CalendarEventDates');
 
-        return $CalendarEventDates->isSchoolClosed($date);
+        return $CalendarEventDates->isSchoolClosed($date, $institutionId);
     }
 
     public function getInstitutionClosedDates($startDate, $endDate, $institutionList)
