@@ -70,6 +70,11 @@ class ScholarshipApplicationsTable extends AppTable  {
                         'gender_id'
                     ]
                 ],
+                'Applicants.MainNationalities' => [
+                    'fields' => [
+                        'nationality_name' => 'MainNationalities.name',
+                    ]
+                ],
                 'Applicants.Genders' => [
                     'fields' => [
                         'code',
@@ -148,6 +153,12 @@ class ScholarshipApplicationsTable extends AppTable  {
             'field' => 'gender_name',
             'type' => 'string',
             'label' =>  ''
+        ];
+        $newArray[] = [
+            'key' => 'Recipients.nationality_id',
+            'field' => 'nationality_name',
+            'type' => 'string',
+            'label' => __('Nationality')
         ];
         $newArray[] = [
             'key' => 'ScholarshipApplications.scholarship_id',
