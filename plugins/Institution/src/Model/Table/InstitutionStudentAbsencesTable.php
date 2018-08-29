@@ -230,7 +230,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 $Cases->save($caseEntity);
             }
         }
-
     }
 
     private function addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate)
