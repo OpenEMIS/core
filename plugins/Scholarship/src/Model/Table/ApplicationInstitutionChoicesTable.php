@@ -29,18 +29,18 @@ class ApplicationInstitutionChoicesTable extends AppTable
     {
         $validator = parent::validationDefault($validator);
 
-        $configItems = TableRegistry::get('Configuration.ConfigItems');
-        $this->ScholarshipInstitutionChoiceType = $configItems->value('scholarship_institution_choice_type');
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $this->ScholarshipInstitutionChoiceType = $ConfigItems->value('scholarship_institution_choice_type');
 
         return $validator
-            ->notEmpty('scholarship_institution_choice_type_id', __('This field cannot be left empty'), function ($context) {
+            ->notEmpty('scholarship_institution_choice_type_id', null, function ($context) {
                 if ($this->ScholarshipInstitutionChoiceType == 1) {
                     return true;
                 } else {
                     return false;
                 }
             })
-            ->notEmpty('institution_name', __('This field cannot be left empty'), function ($context) {
+            ->notEmpty('institution_name', null, function ($context) {
                 if ($this->ScholarshipInstitutionChoiceType == 1) {
                     return false;
                 } else {

@@ -60,9 +60,9 @@ class ConfigurationsController extends AppController
     {
         return $this->redirect(['plugin' => 'Theme', 'controller' => 'Themes', 'action' => 'index', 'querystring' => $this->encode($this->request->query)]);
     }
-    public function ScholarshipInstitutionChoices()
+    public function Scholarships()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigScholarshipInstitutionChoices']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigScholarships']);
     }
     public function StaffTransfers()
     {

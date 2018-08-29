@@ -13,7 +13,7 @@ use App\Model\Traits\OptionsTrait;
 
 use App\Model\Table\ControllerActionTable;
 
-class ConfigScholarshipInstitutionChoicesTable extends ControllerActionTable
+class ConfigScholarshipsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
@@ -46,7 +46,7 @@ class ConfigScholarshipInstitutionChoicesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->where([$this->aliasField('type') => 'Scholarship Institution Choices']);
+        $query->where([$this->aliasField('type') => 'Scholarships']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)

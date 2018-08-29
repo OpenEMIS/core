@@ -16,11 +16,8 @@ class InstitutionChoicesController extends PageController
     public function initialize()
     {
         parent::initialize();
-        //this is not used can delete?
         $this->loadModel('Security.Users');
-        //this is not used can delete?
         $this->loadModel('FieldOption.Countries');
-        //this is not used can delete?
         $this->loadModel('Area.AreaAdministratives');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Scholarship.ApplicationInstitutionChoices');

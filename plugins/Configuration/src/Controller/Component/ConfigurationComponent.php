@@ -29,7 +29,7 @@ class ConfigurationComponent extends Component
         'CustomValidation' => ['className' => 'Configuration.CustomValidation'],
         'Themes' => ['className' => 'Configuration.Themes'],
         'StaffTransfers' => ['className' => 'Configuration.ConfigStaffTransfers'],
-        'ScholarshipInstitutionChoices' => ['className' => 'Configuration.ConfigScholarshipInstitutionChoices']
+        'Scholarships' => ['className' => 'Configuration.ConfigScholarships']
     ];
 
     public $components = ['AccessControl'];
