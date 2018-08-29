@@ -61,6 +61,11 @@ class RecipientAcademicStandingsTable extends AppTable  {
                         'name'
                     ]
                 ],
+                'Recipients.MainNationalities' => [
+                    'fields' => [
+                        'nationality_name' => 'MainNationalities.name',
+                    ]
+                ],
                 'AcademicPeriods' => [
                     'fields' => [
                         'code',
@@ -113,6 +118,12 @@ class RecipientAcademicStandingsTable extends AppTable  {
             'field' => 'gender_name',
             'type' => 'string',
             'label' =>  ''
+        ];
+        $newArray[] = [
+            'key' => 'Recipients.nationality_id',
+            'field' => 'nationality_name',
+            'type' => 'string',
+            'label' => __('Nationality')
         ];
         $newArray[] = [
             'key' => 'RecipientAcademicStandings.scholarship_id',
