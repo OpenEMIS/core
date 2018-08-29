@@ -37,7 +37,7 @@ class POCOR4749 extends AbstractMigration
               'id'  => 5,
               'code'  => 'DISTANCELEARNING',
               'name'  => 'Distance Learning'
-            ]            
+            ]
         ];
 
         $this->table('scholarship_financial_assistance_types')->insert($data)->save(); 
