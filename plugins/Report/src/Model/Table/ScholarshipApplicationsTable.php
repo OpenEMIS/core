@@ -80,6 +80,7 @@ class ScholarshipApplicationsTable extends AppTable  {
                     'fields' => [
                         'name',
                         'maximum_award_amount',
+                        'total_amount',
                         'bond',
                         'scholarship_financial_assistance_type_id',
                         'academic_period_id'
@@ -109,6 +110,7 @@ class ScholarshipApplicationsTable extends AppTable  {
                 'academic_period_id' => 'AcademicPeriods.name',
                 'financial_assistance_type' => 'FinancialAssistanceTypes.name',
                 'maximum_award_amount' => 'Scholarships.maximum_award_amount',
+                'total_award_amount' => 'Scholarships.total_amount',
                 'bond' => 'Scholarships.bond',
                 'duration' => 'Scholarships.duration'
             ])
@@ -162,10 +164,10 @@ class ScholarshipApplicationsTable extends AppTable  {
             'label' => __('Financial Assistance Type')
         ];
         $newArray[] = [
-            'key' => 'Scholarships.maximum_award_amount',
-            'field' => 'maximum_award_amount',
+            'key' => 'Scholarships.total_award_amount',
+            'field' => 'total_award_amount',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Total Award Amount')
         ];
         $newArray[] = [
             'key' => 'Scholarships.duration',
