@@ -140,7 +140,7 @@ class ScholarshipApplicationsTable extends AppTable  {
             'key' => 'Applicants.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' =>  'OpenEMIS ID'
+            'label' =>  __('OpenEMIS ID')
         ];
         $newArray[] = [
             'key' => 'ScholarshipApplications.applicant_id',
