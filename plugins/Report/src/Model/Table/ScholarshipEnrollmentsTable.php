@@ -198,7 +198,7 @@ class ScholarshipEnrollmentsTable extends AppTable
             'key' => 'education_field_of_study_id',
             'field' => 'education_field_of_study_id',
             'type' => 'string',
-            'label' => __('Field of Study')
+            'label' => __('Area of Study')
         ];
 
         $newFields[] = [
