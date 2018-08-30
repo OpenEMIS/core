@@ -29,24 +29,21 @@ class ApplicationInstitutionChoicesTable extends AppTable
     {
         $validator = parent::validationDefault($validator);
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $this->ScholarshipInstitutionChoiceType = $ConfigItems->value('scholarship_institution_choice_type');
-
         return $validator
-            ->notEmpty('scholarship_institution_choice_type_id', null, function ($context) {
-                if ($this->ScholarshipInstitutionChoiceType == 1) {
-                    return true;
-                } else {
-                    return false;
-                }
-            })
-            ->notEmpty('institution_name', null, function ($context) {
-                if ($this->ScholarshipInstitutionChoiceType == 1) {
-                    return false;
-                } else {
-                    return true;
-                }
-            })
+            // ->notEmpty('scholarship_institution_choice_type_id', null, function ($context) {
+            //     if ($this->ScholarshipInstitutionChoiceType == 1) {
+            //         return true;
+            //     } else {
+            //         return false;
+            //     }
+            // })
+            // ->notEmpty('institution_name', null, function ($context) {
+            //     if ($this->ScholarshipInstitutionChoiceType == 1) {
+            //         return false;
+            //     } else {
+            //         return true;
+            //     }
+            // })
             ->requirePresence('country_id')
             ->add('end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'start_date', true],
@@ -66,15 +63,6 @@ class ApplicationInstitutionChoicesTable extends AppTable
                 }
             ]);
     }
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->scholarship_institution_choice_type_id) {
-            $ScholarshipInstitutionChoiceTypes = TableRegistry::get('Scholarship.InstitutionChoiceTypes');
-            $institutionChoiceOptions = $ScholarshipInstitutionChoiceTypes->getList()->toArray();
-            $entity->institution_name = $institutionChoiceOptions[$entity->scholarship_institution_choice_type_id];
-        }
-    }
-
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
