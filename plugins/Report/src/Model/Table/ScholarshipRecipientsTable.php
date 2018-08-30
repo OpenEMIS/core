@@ -180,6 +180,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         }
 
         $ApplicationInstitutionChoices = TableRegistry::get('Scholarship.ApplicationInstitutionChoices');
+        $InstitutionChoiceTypes = TableRegistry::get('Scholarship.InstitutionChoiceTypes');
         $Country = TableRegistry::get('FieldOption.Countries');
         $EducationFieldOfStudies = TableRegistry::get('Education.EducationFieldOfStudies');
         $QualificationLevels = TableRegistry::get('FieldOption.QualificationLevels');
@@ -239,6 +240,9 @@ class ScholarshipRecipientsTable extends AppTable  {
             ->leftJoin([$ApplicationInstitutionChoices->alias() => $ApplicationInstitutionChoices->table()], [
                 $ApplicationInstitutionChoices->aliasField('is_selected = 1'),$this->aliasField('recipient_id =') . $ApplicationInstitutionChoices->aliasField('applicant_id')
             ])
+            ->leftJoin([$InstitutionChoiceTypes->alias() => $InstitutionChoiceTypes->table()], [
+                $InstitutionChoiceTypes->aliasField('id =') . $ApplicationInstitutionChoices->aliasField('scholarship_institution_choice_type_id'),
+            ])
             ->leftJoin([$Country->alias() => $Country->table()], [
                 $Country->aliasField('id =') . $ApplicationInstitutionChoices->aliasField('country_id'),
             ])
@@ -255,7 +259,6 @@ class ScholarshipRecipientsTable extends AppTable  {
                 $this->aliasField('scholarship_recipient_activity_status_id'),
                 $ApplicationInstitutionChoices->aliasField('location_type'),
                 $ApplicationInstitutionChoices->aliasField('country_id'),
-                $ApplicationInstitutionChoices->aliasField('institution_name'),
                 $ApplicationInstitutionChoices->aliasField('education_field_of_study_id'),
                 $ApplicationInstitutionChoices->aliasField('course_name'), 
                 $ApplicationInstitutionChoices->aliasField('qualification_level_id'),
@@ -265,6 +268,7 @@ class ScholarshipRecipientsTable extends AppTable  {
                 $Country->aliasField('name'),
                 $EducationFieldOfStudies->aliasField('name'),
                 $QualificationLevels->aliasField('name'),
+                'institution_name' => 'InstitutionChoiceTypes.name'
             ])
             ->where($conditions);
     }
@@ -358,8 +362,8 @@ class ScholarshipRecipientsTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'ApplicationInstitutionChoices.institution_name',
-            'field' => 'institution',
+            'key' => 'InstitutionChoiceTypes.name',
+            'field' => 'institution_name',
             'type' => 'string',
             'label' => __('Institution')
         ];
