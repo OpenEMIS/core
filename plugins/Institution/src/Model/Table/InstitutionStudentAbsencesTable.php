@@ -33,8 +33,20 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         [
             'value' => 'Workflow.onAssignToHomeRoomTeacher',
             'text' => 'Assign to Home Room Teacher',
-            'description' => 'Triggering this rule will assign the case to the respective Home Room Teacher or Secondary Teacher',
+            'description' => 'Triggering this rule will assign the case to the respective Home Room Teacher',
             'method' => 'onAssignToHomeRoomTeacher'
+        ],        
+        [
+            'value' => 'Workflow.onAssignToSecondaryTeacher',
+            'text' => 'Assign to Secondary Teacher',
+            'description' => 'Triggering this rule will assign the case to the respective Secondary Teacher',
+            'method' => 'onAssignToSecondaryTeacher'
+        ],        
+        [
+            'value' => 'Workflow.onAssignToPrincipal',
+            'text' => 'Assign to Principal',
+            'description' => 'Triggering this rule will assign the case to Principal',
+            'method' => 'onAssignToPrincipal'
         ]
     ];
 
@@ -110,7 +122,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
     }
 
-    public function onAssignToHomeRoomTeacher(Event $event, Entity $caseEntity, Entity $linkedRecordEntity)
+    public function onAssignToHomeRoomTeacher(Event $event, Entity $caseEntity, Entity $linkedRecordEntity, ArrayObject $extra)
     {
         $Students = TableRegistry::get('Institution.Students');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
@@ -120,6 +132,46 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $classTeachers = $Students->find()
             ->select([
                 'homeroom_staff_id' => $Classes->aliasField('staff_id'),
+            ])
+            ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                $ClassStudents->aliasField('student_id = ') . $Students->aliasField('student_id'),
+                $ClassStudents->aliasField('institution_id = ') . $Students->aliasField('institution_id'),
+                $ClassStudents->aliasField('education_grade_id = ') . $Students->aliasField('education_grade_id'),
+                $ClassStudents->aliasField('student_status_id = ') . $Students->aliasField('student_status_id'),
+                $ClassStudents->aliasField('academic_period_id = ') . $Students->aliasField('academic_period_id')
+            ])
+            ->innerJoin([$Classes->alias() => $Classes->table()], [
+                $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
+            ])
+            ->where([
+                $Students->aliasField('student_id') => $linkedRecordEntity->student_id,
+                $Students->aliasField('institution_id') => $linkedRecordEntity->institution_id,
+                $Students->aliasField('academic_period_id') => $linkedRecordEntity->academic_period_id,
+                $Students->aliasField('start_date <= ') => $linkedRecordEntity->start_date,
+                $Students->aliasField('end_date >= ') => $linkedRecordEntity->end_date
+            ])
+            ->first();
+
+        if (!empty($classTeachers)) {
+            $staffId = $classTeachers->homeroom_staff_id;
+
+            if (!empty($staffId)) {
+                $caseEntity->assignee_id = $staffId;
+                $extra['assigneeFound'] = true;
+                $Cases->save($caseEntity);
+            }
+        }
+    }
+
+    public function onAssignToSecondaryTeacher(Event $event, Entity $caseEntity, Entity $linkedRecordEntity, ArrayObject $extra)
+    {
+        $Students = TableRegistry::get('Institution.Students');
+        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $Cases = TableRegistry::get('Cases.InstitutionCases');
+
+        $classTeachers = $Students->find()
+            ->select([
                 'secondary_staff_id' => $Classes->aliasField('secondary_staff_id')
             ])
             ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
@@ -142,10 +194,39 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ->first();
 
         if (!empty($classTeachers)) {
-            $staffId = !empty($classTeachers->homeroom_staff_id) ? $classTeachers->homeroom_staff_id : $classTeachers->secondary_staff_id;
+            $staffId = $classTeachers->secondary_staff_id;
 
             if (!empty($staffId)) {
                 $caseEntity->assignee_id = $staffId;
+                $extra['assigneeFound'] = true;
+                $Cases->save($caseEntity);
+            }
+        }
+    }
+
+    public function onAssignToPrincipal(Event $event, Entity $caseEntity, Entity $linkedRecordEntity, ArrayObject $extra)
+    {
+        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+        $Cases = TableRegistry::get('Cases.InstitutionCases');
+
+        $institutionPrincipal = $InstitutionPositions->find()
+            ->select([
+                'principal_id' => 'InstitutionStaff.staff_id'
+            ])
+            ->matching('InstitutionStaff')
+            ->matching('StaffPositionTitles')
+            ->where([
+                'InstitutionStaff.institution_id' => $linkedRecordEntity->institution_id,
+                'StaffPositionTitles.name ' => 'Principal'
+            ])
+            ->first();
+
+        if (!empty($institutionPrincipal)) {
+            $staffId = $institutionPrincipal->principal_id;
+
+            if (!empty($staffId)) {
+                $caseEntity->assignee_id = $staffId;
+                $extra['assigneeFound'] = true;
                 $Cases->save($caseEntity);
             }
         }
