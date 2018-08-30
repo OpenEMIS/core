@@ -94,16 +94,6 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $country;
     }
 
-    public function onExcelGetInstitution(Event $event, Entity $entity)
-    {
-        $institution = '';
-        if (!is_null($entity->ApplicationInstitutionChoices['institution_name']) && $entity->ApplicationInstitutionChoices['is_selected'] == 1) {
-            $institution = $entity->ApplicationInstitutionChoices['institution_name'];
-        }
-
-        return $institution;
-    }
-
     public function onExcelGetApprovedAmount(Event $event, Entity $entity)
     {
         $amount = '';
