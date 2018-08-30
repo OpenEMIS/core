@@ -50,7 +50,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         ]);
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $this->workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();   
+        $this->workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -197,7 +197,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                             isset($schoolClosedDays[$institutionId][$dayFormat]) &&
                             $schoolClosedDays[$institutionId][$dayFormat] == 0) {
                             $status = __('School Closed');
-                            $unmark=$unmark-1;
+                            $unmark=$unmark-1;  
                         } elseif (isset($attendanceRecord) && $attendanceRecord[$dayColumn] == 1) {
                             $status = __('Marked');
                             $unmark=$unmark-1;
@@ -210,7 +210,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                     return $row;
                 });
             })
-        ;    
+        ;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
