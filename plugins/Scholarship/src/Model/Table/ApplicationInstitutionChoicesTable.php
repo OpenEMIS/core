@@ -4,7 +4,6 @@ namespace Scholarship\Model\Table;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
