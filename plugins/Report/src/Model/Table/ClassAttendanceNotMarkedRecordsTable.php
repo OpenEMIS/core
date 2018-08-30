@@ -50,7 +50,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         ]);
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $this->workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
+        $this->workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();   
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -161,10 +161,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'staff_id' => 'Staff.id',
                 'secondary_staff_id' => 'SecondaryStaff.id',
                 'shift_name' => 'ShiftOptions.name',
-                'area_name' => 'Areas.name',
-                'area_code' => 'Areas.code',
-                'area_administrative_code' => 'AreaAdministratives.code',
-                'area_administrative_name' => 'AreaAdministratives.name',
                 'education_stage_order' => $query->func()->min('EducationStages.order')
             ])
             ->where([
@@ -181,7 +177,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ->formatResults(function (ResultSetInterface $results) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
                 return $results->map(function ($row) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
                     $institutionId = $row->institution_id;
-
+                    $mark= 0;
+                    $unmark= 0;
                     if (!empty($row->class_attendance_records)) {
                         $attendanceRecord = $row->class_attendance_records[0];
                     }
@@ -190,22 +187,30 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                         $dayColumn = 'day_' . $day;
                         $dayFormat = (new DateTime($year . '-' . $month . '-' . $day))->format('Y-m-d');
                         $status = __('Not Marked');
+                        $dayText = (new DateTime($year . '-' . $month . '-' . $day))->format('D');
 
+                        if ($dayText != 'Sun' && $dayText != 'Sat'){
+                            $unmark=$unmark+1;
+                        }
+                        
                         if (isset($schoolClosedDays[$institutionId]) &&
                             isset($schoolClosedDays[$institutionId][$dayFormat]) &&
                             $schoolClosedDays[$institutionId][$dayFormat] == 0) {
                             $status = __('School Closed');
+                            $unmark=$unmark-1;
                         } elseif (isset($attendanceRecord) && $attendanceRecord[$dayColumn] == 1) {
                             $status = __('Marked');
+                            $unmark=$unmark-1;
+                            $mark++;
                         }
-
+                        $row->total_mark = $mark;
+                        $row->total_unmark = $unmark;
                         $row->{$dayColumn} = $status;
                     }
-
                     return $row;
                 });
             })
-        ;
+        ;    
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -322,34 +327,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'Areas.code',
-            'field' => 'area_code',
-            'type' => 'string',
-            'label' => __('Area Code')
-        ];
-
-        $newFields[] = [
-            'key' => 'Areas.name',
-            'field' => 'area_name',
-            'type' => 'string',
-            'label' => __('Area')
-        ];
-
-        $newFields[] = [
-            'key' => 'AreaAdministratives.code',
-            'field' => 'area_administrative_code',
-            'type' => 'string',
-            'label' => __('Area Administrative Code')
-        ];
-
-        $newFields[] = [
-            'key' => 'AreaAdministratives.name',
-            'field' => 'area_administrative_name',
-            'type' => 'string',
-            'label' => __('Area Administrative')
-        ];
-
-        $newFields[] = [
             'key' => 'InstitutionClasses.institution_shift_id',
             'field' => 'institution_shift_id',
             'type' => 'integer',
@@ -369,6 +346,20 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             'type' => 'string',
             'label' => ''
         ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.Marked',
+            'field' => 'total_mark',
+            'type' => 'string',
+            'label' => 'Marked'
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.Unmarked',
+            'field' => 'total_unmark',
+            'type' => 'string',
+            'label' => 'Unmarked'
+        ];                
 
         $newFields[] = [
             'key' => 'InstitutionClasses.staff_id',
