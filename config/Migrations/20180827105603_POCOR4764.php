@@ -1,19 +1,40 @@
 <?php
 
 use Phinx\Migration\AbstractMigration;
+use Cake\ORM\TableRegistry;
 
 class POCOR4764 extends AbstractMigration
 {
     public function up()
     {
-        // config_items
-        $this->execute('CREATE TABLE `z_4764_config_items` LIKE `config_items`');
-        $this->execute('INSERT INTO `z_4764_config_items` SELECT * FROM `config_items`');
-        $this->execute('INSERT INTO `config_items` 
-            (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) VALUES 
-            (1019, "Institution Choices", "scholarship_institution_choice_type", "Scholarships", "Institution Choices", "", "0", 1, 1, "", "", 1, CURRENT_DATE())');
+        $ApplicationInstitutionChoices = TableRegistry::get('Scholarship.ApplicationInstitutionChoices');
+        $ScholarshipApplicationInstitutionChoices = $ApplicationInstitutionChoices
+            ->find()
+            ->toArray();
 
-       // scholarship_institution_choice_types
+        $institutionNameData = $ApplicationInstitutionChoices
+            ->find()
+            ->distinct(['institution_name'])
+            ->select('institution_name')
+            ->toArray();
+
+        // Create field options for scholarship_institution_choice_types based on the existing institution_name column in scholarship_application_institution_choices table 
+        $data = [];
+        $institutionNames = [];
+        $i = 1;
+        foreach ($institutionNameData as $key => $value) {
+            $institutionNames[$i] = $value['institution_name'];
+            $data[] = [
+                'name' => $value['institution_name'],
+                'order' => $i,
+                'modified_user_id' => NULL,
+                'modified' => NULL,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ];
+            $i++;
+        }
+
         $table = $this->table('scholarship_institution_choice_types', [
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This field options table contains the list of scholarship institution choice types used in scholarships'
@@ -75,28 +96,36 @@ class POCOR4764 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
+        $this->insert('scholarship_institution_choice_types', $data);
 
-        // scholarship_application_institution_choices
+        // Backup scholarship_application_institution_choices
         $this->execute('CREATE TABLE `z_4764_scholarship_application_institution_choices` LIKE `scholarship_application_institution_choices`');
         $this->execute('INSERT INTO `z_4764_scholarship_application_institution_choices` SELECT * FROM `scholarship_application_institution_choices`');
-        $this->execute('ALTER TABLE `scholarship_application_institution_choices` MODIFY COLUMN `institution_name`  varchar(150) NULL');
+        // Remove institution_name column from scholarship_application_institution_choices
+        $this->execute('ALTER TABLE `scholarship_application_institution_choices` DROP COLUMN `institution_name`');
+        // Remove scholarship_institution_choice_type_id column from scholarship_application_institution_choices
         $this->table('scholarship_application_institution_choices')
             ->addColumn('scholarship_institution_choice_type_id', 'integer', [
                 'default' => null,
-                'null' => true,
-                'after' => 'institution_name',
+                'null' => false,
+                'after' => 'location_type',
                 'comment' => 'links to scholarship_institution_choice_types.id'
             ])
              ->addIndex('scholarship_institution_choice_type_id')
             ->save();
+        // Generates all the update queries to scholarship_institution_choice_type_id column.
+        $sql = '';
+        foreach ($ScholarshipApplicationInstitutionChoices as $key => $value) {
+
+            $scholarshipInstitutionChoiceTypeId = array_search($value->institution_name, $institutionNames);
+            $sql .= 'UPDATE `scholarship_application_institution_choices` SET `scholarship_institution_choice_type_id` ='. $scholarshipInstitutionChoiceTypeId.' WHERE `id` ='.$value->id.';';
+        }
+        $this->execute($sql);
     }
 
     public function down()
     {
         $this->dropTable("scholarship_institution_choice_types");
-
-        $this->dropTable("config_items");
-        $this->table("z_4764_config_items")->rename("config_items");
 
         $this->dropTable("scholarship_application_institution_choices");
         $this->table("z_4764_scholarship_application_institution_choices")->rename("scholarship_application_institution_choices");
