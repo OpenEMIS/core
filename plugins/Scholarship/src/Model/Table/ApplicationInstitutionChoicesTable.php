@@ -30,20 +30,6 @@ class ApplicationInstitutionChoicesTable extends AppTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            // ->notEmpty('scholarship_institution_choice_type_id', null, function ($context) {
-            //     if ($this->ScholarshipInstitutionChoiceType == 1) {
-            //         return true;
-            //     } else {
-            //         return false;
-            //     }
-            // })
-            // ->notEmpty('institution_name', null, function ($context) {
-            //     if ($this->ScholarshipInstitutionChoiceType == 1) {
-            //         return false;
-            //     } else {
-            //         return true;
-            //     }
-            // })
             ->requirePresence('country_id')
             ->add('end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'start_date', true],
