@@ -24,7 +24,7 @@ class RecipientAcademicStandingsTable extends AppTable
 
         return $validator
            ->add('gpa', [
-                'validClassification' => [
+                'validGPA' => [
                     'rule' => ['range', 0, 9],
                     'message' => 'GPA should between 0 to 9'
                 ]
