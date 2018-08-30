@@ -99,7 +99,7 @@ class RecipientPaymentStructuresTable extends AppTable  {
             'key' => 'Recipients.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' =>  'OpenEMIS ID'
+            'label' =>  __('OpenEMIS ID')
         ];
         $newArray[] = [
             'key' => 'RecipientPaymentStructures.recipient_id',
