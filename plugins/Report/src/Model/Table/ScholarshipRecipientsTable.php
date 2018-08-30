@@ -340,7 +340,7 @@ class ScholarshipRecipientsTable extends AppTable  {
             'key' => 'ApplicationInstitutionChoices.approved_amount',
             'field' => 'approvedAmount',
             'type' => 'string',
-            'label' => __('Approved Amount')
+            'label' => __('Approved Award Amount')
         ];        
 
         $newFields[] = [
@@ -368,7 +368,7 @@ class ScholarshipRecipientsTable extends AppTable  {
             'key' => 'ScholarshipApplications.education_field_of_study_id',
             'field' => 'fieldOfStudy',
             'type' => 'string',
-            'label' => __('Field Of Study')
+            'label' => __('Area of Study')
         ];
 
         $newFields[] = [
