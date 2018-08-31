@@ -57,6 +57,11 @@ class InstitutionChoicesController extends PageController
         $page->get('is_selected')
             ->setLabel('Selection');
 
+        $page->get('start_date')
+            ->setLabel('Commencement Date');
+
+        $page->get('end_date')
+            ->setLabel('Completion Date');
         $page->exclude(['order']);
     }
 
