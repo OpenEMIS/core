@@ -60,7 +60,7 @@ class ScholarshipRecipientInstitutionChoicesController extends BaseController
 
     public function edit($id)
     {
-        $page = $this->Page;                     
+        $page = $this->Page;
         parent::edit($id);
 
         $page->get('location_type')
@@ -68,10 +68,11 @@ class ScholarshipRecipientInstitutionChoicesController extends BaseController
             ->setDisabled(true);
 
         $page->get('country_id')
-            ->setControlType('string')    
+            ->setControlType('string')
             ->setDisabled(true);
 
-        $page->get('institution_name')
+        $page->get('scholarship_institution_choice_type_id')
+            ->setControlType('string')
             ->setDisabled(true);
 
         $page->get('estimated_cost')
@@ -95,7 +96,7 @@ class ScholarshipRecipientInstitutionChoicesController extends BaseController
             ->setDisabled(true);
 
         $entity = $page->getData();
-        $this->renderSelection($entity);   
+        $this->renderSelection($entity);
     }
 
     public function renderSelection(Entity $entity) 

@@ -186,18 +186,20 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                     for ($day = $startDay; $day <= $endDay; ++$day) {
                         $dayColumn = 'day_' . $day;
                         $dayFormat = (new DateTime($year . '-' . $month . '-' . $day))->format('Y-m-d');
-                        
-                        if (isset($schoolClosedDays[$institutionId]) &&
-                            isset($schoolClosedDays[$institutionId][$dayFormat]) &&
-                            $schoolClosedDays[$institutionId][$dayFormat] == 0) {
-                            $status = __('School Closed');
-                            $unmark++;
-                        } elseif (isset($attendanceRecord) && $attendanceRecord[$dayColumn] == 1) {
-                            $status = __('Marked');
-                            $mark++;
-                        } else {
-                            $status = __('Not Marked');
-                            $unmark++;
+                        $dayText = (new DateTime($year . '-' . $month . '-' . $day))->format('l');
+
+                        if(in_array($dayText, $this->workingDays)){
+                            if (isset($schoolClosedDays[$institutionId]) &&
+                                isset($schoolClosedDays[$institutionId][$dayFormat]) &&
+                                $schoolClosedDays[$institutionId][$dayFormat] == 0) {
+                                $status = __('School Closed');
+                            } elseif (isset($attendanceRecord) && $attendanceRecord[$dayColumn] == 1) {
+                                $status = __('Marked');
+                                $mark++;
+                            } else {
+                                $status = __('Not Marked');
+                                $unmark++;
+                            }      
                         }
                         $row->total_mark = $mark;
                         $row->total_unmark = $unmark;
