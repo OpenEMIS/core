@@ -21,6 +21,7 @@ class ScholarshipEnrollmentsTable extends AppTable
 
         $this->belongsTo('Applications', ['className' => 'Scholarship.Applications', 'foreignKey' => ['applicant_id', 'scholarship_id']]);
         $this->belongsTo('Countries', ['className' => 'FieldOption.Countries', 'foreignKey' => 'country_id']);
+        $this->belongsTo('InstitutionChoiceTypes', ['className' => 'Scholarship.InstitutionChoiceTypes', 'foreignKey' => 'scholarship_institution_choice_type_id']);
         $this->belongsTo('InstitutionChoiceStatuses', ['className' => 'Scholarship.InstitutionChoiceStatuses', 'foreignKey' => 'scholarship_institution_choice_status_id']);
         $this->belongsTo('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies' , 'foreignKey' => 'education_field_of_study_id']);
         $this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels',  'foreignKey' =>'qualification_level_id' ]);
@@ -83,6 +84,11 @@ class ScholarshipEnrollmentsTable extends AppTable
                         'identity_type_name' => 'MainIdentityTypes.name',
                     ]
                 ],
+                'InstitutionChoiceTypes' => [
+                    'fields' => [
+                        'institution_name' => 'InstitutionChoiceTypes.name',
+                    ]
+                ],
                 'Scholarships' => [
                     'fields' => [
                         'name',
@@ -110,7 +116,6 @@ class ScholarshipEnrollmentsTable extends AppTable
             ->select([
                 $this->aliasField('applicant_id'),
                 $this->aliasField('scholarship_id'),
-                $this->aliasField('institution_name'),
                 $this->aliasField('location_type'),
                 $this->aliasField('course_name'),
                 $this->aliasField('start_date'),
@@ -188,7 +193,7 @@ class ScholarshipEnrollmentsTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'institution_name',
+            'key' => 'InstitutionChoiceTypes.name',
             'field' => 'institution_name',
             'type' => 'string',
             'label' => __('Institution')
