@@ -338,14 +338,21 @@ class InstitutionCasesTable extends ControllerActionTable
                             $newEntity = $this->patchEntity($newEntity, $caseData, $patchOptions);
                             $this->save($newEntity);
 
+                            $ruleExtra = new ArrayObject([]);
+                            $ruleExtra['assigneeFound'] = false;
+
                             // Trigger rule Post Events
                             if ($workflowRuleEntity->has('workflow_rule_events') && !empty($workflowRuleEntity->workflow_rule_events)) {
                                 $ruleEvents = $workflowRuleEntity->workflow_rule_events;
 
                                 foreach ($ruleEvents as $ruleEvent) {
-                                    $event = $linkedRecordModel->dispatchEvent($ruleEvent->event_key, [$newEntity, $linkedRecordEntity], $linkedRecordModel);
+                                    $event = $linkedRecordModel->dispatchEvent($ruleEvent->event_key, [$newEntity, $linkedRecordEntity, $ruleExtra], $linkedRecordModel);
                                     if ($event->isStopped()) {
                                         return $event->result;
+                                    }
+
+                                    if ($ruleExtra['assigneeFound']) {
+                                        break;
                                     }
                                 }
                             }
