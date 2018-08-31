@@ -100,6 +100,11 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                     ]
                 ],
             ])
+            ->matching('ScholarshipRecipients', function ($q) {
+                return $q->select([
+                    'approved_amount' => 'ScholarshipRecipients.approved_amount',
+                ]);
+            })
             ->matching('RecipientPaymentStructureEstimates.DisbursementCategories', function ($q) {
                 return $q->select([
                     'estimated_disbursement_date' => 'RecipientPaymentStructureEstimates.estimated_disbursement_date',
@@ -143,7 +148,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             'key' => 'RecipientPaymentStructures.name',
             'field' => 'name',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Payment Structure Name')
         ];
 
         $newArray[] = [
@@ -172,6 +177,13 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             'field' => 'comments',
             'type' => 'string',
             'label' => ''
+        ];
+
+        $newArray[] = [
+            'key' => 'ScholarshipRecipients.approved_amount',
+            'field' => 'approved_amount',
+            'type' => 'string',
+            'label' => 'Approved Award Amount'
         ];
 
         $fields->exchangeArray($newArray);
