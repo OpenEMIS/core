@@ -193,7 +193,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                                 isset($schoolClosedDays[$institutionId][$dayFormat]) &&
                                 $schoolClosedDays[$institutionId][$dayFormat] == 0) {
                                 $status = __('School Closed');
-                                $unmark++;
                             } elseif (isset($attendanceRecord) && $attendanceRecord[$dayColumn] == 1) {
                                 $status = __('Marked');
                                 $mark++;
