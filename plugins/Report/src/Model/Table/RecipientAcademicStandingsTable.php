@@ -105,7 +105,7 @@ class RecipientAcademicStandingsTable extends AppTable  {
             'key' => 'Recipients.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' =>  ''
+            'label' =>  'OpenEMIS ID'
         ];
         $newArray[] = [
             'key' => 'RecipientAcademicStandings.recipient_id',
