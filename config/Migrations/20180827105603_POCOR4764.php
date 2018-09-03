@@ -22,17 +22,20 @@ class POCOR4764 extends AbstractMigration
         $data = [];
         $institutionNames = [];
         $i = 1;
-        foreach ($institutionNameData as $key => $value) {
-            $institutionNames[$i] = $value['institution_name'];
-            $data[] = [
-                'name' => $value['institution_name'],
-                'order' => $i,
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ];
-            $i++;
+
+        if (!empty($institutionNameData)) {
+            foreach ($institutionNameData as $key => $value) {
+                $institutionNames[$i] = $value['institution_name'];
+                $data[] = [
+                    'name' => $value['institution_name'],
+                    'order' => $i,
+                    'modified_user_id' => NULL,
+                    'modified' => NULL,
+                    'created_user_id' => '1',
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                $i++;
+            }
         }
 
         $table = $this->table('scholarship_institution_choice_types', [
@@ -43,7 +46,7 @@ class POCOR4764 extends AbstractMigration
             ->addColumn('name', 'string', [
                 'default' => null,
                 'limit' => 50,
-                'null' => true
+                'null' => false
             ])
             ->addColumn('order', 'integer', [
                 'default' => null,
@@ -96,7 +99,9 @@ class POCOR4764 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        $this->insert('scholarship_institution_choice_types', $data);
+        if (!empty($data)) {
+            $this->insert('scholarship_institution_choice_types', $data);
+        }
 
         // Backup scholarship_application_institution_choices
         $this->execute('CREATE TABLE `z_4764_scholarship_application_institution_choices` LIKE `scholarship_application_institution_choices`');
@@ -114,13 +119,15 @@ class POCOR4764 extends AbstractMigration
              ->addIndex('scholarship_institution_choice_type_id')
             ->save();
         // Generates all the update queries to scholarship_institution_choice_type_id column.
-        $sql = '';
-        foreach ($ScholarshipApplicationInstitutionChoices as $key => $value) {
+        if(!empty($ScholarshipApplicationInstitutionChoices)) {
+            $sql = '';
+            foreach ($ScholarshipApplicationInstitutionChoices as $key => $value) {
 
-            $scholarshipInstitutionChoiceTypeId = array_search($value->institution_name, $institutionNames);
-            $sql .= 'UPDATE `scholarship_application_institution_choices` SET `scholarship_institution_choice_type_id` ='. $scholarshipInstitutionChoiceTypeId.' WHERE `id` ='.$value->id.';';
+                $scholarshipInstitutionChoiceTypeId = array_search($value->institution_name, $institutionNames);
+                $sql .= 'UPDATE `scholarship_application_institution_choices` SET `scholarship_institution_choice_type_id` ='. $scholarshipInstitutionChoiceTypeId.' WHERE `id` ='.$value->id.';';
+            }
+            $this->execute($sql);
         }
-        $this->execute($sql);
     }
 
     public function down()
