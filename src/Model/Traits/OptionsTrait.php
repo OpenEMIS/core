@@ -84,6 +84,9 @@ trait OptionsTrait
             'RoomTypes' => [
                 'classifications' => [0 => __('Non-Classroom'), 1 => __('Classroom')]
             ],
+            'Institutions' => [
+                'classifications' => [1 => __('Academic Institution'), 2 => __('Non-Academic Institution')]
+            ],            
             'InstitutionInfrastructure' => [
                 'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Type')]
             ],

@@ -847,7 +847,10 @@ trait MessagesTrait
                 ],
                 'institution_provider_id' => [
                     'ruleLinkedSector' => 'Please select a provider linked to the chosen Sector'
-                ]
+                ],
+                'classification' => [
+                    'validClassification' => 'Please enter a valid Classification',
+                ],
             ],
             'InstitutionContacts' => [
                 'email' => [
@@ -2063,7 +2066,7 @@ trait MessagesTrait
             ],
             'ScholarshipRecipients' => [
                 'approved_amount' => [
-                    'comparison' => 'Approved Amount cannot be more than Total Award Amount',
+                    'comparison' => 'Approved Award Amount cannot be more than Total Award Amount',
                     'validateDecimal' => 'Value cannot be more than two decimal places',
                     'ruleCheckApprovedWithEstimated' => 'Approved Amount cannot be less than the Estimated Amounts',
                     'ruleCheckApprovedWithDisbursed' => 'Approved Amount cannot be less than the Disbursed Amounts',
