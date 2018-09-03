@@ -26,7 +26,7 @@ class RecipientAcademicStandingsTable extends AppTable
            ->add('gpa', [
                 'ruleRange' => [
                     'rule' => ['range', 0, 9],
-                    'message' => 'GPA should between 0 to 9'
+                    'message' => 'GPA should be between 0 to 9'
                 ]
             ])
             ;
