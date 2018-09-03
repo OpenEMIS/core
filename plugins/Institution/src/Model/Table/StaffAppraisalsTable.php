@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
