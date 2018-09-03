@@ -43,7 +43,7 @@ class POCOR4764 extends AbstractMigration
             ->addColumn('name', 'string', [
                 'default' => null,
                 'limit' => 50,
-                'null' => false
+                'null' => true
             ])
             ->addColumn('order', 'integer', [
                 'default' => null,
