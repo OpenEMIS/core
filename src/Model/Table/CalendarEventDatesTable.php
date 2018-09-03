@@ -11,11 +11,18 @@ class CalendarEventDatesTable extends AppTable
         $this->belongsTo('Calendars', ['className' => 'Calendars', 'foreignKey' => 'calendar_event_id']);
     }
 
-    public function isSchoolClosed($date)
+    public function isSchoolClosed($date, $institutionId = null) 
     {
-        $dateEvents = $this->find()
-            ->contain(['Calendars', 'Calendars.CalendarTypes'])
+        $findInstitutions = [-1];
+        if (!is_null($institutionId)) {
+            $findInstitutions[] = $institutionId;
+        }
+
+        $dateEvents = $this
+            ->find()
+            ->contain(['Calendars.CalendarTypes'])
             ->where([
+                ['Calendars.institution_id IN ' => $findInstitutions],
                 $this->aliasField('date') => $date
             ])
             ->toArray();
