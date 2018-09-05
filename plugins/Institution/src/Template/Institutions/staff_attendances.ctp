@@ -53,10 +53,11 @@ $panelHeader = $this->fetch('panelHeader');
 $paramsQuery = $this->ControllerAction->getQueryString();
 $institutionId = $paramsQuery['institution_id'];
 ?>
-<?= $this->element('OpenEmis.alert') ?>
+
+<!-- <?= $this->element('OpenEmis.alert') ?>
 <div class="alert {{class}}" ng-hide="message == null">
     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
-</div>
+</div> -->
 <!-- <style>
     .attendance-dashboard .data-section.single-day {
         width: 32%;
@@ -76,33 +77,33 @@ $institutionId = $paramsQuery['institution_id'];
         width: 100%;
     }
 
-    #institution-student-attendances-table .sg-theme .ag-cell {
+    #institution-staff-attendances-table .sg-theme .ag-cell {
         display: flex;
         flex-flow: column wrap;
         justify-content: center;
     }
 
-    #institution-student-attendances-table .ag-cell .reason-wrapper {
+    #institution-staff-attendances-table .ag-cell .reason-wrapper {
         position: relative;
         width: 100%;
         display: inline-block;
     }
 
-    #institution-student-attendances-table .ag-cell .reason-wrapper .input-select-wrapper {
+    #institution-staff-attendances-table .ag-cell .reason-wrapper .input-select-wrapper {
         margin-bottom: 15px;
     }
 
-    #institution-student-attendances-table .ag-cell textarea#comment.error,
-    #institution-student-attendances-table .ag-cell #student_absence_reason_id select.error,
-    #institution-student-attendances-table .ag-cell #absence_type_id select.error {
+    #institution-staff-attendances-table .ag-cell textarea#comment.error,
+    #institution-staff-attendances-table .ag-cell #staff_absence_reason_id select.error,
+    #institution-staff-attendances-table .ag-cell #absence_type_id select.error {
         border-color: #CC5C5C !important;
     }
     
-    #institution-student-attendances-table .ag-cell textarea#comment:focus {
+    #institution-staff-attendances-table .ag-cell textarea#comment:focus {
         outline: none;
     }
 
-    #institution-student-attendances-table .ag-cell textarea#comment {
+    #institution-staff-attendances-table .ag-cell textarea#comment {
         display: block;
         padding: 5px 10px;
         -webkit-border-radius: 3px;
@@ -113,17 +114,17 @@ $institutionId = $paramsQuery['institution_id'];
         border: 1px solid #CCC;
     }
 
-    #institution-student-attendances-table .ag-cell .input-select-wrapper {
+    #institution-staff-attendances-table .ag-cell .input-select-wrapper {
         margin-bottom: 0;
     }
 
-    #institution-student-attendances-table .ag-cell .input-select-wrapper select {
+    #institution-staff-attendances-table .ag-cell .input-select-wrapper select {
         background: #FFFFFF;
         display: block;
     }
 
-    #institution-student-attendances-table .ag-cell .absence-reason,
-    #institution-student-attendances-table .ag-cell .absences-comment {
+    #institution-staff-attendances-table .ag-cell .absence-reason,
+    #institution-staff-attendances-table .ag-cell .absences-comment {
         overflow: hidden;
         white-space: normal;
         text-overflow: ellipsis;
@@ -132,23 +133,23 @@ $institutionId = $paramsQuery['institution_id'];
         align-items: baseline;
     }
 
-    #institution-student-attendances-table .ag-cell .absence-reason span,
-    #institution-student-attendances-table .ag-cell .absences-comment span {
+    #institution-staff-attendances-table .ag-cell .absence-reason span,
+    #institution-staff-attendances-table .ag-cell .absences-comment span {
         margin: 0 10px;
     }
 
 
-    #institution-student-attendances-table .ag-cell .absence-reason + .absences-comment  {
+    #institution-staff-attendances-table .ag-cell .absence-reason + .absences-comment  {
         margin-top: 15px;
     }
     
-    #institution-student-attendances-table .sg-theme .ag-header-cell.children-period .ag-header-cell-label {
+    #institution-staff-attendances-table .sg-theme .ag-header-cell.children-period .ag-header-cell-label {
         display: flex;
         justify-content: center;
         padding: 10px 0;
     }
 
-    #institution-student-attendances-table .sg-theme .ag-header-group-cell {
+    #institution-staff-attendances-table .sg-theme .ag-header-group-cell {
         border-right: 1px solid #DDDDDD;
         border-bottom: 1px solid #DDDDDD;
         font-weight: 700;
@@ -156,15 +157,15 @@ $institutionId = $paramsQuery['institution_id'];
         padding: 10px;
     }
 
-    #institution-student-attendances-table .sg-theme .children-cell {
+    #institution-staff-attendances-table .sg-theme .children-cell {
         text-align: center;
     }
 
-    #institution-student-attendances-table .sg-theme .ag-row-hover {
+    #institution-staff-attendances-table .sg-theme .ag-row-hover {
         background-color: #FDFEE6 !important;
     }
 
-    .rtl #institution-student-attendances-table .sg-theme .ag-header-group-cell {
+    .rtl #institution-staff-attendances-table .sg-theme .ag-header-group-cell {
         border-right: 0;
         border-left: 1px solid #DDDDDD;
     }
@@ -184,7 +185,7 @@ $institutionId = $paramsQuery['institution_id'];
                         <i class="kd-staff icon"></i>
                         <div class="data-field">
                             <h4><?= __('Total Staff') ?>:</h4>
-                            <h1 class="data-header">{{$ctrl.totalStudents}}</h1>
+                            <h1 class="data-header">{{$ctrl.totalStaff}}</h1>
                         </div>
                     </div>
                     <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
@@ -200,7 +201,8 @@ $institutionId = $paramsQuery['institution_id'];
                         </div>
                     </div>
                 </div>
-                <div id="institution-student-attendances-table" class="table-wrapper">
+                <h4>{{$ctrl.selectedFormattedDayDate}}</h4>
+                <div id="institution-staff-attendances-table" class="table-wrapper">
                     <div ng-if="$ctrl.gridReady" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
                 </div>
             </bg-pane>

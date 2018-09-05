@@ -6,6 +6,8 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
+use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 
 class InstitutionOutcomeResultsTable extends AppTable
 {
@@ -40,6 +42,33 @@ class InstitutionOutcomeResultsTable extends AppTable
 
         $this->addBehavior('CompositeKey');
     }
+
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+        
+        $allowSubjectList = $this->getAllowedSubjectList();
+        $validator
+            ->add('outcome_criteria_id', 'custom', [
+                'rule' => function ($value, $context) use ($allowSubjectList) {
+
+            $outcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
+            $outcomeCriteriasList = $outcomeCriterias
+                ->find()
+                ->where([$outcomeCriterias->aliasField('id') => $value])
+                ->first();
+                    return in_array($outcomeCriteriasList->education_subject_id, $allowSubjectList);
+                },
+                'message' => __('You do not have permission for this subject'),
+                'on' => function ($context) {  
+                    if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
+                        return true;
+                    }
+                    return false;
+                }
+            ])
+            ;
+        return $validator;
+    } 
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -79,5 +108,24 @@ class InstitutionOutcomeResultsTable extends AppTable
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('academic_period_id') => $academicPeriodId
             ]);
+    }
+
+    private function getAllowedSubjectList()
+    {
+        $ImportOutcomeResults = TableRegistry::get('Institution.ImportOutcomeResults');
+        $userId = $ImportOutcomeResults->Auth->user('id');
+        $AccessControl = $ImportOutcomeResults->AccessControl;
+        $classId = $ImportOutcomeResults->request->query('class');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        return $InstitutionSubjects
+            ->find('list', [
+                'keyField' => 'education_subject_id',
+                'valueField' => 'education_subject_id'
+            ])
+            ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $ImportOutcomeResults->controller])
+            ->matching('ClassSubjects', function ($q) use ($classId) {
+                return $q->where(['ClassSubjects.institution_class_id' => $classId]);
+            })
+            ->toArray();
     }
 }

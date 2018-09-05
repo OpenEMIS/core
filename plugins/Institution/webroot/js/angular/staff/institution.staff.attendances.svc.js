@@ -193,7 +193,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                     // var data = params.data;
                     // var rowIndex = params.rowIndex;
                     var timeIn = params.data.InstitutionStaffAttendances.time_in;
-                    return getTimeInElement(params);
+                    return getTimeInTimeOutElement(params);
                 }
             }
         });
@@ -277,14 +277,17 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         return data;
     }
 
-    function getTimeInElement(params) {
+    function getTimeInTimeOutElement(params) {
         var action = params.context.action;
         var data = params.data;
         var rowIndex = params.rowIndex;
-        var timepickerId = 'time-in-' + rowIndex;
+        var timeinPickerId = 'time-in-' + rowIndex;
+        var timeoutPickerId = 'time-out-' + rowIndex;
         var timeIn = params.data.InstitutionStaffAttendances.time_in;
         var timeOut = params.data.InstitutionStaffAttendances.time_out;
         var scope = params.context.scope;
+        // console.log(timeIn);
+        console.log(timeOut);
         if(action == 'edit') {
             if(timeIn == null){
                 timeIn = 'current';
@@ -292,10 +295,17 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                 timeIn = convert12Timeformat(timeIn);
                 // console.log(timeIn);
             }
+            if(timeOut == null){
+                timeOut = 'current';
+            }else{
+                timeOut = convert12Timeformat(timeOut);
+                // console.log(timeOut);
+            }
+            // time in element
             var divElement = document.createElement('div');
             divElement.setAttribute('class', 'input');
             var inputDivElement = document.createElement('div');
-            inputDivElement.setAttribute('id', timepickerId);
+            inputDivElement.setAttribute('id', timeinPickerId);
             inputDivElement.setAttribute('class', 'input-group time');
             var inputElement = document.createElement('input');
             inputElement.setAttribute('class', 'form-control');
@@ -305,14 +315,12 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             iconElement.setAttribute('class', 'glyphicon glyphicon-time');
 
             setTimeout(function(event) {
-                var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: timeIn});
-                $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
+                var timepickerControl = $('#' + timeinPickerId).timepicker({defaultTime: timeIn});
+                $('#' + timeinPickerId).timepicker().on("hide.timepicker", function (e) {
                     // console.log('saving start time.........');
                     // console.log(e.time);
-                    // convertTimeformat(e.time.hours, e.time.minutes, e.time.seconds);
-                    var time_in = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
                     // console.log(time_in);
-                    // data.InstitutionStaffAttendances.start_time = start_time;
+                    var time_in = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
                     saveStaffAttendanceTimeIn(data, params, time_in)
                     .then(
                         function(response) {
@@ -349,116 +357,92 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             }, 1);
 
             inputElement.addEventListener('click', function(event) {
-                $('#' + timepickerId).timepicker();
+                $('#' + timeinPickerId).timepicker();
             });
 
             spanElement.appendChild(iconElement);
             inputDivElement.appendChild(inputElement);
             inputDivElement.appendChild(spanElement);
             divElement.appendChild(inputDivElement);
+            //end of time in element
 
+            // time out element
+            var inputDivElement2 = document.createElement('div');
+            inputDivElement2.setAttribute('id', timeoutPickerId);
+            inputDivElement2.setAttribute('class', 'input-group time');
+            var inputElement2 = document.createElement('input');
+            inputElement2.setAttribute('class', 'form-control');
+            var spanElement2 = document.createElement('span');
+            spanElement2.setAttribute('class', 'input-group-addon');
+            var iconElement2 = document.createElement('i');
+            iconElement2.setAttribute('class', 'glyphicon glyphicon-time');
+
+            setTimeout(function(event) {
+                var timepickerControl2 = $('#' + timeoutPickerId).timepicker({defaultTime: timeOut});
+                $('#' + timeoutPickerId).timepicker().on("hide.timepicker", function (e) {
+                    // console.log('saving start time.........');
+                    // console.log(e.time);
+                    // convertTimeformat(e.time.hours, e.time.minutes, e.time.seconds);
+                    var time_out = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
+                    // console.log(time_in);
+                    // data.InstitutionStaffAttendances.start_time = start_time;
+                    saveStaffAttendanceTimeOut(data, params, time_out)
+                    .then(
+                        function(response) {
+                            // console.log(response.data.error.length);
+                            if(response.data.error.length == 0){
+                                AlertSvc.success(scope, 'Time out record successfully saved.');
+                                data.isNew = false;
+                                data.InstitutionStaffAttendances.time_out = time_out;
+                            }else{
+                                 AlertSvc.error(scope, response.data.error.time_out.ruleCompareTime);
+                            }
+                        },
+                        function(error) {
+                            console.log(error);
+                            AlertSvc.error(scope, 'There was an error when saving record');
+                        }
+                    )
+                    .finally(function() {
+                        var refreshParams = {
+                            columns: [
+                                'time_out',
+                            ],
+                            force: true
+                        };
+                        params.api.refreshCells(refreshParams);
+                    });
+                });
+                $(document).on('DOMMouseScroll mousewheel scroll', function() {
+                    window.clearTimeout(t);
+                    t = setTimeout(function(event) {
+                        timepickerControl2.timepicker('place');
+                    });
+                });
+            }, 1);
+
+            inputElement2.addEventListener('click', function(event) {
+                $('#' + timeoutPickerId).timepicker();
+            });
+
+            spanElement2.appendChild(iconElement2);
+            inputDivElement2.appendChild(inputElement2);
+            inputDivElement2.appendChild(spanElement2);
+            divElement.appendChild(inputDivElement2);
+            //end of time out element
             return divElement;
         } else {
+            //need to change the logic here for time in and time out for view mode
+            //add icon before time
             var time = '';
-            if(timeIn == null){
+            if(timeIn && timeOut){
+                time = '<i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '<br><i class="fa-external-link"></i> ' + convert12Timeformat(timeOut);
+            } else {
                 time = '-';
-            }else{
-                time = convert12Timeformat(timeIn) + '<br>' + convert12Timeformat(timeOut);
             }
-
             return time;
         }
     }
-
-    // function getTimeOutElement(params) {
-    //     var action = params.context.action;
-    //     var data = params.data;
-    //     var rowIndex = params.rowIndex;
-    //     var timepickerId = 'time-out-' + rowIndex;
-    //     var timeOut = params.data.InstitutionStaffAttendances.time_out;
-    //     var scope = params.context.scope;
-    //     if(action == 'edit') {
-    //         if(timeOut == null){
-    //             timeOut = 'current';
-    //         }else{
-    //             timeOut = convert12Timeformat(timeOut);
-    //             // console.log(endTime);
-    //         }
-    //         var divElement = document.createElement('div');
-    //         divElement.setAttribute('class', 'input');
-    //         var inputDivElement = document.createElement('div');
-    //         inputDivElement.setAttribute('id', timepickerId);
-    //         inputDivElement.setAttribute('class', 'input-group time');
-    //         var inputElement = document.createElement('input');
-    //         inputElement.setAttribute('class', 'form-control');
-    //         var spanElement = document.createElement('span');
-    //         spanElement.setAttribute('class', 'input-group-addon');
-    //         var iconElement = document.createElement('i');
-    //         iconElement.setAttribute('class', 'glyphicon glyphicon-time');
-
-    //         setTimeout(function(event) {
-    //             var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: timeOut});
-    //                 $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
-    //                 console.log('saving end-time.........');
-    //                 // console.log(e.time);
-    //                 // convertTimeformat(e.time.hours, e.time.minutes, e.time.seconds);
-    //                 var time_out = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
-    //                 console.log(time_out);
-    //                 saveStaffAttendanceTimeOut(data, params, time_out)
-    //                 .then(
-    //                     function(response) {
-    //                         if(response.data.error.length == 0){
-    //                             AlertSvc.success(scope, 'Time Out record successfully saved.');
-    //                             data.isNew = false;
-    //                             data.InstitutionStaffAttendances.time_out = time_out;
-    //                         }else{
-    //                              AlertSvc.error(scope, response.data.error.time_in.ruleCompareTime);
-    //                         }
-    //                     },
-    //                     function(error) {
-    //                         console.log(error);
-    //                         AlertSvc.error(scope, 'There was an error when saving record');
-    //                     }
-    //                 )
-    //                 .finally(function() {
-    //                     var refreshParams = {
-    //                         columns: [
-    //                             'time_out',
-    //                         ],
-    //                         force: true
-    //                     };
-    //                     params.api.refreshCells(refreshParams);
-    //                 });
-    //             });
-    //             $(document).on('DOMMouseScroll mousewheel scroll', function() {
-    //                 console.log('scroll1');
-    //                 window.clearTimeout(t);
-    //                 t = setTimeout(function(event) {
-    //                     timepickerControl.timepicker('place');
-    //                 });
-    //             });
-    //         }, 1);
-
-
-    //         inputElement.addEventListener('click', function(event) {
-    //             $('#' + timepickerId).timepicker();
-    //         });
-
-    //         spanElement.appendChild(iconElement);
-    //         inputDivElement.appendChild(inputElement);
-    //         inputDivElement.appendChild(spanElement);
-    //         divElement.appendChild(inputDivElement);
-
-    //         return divElement;
-    //     } else {
-    //         if(timeOut == null){
-    //             timeOut = '-';
-    //         }else{
-    //             timeOut = convert12Timeformat(timeOut);
-    //         }
-    //         return timeOut;
-    //     }
-    // }
 
     function convert24Timeformat(hours, minutes, seconds, meridian) {
         if (meridian == "PM" && hours < 12) hours = hours + 12;
@@ -528,11 +512,12 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             time_in: data.InstitutionStaffAttendances.time_in,
             time_out: time,
         };
+        // console.log(staffAttendanceData);
         if(!data.isNew && timeOut != null){
-            // console.log('is not new entity');
+            console.log('is not new entity');
             return InstitutionStaffAttendances.edit(staffAttendanceData);
         }else{
-            // console.log('is new entity');
+            console.log('is new entity');
             return InstitutionStaffAttendances.save(staffAttendanceData);
         }
     } 

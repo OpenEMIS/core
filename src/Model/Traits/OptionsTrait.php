@@ -63,7 +63,7 @@ trait OptionsTrait
                 'interest_rate' => [0 => __('Fixed'), '1' => __('Variable')]
             ],
             'InstitutionChoices' => [
-                'location_type' => ['DOMESTIC' => __('Domestic'), 'INTERNATIONAL' => __('International')]
+                'location_type' => ['DOMESTIC' => __('Domestic'), 'REGIONAL' => __('Regional'), 'INTERNATIONAL' => __('International'), 'ONLINE' => __('Online')]
             ],
             'Health' => [
                 'blood_types' => [
@@ -84,6 +84,9 @@ trait OptionsTrait
             'RoomTypes' => [
                 'classifications' => [0 => __('Non-Classroom'), 1 => __('Classroom')]
             ],
+            'Institutions' => [
+                'classifications' => [1 => __('Academic Institution'), 2 => __('Non-Academic Institution')]
+            ],            
             'InstitutionInfrastructure' => [
                 'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Type')]
             ],
