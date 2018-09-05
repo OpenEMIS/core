@@ -20,7 +20,8 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
             'InstitutionStaffAttendances' => ['index', 'view', 'add', 'edit'],
         ]);
         $this->addBehavior('CompositeKey');
-        $this->addBehavior('TrackActivity', ['target' => 'User.InstitutionStaffAttendanceActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
+        // cannot work for Institution > Attendance > Staff
+        // $this->addBehavior('TrackActivity', ['target' => 'User.InstitutionStaffAttendanceActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
 	}
 
    public function validationDefault(Validator $validator)

@@ -179,40 +179,49 @@ class RecordBehavior extends Behavior
         if (array_key_exists($alias, $data)) {
             $CustomFields = TableRegistry::get($this->config('fieldClass.className'));
 
+            // patch custom_field_values
             if (array_key_exists('custom_field_values', $data[$alias])) {
                 $values = $data[$alias]['custom_field_values'];
                 $fieldValues = $model->array_column($values, $this->config('fieldKey'));
-                $fields = $CustomFields->find()
+                $fieldResults = $CustomFields->find()
                     ->where(['id IN' => $fieldValues])
                     ->all();
 
-                foreach ($values as $key => $attr) {
-                    foreach ($fields as $f) {
-                        if ($f->id == $attr[$this->config('fieldKey')]) {
-                            $data[$alias]['custom_field_values'][$key]['field_type'] = $f->field_type;
-                            $data[$alias]['custom_field_values'][$key]['mandatory'] = $f->is_mandatory;
-                            $data[$alias]['custom_field_values'][$key]['unique'] = $f->is_unique;
-                            $data[$alias]['custom_field_values'][$key]['params'] = $f->params;
+                $fields = [];
+                foreach ($fieldResults as $f) {
+                    $fields[$f->id] = $f;
+                }
 
-                            // logic to patch request data
-                            $fieldType = Inflector::camelize(strtolower($f->field_type));
-                            $settings = new ArrayObject([
-                                'recordKey' => $this->config('recordKey'),
-                                'fieldKey' => $this->config('fieldKey'),
-                                'tableColumnKey' => $this->config('tableColumnKey'),
-                                'tableRowKey' => $this->config('tableRowKey'),
-                                'customValue' => $attr
-                            ]);
-                            $event = $model->dispatchEvent('Render.patch'.$fieldType.'Values', [$entity, $data, $settings], $model);
-                            if ($event->isStopped()) {
-                                return $event->result;
-                            }
-                            // End
+                foreach ($values as $key => $attr) {
+                    $fieldId = $attr[$this->config('fieldKey')];
+                    $thisField = array_key_exists($fieldId, $fields) ? $fields[$fieldId] : null;
+                    if (!is_null($thisField)) {
+                        $data[$alias]['custom_field_values'][$key]['field_type'] = $thisField->field_type;
+                        $data[$alias]['custom_field_values'][$key]['mandatory'] = $thisField->is_mandatory;
+                        $data[$alias]['custom_field_values'][$key]['unique'] = $thisField->is_unique;
+                        $data[$alias]['custom_field_values'][$key]['params'] = $thisField->params;
+
+                        // logic to patch request data
+                        $fieldType = Inflector::camelize(strtolower($thisField->field_type));
+                        $settings = new ArrayObject([
+                            'recordKey' => $this->config('recordKey'),
+                            'fieldKey' => $this->config('fieldKey'),
+                            'tableColumnKey' => $this->config('tableColumnKey'),
+                            'tableRowKey' => $this->config('tableRowKey'),
+                            'customValue' => $attr
+                        ]);
+                        $event = $model->dispatchEvent('Render.patch'.$fieldType.'Values', [$entity, $data, $settings], $model);
+                        if ($event->isStopped()) {
+                            return $event->result;
                         }
+                        // End
                     }
                 }
             }
+            // end
 
+            // patch custom_table_cells
+            $tableCells = [];
             if (array_key_exists('custom_table_cells', $data[$alias])) {
                 $cells = $data[$alias]['custom_table_cells'];
                 $fieldValues = array_keys($cells);
@@ -226,18 +235,35 @@ class RecordBehavior extends Behavior
                     $fields[$f->id] = $f;
                 }
 
+                $settings = new ArrayObject([
+                    'recordKey' => $this->config('recordKey'),
+                    'fieldKey' => $this->config('fieldKey'),
+                    'tableColumnKey' => $this->config('tableColumnKey'),
+                    'tableRowKey' => $this->config('tableRowKey'),
+                    'customValue' => [
+                        'customField' => null,
+                        'cellValues' => []
+                    ],
+                    'tableCells' => []
+                ]);
                 foreach ($cells as $fieldId => $rows) {
-                    foreach ($rows as $rowId => $columns) {
-                        foreach ($columns as $columnId => $attr) {
-                            $thisField = array_key_exists($fieldId, $fields) ? $fields[$fieldId] : null;
-                            if (!is_null($thisField)) {
-                                $data[$alias]['custom_table_cells'][$fieldId][$rowId][$columnId]['field_type'] = $thisField->field_type;
-                                $data[$alias]['custom_table_cells'][$fieldId][$rowId][$columnId]['params'] = $thisField->params;
-                            }
+                    $thisField = array_key_exists($fieldId, $fields) ? $fields[$fieldId] : null;
+                    if (!is_null($thisField)) {
+                        $settings['customValue']['customField'] = $thisField;
+                        $settings['customValue']['cellValues'] = $rows;
+
+                        $event = $model->dispatchEvent('Render.patchTableValues', [$entity, $data, $settings], $model);
+                        if ($event->isStopped()) {
+                            return $event->result;
                         }
                     }
                 }
+
+                $tableCells = $settings->offsetExists('tableCells') ? $settings['tableCells'] : [];
             }
+
+            $data[$alias]['custom_table_cells'] = $tableCells;
+            // end
         }
 
         $arrayOptions = $options->getArrayCopy();
@@ -290,6 +316,8 @@ class RecordBehavior extends Behavior
         $model = $this->_table;
         $process = function ($model, $entity) use ($data) {
             try {
+                $repeaterSuccess = true;
+                $repeaterErrors = false;
                 $errors = $entity->errors();
 
                 $fileErrors = [];
@@ -303,6 +331,7 @@ class RecordBehavior extends Behavior
                     $settings = new ArrayObject([
                         'recordKey' => $this->config('recordKey'),
                         'fieldKey' => $this->config('fieldKey'),
+                        'formKey' => $this->config('formKey'),
                         'tableColumnKey' => $this->config('tableColumnKey'),
                         'tableRowKey' => $this->config('tableRowKey'),
                         'valueKey' => null,
@@ -327,10 +356,21 @@ class RecordBehavior extends Behavior
                         }
                     }
 
-                    if ($this->_table->hasBehavior('RenderTable')) {
+                    // if ($this->_table->hasBehavior('RenderTable')) {
+                    //     if (array_key_exists($model->alias(), $data)) {
+                    //         if (array_key_exists('custom_table_cells', $data[$model->alias()])) {
+                    //             $event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
+                    //             if ($event->isStopped()) {
+                    //                 return $event->result;
+                    //             }
+                    //         }
+                    //     }
+                    // }
+                    //calling processRepeaterValues() in RenderRepeaterBehavior
+                    if ($this->_table->hasBehavior('RenderRepeater')) {
                         if (array_key_exists($model->alias(), $data)) {
-                            if (array_key_exists('custom_table_cells', $data[$model->alias()])) {
-                                $event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
+                            if (array_key_exists('institution_repeater_surveys', $data[$model->alias()])) {
+                                $event = $model->dispatchEvent('Render.processRepeaterValues', [$entity, $data, $settings], $model);
                                 if ($event->isStopped()) {
                                     return $event->result;
                                 }
@@ -391,8 +431,98 @@ class RecordBehavior extends Behavior
                     $entity = $model->patchEntity($entity, $requestData);
                     // End
 
+                    // Logic to delete all exisiting values of a repeater
+                    if ($entity->has('institution_repeater_surveys')) {
+                        $formKey = 'survey_form_id';
+                        $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
+                        $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
+
+                        $status = $entity->status_id;
+                        $institutionId = $entity->institution_id;
+                        $periodId = $entity->academic_period_id;
+                        $parentFormId = $entity->{$formKey};
+
+                        foreach ($entity->institution_repeater_surveys as $fieldId => $fieldObj) {
+                            $formId = $fieldObj[$formKey];
+                            unset($fieldObj[$formKey]);
+
+                            // Logic to delete all answers before re-insert
+                            $repeaterIds = array_keys($fieldObj);
+
+                            $originalRepeaterIds = [];
+                            if ($entity->has('institution_repeaters')) {
+                                if (array_key_exists($fieldId, $entity->institution_repeaters)) {
+                                    $originalRepeaterIds = array_values($entity->institution_repeaters[$fieldId]);
+                                }
+                            }
+                            $surveyIds = [];
+                            if (!empty($originalRepeaterIds)) {
+                                $surveyIds = $RepeaterSurveys
+                                    ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                                    ->where([
+                                        $RepeaterSurveys->aliasField('status_id') => $status,
+                                        $RepeaterSurveys->aliasField('institution_id') => $institutionId,
+                                        $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
+                                        $RepeaterSurveys->aliasField($formKey) => $formId,
+                                        $RepeaterSurveys->aliasField('repeater_id IN ') => $originalRepeaterIds
+                                    ])
+                                    ->toArray();
+                            }
+                            if (!empty($surveyIds)) {
+                                // always deleted all existing answers before re-insert
+                                $RepeaterSurveyAnswers->deleteAll([
+                                    $RepeaterSurveyAnswers->aliasField('institution_repeater_survey_id IN ') => $surveyIds
+                                ]);
+                            }
+
+                            if (!empty($repeaterIds)) {
+                                if (!empty($originalRepeaterIds)) {
+                                    $missingRepeaters = array_diff($originalRepeaterIds, $repeaterIds);
+                                    if (!empty($missingRepeaters)) {
+                                        // if user has remove particular repeater from form, delete away that repeater from database too
+                                        $RepeaterSurveys->deleteAll([
+                                            $RepeaterSurveys->aliasField('status_id') => $status,
+                                            $RepeaterSurveys->aliasField('institution_id') => $institutionId,
+                                            $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
+                                            $RepeaterSurveys->aliasField($formKey) => $formId,
+                                            $RepeaterSurveys->aliasField('repeater_id IN ') => $missingRepeaters
+                                        ]);
+                                    }
+                                }
+                            } else {
+                                // if user remove all rows from form, delete away all repeater records
+                                $RepeaterSurveys->deleteAll([
+                                    $RepeaterSurveys->aliasField('status_id') => $status,
+                                    $RepeaterSurveys->aliasField('institution_id') => $institutionId,
+                                    $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
+                                    $RepeaterSurveys->aliasField($formKey) => $formId
+                                ]);
+                            }
+                        }
+
+                        if(array_key_exists('repeaterValues', $settings)){
+                            foreach ($settings['repeaterValues'] as $key => $value) {
+                                $surveyEntity = $RepeaterSurveys->newEntity($value);
+                                $all[] = $surveyEntity;
+                                if ($RepeaterSurveys->save($surveyEntity)) {
+                                } else {
+                                    Log::write('debug', $surveyEntity->errors());
+                                    $repeaterErrors = true;
+                                    $repeaterSuccess = false;
+                                }
+                            }
+
+                            //pass the entity with repeater errors back to onGetCustomRepeaterElement for rendering the error messages
+                            $entity['institution_repeater_surveys_error_obj'] = $all;
+                            //if any validation error is found for repeater, display error message
+                            if($repeaterErrors){
+                                $entity->errors('institution_repeater_surveys', '');
+                            }
+                        }
+                    }
+
                     $result = $model->save($entity);
-                    if ($result) {
+                    if ($result && $repeaterSuccess) {
                         $conn->commit();
                     } else {
                         $conn->rollback();
@@ -436,7 +566,10 @@ class RecordBehavior extends Behavior
                             }
                         }
                     }
+
+                    Log::write('debug', 'entity Errors:');
                     Log::write('debug', $entity->errors());
+                    Log::write('debug', 'file Errors:');
                     Log::write('debug', $fileErrors);
 
                     return false;

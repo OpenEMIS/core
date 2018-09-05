@@ -126,7 +126,7 @@ class RecipientPaymentsTable extends ControllerActionTable
             'after' => 'estimated_amount',
             'visible' => ['view' => false, 'edit' => true],
             'attr' => [
-                'label' => $this->Scholarships->addCurrencySuffix('Approved Amount'), 
+                'label' => $this->Scholarships->addCurrencySuffix('Approved Award Amount'), 
                 'value' => $entity->scholarship_recipient->approved_amount
             ]
         ]);
@@ -385,7 +385,12 @@ class RecipientPaymentsTable extends ControllerActionTable
                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);   
                     unset($attr['value']);
 
-                    $semesterOptions = TableRegistry::get('Scholarship.Semesters')->getList()->toArray();
+                    $semesterList = TableRegistry::get('Scholarship.Semesters')->getList()->toArray();
+                    if (empty($semesterList)) {
+                        $semesterOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    } else {
+                        $semesterOptions = ['' => '-- '.__('Select').' --'] + $semesterList;
+                    }
                     $semesterInputOptions = [
                         'type' => 'select',
                         'label' => false,
@@ -393,7 +398,7 @@ class RecipientPaymentsTable extends ControllerActionTable
                         'default' => $obj['scholarship_semester_id'],
                         'value' => $obj['scholarship_semester_id']
                     ];
-
+                    
                     $semesterCellData = $form->input("$fieldPrefix.scholarship_semester_id", $semesterInputOptions);
                     $amountCellData = $form->input("$fieldPrefix.amount", ['type' => 'number']);
                     $commentCellData = $form->input("$fieldPrefix.comments", ['type' => 'textarea']);

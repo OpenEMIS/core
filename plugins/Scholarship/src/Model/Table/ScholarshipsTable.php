@@ -19,8 +19,9 @@ class ScholarshipsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    CONST SELECT_FIELD_OF_STUDIES = 1;
-    CONST SELECT_ALL_FIELD_OF_STUDIES = -1;
+    const SELECT_FIELD_OF_STUDIES = 1;
+    const SELECT_ALL_FIELD_OF_STUDIES = -1;
+    const MAX_YEARS = 20;
 
     private $fieldOfStudySelection = [];
     private $interestRateOptions = [];
@@ -113,6 +114,7 @@ class ScholarshipsTable extends ControllerActionTable
             ])
             ->requirePresence('field_of_studies')
             ->requirePresence('bond')
+            ->requirePresence('duration')
             ->add('field_of_studies', 'notEmpty', [
                 'rule' => function ($value, $context) {
                     return isset($value['_ids']) ? !empty($value['_ids']) : true;
@@ -125,7 +127,7 @@ class ScholarshipsTable extends ControllerActionTable
             ->add('total_amount', [
                 'ruleCompareMaximumAwardAmount' => [
                     'rule' => ['compareValues', 'maximum_award_amount'],
-                    'message' => __('Total Amount must be greater than Maximum Award Amount')
+                    'message' => __('Total Award Amount must be greater than Annual Award Amount')
                 ],
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
@@ -153,9 +155,29 @@ class ScholarshipsTable extends ControllerActionTable
                         'AttachmentTypes.name',
                         'ScholarshipsScholarshipAttachmentTypes.scholarship_id'
                     ]
-                ]
+                ],
+                'FinancialAssistanceTypes',
+                'FundingSources',
+                'AcademicPeriods',
             ])
             ->select([
+                'code' => $this->aliasField('code'),
+                'name' => $this->aliasField('name'),
+                'description' => $this->aliasField('description'),
+                'application_open_date' => $this->aliasField('application_open_date'),
+                'application_close_date' => $this->aliasField('application_close_date'),
+                'maximum_award_amount' => $this->aliasField('maximum_award_amount'),
+                'total_amount' => $this->aliasField('total_amount'),
+                'duration' => $this->aliasField('duration'),
+                'bond' => $this->aliasField('bond'),
+                'requirements' => $this->aliasField('requirements'),
+                'instructions' => $this->aliasField('instructions'),
+                'scholarship_financial_assistance_type_id' => $this->aliasField('scholarship_financial_assistance_type_id'),
+                'scholarship_funding_source_id' => $this->aliasField('scholarship_funding_source_id'),
+                'academic_period_id' => $this->aliasField('academic_period_id'),
+                'financial_assistance_types' => 'FinancialAssistanceTypes.name', 
+                'funding_sources' => 'FundingSources.name', 
+                'academic_periods' => 'AcademicPeriods.name',
                 'interest_rate' => 'Loans.interest_rate', 
                 'interest_rate_type' => 'Loans.interest_rate_type', 
                 'loan_term' => 'Loans.loan_term', 
@@ -166,6 +188,90 @@ class ScholarshipsTable extends ControllerActionTable
      public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
      {
             $newArray = [];
+            $newArray[] = [
+                'key' => 'Scholarships.code',
+                'field' => 'code',
+                'type' => 'string',
+                'label' =>  __('Code')
+            ];               
+            $newArray[] = [
+                'key' => 'Scholarships.name',
+                'field' => 'name',
+                'type' => 'string',
+                'label' =>  __('Scholarship Name')
+            ];
+            $newArray[] = [
+                'key' => 'Scholarships.description',
+                'field' => 'description',
+                'type' => 'string',
+                'label' =>  __('Description')
+            ];
+            $newArray[] = [
+                'key' => 'Scholarships.application_open_date',
+                'field' => 'application_open_date',
+                'type' => 'date',
+                'label' =>  __('Application Open Date')
+            ];
+            $newArray[] = [
+                'key' => 'Scholarships.application_close_date',
+                'field' => 'application_close_date',
+                'type' => 'date',
+                'label' =>  __('Application Close Date')
+            ];
+            $newArray[] = [
+                'key' => 'Scholarships.maximum_award_amount',
+                'field' => 'maximum_award_amount',
+                'type' => 'integer',
+                'label' =>  __('Maximum Award Amount')
+            ];
+            $newArray[] = [
+                'key' => 'Scholarships.total_amount',
+                'field' => 'total_amount',
+                'type' => 'string',
+                'label' =>  __('Total Amount')
+            ];
+            $newArray[] = [
+                'key' => 'Scholarships.duration',
+                'field' => 'duration',
+                'type' => 'integer',
+                'label' =>  __('Duration')
+            ];
+            $newArray[] = [
+                'key' => 'Scholarships.bond',
+                'field' => 'bond',
+                'type' => 'integer',
+                'label' =>  __('Bond')
+            ];
+            $newArray[] = [
+                'key' => 'Scholarships.requirements',
+                'field' => 'requirements',
+                'type' => 'string',
+                'label' =>  __('Requirements')
+            ];
+            $newArray[] = [
+                'key' => 'Scholarships.instructions',
+                'field' => 'instructions',
+                'type' => 'string',
+                'label' =>  __('Instructions')
+            ];
+            $newArray[] = [
+                'key' => 'FinancialAssistanceTypes.name',
+                'field' => 'financial_assistance_types',
+                'type' => 'string',
+                'label' =>  __('Financial Assistance Types')
+            ];
+            $newArray[] = [
+                'key' => 'FundingSources.name',
+                'field' => 'funding_sources',
+                'type' => 'string',
+                'label' =>  __('Funding Sources')
+            ];
+            $newArray[] = [
+                'key' => 'AcademicPeriods.name',
+                'field' => 'academic_periods',
+                'type' => 'string',
+                'label' =>  __('Academic Periods')
+            ];
             $newArray[] = [
                 'key' => 'FieldOfStudies.name',
                 'field' => 'all_field_of_studies',
@@ -201,9 +307,8 @@ class ScholarshipsTable extends ControllerActionTable
                 'type' => 'string',
                 'label' => __('Payment Frequency')
             ];
-       
-            $newFields = array_merge($fields->getArrayCopy(), $newArray);
-            $fields->exchangeArray($newFields);
+
+            $fields->exchangeArray($newArray);
     }
 
     public function onExcelGetInterestRateType(Event $event, Entity $entity)
@@ -369,9 +474,25 @@ class ScholarshipsTable extends ControllerActionTable
         }
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'maximum_award_amount') {
+            return __('Annual Award Amount');
+        } elseif ($field == 'name') {
+            return __('Scholarship Name');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     public function onGetBond(Event $event, Entity $entity)
     {
         return $entity->bond . ' ' . __('Years');
+    }
+
+    public function onGetDuration(Event $event, Entity $entity)
+    {
+        return $entity->duration . ' ' . __('Years');
     }
 
     public function onGetInterestRate(Event $event, Entity $entity)
@@ -479,9 +600,9 @@ class ScholarshipsTable extends ControllerActionTable
                         $this->field('loan.loan_term', [
                             'type' => 'select',
                             'attr' => [
-                                'label' => __('Loan Term'),
+                                'label' => __('Loan Term (Year)'),
                                 'select' => true,
-                                'options' => $this->getLoanTermOptions(20)
+                                'options' => $this->getLoanTermOptions(self::MAX_YEARS)
                             ],
                             'after' => 'loan.scholarship_payment_frequency_id'
                         ]);
@@ -496,7 +617,15 @@ class ScholarshipsTable extends ControllerActionTable
     public function onUpdateFieldBond(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $attr['options'] = $this->getBondOptions(20);
+            $attr['options'] = $this->getBondOptions(self::MAX_YEARS);
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldDuration(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['options'] = $this->getDurationOptions(self::MAX_YEARS);
         }
         return $attr;
     }
@@ -635,6 +764,10 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function setupFields($entity = null)
     {
+        $this->field('name', [
+            'attr' => ['label' => __('Scholarship Name')],
+            'after' => 'code',
+        ]);
         $this->field('scholarship_financial_assistance_type_id', [
             'type' => 'select',
             'attr' => ['label' => __('Financial Assistance Type')],
@@ -666,17 +799,23 @@ class ScholarshipsTable extends ControllerActionTable
         ]);
         $this->field('maximum_award_amount', [
             'type' => 'integer',
-            'attr' => ['label' => $this->addCurrencySuffix('Maximum Award Amount')],
+            'attr' => ['label' => $this->addCurrencySuffix('Annual Award Amount')],
             'after' => 'application_close_date'
         ]);
         $this->field('total_amount', [
             'type' => 'integer',
-            'attr' => ['label' => $this->addCurrencySuffix('Total Amount')],
+            'attr' => ['label' => $this->addCurrencySuffix('Total Award Amount')],
             'after' => 'maximum_award_amount'
+        ]);
+        $this->field('duration', [
+            'type' => 'select',
+            'attr' => ['label' => __('Duration (Year)')],
+            'after' => 'total_amount'
         ]);
         $this->field('bond', [
             'type' => 'select',
-            'after' => 'total_amount'
+            'attr' => ['label' => __('Bond (Year)')],
+            'after' => 'duration'
         ]);
         $this->field('attachment_type_id', [
             'type' => 'custom_attachment_type',
@@ -706,10 +845,21 @@ class ScholarshipsTable extends ControllerActionTable
         $bondOptions = [];
 
         for ($i=0; $i<=$maxYears; $i++) {
-            $bondOptions[$i] = $i . ' ' . __('Years');
+            $bondOptions[] = $i . ' ';
         }
 
         return $bondOptions;
+    }
+
+    public function getDurationOptions($maxYears)
+    {
+        $durationOptions = [];
+
+        for ($i=0; $i<=$maxYears; $i++) {
+            $durationOptions[] = $i . ' ';
+        }
+
+        return $durationOptions;
     }
 
     public function getLoanTermOptions($maxYears)
@@ -717,7 +867,7 @@ class ScholarshipsTable extends ControllerActionTable
         $loanTermOptions = [];
 
         for ($i=1; $i<=$maxYears; $i++) {
-            $loanTermOptions[$i] = $i . ' ' . __('Years');
+            $loanTermOptions[] = $i;
         }
 
         return $loanTermOptions;
