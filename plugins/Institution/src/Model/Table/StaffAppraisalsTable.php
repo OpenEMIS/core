@@ -54,6 +54,12 @@ class StaffAppraisalsTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+        $this->hasMany('AppraisalScoreAnswers', [
+            'className' => 'StaffAppraisal.AppraisalScoreAnswers',
+            'foreignKey' => 'institution_staff_appraisal_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         // for file upload
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -127,115 +133,27 @@ class StaffAppraisalsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->setupTabElements();
-    }
-
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('staff_id') => $this->staff->id]);
     }
 
-    private function setupTabElements()
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        $options['type'] = 'staff';
-        $userId = $this->request->query('user_id');
-        if (!is_null($userId)) {
-            $options['user_id'] = $userId;
-        }
-
-        $tabElements = $this->controller->getCareerTabElements($options);
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'StaffAppraisals');
+        $appraisalScoreAnswers = $this->AppraisalScoreAnswers;
+        
+        // Dispatch this event method to the AppraisalScoreAnswersTable to do the saving of records den pass back to this table so that it will be become low coupling.
+        // Why dispatch event behind need the table info???
+        $appraisalScoreAnswers->dispatchEvent('Model.Appraisal.edit.beforePatch', [$requestData, $this->alias()], $appraisalScoreAnswers);
     }
 
-    public function findWorkbench(Query $query, array $options)
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
-        $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $appraisalScoreAnswers = $this->AppraisalScoreAnswers;
 
-        $userId = $session->read('Auth.User.id');
-        $Statuses = $this->Statuses;
-        $doneStatus = WorkflowSteps::DONE;
+        // Dispatch this event method to the AppraisalScoreAnswersTable to do the saving of records den pass back to this table so that it will be become low coupling.
+        // Why dispatch event behind need the table info???
+        $appraisalScoreAnswers->dispatchEvent('Model.Appraisal.edit.beforePatch', [$requestData, $this->alias()], $appraisalScoreAnswers);
 
-        $query
-            ->select([
-                $this->aliasField('id'),
-                $this->aliasField('status_id'),
-                $this->aliasField('staff_id'),
-                $this->aliasField('institution_id'),
-                $this->aliasField('modified'),
-                $this->aliasField('created'),
-                $this->Statuses->aliasField('name'),
-                $this->Users->aliasField('openemis_no'),
-                $this->Users->aliasField('first_name'),
-                $this->Users->aliasField('middle_name'),
-                $this->Users->aliasField('third_name'),
-                $this->Users->aliasField('last_name'),
-                $this->Users->aliasField('preferred_name'),
-                $this->AppraisalTypes->aliasField('name'),
-                $this->AppraisalForms->aliasField('name'),
-                $this->AppraisalPeriods->aliasField('name'),
-                $this->Institutions->aliasField('code'),
-                $this->Institutions->aliasField('name'),
-                $this->CreatedUser->aliasField('openemis_no'),
-                $this->CreatedUser->aliasField('first_name'),
-                $this->CreatedUser->aliasField('middle_name'),
-                $this->CreatedUser->aliasField('third_name'),
-                $this->CreatedUser->aliasField('last_name'),
-                $this->CreatedUser->aliasField('preferred_name')
-            ])
-            ->contain([
-                $this->Users->alias(),
-                $this->AppraisalTypes->alias(),
-                $this->AppraisalForms->alias(),
-                $this->AppraisalPeriods->alias(),
-                $this->Institutions->alias(),
-                $this->CreatedUser->alias()
-            ])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
-                return $q->where([
-                    $Statuses->aliasField('category <> ') => $doneStatus
-                ]);
-            })
-            ->where([
-                $this->aliasField('assignee_id') => $userId
-            ])
-            ->order([
-                $this->aliasField('created') => 'DESC'
-            ])
-            ->formatResults(function (ResultSetInterface $results) {
-                return $results->map(function ($row) {
-                    $url = [
-                        'plugin' => 'Institution',
-                        'controller' => 'Institutions',
-                        'action' => 'StaffAppraisals',
-                        'view',
-                        $this->paramsEncode(['id' => $row->id]),
-                        'user_id' => $row->staff_id,
-                        'institution_id' => $row->institution_id
-                    ];
-
-                    if (is_null($row->modified)) {
-                        $receivedDate = $this->formatDate($row->created);
-                     } else {
-                        $receivedDate = $this->formatDate($row->modified);
-                     }
-
-                    $row['url'] = $url;
-                    $row['status'] = __($row->_matchingData['Statuses']->name);
-                    // Name (Type) for OpenEMIS ID - Staff Name in Appraisal Period
-                    $row['request_title'] = sprintf(__('%s (%s) for %s in %s'), $row->appraisal_form->name, $row->appraisal_type->name, $row->user->name_with_id, $row->appraisal_period->name);
-                    $row['institution'] = $row->institution->code_name;
-                    $row['received_date'] = $receivedDate;
-                    $row['requester'] = $row->created_user->name_with_id;
-
-                    return $row;
-                });
-            });
-
-        return $query;
     }
-
 }
