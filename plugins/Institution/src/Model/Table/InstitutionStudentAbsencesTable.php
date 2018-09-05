@@ -437,7 +437,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 $requestQuery['education_grade_id'] = $firstInstitutionEducationGradesResult->id;
             } else {
                 $requestQuery['education_grade_id'] = -1;
-            }       
+            }
         }
 
         $selectedEducationGrades = $requestQuery['education_grade_id'];
