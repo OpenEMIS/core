@@ -242,6 +242,9 @@ class AppraisalBehavior extends Behavior
                     },
                     'AppraisalNumberAnswers' => function ($q) use ($staffAppraisalId) {
                         return $q->where(['AppraisalNumberAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalScoreAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalScoreAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
                     }
                 ])
                 ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
@@ -343,6 +346,17 @@ class AppraisalBehavior extends Behavior
 
                 if ($criteria->has('appraisal_number')) {
                     $model->field($fieldKey.'.validation_rule', ['type' => 'hidden', 'value' => $criteria->appraisal_number->validation_rule]);
+                }
+                break;
+            case 'SCORE':
+                $key = 'appraisal_score_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
+                $action = $model->action;
+                // Added this, so that the result are able to display in the edit and view if not not sure why cant display in "view" when using 'readonly'.
+                if ($action == 'edit' || $action == 'add') {
+                    $attr['type'] = 'readonly';
+                } else if ($action == 'view') {
+                    $attr['type'] = 'text';
                 }
                 break;
         }
