@@ -534,9 +534,6 @@ class AppraisalScoresTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         // If there exists a staff appraisal form that has done before by any staff den the admin able to edit the score template else NO.
-        // if ($appraisalScoreAnswersEntities->count() >= 1) {
-        //     unset($buttons['edit']);
-        // }
         if (!$this->isAppraisalScoreAnswersEditable($formId)) {
             unset($buttons['edit']);
         }
@@ -710,11 +707,9 @@ class AppraisalScoresTable extends ControllerActionTable
         $scoreDependency = [];
 
         // Only add only score field type dependency
-        // foreach ($scoreDependencyArrayField as $mainScoreId => $score) {
         foreach ($scoreDependencyArrayField as $scoreDependencyMainScoreId => $score) {
             foreach ($score as $dependency) {
                 if ($dependency['_joinData']['field_type'] == self::SCORE_TYPE_CODE) {
-                    // $scoreDependency[$mainScoreId][] = $dependency;
                     $scoreDependency[$scoreDependencyMainScoreId][] = $dependency;
                 }
             }
@@ -730,32 +725,11 @@ class AppraisalScoresTable extends ControllerActionTable
     }
 
     /**
+    *   This recursiveFind is to find if there any score dependency it will take the mainID and trace the linkage ID
+    *   If there's exists one traceID that is link back to the mainID that mean there exists a score dependency and will return validationPass *   to false;
     *
     **/
     private function recursiveFind($traceId, $mainId, $scoreDependency) {
-        // pr("mainId ".$mainId);
-        // pr("traceId ".$traceId);
-        // pr('--------------');
-        // pr($scoreDependency);
-        // die;
-        // if (array_key_exists($traceId, $scoreDependency)) {
-        //     $this->validationPass = false;
-        //     return;
-        // } elseif (array_key_exists($traceId, $scoreDependency)) {
-        //     foreach ($scoreDependency[$traceId] as $childId) {
-        //         if ($childId['_joinData']['field_type'] == self::SCORE_TYPE_CODE) {
-        //             if ($childId['appraisal_criteria_linked_id'] == $mainId) {
-        //                 $this->validationPass = false;
-        //                 return;
-        //             } else {
-        //                 $this->recursiveFind($childId['appraisal_criteria_linked_id'], $mainId, $scoreDependency);
-        //             }
-        //         }
-        //     }
-        // } else {
-        //     $this->validationPass = true;
-        // }
-
         if (array_key_exists($traceId, $scoreDependency)) {
             foreach ($scoreDependency[$traceId] as $childId) {
                 if ($childId['_joinData']['field_type'] == self::SCORE_TYPE_CODE) {

@@ -25,10 +25,6 @@
 			</div>
 		</div>
 	</div>
-	<!-- <div class="row">
-		<div class="col-xs-6 col-md-3 form-label"><?= $attr2['add_steps_field'] ?></div>
-		<div class="form-input"><?php echo $attr2['attr']['value']; ?></div>
-	</div> -->
 
 <?php elseif ($ControllerAction['action'] == 'edit') : ?>
 	<?= $this->Html->script('CustomField.custom.form', ['block' => true]); ?>
@@ -39,7 +35,6 @@
 		<div class="clearfix">
 			<?php
 				$attr['model'] = $alias;
-				// pr($attr);die;
 				echo $this->HtmlField->chosenSelectInput($attr, [
 					'label' => __($attr['add_field']), 
 					'multiple' => false, 
@@ -47,14 +42,11 @@
 				]);
 
 				if(array_key_exists('add_steps_field', $attr2)) {
-					// pr($attr2);die;
-
 					echo $this->HtmlField->chosenSelectInput($attr2, [
 						'label' => __($attr2['add_steps_field']), 
 						'options' => $attr2['options'],
 						'multiple' => false, 
 						'value' => $attr2['attr']['value']
-						// 'onchange' => "$('#reload').val('addField').click();"
 					]);
 				}
 			?>
