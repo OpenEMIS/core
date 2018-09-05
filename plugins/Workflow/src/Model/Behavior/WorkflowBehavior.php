@@ -45,7 +45,11 @@ class WorkflowBehavior extends Behavior
             'edit' => true,
             'remove' => true
         ],
-        'disableWorkflow' => false
+        'disableWorkflow' => false,
+        'filter' => [
+            'type' => true,
+            'category' => true
+        ]
 
     ];
 
@@ -376,8 +380,9 @@ class WorkflowBehavior extends Behavior
 
             $filter = $workflowModel->filter;
             $model = $workflowModel->model;
+            $filterConfig = $this->config('filter');
 
-            if (!empty($filter)) {
+            if ($filterConfig['type'] && !empty($filter)) {
                 // Wofkflow Filter Options
                 $filterOptions = TableRegistry::get($filter)->getList()->toArray();
 
@@ -410,12 +415,14 @@ class WorkflowBehavior extends Behavior
                 // End
             }
 
-            // Categories Options
-            $categoryOptions = ['-1' => '-- ' . __('All Categories') . ' --'] + $this->getSelectOptions('WorkflowSteps.category');
-            $selectedCategory = $this->_table->queryString('category', $categoryOptions);
-            $this->_table->advancedSelectOptions($categoryOptions, $selectedCategory);
-            $this->_table->controller->set(compact('categoryOptions', 'selectedCategory'));
-            // End
+            if ($filterConfig['category']) {
+                // Categories Options
+                $categoryOptions = ['-1' => '-- ' . __('All Categories') . ' --'] + $this->getSelectOptions('WorkflowSteps.category');
+                $selectedCategory = $this->_table->queryString('category', $categoryOptions);
+                $this->_table->advancedSelectOptions($categoryOptions, $selectedCategory);
+                $this->_table->controller->set(compact('categoryOptions', 'selectedCategory'));
+                // End
+            }
         }
     }
 
@@ -425,9 +432,10 @@ class WorkflowBehavior extends Behavior
 
         $registryAlias = $this->config('model');
         $workflowModel = $this->getWorkflowSetup($registryAlias);
+        $filterConfig = $this->config('filter');
 
         $filter = $workflowModel->filter;
-        if (!empty($filter)) {
+        if ($filterConfig['type'] && !empty($filter)) {
             $selectedFilter = $this->_table->ControllerAction->getVar('selectedFilter');
 
             // Filter key
@@ -440,12 +448,14 @@ class WorkflowBehavior extends Behavior
             }
         }
 
-        $selectedCategory = $this->_table->ControllerAction->getVar('selectedCategory');
-        if (!is_null($selectedCategory) && $selectedCategory != -1) {
-            $query
-                ->matching('Statuses', function ($q) use ($selectedCategory) {
-                    return $q->where(['category' => $selectedCategory]);
-                });
+        if ($filterConfig['category']) {
+            $selectedCategory = $this->_table->ControllerAction->getVar('selectedCategory');
+            if (!is_null($selectedCategory) && $selectedCategory != -1) {
+                $query
+                    ->matching('Statuses', function ($q) use ($selectedCategory) {
+                        return $q->where(['category' => $selectedCategory]);
+                    });
+            }
         }
 
         if ($this->isCAv4()) {

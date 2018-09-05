@@ -523,22 +523,24 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function onGetStudentStatus(Event $event, Entity $entity)
     {
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
-        $query = $InstitutionStudents
-                ->find()
-                ->matching('StudentStatuses')
-                ->select([
-                    'status_name' => 'StudentStatuses.name'
-                ])
-                ->where([
-                    $InstitutionStudents->aliasField('institution_id') => $entity->institution->id,
-                    $InstitutionStudents->aliasField('student_id') => $entity->user->id,
-                    $InstitutionStudents->aliasField('education_grade_id') => $entity->education_grade->id,
-                    $InstitutionStudents->aliasField('academic_period_id') => $entity->academic_period->id
-                ])
-                ->first();
+        if (!empty($entity->user)) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $query = $InstitutionStudents
+                    ->find()
+                    ->matching('StudentStatuses')
+                    ->select([
+                        'status_name' => 'StudentStatuses.name'
+                    ])
+                    ->where([
+                        $InstitutionStudents->aliasField('institution_id') => $entity->institution->id,
+                        $InstitutionStudents->aliasField('student_id') => $entity->user->id,
+                        $InstitutionStudents->aliasField('education_grade_id') => $entity->education_grade->id,
+                        $InstitutionStudents->aliasField('academic_period_id') => $entity->academic_period->id
+                    ])
+                    ->first();
 
-        return __($query->status_name);
+            return __($query->status_name);
+        }
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)

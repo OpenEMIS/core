@@ -21,7 +21,11 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     vm.dayListOptions = [];
     vm.selectedDay = '';
     vm.selectedDayDate = '';
+    vm.selectedFormattedDayDate = '';
 
+    vm.totalStaff = '';
+    vm.presentCount = 0;
+    vm.absenceCount = 0;
     // gridOptions
     vm.gridReady = false;
     vm.gridOptions = {
@@ -117,11 +121,13 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
 
     vm.setDayListOptions = function(dayListOptions) {
         vm.dayListOptions = dayListOptions;
+        // console.log(dayListOptions);
         if (dayListOptions.length > 0) {
             angular.forEach(dayListOptions, function(day) {
                 if (day.selected == true) {
                    vm.selectedDay = day.id;
                    vm.selectedDayDate = day.date;
+                   vm.selectedFormattedDayDate = day.name;
                 }
             });
         }
@@ -130,6 +136,9 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     //onChange
     vm.changeAcademicPeriod = function() {
         UtilsSvc.isAppendLoader(true);
+        vm.presentCount = 0;
+        vm.absenceCount = 0;
+        vm.totalStaff = 0;
         InstitutionStaffAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod)
         .then(function(weekListOptions) {
             vm.gridOptions.context.period = vm.selectedAcademicPeriod;
@@ -155,13 +164,15 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         var weekObj = vm.weekListOptions.find(obj => obj.id == vm.selectedWeek);
         vm.selectedStartDate = weekObj.start_day;
         vm.selectedEndDate = weekObj.end_day;
+        vm.presentCount = 0;
+        vm.absenceCount = 0;
+        vm.totalStaff = 0;
         InstitutionStaffAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek)
         .then(function(dayListOptions) {
             vm.setDayListOptions(dayListOptions);
             return InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams());
         }, vm.error)
         .then(function(allStaffAttendances) {
-            // console.log(allStaffAttendances);
             vm.setAllStaffAttendances(allStaffAttendances);
             vm.setGridData();
             vm.setColumnDef();
@@ -176,10 +187,13 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         UtilsSvc.isAppendLoader(true);
         var dayObj = vm.dayListOptions.find(obj => obj.id == vm.selectedDay);
         vm.selectedDayDate = dayObj.date;
-        // console.log(dayObj);
+        vm.selectedFormattedDayDate = dayObj.name;
         // vm.schoolClosed = (angular.isDefined(dayObj.closed) && dayObj.closed) ? true : false;
         // vm.gridOptions.context.schoolClosed = vm.schoolClosed;
         vm.gridOptions.context.date = vm.selectedDay;
+        vm.presentCount = 0;
+        vm.absenceCount = 0;
+        vm.totalStaff = 0;
         InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams())
         .then(function(allStaffAttendances) {
             console.log(allStaffAttendances);
@@ -221,8 +235,22 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     }
 
     vm.setAllStaffAttendances = function(staffList) {
-        // vm.staff = [];
+        console.log(staffList);
         vm.staffList = staffList;
+        vm.totalStaff = staffList.length;
+
+        if (staffList.length > 0) {
+            angular.forEach(staffList, function(staff) {
+                //set the present count
+                if (!staff.isNew) {
+                    vm.presentCount = vm.presentCount + 1;
+                }
+                //set the leave count
+                if (staff.StaffLeave.length > 0) {
+                    vm.absenceCount = vm.absenceCount + 1;
+                }
+            });
+        }
     }
 
     vm.setGridData = function() {
