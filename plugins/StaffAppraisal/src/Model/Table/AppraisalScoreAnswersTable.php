@@ -64,11 +64,6 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
 			        	$appraisalFormsCriteriasScoresLinks->aliasField('appraisal_criteria_id') => $criteriaScoreId
 			        ]);
 
-                // if ($count == 1 && $criteriaScoreId == 10) {
-                //     pr($criteriaScoreIds);
-                //     die;
-                // }
-
 		        $hasNoLinkageToScore = true;
 		        $totalScore = 0;
                 $noOfChildInTheScoreEntity = 0;
@@ -79,11 +74,6 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
 					$scoreEntityId = $scoreEntity->appraisal_criteria_id;
 		        	$scoreEntityLinkId = $scoreEntity->appraisal_criteria_linked_id;
 		        	$scoreEntityFieldType = $scoreEntity->appraisal_forms_criterias_link->appraisal_criteria->field_type->code;
-
-                    // if ($count == 1 && $criteriaScoreId == 10) {
-                    //     pr($scoreEntityFieldType);
-                    //     die;
-                    // }
 
 		        	if ($scoreEntityFieldType == self::FIELD_TYPE_SLIDER) {
 						if ($scoreEntity->appraisal_forms_criterias_link->has('appraisal_slider_answers')) {
@@ -124,12 +114,6 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
                     if (!is_null($scoreEntityParams) && array_key_exists('formula', $scoreEntityParams)) {
                         $formula = $scoreEntityParams['formula'];
                         
-                        // if ($formula == self::FORMULA_AVG) {
-                        //     $totalScore = $totalScore/$noOfChildInTheScoreEntity;
-                        // } elseif ($formula == self::FORMULA_SUM) {
-                        //     $totalScore = $totalScore;
-                        // }
-
                         switch ($formula) {
                             case self::FORMULA_AVG:
                                 if ($noOfChildInTheScoreEntity != 0) {

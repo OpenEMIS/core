@@ -47,7 +47,6 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         $events = parent::implementedEvents();
         $events['Model.Appraisal.add.afterSave'] = 'appraisalScoreAddAfterSave';
         $events['Model.Appraisal.edit.beforeSave'] = 'appraisalScoreEditBeforeSave';
-        // $events['Model.Appraisal.beforeDelete'] = 'appraisalScoreBeforeDelete';
         return $events;
     }
 
@@ -67,26 +66,6 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
         $this->createAppraisalFormsCriteriasScoresRecord($requestData);
     }
-
-    // public function appraisalScoreBeforeDelete(Event $event, Entity $entity)
-    // {
-    //     $formId = $entity->id;
-
-    //     // Get all the criterias based on the form
-    //     $appraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
-    //     $appraisalFormsCriteriasEntities = $appraisalFormsCriterias
-    //         ->find()
-    //         ->where([
-    //             $appraisalFormsCriterias->aliasField('appraisal_form_id') => $formId
-    //         ]);
-
-    //     $criteriaToBeRemoved['AppraisalForms'] = [
-    //         'id' => $entity->id,
-    //         'appraisal_criterias' => $appraisalFormsCriteriasEntities->toArray()
-    //     ]; 
-
-    //     $this->deleteAppraisalFormsCriteriasScoreRecord($criteriaToBeRemoved);
-    // }
 
     private function createAppraisalFormsCriteriasScoresRecord($requestData) 
     {
@@ -108,7 +87,6 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
                         $formId = $requestData['AppraisalScores']['id'];
                         $criteriaId = $appraisalFormCriteriasEntity['id'];
 
-                        // $actualDataToBeSave['appraisal_forms_criterias_scores'][] = [
                         $actualDataToBeSave[] = [
                             'appraisal_form_id' => $formId,
                             'appraisal_criteria_id' => $criteriaId,
@@ -131,7 +109,6 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
     private function deleteAppraisalFormsCriteriasScoreRecord($requestData)
     {
-        // pr($requestData);die;
         $formId = $requestData['AppraisalForms']['id'];
         $criteriaIdFromTable = [];
 
@@ -157,11 +134,6 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         foreach ($appraisalFormCriteriasFromRequestData as $obj) {
             $criteriaIdFromRequestData[] = $obj['id'];
         }        
-
-
-        // pr($criteriaIdFromTable);
-        // pr('-------------------------------');
-        // pr($criteriaIdFromRequestData);die;
 
         $result = array_diff($criteriaIdFromTable,$criteriaIdFromRequestData);
 
