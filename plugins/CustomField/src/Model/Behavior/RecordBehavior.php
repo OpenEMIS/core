@@ -393,10 +393,10 @@ class RecordBehavior extends Behavior
                                     $SurveyRules->aliasField('enabled') => 1
                                 ])
                                 ->toArray();
-                            $showRules = [];
                             foreach ($rules as $rule) {
+                                $ruleShowOptions = json_decode($rule->show_options);
                                 foreach ($entity->custom_field_values as $key => $value) {
-                                    if ($value->survey_question_id == $rule->dependent_question_id && '["'.$value->number_value.'"]' != $rule->show_options) {
+                                    if ($value->survey_question_id == $rule->dependent_question_id && !in_array($value->number_value, $ruleShowOptions)) {
                                         $settings['deleteFieldIds'][] = $rule->survey_question_id;
                                         break;
                                     }
