@@ -381,7 +381,7 @@ class RecordBehavior extends Behavior
                     $conn = ConnectionManager::get('default');
                     $conn->begin();
 
-                    // Logic to delete all the answer for rules
+                    // POCOR-4799 Modified to only delete all dependent answers only if the selected value is not the show_options value in SurveyRules.
                     if (is_null($this->config('moduleKey'))) {
                         if (isset($data[$this->_table->alias()][$this->config('formKey')])) {
                             $surveyFormId = $data[$this->_table->alias()][$this->config('formKey')];
@@ -395,7 +395,12 @@ class RecordBehavior extends Behavior
                                 ->toArray();
                             $showRules = [];
                             foreach ($rules as $rule) {
-                                $settings['deleteFieldIds'][] = $rule->survey_question_id;
+                                foreach ($entity->custom_field_values as $key => $value) {
+                                    if ($value->survey_question_id == $rule->dependent_question_id && '["'.$value->number_value.'"]' != $rule->show_options) {
+                                        $settings['deleteFieldIds'][] = $rule->survey_question_id;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
