@@ -337,7 +337,7 @@ class RecordBehavior extends Behavior
                         'valueKey' => null,
                         'customValue' => null,
                         'fieldValues' => [],
-                        'tableCells' => [],
+                        'tableCells' => $data[$model->alias()]['custom_table_cells'],
                         'deleteFieldIds' => []
                     ]);
 
