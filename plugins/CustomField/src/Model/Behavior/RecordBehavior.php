@@ -425,7 +425,6 @@ class RecordBehavior extends Behavior
 
                     // repatch $entity for saving, turn off validation
                     $data[$model->alias()]['custom_field_values'] = $settings['fieldValues'];
-                    $data[$model->alias()]['custom_table_cells'] = $settings['tableCells'];
 
                     $requestData = $data->getArrayCopy();
                     $entity = $model->patchEntity($entity, $requestData);
