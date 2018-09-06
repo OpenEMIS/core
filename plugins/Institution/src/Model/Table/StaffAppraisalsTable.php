@@ -140,11 +140,11 @@ class StaffAppraisalsTable extends ControllerActionTable
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        $appraisalScoreAnswers = $this->AppraisalScoreAnswers;
+        // $appraisalScoreAnswers = $this->AppraisalScoreAnswers;
         
-        // Dispatch this event method to the AppraisalScoreAnswersTable to do the saving of records den pass back to this table so that it will be become low coupling.
-        // Why dispatch event behind need the table info???
-        $appraisalScoreAnswers->dispatchEvent('Model.Appraisal.edit.beforePatch', [$requestData, $this->alias()], $appraisalScoreAnswers);
+        // // Dispatch this event method to the AppraisalScoreAnswersTable to do the saving of records den pass back to this table so that it will be become low coupling.
+        // // Why dispatch event behind need the table info???
+        // $appraisalScoreAnswers->dispatchEvent('Model.Appraisal.edit.beforePatch', [$requestData, $this->alias()], $appraisalScoreAnswers);
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
@@ -153,7 +153,19 @@ class StaffAppraisalsTable extends ControllerActionTable
 
         // Dispatch this event method to the AppraisalScoreAnswersTable to do the saving of records den pass back to this table so that it will be become low coupling.
         // Why dispatch event behind need the table info???
-        $appraisalScoreAnswers->dispatchEvent('Model.Appraisal.edit.beforePatch', [$requestData, $this->alias()], $appraisalScoreAnswers);
+        // $appraisalScoreAnswers->dispatchEvent('Model.Appraisal.edit.beforePatch', [$requestData, $this->alias()], $appraisalScoreAnswers);
 
+        // pr($requestData[$this->alias()]);die;
+        // pr($requestData);die;
+
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $appraisalScore = $this->AppraisalForms->AppraisalFormsCriteriasScores;
+        $action = 'calculateScoreAfterSliderCriteriaIsSaved';
+        // All the slider criteria has been save to DB already, when it come until here therefore now "retrieve" all the question from DB and all the "SCORE" type and calculate then save back to db for the score fields.
+        $appraisalScore->dispatchEvent('Model.Appraisal.edit.afterSave', [$entity, $action], $appraisalScore);
+        // pr($entity);die;
     }
 }
