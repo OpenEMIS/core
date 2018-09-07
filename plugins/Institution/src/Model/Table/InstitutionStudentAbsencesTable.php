@@ -431,6 +431,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ->contain(['EducationGrades'])
                 ->where(['institution_id' => $institutionId])
                 ->group('education_grade_id')
+                ->order('education_grade_id')
                 ->first();
 
             if (!empty($firstInstitutionEducationGradesResult)) {
@@ -475,6 +476,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     [$InstitutionClasses->aliasField('academic_period_id') => $selectedAcademicPeriod],
                     [$InstitutionClasses->aliasField('institution_id') => $institutionId]
                 ])
+                ->order($InstitutionClasses->aliasField('id'))
                 ->first();
 
             if (!empty($firstInstitutionClassIdResult)) {
