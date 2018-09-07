@@ -50,7 +50,7 @@ class ReportsController extends AppController
         $options = [];
         if ($module == 'Directory') {
             $options = [
-                'Report.Directory' => __('Directory'),
+                'Report.Directory' => __('User Default Identity'),
             ];
         } elseif ($module == 'Institutions') {
             $options = [
