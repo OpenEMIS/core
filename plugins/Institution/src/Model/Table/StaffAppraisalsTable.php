@@ -133,6 +133,11 @@ class StaffAppraisalsTable extends ControllerActionTable
         }
     }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->setupTabElements();
+    }
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('staff_id') => $this->staff->id]);
@@ -232,5 +237,18 @@ class StaffAppraisalsTable extends ControllerActionTable
             });
 
         return $query;
+    }
+
+    private function setupTabElements()
+    {
+        $options['type'] = 'staff';
+        $userId = $this->request->query('user_id');
+        if (!is_null($userId)) {
+            $options['user_id'] = $userId;
+        }
+
+        $tabElements = $this->controller->getCareerTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'StaffAppraisals');
     }
 }
