@@ -57,6 +57,8 @@ class POCOR4741 extends AbstractMigration
             ])
             ->addIndex('appraisal_form_id')
             ->addIndex('appraisal_criteria_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
 
         $this->table('appraisal_forms_criterias_scores_links', [
@@ -122,7 +124,7 @@ class POCOR4741 extends AbstractMigration
         ->addColumn('answer', 'decimal', [
             'default' => null,
             'null' => true,
-            'precision' => 5,
+            'precision' => 10,
             'scale' => 2
         ])
 
@@ -147,6 +149,9 @@ class POCOR4741 extends AbstractMigration
 
         ->addIndex('appraisal_form_id')
         ->addIndex('appraisal_criteria_id')
+        ->addIndex('institution_staff_appraisal_id')
+        ->addIndex('modified_user_id')
+        ->addIndex('created_user_id')
         ->save();
     }
 
