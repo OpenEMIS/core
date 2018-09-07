@@ -117,20 +117,20 @@ trait OptionsTrait
             ],
             'WorkflowRules' => [
                 'features' => [
-                    'StaffBehaviours' => [
-                        'className' => 'Institution.StaffBehaviours',
-                        'url' => [
-                            'plugin' => 'Institution',
-                            'controller' => 'Institutions',
-                            'action' => 'StaffBehaviours'
-                        ]
-                    ],
                     'StudentAttendances' => [
                         'className' => 'Institution.InstitutionStudentAbsences',
                         'url' => [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'StudentAbsences'
+                        ]
+                    ],
+                    'StaffBehaviours' => [
+                        'className' => 'Institution.StaffBehaviours',
+                        'url' => [
+                            'plugin' => 'Institution',
+                            'controller' => 'Institutions',
+                            'action' => 'StaffBehaviours'
                         ]
                     ]
                 ]
