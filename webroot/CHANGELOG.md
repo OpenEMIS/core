@@ -1,3 +1,11 @@
+### [3.34.0] - 2018-09-07
+- Developed User Default Identity Report in Reports > Directory 
+- Developed Staff Appraisal calculated fields in Administration > Appraisals > Scores
+- Implemented additional column called Nationality in Report > Institution > Staff (Assigned) report
+- Implemented default filters in Institutions > Cases
+- Bug fix on Institutions > Survey Rules during xform generation for OpenEMIS Survey
+- Bug fix on ability to save reords in Institutions > Performance > Outcomes 
+
 ### [3.33.1] - 2018-09-07
 - Bug fix on ability to save records in Institution Survey table question type
 - Bug fix on 404 error when Institution Survey rules answer was changed
