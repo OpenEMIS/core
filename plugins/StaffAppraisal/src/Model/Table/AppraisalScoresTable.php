@@ -97,6 +97,8 @@ class AppraisalScoresTable extends ControllerActionTable
 
         if (!$this->isAppraisalScoreAnswersEditable($formId)) {
             unset($extra['toolbarButtons']['edit']);
+            $this->Alert->info('Staff.Appraisal.isNotEditable');
+            $event->stopPropagation();
         }
     }
 
@@ -107,7 +109,7 @@ class AppraisalScoresTable extends ControllerActionTable
         $formId = $entity->id;
 
         if (!$this->isAppraisalScoreAnswersEditable($formId)) {
-            $this->Alert->error('Staff.Appraisal.isNotEditable');
+            $this->Alert->info('Staff.Appraisal.isNotEditable');
             $event->stopPropagation();
             return $this->controller->redirect($this->url('view'));
         }
