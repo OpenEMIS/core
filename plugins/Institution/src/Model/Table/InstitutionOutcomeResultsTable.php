@@ -46,11 +46,11 @@ class InstitutionOutcomeResultsTable extends AppTable
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
         
-        $allowSubjectList = $this->getAllowedSubjectList();
         $validator
             ->add('outcome_criteria_id', 'custom', [
-                'rule' => function ($value, $context) use ($allowSubjectList) {
+                'rule' => function ($value, $context) {
 
+            $allowSubjectList = $this->getAllowedSubjectList();
             $outcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
             $outcomeCriteriasList = $outcomeCriterias
                 ->find()
@@ -68,7 +68,7 @@ class InstitutionOutcomeResultsTable extends AppTable
             ])
             ;
         return $validator;
-    } 
+    }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
