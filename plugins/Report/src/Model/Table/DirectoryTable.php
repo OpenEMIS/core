@@ -125,24 +125,24 @@ class DirectoryTable extends AppTable
         ];
 
         $extraFields[] = [
-            'key' => 'MainIdentityTypes.name',
-            'field' => 'identity_type',
-            'type' => 'string',
-            'label' => __('Main Identity Type')
-        ];
-
-        $extraFields[] = [
             'key' => 'MainNationalities.name',
             'field' => 'nationality_name',
             'type' => 'string',
-            'label' => __('Main Nationality')
+            'label' => __('Default Nationality')
+        ];
+
+        $extraFields[] = [
+            'key' => 'MainIdentityTypes.name',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Default Identity Type')
         ];
 
         $extraFields[] = [
             'key' => 'Directory.identity_number',
             'field' => 'identity_number',
             'type' => 'string',
-            'label' => __('Main Identity Number')
+            'label' => __('Default Identity Number')
         ];
 
         $extraFields[] = [
