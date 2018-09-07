@@ -1694,7 +1694,10 @@ trait MessagesTrait
                 'rating' => 'Rating',
                 'value' => 'Value',
                 'final_rating' => 'Final Rating',
-                'deleted_competencies' => 'This competency has been removed'
+                'deleted_competencies' => 'This competency has been removed',
+                // Added
+                'circular_dependency' => 'This will lead to a circular dependency',
+                'isNotEditable' => 'Edit operation is not allowed as there are other information linked to this record.'
             ],
             'Competencies' => [
                 'min' => [

@@ -11,6 +11,9 @@ use App\Model\Table\ControllerActionTable;
 
 class AppraisalFormsTable extends ControllerActionTable
 {
+    // Added
+    const FIELD_TYPE_SCORE = "SCORE";
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -26,6 +29,8 @@ class AppraisalFormsTable extends ControllerActionTable
         ]);
         $this->hasMany('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods', 'foreignKey' => 'appraisal_form_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffAppraisals', ['className' => 'Institution.StaffAppraisals', 'foreignKey' => 'appraisal_form_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        $this->hasMany('AppraisalFormsCriteriasScores', ['className' => 'StaffAppraisal.AppraisalFormsCriteriasScores', 'foreignKey' => 'appraisal_form_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->setDeleteStrategy('restrict');
     }
@@ -191,7 +196,14 @@ class AppraisalFormsTable extends ControllerActionTable
                 $rowData = [];
                 $rowData[] = $customFieldName.$cellData;
                 $rowData[] = $customFieldType;
-                $rowData[] = $form->checkbox("$joinDataPrefix.is_mandatory", ['checked' => $obj['is_mandatory'], 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
+
+                // Added
+                if(array_key_exists('field_type', $obj) && !is_null($obj['field_type']) && strtoupper($obj['field_type']) != self::FIELD_TYPE_SCORE) {
+                    $rowData[] = $form->checkbox("$joinDataPrefix.is_mandatory", ['checked' => $obj['is_mandatory'], 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
+                }else {
+                    $rowData[] = $form->hidden("$joinDataPrefix.is_mandatory", ['value' => 0]);
+                }
+
                 $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
                 $rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
                 $tableCells[] = $rowData;
@@ -222,5 +234,17 @@ class AppraisalFormsTable extends ControllerActionTable
         $extra['excludedModels'] = [
             $this->AppraisalCriterias->alias()
         ];
+    }
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    {
+        $appraisalScore = $this->AppraisalCriterias->AppraisalScores;
+        $appraisalScore->dispatchEvent('Model.Appraisal.add.afterSave', [$entity, $requestData, $this->alias()], $appraisalScore);
+    }
+
+    public function editBeforeSave(Event $event, $entity, $requestData, $extra)
+    {
+        $appraisalScore = $this->AppraisalCriterias->AppraisalScores;
+        $appraisalScore->dispatchEvent('Model.Appraisal.edit.beforeSave', [$entity, $requestData, $this->alias()], $appraisalScore);
     }
 }
