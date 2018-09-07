@@ -205,12 +205,15 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
             ];
         }
 
-        $newEntities = $AppraisalScoreAnswers->newEntities($data);
-        $AppraisalScoreAnswers->connection()->transactional(function () use ($AppraisalScoreAnswers, $newEntities) {
-            foreach ($newEntities as $entity) {
-                $AppraisalScoreAnswers->save($entity);
-            }
-        });
+        if (!empty($proccessedCriteriaScore)) {
+            $newEntities = $AppraisalScoreAnswers->newEntities($data);
+            $AppraisalScoreAnswers->connection()->transactional(function () use ($AppraisalScoreAnswers, $newEntities) {
+                foreach ($newEntities as $entity) {
+                    $AppraisalScoreAnswers->save($entity);
+                }
+            });
+        }
+
     }
 
     private function createAppraisalFormsCriteriasScoresRecord($requestData) 
