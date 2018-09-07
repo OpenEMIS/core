@@ -21,7 +21,7 @@ class AppraisalScoresTable extends ControllerActionTable
 
 
     private $stepsOptions = [
-        '0' => '-- Select --',
+        // '0' => '-- Select --',
         'SUM' => 'Sum',
         'AVG' => 'Average'
     ];
@@ -486,7 +486,7 @@ class AppraisalScoresTable extends ControllerActionTable
         if ($action == 'edit') {
             $entity = $attr['attr']['entity'];
             $scoreCriteriasOptions = [];
-            $selectedFinal = '';
+            $selectedFinal = '';            
 
             if ($entity->has('appraisal_forms_criterias')) {
                 $criteriaList = $entity->appraisal_forms_criterias;
@@ -693,8 +693,8 @@ class AppraisalScoresTable extends ControllerActionTable
     private function translateStepToReadableWords($words)
     {
         switch ($words) {
-            case "0":
-                return __("-- Select --");
+            // case "0":
+            //     return __("-- Select --");
             case "AVG":
                 return __("Average");
             case "SUM":

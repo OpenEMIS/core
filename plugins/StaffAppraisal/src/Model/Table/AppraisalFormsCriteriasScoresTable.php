@@ -8,6 +8,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Datasource\EntityInterface;
+use Cake\Log\Log;
 
 class AppraisalFormsCriteriasScoresTable extends AppTable
 {
@@ -48,15 +49,14 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.Appraisal.add.afterSave'] = 'appraisalScoreAddAfterSave';
-        $events['Model.Appraisal.edit.beforeSave'] = 'appraisalScoreEditBeforeSave';
-        $events['Model.Appraisal.edit.afterSave'] = 'appraisalEditAfterSave';
-
+        $events['Model.Appraisal.add.afterSave'] = 'updateAppraisalScore';
+        $events['Model.Appraisal.edit.beforeSave'] = 'updateAppraisalScore';
+        $events['Model.InstitutionStaffAppraisal.editAfterSave'] = 'calculateScore';
         return $events;
     }
 
     // Added
-    public function appraisalScoreAddAfterSave(Event $event, Entity $entity, ArrayObject $requestData, $alias)
+    public function updateAppraisalScore(Event $event, Entity $entity, ArrayObject $requestData, $alias)
     {
         // Form ID
         $requestData[$this->alias()]['id'] = $entity->id;
@@ -64,259 +64,154 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         $this->createAppraisalFormsCriteriasScoresRecord($requestData);
     }
 
-    public function appraisalScoreEditBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, $alias)
+    // All the slider criteria has been save to DB already, when it come until here therefore now "retrieve" all the question from DB and all the "SCORE" type and calculate then save back to db for the score fields.
+    // 
+    public function calculateScore(Event $event, Entity $entity)
     {
-        // Form ID
-        $requestData[$this->alias()]['id'] = $entity->id;
-
-        $this->createAppraisalFormsCriteriasScoresRecord($requestData);
-    }
-
-    public function appraisalEditAfterSave(Event $event, Entity $entity, $action = null)
-    {
-        switch ($action) {
-            case "calculateScoreAfterSliderCriteriaIsSaved":
-                $this->calculateScore($entity);
-                break;
-        }
-    }
-
-    private function calculateScore(Entity $entity)
-    {
-        pr("appraisalEditAfterSave - AppraisalFormsCriteriasScoresTable");
-        // pr('die');die;
-        // pr($entity);
         $formId = $entity->appraisal_form_id;
         $institutionStaffAppraisalId = $entity->id;
-        $criteriaScoreIds = [];
-        // $count = 0;
-        $proccessedCriteriaScore = [];
+        // To store all the criterias that have a criteria record
+        $criteriaScoreEntities = [];
+        // To store all the criteria score that is been processed, "scoreId" => "calculatedScore"
+        $proccessedCriteriaScore = new ArrayObject([]);
 
-         // Get all the appraisal score criteria id and store to an array
         // $appraisalCriteriaScoreEntities = $this->find()
-        //     ->where([
-        //         $this->aliasField('appraisal_form_id') => $formId
-        //     ])
-        //     ->contain([
-        //         'AppraisalFormsCriterias.AppraisalCriterias.FieldTypes',
-        //         // 'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalCriterias.FieldTypes',
-        //         'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalSliderAnswers',
-        //         'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalScoreAnswers',
-        //     ]);
-
-        $appraisalCriteriaScoreEntities = $this->find()
+        $result = $this->find()
             ->where([
                 $this->aliasField('appraisal_form_id') => $formId,
-                // $this->aliasField('institution_staff_appraisal_id') => $institutionStaffAppraisalId
-
             ])
             ->contain([
                 'AppraisalFormsCriterias.AppraisalCriterias.FieldTypes',
                 'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalCriterias.FieldTypes',
-
-                // // 'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalCriterias.FieldTypes',
                 'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalSliderAnswers' => function ($q) use ($institutionStaffAppraisalId) {
                     return $q->where([
                         'AppraisalSliderAnswers.institution_staff_appraisal_id' => $institutionStaffAppraisalId
-
                     ]);
-                },
-                // 'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalScoreAnswers',
-            ]);
+                }
+            ])
+            ->all();
 
-         // pr($appraisalCriteriaScoreEntities->toArray());die;
+        if (!$result->isEmpty()) {
+            $appraisalCriteriaScoreEntities = $result->toArray();
 
-        // Retriving all the score ID that has a linkage to $criteriaScoreIds[]
-        foreach ($appraisalCriteriaScoreEntities as $criteriaScore) {
-            $criteriaScoreId = $criteriaScore->appraisal_criteria_id;
-            if (!empty($criteriaScore->appraisal_forms_criterias_scores_links)) {
-                $criteriaScoreIds[] = $criteriaScore;
-            } else {
-                $proccessedCriteriaScore[$criteriaScoreId] = 0;
+            // Retriving all the score ID that has a linkage to $criteriaScoreEntities[]
+            foreach ($appraisalCriteriaScoreEntities as $criteriaScore) {
+                $criteriaScoreId = $criteriaScore->appraisal_criteria_id;
+                if (!empty($criteriaScore->appraisal_forms_criterias_scores_links)) {
+                    $criteriaScoreEntities[] = $criteriaScore;
+                } else { // When score doesn't have criteria, treated as processed
+                    $proccessedCriteriaScore[$criteriaScoreId] = 0;
+                }
             }
-         }
-         // pr($criteriaScoreIds);die;
-         // pr($proccessedCriteriaScore);die;
-         $exit = 0;
-         $currentIndex = 0;
-         // pr($criteriaScoreIds);
-         while (count($criteriaScoreIds) && $exit++ < 500) {
-            $currentCriteria = $criteriaScoreIds[$currentIndex];
-            $currAbleToEvaluate = true;
-            // if ($currentCriteria->appraisal_criteria_id == 13) {
-            //     pr($currentCriteria);die;
-            // }
+        }
+
+        $processCount = 0;
+        $currentIndex = 0;
+
+        while (count($criteriaScoreEntities)) {
+            if ($processCount++ > 10000) {
+                Log::write('error', $this->alias() . ': Infinite loop when calculating scores');
+                Log::write('error', $this->alias() . ': Entity');
+                Log::write('error', $criteriaScoreEntities);
+                throw new Exception('Unable to compute the scores');
+            }
+
+            $currentCriteria = $criteriaScoreEntities[$currentIndex];
+            $canEvaluate = true;
+
+            // Determine canEvaluate
             foreach ($currentCriteria->appraisal_forms_criterias_scores_links as $childCriteria) {
-
-                //check if there is a score
+                // Check if there is a score
                 $isScoreType = ($childCriteria->appraisal_forms_criterias_link->appraisal_criteria->field_type->code == self::FIELD_TYPE_SCORE);
-
-                //check child criteria is in processed array
                 if ($isScoreType && !array_key_exists($childCriteria->appraisal_criteria_linked_id, $proccessedCriteriaScore)) {
-                    //if have all slider and no score
-                    $currAbleToEvaluate = false;
+                    // If the currentCriteria have all slider and no score
+                    $canEvaluate = false;
                     break;
                 }
-
-                // $childCriteriaLink = $childCriteria->appraisal_forms_criterias_link;
-
-                // if ($childCriteriaLink->has('appraisal_score_answers') && $currAbleToEvaluate) {
-                //     foreach($childCriteriaLink->appraisal_score_answers as $childChildCriteria) {
-                //         $scoreEntityLinkId = $childChildCriteria->appraisal_criteria_id;
-
-                //         if (!array_key_exists($scoreEntityLinkId, $proccessedCriteriaScore)) {
-                //             $currAbleToEvaluate = false;
-                //             break;
-                //         }
-
-                //     }
-                // }
             }
 
-
-
-            if($currAbleToEvaluate) {
-                //evaluate and throw into processed array
+            if($canEvaluate) {
+                // Evaluate and throw into processed array
                 $this->evaluateScore($currentCriteria, $proccessedCriteriaScore);
-                        // pr($proccessedCriteriaScore);die;
 
-                //remove the criteria from criteriaScoreIds since its already successfully calculated the score
-                array_splice($criteriaScoreIds, $currentIndex, 1);
+                // Remove the criteria from criteriaScoreIds since its already successfully calculated the score
+                array_splice($criteriaScoreEntities, $currentIndex, 1);
             }
 
-                // if ($currentCriteria->appraisal_criteria_id == 12) {
-                //     pr('before');
-                //     pr($currentIndex + 1);
-                //     pr(count($currentIndex));
-                //     pr(($currentIndex + 1) % count($criteriaScoreIds));
-                // }
-            if (count($criteriaScoreIds) > 0) {
-                $currentIndex = ($currentIndex + 1) % count($criteriaScoreIds);
+            // Increment currentIndex by 1 (circular)
+            if (count($criteriaScoreEntities) > 0) {
+                $currentIndex = ++$currentIndex % count($criteriaScoreEntities);
             }
-
-                // if ($currentCriteria->appraisal_criteria_id == 12) {
-                //     pr('after');
-
-                //     pr($currentIndex);
-                    // pr($proccessedCriteriaScore);die;
-                // }
-
          }
-         // pr($criteriaScoreIds);
-         // pr($proccessedCriteriaScore);die;
+
         // Save score to database (appraisal_score_answers table)
-        $this->saveCriteriasScoreAnswer($formId, $institutionStaffAppraisalId, $proccessedCriteriaScore);
+        $params = new ArrayObject([
+            'form_id' => $formId,
+            'institution_staff_appraisal_id' => $institutionStaffAppraisalId,
+        ]);
+        $this->saveCriteriaScoreAnswers($proccessedCriteriaScore, $params);
     }
 
-    private function evaluateScore($currentCriteria, &$proccessedCriteriaScore)
-    {
+    private function evaluateScore($currentCriteria, ArrayObject $proccessedCriteriaScore)
+    {   
+        $criteriaCountLink = count($currentCriteria->appraisal_forms_criterias_scores_links);
 
-        
-        $noOfChildInTheScoreEntity = 0;
-        $totalScore = 0;
-
-        foreach($currentCriteria->appraisal_forms_criterias_scores_links as $childCriteria) {
-            $childCriteriaLink = $childCriteria->appraisal_forms_criterias_link;
-            if ($childCriteriaLink->has('appraisal_slider_answers') && count($childCriteriaLink->appraisal_slider_answers)) {
-                $childChildCriteria = $childCriteriaLink->appraisal_slider_answers[0];
-                $totalScore += $childChildCriteria->answer;
-            } else { //score
-                //take the id and check with processed
-                if(isset($proccessedCriteriaScore[$childCriteriaLink->appraisal_criteria_id])) {
-                    $totalScore += $proccessedCriteriaScore[$childCriteriaLink->appraisal_criteria_id];
-                } 
-            }
-            $noOfChildInTheScoreEntity++;
-        }
-
-
-        // pr($currentCriteria);die;
-
-
-
-
-        // foreach ($currentCriteria->appraisal_forms_criterias_scores_links as $childCriteria) {
-        //     $childCriteriaLink = $childCriteria->appraisal_forms_criterias_link;
-
-        //     if ($childCriteriaLink->has('appraisal_score_answers')) {
-        //         foreach ($childCriteriaLink->appraisal_score_answers as $childChildCriteria) {
-
-        //             //take the id and check with processed
-        //             if(isset($proccessedCriteriaScore[$childChildCriteria->appraisal_criteria_id])) {
-        //                 $totalScore += $proccessedCriteriaScore[$childChildCriteria->appraisal_criteria_id];
-        //             } else {
-        //                 pr($childChildCriteria->appraisal_criteria_id);
-        //                 pr($proccessedCriteriaScore);
-        //                 pr("holy sheet"); die;
-        //             }
-  
-        //             $noOfChildInTheScoreEntity++;
-        //         }
-        //     }
-        // }
-
-
-        // Calculate score
-        if ($currentCriteria->has('params') && !empty($currentCriteria->params)) {                             
-            $scoreEntityParams = json_decode($currentCriteria->params, true);
-            if (!is_null($scoreEntityParams) && array_key_exists('formula', $scoreEntityParams)) {
-                $formula = $scoreEntityParams['formula'];
-                switch ($formula) {
-                    case self::FORMULA_AVG:
-                        if ($noOfChildInTheScoreEntity != 0) {
-                            $totalScore = $totalScore/$noOfChildInTheScoreEntity;
-                        } else {
-                            $totalScore = 0;
-                        }
-                    break;
-                    case self::FORMULA_SUM:
-                        $totalScore = $totalScore;
-                        break;
-                    default:
-                        $totalScore = 0;
-                    break;
+        if ($criteriaCountLink > 0) {
+            $totalScore = 0;
+            foreach ($currentCriteria->appraisal_forms_criterias_scores_links as $childCriteria) {
+                $childCriteriaLink = $childCriteria->appraisal_forms_criterias_link;
+                if ($childCriteriaLink->has('appraisal_slider_answers') && count($childCriteriaLink->appraisal_slider_answers)) {
+                    $childChildCriteria = $childCriteriaLink->appraisal_slider_answers[0];
+                    $totalScore += $childChildCriteria->answer;
+                } else { //score
+                    //take the id and check with processed
+                    if (isset($proccessedCriteriaScore[$childCriteriaLink->appraisal_criteria_id])) {
+                        $totalScore += $proccessedCriteriaScore[$childCriteriaLink->appraisal_criteria_id];
+                    } 
                 }
             }
+
+            // Calculate score based on the criteria params.
+            if ($currentCriteria->has('params') && !empty($currentCriteria->params)) {                             
+                $scoreEntityParams = json_decode($currentCriteria->params, true);
+                if (!is_null($scoreEntityParams) && array_key_exists('formula', $scoreEntityParams)) {
+                    $formula = $scoreEntityParams['formula'];
+                    switch ($formula) {
+                        case self::FORMULA_AVG:
+                            $totalScore = $totalScore / $criteriaCountLink;
+                        break;
+                        case self::FORMULA_SUM:
+                            break;
+                        default:
+                            $totalScore = 0;
+                            // Write a log error also
+                            // Remove the select thing.
+                        break;
+                    }
+                }
+            }
+            $proccessedCriteriaScore[$currentCriteria->appraisal_criteria_id] = $totalScore;
         }
-
-
-
-        //throw into processed array
-        $proccessedCriteriaScore[$currentCriteria->appraisal_criteria_id] = $totalScore;
-
-        // pr($proccessedCriteriaScore);die;
-
     }
 
-    private function saveCriteriasScoreAnswer($formId, $institutionStaffAppraisalId, $proccessedCriteriaScore)
+    private function saveCriteriaScoreAnswers(ArrayObject $proccessedCriteriaScore, ArrayObject $params)
     {
-        // pr('saveCriteriasScoreAnswer');
-        // pr($proccessedCriteriaScore);
-        // pr($institutionStaffAppraisalId);
-        // pr($formId);die;
-        $appraisalScoreAnswers = TableRegistry::get('StaffAppraisal.appraisal_score_answers');
-        $appraisalScoreAnswersEntities = $appraisalScoreAnswers->find()
-        ->where([
-            $appraisalScoreAnswers->aliasField('appraisal_form_id') => $formId,
-            $appraisalScoreAnswers->aliasField('institution_staff_appraisal_id') => $institutionStaffAppraisalId,
-
-        ]);
-
+        $AppraisalScoreAnswers = TableRegistry::get('StaffAppraisal.AppraisalScoreAnswers');
 
         // Calculated all the score fields, time to save to DB
         foreach ($proccessedCriteriaScore as $criteriaScoreId => $answer) {
             $data[] = [
-                'appraisal_form_id' => $formId,
-                'institution_staff_appraisal_id' => $institutionStaffAppraisalId,
+                'appraisal_form_id' => $params['form_id'],
+                'institution_staff_appraisal_id' => $params['institution_staff_appraisal_id'],
                 'appraisal_criteria_id' => $criteriaScoreId,
                 'answer' => $answer
             ];
         }
-        // pr($data);die;
-        $newEntities = $appraisalScoreAnswers->newEntities($data);
-        $appraisalScoreAnswers->connection()->transactional(function () use ($appraisalScoreAnswers, $newEntities) {
+
+        $newEntities = $AppraisalScoreAnswers->newEntities($data);
+        $AppraisalScoreAnswers->connection()->transactional(function () use ($AppraisalScoreAnswers, $newEntities) {
             foreach ($newEntities as $entity) {
-                $appraisalScoreAnswers->save($entity, ['atomic' => false]);
+                $AppraisalScoreAnswers->save($entity);
             }
         });
     }
