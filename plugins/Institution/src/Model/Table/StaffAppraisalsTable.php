@@ -143,6 +143,13 @@ class StaffAppraisalsTable extends ControllerActionTable
         $query->where([$this->aliasField('staff_id') => $this->staff->id]);
     }
 
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) 
+    {
+        $broadcaster = $this;
+        $listeners = [];
+        $listeners[] = $this->AppraisalForms->AppraisalFormsCriteriasScores;
+        $this->dispatchEventToModels('Model.InstitutionStaffAppraisal.addAfterSave', [$entity], $broadcaster, $listeners);
+    }
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $broadcaster = $this;
