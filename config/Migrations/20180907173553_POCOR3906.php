@@ -1,10 +1,12 @@
 <?php
 use Phinx\Migration\AbstractMigration;
+use Cake\ORM\TableRegistry;
 
 class POCOR3906 extends AbstractMigration
 {
     public function up()
     {
+        // Last testing is to ensure that the migration will work if institution_staff_leave is empty!!!
         // institution_staff_attendance_activities
         $StaffAttendanceActivities = $this->table(
             'institution_staff_attendance_activities', [
@@ -165,8 +167,43 @@ class POCOR3906 extends AbstractMigration
             ->save();
 
         // institution_staff_leave
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaffLeave = TableRegistry::get('Institution.StaffLeave');
+        $institutionStaffLeaveOrigin = $InstitutionStaffLeave
+            ->find()
+            ->toArray();
+
+        $data = [];
+        foreach ($institutionStaffLeaveOrigin as $key => $value) {
+            $startDate = $value->date_from;
+            $academicPeriodId = $AcademicPeriods->getAcademicPeriodIdByDate($startDate);
+            if ($value->modified) {
+                $modified = date('Y-m-d H:i:s', strtotime($value->modified));
+            } else {
+                $modified = null;
+            }
+            $data[] = [
+                    'id' => $value->id,
+                    'date_from' => date('Y-m-d', strtotime($value->date_from)),
+                    'date_to' => date('Y-m-d', strtotime($value->date_to)),
+                    'comments' => $value->comments,
+                    'staff_id' => $value->staff_id,
+                    'staff_leave_type_id' => $value->staff_leave_type_id,
+                    'institution_id' => $value->institution_id,
+                    'assignee_id' => $value->assignee_id,
+                    'academic_period_id' => $academicPeriodId,
+                    'status_id' => $value->status_id,
+                    'number_of_days' => $value->number_of_days,
+                    'file_name' => $value->file_name,
+                    'file_content' => $value->file_content,
+                    'modified_user_id' => $value->modified_user_id,
+                    'modified' => $modified,
+                    'created_user_id' => '1',
+                    'created' => date('Y-m-d H:i:s', strtotime($value->created))
+                ];
+        }
+
         $this->execute('RENAME TABLE `institution_staff_leave` TO `z_3906_institution_staff_leave`');
-        $this->execute('DROP TABLE IF EXISTS institution_staff_leave');
 
         $StaffLeave = $this->table('institution_staff_leave', [
             'collation' => 'utf8mb4_unicode_ci',
@@ -194,6 +231,7 @@ class POCOR3906 extends AbstractMigration
                 'limit' => null,
                 'null' => true,
             ])
+            // set full_day to true because staff leave did not cater for non full day previously
             ->addColumn('full_day', 'integer', [
                 'default' => 1,
                 'limit' => 1,
@@ -228,9 +266,8 @@ class POCOR3906 extends AbstractMigration
                 'limit' => 11,
                 'null' => false,
             ])
-            //need to remove the hard coded id.
             ->addColumn('academic_period_id', 'integer', [
-                'default' => 27,
+                'default' => null,
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to academic_periods.id'
@@ -286,16 +323,14 @@ class POCOR3906 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
-        $this->execute('
-            INSERT INTO `institution_staff_leave` 
-                (`id`, `date_from`, `date_to`, `comments`, `staff_id`, `staff_leave_type_id`, `institution_id`, `assignee_id`, `status_id`, `number_of_days`, `file_name`, `file_content`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-            SELECT `id`, `date_from`, `date_to`, `comments`, `staff_id`, `staff_leave_type_id`, `institution_id`, `assignee_id`, `status_id`, `number_of_days`, `file_name`, `file_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
-            FROM `z_3906_institution_staff_leave`
-        ');
+        if (!empty($data)) {
+            $StaffLeave->insert($data);
+            $StaffLeave->saveData();
+        }
     }
 
     public function down()
-    {   
+    {
         $this->dropTable('institution_staff_attendances');
         $this->dropTable('institution_staff_attendance_activities');
 
