@@ -7,7 +7,7 @@ class POCOR4741 extends AbstractMigration
     public function up()
     {
         $fieldData = [
-            'code' => 'SCORE'
+            'code' => 'SCORE',
             'name' => 'Score'
         ];
 
@@ -176,22 +176,22 @@ class POCOR4741 extends AbstractMigration
         // $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` >= ' . $order);
 
         //Insert workflow into it
-        $this->insert('security_functions', [
-            'id' => 6013,
-            'name' => 'Workflows',
-            'controller' => 'Reports',
-            'module' => 'Reports',
-            'category' => 'Reports',
-            'parent_id' => -1,
-            '_view' => 'Workflows.index',
-            '_add' => 'Workflows.add',
-            '_execute' => 'Workflows.download',
-            'order' => $order,
-            'visible' => 1,
-            'description' => null,
-            'created_user_id' => 1,
-            'created' => date('Y-m-d H:i:s')
-        ]);
+        // $this->insert('security_functions', [
+        //     'id' => 6013,
+        //     'name' => 'Workflows',
+        //     'controller' => 'Reports',
+        //     'module' => 'Reports',
+        //     'category' => 'Reports',
+        //     'parent_id' => -1,
+        //     '_view' => 'Workflows.index',
+        //     '_add' => 'Workflows.add',
+        //     '_execute' => 'Workflows.download',
+        //     'order' => $order,
+        //     'visible' => 1,
+        //     'description' => null,
+        //     'created_user_id' => 1,
+        //     'created' => date('Y-m-d H:i:s')
+        // ]);
     }
 
     public function down()
@@ -199,7 +199,7 @@ class POCOR4741 extends AbstractMigration
         $this->dropTable('appraisal_forms_criterias_scores');
         $this->dropTable('appraisal_forms_criterias_scores_links');
         $this->dropTable('appraisal_score_answers');
-        $this->execute('DELETE from `field_types` WHERE id = 5');
+        $this->execute('DELETE from `field_types` WHERE code = "SCORE"');
 
         // $this->execute('DROP TABLE IF EXISTS `security_functions`');
         // $this->execute('RENAME TABLE `z_4741_security_functions` TO `security_functions`');
