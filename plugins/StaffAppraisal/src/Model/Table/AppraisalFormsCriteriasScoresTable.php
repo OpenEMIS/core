@@ -93,17 +93,38 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         $proccessedCriteriaScore = [];
 
          // Get all the appraisal score criteria id and store to an array
+        // $appraisalCriteriaScoreEntities = $this->find()
+        //     ->where([
+        //         $this->aliasField('appraisal_form_id') => $formId
+        //     ])
+        //     ->contain([
+        //         'AppraisalFormsCriterias.AppraisalCriterias.FieldTypes',
+        //         // 'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalCriterias.FieldTypes',
+        //         'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalSliderAnswers',
+        //         'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalScoreAnswers',
+        //     ]);
+
         $appraisalCriteriaScoreEntities = $this->find()
             ->where([
-                $this->aliasField('appraisal_form_id') => $formId
+                $this->aliasField('appraisal_form_id') => $formId,
+                // $this->aliasField('institution_staff_appraisal_id') => $institutionStaffAppraisalId
+
             ])
             ->contain([
                 'AppraisalFormsCriterias.AppraisalCriterias.FieldTypes',
-                // 'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalCriterias.FieldTypes',
-                'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalSliderAnswers',
-                'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalScoreAnswers',
+                'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalCriterias.FieldTypes',
+
+                // // 'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalCriterias.FieldTypes',
+                'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalSliderAnswers' => function ($q) use ($institutionStaffAppraisalId) {
+                    return $q->where([
+                        'AppraisalSliderAnswers.institution_staff_appraisal_id' => $institutionStaffAppraisalId
+
+                    ]);
+                },
+                // 'AppraisalFormsCriteriasScoresLinks.AppraisalFormsCriteriasLinks.AppraisalScoreAnswers',
             ]);
 
+         // pr($appraisalCriteriaScoreEntities->toArray());die;
 
         // Retriving all the score ID that has a linkage to $criteriaScoreIds[]
         foreach ($appraisalCriteriaScoreEntities as $criteriaScore) {
@@ -114,30 +135,42 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
                 $proccessedCriteriaScore[$criteriaScoreId] = 0;
             }
          }
-         // pr(count($criteriaScoreIds));
-         // pr(count($proccessedCriteriaScore));die;
+         // pr($criteriaScoreIds);die;
+         // pr($proccessedCriteriaScore);die;
          $exit = 0;
          $currentIndex = 0;
          // pr($criteriaScoreIds);
          while (count($criteriaScoreIds) && $exit++ < 500) {
             $currentCriteria = $criteriaScoreIds[$currentIndex];
             $currAbleToEvaluate = true;
-
+            // if ($currentCriteria->appraisal_criteria_id == 13) {
+            //     pr($currentCriteria);die;
+            // }
             foreach ($currentCriteria->appraisal_forms_criterias_scores_links as $childCriteria) {
 
-                $childCriteriaLink = $childCriteria->appraisal_forms_criterias_link;
+                //check if there is a score
+                $isScoreType = ($childCriteria->appraisal_forms_criterias_link->appraisal_criteria->field_type->code == self::FIELD_TYPE_SCORE);
 
-                if ($childCriteriaLink->has('appraisal_score_answers') && $currAbleToEvaluate) {
-                    foreach($childCriteriaLink->appraisal_score_answers as $childChildCriteria) {
-                        $scoreEntityLinkId = $childChildCriteria->appraisal_criteria_id;
-
-                        if (!array_key_exists($scoreEntityLinkId, $proccessedCriteriaScore)) {
-                            $currAbleToEvaluate = false;
-                            break;
-                        }
-
-                    }
+                //check child criteria is in processed array
+                if ($isScoreType && !array_key_exists($childCriteria->appraisal_criteria_linked_id, $proccessedCriteriaScore)) {
+                    //if have all slider and no score
+                    $currAbleToEvaluate = false;
+                    break;
                 }
+
+                // $childCriteriaLink = $childCriteria->appraisal_forms_criterias_link;
+
+                // if ($childCriteriaLink->has('appraisal_score_answers') && $currAbleToEvaluate) {
+                //     foreach($childCriteriaLink->appraisal_score_answers as $childChildCriteria) {
+                //         $scoreEntityLinkId = $childChildCriteria->appraisal_criteria_id;
+
+                //         if (!array_key_exists($scoreEntityLinkId, $proccessedCriteriaScore)) {
+                //             $currAbleToEvaluate = false;
+                //             break;
+                //         }
+
+                //     }
+                // }
             }
 
 
@@ -165,51 +198,62 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
                 //     pr('after');
 
                 //     pr($currentIndex);
-                //     pr($proccessedCriteriaScore);die;
+                    // pr($proccessedCriteriaScore);die;
                 // }
 
          }
-         pr($proccessedCriteriaScore);die;
+         // pr($criteriaScoreIds);
+         // pr($proccessedCriteriaScore);die;
         // Save score to database (appraisal_score_answers table)
         $this->saveCriteriasScoreAnswer($formId, $institutionStaffAppraisalId, $proccessedCriteriaScore);
     }
 
     private function evaluateScore($currentCriteria, &$proccessedCriteriaScore)
     {
+
+        
         $noOfChildInTheScoreEntity = 0;
         $totalScore = 0;
-        foreach ($currentCriteria->appraisal_forms_criterias_scores_links as $childCriteria) {
+
+        foreach($currentCriteria->appraisal_forms_criterias_scores_links as $childCriteria) {
             $childCriteriaLink = $childCriteria->appraisal_forms_criterias_link;
-            if ($childCriteriaLink->has('appraisal_slider_answers')) {
-                foreach ($childCriteriaLink->appraisal_slider_answers as $childChildCriteria) {
-                    $totalScore += $childChildCriteria->answer;
-                    $noOfChildInTheScoreEntity++;
-                }
+            if ($childCriteriaLink->has('appraisal_slider_answers') && count($childCriteriaLink->appraisal_slider_answers)) {
+                $childChildCriteria = $childCriteriaLink->appraisal_slider_answers[0];
+                $totalScore += $childChildCriteria->answer;
+            } else { //score
+                //take the id and check with processed
+                if(isset($proccessedCriteriaScore[$childCriteriaLink->appraisal_criteria_id])) {
+                    $totalScore += $proccessedCriteriaScore[$childCriteriaLink->appraisal_criteria_id];
+                } 
             }
+            $noOfChildInTheScoreEntity++;
         }
 
 
+        // pr($currentCriteria);die;
 
 
-        foreach ($currentCriteria->appraisal_forms_criterias_scores_links as $childCriteria) {
-            $childCriteriaLink = $childCriteria->appraisal_forms_criterias_link;
 
-            if ($childCriteriaLink->has('appraisal_score_answers')) {
-                foreach ($childCriteriaLink->appraisal_score_answers as $childChildCriteria) {
 
-                    //take the id and check with processed
-                    if(isset($proccessedCriteriaScore[$childChildCriteria->appraisal_criteria_id])) {
-                        $totalScore += $proccessedCriteriaScore[$childChildCriteria->appraisal_criteria_id];
-                    } else {
-                        pr($childChildCriteria->appraisal_criteria_id);
-                        pr($proccessedCriteriaScore);
-                        pr("holy sheet"); die;
-                    }
+        // foreach ($currentCriteria->appraisal_forms_criterias_scores_links as $childCriteria) {
+        //     $childCriteriaLink = $childCriteria->appraisal_forms_criterias_link;
+
+        //     if ($childCriteriaLink->has('appraisal_score_answers')) {
+        //         foreach ($childCriteriaLink->appraisal_score_answers as $childChildCriteria) {
+
+        //             //take the id and check with processed
+        //             if(isset($proccessedCriteriaScore[$childChildCriteria->appraisal_criteria_id])) {
+        //                 $totalScore += $proccessedCriteriaScore[$childChildCriteria->appraisal_criteria_id];
+        //             } else {
+        //                 pr($childChildCriteria->appraisal_criteria_id);
+        //                 pr($proccessedCriteriaScore);
+        //                 pr("holy sheet"); die;
+        //             }
   
-                    $noOfChildInTheScoreEntity++;
-                }
-            }
-        }
+        //             $noOfChildInTheScoreEntity++;
+        //         }
+        //     }
+        // }
 
 
         // Calculate score
@@ -246,6 +290,10 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
     private function saveCriteriasScoreAnswer($formId, $institutionStaffAppraisalId, $proccessedCriteriaScore)
     {
+        // pr('saveCriteriasScoreAnswer');
+        // pr($proccessedCriteriaScore);
+        // pr($institutionStaffAppraisalId);
+        // pr($formId);die;
         $appraisalScoreAnswers = TableRegistry::get('StaffAppraisal.appraisal_score_answers');
         $appraisalScoreAnswersEntities = $appraisalScoreAnswers->find()
         ->where([
@@ -254,7 +302,6 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
         ]);
 
-        // pr($appraisalScoreAnswersEntities->toArray());die;
 
         // Calculated all the score fields, time to save to DB
         foreach ($proccessedCriteriaScore as $criteriaScoreId => $answer) {
