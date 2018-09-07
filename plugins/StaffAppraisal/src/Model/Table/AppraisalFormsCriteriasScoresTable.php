@@ -205,7 +205,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
             ];
         }
 
-        if (!empty($proccessedCriteriaScore) > 0) {
+        if (!empty($proccessedCriteriaScore)) {
             $newEntities = $AppraisalScoreAnswers->newEntities($data);
             $AppraisalScoreAnswers->connection()->transactional(function () use ($AppraisalScoreAnswers, $newEntities) {
                 foreach ($newEntities as $entity) {
