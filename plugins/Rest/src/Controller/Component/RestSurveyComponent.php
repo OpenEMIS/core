@@ -1401,14 +1401,15 @@ class RestSurveyComponent extends Component
             if (isset($attr['rules'][$questionId])) {
                 $rules = $attr['rules'][$questionId];
                 $relevancy = '';
+                $tmp = [];
                 foreach ($rules as $key => $options) {
                     $dependentQuestion = $attr['rules']['dependent_question_mapping'][$key];
                     $options = json_decode($options);
                     foreach ($options as $option) {
-                        $relevancy .= '../'.$dependentQuestion.' eq '. $option .' &#38;&#38; ';
+                        $tmp[] = '../'.$dependentQuestion.' eq '. $option;
                     }
                 }
-                $relevancy = rtrim($relevancy, ' &#38;&#38; ');
+                $relevancy = implode(' &#38;&#38; ', $tmp);
                 $bindNode->addAttribute("relevant", $relevancy);
             }
         }
