@@ -13,6 +13,7 @@ class ReportsController extends AppController
     {
         parent::initialize();
         $this->ControllerAction->models = [
+            'Directory'  => ['className' => 'Report.Directory', 'actions' => ['index', 'add']],
             'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
             'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
             'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
@@ -47,7 +48,11 @@ class ReportsController extends AppController
     public function getFeatureOptions($module)
     {
         $options = [];
-        if ($module == 'Institutions') {
+        if ($module == 'Directory') {
+            $options = [
+                'Report.Directory' => __('Directory'),
+            ];
+        } elseif ($module == 'Institutions') {
             $options = [
                 'Report.Institutions' => __('Institutions'),
                 'Report.InstitutionPositions' => __('Positions'),
