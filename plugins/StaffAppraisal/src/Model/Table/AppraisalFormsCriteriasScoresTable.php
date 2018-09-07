@@ -12,7 +12,6 @@ use Cake\Log\Log;
 
 class AppraisalFormsCriteriasScoresTable extends AppTable
 {
-    // Added
     const FIELD_TYPE_SCORE = "SCORE";
     const FIELD_TYPE_SLIDER = "SLIDER";
     const FORMULA_SUM = "SUM";
@@ -45,17 +44,16 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         ]);
     }
 
-    // Added
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $events['Model.Appraisal.add.afterSave'] = 'updateAppraisalScore';
         $events['Model.Appraisal.edit.beforeSave'] = 'updateAppraisalScore';
+        $events['Model.InstitutionStaffAppraisal.addAfterSave'] = 'calculateScore';
         $events['Model.InstitutionStaffAppraisal.editAfterSave'] = 'calculateScore';
         return $events;
     }
 
-    // Added
     public function updateAppraisalScore(Event $event, Entity $entity, ArrayObject $requestData, $alias)
     {
         // Form ID
@@ -65,7 +63,6 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     }
 
     // All the slider criteria has been save to DB already, when it come until here therefore now "retrieve" all the question from DB and all the "SCORE" type and calculate then save back to db for the score fields.
-    // 
     public function calculateScore(Event $event, Entity $entity)
     {
         $formId = $entity->appraisal_form_id;
@@ -225,7 +222,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
             // To remove the record that is un-link to the form.
             $this->deleteAppraisalFormsCriteriasScoreRecord($requestData);
-
+            $actualDataToBeSave = [];
             foreach ($requestData['AppraisalForms']['appraisal_criterias'] as $appraisalFormCriteriasEntity) {
 
                 $criteriasFieldType = strtoupper($appraisalFormCriteriasEntity['_joinData']['field_type']);                
@@ -245,14 +242,15 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
                 }
             }
 
-            // Process all the entities as a single transaction
-            $newEntities = $appraisalFormsCriteriasScores->newEntities($actualDataToBeSave);
-
-            $appraisalFormsCriteriasScores->connection()->transactional(function () use ($appraisalFormsCriteriasScores, $newEntities) {
+            if (!is_null($actualDataToBeSave)) {
+                // Process all the entities as a single transaction
+                $newEntities = $appraisalFormsCriteriasScores->newEntities($actualDataToBeSave);
+                $appraisalFormsCriteriasScores->connection()->transactional(function () use ($appraisalFormsCriteriasScores, $newEntities) {
                 foreach ($newEntities as $entity) {
                     $appraisalFormsCriteriasScores->save($entity, ['atomic' => false]);
-                }
-            });
+                    }
+                });
+            }
         }
     }
 
