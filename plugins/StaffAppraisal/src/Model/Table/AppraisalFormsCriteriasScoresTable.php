@@ -194,7 +194,8 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     private function saveCriteriaScoreAnswers(ArrayObject $proccessedCriteriaScore, ArrayObject $params)
     {
         $AppraisalScoreAnswers = TableRegistry::get('StaffAppraisal.AppraisalScoreAnswers');
-
+        $data = [];
+        
         // Calculated all the score fields, time to save to DB
         foreach ($proccessedCriteriaScore as $criteriaScoreId => $answer) {
             $data[] = [
@@ -205,7 +206,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
             ];
         }
 
-        if (!empty($proccessedCriteriaScore)) {
+        if (!empty($data)) {
             $newEntities = $AppraisalScoreAnswers->newEntities($data);
             $AppraisalScoreAnswers->connection()->transactional(function () use ($AppraisalScoreAnswers, $newEntities) {
                 foreach ($newEntities as $entity) {
