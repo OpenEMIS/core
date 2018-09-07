@@ -48,6 +48,11 @@ class StaffAppraisalsController extends AppController
                 'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Types'],
                 'text' => __('Types')
             ],
+            // Added
+            'Scores' => [
+                'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Scores'],
+                'text' => __('Scores')
+            ],
             'Periods' => [
                 'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Periods'],
                 'text' => __('Periods')
@@ -71,6 +76,12 @@ class StaffAppraisalsController extends AppController
     public function Types()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StaffAppraisal.AppraisalTypes']);
+    }
+
+    // Added
+    public function Scores()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StaffAppraisal.AppraisalScores']);
     }
 
     public function Periods()

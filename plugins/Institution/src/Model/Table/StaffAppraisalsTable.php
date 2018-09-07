@@ -54,6 +54,12 @@ class StaffAppraisalsTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+        $this->hasMany('AppraisalScoreAnswers', [
+            'className' => 'StaffAppraisal.AppraisalScoreAnswers',
+            'foreignKey' => 'institution_staff_appraisal_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         // for file upload
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -127,27 +133,17 @@ class StaffAppraisalsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->setupTabElements();
-    }
-
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('staff_id') => $this->staff->id]);
     }
 
-    private function setupTabElements()
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        $options['type'] = 'staff';
-        $userId = $this->request->query('user_id');
-        if (!is_null($userId)) {
-            $options['user_id'] = $userId;
-        }
-
-        $tabElements = $this->controller->getCareerTabElements($options);
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'StaffAppraisals');
+        $broadcaster = $this;
+        $listeners = [];
+        $listeners[] = $this->AppraisalForms->AppraisalFormsCriteriasScores;
+        $this->dispatchEventToModels('Model.InstitutionStaffAppraisal.editAfterSave', [$entity], $broadcaster, $listeners);
     }
 
     public function findWorkbench(Query $query, array $options)
@@ -237,5 +233,4 @@ class StaffAppraisalsTable extends ControllerActionTable
 
         return $query;
     }
-
 }
