@@ -352,11 +352,10 @@ class AppraisalBehavior extends Behavior
                 $key = 'appraisal_score_answers';
                 $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $action = $model->action;
-                // Added this, so that the result are able to display in the edit and view if not not sure why cant display in "view" when using 'readonly'.
                 if ($action == 'edit' || $action == 'add') {
                     $attr['type'] = 'readonly';
                 } else if ($action == 'view') {
-                    $attr['type'] = 'text';
+                    $attr['type'] = 'string';
                 }
                 break;
         }

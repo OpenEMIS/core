@@ -442,6 +442,7 @@ class AppraisalScoresTable extends ControllerActionTable
             $attr['add_field'] = __('Criterias');
 
             // Display the steps
+            // To be refactor
             $attr2 = [];
             $attr2['model'] = $this->alias();
             $attr2['field'] = 'steps.'.$criteriaId;

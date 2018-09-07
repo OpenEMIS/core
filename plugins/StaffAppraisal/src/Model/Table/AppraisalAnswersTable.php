@@ -37,7 +37,6 @@ class AppraisalAnswersTable extends AppTable
         }
     }
 
-    // To fix one of the issue that is depend on this
     public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->answer === '' || is_null($entity->answer)) {
