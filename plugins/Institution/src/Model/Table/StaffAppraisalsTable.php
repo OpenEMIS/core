@@ -11,10 +11,12 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\TableRegistry;
 
 class StaffAppraisalsTable extends ControllerActionTable
 {    
     public $staff;
+    const IS_FINAL_SCORE = 1;
 
     public function initialize(array $config)
     {
@@ -141,6 +143,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('staff_id') => $this->staff->id]);
+        $this->field('final_score');
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) 
@@ -246,6 +249,32 @@ class StaffAppraisalsTable extends ControllerActionTable
         return $query;
     }
 
+    public function onGetFinalScore(Event $event, Entity $entity)
+    {
+        $final_score = self::IS_FINAL_SCORE;
+        $institutionStaffAppraisalsId = $entity->id;
+
+        $results = $this->find()
+            ->where([
+                $this->aliasField('id') => $institutionStaffAppraisalsId
+            ])
+            ->matching(
+                'AppraisalForms.AppraisalFormsCriteriasScores', function ($q) use ($final_score, $institutionStaffAppraisalsId) {
+                    return $q
+                        ->where([
+                            'AppraisalFormsCriteriasScores.final_score' => $final_score
+                        ]);
+                }
+            )
+            ->all();
+
+        if (!$results->isEmpty()) {
+            return $this->getFinalScoreResult($results);
+        } else {
+            return "<i class='fa fa-minus'></i>";
+        }
+    }
+
     private function setupTabElements()
     {
         $options['type'] = 'staff';
@@ -257,5 +286,40 @@ class StaffAppraisalsTable extends ControllerActionTable
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'StaffAppraisals');
+    }
+
+    private function getFinalScoreResult($results)
+    {
+        $results = $results->first();
+        $institutionStaffAppraisalsId = $results->id;
+        
+        $appraisalFormsCriteriasScore = $results->_matchingData['AppraisalFormsCriteriasScores'];
+
+        $formId = $appraisalFormsCriteriasScore->appraisal_form_id;
+        $appraisalCriteriaId = $appraisalFormsCriteriasScore->appraisal_criteria_id;
+
+        $AppraisalScoreAnswers = TableRegistry::get('StaffAppraisal.AppraisalScoreAnswers');
+
+        $appraisalScoreAnswersEntity = $AppraisalScoreAnswers->find()
+            ->where([
+                $AppraisalScoreAnswers->aliasField('appraisal_form_id') => $formId,
+                $AppraisalScoreAnswers->aliasField('appraisal_criteria_id') => $appraisalCriteriaId,
+                $AppraisalScoreAnswers->aliasField('institution_staff_appraisal_id') => $institutionStaffAppraisalsId,
+            ])
+            ->select([
+                $AppraisalScoreAnswers->aliasField('answer')
+            ])
+            ->all();
+
+        if (!$appraisalScoreAnswersEntity->isEmpty()) {
+            $answer = $appraisalScoreAnswersEntity->first()->answer;
+            if ($answer == 0) {
+                return '0 ';
+            }else {
+                return $appraisalScoreAnswersEntity->first()->answer;
+            }
+        } else {
+            return "<i class='fa fa-minus'></i>";
+        }
     }
 }
