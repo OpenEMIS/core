@@ -81,7 +81,6 @@ class UsersTable extends AppTable
             'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser',
             'Model.Users.afterLogin' => 'afterLogin',
             'Model.Users.updateLoginLanguage' => 'updateLoginLanguage',
-            'Model.UserNationalities.onChange' => 'onChangeUserNationalities',
             'Model.UserIdentities.onChange' => 'onChangeUserIdentities',
             'Model.Nationalities.onChange' => 'onChangeNationalities',
             'Model.UserContacts.onChange' => 'onChangeUserContacts'
@@ -968,45 +967,6 @@ class UsersTable extends AppTable
                 $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
             }
         }
-    }
-
-    public function onChangeUserNationalities(Event $event, Entity $entity)
-    {
-        $nationalityId = $entity->nationality_id;
-        $Nationalities = TableRegistry::get('FieldOption.Nationalities');
-
-        // to find out the default identity type linked to this nationality
-        $nationality = $Nationalities
-                        ->find()
-                        ->where([
-                            $Nationalities->aliasField($Nationalities->primaryKey()) => $nationalityId
-                        ])
-                        ->first();
-
-        // to get the identity record for the user based on the default identity type linked to this nationality
-        $UserIdentities = TableRegistry::get('User.Identities');
-        $latestIdentity = $UserIdentities->find()
-        ->where([
-            $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
-            $UserIdentities->aliasField('identity_type_id') => $nationality->identity_type_id,
-        ])
-        ->order([$UserIdentities->aliasField('created') => 'desc'])
-        ->first();
-
-        // if there is an existing user identity record
-        $identityNumber = null;
-        if (!empty($latestIdentity)) {
-            $identityNumber = $latestIdentity->number;
-        }
-
-        $this->updateAll(
-            [
-                'nationality_id' => $nationalityId,
-                'identity_type_id' => $nationality->identity_type_id,
-                'identity_number' => $identityNumber
-            ],
-            ['id' => $entity->security_user_id]
-        );
     }
 
     public function onChangeUserIdentities(Event $event, Entity $entity)
