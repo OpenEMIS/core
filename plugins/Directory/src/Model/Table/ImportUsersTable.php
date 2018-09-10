@@ -210,7 +210,7 @@ class ImportUsersTable extends AppTable
             }
         }
 
-        // if identity number is not empty, need to ensure it has identity type selected, it has to be unique and following the validation patter (if there is)
+        //if identity number is not empty, need to ensure it has identity type selected, it has to be unique and following the validation patter (if there is)
         if ($tempRow->offsetExists('identity_number') && !empty($tempRow['identity_number'])) {
             if (!$tempRow->offsetExists('identity_type_id') || empty($tempRow['identity_type_id'])) {
                 $rowInvalidCodeCols['identity_type'] = $this->getExcelLabel('Import', 'identity_type_required');
