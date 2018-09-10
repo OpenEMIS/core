@@ -202,27 +202,6 @@ class ImportUsersTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        //check combination of nationality and identity whether according to the setting on nationality field options
-        if ($tempRow->offsetExists('nationality_id') && !empty($tempRow['nationality_id'])) {
-            if ($tempRow->offsetExists('identity_type_id') && !empty($tempRow['identity_type_id'])) {
-                $query = $this->Nationalities
-                        ->find()
-                        ->contain('IdentityTypes')
-                        ->where([
-                            $this->Nationalities->aliasField('id') => $tempRow['nationality_id'],
-                        ])
-                        ->first();
-
-                $identityTypeId = $query->identity_type_id;
-                $identityTypeName = $query->identity_type->name;
-
-                if ($identityTypeId != $tempRow['identity_type_id']) {
-                    $rowInvalidCodeCols['identity_type_id'] = $this->getMessage('Import.identity_type_doesnt_match', ['sprintf' => [$identityTypeName]]);
-                    return false;
-                }
-            }
-        }
-
         //if identity type selected, then need to specify identity number
         if ($tempRow->offsetExists('identity_type_id') && !empty($tempRow['identity_type_id'])) {
             if (!$tempRow->offsetExists('identity_number') || empty($tempRow['identity_number'])) {
@@ -231,7 +210,7 @@ class ImportUsersTable extends AppTable
             }
         }
 
-        //if identity number is not empty, need to ensure it has identity type selected, it has to be unique and following the validation patter (if there is)
+        // if identity number is not empty, need to ensure it has identity type selected, it has to be unique and following the validation patter (if there is)
         if ($tempRow->offsetExists('identity_number') && !empty($tempRow['identity_number'])) {
             if (!$tempRow->offsetExists('identity_type_id') || empty($tempRow['identity_type_id'])) {
                 $rowInvalidCodeCols['identity_type'] = $this->getExcelLabel('Import', 'identity_type_required');
