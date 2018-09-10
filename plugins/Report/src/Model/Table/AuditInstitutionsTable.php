@@ -68,8 +68,8 @@ class AuditInstitutionsTable extends AppTable
                 ]
             ])
             ->where([
-                $this->aliasField('created >= "') . $reportStartDate . '"',
-                $this->aliasField('created <= "') . $reportEndDate . '"'
+                $this->aliasField('created >= "') . $reportStartDate . ' 00:00:00"',
+                $this->aliasField('created <= "') . $reportEndDate . ' 23:59:59"'
             ]);
     }
 

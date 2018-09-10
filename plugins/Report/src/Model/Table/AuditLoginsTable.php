@@ -89,8 +89,8 @@ class AuditLoginsTable extends AppTable
                 ]
             ])
             ->where([
-                $this->aliasField('last_login >= "') . $reportStartDate . '"',
-                $this->aliasField('last_login <= "') . $reportEndDate . '"'
+                $this->aliasField('last_login >= "') . $reportStartDate . ' 00:00:00"',
+                $this->aliasField('last_login <= "') . $reportEndDate . ' 23:59:59"'
             ]);
 
         switch ($requestData->sort_by) {
