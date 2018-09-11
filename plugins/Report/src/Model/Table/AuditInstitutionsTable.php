@@ -37,8 +37,8 @@ class AuditInstitutionsTable extends AppTable
         
         $requestData = json_decode($settings['process']['params']);
         
-        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d');
-        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d');
+        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d H:i:s');
+        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d H:i:s');
 
         $query
             ->select([
@@ -68,8 +68,8 @@ class AuditInstitutionsTable extends AppTable
                 ]
             ])
             ->where([
-                $this->aliasField('created >= "') . $reportStartDate . ' 00:00:00"',
-                $this->aliasField('created <= "') . $reportEndDate . ' 23:59:59"'
+                $this->aliasField('created >= "') . $reportStartDate . '"',
+                $this->aliasField('created <= "') . $reportEndDate . '"'
             ]);
     }
 
