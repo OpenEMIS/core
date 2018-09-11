@@ -11,6 +11,7 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\EntityInterface;
 
 class StaffAppraisalsTable extends ControllerActionTable
 {    
@@ -143,19 +144,13 @@ class StaffAppraisalsTable extends ControllerActionTable
         $query->where([$this->aliasField('staff_id') => $this->staff->id]);
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) 
+    public function afterSaveCommit(Event $event, EntityInterface $entity, ArrayObject $options)
     {
         $broadcaster = $this;
         $listeners = [];
         $listeners[] = $this->AppraisalForms->AppraisalFormsCriteriasScores;
+        
         $this->dispatchEventToModels('Model.InstitutionStaffAppraisal.addAfterSave', [$entity], $broadcaster, $listeners);
-    }
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-    {
-        $broadcaster = $this;
-        $listeners = [];
-        $listeners[] = $this->AppraisalForms->AppraisalFormsCriteriasScores;
-        $this->dispatchEventToModels('Model.InstitutionStaffAppraisal.editAfterSave', [$entity], $broadcaster, $listeners);
     }
 
     public function findWorkbench(Query $query, array $options)
