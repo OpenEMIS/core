@@ -252,7 +252,6 @@ class StaffAppraisalsTable extends ControllerActionTable
         $institutionStaffAppraisalsId = $entity->id;
         $AppraisalFormsCriteriasScores = $this->AppraisalForms->AppraisalFormsCriteriasScores;
         $AppraisalScoreAnswers = $this->AppraisalScoreAnswers;
-        $answer = "<i class='fa fa-minus'></i>";
 
         $results = $this->find()
             ->select([
@@ -271,6 +270,7 @@ class StaffAppraisalsTable extends ControllerActionTable
             ])
             ->all();
 
+        $answer = "<i class='fa fa-minus'></i>";
         if (!$results->isEmpty()) {
             $resultEntity = $results->first();
             if ($resultEntity->has('answer') && !is_null($resultEntity->answer)) {
