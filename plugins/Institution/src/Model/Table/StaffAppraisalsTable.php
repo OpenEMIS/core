@@ -11,7 +11,6 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
-use Cake\ORM\TableRegistry;
 
 class StaffAppraisalsTable extends ControllerActionTable
 {    
@@ -255,28 +254,24 @@ class StaffAppraisalsTable extends ControllerActionTable
         $AppraisalScoreAnswers = $this->AppraisalScoreAnswers;
 
         $results = $this->find()
+            ->select([
+                'answer' => $AppraisalScoreAnswers->aliasField('answer')
+            ])
             ->where([
                 $this->aliasField('id') => $institutionStaffAppraisalsId,
                 $AppraisalFormsCriteriasScores->aliasField('final_score') => 1
             ])
             ->innerJoin([$AppraisalFormsCriteriasScores->alias() => $AppraisalFormsCriteriasScores->table()], [
                 $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id = ') . $this->aliasField('appraisal_form_id'),
-
             ])
             ->innerJoin([$AppraisalScoreAnswers->alias() => $AppraisalScoreAnswers->table()], [
                 $AppraisalScoreAnswers->aliasField('appraisal_form_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id'),
                 $AppraisalScoreAnswers->aliasField('appraisal_criteria_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_criteria_id'),
             ])
-            ->select([
-                'formId' => $this->aliasField('appraisal_form_id'),
-                'institutionStaffAppraisalsId' => $this->aliasField('id'),
-                'appraisalCriteriaId' => $AppraisalScoreAnswers->aliasField('appraisal_criteria_id'),
-                'answer' => $AppraisalScoreAnswers->aliasField('answer')
-            ])
             ->all();
 
         if (!$results->isEmpty()) {
-            return $this->getFinalScoreResult($results);
+            return $results->first()->answer.' ';
         } else {
             return "<i class='fa fa-minus'></i>";
         }
@@ -293,19 +288,5 @@ class StaffAppraisalsTable extends ControllerActionTable
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'StaffAppraisals');
-    }
-
-    private function getFinalScoreResult($results)
-    {
-        if (!$results->isEmpty()) {
-            $answer = $results->first()->answer;
-            if ($answer == 0) {
-                return '0 ';
-            }else {
-                return $results->first()->answer;
-            }
-        } else {
-            return "<i class='fa fa-minus'></i>";
-        }
     }
 }
