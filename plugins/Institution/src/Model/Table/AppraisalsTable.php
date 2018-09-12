@@ -29,6 +29,7 @@ class AppraisalsTable extends ControllerActionTable
         $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalSliderAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalDropdownAnswers', ['className' => 'StaffAppraisal.AppraisalDropdownAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalNumberAnswers', ['className' => 'StaffAppraisal.AppraisalNumberAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalScoreAnswers', ['className' => 'StaffAppraisal.AppraisalScoreAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Institution.Appraisal');

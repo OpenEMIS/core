@@ -16,7 +16,6 @@ use Cake\ORM\TableRegistry;
 class StaffAppraisalsTable extends ControllerActionTable
 {    
     public $staff;
-    const IS_FINAL_SCORE = 1;
 
     public function initialize(array $config)
     {
@@ -251,21 +250,29 @@ class StaffAppraisalsTable extends ControllerActionTable
 
     public function onGetFinalScore(Event $event, Entity $entity)
     {
-        $final_score = self::IS_FINAL_SCORE;
         $institutionStaffAppraisalsId = $entity->id;
+        $AppraisalFormsCriteriasScores = $this->AppraisalForms->AppraisalFormsCriteriasScores;
+        $AppraisalScoreAnswers = $this->AppraisalScoreAnswers;
 
         $results = $this->find()
             ->where([
-                $this->aliasField('id') => $institutionStaffAppraisalsId
+                $this->aliasField('id') => $institutionStaffAppraisalsId,
+                $AppraisalFormsCriteriasScores->aliasField('final_score') => 1
             ])
-            ->matching(
-                'AppraisalForms.AppraisalFormsCriteriasScores', function ($q) use ($final_score, $institutionStaffAppraisalsId) {
-                    return $q
-                        ->where([
-                            'AppraisalFormsCriteriasScores.final_score' => $final_score
-                        ]);
-                }
-            )
+            ->innerJoin([$AppraisalFormsCriteriasScores->alias() => $AppraisalFormsCriteriasScores->table()], [
+                $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id = ') . $this->aliasField('appraisal_form_id'),
+
+            ])
+            ->innerJoin([$AppraisalScoreAnswers->alias() => $AppraisalScoreAnswers->table()], [
+                $AppraisalScoreAnswers->aliasField('appraisal_form_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id'),
+                $AppraisalScoreAnswers->aliasField('appraisal_criteria_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_criteria_id'),
+            ])
+            ->select([
+                'formId' => $this->aliasField('appraisal_form_id'),
+                'institutionStaffAppraisalsId' => $this->aliasField('id'),
+                'appraisalCriteriaId' => $AppraisalScoreAnswers->aliasField('appraisal_criteria_id'),
+                'answer' => $AppraisalScoreAnswers->aliasField('answer')
+            ])
             ->all();
 
         if (!$results->isEmpty()) {
@@ -290,33 +297,12 @@ class StaffAppraisalsTable extends ControllerActionTable
 
     private function getFinalScoreResult($results)
     {
-        $results = $results->first();
-        $institutionStaffAppraisalsId = $results->id;
-        
-        $appraisalFormsCriteriasScore = $results->_matchingData['AppraisalFormsCriteriasScores'];
-
-        $formId = $appraisalFormsCriteriasScore->appraisal_form_id;
-        $appraisalCriteriaId = $appraisalFormsCriteriasScore->appraisal_criteria_id;
-
-        $AppraisalScoreAnswers = TableRegistry::get('StaffAppraisal.AppraisalScoreAnswers');
-
-        $appraisalScoreAnswersEntity = $AppraisalScoreAnswers->find()
-            ->where([
-                $AppraisalScoreAnswers->aliasField('appraisal_form_id') => $formId,
-                $AppraisalScoreAnswers->aliasField('appraisal_criteria_id') => $appraisalCriteriaId,
-                $AppraisalScoreAnswers->aliasField('institution_staff_appraisal_id') => $institutionStaffAppraisalsId,
-            ])
-            ->select([
-                $AppraisalScoreAnswers->aliasField('answer')
-            ])
-            ->all();
-
-        if (!$appraisalScoreAnswersEntity->isEmpty()) {
-            $answer = $appraisalScoreAnswersEntity->first()->answer;
+        if (!$results->isEmpty()) {
+            $answer = $results->first()->answer;
             if ($answer == 0) {
                 return '0 ';
             }else {
-                return $appraisalScoreAnswersEntity->first()->answer;
+                return $results->first()->answer;
             }
         } else {
             return "<i class='fa fa-minus'></i>";
