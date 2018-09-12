@@ -148,16 +148,12 @@ class AuditsTable extends AppTable
 
     private function checkForDateFields(ArrayObject $data)
     {
-        $requestData = $data->getArrayCopy();
-
-        if (array_key_exists("report_start_date",$requestData[$this->alias()]) && !empty($requestData[$this->alias()]['report_start_date'])) {
-            $requestData[$this->alias()]['report_start_date'] = $requestData[$this->alias()]['report_start_date'].' 00:00:00';
+        if (array_key_exists("report_start_date",$data[$this->alias()]) && !empty($data[$this->alias()]['report_start_date'])) {
+            $data[$this->alias()]['report_start_date'] = $data[$this->alias()]['report_start_date'].' 00:00:00';
         }
 
-        if (array_key_exists("report_end_date",$requestData[$this->alias()]) && !empty($requestData[$this->alias()]['report_end_date'])) {
-            $requestData[$this->alias()]['report_end_date'] = $requestData[$this->alias()]['report_end_date'].' 23:59:59';
+        if (array_key_exists("report_end_date",$data[$this->alias()]) && !empty($data[$this->alias()]['report_end_date'])) {
+            $data[$this->alias()]['report_end_date'] = $data[$this->alias()]['report_end_date'].' 23:59:59';
         }
-
-        $data->exchangeArray($requestData);
     }
 }
