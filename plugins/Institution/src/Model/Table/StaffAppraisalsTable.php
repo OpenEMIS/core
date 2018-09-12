@@ -252,6 +252,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         $institutionStaffAppraisalsId = $entity->id;
         $AppraisalFormsCriteriasScores = $this->AppraisalForms->AppraisalFormsCriteriasScores;
         $AppraisalScoreAnswers = $this->AppraisalScoreAnswers;
+        $answer = "<i class='fa fa-minus'></i>";
 
         $results = $this->find()
             ->select([
@@ -271,10 +272,12 @@ class StaffAppraisalsTable extends ControllerActionTable
             ->all();
 
         if (!$results->isEmpty()) {
-            return $results->first()->answer.' ';
-        } else {
-            return "<i class='fa fa-minus'></i>";
+            $resultEntity = $results->first();
+            if ($resultEntity->has('answer') && !is_null($resultEntity->answer)) {
+                $answer = $resultEntity->answer. ' ';
+            }
         }
+        return $answer;
     }
 
     private function setupTabElements()
