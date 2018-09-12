@@ -11,7 +11,6 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
-use Cake\Datasource\EntityInterface;
 
 class StaffAppraisalsTable extends ControllerActionTable
 {    
@@ -144,7 +143,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         $query->where([$this->aliasField('staff_id') => $this->staff->id]);
     }
 
-    public function afterSaveCommit(Event $event, EntityInterface $entity, ArrayObject $options)
+    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;
         $listeners = [];
