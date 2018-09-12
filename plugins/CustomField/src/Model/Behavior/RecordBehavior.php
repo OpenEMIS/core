@@ -1374,7 +1374,7 @@ class RecordBehavior extends Behavior
     private function date($data, $fieldInfo, $options = [])
     {
         if (isset($data[$fieldInfo['id']])) {
-            $date = date_create_from_format('Y-m-d', $data[$fieldInfo['id']]);
+            $date = $data[$fieldInfo['id']];
             return $this->_table->formatDate(new Date($date));
         } else {
             return '';
