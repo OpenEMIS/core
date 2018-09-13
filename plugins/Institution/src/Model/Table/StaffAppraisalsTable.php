@@ -267,6 +267,7 @@ class StaffAppraisalsTable extends ControllerActionTable
             ->innerJoin([$AppraisalScoreAnswers->alias() => $AppraisalScoreAnswers->table()], [
                 $AppraisalScoreAnswers->aliasField('appraisal_form_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id'),
                 $AppraisalScoreAnswers->aliasField('appraisal_criteria_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_criteria_id'),
+                $AppraisalScoreAnswers->aliasField('institution_staff_appraisal_id = ') . $institutionStaffAppraisalsId
             ])
             ->all();
 
