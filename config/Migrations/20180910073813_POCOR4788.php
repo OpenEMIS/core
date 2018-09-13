@@ -6,24 +6,21 @@ class POCOR4788 extends AbstractMigration
 {
     public function up()
     {
-        // alerts
-        $Alerts = $this->table('alerts');
+        $today = date('Y-m-d H:i:s');
 
+        // alerts
         $alertData = [
             'name' => 'ScholarshipApplication',
             'process_name' => 'AlertScholarshipApplication',
             'created_user_id' => 1,
-            'created' => date('Y-m-d H:i:s')
+            'created' => $today
         ];
 
-        $Alerts
-            ->insert($alertData)
-            ->save();
+        $this->insert('alerts', $alertData);
 
         // locale_contents
         $this->execute('CREATE TABLE `z_4788_locale_contents` LIKE `locale_contents`');
         $this->execute('INSERT INTO `z_4788_locale_contents` SELECT * FROM `locale_contents`');
-        $today = date('Y-m-d H:i:s');
 
         $localeContentData = [
             [
