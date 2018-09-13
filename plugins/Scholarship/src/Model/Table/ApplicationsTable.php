@@ -2,6 +2,7 @@
 namespace Scholarship\Model\Table;
 
 use ArrayObject;
+use DateTime;
 
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -918,6 +919,63 @@ class ApplicationsTable extends ControllerActionTable
         } catch (RecordNotFoundException $e) {
             Log::write('debug', $e->getMessage());
         }
+    }
+
+    public function getModelAlertData($threshold)
+    {
+        $thresholdArray = json_decode($threshold, true);
+        
+        $conditionKey = $thresholdArray['condition'];
+        $dayBefore = $thresholdArray['value'];
+        $workflowCategory = $thresholdArray['category'];
+
+        // 1 - Days before application close date
+        $sqlConditions = [
+            1 => ('DATEDIFF(Scholarships.application_close_date, NOW())' . ' BETWEEN 0 AND ' . $dayBefore), // before
+        ];
+        $record = [];
+        
+        if (array_key_exists($conditionKey, $sqlConditions)) { 
+            $record = $this
+                ->find()
+                ->select([
+                    $this->aliasField('applicant_id'),
+                    $this->aliasField('scholarship_id'),
+                    $this->aliasField('status_id'),
+                    $this->aliasField('requested_amount'),
+                    $this->aliasField('comments'),
+                    $this->Applicants->aliasField('first_name'),
+                    $this->Applicants->aliasField('middle_name'),
+                    $this->Applicants->aliasField('third_name'),
+                    $this->Applicants->aliasField('last_name'),
+                    $this->Applicants->aliasField('preferred_name'),
+                    $this->Applicants->aliasField('email'),
+                    $this->Applicants->aliasField('address'),
+                    $this->Applicants->aliasField('postal_code'),
+                    $this->Applicants->aliasField('date_of_birth'),
+                    $this->Scholarships->aliasField('code'),
+                    $this->Scholarships->aliasField('name'),
+                    $this->Scholarships->aliasField('description'),
+                    $this->Scholarships->aliasField('application_close_date'),
+                    $this->Scholarships->aliasField('application_open_date'),
+                    $this->Scholarships->aliasField('maximum_award_amount'),
+                    $this->Scholarships->aliasField('total_amount'),
+                    $this->Scholarships->aliasField('duration'),
+                    $this->Scholarships->aliasField('bond')
+                ])
+                ->contain([
+                    $this->Scholarships->alias(),
+                    $this->Applicants->alias(),
+                    $this->Statuses->alias()
+                ])
+                ->where([
+                    $this->Statuses->aliasField('category') => $workflowCategory,
+                    $sqlConditions[$conditionKey]
+                ])
+                ->hydrate(false)
+                ->toArray();
+        }
+        return $record;
     }
 
     public function findWorkbench(Query $query, array $options)
