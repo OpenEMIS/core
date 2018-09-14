@@ -34,7 +34,7 @@ class POCOR4788 extends AbstractMigration
                 'created' => $today
             ],
             [
-                'en' => 'Days before end of application close date',
+                'en' => 'Days before application close date',
                 'created_user_id' => 1,
                 'created' => $today
             ],

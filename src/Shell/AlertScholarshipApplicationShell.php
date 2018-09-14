@@ -48,8 +48,8 @@ class AlertScholarshipApplicationShell extends AlertShell
                         $vars['day_difference'] = $diff->days;
                         $vars['threshold'] = $thresholdArray;
                         
-                        $applicantId = $vars['applicant_id'];
-                        $applicantEntity = $this->Users
+                        $assigneeId = $vars['assignee_id'];
+                        $assigneeEntity = $this->Users
                             ->find()
                             ->select([
                                 $this->Users->aliasField('first_name'),
@@ -60,19 +60,19 @@ class AlertScholarshipApplicationShell extends AlertShell
                                 $this->Users->aliasField('email')
                             ])
                             ->where([
-                                $this->Users->aliasField('id') => $applicantId
+                                $this->Users->aliasField('id') => $assigneeId
                             ])
                             ->first();
 
-                        if (!is_null($applicantEntity)) {
-                            $email = $applicantEntity->email;
-                            $name = $applicantEntity->name;
+                        if (!is_null($assigneeEntity)) {
+                            $email = $assigneeEntity->email;
+                            $name = $assigneeEntity->name;
 
                             if (!is_null($email) && $email !== '') {
-                                $applicantEmail = $name . ' <' . $email . '>';
+                                $assigneeEmail = $name . ' <' . $email . '>';
                                 $subject = $this->AlertLogs->replaceMessage($feature, $rule->subject, $vars);
                                 $message = $this->AlertLogs->replaceMessage($feature, $rule->message, $vars);
-                                $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $applicantEmail, $subject, $message);
+                                $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $assigneeEmail, $subject, $message);
                             }
                         }
                     }
