@@ -4,7 +4,7 @@ namespace InstitutionRepeater\Model\Table;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
-
+use Cake\Log\Log;
 class RepeaterSurveysTable extends ControllerActionTable
 {
 	// Default Status
@@ -47,6 +47,7 @@ class RepeaterSurveysTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionSurveys.afterSave'] = 'institutionSurveyAfterSave';
+        $events['Model.InstitutionSurveys.afterDelete'] = 'institutionSurveyAfterDelete';
 
         return $events;
     }
@@ -55,6 +56,18 @@ class RepeaterSurveysTable extends ControllerActionTable
     {
     	$this->updateAll(
             ['status_id' => $institutionSurveyEntity->status_id],
+            [
+                'institution_id' => $institutionSurveyEntity->institution_id,
+                'academic_period_id' => $institutionSurveyEntity->academic_period_id,
+                'parent_form_id' => $institutionSurveyEntity->survey_form_id
+            ]
+        );
+    }
+
+	public function institutionSurveyAfterDelete(Event $event, Entity $institutionSurveyEntity)
+    {
+    	Log::write('debug', 'institutionSurveyAfterDelete in RepeaterSurveys >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+    	$this->deleteAll(
             [
                 'institution_id' => $institutionSurveyEntity->institution_id,
                 'academic_period_id' => $institutionSurveyEntity->academic_period_id,
