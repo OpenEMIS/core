@@ -393,7 +393,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function findByClasses(Query $query, array $options)
     {
-        return $query
+        return isset($options['selectedClassId']) && $options['selectedClassId'] ? $query
             ->join([
                 [
                     'table' => 'institution_class_subjects',
@@ -403,8 +403,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         'InstitutionClassSubjects.institution_class_id' => $options['selectedClassId']
                     ]
                 ]
-            ])
-            ;
+            ]) : $query;
     }
 
     // used for student report cards
