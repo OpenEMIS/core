@@ -63,7 +63,8 @@ class StaffTable extends ControllerActionTable
 
         $this->addBehavior('Excel', [
             'excludes' => ['start_year', 'end_year', 'security_group_user_id'],
-            'pages' => ['index']
+            'pages' => ['index'],
+            'autoFields' => false
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -238,7 +239,22 @@ class StaffTable extends ControllerActionTable
         if ($periodId > 0) {
             $query->find('academicPeriod', ['academic_period_id' => $periodId]);
         }
-        $query->contain(['Positions.StaffPositionTitles'])->select(['position_title_teaching' => 'StaffPositionTitles.type'])->autoFields(true);
+        $query->contain([
+            'Positions.StaffPositionTitles'=>[
+                'fields' => [
+                    'position_title_teaching' => 'StaffPositionTitles.type'
+                ]
+            ]
+        ])
+        ->select([
+            'staff_id' => 'Staff.staff_id',
+            'institution_position_id' => 'Staff.institution_position_id',
+            'FTE' => 'Staff.FTE',
+            'staff_status_id' => 'Staff.staff_status_id'
+        ])
+        // ->select(['position_title_teaching' => 'StaffPositionTitles.type'])
+        // ->autoFields(true)
+        ;
         $query->contain(['Users.IdentityTypes'])
             ->select([
                 'openemis_no' => 'Users.openemis_no',
@@ -299,7 +315,7 @@ class StaffTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key' => 'Positions.position_title_teaching',
+            'key' => 'StaffPositionTitles.type',
             'field' => 'position_title_teaching',
             'type' => 'string',
             'label' => __('Teaching')
