@@ -940,6 +940,7 @@ class ApplicationsTable extends ControllerActionTable
                 ->find()
                 ->select([
                     $this->aliasField('applicant_id'),
+                    $this->aliasField('assignee_id'),
                     $this->aliasField('scholarship_id'),
                     $this->aliasField('status_id'),
                     $this->aliasField('requested_amount'),
@@ -961,12 +962,18 @@ class ApplicationsTable extends ControllerActionTable
                     $this->Scholarships->aliasField('maximum_award_amount'),
                     $this->Scholarships->aliasField('total_amount'),
                     $this->Scholarships->aliasField('duration'),
-                    $this->Scholarships->aliasField('bond')
+                    $this->Scholarships->aliasField('bond'),
+                    $this->Assignees->aliasField('first_name'),
+                    $this->Assignees->aliasField('middle_name'),
+                    $this->Assignees->aliasField('third_name'),
+                    $this->Assignees->aliasField('last_name'),
+                    $this->Assignees->aliasField('preferred_name')
                 ])
                 ->contain([
                     $this->Scholarships->alias(),
                     $this->Applicants->alias(),
-                    $this->Statuses->alias()
+                    $this->Statuses->alias(),
+                    $this->Assignees->alias()
                 ])
                 ->where([
                     $this->Statuses->aliasField('category') => $workflowCategory,
