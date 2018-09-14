@@ -105,6 +105,10 @@ class ExcelReportBehavior extends Behavior
 
         $extra['vars'] = $this->getVars($params, $extra);
 
+        // pr('vars');
+        // pr($extra['vars']);
+        // die;
+
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('format');
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
 
