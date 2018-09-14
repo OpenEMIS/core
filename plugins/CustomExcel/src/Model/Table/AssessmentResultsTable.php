@@ -50,6 +50,7 @@ class AssessmentResultsTable extends AppTable
                 'GroupAssessmentItems',
                 'GroupAssessmentItemsGradingTypes',
                 'GroupAssessmentPeriods',
+                'GroupAssessmentPeriodsWithTerms',
                 'GroupAssessmentItemResults',
                 'ClassStudents',
                 'Institutions',
@@ -70,6 +71,7 @@ class AssessmentResultsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItems'] = 'onExcelTemplateInitialiseGroupAssessmentItems';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes'] = 'onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentPeriods'] = 'onExcelTemplateInitialiseGroupAssessmentPeriods';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentPeriodsWithTerms'] = 'onExcelTemplateInitialiseGroupAssessmentPeriodsWithTerms';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItemResults'] = 'onExcelTemplateInitialiseGroupAssessmentItemResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassStudents'] = 'onExcelTemplateInitialiseClassStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
@@ -260,24 +262,19 @@ class AssessmentResultsTable extends AppTable
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 
             $query = $AssessmentItemsGradingTypes->find();
-            $selectedColumns = [
-                'subject_classification' => '(
+
+            $withoutTerm = $query
+                ->select([
+                    'subject_classification' => '(
                     CASE
                     WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
                         ELSE '.$EducationSubjects->aliasField('name').'
                         END
                     )',
-                'academic_term_value' => '(
-                    CASE
-                    WHEN '.$AssessmentPeriods->aliasField('academic_term <> \'\'').' THEN '.$AssessmentPeriods->aliasField('academic_term').'
-                        ELSE '.$AssessmentPeriods->aliasField('name').'
-                        END
-                    )',
-                'academic_term_total_weighted_max' => $query->func()->sum($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight'))
-            ];
-
-            $results = $AssessmentItemsGradingTypes->find()
-                ->select($selectedColumns)
+                    'academic_term_value' => $AssessmentPeriods->aliasField('name'),
+                    'academic_term_total_weighted_max' => $query->func()->sum($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight')),
+                    'totalNumberOfAcademicLinkage' => $query->func()->count($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight'))
+                ])
                 ->contain([$AssessmentGradingTypes->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
                 ->leftJoin(
                     [$AssessmentItems->alias() => $AssessmentItems->table()],
@@ -291,35 +288,185 @@ class AssessmentResultsTable extends AppTable
                 ->hydrate(false)
                 ->all();
 
-            $assessmentItemsGradingTypeResults = $results->toArray();
-            $averageAssessmentItemsGradingTypes = [];
-            foreach ($assessmentItemsGradingTypeResults as $key => $obj) {
-                $subjectClassification = Inflector::slug($obj['subject_classification']);
-                $academicTermTotalWeightedMax = $obj['academic_term_total_weighted_max'];
+            $withTerm = $query
+                ->select([
+                    'subject_classification' => '(
+                    CASE
+                    WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
+                        ELSE '.$EducationSubjects->aliasField('name').'
+                        END
+                    )',
+                    'academic_term_value' => $AssessmentPeriods->aliasField('academic_term'),
+                    'academic_term_total_weighted_max' => $query->func()->sum($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight')),
+                    'totalNumberOfAcademicLinkage' => $query->func()->count($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight'))
+                ])
+                ->contain([$AssessmentGradingTypes->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
+                ->leftJoin(
+                    [$AssessmentItems->alias() => $AssessmentItems->table()],
+                    [
+                        $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemsGradingTypes->aliasField('assessment_id'),
+                        $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemsGradingTypes->aliasField('education_subject_id')
+                    ]
+                )
+                ->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id']])
+                ->group(['subject_classification'])
+                ->hydrate(false)
+                ->all();
 
-                if (array_key_exists($subjectClassification, $averageAssessmentItemsGradingTypes)) {
-                    $averageAssessmentItemsGradingTypes[$subjectClassification]['group_academic_term_total_weighted_max'] += $academicTermTotalWeightedMax;
-                    $averageAssessmentItemsGradingTypes[$subjectClassification]['count'] += 1;
-                } else {
-                    $averageAssessmentItemsGradingTypes[$subjectClassification] = [
-                        'name' => $obj['subject_classification'],
-                        'group_academic_term_total_weighted_max' => $academicTermTotalWeightedMax,
-                        'count' => 1
-                    ];
+            $withAndWithoutTerm = array_merge($withoutTerm->toArray(), $withTerm->toArray());
+
+            $averageColumn = [];
+            $totalNumberOfAcademicLinkage = 0;
+            $academicTermTotalWeightedMax = 0;
+
+            $subjectClassification = '';
+
+            if (!$withTerm->isEmpty() && !is_null($withTerm->first()['academic_term_value'])) {
+                foreach ($withTerm as $key => $objWithTerm) {
+                    // if ($subjectClassification == $objWithTerm['subject_classification']) {
+                    //     $totalNumberOfAcademicLinkage += $objWithTerm['totalNumberOfAcademicLinkage'];
+                    //     $academicTermTotalWeightedMax += $objWithTerm['academic_term_total_weighted_max'];
+                    // } else {
+                    //     $totalNumberOfAcademicLinkage += $objWithTerm['totalNumberOfAcademicLinkage'];
+                    //     $academicTermTotalWeightedMax += $objWithTerm['academic_term_total_weighted_max'];
+                    // }
+
+                    $totalNumberOfAcademicLinkage += $objWithTerm['totalNumberOfAcademicLinkage'];
+                    $academicTermTotalWeightedMax += $objWithTerm['academic_term_total_weighted_max'];
+
+                    if (!array_key_exists($objWithTerm['subject_classification'], $averageColumn) && $subjectClassification == $objWithTerm['subject_classification']) {
+                        if ($totalNumberOfAcademicLinkage != 0) {
+                            $averageColumn[$objWithTerm['subject_classification']] = [
+                                'subject_classification' => $objWithTerm['subject_classification'],
+                                'totalNumberOfAcademicLinkage' => $totalNumberOfAcademicLinkage,
+                                // 'academic_term_value' => $objWithTerm['academic_term_value'],
+                                'academic_term_value' => 'Average',
+                                'academic_term_total_weighted_max' => $academicTermTotalWeightedMax / $totalNumberOfAcademicLinkage
+                            ];
+                        } else {
+                            $averageColumn[$objWithTerm['subject_classification']] = [
+                                'subject_classification' => $objWithTerm['subject_classification'],
+                                'totalNumberOfAcademicLinkage' => $totalNumberOfAcademicLinkage,
+                                // 'academic_term_value' => $objWithTerm['academic_term_value'],
+                                'academic_term_value' => 'Average',
+                                'academic_term_total_weighted_max' => 0
+                            ];
+                        }
+                        
+                        $totalNumberOfAcademicLinkage = 0;
+                        $academicTermTotalWeightedMax = 0;
+                    }
+                    $subjectClassification = $objWithTerm['subject_classification'];
+                }
+                foreach ($averageColumn as $obj) {
+                    $withAndWithoutTerm[] = $obj;
+                }
+            } else {
+                foreach ($withoutTerm as $key => $objWithoutTerm) {
+                    $totalNumberOfAcademicLinkage += $objWithoutTerm['totalNumberOfAcademicLinkage'];
+                    $academicTermTotalWeightedMax += $objWithoutTerm['academic_term_total_weighted_max'];
+
+                    if (!array_key_exists($objWithoutTerm['subject_classification'], $averageColumn) && $subjectClassification == $objWithoutTerm['subject_classification']) {
+                        if ($totalNumberOfAcademicLinkage != 0) {
+                            $averageColumn[$objWithoutTerm['subject_classification']] = [
+                                'subject_classification' => $objWithoutTerm['subject_classification'],
+                                'totalNumberOfAcademicLinkage' => $totalNumberOfAcademicLinkage,
+                                'academic_term_value' => 'Average',
+                                'academic_term_total_weighted_max' => $academicTermTotalWeightedMax / $totalNumberOfAcademicLinkage
+                            ];
+                        } else {
+                            $averageColumn[$objWithoutTerm['subject_classification']] = [
+                                'subject_classification' => $objWithoutTerm['subject_classification'],
+                                'totalNumberOfAcademicLinkage' => $totalNumberOfAcademicLinkage,
+                                'academic_term_value' => 'Average',
+                                'academic_term_total_weighted_max' => 0
+                            ];
+                        }
+                        
+                        $totalNumberOfAcademicLinkage = 0;
+                        $academicTermTotalWeightedMax = 0;
+                    }
+                    $subjectClassification = $objWithoutTerm['subject_classification'];
+                }
+                foreach ($averageColumn as $obj) {
+                    $withAndWithoutTerm[] = $obj;
                 }
             }
 
-            foreach ($averageAssessmentItemsGradingTypes as $key => $obj) {
-                $assessmentItemsGradingTypeResults[] = [
-                    'subject_classification' => $obj['name'],
-                    'academic_term_value' => __('Average'),
-                    'academic_term_total_weighted_max' => $obj['group_academic_term_total_weighted_max'] / $obj['count']
-                ];
-            }
 
-            return $assessmentItemsGradingTypeResults;
+            return $withAndWithoutTerm;
         }
     }
+
+    // public function onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes(Event $event, array $params, ArrayObject $extra)
+    // {
+    //     if (array_key_exists('assessment_id', $params)) {
+    //         $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+    //         $AssessmentGradingTypes = TableRegistry::get('Assessment.AssessmentGradingTypes');
+    //         $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+    //         $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+    //         $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+
+    //         $query = $AssessmentItemsGradingTypes->find();
+    //         $selectedColumns = [
+    //             'subject_classification' => '(
+    //                 CASE
+    //                 WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
+    //                     ELSE '.$EducationSubjects->aliasField('name').'
+    //                     END
+    //                 )',
+    //             'academic_term_value' => '(
+    //                 CASE
+    //                 WHEN '.$AssessmentPeriods->aliasField('academic_term <> \'\'').' THEN '.$AssessmentPeriods->aliasField('academic_term').'
+    //                     ELSE '.$AssessmentPeriods->aliasField('name').'
+    //                     END
+    //                 )',
+    //             'academic_term_total_weighted_max' => $query->func()->sum($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight'))
+    //         ];
+
+    //         $results = $AssessmentItemsGradingTypes->find()
+    //             ->select($selectedColumns)
+    //             ->contain([$AssessmentGradingTypes->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
+    //             ->leftJoin(
+    //                 [$AssessmentItems->alias() => $AssessmentItems->table()],
+    //                 [
+    //                     $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemsGradingTypes->aliasField('assessment_id'),
+    //                     $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemsGradingTypes->aliasField('education_subject_id')
+    //                 ]
+    //             )
+    //             ->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id']])
+    //             ->group(['subject_classification', 'academic_term_value'])
+    //             ->hydrate(false)
+    //             ->all();
+
+    //         $assessmentItemsGradingTypeResults = $results->toArray();
+    //         $averageAssessmentItemsGradingTypes = [];
+    //         foreach ($assessmentItemsGradingTypeResults as $key => $obj) {
+    //             $subjectClassification = Inflector::slug($obj['subject_classification']);
+    //             $academicTermTotalWeightedMax = $obj['academic_term_total_weighted_max'];
+
+    //             if (array_key_exists($subjectClassification, $averageAssessmentItemsGradingTypes)) {
+    //                 $averageAssessmentItemsGradingTypes[$subjectClassification]['group_academic_term_total_weighted_max'] += $academicTermTotalWeightedMax;
+    //                 $averageAssessmentItemsGradingTypes[$subjectClassification]['count'] += 1;
+    //             } else {
+    //                 $averageAssessmentItemsGradingTypes[$subjectClassification] = [
+    //                     'name' => $obj['subject_classification'],
+    //                     'group_academic_term_total_weighted_max' => $academicTermTotalWeightedMax,
+    //                     'count' => 1
+    //                 ];
+    //             }
+    //         }
+
+    //         foreach ($averageAssessmentItemsGradingTypes as $key => $obj) {
+    //             $assessmentItemsGradingTypeResults[] = [
+    //                 'subject_classification' => $obj['name'],
+    //                 'academic_term_value' => __('Average'),
+    //                 'academic_term_total_weighted_max' => $obj['group_academic_term_total_weighted_max'] / $obj['count']
+    //             ];
+    //         }
+    //         return $assessmentItemsGradingTypeResults;
+    //     }
+    // }
 
     public function onExcelTemplateInitialiseGroupAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
     {
@@ -361,6 +508,72 @@ class AssessmentResultsTable extends AppTable
         }
     }
 
+    public function onExcelTemplateInitialiseGroupAssessmentPeriodsWithTerms(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('assessment_id', $params)) {
+            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $query = $AssessmentPeriods->find();
+
+            $withoutTerm = $query
+                ->select([
+                    'academic_term_value' => $AssessmentPeriods->aliasField('name'),
+                    'academic_term' => $AssessmentPeriods->aliasField('academic_term'),
+                    'total_period_weight' => $AssessmentPeriods->aliasField('weight')
+                ])
+                ->where([$AssessmentPeriods->aliasField('assessment_id') => $params['assessment_id']])
+                ->hydrate(false)
+                ->all();
+
+            $withTerm = $query
+                ->select([
+                    'academic_term_value' => $AssessmentPeriods->aliasField('academic_term'),
+                    'total_period_weight' => $query->func()->sum($AssessmentPeriods->aliasField('weight'))
+                ])
+                ->where([
+                    $AssessmentPeriods->aliasField('assessment_id') => $params['assessment_id'],
+                    $AssessmentPeriods->aliasField('academic_term <> ') => ""
+                ])
+                ->group(['academic_term_value'])
+                ->hydrate(false)
+                ->all();
+
+            $periodsWithTermOrders = [];
+            $academic_term_total_weighted = 0;
+            $academicTermValueAverage = ' of ';
+
+            if (!$withTerm->isEmpty()) {
+                foreach ($withTerm as $key => $objWithTerm) {
+                    $hasSetAcademicTerm = false;
+                    foreach ($withoutTerm as $objWithoutTerm) {
+                        if (isset($objWithoutTerm['academic_term']) && isset($objWithTerm['academic_term_value'])) {
+                            if ($objWithoutTerm['academic_term'] == $objWithTerm['academic_term_value']) {
+                                $periodsWithTermOrders[] = $objWithoutTerm;
+                                $academic_term_total_weighted += $objWithoutTerm['total_period_weight'];
+                                if (!$hasSetAcademicTerm) {
+                                    $academicTermValueAverage = $academicTermValueAverage.''.$objWithoutTerm['academic_term']. ' ';
+                                    $hasSetAcademicTerm = true;
+                                }
+                            }
+                        }
+                    }
+                    $periodsWithTermOrders[] = $objWithTerm;
+                }
+            } else {
+                $periodsWithTermOrders = $withoutTerm->toArray();
+            }
+
+            // Add Average Column
+            $academicTermResults = [
+                'academic_term_value' => __('Average'),
+                'total_period_weight' => $academic_term_total_weighted
+            ];
+            
+            $periodsWithTermOrders[] = $academicTermResults;
+
+            return $periodsWithTermOrders;
+        }
+    }
+
     public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params)) {
@@ -371,28 +584,120 @@ class AssessmentResultsTable extends AppTable
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 
             $query = $AssessmentItemResults->find();
-            $selectedColumns = [
-                $AssessmentItemResults->aliasField('institution_id'),
-                $AssessmentItemResults->aliasField('academic_period_id'),
-                $AssessmentItemResults->aliasField('assessment_id'),
-                $AssessmentItemResults->aliasField('student_id'),
-                'subject_classification' => '(
-                    CASE
-                    WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
-                        ELSE '.$EducationSubjects->aliasField('name').'
-                        END
-                    )',
-                'academic_term_value' => '(
-                    CASE
-                    WHEN '.$AssessmentPeriods->aliasField('academic_term <> \'\'').' THEN '.$AssessmentPeriods->aliasField('academic_term').'
-                        ELSE '.$AssessmentPeriods->aliasField('name').'
-                        END
-                    )',
-                'academic_term_total_weighted_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight'))
-            ];
+            // $selectedColumns = [
+            //     $AssessmentItemResults->aliasField('institution_id'),
+            //     $AssessmentItemResults->aliasField('academic_period_id'),
+            //     $AssessmentItemResults->aliasField('assessment_id'),
+            //     $AssessmentItemResults->aliasField('student_id'),
+            //     'subject_classification' => '(
+            //         CASE
+            //         WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
+            //             ELSE '.$EducationSubjects->aliasField('name').'
+            //             END
+            //         )',
+            //     'academic_term_value' => '(
+            //         CASE
+            //         WHEN '.$AssessmentPeriods->aliasField('academic_term <> \'\'').' THEN '.$AssessmentPeriods->aliasField('academic_term').'
+            //             ELSE '.$AssessmentPeriods->aliasField('name').'
+            //             END
+            //         )',
+            //     'academic_term_total_weighted_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight')),
+            //     'totalNumberOfAcademicLinkage' => $query->func()->count($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight'))
+            // ];
 
-            $results = $AssessmentItemResults->find()
-                ->select($selectedColumns)
+            // $results = $AssessmentItemResults->find()
+            //     ->select($selectedColumns)
+            //     ->innerJoin(
+            //         [$this->alias() => $this->table()],
+            //         [
+            //             $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
+            //             $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
+            //             $this->aliasField('institution_class_id') => $params['class_id']
+            //         ]
+            //     )
+            //     ->leftJoin(
+            //         [$AssessmentItems->alias() => $AssessmentItems->table()],
+            //         [
+            //             $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemResults->aliasField('assessment_id'),
+            //             $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemResults->aliasField('education_subject_id')
+            //         ]
+            //     )
+            //     ->contain([$AssessmentGradingOptions->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
+            //     ->where([
+            //         $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id']
+            //     ])
+            //     ->group([
+            //         $AssessmentItemResults->aliasField('academic_period_id'),
+            //         $AssessmentItemResults->aliasField('assessment_id'),
+            //         $AssessmentItemResults->aliasField('student_id'),
+            //         'subject_classification',
+            //         'academic_term_value'
+            //     ])
+            //     ->hydrate(false)
+            //     ->all();
+
+            // $studentSubjectResults = $results->toArray();
+            // // pr($studentSubjectResults);die;
+
+            // $averageStudentSubjectResults = [];
+            // foreach ($studentSubjectResults as $key => $obj) {
+            //     $studentId = $obj['student_id'];
+            //     $subjectClassification = Inflector::slug($obj['subject_classification']);
+            //     $academicTermTotalWeightedMarks = $obj['academic_term_total_weighted_marks'];
+            //     if (array_key_exists($studentId, $averageStudentSubjectResults) && array_key_exists($subjectClassification, $averageStudentSubjectResults[$studentId])) {
+            //         $averageStudentSubjectResults[$studentId][$subjectClassification]['group_academic_term_total_weighted_marks'] += $academicTermTotalWeightedMarks;
+            //         // $averageStudentSubjectResults[$studentId][$subjectClassification]['count'] += 1;
+                    
+            //         $averageStudentSubjectResults[$studentId][$subjectClassification]['count'] += $obj['totalNumberOfAcademicLinkage'];
+            //     } else {
+            //         $averageStudentSubjectResults[$studentId][$subjectClassification] = [
+            //             'institution_id' => $obj['institution_id'],
+            //             'academic_period_id' => $obj['academic_period_id'],
+            //             'assessment_id' => $obj['assessment_id'],
+            //             'name' => $obj['subject_classification'],
+            //             'group_academic_term_total_weighted_marks' => $academicTermTotalWeightedMarks,
+            //             // 'count' => 1
+            //             'count' => $obj['totalNumberOfAcademicLinkage']
+            //         ];
+            //     }
+            // }
+            // foreach ($averageStudentSubjectResults as $studentKey => $studentObj) {                
+            //     foreach ($studentObj as $subjectKey => $subjectObj) {                    
+            //         // $averageMark = $subjectObj['count'] == $this->groupAssessmentPeriodCount ? $subjectObj['group_academic_term_total_weighted_marks'] / $subjectObj['count'] : '';
+            //         $averageMark = $subjectObj['group_academic_term_total_weighted_marks'] / $subjectObj['count'];
+            // // pr($averageMark);die;
+
+            //         $averageObj = [
+            //             'institution_id' => $subjectObj['institution_id'],
+            //             'academic_period_id' => $subjectObj['academic_period_id'],
+            //             'assessment_id' => $subjectObj['assessment_id'],
+            //             'student_id' => $studentKey,
+            //             'subject_classification' => $subjectObj['name'],
+            //             'academic_term_value' => __('Average'),
+            //             'academic_term_total_weighted_marks' => $averageMark
+            //         ];
+            //         $studentSubjectResults[] = $averageObj;
+            //     }
+            // }
+            // // pr($studentSubjectResults);die;
+            // return $studentSubjectResults;
+
+            $withoutTerm = $AssessmentItemResults->find()
+                ->select([
+                    $AssessmentItemResults->aliasField('institution_id'),
+                    $AssessmentItemResults->aliasField('academic_period_id'),
+                    $AssessmentItemResults->aliasField('assessment_id'),
+                    $AssessmentItemResults->aliasField('student_id'),
+                    'subject_classification' => '(
+                        CASE
+                        WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
+                            ELSE '.$EducationSubjects->aliasField('name').'
+                            END
+                    )',
+                    'academic_term_value' => $AssessmentPeriods->aliasField('name'),
+                    'academic_term_total_weighted_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight')),
+                    'totalNumberOfAcademicLinkage' => $query->func()->count($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight'))
+                ])
                 ->innerJoin(
                     [$this->alias() => $this->table()],
                     [
@@ -422,30 +727,87 @@ class AssessmentResultsTable extends AppTable
                 ->hydrate(false)
                 ->all();
 
-            $studentSubjectResults = $results->toArray();
-            $averageStudentSubjectResults = [];
-            foreach ($studentSubjectResults as $key => $obj) {
+                $withTerm = $AssessmentItemResults->find()
+                    ->select([
+                        $AssessmentItemResults->aliasField('institution_id'),
+                        $AssessmentItemResults->aliasField('academic_period_id'),
+                        $AssessmentItemResults->aliasField('assessment_id'),
+                        $AssessmentItemResults->aliasField('student_id'),
+                        'subject_classification' => '(
+                            CASE
+                            WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
+                                ELSE '.$EducationSubjects->aliasField('name').'
+                                END
+                        )',
+                        'academic_term_value' => $AssessmentPeriods->aliasField('academic_term'),
+                        'academic_term_total_weighted_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight')),
+                        'totalNumberOfAcademicLinkage' => $query->func()->count($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight'))
+                    ])
+                    ->innerJoin(
+                        [$this->alias() => $this->table()],
+                        [
+                            $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
+                            $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
+                            $this->aliasField('institution_class_id') => $params['class_id']
+                        ]
+                    )
+                    ->leftJoin(
+                        [$AssessmentItems->alias() => $AssessmentItems->table()],
+                        [
+                            $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemResults->aliasField('assessment_id'),
+                            $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemResults->aliasField('education_subject_id')
+                        ]
+                    )
+                    ->contain([$AssessmentGradingOptions->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
+                    ->where([
+                        $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id'],
+                        $AssessmentPeriods->aliasField('academic_term <> ') => ""
+                    ])
+                    ->group([
+                        $AssessmentItemResults->aliasField('academic_period_id'),
+                        $AssessmentItemResults->aliasField('assessment_id'),
+                        $AssessmentItemResults->aliasField('student_id'),
+                        'subject_classification',
+                        'academic_term_value'
+                    ])
+                    ->hydrate(false)
+                    ->all();
+
+            // pr($withTerm);die;
+
+
+            $studentSubjectResultsWithoutTerm = $withoutTerm->toArray();
+            $studentSubjectResultsWithTerm = $withTerm->toArray();
+            // pr($studentSubjectResults);die;
+
+            $averageStudentSubjectResultsWithoutTerm = [];
+            foreach ($studentSubjectResultsWithoutTerm as $key => $obj) {
                 $studentId = $obj['student_id'];
                 $subjectClassification = Inflector::slug($obj['subject_classification']);
                 $academicTermTotalWeightedMarks = $obj['academic_term_total_weighted_marks'];
-                if (array_key_exists($studentId, $averageStudentSubjectResults) && array_key_exists($subjectClassification, $averageStudentSubjectResults[$studentId])) {
-                    $averageStudentSubjectResults[$studentId][$subjectClassification]['group_academic_term_total_weighted_marks'] += $academicTermTotalWeightedMarks;
-                    $averageStudentSubjectResults[$studentId][$subjectClassification]['count'] += 1;
+                if (array_key_exists($studentId, $averageStudentSubjectResultsWithoutTerm) && array_key_exists($subjectClassification, $averageStudentSubjectResultsWithoutTerm[$studentId])) {
+                    $averageStudentSubjectResultsWithoutTerm[$studentId][$subjectClassification]['group_academic_term_total_weighted_marks'] += $academicTermTotalWeightedMarks;
+                    // $averageStudentSubjectResults[$studentId][$subjectClassification]['count'] += 1;
+                    
+                    $averageStudentSubjectResultsWithoutTerm[$studentId][$subjectClassification]['count'] += $obj['totalNumberOfAcademicLinkage'];
                 } else {
-                    $averageStudentSubjectResults[$studentId][$subjectClassification] = [
+                    $averageStudentSubjectResultsWithoutTerm[$studentId][$subjectClassification] = [
                         'institution_id' => $obj['institution_id'],
                         'academic_period_id' => $obj['academic_period_id'],
                         'assessment_id' => $obj['assessment_id'],
                         'name' => $obj['subject_classification'],
                         'group_academic_term_total_weighted_marks' => $academicTermTotalWeightedMarks,
-                        'count' => 1
+                        // 'count' => 1
+                        'count' => $obj['totalNumberOfAcademicLinkage']
                     ];
                 }
             }
+            foreach ($averageStudentSubjectResultsWithoutTerm as $studentKey => $studentObj) {                
+                foreach ($studentObj as $subjectKey => $subjectObj) {                    
+                    // $averageMark = $subjectObj['count'] == $this->groupAssessmentPeriodCount ? $subjectObj['group_academic_term_total_weighted_marks'] / $subjectObj['count'] : '';
+                    $averageMark = $subjectObj['group_academic_term_total_weighted_marks'] / $subjectObj['count'];
+            // pr($averageMark);die;
 
-            foreach ($averageStudentSubjectResults as $studentKey => $studentObj) {
-                foreach ($studentObj as $subjectKey => $subjectObj) {
-                    $averageMark = $subjectObj['count'] == $this->groupAssessmentPeriodCount ? $subjectObj['group_academic_term_total_weighted_marks'] / $subjectObj['count'] : '';
                     $averageObj = [
                         'institution_id' => $subjectObj['institution_id'],
                         'academic_period_id' => $subjectObj['academic_period_id'],
@@ -455,13 +817,160 @@ class AssessmentResultsTable extends AppTable
                         'academic_term_value' => __('Average'),
                         'academic_term_total_weighted_marks' => $averageMark
                     ];
-                    $studentSubjectResults[] = $averageObj;
+                    $studentSubjectResultsWithoutTerm[] = $averageObj;
                 }
             }
 
+            $averageStudentSubjectResultsWithTerm = [];
+            foreach ($studentSubjectResultsWithTerm as $key => $obj) {
+                $studentId = $obj['student_id'];
+                $subjectClassification = Inflector::slug($obj['subject_classification']);
+                $academicTermTotalWeightedMarks = $obj['academic_term_total_weighted_marks'];
+                if (array_key_exists($studentId, $averageStudentSubjectResultsWithTerm) && array_key_exists($subjectClassification, $averageStudentSubjectResultsWithTerm[$studentId])) {
+                    $averageStudentSubjectResultsWithTerm[$studentId][$subjectClassification]['group_academic_term_total_weighted_marks'] += $academicTermTotalWeightedMarks;
+                    // $averageStudentSubjectResults[$studentId][$subjectClassification]['count'] += 1;
+                    
+                    $averageStudentSubjectResultsWithTerm[$studentId][$subjectClassification]['count'] += $obj['totalNumberOfAcademicLinkage'];
+                } else {
+                    $averageStudentSubjectResultsWithTerm[$studentId][$subjectClassification] = [
+                        'institution_id' => $obj['institution_id'],
+                        'academic_period_id' => $obj['academic_period_id'],
+                        'assessment_id' => $obj['assessment_id'],
+                        'name' => $obj['subject_classification'],
+                        'group_academic_term_total_weighted_marks' => $academicTermTotalWeightedMarks,
+                        // 'count' => 1
+                        'count' => $obj['totalNumberOfAcademicLinkage']
+                    ];
+                }
+            }
+            foreach ($averageStudentSubjectResultsWithTerm as $studentKey => $studentObj) {                
+                foreach ($studentObj as $subjectKey => $subjectObj) {                    
+                    // $averageMark = $subjectObj['count'] == $this->groupAssessmentPeriodCount ? $subjectObj['group_academic_term_total_weighted_marks'] / $subjectObj['count'] : '';
+                    $averageMark = $subjectObj['group_academic_term_total_weighted_marks'] / $subjectObj['count'];
+            // pr($averageMark);die;
+
+                    $averageObj = [
+                        'institution_id' => $subjectObj['institution_id'],
+                        'academic_period_id' => $subjectObj['academic_period_id'],
+                        'assessment_id' => $subjectObj['assessment_id'],
+                        'student_id' => $studentKey,
+                        'subject_classification' => $subjectObj['name'],
+                        'academic_term_value' => __('Average'),
+                        'academic_term_total_weighted_marks' => $averageMark
+                    ];
+                    $studentSubjectResultsWithTerm[] = $averageObj;
+                }
+            }
+
+            $studentSubjectResults = array_merge($studentSubjectResultsWithoutTerm, $studentSubjectResultsWithTerm);
+            // pr($studentSubjectResults);die;
+
+            // pr($studentSubjectResults);die;
             return $studentSubjectResults;
         }
     }
+
+    // public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
+    // {
+    //     if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params)) {
+    //         $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+    //         $AssessmentGradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');
+    //         $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+    //         $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+    //         $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+
+    //         $query = $AssessmentItemResults->find();
+    //         $selectedColumns = [
+    //             $AssessmentItemResults->aliasField('institution_id'),
+    //             $AssessmentItemResults->aliasField('academic_period_id'),
+    //             $AssessmentItemResults->aliasField('assessment_id'),
+    //             $AssessmentItemResults->aliasField('student_id'),
+    //             'subject_classification' => '(
+    //                 CASE
+    //                 WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
+    //                     ELSE '.$EducationSubjects->aliasField('name').'
+    //                     END
+    //                 )',
+    //             'academic_term_value' => '(
+    //                 CASE
+    //                 WHEN '.$AssessmentPeriods->aliasField('academic_term <> \'\'').' THEN '.$AssessmentPeriods->aliasField('academic_term').'
+    //                     ELSE '.$AssessmentPeriods->aliasField('name').'
+    //                     END
+    //                 )',
+    //             'academic_term_total_weighted_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight'))
+    //         ];
+
+    //         $results = $AssessmentItemResults->find()
+    //             ->select($selectedColumns)
+    //             ->innerJoin(
+    //                 [$this->alias() => $this->table()],
+    //                 [
+    //                     $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
+    //                     $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
+    //                     $this->aliasField('institution_class_id') => $params['class_id']
+    //                 ]
+    //             )
+    //             ->leftJoin(
+    //                 [$AssessmentItems->alias() => $AssessmentItems->table()],
+    //                 [
+    //                     $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemResults->aliasField('assessment_id'),
+    //                     $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemResults->aliasField('education_subject_id')
+    //                 ]
+    //             )
+    //             ->contain([$AssessmentGradingOptions->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
+    //             ->where([
+    //                 $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id']
+    //             ])
+    //             ->group([
+    //                 $AssessmentItemResults->aliasField('academic_period_id'),
+    //                 $AssessmentItemResults->aliasField('assessment_id'),
+    //                 $AssessmentItemResults->aliasField('student_id'),
+    //                 'subject_classification',
+    //                 'academic_term_value'
+    //             ])
+    //             ->hydrate(false)
+    //             ->all();
+
+    //         $studentSubjectResults = $results->toArray();
+    //         $averageStudentSubjectResults = [];
+    //         foreach ($studentSubjectResults as $key => $obj) {
+    //             $studentId = $obj['student_id'];
+    //             $subjectClassification = Inflector::slug($obj['subject_classification']);
+    //             $academicTermTotalWeightedMarks = $obj['academic_term_total_weighted_marks'];
+    //             if (array_key_exists($studentId, $averageStudentSubjectResults) && array_key_exists($subjectClassification, $averageStudentSubjectResults[$studentId])) {
+    //                 $averageStudentSubjectResults[$studentId][$subjectClassification]['group_academic_term_total_weighted_marks'] += $academicTermTotalWeightedMarks;
+    //                 $averageStudentSubjectResults[$studentId][$subjectClassification]['count'] += 1;
+    //             } else {
+    //                 $averageStudentSubjectResults[$studentId][$subjectClassification] = [
+    //                     'institution_id' => $obj['institution_id'],
+    //                     'academic_period_id' => $obj['academic_period_id'],
+    //                     'assessment_id' => $obj['assessment_id'],
+    //                     'name' => $obj['subject_classification'],
+    //                     'group_academic_term_total_weighted_marks' => $academicTermTotalWeightedMarks,
+    //                     'count' => 1
+    //                 ];
+    //             }
+    //         }
+
+    //         foreach ($averageStudentSubjectResults as $studentKey => $studentObj) {
+    //             foreach ($studentObj as $subjectKey => $subjectObj) {
+    //                 $averageMark = $subjectObj['count'] == $this->groupAssessmentPeriodCount ? $subjectObj['group_academic_term_total_weighted_marks'] / $subjectObj['count'] : '';
+    //                 $averageObj = [
+    //                     'institution_id' => $subjectObj['institution_id'],
+    //                     'academic_period_id' => $subjectObj['academic_period_id'],
+    //                     'assessment_id' => $subjectObj['assessment_id'],
+    //                     'student_id' => $studentKey,
+    //                     'subject_classification' => $subjectObj['name'],
+    //                     'academic_term_value' => __('Average'),
+    //                     'academic_term_total_weighted_marks' => $averageMark
+    //                 ];
+    //                 $studentSubjectResults[] = $averageObj;
+    //             }
+    //         }
+
+    //         return $studentSubjectResults;
+    //     }
+    // }
 
     public function onExcelTemplateInitialiseClassStudents(Event $event, array $params, ArrayObject $extra)
     {
