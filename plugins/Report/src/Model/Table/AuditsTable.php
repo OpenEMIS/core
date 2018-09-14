@@ -60,6 +60,11 @@ class AuditsTable extends AppTable
         $this->ControllerAction->field('sort_by', ['type' => 'hidden']);
     }
 
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    {
+        $this->checkForDateFields($requestData);
+    }
+
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -138,6 +143,17 @@ class AuditsTable extends AppTable
                 $attr['value'] = Time::now();
             }
             return $attr;
+        }
+    }
+
+    private function checkForDateFields(ArrayObject $requestData)
+    {
+        if (array_key_exists("report_start_date",$requestData[$this->alias()]) && !empty($requestData[$this->alias()]['report_start_date'])) {
+            $requestData[$this->alias()]['report_start_date'] = $requestData[$this->alias()]['report_start_date'].' 00:00:00';
+        }
+
+        if (array_key_exists("report_end_date",$requestData[$this->alias()]) && !empty($requestData[$this->alias()]['report_end_date'])) {
+            $requestData[$this->alias()]['report_end_date'] = $requestData[$this->alias()]['report_end_date'].' 23:59:59';
         }
     }
 }
