@@ -90,8 +90,21 @@ class CustomReportsTable extends AppTable
                     unset($filters['academic_period_id']);
                 }
 
+                if (isset($this->request->data["submit"]) && $this->request->data["submit"] == "academic_period_id") {
+                    $toReset = true;
+                } else {
+                    $toReset = false;
+                }
+
                 // other filters
                 foreach ($filters as $field => $filterData) {
+                    if ($toReset) {
+                        unset($this->request->data[$this->alias()][$field]);
+                    }
+                    if (isset($this->request->data["submit"]) && $field == $this->request->data["submit"]) {
+                        $toReset = true;
+                    }
+
                     $fieldType = array_key_exists('fieldType', $filterData) ? $filterData['fieldType'] : 'select';
                     $fieldParams = [];
                     $fieldParams['type'] = $fieldType;
@@ -113,7 +126,7 @@ class CustomReportsTable extends AppTable
                         // set field parameters
                         $fieldParams['options'] = $options;
                         $fieldParams['select'] = false;
-                        $fieldParams['onChangeReload'] = true;
+                        $fieldParams['onChangeReload'] = $field;
                         if ($fieldType == 'chosenSelect') {
                             $fieldParams['attr'] = ['multiple' => false];
                         }
@@ -187,7 +200,7 @@ class CustomReportsTable extends AppTable
             $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = $AcademicPeriods->getCurrent();
 
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = "academic_period_id";
             $attr['options'] = $periodOptions;
             $attr['default'] = $selectedPeriod;
             $attr['type'] = 'select';
