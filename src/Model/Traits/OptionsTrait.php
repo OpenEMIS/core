@@ -191,7 +191,7 @@ trait OptionsTrait
                         3 => __('Done'),
                     ],
                     'before_after' => [
-                        1 => __('Days before end of application close date')
+                        1 => __('Days before application close date')
                     ]
                 ]
             ]
