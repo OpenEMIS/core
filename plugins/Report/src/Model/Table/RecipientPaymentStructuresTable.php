@@ -30,6 +30,18 @@ class RecipientPaymentStructuresTable extends AppTable  {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        $financialAssistanceType = $requestData->scholarship_financial_assistance_type_id;
+
+        $conditions = [
+            $this->Scholarships->aliasField('academic_period_id') => $academicPeriodId
+        ];
+
+        if ($financialAssistanceType != -1) {
+            $conditions[$this->Scholarships->aliasField('scholarship_financial_assistance_type_id')] = $financialAssistanceType;
+        }
+
         $query
             ->contain([
                 'Recipients' => [
@@ -89,6 +101,7 @@ class RecipientPaymentStructuresTable extends AppTable  {
                 'estimated_amount' => 'RecipientPaymentStructureEstimates.estimated_amount',
                 'category_name' => 'DisbursementCategories.name'
             ])
+            ->where($conditions)
             ->order([$this->aliasField('recipient_id'), $this->aliasField('scholarship_id'), $this->aliasField('id')]);
     }
     

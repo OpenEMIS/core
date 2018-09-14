@@ -83,13 +83,6 @@ class ScholarshipsTable extends AppTable  {
     {
         $attr['options'] = $this->AcademicPeriods->getYearList();
         $attr['default'] = $this->AcademicPeriods->getCurrent();
-        
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            if ($feature == 'Report.RecipientPaymentStructures') {
-                $attr['type'] = 'hidden';
-            } 
-        }
         return $attr;
     }
 
@@ -102,13 +95,6 @@ class ScholarshipsTable extends AppTable  {
         $attr['select'] = false;
         $attr['attr']['label'] = __('Financial Assistance Type');
         $attr['options'] = $financialAssistanceTypeOptions;
-
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            if ($feature == 'Report.RecipientPaymentStructures') {
-                $attr['type'] = 'hidden';
-            } 
-        }
         return $attr;
     }
 
