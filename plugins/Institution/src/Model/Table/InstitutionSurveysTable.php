@@ -71,7 +71,6 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedNameSearch');
 
         $this->toggle('add', false);
-        // $this->toggle('remove', false); // For Institution Survey, delete button will be disabled regardless settings in Workflow
     }
 
     public function implementedEvents()
@@ -92,12 +91,10 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        Log::write('debug', 'deleteAfterAction in InstitutionSurveys >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
         $broadcaster = $this;
         $listeners[] = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
 
         if (!empty($listeners)) {
-            Log::write('debug', 'triggering event in deleteAfterAction >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
             $this->dispatchEventToModels('Model.InstitutionSurveys.afterDelete', [$entity], $broadcaster, $listeners);
         }
     }
@@ -437,6 +434,20 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         $this->field('description');
         $this->setFieldOrder(['academic_period_id', 'survey_form_id', 'description']);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity) {
+        // to get all the workflow steps for this model
+        $workflow = $this->getWorkflow($this->registryAlias(), $entity);
+        if (!empty($workflow)) {
+            foreach ($workflow->workflow_steps as $workflowStep) {
+                if ($workflowStep->category == WorkflowSteps::DONE) {
+                    if ($entity->status->id == $workflowStep->id) {
+                        $this->toggle('remove', false);
+                    }
+                }
+            }
+        }
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
