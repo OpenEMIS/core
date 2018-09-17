@@ -46,7 +46,7 @@ class StaffTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-        $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
+        $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'staff_type_id']);
         $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -239,27 +239,63 @@ class StaffTable extends ControllerActionTable
         if ($periodId > 0) {
             $query->find('academicPeriod', ['academic_period_id' => $periodId]);
         }
-        $query->contain([
-            'Positions.StaffPositionTitles'=>[
-                'fields' => [
-                    'position_title_teaching' => 'StaffPositionTitles.type'
+        $query
+            ->contain([
+                'Users' => [
+                    'fields' => [
+                        'id',
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name',
+                        'gender_id'
+                    ]
+                ],
+                'Positions' => [
+                    'fields' => [
+                        'id',
+                        'status_id',
+                        'position_no',
+                        'staff_position_title_id',
+                        'staff_position_grade_id',
+                        'institution_id'
+                    ]
+                ],
+                'Users.IdentityTypes' => [
+                    'fields' => [
+                        'identity_type' => 'IdentityTypes.name',
+                        'identity_number' => 'Users.identity_number'
+                    ]
+                ],
+                'StaffTypes' => [
+                    'fields' => [
+                        'staff_type_name' => 'StaffTypes.name',
+                    ]
+                ],
+                'StaffStatuses' => [
+                    'fields' => [
+                        'staff_status_name' => 'StaffStatuses.name',
+                    ]
+                ],
+                'Institutions' => [
+                    'fields' => [
+                        'institution_name' => 'Institutions.name',
+                    ]
+                ],
+                'Positions.StaffPositionTitles'=>[
+                    'fields' => [
+                        'position_title_teaching' => 'StaffPositionTitles.type',
+                    ]
                 ]
-            ]
-        ])
-        ->select([
-            'staff_id' => 'Staff.staff_id',
-            'institution_position_id' => 'Staff.institution_position_id',
-            'FTE' => 'Staff.FTE',
-            'staff_status_id' => 'Staff.staff_status_id'
-        ])
-        // ->select(['position_title_teaching' => 'StaffPositionTitles.type'])
-        // ->autoFields(true)
-        ;
-        $query->contain(['Users.IdentityTypes'])
+            ])
             ->select([
                 'openemis_no' => 'Users.openemis_no',
-                'identity_type' => 'IdentityTypes.name',
-                'identity_number' => 'Users.identity_number'
+                'institution_position_id' => 'Staff.institution_position_id',
+                'FTE' => 'Staff.FTE',
+                'start_date' => 'Staff.start_date',
+                'end_date' => 'Staff.end_date',
             ]);
     }
 
@@ -276,8 +312,6 @@ class StaffTable extends ControllerActionTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $fieldArray = $fields->getArrayCopy();
-
         //redeclare fields for sorting purpose.
         $extraField[] = [
             'key' => 'Users.openemis_no',
@@ -288,8 +322,8 @@ class StaffTable extends ControllerActionTable
 
         $extraField[] = [
             'key' => 'Staff.staff_id',
-            'field' => 'staff_id',
-            'type' => 'integer',
+            'field' => 'name',
+            'type' => 'string',
             'label' => __('Staff')
         ];
 
@@ -301,8 +335,8 @@ class StaffTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key' => 'Staff.staff_type_id',
-            'field' => 'staff_type_id',
+            'key' => 'StaffTypes.name',
+            'field' => 'staff_type_name',
             'type' => 'integer',
             'label' => __('Staff Type')
         ];
@@ -322,9 +356,9 @@ class StaffTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key' => 'Staff.staff_status_id',
-            'field' => 'staff_status_id',
-            'type' => 'integer',
+            'key' => 'StaffStatuses.name',
+            'field' => 'staff_status_name',
+            'type' => 'string',
             'label' => __('Staff Status')
         ];
 
@@ -343,9 +377,9 @@ class StaffTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key' => 'Staff.institution_id',
-            'field' => 'institution_id',
-            'type' => 'integer',
+            'key' => 'Institutions.name',
+            'field' => 'institution_name',
+            'type' => 'string',
             'label' => __('Institution')
         ];
 
