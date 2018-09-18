@@ -201,6 +201,9 @@ class AlertLogsTable extends ControllerActionTable
                 if (empty($availablePlaceholder)) {
                     // for workflow alert
                     $value = Hash::get($vars, $placeholder);
+                    if ($value instanceof Date || $value instanceof \Cake\I18n\Date) {
+                        $value = $this->formatDate($value);
+                    }
                     $message = str_replace($replace, $value, $message);
                 } else if (array_key_exists('${' . $placeholder . '}', $availablePlaceholder)) {
                     // for attendance alert (alert rules)
