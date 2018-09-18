@@ -19,6 +19,7 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 
 class ExcelReportBehavior extends Behavior
 {
@@ -230,6 +231,7 @@ class ExcelReportBehavior extends Behavior
                 if (!is_null($format) && is_numeric($cellValue)) {
                     $formatting = number_format(0, $format);
                     $cellStyle->getNumberFormat()->setFormatCode($formatting);
+                    // pr($cellValue);die;
                 }
                 break;
 
@@ -251,7 +253,11 @@ class ExcelReportBehavior extends Behavior
         }
 
         // set cell style to follow placeholder
-        $objWorksheet->getCell($cellCoordinate)->setValue(__($cellValue));
+        if ($cellValue === 0) {
+            $objWorksheet->getCell($cellCoordinate)->setValueExplicit($cellValue, DataType::TYPE_NUMERIC);
+        } else {
+            $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
+        }
         $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
 
         // set column width to follow placeholder
@@ -301,6 +307,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         // set to empty to remove the placeholder
+        pr("here");die;
         $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
     }
 
