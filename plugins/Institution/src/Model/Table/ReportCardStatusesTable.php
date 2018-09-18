@@ -289,7 +289,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ]
             )
             ->autoFields(true)
-            ->where($where);
+            ->where($where)
+            ->all();
 
         if (is_null($this->request->query('sort'))) {
             $query
@@ -487,8 +488,14 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function onGetReportQueue(Event $event, Entity $entity)
     {
+        if ($entity->has('report_card_id')) {
+            $reportCardId = $entity->report_card_id;
+        } else if (!is_null($this->request->query('report_card_id'))) {
+            $reportCardId = $this->request->query('report_card_id');
+        }
+        
         $search = [
-            'report_card_id' => $entity->report_card_id,
+            'report_card_id' => $reportCardId,
             'institution_class_id' => $entity->institution_class_id,
             'student_id' => $entity->student_id,
             'institution_id' => $entity->institution_id,
@@ -500,7 +507,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         if ($resultIndex !== false) {
             $totalQueueCount = count($this->reportProcessList);
-            return sprintf(__('%s of %s'), $resultIndex, $totalQueueCount);
+            return sprintf(__('%s of %s'), $resultIndex + 1, $totalQueueCount);
         } else {
             return '<i class="fa fa-minus"></i>';
         }
