@@ -19,7 +19,11 @@ class AlertRulesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
+    const ASSIGN_TO_ASSIGNEE = -1;
+    const ASSIGNEE_ROLE = 'Current Workflow Assignee';
+
     private $alertTypeFeatures = [];
+    private $featureList = [];
 
     public function initialize(array $config)
     {
@@ -43,6 +47,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleStaffEmployment');
         $this->addBehavior('Alert.AlertRuleStaffLeave');
         $this->addBehavior('Alert.AlertRuleStaffType');
+        $this->addBehavior('Alert.AlertRuleScholarshipApplication');
     }
 
     public function validationDefault(Validator $validator)
@@ -73,6 +78,26 @@ class AlertRulesTable extends ControllerActionTable
                     }
                     $data['threshold'] = !empty($thresholdArray) ? json_encode($thresholdArray, JSON_UNESCAPED_UNICODE) : '';
                 }
+            }
+        }
+    }
+
+    public function afterSaveCommit(Event $event, Entity $entity) 
+    {
+        if (in_array($entity->feature, ['ScholarshipApplication']) && $entity->isNew()) {
+            $AlertRoles = TableRegistry::get('Alert.AlertsRoles');
+
+            $alertRoleData = [
+                'alert_rule_id' => $entity->id,
+                'security_role_id' => self::ASSIGN_TO_ASSIGNEE
+            ];
+
+            $alertRoleEntity = $AlertRoles->newEntity($alertRoleData);
+            
+            if ($AlertRoles->save($alertRoleEntity)) {
+            } else {
+                Log::write('error', 'Error saving roles to assigee.');
+                Log::write('error', $alertRoleEntity);
             }
         }
     }
@@ -189,6 +214,7 @@ class AlertRulesTable extends ControllerActionTable
 
     public function onGetFeature(Event $event, Entity $entity)
     {
+        $this->featureList[$entity->id] = $entity->feature;
         return Inflector::humanize(Inflector::underscore($entity->feature));
     }
 
@@ -249,9 +275,13 @@ class AlertRulesTable extends ControllerActionTable
 
     public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request)
     {
-        switch ($action) {
-            case 'add':
-            case 'edit':
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+            if ($entity->has('feature') && in_array($entity->feature, ['ScholarshipApplication'])) {
+                $attr['type'] = 'disabled';
+                $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+                $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+            } else {
                 $roleOptions = $this->SecurityRoles
                     ->find('list')
                     ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->primaryKey()), $this->SecurityRoles->aliasField('name')])
@@ -261,7 +291,7 @@ class AlertRulesTable extends ControllerActionTable
 
                 $attr['type'] = 'chosenSelect';
                 $attr['options'] = $roleOptions;
-                break;
+            }
         }
 
         return $attr;
@@ -292,8 +322,8 @@ class AlertRulesTable extends ControllerActionTable
     {
         if (!$entity->has('security_roles')) {
             $query = $this->find()
-            ->where([$this->aliasField($this->primaryKey()) => $entity->id])
-            ->contain(['SecurityRoles']);
+                ->where([$this->aliasField($this->primaryKey()) => $entity->id])
+                ->contain(['SecurityRoles']);
 
             $data = $query->first();
         } else {
@@ -307,6 +337,11 @@ class AlertRulesTable extends ControllerActionTable
             }
         }
 
+        $feature = $this->featureList[$entity->id];
+        if (in_array($feature, ['ScholarshipApplication'])) {
+            $role = [__(self::ASSIGNEE_ROLE)];
+        }
+
         return (!empty($role))? implode(', ', $role): ' ';
     }
 
@@ -317,7 +352,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('feature', ['type' => 'select', 'entity' => $entity]);
         $this->field('enabled', ['type' => 'select']);
         $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
-        $this->field('security_roles', ['after' => 'method']);
+        $this->field('security_roles', ['after' => 'method', 'entity' => $entity]);
         $this->field('threshold', ['after' => 'security_roles', 'entity' => $entity]);
 
         // Alert section
