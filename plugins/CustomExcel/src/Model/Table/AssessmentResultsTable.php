@@ -351,76 +351,6 @@ class AssessmentResultsTable extends AppTable
         }
     }
 
-    // public function onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes(Event $event, array $params, ArrayObject $extra)
-    // {
-    //     if (array_key_exists('assessment_id', $params)) {
-    //         $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
-    //         $AssessmentGradingTypes = TableRegistry::get('Assessment.AssessmentGradingTypes');
-    //         $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
-    //         $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-    //         $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-
-    //         $query = $AssessmentItemsGradingTypes->find();
-    //         $selectedColumns = [
-    //             'subject_classification' => '(
-    //                 CASE
-    //                 WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
-    //                     ELSE '.$EducationSubjects->aliasField('name').'
-    //                     END
-    //                 )',
-    //             'academic_term_value' => '(
-    //                 CASE
-    //                 WHEN '.$AssessmentPeriods->aliasField('academic_term <> \'\'').' THEN '.$AssessmentPeriods->aliasField('academic_term').'
-    //                     ELSE '.$AssessmentPeriods->aliasField('name').'
-    //                     END
-    //                 )',
-    //             'academic_term_total_weighted_max' => $query->func()->sum($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight'))
-    //         ];
-
-    //         $results = $AssessmentItemsGradingTypes->find()
-    //             ->select($selectedColumns)
-    //             ->contain([$AssessmentGradingTypes->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
-    //             ->leftJoin(
-    //                 [$AssessmentItems->alias() => $AssessmentItems->table()],
-    //                 [
-    //                     $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemsGradingTypes->aliasField('assessment_id'),
-    //                     $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemsGradingTypes->aliasField('education_subject_id')
-    //                 ]
-    //             )
-    //             ->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id']])
-    //             ->group(['subject_classification', 'academic_term_value'])
-    //             ->hydrate(false)
-    //             ->all();
-
-    //         $assessmentItemsGradingTypeResults = $results->toArray();
-    //         $averageAssessmentItemsGradingTypes = [];
-    //         foreach ($assessmentItemsGradingTypeResults as $key => $obj) {
-    //             $subjectClassification = Inflector::slug($obj['subject_classification']);
-    //             $academicTermTotalWeightedMax = $obj['academic_term_total_weighted_max'];
-
-    //             if (array_key_exists($subjectClassification, $averageAssessmentItemsGradingTypes)) {
-    //                 $averageAssessmentItemsGradingTypes[$subjectClassification]['group_academic_term_total_weighted_max'] += $academicTermTotalWeightedMax;
-    //                 $averageAssessmentItemsGradingTypes[$subjectClassification]['count'] += 1;
-    //             } else {
-    //                 $averageAssessmentItemsGradingTypes[$subjectClassification] = [
-    //                     'name' => $obj['subject_classification'],
-    //                     'group_academic_term_total_weighted_max' => $academicTermTotalWeightedMax,
-    //                     'count' => 1
-    //                 ];
-    //             }
-    //         }
-
-    //         foreach ($averageAssessmentItemsGradingTypes as $key => $obj) {
-    //             $assessmentItemsGradingTypeResults[] = [
-    //                 'subject_classification' => $obj['name'],
-    //                 'academic_term_value' => __('Average'),
-    //                 'academic_term_total_weighted_max' => $obj['group_academic_term_total_weighted_max'] / $obj['count']
-    //             ];
-    //         }
-    //         return $assessmentItemsGradingTypeResults;
-    //     }
-    // }
-
     public function onExcelTemplateInitialiseGroupAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('assessment_id', $params)) {
@@ -445,7 +375,6 @@ class AssessmentResultsTable extends AppTable
 
             $academicTermResults = $results->toArray();
             // this value is use to decide whether to show the average or not, only show average when all academic term got mark
-            // 
             if (!$results->isEmpty()) {
                 $countList = $results->toArray();
                 foreach ($countList as $record) {
@@ -522,7 +451,6 @@ class AssessmentResultsTable extends AppTable
                 'academic_term_value' => __('Average'),
                 'total_period_weight' => $academic_term_total_weighted
             ];
-            
             $periodsWithTermOrders[] = $academicTermResults;
             return $periodsWithTermOrders;
         }
