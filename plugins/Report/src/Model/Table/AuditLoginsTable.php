@@ -56,8 +56,9 @@ class AuditLoginsTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d');
-        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d');
+
+        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d H:i:s');
+        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d H:i:s');
 
         $query
             ->select([

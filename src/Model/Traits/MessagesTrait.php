@@ -786,6 +786,9 @@ trait MessagesTrait
             ],
             'StaffType' => [
                 'value' => 'Days within %d to %d'
+            ],
+            'ScholarshipApplication' => [
+                'value' => 'Days within %d to %d'
             ]
         ],
         'UserBodyMasses' => [
