@@ -347,6 +347,7 @@ class AssessmentResultsTable extends AppTable
             }
 
             $groupAssessmentItemsGradingTypes = array_merge($withoutTerm->toArray(), $withTerm->toArray(), $averageRecords);
+            
             return $groupAssessmentItemsGradingTypes;
         }
     }
@@ -595,8 +596,6 @@ class AssessmentResultsTable extends AppTable
                     ];
                 }
             }
-            
-
             $studentSubjectResults = array_merge($withoutTerm->toArray(), $withTerm->toArray(), $averageRecords);
 
             return $studentSubjectResults;
