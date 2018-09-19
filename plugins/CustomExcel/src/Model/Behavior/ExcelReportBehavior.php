@@ -106,10 +106,6 @@ class ExcelReportBehavior extends Behavior
 
         $extra['vars'] = $this->getVars($params, $extra);
 
-        // pr('vars');
-        // pr($extra['vars']);
-        // die;
-
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('format');
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
 
@@ -231,7 +227,6 @@ class ExcelReportBehavior extends Behavior
                 if (!is_null($format) && is_numeric($cellValue)) {
                     $formatting = number_format(0, $format);
                     $cellStyle->getNumberFormat()->setFormatCode($formatting);
-                    // pr($cellValue);die;
                 }
                 break;
 
@@ -253,11 +248,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         // set cell style to follow placeholder
-        if ($cellValue === 0) {
-            $objWorksheet->getCell($cellCoordinate)->setValueExplicit($cellValue, DataType::TYPE_NUMERIC);
-        } else {
-            $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
-        }
+        $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
         $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
 
         // set column width to follow placeholder
@@ -307,7 +298,6 @@ class ExcelReportBehavior extends Behavior
         }
 
         // set to empty to remove the placeholder
-        pr("here");die;
         $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
     }
 
