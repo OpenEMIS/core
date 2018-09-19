@@ -1,3 +1,8 @@
+### [3.35.0] - 2018-09-14
+- Developed Scholarship deadline alert feature in Administration > Notification > Alert page
+- Implemented Academic Period and Financial Assistance type filter in Reports > Scholarships > Recipient Payment Structures page
+- Bug fix on Identity type in Directory > General > Overview page
+
 ### [3.34.0] - 2018-09-07
 - Developed User Default Identity Report in Reports > Directory 
 - Developed Staff Appraisal calculated fields in Administration > Appraisals > Scores
