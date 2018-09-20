@@ -35,11 +35,17 @@ class POCOR4816 extends AbstractMigration
         ];
         $this->insert('locale_contents', $localeData);
         // locale_content - END
+        
+        // security_functions
+        /*
+            TODO: add permissions for newly added features
+         */
+        $this->execute('CREATE TABLE `z_4816_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_4816_security_functions` SELECT * FROM `security_functions`');
+        // security_functions - END
 
         // institution_lands
-        $this->execute('CREATE TABLE `z_4816_institution_lands` LIKE `institution_lands`');
-        $this->execute('INSERT INTO `z_4816_institution_lands` SELECT * FROM `institution_lands`');
-        $this->execute('DROP TABLE IF EXISTS `institution_lands`');
+        $this->execute('RENAME TABLE `institution_lands` TO `z_4816_institution_lands`');
 
         $InstitutionLands = $this->table('institution_lands', [
             'collation' => 'utf8mb4_unicode_ci',
@@ -173,10 +179,7 @@ class POCOR4816 extends AbstractMigration
         // institution_lands - END
         
         // institution_buildings
-        $this->execute('CREATE TABLE `z_4816_institution_buildings` LIKE `institution_buildings`');
-        $this->execute('INSERT INTO `z_4816_institution_buildings` SELECT * FROM `institution_buildings`');
-        $this->execute('DROP TABLE IF EXISTS `institution_buildings`');
-
+        $this->execute('RENAME TABLE `institution_buildings` TO `z_4816_institution_buildings`');
 
         $InstitutionBuildings = $this->table('institution_buildings', [
             'collation' => 'utf8mb4_unicode_ci',
@@ -317,10 +320,8 @@ class POCOR4816 extends AbstractMigration
         // institution_buildings - END
 
         // institution_floors
-        $this->execute('CREATE TABLE `z_4816_institution_floors` LIKE `institution_floors`');
-        $this->execute('INSERT INTO `z_4816_institution_floors` SELECT * FROM `institution_floors`');
-        $this->execute('DROP TABLE IF EXISTS `institution_floors`');
-
+        $this->execute('RENAME TABLE `institution_floors` TO `z_4816_institution_floors`');
+        
         $InstitutionFloors = $this->table('institution_floors', [
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains all floor information of all institutions'
@@ -443,10 +444,7 @@ class POCOR4816 extends AbstractMigration
         // institution_floors - END
 
         // institution_rooms
-        $this->execute('CREATE TABLE `z_4816_institution_rooms` LIKE `institution_rooms`');
-        $this->execute('INSERT INTO `z_4816_institution_rooms` SELECT * FROM `institution_rooms`');
-        $this->execute('DROP TABLE IF EXISTS `institution_rooms`');
-
+        $this->execute('RENAME TABLE `institution_rooms` TO `z_4816_institution_rooms`');
 
         $InstitutionRooms = $this->table('institution_rooms', [
             'collation' => 'utf8mb4_unicode_ci',
@@ -567,9 +565,7 @@ class POCOR4816 extends AbstractMigration
         // institution_rooms - END
 
         // training_courses
-        $this->execute('CREATE TABLE `z_4816_training_courses` LIKE `training_courses`');
-        $this->execute('INSERT INTO `z_4816_training_courses` SELECT * FROM `training_courses`');
-        $this->execute('DROP TABLE IF EXISTS `training_courses`');
+        $this->execute('RENAME TABLE `training_courses` TO `z_4816_training_courses`');
 
         $TrainingCourses = $this->table('training_courses', [
             'collation' => 'utf8mb4_unicode_ci',
@@ -697,6 +693,385 @@ class POCOR4816 extends AbstractMigration
 
         $this->execute('INSERT INTO `training_courses` (`id`, `code`, `name`, `description`, `objective`, `credit_hours`, `duration`, `number_of_months`, `special_education_needs`, `file_name`, `file_content`, `training_field_of_study_id`, `training_course_type_id`, `training_mode_of_delivery_id`, `training_requirement_id`, `training_level_id`, `assignee_id`, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `code`, `name`, `description`, `objective`, `credit_hours`, `duration`, `number_of_months`, 0, `file_name`, `file_content`, `training_field_of_study_id`, `training_course_type_id`, `training_mode_of_delivery_id`, `training_requirement_id`, `training_level_id`, `assignee_id`, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4816_training_courses`');
         // training_courses - END
+        // NEW TABLE
+        // special_needs_referral_types (field_options)
+        $SpecialNeedsReferralTypes = $this->table('special_needs_referral_types', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of special needs referral types used in user_special_needs_referrals'
+        ]);
+
+        $SpecialNeedsReferralTypes
+            ->addColumn('name', 'string', [
+                'limit' => 50,
+                'null' => false,
+                'default' => null
+            ])
+            ->addColumn('order', 'integer', [
+                'limit' => 3,
+                'null' => false,
+                'default' => null
+            ])
+            ->addColumn('visible', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 1
+            ])
+            ->addColumn('editable', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 1
+            ])
+            ->addColumn('default', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 0
+            ])
+            ->addColumn('international_code', 'string', [
+                'limit' => 50,
+                'null' => true,
+                'default' => null
+            ])
+            ->addColumn('national_code', 'string', [
+                'limit' => 50,
+                'null' => true,
+                'default' => null
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+        // special_needs_referral_types - END
+    
+        // special_needs_service_types (field_options)
+        $SpecialNeedsServiceTypes = $this->table('special_needs_service_types', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of special needs service types used in user_special_needs_services'
+        ]);
+
+        $SpecialNeedsServiceTypes
+            ->addColumn('name', 'string', [
+                'limit' => 50,
+                'null' => false,
+                'default' => null
+            ])
+            ->addColumn('order', 'integer', [
+                'limit' => 3,
+                'null' => false,
+                'default' => null
+            ])
+            ->addColumn('visible', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 1
+            ])
+            ->addColumn('editable', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 1
+            ])
+            ->addColumn('default', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 0
+            ])
+            ->addColumn('international_code', 'string', [
+                'limit' => 50,
+                'null' => true,
+                'default' => null
+            ])
+            ->addColumn('national_code', 'string', [
+                'limit' => 50,
+                'null' => true,
+                'default' => null
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+        // special_needs_service_types - END
+
+        // special_needs_device_types (field_options)
+        $SpecialNeedsDeviceTypes = $this->table('special_needs_device_types', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of special needs devices types used in user_special_needs_devices'
+        ]);
+
+        $SpecialNeedsDeviceTypes
+            ->addColumn('name', 'string', [
+                'limit' => 50,
+                'null' => false,
+                'default' => null
+            ])
+            ->addColumn('order', 'integer', [
+                'limit' => 3,
+                'null' => false,
+                'default' => null
+            ])
+            ->addColumn('visible', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 1
+            ])
+            ->addColumn('editable', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 1
+            ])
+            ->addColumn('default', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 0
+            ])
+            ->addColumn('international_code', 'string', [
+                'limit' => 50,
+                'null' => true,
+                'default' => null
+            ])
+            ->addColumn('national_code', 'string', [
+                'limit' => 50,
+                'null' => true,
+                'default' => null
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+        // special_needs_device_types - END
+        
+        // special_needs_visit_types (system_defined)
+        $SpecialNeedsVisitTypes = $this->table('special_needs_visit_types', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => ''
+        ]);
+
+        $SpecialNeedsVisitTypes
+            ->addColumn('code', 'string', [
+                'limit' => 100,
+                'null' => false,
+                'default' => null
+            ])
+            ->addColumn('name', 'string', [
+                'limit' => 250,
+                'null' => false,
+                'default' => null
+            ])
+            ->save();
+
+        $specialNeedsVisitData = [
+            [
+                'id' => 1,
+                'code' => 'INSTITUTION_VISIT',
+                'name' => 'Institution Visit'
+            ],
+            [
+                'id' => 2,
+                'code' => 'HOME_VISIT',
+                'name' => 'Home Visit'
+            ]
+        ];
+
+        $this->insert('special_needs_visit_types', $specialNeedsVisitData);
+        // special_needs_visit_types - END
+        
+        // special_needs_purpose_types (field options)
+        $SpecialNeedsPurposeTypes = $this->table('special_needs_purpose_types', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => ''
+        ]);
+
+        $SpecialNeedsPurposeTypes
+            ->addColumn('name', 'string', [
+                'limit' => 50,
+                'null' => false,
+                'default' => null
+            ])
+            ->addColumn('order', 'integer', [
+                'limit' => 3,
+                'null' => false,
+                'default' => null
+            ])
+            ->addColumn('visible', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 1
+            ])
+            ->addColumn('editable', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 1
+            ])
+            ->addColumn('default', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'default' => 0
+            ])
+            ->addColumn('international_code', 'string', [
+                'limit' => 50,
+                'null' => true,
+                'default' => null
+            ])
+            ->addColumn('national_code', 'string', [
+                'limit' => 50,
+                'null' => true,
+                'default' => null
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+        // special_needs_purpose_types - END (field options)
+
+        
+        // user_special_needs_referrals
+        $UserSpecialNeedsReferrals = $this->table('user_special_needs_referrals', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains all special needs referral for all users'
+        ]);
+
+        $UserSpecialNeedsReferrals
+            ->addColumn('date', 'date', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('file_name', 'string', [
+                'null' => true,
+                'limit' => 250,
+                'default' => null
+            ])
+            ->addColumn('file_content', 'blob', [
+                'limit' => '4294967295',
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('academic_period_id', 'integer', [
+                'comment' => 'links to academic_periods.id',
+                'limit' => 11,
+                'default' => false,
+                'null' => false
+            ])
+            ->addColumn('security_user_id', 'integer', [
+                'comment' => 'links to security_users.id',
+                'limit' => 11,
+                'default' => false,
+                'null' => false
+            ])
+            ->addColumn('referrer_id', 'integer', [
+                'comment' => 'links to security_users.id',
+                'limit' => 11,
+                'default' => false,
+                'null' => false
+            ])
+            ->addColumn('referral_type_id', 'integer', [
+                'comment' => 'links to special_needs_referral_types.id',
+                'limit' => 11,
+                'default' => false,
+                'null' => false
+            ])
+            ->addColumn('reason_type_id', 'integer', [
+                'comment' => 'links to special_need_types.id',
+                'limit' => 11,
+                'default' => false,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('academic_period_id')
+            ->addIndex('security_user_id')
+            ->addIndex('referrer_id')
+            ->addIndex('referral_type_id')
+            ->addIndex('reason_type_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+        // user_special_needs_referral - END
     }
 
     public function down()
@@ -704,6 +1079,10 @@ class POCOR4816 extends AbstractMigration
         // locale_content
         $this->execute('DROP TABLE IF EXISTS `locale_contents`');
         $this->execute('RENAME TABLE `z_4816_locale_contents` TO `locale_contents`');
+
+        // security_functions
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('RENAME TABLE `z_4816_security_functions` TO `security_functions`');
 
         // institution_lands
         $this->execute('DROP TABLE IF EXISTS `institution_lands`');
@@ -724,5 +1103,40 @@ class POCOR4816 extends AbstractMigration
         // training_courses
         $this->execute('DROP TABLE IF EXISTS `training_courses`');
         $this->execute('RENAME TABLE `z_4816_training_courses` TO `training_courses`');
+
+        // institution_counsellings
+        $this->execute('DROP TABLE IF EXISTS `institution_counsellings`');
+        $this->execute('RENAME TABLE `z_4816_institution_counsellings` TO `institution_counsellings`');
+
+        // NEW TABLE
+        // special_needs_referral_types
+        $this->execute('DROP TABLE IF EXISTS `special_needs_referral_types`');
+
+        // special_needs_service_types
+        $this->execute('DROP TABLE IF EXISTS `special_needs_service_types`');
+
+        // special_needs_device_types
+        $this->execute('DROP TABLE IF EXISTS `special_needs_device_types`');
+
+        // special_needs_visit_types
+        $this->execute('DROP TABLE IF EXISTS `special_needs_visit_types`');
+
+        // special_needs_purpose_types
+        $this->execute('DROP TABLE IF EXISTS `special_needs_purpose_types`');
+
+        // user_special_needs_referrals
+        $this->execute('DROP TABLE IF EXISTS `user_special_needs_referrals`');
+
+        // user_special_needs_assessments 
+        $this->execute('DROP TABLE IF EXISTS `user_special_needs_assessments`');
+
+        // user_special_needs_services
+        $this->execute('DROP TABLE IF EXISTS `user_special_needs_services`');
+
+        // user_special_needs_devices
+        $this->execute('DROP TABLE IF EXISTS `user_special_needs_devices`');
+
+        // user_special_needs_plans
+        $this->execute('DROP TABLE IF EXISTS `user_special_needs_plans`');
     }
 }
