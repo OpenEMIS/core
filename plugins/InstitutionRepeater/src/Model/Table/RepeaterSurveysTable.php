@@ -65,13 +65,13 @@ class RepeaterSurveysTable extends ControllerActionTable
     }
 
 	public function institutionSurveyAfterDelete(Event $event, Entity $institutionSurveyEntity)
-    {
-    	$this->deleteAll(
-            [
-                'institution_id' => $institutionSurveyEntity->institution_id,
+	{
+		$this->deleteAll(
+			[
+				'institution_id' => $institutionSurveyEntity->institution_id,
                 'academic_period_id' => $institutionSurveyEntity->academic_period_id,
                 'parent_form_id' => $institutionSurveyEntity->survey_form_id
             ]
-        );
-    }
+		);
+	}
 }
