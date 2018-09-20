@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
+use Cake\Validation\Validator;
 
 class AppraisalFormsTable extends ControllerActionTable
 {
@@ -110,9 +111,29 @@ class AppraisalFormsTable extends ControllerActionTable
                 }
             } elseif ($this->request->is(['post', 'put'])) {
                 $requestData = $this->request->data;
+
                 if (array_key_exists('appraisal_criterias', $requestData[$this->alias()])) {
                     foreach ($requestData[$this->alias()]['appraisal_criterias'] as $key => $obj) {
-                        $arrayData = [
+                        if (array_key_exists('appraisal_criterias_section_error', $requestData[$this->alias()]) && array_key_exists($key, $requestData[$this->alias()]['appraisal_criterias_section_error'])) {
+
+                            $message = 'Criteria have to be in a section';
+                            $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-exclamation-circle fa-lg fa-right table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
+
+                            $arrayData = [
+                            'name' => $obj['_joinData']['name'],
+                            'field_type' => $obj['_joinData']['field_type'],
+                            'field_type_id' => $obj['_joinData']['field_type_id'],
+                            'appraisal_criteria_id' => $obj['id'],
+                            'appraisal_form_id' => $obj['_joinData']['appraisal_form_id'],
+                            'is_mandatory' => $obj['_joinData']['is_mandatory'],
+                            'section' => $obj['_joinData']['section'],
+                            'tooltip' => $tooltipMessage
+                            ];
+                            if (!empty($obj['_joinData']['id'])) {
+                                $arrayData['id'] = $obj['_joinData']['id'];
+                            }
+                        }else {
+                            $arrayData = [
                             'name' => $obj['_joinData']['name'],
                             'field_type' => $obj['_joinData']['field_type'],
                             'field_type_id' => $obj['_joinData']['field_type_id'],
@@ -120,10 +141,12 @@ class AppraisalFormsTable extends ControllerActionTable
                             'appraisal_form_id' => $obj['_joinData']['appraisal_form_id'],
                             'is_mandatory' => $obj['_joinData']['is_mandatory'],
                             'section' => $obj['_joinData']['section']
-                        ];
-                        if (!empty($obj['_joinData']['id'])) {
-                            $arrayData['id'] = $obj['_joinData']['id'];
+                            ];
+                            if (!empty($obj['_joinData']['id'])) {
+                                $arrayData['id'] = $obj['_joinData']['id'];
+                            } 
                         }
+                       
                         $arrayFields[] = $arrayData;
                     }
                 }
@@ -143,7 +166,6 @@ class AppraisalFormsTable extends ControllerActionTable
                     }
                 }
             }
-
             $tableHeaders = [__('Criteria') , __('Field Type'), __('Is Mandatory'), ''];
             $tableCells = [];
 
@@ -152,7 +174,7 @@ class AppraisalFormsTable extends ControllerActionTable
             $sectionName = "";
             $printSection = false;
 
-            foreach ($arrayFields as $key => $obj) {
+            foreach ($arrayFields as $key => $obj) {                
                 $fieldPrefix = $this->alias() . '.appraisal_criterias.' . $cellCount++;
                 $joinDataPrefix = $fieldPrefix . '._joinData';
                 $customFieldName = $obj['name'];
@@ -160,6 +182,11 @@ class AppraisalFormsTable extends ControllerActionTable
                 $customFieldTypeId = $obj['field_type_id'];
                 $customFieldId = $obj['appraisal_criteria_id'];
                 $customFormId = $obj['appraisal_form_id'];
+                $customTooltip = "";
+                if (array_key_exists('tooltip', $obj)) {
+                    $customTooltip = $obj['tooltip'];
+                    // $customFieldName .= $customTooltip;
+                }
                 $customSection = "";
                 if (!empty($obj['section'])) {
                     $customSection = $obj['section'];
@@ -168,8 +195,10 @@ class AppraisalFormsTable extends ControllerActionTable
                     $sectionName = $customSection;
                     $printSection = true;
                 }
+
                 $cellData = "";
                 $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $customFieldId]);
+                // $cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $customFieldName. ' '.$customTooltip]);
                 $cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $customFieldName]);
                 $cellData .= $form->hidden($joinDataPrefix.".field_type", ['value' => $customFieldType]);
                 $cellData .= $form->hidden($joinDataPrefix.".field_type_id", ['value' => $customFieldTypeId]);
@@ -194,7 +223,8 @@ class AppraisalFormsTable extends ControllerActionTable
                     $tableCells[] = $rowData;
                 }
                 $rowData = [];
-                $rowData[] = $customFieldName.$cellData;
+                $rowData[] = $customFieldName.$cellData.$customTooltip;
+                pr($rowData);
                 $rowData[] = $customFieldType;
 
                 // Added
@@ -234,6 +264,93 @@ class AppraisalFormsTable extends ControllerActionTable
         $extra['excludedModels'] = [
             $this->AppraisalCriterias->alias()
         ];
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->add('appraisal_criterias', 'checkAppraisalFormSection', [
+                'rule' => function ($value, $context) {
+                    $hasNoSectionCriteriasKey = [];
+                    $firstTime = true;
+                    $hasSection = NULL;
+
+                    foreach ($value as $appraisalCriteriasKey => $criteria) {
+                        $criteria = $criteria['_joinData'];
+
+                        if ($firstTime) {
+                            $firstTime = false;
+                            if (!empty($criteria['section'])) {
+                                $hasSection = true;
+                            } else {
+                                $hasSection = false;
+                                $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
+                            }
+                        } else {
+
+                            // Not working double check the algo ....
+
+                            
+                          // Not first time
+                            if (!empty($criteria['section'] && $hasSection)) {
+                            // Do nothing
+                            } elseif (!empty($criteria['section'] && !$hasSection)) {
+                                return false;
+                            } elseif (empty($criteria['section'] && !$hasSection)) {
+                                $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
+                            } elseif (empty($criteria['section'] && $hasSection)) {
+                                return false;
+                            }  
+                        }
+                         $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
+                    }
+                    
+                    return true;
+
+
+
+
+                    // $hasNoSectionCriteriasKey = [];
+                    // $hasSection = null;
+                    // $firstTime = true;
+                    // foreach ($value as $appraisalCriteriasKey => $criteria) {
+                    //     // pr($appraisalCriteriasKey);
+                        
+                    //     // pr($criteria);
+                    //     // pr('----');
+                    //     // pr($appraisalCriteriasKey);die;
+                    //     $criteria = $criteria['_joinData'];
+                    //     if ($firstTime) {
+                    //         $firstTime = false;
+                    //         if (empty($criteria['section'])) {
+                    //             $hasSection = false;
+                    //             $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
+                    //         } else {
+                    //             $hasSection = true;
+                    //         }
+                    //     }
+
+                    //     // if (empty($criteria['section'])) {
+                    //     //     $hasSection = false;
+                    //     //     $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
+                    //     // }
+
+                    //     // if($appraisalCriteriasKey == 1) {
+                    //     //     pr($hasSection);
+                    //     // }
+
+                    //     if (!empty($criteria['section']) && !$hasSection) {
+                    //         return false;
+                    //     } elseif (empty($criteria['section']) && $hasSection) {
+                    //         return false;
+                    //     } else {
+                    //         $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
+                    //     }
+                    // }
+                    // return true;
+                },
+            ]);
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
