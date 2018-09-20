@@ -441,10 +441,8 @@ class InstitutionSurveysTable extends ControllerActionTable
         $workflow = $this->getWorkflow($this->registryAlias(), $entity);
         if (!empty($workflow)) {
             foreach ($workflow->workflow_steps as $workflowStep) {
-                if ($workflowStep->category == WorkflowSteps::DONE) {
-                    if ($entity->status->id == $workflowStep->id) {
-                        $this->toggle('remove', false);
-                    }
+                if ($entity->status->id == $workflowStep->id && !($workflowStep->is_removable)) {
+                    $this->toggle('remove', false);
                 }
             }
         }
