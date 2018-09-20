@@ -35,7 +35,8 @@ class InstitutionAccessControlComponent extends Component {
 			['controller' => 'Institutions'],
 			['controller' => 'Students'],
 			['controller' => 'Staff'],
-			['controller' => 'InstitutionContactPersons']
+			['controller' => 'InstitutionContactPersons'],
+			['controller' => 'InstitutionCalendars']
 		];
 		return ['roles' => $roles, 'restrictedTo' => $restrictedTo];
 	}
