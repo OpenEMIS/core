@@ -47,6 +47,10 @@ class StudentsController extends AppController
         'Immunizations',
         'Medications',
         'Tests',
+
+        // special needs
+        'SpecialNeedsReferrals'
+        
     ];
 
     public function initialize()
@@ -179,6 +183,13 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
     // End Health
+    
+    // Special Needs
+    public function SpecialNeedsReferrals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsReferrals']);
+    }
+    // Special Needs - End
     // End
 
     // AngularJS

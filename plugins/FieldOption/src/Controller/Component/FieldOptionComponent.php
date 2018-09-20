@@ -161,6 +161,13 @@ class FieldOptionComponent extends Component
         'ScholarshipDisbursementCategories' => ['className' => 'Scholarship.DisbursementCategories', 'parent' => 'Scholarship'],
         'ScholarshipSemesters' => ['className' => 'Scholarship.Semesters', 'parent' => 'Scholarship'],
         'ScholarshipInstitutionChoices' => ['className' => 'Scholarship.InstitutionChoiceTypes', 'parent' => 'Scholarship'],
+
+    // Special Needs
+        'SpecialNeedTypes' => ['className' => 'FieldOption.SpecialNeedTypes', 'parent' => 'Special Needs'],
+        'SpecialNeedDifficulties' => ['className' => 'FieldOption.SpecialNeedDifficulties', 'parent' => 'Special Needs'],
+        'SpecialNeedsReferralTypes' => ['className' => 'SpecialNeeds.SpecialNeedsReferralTypes', 'parent' => 'Special Needs'],
+        'SpecialNeedsServiceTypes' => ['className' => 'SpecialNeeds.SpecialNeedsServiceTypes', 'parent' => 'Special Needs'],
+        'SpecialNeedsDeviceTypes' => ['className' => 'SpecialNeeds.SpecialNeedsDeviceTypes', 'parent' => 'Special Needs']
     ];
 
     public $components = ['AccessControl'];
