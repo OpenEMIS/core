@@ -171,6 +171,15 @@ class RecordBehavior extends Behavior
         $this->setupCustomFields($entity);
     }
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (isset($data['submit']) && $data['submit'] == 'save') {
+            if (isset($data['custom_table_cells']) && empty($data['custom_table_cells'])) {
+                unset($data['custom_table_cells']);
+            }
+        }
+    }
+
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
@@ -766,7 +775,16 @@ class RecordBehavior extends Behavior
 
         $fieldValues = [];  // values of custom field must be in sequence for validation errors to be placed correctly
         if (!is_null($query)) {
-            $customFields = $query->toArray();
+            $where =[];
+            if ($entity->survey_form['custom_module_id'] == 1 && isset($model->request->query['tab_section'])){
+                $tabSection = $model->request->query['tab_section'];
+                $where[] = $query->newExpr('REPLACE(' . $this->CustomFormsFields->aliasField('section') . ', " ", "-" ) = "'.$tabSection.'"');
+            }
+            $customFields = $query
+                ->where([
+                    $where
+                ])
+                ->toArray();
 
             foreach ($customFields as $key => $obj) {
                 $customField = $obj->custom_field;
