@@ -1316,6 +1316,12 @@ class RecordBehavior extends Behavior
                         unset($toolbarButtons['back']['url']['tab_section']);
                     }
                 }
+            }elseif ($action == 'edit') {
+                if ($toolbarButtons->offsetExists('list')) {
+                    if (array_key_exists('tab_section', $toolbarButtons['list']['url'])) {
+                        unset($toolbarButtons['list']['url']['tab_section']);
+                    }
+                }
             }
         }
     }
