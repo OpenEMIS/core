@@ -36,6 +36,46 @@ class AppraisalFormsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->add('appraisal_criterias', 'checkAppraisalFormSection', [
+                'rule' => function ($value, $context) {
+                    $hasNoSectionCriteriasKey = [];
+                    $hasSection = true;
+                    $hasEnteredfirstCriteria = false;
+                    
+                    foreach ($value as $appraisalCriteriasKey => $criteria) {
+                        $criteria = $criteria['_joinData'];
+                        if (!$hasEnteredfirstCriteria) {
+                            if (empty($criteria['section'])) {
+                                $hasSection = false;
+                                $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
+                            } else {
+                                $hasSection = true;
+                            }
+                            $hasEnteredfirstCriteria = true;
+                        } else {
+                            if (empty($criteria['section'])) {
+                                $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
+                            }
+                        }
+
+                        // Form exists a has section but this criteria don't have section
+                        if ($hasSection && empty($criteria['section'])) {
+                            $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
+                            return false;
+                        } elseif (!$hasSection && !empty($criteria['section'])) {   // Form does not exist a section but this criteria have have section
+                            $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+            ]);
+    }
+
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['AppraisalCriterias.FieldTypes']);
@@ -259,46 +299,6 @@ class AppraisalFormsTable extends ControllerActionTable
         $extra['excludedModels'] = [
             $this->AppraisalCriterias->alias()
         ];
-    }
-
-    public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-        return $validator
-            ->add('appraisal_criterias', 'checkAppraisalFormSection', [
-                'rule' => function ($value, $context) {
-                    $hasNoSectionCriteriasKey = [];
-                    $hasSection = true;
-                    $hasEnteredfirstCriteria = false;
-                    
-                    foreach ($value as $appraisalCriteriasKey => $criteria) {
-                        $criteria = $criteria['_joinData'];
-                        if (!$hasEnteredfirstCriteria) {
-                            if (empty($criteria['section'])) {
-                                $hasSection = false;
-                                $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
-                            } else {
-                                $hasSection = true;
-                            }
-                            $hasEnteredfirstCriteria = true;
-                        } else {
-                            if (empty($criteria['section'])) {
-                                $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
-                            }
-                        }
-
-                        // Form exists a has section but this criteria don't have section
-                        if ($hasSection && empty($criteria['section'])) {
-                            $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
-                            return false;
-                        } elseif (!$hasSection && !empty($criteria['section'])) {   // Form does not exist a section but this criteria have have section
-                            $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
-                            return false;
-                        }
-                    }
-                    return true;
-                },
-            ]);
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
