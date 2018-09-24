@@ -693,14 +693,101 @@ class POCOR4816 extends AbstractMigration
 
         $this->execute('INSERT INTO `training_courses` (`id`, `code`, `name`, `description`, `objective`, `credit_hours`, `duration`, `number_of_months`, `special_education_needs`, `file_name`, `file_content`, `training_field_of_study_id`, `training_course_type_id`, `training_mode_of_delivery_id`, `training_requirement_id`, `training_level_id`, `assignee_id`, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `code`, `name`, `description`, `objective`, `credit_hours`, `duration`, `number_of_months`, 0, `file_name`, `file_content`, `training_field_of_study_id`, `training_course_type_id`, `training_mode_of_delivery_id`, `training_requirement_id`, `training_level_id`, `assignee_id`, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4816_training_courses`');
         // training_courses - END
-        // NEW TABLE
-        // special_needs_referral_types (field_options)
-        $SpecialNeedsReferralTypes = $this->table('special_needs_referral_types', [
+        
+        // institution_counsellings
+        $this->execute('RENAME TABLE `institution_counsellings` TO `z_4816_institution_counsellings`');
+
+        $InstitutionCounsellings = $this->table('institution_counsellings', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the list of special needs referral types used in user_special_needs_referrals'
+            'comment' => 'This table contains counsellings for the students'
+        ]);
+        $InstitutionCounsellings
+            ->addColumn('date', 'date', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('guidance_utilized', 'text', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('description', 'text', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('intervention', 'text', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('file_name', 'string', [
+                'null' => true,
+                'limit' => 250,
+                'default' => null
+            ])
+            ->addColumn('file_content', 'blob', [
+                'limit' => '4294967295',
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('counselor_id', 'integer', [
+                'comment' => 'links to security_users.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('student_id', 'integer', [
+                'comment' => 'links to security_users.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('guidance_type_id', 'integer', [
+                'comment' => 'links to guidance_types.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('counselor_id')
+            ->addIndex('student_id')
+            ->addIndex('guidance_type_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+
+        // guidance_utilized - NULLABLE field?
+        $this->execute('INSERT INTO `institution_counsellings` (`id`, `date`, `guidance_utilized`, `description`, `intervention`, `comment`, `file_name`, `file_content`, `counselor_id`, `student_id`, `guidance_type_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `date`, " ", `description`, `intervention`, null, `file_name`, `file_content`, `counselor_id`, `student_id`, `guidance_type_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4816_institution_counsellings`');
+
+        // institution_counsellings - END
+        
+        // NEW TABLE
+        // special_needs_referrer_types (field_options)
+        $SpecialNeedsReferrerTypes = $this->table('special_needs_referrer_types', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of special needs referrer types used in user_special_needs_referrals'
         ]);
 
-        $SpecialNeedsReferralTypes
+        $SpecialNeedsReferrerTypes
             ->addColumn('name', 'string', [
                 'limit' => 50,
                 'null' => false,
@@ -757,7 +844,7 @@ class POCOR4816 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // special_needs_referral_types - END
+        // special_needs_referrer_types - END
     
         // special_needs_service_types (field_options)
         $SpecialNeedsServiceTypes = $this->table('special_needs_service_types', [
@@ -1018,31 +1105,31 @@ class POCOR4816 extends AbstractMigration
             ->addColumn('academic_period_id', 'integer', [
                 'comment' => 'links to academic_periods.id',
                 'limit' => 11,
-                'default' => false,
+                'default' => null,
                 'null' => false
             ])
             ->addColumn('security_user_id', 'integer', [
                 'comment' => 'links to security_users.id',
                 'limit' => 11,
-                'default' => false,
+                'default' => null,
                 'null' => false
             ])
             ->addColumn('referrer_id', 'integer', [
                 'comment' => 'links to security_users.id',
                 'limit' => 11,
-                'default' => false,
+                'default' => null,
                 'null' => false
             ])
-            ->addColumn('referral_type_id', 'integer', [
-                'comment' => 'links to special_needs_referral_types.id',
+            ->addColumn('referrer_type_id', 'integer', [
+                'comment' => 'links to special_needs_referrer_types.id',
                 'limit' => 11,
-                'default' => false,
+                'default' => null,
                 'null' => false
             ])
             ->addColumn('reason_type_id', 'integer', [
                 'comment' => 'links to special_need_types.id',
                 'limit' => 11,
-                'default' => false,
+                'default' => null,
                 'null' => false
             ])
             ->addColumn('modified_user_id', 'integer', [
@@ -1066,12 +1153,69 @@ class POCOR4816 extends AbstractMigration
             ->addIndex('academic_period_id')
             ->addIndex('security_user_id')
             ->addIndex('referrer_id')
-            ->addIndex('referral_type_id')
+            ->addIndex('referrer_type_id')
             ->addIndex('reason_type_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
         // user_special_needs_referral - END
+        /*
+        // user_special_needs_assessments - NOTE: To patch from user_special_needs table(?)
+        $UserSpecialNeedsAssessments = $this->table('user_special_needs_assessments', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains all special needs assessments for all users'
+        ]);
+
+        $UserSpecialNeedsAssessments
+            ->addColumn('', '', [
+
+            ])
+            ->addIndex('')
+            ->save();
+        // user_special_needs_assessments - END
+        
+        // user_special_needs_services
+        $UserSpecialNeedsServices = $this->table('user_special_needs_services', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains all special needs services for all users'
+        ]);
+
+        $UserSpecialNeedsServices
+            ->addColumn('', '', [
+
+            ])
+            ->addIndex('')
+            ->save();
+        // user_special_needs_services - END
+        
+        // user_special_needs_devices
+        $UserSpecialNeedsDevices = $this->table('user_special_needs_devices', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains all special needs devices for all users'
+        ]);
+
+        $UserSpecialNeedsDevices
+            ->addColumn('', '', [
+
+            ])
+            ->addIndex('')
+            ->save();
+        // user_special_needs_devices - END
+        
+        // user_special_needs_plans
+        $UserSpecialNeedsPlans = $this->table('user_special_needs_plans', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains all special needs plans for all users'
+        ]);
+
+        $UserSpecialNeedsPlans
+            ->addColumn('', '', [
+
+            ])
+            ->addIndex('')
+            ->save();
+        // user_special_needs_plans - END
+        */
     }
 
     public function down()
@@ -1110,7 +1254,7 @@ class POCOR4816 extends AbstractMigration
 
         // NEW TABLE
         // special_needs_referral_types
-        $this->execute('DROP TABLE IF EXISTS `special_needs_referral_types`');
+        $this->execute('DROP TABLE IF EXISTS `special_needs_referrer_types`');
 
         // special_needs_service_types
         $this->execute('DROP TABLE IF EXISTS `special_needs_service_types`');
