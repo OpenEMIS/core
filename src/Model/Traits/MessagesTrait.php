@@ -2257,6 +2257,13 @@ trait MessagesTrait
                     'ruleNotEmpty' => 'This field cannot be left empty'
                 ]
             ]
+        ],
+        'SpecialNeeds' => [
+            'SpecialNeedsReferrals' => [
+                'date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ]
+            ]
         ]
     ];
 
