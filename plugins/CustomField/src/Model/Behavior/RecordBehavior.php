@@ -86,7 +86,7 @@ class RecordBehavior extends Behavior
             $this->_table->hasMany('CustomTableCells', $this->config('tableCellClass'));
             $this->CustomTableCells = $this->_table->CustomTableCells;
         }
-
+        $this->firstTabName = null;
         $this->CustomModules = TableRegistry::get('CustomField.CustomModules');
         $this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
 
@@ -166,9 +166,14 @@ class RecordBehavior extends Behavior
 
     public function viewAfterAction(Event $event, Entity $entity)
     {
+        $model = $this->_table;
         // add here to make view has the same format in edit
         $this->formatEntity($entity);
         $this->setupCustomFields($entity);
+        // check if the query string contains tab_section if tab_section exists for a particular survey
+        if (!(isset($model->request->query['tab_section'])) && $this->firstTabName) {
+            $model->request->query['tab_section'] = $this->firstTabName;
+        }
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
@@ -289,7 +294,12 @@ class RecordBehavior extends Behavior
 
     public function addEditAfterAction(Event $event, Entity $entity)
     {
+        $model = $this->_table;
         $this->setupCustomFields($entity);
+        // check if the query string contains tab_section if tab_section exists for a particular survey
+        if (!(isset($model->request->query['tab_section'])) && $this->firstTabName) {
+            $model->request->query['tab_section'] = $this->firstTabName;
+        }
     }
 
     public function afterAction(Event $event)
@@ -855,6 +865,10 @@ class RecordBehavior extends Behavior
                     if ($sectionName != $obj->section) {
                         $sectionName = $obj->section;
                         $tabName = Inflector::slug($sectionName);
+                        // set the first tab section into a global variable
+                        if (is_null($this->firstTabName)) {
+                            $this->firstTabName = $tabName;
+                        }
                         if (empty($tabElements)) {
                             $selectedAction = $tabName;
                         }
