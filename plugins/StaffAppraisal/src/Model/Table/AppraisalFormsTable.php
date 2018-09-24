@@ -262,7 +262,6 @@ class AppraisalFormsTable extends ControllerActionTable
                 $rowData[] = $customFieldName.$cellData.$customTooltip;
                 $rowData[] = $customFieldType;
 
-                // Added
                 if(array_key_exists('field_type', $obj) && !is_null($obj['field_type']) && strtoupper($obj['field_type']) != self::FIELD_TYPE_SCORE) {
                     $rowData[] = $form->checkbox("$joinDataPrefix.is_mandatory", ['checked' => $obj['is_mandatory'], 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
                 }else {
