@@ -165,7 +165,7 @@ class FieldOptionComponent extends Component
     // Special Needs
         'SpecialNeedTypes' => ['className' => 'FieldOption.SpecialNeedTypes', 'parent' => 'Special Needs'],
         'SpecialNeedDifficulties' => ['className' => 'FieldOption.SpecialNeedDifficulties', 'parent' => 'Special Needs'],
-        'SpecialNeedsReferralTypes' => ['className' => 'SpecialNeeds.SpecialNeedsReferralTypes', 'parent' => 'Special Needs'],
+        'SpecialNeedsReferrerTypes' => ['className' => 'SpecialNeeds.SpecialNeedsReferrerTypes', 'parent' => 'Special Needs'],
         'SpecialNeedsServiceTypes' => ['className' => 'SpecialNeeds.SpecialNeedsServiceTypes', 'parent' => 'Special Needs'],
         'SpecialNeedsDeviceTypes' => ['className' => 'SpecialNeeds.SpecialNeedsDeviceTypes', 'parent' => 'Special Needs']
     ];

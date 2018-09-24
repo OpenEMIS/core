@@ -3,13 +3,13 @@ namespace SpecialNeeds\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 
-class SpecialNeedsReferralTypesTable extends ControllerActionTable
+class SpecialNeedsReferrerTypesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
         parent::initialize($config);
 
-        // associations - to add
+        $this->hasMany('SpecialNeedsReferrals', ['className' => 'SpecialNeeds.SpecialNeedsReferrals']);
         
         $this->addBehavior('FieldOption.FieldOption');
     }
