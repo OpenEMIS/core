@@ -111,8 +111,7 @@ class AppraisalFormsTable extends ControllerActionTable
                 }
             } elseif ($this->request->is(['post', 'put'])) {
                 $requestData = $this->request->data;
-
-                if (array_key_exists('appraisal_criterias', $requestData[$this->alias()])) {
+                if (array_key_exists('appraisal_criterias', $requestData[$this->alias()])) {                    
                     foreach ($requestData[$this->alias()]['appraisal_criterias'] as $key => $obj) {
                         if (array_key_exists('appraisal_criterias_section_error', $requestData[$this->alias()]) && array_key_exists($key, $requestData[$this->alias()]['appraisal_criterias_section_error'])) {
 
@@ -173,7 +172,6 @@ class AppraisalFormsTable extends ControllerActionTable
             $order = 0;
             $sectionName = "";
             $printSection = false;
-
             foreach ($arrayFields as $key => $obj) {                
                 $fieldPrefix = $this->alias() . '.appraisal_criterias.' . $cellCount++;
                 $joinDataPrefix = $fieldPrefix . '._joinData';
@@ -185,7 +183,6 @@ class AppraisalFormsTable extends ControllerActionTable
                 $customTooltip = "";
                 if (array_key_exists('tooltip', $obj)) {
                     $customTooltip = $obj['tooltip'];
-                    // $customFieldName .= $customTooltip;
                 }
                 $customSection = "";
                 if (!empty($obj['section'])) {
@@ -198,7 +195,6 @@ class AppraisalFormsTable extends ControllerActionTable
 
                 $cellData = "";
                 $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $customFieldId]);
-                // $cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $customFieldName. ' '.$customTooltip]);
                 $cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $customFieldName]);
                 $cellData .= $form->hidden($joinDataPrefix.".field_type", ['value' => $customFieldType]);
                 $cellData .= $form->hidden($joinDataPrefix.".field_type_id", ['value' => $customFieldTypeId]);
@@ -224,7 +220,6 @@ class AppraisalFormsTable extends ControllerActionTable
                 }
                 $rowData = [];
                 $rowData[] = $customFieldName.$cellData.$customTooltip;
-                pr($rowData);
                 $rowData[] = $customFieldType;
 
                 // Added
@@ -273,82 +268,35 @@ class AppraisalFormsTable extends ControllerActionTable
             ->add('appraisal_criterias', 'checkAppraisalFormSection', [
                 'rule' => function ($value, $context) {
                     $hasNoSectionCriteriasKey = [];
-                    $firstTime = true;
-                    $hasSection = NULL;
-
+                    $hasSection = true;
+                    $hasEnteredfirstCriteria = false;
+                    
                     foreach ($value as $appraisalCriteriasKey => $criteria) {
                         $criteria = $criteria['_joinData'];
-
-                        if ($firstTime) {
-                            $firstTime = false;
-                            if (!empty($criteria['section'])) {
-                                $hasSection = true;
-                            } else {
+                        if (!$hasEnteredfirstCriteria) {
+                            if (empty($criteria['section'])) {
                                 $hasSection = false;
                                 $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
+                            } else {
+                                $hasSection = true;
                             }
+                            $hasEnteredfirstCriteria = true;
                         } else {
-
-                            // Not working double check the algo ....
-
-                            
-                          // Not first time
-                            if (!empty($criteria['section'] && $hasSection)) {
-                            // Do nothing
-                            } elseif (!empty($criteria['section'] && !$hasSection)) {
-                                return false;
-                            } elseif (empty($criteria['section'] && !$hasSection)) {
+                            if (empty($criteria['section'])) {
                                 $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
-                            } elseif (empty($criteria['section'] && $hasSection)) {
-                                return false;
-                            }  
+                            }
                         }
-                         $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
+
+                        // Form exists a has section but this criteria don't have section
+                        if ($hasSection && empty($criteria['section'])) {
+                            $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
+                            return false;
+                        } elseif (!$hasSection && !empty($criteria['section'])) {   // Form does not exist a section but this criteria have have section
+                            $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
+                            return false;
+                        }
                     }
-                    
                     return true;
-
-
-
-
-                    // $hasNoSectionCriteriasKey = [];
-                    // $hasSection = null;
-                    // $firstTime = true;
-                    // foreach ($value as $appraisalCriteriasKey => $criteria) {
-                    //     // pr($appraisalCriteriasKey);
-                        
-                    //     // pr($criteria);
-                    //     // pr('----');
-                    //     // pr($appraisalCriteriasKey);die;
-                    //     $criteria = $criteria['_joinData'];
-                    //     if ($firstTime) {
-                    //         $firstTime = false;
-                    //         if (empty($criteria['section'])) {
-                    //             $hasSection = false;
-                    //             $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
-                    //         } else {
-                    //             $hasSection = true;
-                    //         }
-                    //     }
-
-                    //     // if (empty($criteria['section'])) {
-                    //     //     $hasSection = false;
-                    //     //     $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
-                    //     // }
-
-                    //     // if($appraisalCriteriasKey == 1) {
-                    //     //     pr($hasSection);
-                    //     // }
-
-                    //     if (!empty($criteria['section']) && !$hasSection) {
-                    //         return false;
-                    //     } elseif (empty($criteria['section']) && $hasSection) {
-                    //         return false;
-                    //     } else {
-                    //         $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
-                    //     }
-                    // }
-                    // return true;
                 },
             ]);
     }
