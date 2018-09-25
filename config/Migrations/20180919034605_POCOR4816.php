@@ -1295,8 +1295,7 @@ class POCOR4816 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
         // user_special_needs_services - END
-        
-     /*   
+      
         // user_special_needs_devices
         $UserSpecialNeedsDevices = $this->table('user_special_needs_devices', [
             'collation' => 'utf8mb4_unicode_ci',
@@ -1304,10 +1303,44 @@ class POCOR4816 extends AbstractMigration
         ]);
 
         $UserSpecialNeedsDevices
-            ->addColumn('', '', [
-
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'null' => true
             ])
-            ->addIndex('')
+            ->addColumn('security_user_id', 'integer', [
+                'comment' => 'links to security_users.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('special_needs_device_type_id', 'integer', [
+                'comment' => 'links to special_needs_device_types.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('security_user_id')
+            ->addIndex('special_needs_device_type_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
         // user_special_needs_devices - END
         
@@ -1318,13 +1351,54 @@ class POCOR4816 extends AbstractMigration
         ]);
 
         $UserSpecialNeedsPlans
-            ->addColumn('', '', [
-
+            ->addColumn('plan_name', 'string', [
+                'limit' => 250,
+                'default' => null,
+                'null' => false
             ])
-            ->addIndex('')
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('file_name', 'string', [
+                'null' => true,
+                'limit' => 250,
+                'default' => null
+            ])
+            ->addColumn('file_content', 'blob', [
+                'limit' => '4294967295',
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('security_user_id', 'integer', [
+                'comment' => 'links to security_users.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('security_user_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
         // user_special_needs_plans - END
-        */
     }
 
     public function down()

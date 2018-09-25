@@ -9,7 +9,7 @@ class SpecialNeedsReferrerTypesTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->hasMany('SpecialNeedsReferrals', ['className' => 'SpecialNeeds.SpecialNeedsReferrals']);
+        $this->hasMany('SpecialNeedsReferrals', ['className' => 'SpecialNeeds.SpecialNeedsReferrals', 'dependent' => true, 'cascadeCallbacks' => true]);
         
         $this->addBehavior('FieldOption.FieldOption');
     }
