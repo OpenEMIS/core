@@ -122,8 +122,13 @@ class CustomReportsTable extends AppTable
                         if (array_key_exists('options', $filterData)) {
                             if (array_key_exists('options_condition', $filterData)) {
                                 // only allow options if conditions met
-                                if ($this->checkOptionCondition($filterData["options_condition"], $queryParams)) { 
-                                    $options = $filterData['options'] + $options;
+                                if ($this->checkOptionCondition($filterData["options_condition"], $queryParams)) {
+                                    foreach ($filterData['options'] as $value => $option) {
+                                        if ($value == -1) {
+                                            $value = "0 OR (0=0)";
+                                        }
+                                        $options = array($value => $option) + $options;
+                                    }
                                 }
                             } else { // if no condition, allow options
                                 $options = $filterData['options'] + $options;
