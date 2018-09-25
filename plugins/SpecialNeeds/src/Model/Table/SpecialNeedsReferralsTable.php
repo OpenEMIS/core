@@ -2,6 +2,7 @@
 namespace SpecialNeeds\Model\Table;
 
 use ArrayObject;
+use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
@@ -9,8 +10,6 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
-use App\Model\Table\ControllerActionTable;
-use App\Model\Traits\OptionsTrait;
 
 class SpecialNeedsReferralsTable extends ControllerActionTable
 {
@@ -21,8 +20,9 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Referrers', ['className' => 'Security.Users', 'foreignKey' => 'referrer_id']);
-        $this->belongsTo('ReferrerTypes', ['className' => 'SpecialNeeds.SpecialNeedsReferrerTypes']);
+        $this->belongsTo('SpecialNeedsReferrerTypes', ['className' => 'SpecialNeeds.SpecialNeedsReferrerTypes']);
         $this->belongsTo('SpecialNeedTypes', ['className' => 'FieldOption.SpecialNeedTypes', 'foreignKey' => 'reason_type_id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.AdvancedNameSearch');
@@ -63,6 +63,8 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         switch ($field) {
             case 'referrer_id':
                 return __('Referrer Name');
+            case 'special_needs_referrer_type_id':
+                return __('Referrer Type');
             case 'reason_type_id':
                 return __('Reason');
             default:
@@ -75,14 +77,14 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         // Academic Periods Filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+
         $query->where([
             $this->aliasField('academic_period_id') => $selectedAcademicPeriod
         ]);
-        // Academic Periods Filter - END
         
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Referrals/controls', 'data' => [], 'options' => [], 'order' => 1];
-
+        // Academic Periods Filter - END
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -100,13 +102,6 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->field('academic_period_id', ['visible' => false]);
         $this->setFieldOrder(['referrer_id', 'referrer_type_id', 'date', 'reason_type_id']);
     }
-
-    // public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    // {
-    //     $query->contain([
-    //         $this->Referrers->alias()
-    //     ]);
-    // }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -247,13 +242,13 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('referrer_id', ['entity' => $entity]);
-        $this->field('referrer_type_id', ['type' => 'select']);
+        $this->field('special_needs_referrer_type_id', ['type' => 'select']);
         $this->field('date');
         $this->field('reason_type_id', ['type' => 'select']);
         $this->field('comment', ['type' => 'text']);
-        $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
-        $this->field('file_content', ['visible' => ['view' => true, 'edit' => true]]);
+        $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['visible' => ['add' => true, 'view' => true, 'edit' => true]]);
 
-        $this->setFieldOrder(['academic_period_id', 'referrer_id', 'referrer_type_id', 'date', 'reason_type_id', 'comment', 'file_name', 'file_content']);
+        $this->setFieldOrder(['academic_period_id', 'referrer_id', 'special_needs_referrer_type_id', 'date', 'reason_type_id', 'comment', 'file_name', 'file_content']);
     }
 }
