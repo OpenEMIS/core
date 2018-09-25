@@ -9,7 +9,7 @@ class SpecialNeedsDeviceTypesTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        // associations - to add
+        $this->hasMany('SpecialNeedsDevices', ['className' => 'SpecialNeeds.SpecialNeedsDevices', 'dependent' => true, 'cascadeCallbacks' => true]);
         
         $this->addBehavior('FieldOption.FieldOption');
     }

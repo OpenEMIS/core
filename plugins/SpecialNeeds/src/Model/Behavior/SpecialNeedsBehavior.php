@@ -41,6 +41,8 @@ class SpecialNeedsBehavior extends Behavior
             'Referrals' => 'SpecialNeedsReferrals',
             'Assessments' => 'SpecialNeedsAssessments',
             'Services' => 'SpecialNeedsServices',
+            'Devices' => 'SpecialNeedsDevices',
+            'Plans' => 'SpecialNeedsPlans'
         ];
         
         $tabElements = [];
