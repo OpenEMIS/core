@@ -20,7 +20,6 @@ class StudentsController extends AppController
         'Guardians',
         'GuardianUser',
         'UserLanguages',
-        'SpecialNeeds',
         'Attachments',
         'Comments',
         // 'UserActivities',
@@ -49,8 +48,11 @@ class StudentsController extends AppController
         'Tests',
 
         // special needs
-        'SpecialNeedsReferrals'
-        
+        'SpecialNeedsReferrals',
+        'SpecialNeedsAssessments',
+        'SpecialNeedsServices',
+        'SpecialNeedsDevices',
+        'SpecialNeedsPlans'
     ];
 
     public function initialize()
@@ -99,10 +101,6 @@ class StudentsController extends AppController
     public function Languages()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']);
-    }
-    public function SpecialNeeds()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']);
     }
     public function Contacts()
     {
