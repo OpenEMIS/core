@@ -15,7 +15,6 @@ use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 use Cake\I18n\Date;
 use Cake\Log\Log;
-
 use Cake\Routing\Router;
 
 use App\Model\Table\ControllerActionTable;
@@ -280,6 +279,9 @@ class InstitutionClassesTable extends ControllerActionTable
                     ->select([
                         'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id', 'student_status_id'
                     ])
+                    ->matching('StudentStatuses', function ($q) {
+                        return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
+                    })
                     ->where([
                         $this->ClassStudents->aliasField('institution_class_id') => $institutionClassId
                     ])
@@ -512,8 +514,10 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ClassStudents' => [
                     'sort' => ['Users.first_name', 'Users.last_name']
                 ],
+                'ClassStudents.StudentStatuses' => function ($q) {
+                    return $q->where([('StudentStatuses.code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN']]);
+                },
                 'ClassStudents.Users.Genders',
-                'ClassStudents.StudentStatuses',
                 'ClassStudents.EducationGrades',
                 'AcademicPeriods'
             ]);

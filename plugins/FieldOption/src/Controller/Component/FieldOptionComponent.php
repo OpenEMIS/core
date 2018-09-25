@@ -34,6 +34,7 @@ class FieldOptionComponent extends Component
         'ShiftOptions' => ['className' => 'Institution.ShiftOptions', 'parent' => 'Institution'],
         'TextbookConditions' => ['className' => 'Textbook.TextbookConditions', 'parent' => 'Institution'],
         'ReportCardCommentCodes' => ['className' => 'ReportCard.ReportCardCommentCodes', 'parent' => 'Institution'],
+        'InstitutionCommitteeTypes' => ['className' => 'Institution.InstitutionCommitteeTypes', 'parent' => 'Institution'],
 
     // Student
         'StudentAbsenceReasons' => ['className' => 'Institution.StudentAbsenceReasons', 'parent' => 'Student'],
@@ -134,6 +135,8 @@ class FieldOptionComponent extends Component
         'UtilityInternetBandwidths' => ['className' => 'Institution.UtilityInternetBandwidths', 'parent' => 'Infrastructure'],
         'UtilityTelephoneTypes' => ['className' => 'Institution.UtilityTelephoneTypes', 'parent' => 'Infrastructure'],
         'UtilityTelephoneConditions' => ['className' => 'Institution.UtilityTelephoneConditions', 'parent' => 'Infrastructure'],
+        'AssetTypes' => ['className' => 'Institution.AssetTypes', 'parent' => 'Infrastructure'],
+        'AssetConditions' => ['className' => 'Institution.AssetConditions', 'parent' => 'Infrastructure'],
 
     // Health
         'AllergyTypes' => ['className' => 'Health.AllergyTypes', 'parent' => 'Health'],
@@ -157,11 +160,7 @@ class FieldOptionComponent extends Component
         'ScholarshipRecipientActivityStatuses' => ['className' => 'Scholarship.RecipientActivityStatuses', 'parent' => 'Scholarship'],
         'ScholarshipDisbursementCategories' => ['className' => 'Scholarship.DisbursementCategories', 'parent' => 'Scholarship'],
         'ScholarshipSemesters' => ['className' => 'Scholarship.Semesters', 'parent' => 'Scholarship'],
-
-    // Assets
-        'AssetTypes' => ['className' => 'Institution.AssetTypes', 'parent' => 'Assets'],
-        'AssetPurposes' => ['className' => 'Institution.AssetPurposes', 'parent' => 'Assets'],
-        'AssetConditions' => ['className' => 'Institution.AssetConditions', 'parent' => 'Assets'],
+        'ScholarshipInstitutionChoices' => ['className' => 'Scholarship.InstitutionChoiceTypes', 'parent' => 'Scholarship'],
     ];
 
     public $components = ['AccessControl'];

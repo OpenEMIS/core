@@ -517,6 +517,7 @@ trait MessagesTrait
             'current_period' => 'Current Academic Period',
             'next_period' => 'Next Academic Period',
             'success' => 'Students have been promoted',
+            'saveDraftSuccess' => 'Student Promotion successfully saved as draft',
             'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution',
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noStudentSelected' => 'There are no students selected',
@@ -658,6 +659,15 @@ trait MessagesTrait
             'noStudentSelected' => 'There are no students selected',
             'noLinkedExamCentres' => 'Please contact your administrator to set up available Examination Centres for the selected Examination'
         ],
+        'AssessmentGradingTypes' => [
+            'noGradingOptions' => 'There are no grading options for this grading type'
+        ],
+        'OutcomeGradingTypes' => [
+            'noGradingOptions' => 'There are no grading options for this grading type'
+        ],
+        'CompetencyGradingTypes' => [
+            'noGradingOptions' => 'There are no grading options for this grading type'
+        ],
         'Examinations' => [
             'noExaminationItems' => 'There are no examination items for this examination'
         ],
@@ -743,7 +753,10 @@ trait MessagesTrait
             'publish' => 'The Report Card has been successfully published',
             'publishAll' => 'All generated Report Cards have been published successfully',
             'unpublish' => 'The Report Card has been successfully unpublished',
-            'unpublishAll' => 'All published Report Cards have been unpublished successfully'
+            'unpublishAll' => 'All published Report Cards have been unpublished successfully',
+            'email' => 'The Report Card will be sent in the background',
+            'emailAll' => 'All Report Cards will be sent in the background',
+            'emailInProgress' => 'There is already a email process sending in the background',
         ],
         'RecipientPaymentStructures' => [
             'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
@@ -772,6 +785,9 @@ trait MessagesTrait
                 'value' => 'Days within %d to %d'
             ],
             'StaffType' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'ScholarshipApplication' => [
                 'value' => 'Days within %d to %d'
             ]
         ],
@@ -834,7 +850,10 @@ trait MessagesTrait
                 ],
                 'institution_provider_id' => [
                     'ruleLinkedSector' => 'Please select a provider linked to the chosen Sector'
-                ]
+                ],
+                'classification' => [
+                    'validClassification' => 'Please enter a valid Classification',
+                ],
             ],
             'InstitutionContacts' => [
                 'email' => [
@@ -999,6 +1018,11 @@ trait MessagesTrait
                     'compareWithDateStarted' => 'Date completed should not be earlier than date started'
                 ],
             ],
+            'FeederOutgoingInstitutions' => [
+                'institution_id' => [
+                    'ruleUnique' => 'Recipient institution must be unique for the same academic period and education grade'
+                ]
+            ],
             'Students' => [
                 'student_name' => [
                     'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
@@ -1009,7 +1033,8 @@ trait MessagesTrait
                     'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
                     'ageHint' => 'The student should be %s years old',
                     'ageRangeHint' => 'The student should be between %s to %s years old',
-                    'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
+                    'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
+                    'studentNotExists' => 'This student does not exist in the system.'
                 ],
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
@@ -1053,21 +1078,33 @@ trait MessagesTrait
                 ]
             ],
             'StudentAdmission' => [
+                'academic_period_id' => [
+                    'ruleCheckValidAcademicPeriodId' => 'Invalid Academic Period id'
+                ],
                 'student_id' => [
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
                     'ruleCheckPendingAdmissionExist' => 'Student has already been added to admission list'
                 ],
                 'institution_class_id' => [
+                    'ruleCheckValidClassId' => 'This institution does not offer the selected class for this selected education grade in the selected academic period',
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
                 'gender_id' => [
                     'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
                 ],
                 'start_date' => [
-                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.',
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'education_grade_id' => [
+                    'checkProgrammeExist' => 'This insistution does not offer the selected Education Grade',
                     'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+                'status_id' => [
+                    'ruleCheckStatusIdValid' => 'Invalid status id'
                 ],
             ],
             'StaffBehaviours' => [
@@ -1250,6 +1287,14 @@ trait MessagesTrait
                 'student_id' => [
                     'ruleNoNewWithdrawRequestInGradeAndInstitution' => 'There is a pending withdraw application for this student.',
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
+                ]
+            ],
+            'InstitutionCommittees' => [
+                'meeting_date' => [
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ],
+                'end_time' => [
+                    'ruleCompareTimeReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
         ],
@@ -1447,6 +1492,9 @@ trait MessagesTrait
                 ]
             ],
             'UserBodyMasses' => [
+                'date' => [
+                    'ruleUnique' => 'Repeated Date',
+                ],
                 'height' => [
                     'validateDecimal' => 'Cannot be more than two decimal place',
                     'notZero' => 'Height must be more than 0',
@@ -1649,7 +1697,9 @@ trait MessagesTrait
                 'rating' => 'Rating',
                 'value' => 'Value',
                 'final_rating' => 'Final Rating',
-                'deleted_competencies' => 'This competency has been removed'
+                'deleted_competencies' => 'This competency has been removed',
+                'circular_dependency' => 'This will lead to a circular dependency',
+                'isNotEditable' => 'Edit operation is not allowed as there are other information linked to this record.'
             ],
             'Competencies' => [
                 'min' => [
@@ -2016,12 +2066,12 @@ trait MessagesTrait
             ],
             'Applications' => [
                 'requested_amount' => [
-                    'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Maximum Award Amount',
+                    'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Annual Award Amount',
                 ]
             ],
             'ScholarshipRecipients' => [
                 'approved_amount' => [
-                    'comparison' => 'Approved Amount cannot be more than Maximum Award Amount',
+                    'comparison' => 'Approved Award Amount cannot be more than Total Award Amount',
                     'validateDecimal' => 'Value cannot be more than two decimal places',
                     'ruleCheckApprovedWithEstimated' => 'Approved Amount cannot be less than the Estimated Amounts',
                     'ruleCheckApprovedWithDisbursed' => 'Approved Amount cannot be less than the Disbursed Amounts',

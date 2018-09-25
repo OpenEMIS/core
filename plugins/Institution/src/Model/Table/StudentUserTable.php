@@ -42,7 +42,7 @@ class StudentUserTable extends ControllerActionTable
                 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
                 'recordKey' => 'student_id',
                 'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
-                'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
+                'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
             ]);
         }
 
@@ -594,12 +594,14 @@ class StudentUserTable extends ControllerActionTable
             if (isset($tabElements['ExaminationResults'])) {
                 unset($tabElements['ExaminationResults']);
             }
-        }
-        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
-            if (isset($tabElements['Risks'])) {
-                unset($tabElements['Risks']);
+
+            if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+                if (isset($tabElements['Risks'])) {
+                    unset($tabElements['Risks']);
+                }
             }
         }
+
         return $tabElements;
     }
 

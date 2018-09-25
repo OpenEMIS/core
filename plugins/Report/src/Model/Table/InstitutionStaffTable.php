@@ -142,6 +142,11 @@ class InstitutionStaffTable extends AppTable
                         'gender' => 'Genders.name'
                     ]
                 ],
+                'Users.MainNationalities' => [
+                    'fields' => [
+                        'nationality' => 'MainNationalities.name'
+                    ]
+                ],
                 'Users.Contacts' => [
                     'fields' => [
                         'Contacts.value',
@@ -349,15 +354,22 @@ class InstitutionStaffTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'Users.identities',
-            'field' => 'user_identities',
+            'key' => 'Users.gender_id',
+            'field' => 'gender',
             'type' => 'string',
             'label' => ''
         ];
 
         $newFields[] = [
-            'key' => 'Users.gender_id',
-            'field' => 'gender',
+            'key' => 'Users.nationality_id',
+            'field' => 'nationality',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.identities',
+            'field' => 'user_identities',
             'type' => 'string',
             'label' => ''
         ];

@@ -2316,6 +2316,67 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    public static function checkValidAcademicPeriodId($field, array $globalData)
+    {
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    
+        $periodLevel = $AcademicPeriods
+                    ->find()
+                    ->where([
+                        $AcademicPeriods->aliasField('id') => $globalData['data']['academic_period_id']
+                    ])
+                    ->extract('academic_period_level_id')
+                    ->first();
+
+        if($periodLevel != 1) {
+            return false;
+        }
+        return true; 
+    }
+
+    public static function checkEducationGradeExist($field, array $globalData)
+    {
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $model = $globalData['providers']['table'];
+        $registryAlias = $model->registryAlias();
+        
+        $gradesInInstitution = $InstitutionGrades
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'education_grade_id'
+                ])
+                ->where([
+                    $InstitutionGrades->aliasField('institution_id') => $globalData['data']['institution_id']
+                ])
+                ->toArray();
+       
+        if (!in_array($globalData['data']['education_grade_id'], $gradesInInstitution)) {
+            return $model->getMessage("$registryAlias.education_grade_id.checkProgrammeExist");
+        }
+        return true;
+    }
+
+    public static function checkValidClassId($field, array $globalData) 
+    {
+        $data = $globalData['data'];
+        $educationGradeId = $data['education_grade_id'];
+
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $availableClass = $InstitutionClasses
+                ->find()
+                ->innerJoinWith('ClassGrades', function ($q) use ($educationGradeId) {
+                    return $q->where(['ClassGrades.education_grade_id' => $educationGradeId]);
+                })
+                ->where([
+                    $InstitutionClasses->aliasField('id') => $data['institution_class_id'],
+                    $InstitutionClasses->aliasField('institution_id') => $data['institution_id'],
+                    $InstitutionClasses->aliasField('academic_period_id') => $data['academic_period_id'],  
+                ])
+                ->count();
+       
+        return !($availableClass == 0);
+    }
+
     public static function checkProgrammeEndDate($field, $caller, array $globalData)
     {
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
@@ -2703,5 +2764,23 @@ class ValidationBehavior extends Behavior
             }
         }
         return false;
+    }
+
+    public static function checkStatusIdValid($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+
+        $Workflows = TableRegistry::get('Workflow.Workflows');
+        $workflowResult = $Workflows
+            ->find()
+            ->matching('WorkflowModels', function ($q) use ($model) {
+                return $q->where(['WorkflowModels.model' => $model->registryAlias()]);
+            })
+            ->matching('WorkflowSteps', function ($q) use ($field) {
+                return $q->where(['WorkflowSteps.id' => $field]);
+            })
+            ->all();
+
+        return !$workflowResult->isEmpty();
     }
 }
