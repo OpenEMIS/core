@@ -14,7 +14,6 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AssetStatuses', ['className' => 'Institution.AssetStatuses']);
         $this->belongsTo('AssetTypes', ['className' => 'Institution.AssetTypes']);
-        $this->belongsTo('AssetPurposes', ['className' => 'Institution.AssetPurposes']);
         $this->belongsTo('AssetConditions', ['className' => 'Institution.AssetConditions']);
     }
 

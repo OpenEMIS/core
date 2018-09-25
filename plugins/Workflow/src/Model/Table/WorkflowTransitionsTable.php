@@ -90,7 +90,7 @@ class WorkflowTransitionsTable extends AppTable {
 
 		$workflowModel = $stepEntity->_matchingData['WorkflowModels'];
 
-		if ($entity->has('is_imported') && $entity->is_imported) {
+		if ($entity->has('action_type') && $entity->action_type == 'imported') {
 			$workflowActionName = 'Administration - Record Imported';
 		} else {
 			$workflowActionName = 'Administration - Record Created';

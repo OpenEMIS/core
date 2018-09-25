@@ -138,12 +138,12 @@
 
         function getDefaultTextConfig() {
             return {
-                topCheckboxLabel: "Unassign Students",
-                topSearchPlaceholder: "Search Unassign Students",
+                topCheckboxLabel: "Unassigned Students",
+                topSearchPlaceholder: "Search Unassigned Students",
                 topToBottomButton: "Assign",
                 bottomToTopButton: "Unassign",
-                bottomCheckboxLabel: "Assign Students",
-                bottomSearchPlaceholder: "Search Assign Students"
+                bottomCheckboxLabel: "Assigned Students",
+                bottomSearchPlaceholder: "Search Assigned Students"
             };
         }
 

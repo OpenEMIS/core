@@ -69,17 +69,16 @@ class RenderTableBehavior extends RenderBehavior {
                 $tableColumnId = $colObj->id;
                 $tableRowId = $rowObj->id;
 
-                
                 $cellPrefix = "$fieldPrefix.$tableRowId.$tableColumnId";
 
                 $cellValue = "";
                 $cellInput = "";
-                $cellOptions = ['label' => false];
-                $cellOptions = array_merge($cellOptions, $cellAttr);
+                $cellInputOptions = ['label' => false];
+                $cellInputOptions = array_merge($cellInputOptions, $cellAttr);
 
                 if (isset($cellValues[$fieldId][$tableRowId][$tableColumnId])) {
                     $cellValue = $cellValues[$fieldId][$tableRowId][$tableColumnId][$valueColumn];
-                    $cellOptions['value'] = $cellValue;
+                    $cellInputOptions['value'] = $cellValue;
                 }
 
                 // start build error messages for each cell
@@ -87,12 +86,16 @@ class RenderTableBehavior extends RenderBehavior {
                 if (!empty($cellErrors)) {
                     foreach ($cellErrors as $errorKey => $errorObj) {
                         $cellEntity = $entity->custom_table_cells[$errorKey];
-
                         $cellFieldId = $cellEntity->{$fieldKey};
                         $cellRowId = $cellEntity->{$tableRowKey};
                         $cellColumnId = $cellEntity->{$tableColumnKey};
 
                         if ($cellFieldId == $fieldId && $cellRowId == $tableRowId && $cellColumnId == $tableColumnId) {
+                            $invalid = $cellEntity->invalid();
+                            if (!empty($invalid) && array_key_exists($valueColumn, $invalid)) {
+                                $cellInputOptions['value'] = $cellEntity->invalid($valueColumn);
+                            }
+
                             $errors = '';
                             foreach ($errorObj as $fieldCol => $fieldErrors) {
                                 foreach ($fieldErrors as $fieldErrorRule => $fieldErrorMessage) {
@@ -109,7 +112,7 @@ class RenderTableBehavior extends RenderBehavior {
                     }
                 }
                 // end build error messages for each cell
-                $cellInput .= $form->input("$cellPrefix.$valueColumn", $cellOptions);
+                $cellInput .= $form->input("$cellPrefix.$valueColumn", $cellInputOptions);
                 if (!empty($errorInput)) {
                     $cellInput .= $errorInput;
                 }
@@ -140,46 +143,44 @@ class RenderTableBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function processTableValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
-        $settings['valueKey'] = 'text_value';
+    public function patchTableValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    {
         $tableCells = $settings['tableCells'];
 
-        $alias = $this->_table->alias();
-        $values = $data[$alias]['custom_table_cells'];
+        $customField = $settings['customValue']['customField'];
+        $cellValues = $settings['customValue']['cellValues'];
+
+        $fieldId = $customField->id;
         $fieldKey = $settings['fieldKey'];
         $tableColumnKey = $settings['tableColumnKey'];
         $tableRowKey = $settings['tableRowKey'];
-        $valueKey = $settings['valueKey'];
 
-        foreach ($values as $fieldId => $rows) {
-            $settings['deleteFieldIds'][] = $fieldId;
-            foreach ($rows as $rowId => $columns) {
-                foreach ($columns as $columnId => $obj) {
-                    $textValue = NULL;
-                    $numberValue = NULL;
-                    $decimalValue = NULL;
-                    if (array_key_exists('text_value', $obj)) {
-                        $textValue = $obj['text_value'];
-                    }
-                    if (array_key_exists('number_value', $obj)) {
-                        $numberValue = $obj['number_value'];
-                    }
-                    if (array_key_exists('decimal_value', $obj)) {
-                        $decimalValue = $obj['decimal_value'];
-                    }
+        foreach ($cellValues as $rowId => $columns) {
+            foreach ($columns as $columnId => $attr) {
+                $textValue = NULL;
+                $numberValue = NULL;
+                $decimalValue = NULL;
+                if (array_key_exists('text_value', $attr)) {
+                    $textValue = $attr['text_value'];
+                }
+                if (array_key_exists('number_value', $attr)) {
+                    $numberValue = $attr['number_value'];
+                }
+                if (array_key_exists('decimal_value', $attr)) {
+                    $decimalValue = $attr['decimal_value'];
+                }
 
-                    if (strlen($textValue) > 0 || strlen($numberValue) > 0 || strlen($decimalValue) > 0) {
-                        $tableCells[] = [
-                            $fieldKey => $fieldId,
-                            $tableRowKey => $rowId,
-                            $tableColumnKey => $columnId,
-                            'text_value' => $textValue,
-                            'number_value' => $numberValue,
-                            'decimal_value' => $decimalValue,
-                            'field_type' => $obj['field_type'],
-                            'params' => $obj['params']
-                        ];
-                    }
+                if (strlen($textValue) > 0 || strlen($numberValue) > 0 || strlen($decimalValue) > 0) {
+                    $tableCells[] = [
+                        $fieldKey => $fieldId,
+                        $tableRowKey => $rowId,
+                        $tableColumnKey => $columnId,
+                        'text_value' => $textValue,
+                        'number_value' => $numberValue,
+                        'decimal_value' => $decimalValue,
+                        'field_type' => $customField->field_type,
+                        'params' => $customField->params
+                    ];
                 }
             }
         }

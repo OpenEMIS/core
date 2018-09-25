@@ -62,7 +62,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
-		$validator
+		return $validator
 			->allowEmpty('code')
 			->add('code', 'ruleUniqueCode', [
 			    'rule' => ['checkUniqueCode', null]
@@ -86,8 +86,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
                     'rule' => ['range', 0, 9999.99]
                 ]
             ])
-			;
-		return $validator;
+			->requirePresence('grading_options');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -144,6 +143,13 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		$this->controller->set('gradingOptions', $gradingOptions);
 	}
 
+   public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
+            $this->Alert->warning($this->aliasField('noGradingOptions'));
+        }
+    }
+
 	public function addEditOnReload(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
 		$groupOptionData = $this->GradingOptions->getFormFields();
 		if (!empty($entity->id)) {
@@ -165,6 +171,13 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 ** edit action events
 **
 ******************************************************************************************************************/
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
+            $this->Alert->warning($this->aliasField('noGradingOptions'));
+        }
+    }
+
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
 		// get the array of the original gradeOptions

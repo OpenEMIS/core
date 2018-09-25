@@ -8,6 +8,10 @@
 				<table class="table table-checkable">
 					<thead>
 						<tr>
+							<?php
+								$showNextClass = isset($attr['displayNextClassColumn']) ? $attr['displayNextClassColumn'] : false;
+								$nextClassOptions = isset($attr['nextClassOptions']) ? $attr['nextClassOptions'] : [];
+							?>
 							<?php if ($action != 'reconfirm') { ?>
 							<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
 							<?php } ?>
@@ -15,6 +19,9 @@
 							<th><?= __('Student') ?></th>
 							<th><?= __('Current Grade') ?></th>
 							<th><?= __('Class') ?></th>
+							<?php if ($showNextClass) { ?>
+								<th><?= __('Next Class') ?></th>
+							<?php } ?>
 						</tr>
 					</thead>
 					<?php if (isset($attr['data'])) :
@@ -30,6 +37,7 @@
 							<?php
 							$studentCount = 0;
 							foreach ($attr['data'] as $i => $obj) :
+								$pendingRequestsCount = $obj->pendingRequestsCount;
 								if ($action == 'reconfirm') {
 									if (!in_array($obj->student_id, $onlySelectedStudents)) continue;
 								}
@@ -38,7 +46,7 @@
 									<?php if ($action != 'reconfirm') { ?>
 									<td class="checkbox-column tooltip-orange">
 										<?php
-											if ($obj->pendingRequestsCount > 0) {
+											if ($pendingRequestsCount > 0) {
 												echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-orange" data-animation="false" data-container="body" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$this->Label->get($ControllerAction['table']->alias().'.pendingRequest'). '"></i>';
 											} else {
 												$alias = $ControllerAction['table']->alias();
@@ -53,6 +61,23 @@
 									<td><?= $obj->_matchingData['Users']->name ?></td>
 									<td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
 									<td><?= isset($attr['classOptions'][$obj->institution_class_id]) ? $attr['classOptions'][$obj->institution_class_id] : '' ?></td>
+									<?php if ($showNextClass) { ?>
+										<td>
+											<?php if ($action == 'add') {
+													if ($pendingRequestsCount == 0) {
+														echo $this->Form->input("$fieldPrefix.next_institution_class_id", [
+															'options' => $nextClassOptions,
+															'value' => [$obj->next_institution_class_id]
+														]);
+													}
+												} elseif ($action == 'reconfirm') {
+													$nextClassId = isset($attr['selectedStudents'][$i]['next_institution_class_id']) && $attr['selectedStudents'][$i]['next_institution_class_id'] != 0 ? $attr['selectedStudents'][$i]['next_institution_class_id'] : null;
+													$displayNextClassValue = isset($nextClassOptions[$nextClassId]) ? $nextClassOptions[$nextClassId] : '';
+													echo $displayNextClassValue;
+												}
+											?>
+	                        			</td>
+                        			<?php } ?>
 								</tr>
 							<?php $studentCount++;
 							endforeach ?>

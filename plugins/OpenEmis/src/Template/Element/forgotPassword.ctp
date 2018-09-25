@@ -1,5 +1,6 @@
 <?php
 $description = __d('open_emis', $_productName);
+$icon = strpos($_productName, 'School') !== false ? '_school' : '';
 ?>
 
 <!DOCTYPE html>
@@ -32,6 +33,7 @@ $description = __d('open_emis', $_productName);
 		echo $this->Html->script('OpenEmis.../plugins/bootstrap/js/bootstrap.min');
 	?>
 
+	<link rel="stylesheet" href="<?= $this->Url->css('themes/layout.min') ?>?timestamp=<?=$lastModified?>" >
 	<!--[if gte IE 9]>
 	<?php
 		echo $this->Html->css('OpenEmis.ie/ie9-fixes');
@@ -46,8 +48,14 @@ $description = __d('open_emis', $_productName);
 		<div class="login-box">
 			<div class="title">
 				<span class="title-wrapper">
-					<!-- <i class="kd-openemis"></i> -->
-					<h1><?= __('Recover Your Password') ?></h1>
+					<?php if (!$productLogo) : ?>
+					<i class="kd-openemis"></i>
+					<?php else: ?>
+					<?= $this->Html->image($productLogo, [
+						'style' => 'max-height: 45px; vertical-align: top'
+					]); ?>
+					<?php endif; ?>
+					<h1><?= $_productName ?></h1>
 				</span>
 			</div>
 			

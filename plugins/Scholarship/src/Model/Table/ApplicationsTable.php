@@ -2,6 +2,7 @@
 namespace Scholarship\Model\Table;
 
 use ArrayObject;
+use DateTime;
 
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -409,6 +410,7 @@ class ApplicationsTable extends ControllerActionTable
                         'description',
                         'maximum_award_amount',
                         'total_amount',
+                        'duration',
                         'bond',
                         'requirements',
                         'instructions',
@@ -473,6 +475,15 @@ class ApplicationsTable extends ControllerActionTable
     }
 
     // index fields
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'scholarship_id') {
+            return __('Scholarship Name');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
         return $entity->applicant->openemis_no;
@@ -519,6 +530,11 @@ class ApplicationsTable extends ControllerActionTable
     public function onGetMaximumAwardAmount(Event $event, Entity $entity)
     {
         return $entity->scholarship->maximum_award_amount;
+    }
+
+    public function onGetDuration(Event $event, Entity $entity)
+    {
+        return $entity->scholarship->duration . ' ' . __('Years');
     }
 
     public function onGetBond(Event $event, Entity $entity)
@@ -648,6 +664,23 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
+    public function onUpdateFieldDuration(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $value = '';
+            if (isset($entity->scholarship->duration) && strlen($entity->scholarship->duration) > 0) {
+                $value = $entity->scholarship->duration . ' ' . __('Years');
+            }
+
+            $attr['value'] = $value;
+            $attr['attr']['value'] = $value;
+        }
+
+        return $attr;
+    }    
+
     public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -754,8 +787,12 @@ class ApplicationsTable extends ControllerActionTable
             'fieldName' => 'scholarship.maximum_award_amount',
             'attr' => [
                 'require' => false,
-                'label' => $this->addCurrencySuffix('Maximum Award Amount')
+                'label' => $this->addCurrencySuffix('Annual Award Amount')
             ]
+        ]);
+        $this->field('duration', [
+            'type' => 'disabled',
+            'entity' => $entity
         ]);
         $this->field('bond', [
             'type' => 'disabled',
@@ -882,6 +919,70 @@ class ApplicationsTable extends ControllerActionTable
         } catch (RecordNotFoundException $e) {
             Log::write('debug', $e->getMessage());
         }
+    }
+
+    public function getModelAlertData($threshold)
+    {
+        $thresholdArray = json_decode($threshold, true);
+        
+        $conditionKey = $thresholdArray['condition'];
+        $dayBefore = $thresholdArray['value'];
+        $workflowCategory = $thresholdArray['category'];
+
+        // 1 - Days before application close date
+        $sqlConditions = [
+            1 => ('DATEDIFF(Scholarships.application_close_date, NOW())' . ' BETWEEN 0 AND ' . $dayBefore), // before
+        ];
+        $record = [];
+        
+        if (array_key_exists($conditionKey, $sqlConditions)) { 
+            $record = $this
+                ->find()
+                ->select([
+                    $this->aliasField('applicant_id'),
+                    $this->aliasField('assignee_id'),
+                    $this->aliasField('scholarship_id'),
+                    $this->aliasField('status_id'),
+                    $this->aliasField('requested_amount'),
+                    $this->aliasField('comments'),
+                    $this->Applicants->aliasField('first_name'),
+                    $this->Applicants->aliasField('middle_name'),
+                    $this->Applicants->aliasField('third_name'),
+                    $this->Applicants->aliasField('last_name'),
+                    $this->Applicants->aliasField('preferred_name'),
+                    $this->Applicants->aliasField('email'),
+                    $this->Applicants->aliasField('address'),
+                    $this->Applicants->aliasField('postal_code'),
+                    $this->Applicants->aliasField('date_of_birth'),
+                    $this->Scholarships->aliasField('code'),
+                    $this->Scholarships->aliasField('name'),
+                    $this->Scholarships->aliasField('description'),
+                    $this->Scholarships->aliasField('application_close_date'),
+                    $this->Scholarships->aliasField('application_open_date'),
+                    $this->Scholarships->aliasField('maximum_award_amount'),
+                    $this->Scholarships->aliasField('total_amount'),
+                    $this->Scholarships->aliasField('duration'),
+                    $this->Scholarships->aliasField('bond'),
+                    $this->Assignees->aliasField('first_name'),
+                    $this->Assignees->aliasField('middle_name'),
+                    $this->Assignees->aliasField('third_name'),
+                    $this->Assignees->aliasField('last_name'),
+                    $this->Assignees->aliasField('preferred_name')
+                ])
+                ->contain([
+                    $this->Scholarships->alias(),
+                    $this->Applicants->alias(),
+                    $this->Statuses->alias(),
+                    $this->Assignees->alias()
+                ])
+                ->where([
+                    $this->Statuses->aliasField('category') => $workflowCategory,
+                    $sqlConditions[$conditionKey]
+                ])
+                ->hydrate(false)
+                ->toArray();
+        }
+        return $record;
     }
 
     public function findWorkbench(Query $query, array $options)

@@ -1,3 +1,100 @@
+### [3.35.0] - 2018-09-14
+- Developed Scholarship deadline alert feature in Administration > Notification > Alert page
+- Implemented Academic Period and Financial Assistance type filter in Reports > Scholarships > Recipient Payment Structures page
+- Bug fix on Identity type in Directory > General > Overview page
+
+### [3.34.0] - 2018-09-07
+- Developed User Default Identity Report in Reports > Directory 
+- Developed Staff Appraisal calculated fields in Administration > Appraisals > Scores
+- Implemented additional column called Nationality in Report > Institution > Staff (Assigned) report
+- Implemented default filters in Institutions > Cases
+- Bug fix on Institutions > Survey Rules during xform generation for OpenEMIS Survey
+- Bug fix on ability to save reords in Institutions > Performance > Outcomes 
+
+### [3.33.1] - 2018-09-07
+- Bug fix on ability to save records in Institution Survey table question type
+- Bug fix on 404 error when Institution Survey rules answer was changed
+- Bug fix on Institution Survey when Dependent question disappears 
+
+### [3.33.0] - 2018-09-03
+- Developed changes to Class Attendance Marked Report in Reports > Institution > Class Attendance Marked
+- Developed post event rule for Secondary Teacher and Principal in Administration > Workflow > Rules
+- Developed additional Financial Assistance type (Full scholarship, Partial scholarship, Grant, Distance Learning)
+- Developed option to configure Scholarship Institution Choice in Administration > Scholarship > Applications > Institution Choices
+- Developed feature to export Scholarships > Recipients > Payment Structures
+- Introduced Annual Award Amount to Scholarships > Recipients > Payment Structures
+
+### [3.32.3] - 2018-08-23
+- Developed a feature to email all students their report card in Institutions > Report Card > Status
+- Added Partial Scholarships and Grants to Scholarship module in Administration > Scholarships
+- Added Scholarships Disbursement (Detailed) and Scholarship Enrollment reports in Reports module
+- Developed a feature to retrieve Institution image through API
+
+### [3.32.2] - 2018-08-13
+- Bug fix on deleting rows and columns for table question type in Survey module
+
+### [3.32.0] - 2018-08-03
+- Developed School Feeder feature in Institutions Module
+- Developed function to save class for next academic period in Institution > Students > Promotions page
+- Developed feature to email student report card in Institution > Report Card
+
+### [3.31.0] - 2018-07-20
+- Developed student pending admission API
+- Developed Potential Wrong Birthdates in Reports > Data Quality 
+- Developed function to import height and weight for multiple students
+
+### [3.30.2] - 2018-07-13
+- Developed additional placeholders in Student Report Card
+
+### [3.30.1] - 2018-07-05
+- Added Started On and Completed On in Institutions > Report Cards
+
+### [3.30.0] - 2018-07-02
+- Developed audit reports via feature
+- Implemented status column in Institution > Students > Import feature
+- Change date format in Audit Report to yyyy-mm-dd to enable sorting
+
+### [3.30.0] - 2018-07-02
+- Developed audit reports via feature
+- Implemented status column in Institution > Students > Import feature
+- Change date format in Audit Report to yyyy-mm-dd to enable sorting
+
+### [3.29.0] - 2018-06-22
+- Data patch on Positions feature
+- Develop Student Attendance Summary Report
+- Develop Workflow Report
+- Develop OpenEMIS Committees feature
+- Develop ability to add multiple attachments to Students/Staff behaviour feature
+
+### [3.28.1] - 2018-06-20
+- Rename breadcrumbs and headers to the original name under Report module 
+
+### [3.28.0] - 2018-06-14
+- Rename Scholarships sub-menu in Administration > Scholarships > Details
+- Added date range to Audit Login report
+- Added "Forgot Password" and "Forgot Username" feature 
+- Develop student capacity per class
+- Develop Workflow Rules event in Administration > Workflows > Rules
+- Develop Assets feature in Institutions > Assets
+
+### [3.27.2] - 2018-06-11
+- Added new labels to Administration > Translations
+- Changed colours for Institution > Dashboard charts
+
+### [3.27.1] - 2018-06-06
+- Optimized the generation of Student Reports Card
+
+### [3.27.0] - 2018-06-04
+- Developed Recipients feature under Administration > Scholarships
+- Removed the Title field in Staff > Career > Appraisal
+- Added additional filters and columns to Institution > Cases
+- Added Date of Birth to Report > Institutions > Student 
+- Developed import feature for Institutions > Staff > Positions
+- Developed import feature for Institutions > Positions
+
+### [3.26.1] - 2018-05-25
+- Created Deputy Principal system role in Administration > Security > Role
+
 ### [3.26.0] - 2018-05-18
 - Developed Scholarship feature under Profile and Administration
 - Implemented import feature for Staff Leave under Staff > Career > Leave

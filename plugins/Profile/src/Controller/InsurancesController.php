@@ -129,7 +129,7 @@ class InsurancesController extends PageController
             'HealthImmunizations' => ['text' => __('Immunizations')],
             'HealthMedications' => ['text' => __('Medications')],
             'HealthTests' => ['text' => __('Tests')],
-            'BodyMasses' => ['text' => __('Body Masses')],
+            'BodyMasses' => ['text' => __('Body Mass')],
             'Insurances' => ['text' => __('Insurances')]
         ];
 
@@ -185,7 +185,7 @@ class InsurancesController extends PageController
             'HealthImmunizations' => ['text' => __('Immunizations')],
             'HealthMedications' => ['text' => __('Medications')],
             'HealthTests' => ['text' => __('Tests')],
-            'BodyMasses' => ['text' => __('Body Masses')],
+            'BodyMasses' => ['text' => __('Body Mass')],
             'Insurances' => ['text' => __('Insurances')]
         ];
 
