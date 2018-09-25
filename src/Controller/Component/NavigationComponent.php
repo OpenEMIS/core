@@ -1003,6 +1003,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Employments', 'Profiles.StaffQualifications', 'Profiles.StaffExtracurriculars', 'Profiles.StaffMemberships', 'Profiles.StaffLicenses', 'Profiles.StaffAwards']
             ],
+            'Profiles.SpecialNeedsReferrals' => [
+                'title' => 'Special Needs',
+                'parent' => 'Profiles.Profiles',
+                'params' => ['plugin' => 'Profile'],
+                'selected' => ['Profiles.SpecialNeedsReferrals', 'Profiles.SpecialNeedsAssessments', 'Profiles.SpecialNeedsServices', 'Profiles.SpecialNeedsDevices', 'Profiles.SpecialNeedsPlans']
+            ],
             'Profiles.ScholarshipApplications' => [
                 'title' => 'Scholarships',
                 'parent' => 'Profiles.Profiles',
@@ -1035,6 +1041,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.Employments', 'Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffAwards']
             ],
+            'Directories.SpecialNeedsReferrals' => [
+                'title' => 'Special Needs',
+                'parent' => 'Directories.Directories.index',
+                'params' => ['plugin' => 'Directory'],
+                'selected' => ['Directories.SpecialNeedsReferrals', 'Directories.SpecialNeedsAssessments', 'Directories.SpecialNeedsServices', 'Directories.SpecialNeedsDevices', 'Directories.SpecialNeedsPlans']
+            ]
         ];
         return $navigation;
     }
