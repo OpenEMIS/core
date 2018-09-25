@@ -122,7 +122,7 @@ class CustomReportsTable extends AppTable
                         if (array_key_exists('options', $filterData)) {
                             if (array_key_exists('options_condition', $filterData)) {
                                 // only allow options if conditions met
-                                if($this->_checkOptionCondition($filterData["options_condition"])) { 
+                                if ($this->checkOptionCondition($filterData["options_condition"], $queryParams)) { 
                                     $options = $filterData['options'] + $options;
                                 }
                             } else { // if no condition, allow options
