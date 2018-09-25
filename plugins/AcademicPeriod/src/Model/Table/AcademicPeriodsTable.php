@@ -74,6 +74,7 @@ class AcademicPeriodsTable extends AppTable
         $this->hasMany('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Scholarships', ['className' => 'Scholarship.Scholarships', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Tree');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -921,4 +922,28 @@ class AcademicPeriodsTable extends AppTable
 
         return $academicPeriodId;
     }
+
+    public function getNextAcademicPeriodId($id)
+    {
+        $selectedPeriod = $id;
+        $periodLevelId= $this->get($selectedPeriod)->academic_period_level_id;
+        $startDate= $this->get($selectedPeriod)->start_date->format('Y-m-d');
+
+        $where = [
+            $this->aliasField('id <>') => $selectedPeriod,
+            $this->aliasField('academic_period_level_id') => $periodLevelId,
+            $this->aliasField('start_date >=') => $startDate
+        ];
+
+        $nextAcademicPeriodId = $this->AcademicPeriods
+            ->find('visible')
+            ->find('editable', ['isEditable' => true])
+            ->where($where)
+            ->order([$this->aliasField('order') => 'DESC'])
+            ->extract('id')
+            ->first();
+
+        return $nextAcademicPeriodId;
+    }
+ 
 }

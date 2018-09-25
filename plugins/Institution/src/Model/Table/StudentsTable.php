@@ -80,7 +80,7 @@ class StudentsTable extends ControllerActionTable
                 '_function' => 'getNumberOfStudentsByGradeByInstitution'
             ]
         ]);
-        $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStudentAdmission']);       
 
         /**
          * Advance Search Types.
@@ -565,6 +565,18 @@ class StudentsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        // permission checking for import button
+        $hasImportAdmissionPermission = $this->AccessControl->check(['Institutions', 'ImportStudentAdmission', 'add']);
+        $hasImportBodyMassPermission = $this->AccessControl->check(['Institutions', 'ImportStudentBodyMasses', 'add']);
+
+        if (!$hasImportAdmissionPermission && $hasImportBodyMassPermission) {
+            if ($this->behaviors()->has('ImportLink')) {
+                $this->behaviors()->get('ImportLink')->config([
+                   'import_model' => 'ImportStudentBodyMasses'
+                ]);
+            }
+        }
+
         $session = $this->request->session();
         $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
 
