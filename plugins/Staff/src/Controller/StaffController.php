@@ -16,7 +16,6 @@ class StaffController extends AppController
         'UserNationalities',
         'Contacts',
         'UserLanguages',
-        'SpecialNeeds',
         'Attachments',
         'Comments',
 
@@ -112,10 +111,6 @@ class StaffController extends AppController
     public function Languages()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']);
-    }
-    public function SpecialNeeds()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']);
     }
     public function Memberships()
     {
