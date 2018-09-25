@@ -40,13 +40,14 @@ class SpecialNeedsBehavior extends Behavior
         $tabFeatures = [
             'Referrals' => 'SpecialNeedsReferrals',
             'Assessments' => 'SpecialNeedsAssessments',
+            'Services' => 'SpecialNeedsServices',
         ];
         
         $tabElements = [];
         foreach ($tabFeatures as $action => $feature) {
             if ($controller->AccessControl->check([$name, $feature, 'index'])) {
                 $featureUrl = array_merge($urlBase, ['action' => $feature]);
-                $tabElements[] = [
+                $tabElements[$feature] = [
                     'url' => $featureUrl,
                     'text' => $action
                 ];
