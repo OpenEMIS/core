@@ -69,7 +69,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         $this->field('plan_name');
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('file_content', ['visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
 
         $this->setFieldOrder(['plan_name', 'file_name', 'file_content', 'comment']);
     }

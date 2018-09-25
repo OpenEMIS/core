@@ -81,7 +81,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->field('special_need_type_id', ['type' => 'select']);
         $this->field('special_need_difficulty_id', ['type' => 'select']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
-        $this->field('file_content', ['visible' => ['view' => true, 'edit' => true]]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('comment', ['type' => 'text']);
 
         $this->setFieldOrder(['special_need_type_id', 'special_need_difficulty_id', 'file_name', 'file_content', 'comment']);

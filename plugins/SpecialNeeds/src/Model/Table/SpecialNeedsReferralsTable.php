@@ -184,6 +184,8 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                     $this->paramsEncode(['id' => $entity->referrer->id])
                 ]);
             }
+        } elseif ($this->action == 'index') {
+            return $entity->referrer->name_with_id;
         }
     }
 
@@ -247,7 +249,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->field('reason_type_id', ['type' => 'select']);
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('file_content', ['visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
 
         $this->setFieldOrder(['academic_period_id', 'referrer_id', 'special_needs_referrer_type_id', 'date', 'reason_type_id', 'comment', 'file_name', 'file_content']);
     }
