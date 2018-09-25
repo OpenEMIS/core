@@ -851,7 +851,6 @@ class POCOR4816 extends AbstractMigration
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains the list of special needs service types used in user_special_needs_services'
         ]);
-
         $SpecialNeedsServiceTypes
             ->addColumn('name', 'string', [
                 'limit' => 50,
@@ -916,7 +915,6 @@ class POCOR4816 extends AbstractMigration
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains the list of special needs devices types used in user_special_needs_devices'
         ]);
-
         $SpecialNeedsDeviceTypes
             ->addColumn('name', 'string', [
                 'limit' => 50,
@@ -981,7 +979,6 @@ class POCOR4816 extends AbstractMigration
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => ''
         ]);
-
         $SpecialNeedsVisitTypes
             ->addColumn('code', 'string', [
                 'limit' => 100,
@@ -1016,7 +1013,6 @@ class POCOR4816 extends AbstractMigration
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => ''
         ]);
-
         $SpecialNeedsPurposeTypes
             ->addColumn('name', 'string', [
                 'limit' => 50,
@@ -1082,7 +1078,6 @@ class POCOR4816 extends AbstractMigration
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains all special needs referral for all users'
         ]);
-
         $UserSpecialNeedsReferrals
             ->addColumn('date', 'date', [
                 'default' => null,
@@ -1120,7 +1115,7 @@ class POCOR4816 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
-            ->addColumn('referrer_type_id', 'integer', [
+            ->addColumn('special_needs_referrer_type_id', 'integer', [
                 'comment' => 'links to special_needs_referrer_types.id',
                 'limit' => 11,
                 'default' => null,
@@ -1153,25 +1148,79 @@ class POCOR4816 extends AbstractMigration
             ->addIndex('academic_period_id')
             ->addIndex('security_user_id')
             ->addIndex('referrer_id')
-            ->addIndex('referrer_type_id')
+            ->addIndex('special_needs_referrer_type_id')
             ->addIndex('reason_type_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
         // user_special_needs_referral - END
-        /*
-        // user_special_needs_assessments - NOTE: To patch from user_special_needs table(?)
+        
+        // user_special_needs_assessments
         $UserSpecialNeedsAssessments = $this->table('user_special_needs_assessments', [
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains all special needs assessments for all users'
         ]);
-
         $UserSpecialNeedsAssessments
-            ->addColumn('', '', [
-
+            ->addColumn('file_name', 'string', [
+                'null' => true,
+                'limit' => 250,
+                'default' => null
             ])
-            ->addIndex('')
+            ->addColumn('file_content', 'blob', [
+                'limit' => '4294967295',
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('special_need_type_id', 'integer', [
+                'comment' => 'links to special_need_types.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('special_need_difficulty_id', 'integer', [
+                'comment' => 'links to special_need_difficulties.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('security_user_id', 'integer', [
+                'comment' => 'links to security_users.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('special_need_type_id')
+            ->addIndex('special_need_difficulty_id')
+            ->addIndex('security_user_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
+        
+        $this->execute('RENAME TABLE `user_special_needs` TO `z_4816_user_special_needs`');
+        $this->execute('INSERT INTO `user_special_needs_assessments` (`id`, `comment`, `security_user_id`, `special_need_type_id`, `special_need_difficulty_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `comment`, `security_user_id`, `special_need_type_id`, `special_need_difficulty_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4816_user_special_needs`');
+
         // user_special_needs_assessments - END
         
         // user_special_needs_services
@@ -1179,15 +1228,75 @@ class POCOR4816 extends AbstractMigration
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains all special needs services for all users'
         ]);
-
         $UserSpecialNeedsServices
-            ->addColumn('', '', [
-
+            ->addColumn('organization', 'string', [
+                'limit' => 100,
+                'default' => null,
+                'null' => true
             ])
-            ->addIndex('')
+            ->addColumn('description', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('file_name', 'string', [
+                'null' => true,
+                'limit' => 250,
+                'default' => null
+            ])
+            ->addColumn('file_content', 'blob', [
+                'limit' => '4294967295',
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('academic_period_id', 'integer', [
+                'comment' => 'links to academic_periods.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('security_user_id', 'integer', [
+                'comment' => 'links to security_users.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('special_needs_service_type_id', 'integer', [
+                'comment' => 'links to special_needs_service_types.id',
+                'limit' => 11,
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('academic_period_id')
+            ->addIndex('security_user_id')
+            ->addIndex('special_needs_service_type_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
         // user_special_needs_services - END
         
+     /*   
         // user_special_needs_devices
         $UserSpecialNeedsDevices = $this->table('user_special_needs_devices', [
             'collation' => 'utf8mb4_unicode_ci',
@@ -1273,6 +1382,7 @@ class POCOR4816 extends AbstractMigration
 
         // user_special_needs_assessments 
         $this->execute('DROP TABLE IF EXISTS `user_special_needs_assessments`');
+        $this->execute('RENAME TABLE `z_4816_user_special_needs` TO `user_special_needs`');
 
         // user_special_needs_services
         $this->execute('DROP TABLE IF EXISTS `user_special_needs_services`');
