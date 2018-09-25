@@ -42,6 +42,325 @@ class POCOR4816 extends AbstractMigration
          */
         $this->execute('CREATE TABLE `z_4816_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `z_4816_security_functions` SELECT * FROM `security_functions`');
+
+        /*
+            Current Special Needs permission
+            Institution > Students (id: 2006, order: 120)
+            Institution > Staff    (id: 3006, order: 156)
+            Directory              (id: 7007, order: 289)
+         */
+        
+        $this->execute('DELETE FROM `security_functions` WHERE id = 2006');
+        $this->execute('UPDATE `security_functions` set `order` = `order` - 1 WHERE `order` >= 120');
+
+        $this->execute('DELETE FROM `security_functions` WHERE id = 3006');
+        $this->execute('UPDATE `security_functions` set `order` = `order` - 1 WHERE `order` >= 156');
+
+        $this->execute('DELETE FROM `security_functions` WHERE id = 7007');
+        $this->execute('UPDATE `security_functions` set `order` = `order` - 1 WHERE `order` >= 289');
+
+        /*
+            Updated Special Needs permissions
+            Institution > Students
+                - Referrals   (id: 2041, order: 145)
+                - Assessments (id: 2042, order: 146)
+                - Services    (id: 2043, order: 147)
+                - Devices     (id: 2044, order: 148)
+                - Plans       (id: 2045, order: 149)
+
+            Institution > Staff 
+                - Referrals   (id: 3050, order: 188) + 5
+                - Assessments (id: 3051, order: 189) + 5
+                - Services    (id: 3052, order: 190) + 5
+                - Devices     (id: 3053, order: 191) + 5
+                - Plans       (id: 3054, order: 192) + 5
+
+            Directories
+                - Referrals   (id: 7063, order: 332) + 10
+                - Assessments (id: 7064, order: 333) + 10
+                - Services    (id: 7065, order: 334) + 10
+                - Devices     (id: 7066, order: 335) + 10
+                - Plans       (id: 7067, order: 336) + 10
+         */
+        
+        $this->execute('UPDATE `security_functions` set `order` = `order` + 5 WHERE `order` >= 145');
+        $this->execute('UPDATE `security_functions` set `order` = `order` + 5 WHERE `order` >= 193');
+        $this->execute('UPDATE `security_functions` set `order` = `order` + 5 WHERE `order` >= 342');
+
+        $securityFunctionData = [
+            [
+                'id' => 2041,
+                'name' => 'Referrals',
+                'controller' => 'Students',
+                'module' => 'Institutions',
+                'category' => 'Students - Special Needs',
+                'parent_id' => 2000,
+                '_view' => 'SpecialNeedsReferrals.index|SpecialNeedsReferrals.view',
+                '_edit' => 'SpecialNeedsReferrals.edit',
+                '_add' => 'SpecialNeedsReferrals.add',
+                '_delete' => 'SpecialNeedsReferrals.remove',
+                '_execute' => null,
+                'order' => 145,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 2042,
+                'name' => 'Assessments',
+                'controller' => 'Students',
+                'module' => 'Institutions',
+                'category' => 'Students - Special Needs',
+                'parent_id' => 2000,
+                '_view' => 'SpecialNeedsAssessments.index|SpecialNeedsAssessments.view',
+                '_edit' => 'SpecialNeedsAssessments.edit',
+                '_add' => 'SpecialNeedsAssessments.add',
+                '_delete' => 'SpecialNeedsAssessments.remove',
+                '_execute' => null,
+                'order' => 146,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 2043,
+                'name' => 'Services',
+                'controller' => 'Students',
+                'module' => 'Institutions',
+                'category' => 'Students - Special Needs',
+                'parent_id' => 2000,
+                '_view' => 'SpecialNeedsServices.index|SpecialNeedsServices.view',
+                '_edit' => 'SpecialNeedsServices.edit',
+                '_add' => 'SpecialNeedsServices.add',
+                '_delete' => 'SpecialNeedsServices.remove',
+                '_execute' => null,
+                'order' => 147,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 2044,
+                'name' => 'Devices',
+                'controller' => 'Students',
+                'module' => 'Institutions',
+                'category' => 'Students - Special Needs',
+                'parent_id' => 2000,
+                '_view' => 'SpecialNeedsDevices.index|SpecialNeedsDevices.view',
+                '_edit' => 'SpecialNeedsDevices.edit',
+                '_add' => 'SpecialNeedsDevices.add',
+                '_delete' => 'SpecialNeedsDevices.remove',
+                '_execute' => null,
+                'order' => 148,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 2045,
+                'name' => 'Plans',
+                'controller' => 'Students',
+                'module' => 'Institutions',
+                'category' => 'Students - Special Needs',
+                'parent_id' => 2000,
+                '_view' => 'SpecialNeedsPlans.index|SpecialNeedsPlans.view',
+                '_edit' => 'SpecialNeedsPlans.edit',
+                '_add' => 'SpecialNeedsPlans.add',
+                '_delete' => 'SpecialNeedsPlans.remove',
+                '_execute' => null,
+                'order' => 149,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 3050,
+                'name' => 'Referrals',
+                'controller' => 'Staff',
+                'module' => 'Institutions',
+                'category' => 'Staff - Special Needs',
+                'parent_id' => 3000,
+                '_view' => 'SpecialNeedsReferrals.index|SpecialNeedsReferrals.view',
+                '_edit' => 'SpecialNeedsReferrals.edit',
+                '_add' => 'SpecialNeedsReferrals.add',
+                '_delete' => 'SpecialNeedsReferrals.remove',
+                '_execute' => null,
+                'order' => 193,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 3051,
+                'name' => 'Assessments',
+                'controller' => 'Staff',
+                'module' => 'Institutions',
+                'category' => 'Staff - Special Needs',
+                'parent_id' => 3000,
+                '_view' => 'SpecialNeedsAssessments.index|SpecialNeedsAssessments.view',
+                '_edit' => 'SpecialNeedsAssessments.edit',
+                '_add' => 'SpecialNeedsAssessments.add',
+                '_delete' => 'SpecialNeedsAssessments.remove',
+                '_execute' => null,
+                'order' => 194,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 3052,
+                'name' => 'Services',
+                'controller' => 'Staff',
+                'module' => 'Institutions',
+                'category' => 'Staff - Special Needs',
+                'parent_id' => 3000,
+                '_view' => 'SpecialNeedsServices.index|SpecialNeedsServices.view',
+                '_edit' => 'SpecialNeedsServices.edit',
+                '_add' => 'SpecialNeedsServices.add',
+                '_delete' => 'SpecialNeedsServices.remove',
+                '_execute' => null,
+                'order' => 195,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 3053,
+                'name' => 'Devices',
+                'controller' => 'Staff',
+                'module' => 'Institutions',
+                'category' => 'Staff - Special Needs',
+                'parent_id' => 3000,
+                '_view' => 'SpecialNeedsDevices.index|SpecialNeedsDevices.view',
+                '_edit' => 'SpecialNeedsDevices.edit',
+                '_add' => 'SpecialNeedsDevices.add',
+                '_delete' => 'SpecialNeedsDevices.remove',
+                '_execute' => null,
+                'order' => 196,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 3054,
+                'name' => 'Plans',
+                'controller' => 'Staff',
+                'module' => 'Institutions',
+                'category' => 'Staff - Special Needs',
+                'parent_id' => 3000,
+                '_view' => 'SpecialNeedsPlans.index|SpecialNeedsPlans.view',
+                '_edit' => 'SpecialNeedsPlans.edit',
+                '_add' => 'SpecialNeedsPlans.add',
+                '_delete' => 'SpecialNeedsPlans.remove',
+                '_execute' => null,
+                'order' => 197,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 7063,
+                'name' => 'Referrals',
+                'controller' => 'Directories',
+                'module' => 'Directory',
+                'category' => 'Special Needs',
+                'parent_id' => 7000,
+                '_view' => 'SpecialNeedsReferrals.index|SpecialNeedsReferrals.view',
+                '_edit' => 'SpecialNeedsReferrals.edit',
+                '_add' => 'SpecialNeedsReferrals.add',
+                '_delete' => 'SpecialNeedsReferrals.remove',
+                '_execute' => null,
+                'order' => 342,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 7064,
+                'name' => 'Assessments',
+                'controller' => 'Directories',
+                'module' => 'Directory',
+                'category' => 'Special Needs',
+                'parent_id' => 7000,
+                '_view' => 'SpecialNeedsAssessments.index|SpecialNeedsAssessments.view',
+                '_edit' => 'SpecialNeedsAssessments.edit',
+                '_add' => 'SpecialNeedsAssessments.add',
+                '_delete' => 'SpecialNeedsAssessments.remove',
+                '_execute' => null,
+                'order' => 343,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 7065,
+                'name' => 'Services',
+                'controller' => 'Directories',
+                'module' => 'Directory',
+                'category' => 'Special Needs',
+                'parent_id' => 7000,
+                '_view' => 'SpecialNeedsServices.index|SpecialNeedsServices.view',
+                '_edit' => 'SpecialNeedsServices.edit',
+                '_add' => 'SpecialNeedsServices.add',
+                '_delete' => 'SpecialNeedsServices.remove',
+                '_execute' => null,
+                'order' => 344,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 7066,
+                'name' => 'Devices',
+                'controller' => 'Directories',
+                'module' => 'Directory',
+                'category' => 'Special Needs',
+                'parent_id' => 7000,
+                '_view' => 'SpecialNeedsDevices.index|SpecialNeedsDevices.view',
+                '_edit' => 'SpecialNeedsDevices.edit',
+                '_add' => 'SpecialNeedsDevices.add',
+                '_delete' => 'SpecialNeedsDevices.remove',
+                '_execute' => null,
+                'order' => 345,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'id' => 7067,
+                'name' => 'Plans',
+                'controller' => 'Directories',
+                'module' => 'Directory',
+                'category' => 'Special Needs',
+                'parent_id' => 7000,
+                '_view' => 'SpecialNeedsPlans.index|SpecialNeedsPlans.view',
+                '_edit' => 'SpecialNeedsPlans.edit',
+                '_add' => 'SpecialNeedsPlans.add',
+                '_delete' => 'SpecialNeedsPlans.remove',
+                '_execute' => null,
+                'order' => 346,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => $today
+            ]
+        ];
+
+        $this->insert('security_functions', $securityFunctionData);
         // security_functions - END
 
         // institution_lands
