@@ -31,16 +31,6 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
-    {
-        switch ($field) {
-            case 'special_needs_device_type_id':
-                return __('Device Name');
-            default:
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('comment', ['visible' => false]);
