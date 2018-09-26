@@ -17,8 +17,6 @@ class SpecialNeedsBehavior extends Behavior
     {
         $model = $this->_table;
         $controller = $this->_table->controller;
-        $plugin = $controller->plugin;
-        $name = $controller->name;
 
         $tabElements = $this->getSpecialNeedsTab();
         $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
@@ -30,11 +28,11 @@ class SpecialNeedsBehavior extends Behavior
     {
         $controller = $this->_table->controller;
         $plugin = $controller->plugin;
-        $name = $controller->name;
+        $controllerName = $controller->name;
 
         $urlBase = [
             'plugin' => $plugin,
-            'controller' => $name
+            'controller' => $controllerName
         ];
 
         $tabFeatures = [
@@ -46,12 +44,12 @@ class SpecialNeedsBehavior extends Behavior
         ];
         
         $tabElements = [];
-        foreach ($tabFeatures as $action => $feature) {
-            if ($controller->AccessControl->check([$name, $feature, 'index'])) {
+        foreach ($tabFeatures as $featureName => $feature) {
+            if ($controller->AccessControl->check([$controllerName, $feature, 'index'])) {
                 $featureUrl = array_merge($urlBase, ['action' => $feature]);
                 $tabElements[$feature] = [
                     'url' => $featureUrl,
-                    'text' => $action
+                    'text' => $featureName
                 ];
             }
         }
