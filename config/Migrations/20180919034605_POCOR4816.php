@@ -503,6 +503,7 @@ class POCOR4816 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('code')
+            ->addIndex('accessibility')
             ->addIndex('institution_id')
             ->addIndex('academic_period_id')
             ->addIndex('land_type_id')
@@ -643,6 +644,7 @@ class POCOR4816 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('code')
+            ->addIndex('accessibility')
             ->addIndex('institution_land_id')
             ->addIndex('institution_id')
             ->addIndex('academic_period_id')
@@ -768,6 +770,7 @@ class POCOR4816 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('code')
+            ->addIndex('accessibility')
             ->addIndex('institution_building_id')
             ->addIndex('institution_id')
             ->addIndex('academic_period_id')
@@ -888,6 +891,7 @@ class POCOR4816 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('code')
+            ->addIndex('accessibility')
             ->addIndex('room_type_id')
             ->addIndex('room_status_id')
             ->addIndex('institution_floor_id')
@@ -1019,6 +1023,7 @@ class POCOR4816 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('special_education_needs')
             ->addIndex('training_field_of_study_id')
             ->addIndex('training_course_type_id')
             ->addIndex('training_mode_of_delivery_id')
