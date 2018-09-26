@@ -15,11 +15,10 @@ class InstitutionSurveyTableCellsTable extends CustomTableCellsTable {
 
 	public function implementedEvents()
 	{
-        $events = parent::implementedEvents();
-        $events['Model.InstitutionSurveys.afterSave'] = 'institutionSurveyAfterSave';
-
-        return $events;
-    }
+		$events = parent::implementedEvents();
+		$events['Model.InstitutionSurveys.afterSave'] = 'institutionSurveyAfterSave';
+		return $events;
+	}
 
     public function institutionSurveyAfterSave(Event $event, Entity $institutionSurveyEntity)
     {
