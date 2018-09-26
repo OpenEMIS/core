@@ -147,7 +147,7 @@ class RenderTableBehavior extends RenderBehavior {
     public function patchTableValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
     {
         $tableCells = $settings['tableCells'];
-        $deleteTableCells = false;
+        $deleteTableCells = $settings['deleteTableCells'];
         $customField = $settings['customValue']['customField'];
         $cellValues = $settings['customValue']['cellValues'];
 
@@ -186,8 +186,7 @@ class RenderTableBehavior extends RenderBehavior {
                     foreach ($entity->custom_table_cells as $value) {
                         if ($value->survey_table_column_id == $columnId && $value->survey_table_row_id == $rowId) {
                             if ($value->text_value != $textValue || $value->number_value != $numberValue || $value->decimal_value != $decimalValue) {
-                                $deleteTableCells = true;
-                                $tableCells[] = [
+                                $deleteTableCells[] = [
                                     $fieldKey => $fieldId,
                                     $tableRowKey => $rowId,
                                     $tableColumnKey => $columnId,

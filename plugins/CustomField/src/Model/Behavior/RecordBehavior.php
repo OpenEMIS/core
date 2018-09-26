@@ -227,7 +227,7 @@ class RecordBehavior extends Behavior
 
             // patch custom_table_cells
             $tableCells = [];
-            $deleteTableCells = false;
+            $deleteTableCells = [];
             if (array_key_exists('custom_table_cells', $data[$alias])) {
                 $cells = $data[$alias]['custom_table_cells'];
                 $fieldValues = array_keys($cells);
@@ -251,7 +251,7 @@ class RecordBehavior extends Behavior
                         'cellValues' => []
                     ],
                     'tableCells' => [],
-                    'deleteTableCells' => false
+                    'deleteTableCells' => []
                 ]);
                 foreach ($cells as $fieldId => $rows) {
                     $thisField = array_key_exists($fieldId, $fields) ? $fields[$fieldId] : null;
@@ -265,9 +265,8 @@ class RecordBehavior extends Behavior
                         }
                     }
                 }
-
                 $tableCells = $settings->offsetExists('tableCells') ? $settings['tableCells'] : [];
-                $deleteTableCells = $settings['deleteTableCells'];
+                $deleteTableCells = $settings->offsetExists('deleteTableCells') ? $settings['deleteTableCells'] : [];
             }
 
             $data[$alias]['custom_table_cells'] = $tableCells;
