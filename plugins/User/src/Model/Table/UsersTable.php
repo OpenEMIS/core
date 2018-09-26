@@ -587,6 +587,12 @@ class UsersTable extends AppTable
             ->allowEmpty('username', 'update')
             // password validation now in behavior
             ->allowEmpty('photo_content')
+            ->allowEmpty('identity_number', function ($context) {
+                if (!empty($context['data']['identity_type_id']) && empty($context['data']['identity_number'])) {
+                    return false;
+                } 
+                return true;
+            })
             ;
         return $validator;
     }
