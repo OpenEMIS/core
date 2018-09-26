@@ -236,6 +236,7 @@ class RecordBehavior extends Behavior
 
             // patch custom_table_cells
             $tableCells = [];
+            $deleteTableCells = false;
             if (array_key_exists('custom_table_cells', $data[$alias])) {
                 $cells = $data[$alias]['custom_table_cells'];
                 $fieldValues = array_keys($cells);
@@ -258,7 +259,8 @@ class RecordBehavior extends Behavior
                         'customField' => null,
                         'cellValues' => []
                     ],
-                    'tableCells' => []
+                    'tableCells' => [],
+                    'deleteTableCells' => false
                 ]);
                 foreach ($cells as $fieldId => $rows) {
                     $thisField = array_key_exists($fieldId, $fields) ? $fields[$fieldId] : null;
@@ -274,9 +276,11 @@ class RecordBehavior extends Behavior
                 }
 
                 $tableCells = $settings->offsetExists('tableCells') ? $settings['tableCells'] : [];
+                $deleteTableCells = $settings['deleteTableCells'];
             }
 
             $data[$alias]['custom_table_cells'] = $tableCells;
+            $data[$alias]['delete_table_cells'] = $deleteTableCells;
             // end
         }
 
@@ -375,16 +379,6 @@ class RecordBehavior extends Behavior
                         }
                     }
 
-                    // if ($this->_table->hasBehavior('RenderTable')) {
-                    //     if (array_key_exists($model->alias(), $data)) {
-                    //         if (array_key_exists('custom_table_cells', $data[$model->alias()])) {
-                    //             $event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
-                    //             if ($event->isStopped()) {
-                    //                 return $event->result;
-                    //             }
-                    //         }
-                    //     }
-                    // }
                     //calling processRepeaterValues() in RenderRepeaterBehavior
                     if ($this->_table->hasBehavior('RenderRepeater')) {
                         if (array_key_exists($model->alias(), $data)) {
@@ -443,13 +437,8 @@ class RecordBehavior extends Behavior
                                     $this->CustomTableCells->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
                                 ]);
                             }
-                            // $event = $model->dispatchEvent('Render.deleteCustomFieldValues', [$entity, $deleteFieldIds], $model);
                         }
                     }
-
-                    // repatch $entity for saving, turn off validation
-                    $data[$model->alias()]['custom_field_values'] = $settings['fieldValues'];
-                    $data[$model->alias()]['custom_table_cells'] = $settings['tableCells'];
 
                     $requestData = $data->getArrayCopy();
                     $entity = $model->patchEntity($entity, $requestData);
