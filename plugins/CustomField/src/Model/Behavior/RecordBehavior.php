@@ -176,15 +176,6 @@ class RecordBehavior extends Behavior
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {
-        if (isset($data['submit']) && $data['submit'] == 'save') {
-            if (isset($data['custom_table_cells']) && empty($data['custom_table_cells'])) {
-                unset($data['custom_table_cells']);
-            }
-        }
-    }
-
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
