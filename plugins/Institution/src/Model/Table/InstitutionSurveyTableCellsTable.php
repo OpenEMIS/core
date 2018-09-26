@@ -20,24 +20,24 @@ class InstitutionSurveyTableCellsTable extends CustomTableCellsTable {
 		return $events;
 	}
 
-    public function institutionSurveyAfterSave(Event $event, Entity $institutionSurveyEntity)
-    {
-    	if ($institutionSurveyEntity->delete_table_cells) {
-	    	$textValueConditions['OR'] = [
-	    		'text_value' => '',
-	    		'isnull(text_value)',
-	    	];
-	    	$decimalValueConditions['OR'] = [
-	    		'decimal_value' => '',
-	    		'isnull(decimal_value)',
-	    	];
-	    	$conditions = [
-	    		'institution_survey_id' => $institutionSurveyEntity->id,
-	    		'isnull(number_value)',
-	    		$textValueConditions,
-	    		$decimalValueConditions
-	    	];
+	public function institutionSurveyAfterSave(Event $event, Entity $institutionSurveyEntity)
+	{
+		if ($institutionSurveyEntity->delete_table_cells) {
+			$textValueConditions['OR'] = [
+				'text_value' => '',
+				'isnull(text_value)',
+			];
+			$decimalValueConditions['OR'] = [
+				'decimal_value' => '',
+				'isnull(decimal_value)',
+			];
+			$conditions = [
+				'institution_survey_id' => $institutionSurveyEntity->id,
+				'isnull(number_value)',
+				$textValueConditions,
+				$decimalValueConditions
+			];
 			$this->deleteAll($conditions);
-    	}
-    }
+		}
+	}
 }
