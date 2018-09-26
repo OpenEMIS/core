@@ -22,21 +22,18 @@ class InstitutionSurveyTableCellsTable extends CustomTableCellsTable {
 
 	public function institutionSurveyAfterSave(Event $event, Entity $institutionSurveyEntity)
 	{
-		if ($institutionSurveyEntity->delete_table_cells) {
-			$textValueConditions['OR'] = [
-				'text_value' => '',
-				'isnull(text_value)',
-			];
-			$decimalValueConditions['OR'] = [
-				'decimal_value' => '',
-				'isnull(decimal_value)',
-			];
+		$deleteTableCells = $institutionSurveyEntity->delete_table_cells;
+		if (!empty($deleteTableCells)) {
 			$conditions = [
-				'institution_survey_id' => $institutionSurveyEntity->id,
-				'isnull(number_value)',
-				$textValueConditions,
-				$decimalValueConditions
+				'institution_survey_id' => $institutionSurveyEntity->id
 			];
+			foreach ($deleteTableCells as $key => $value) {
+				$conditions['OR'][] = [
+					'survey_question_id' => $value['survey_question_id'],
+					'survey_table_row_id' => $value['survey_table_row_id'],
+					'survey_table_column_id' => $value['survey_table_column_id']
+				];
+			}
 			$this->deleteAll($conditions);
 		}
 	}
