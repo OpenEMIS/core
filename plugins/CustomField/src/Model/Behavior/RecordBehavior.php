@@ -86,7 +86,7 @@ class RecordBehavior extends Behavior
             $this->_table->hasMany('CustomTableCells', $this->config('tableCellClass'));
             $this->CustomTableCells = $this->_table->CustomTableCells;
         }
-
+        $this->firstTabName = null;
         $this->CustomModules = TableRegistry::get('CustomField.CustomModules');
         $this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
 
@@ -166,9 +166,14 @@ class RecordBehavior extends Behavior
 
     public function viewAfterAction(Event $event, Entity $entity)
     {
+        $model = $this->_table;
         // add here to make view has the same format in edit
         $this->formatEntity($entity);
         $this->setupCustomFields($entity);
+        // check if the query string contains tab_section if tab_section exists for a particular survey
+        if (!(isset($model->request->query['tab_section'])) && $this->firstTabName) {
+            $model->request->query['tab_section'] = $this->firstTabName;
+        }
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -222,6 +227,7 @@ class RecordBehavior extends Behavior
 
             // patch custom_table_cells
             $tableCells = [];
+            $deleteTableCells = [];
             if (array_key_exists('custom_table_cells', $data[$alias])) {
                 $cells = $data[$alias]['custom_table_cells'];
                 $fieldValues = array_keys($cells);
@@ -244,7 +250,8 @@ class RecordBehavior extends Behavior
                         'customField' => null,
                         'cellValues' => []
                     ],
-                    'tableCells' => []
+                    'tableCells' => [],
+                    'deleteTableCells' => []
                 ]);
                 foreach ($cells as $fieldId => $rows) {
                     $thisField = array_key_exists($fieldId, $fields) ? $fields[$fieldId] : null;
@@ -258,11 +265,12 @@ class RecordBehavior extends Behavior
                         }
                     }
                 }
-
                 $tableCells = $settings->offsetExists('tableCells') ? $settings['tableCells'] : [];
+                $deleteTableCells = $settings->offsetExists('deleteTableCells') ? $settings['deleteTableCells'] : [];
             }
 
             $data[$alias]['custom_table_cells'] = $tableCells;
+            $data[$alias]['delete_table_cells'] = $deleteTableCells;
             // end
         }
 
@@ -280,7 +288,12 @@ class RecordBehavior extends Behavior
 
     public function addEditAfterAction(Event $event, Entity $entity)
     {
+        $model = $this->_table;
         $this->setupCustomFields($entity);
+        // check if the query string contains tab_section if tab_section exists for a particular survey
+        if (!(isset($model->request->query['tab_section'])) && $this->firstTabName) {
+            $model->request->query['tab_section'] = $this->firstTabName;
+        }
     }
 
     public function afterAction(Event $event)
@@ -356,16 +369,6 @@ class RecordBehavior extends Behavior
                         }
                     }
 
-                    // if ($this->_table->hasBehavior('RenderTable')) {
-                    //     if (array_key_exists($model->alias(), $data)) {
-                    //         if (array_key_exists('custom_table_cells', $data[$model->alias()])) {
-                    //             $event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
-                    //             if ($event->isStopped()) {
-                    //                 return $event->result;
-                    //             }
-                    //         }
-                    //     }
-                    // }
                     //calling processRepeaterValues() in RenderRepeaterBehavior
                     if ($this->_table->hasBehavior('RenderRepeater')) {
                         if (array_key_exists($model->alias(), $data)) {
@@ -424,13 +427,8 @@ class RecordBehavior extends Behavior
                                     $this->CustomTableCells->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
                                 ]);
                             }
-                            // $event = $model->dispatchEvent('Render.deleteCustomFieldValues', [$entity, $deleteFieldIds], $model);
                         }
                     }
-
-                    // repatch $entity for saving, turn off validation
-                    $data[$model->alias()]['custom_field_values'] = $settings['fieldValues'];
-                    $data[$model->alias()]['custom_table_cells'] = $settings['tableCells'];
 
                     $requestData = $data->getArrayCopy();
                     $entity = $model->patchEntity($entity, $requestData);
@@ -766,7 +764,16 @@ class RecordBehavior extends Behavior
 
         $fieldValues = [];  // values of custom field must be in sequence for validation errors to be placed correctly
         if (!is_null($query)) {
-            $customFields = $query->toArray();
+            $where =[];
+            if ($entity->survey_form['custom_module_id'] == 1 && isset($model->request->query['tab_section'])){
+                $tabSection = $model->request->query['tab_section'];
+                $where[] = $query->newExpr('REPLACE(' . $this->CustomFormsFields->aliasField('section') . ', " ", "-" ) = "'.$tabSection.'"');
+            }
+            $customFields = $query
+                ->where([
+                    $where
+                ])
+                ->toArray();
 
             foreach ($customFields as $key => $obj) {
                 $customField = $obj->custom_field;
@@ -837,6 +844,10 @@ class RecordBehavior extends Behavior
                     if ($sectionName != $obj->section) {
                         $sectionName = $obj->section;
                         $tabName = Inflector::slug($sectionName);
+                        // set the first tab section into a global variable
+                        if (is_null($this->firstTabName)) {
+                            $this->firstTabName = $tabName;
+                        }
                         if (empty($tabElements)) {
                             $selectedAction = $tabName;
                         }
@@ -1296,6 +1307,12 @@ class RecordBehavior extends Behavior
                 if ($toolbarButtons->offsetExists('back')) {
                     if (array_key_exists('tab_section', $toolbarButtons['back']['url'])) {
                         unset($toolbarButtons['back']['url']['tab_section']);
+                    }
+                }
+            }elseif ($action == 'edit') {
+                if ($toolbarButtons->offsetExists('list')) {
+                    if (array_key_exists('tab_section', $toolbarButtons['list']['url'])) {
+                        unset($toolbarButtons['list']['url']['tab_section']);
                     }
                 }
             }
