@@ -121,11 +121,17 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $academicPeriodQueryString = $this->request->query('academic_period_id');
-            if (!is_null($academicPeriodQueryString) && $this->AcademicPeriods->exists($academicPeriodQueryString)) {
-                $selectedAcademicPeriodId = $academicPeriodQueryString;
+            $entity = $attr['entity'];
+
+            if ($entity->has('academic_period_id')) {
+                $selectedAcademicPeriodId = $entity->academic_period_id;
             } else {
-                $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+                $academicPeriodQueryString = $this->request->query('academic_period_id');
+                if (!is_null($academicPeriodQueryString) && $this->AcademicPeriods->exists($academicPeriodQueryString)) {
+                    $selectedAcademicPeriodId = $academicPeriodQueryString;
+                } else {
+                    $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+                }
             }
 
             $academicPeriodName = $this->AcademicPeriods
@@ -242,7 +248,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
-        $this->field('academic_period_id', ['type' => 'select']);
+        $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('referrer_id', ['entity' => $entity]);
         $this->field('special_needs_referrer_type_id', ['type' => 'select']);
         $this->field('date');
