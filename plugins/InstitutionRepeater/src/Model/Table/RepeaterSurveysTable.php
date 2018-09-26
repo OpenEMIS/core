@@ -47,6 +47,7 @@ class RepeaterSurveysTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionSurveys.afterSave'] = 'institutionSurveyAfterSave';
+        $events['Model.InstitutionSurveys.afterDelete'] = 'institutionSurveyAfterDelete';
 
         return $events;
     }
@@ -62,4 +63,15 @@ class RepeaterSurveysTable extends ControllerActionTable
             ]
         );
     }
+
+	public function institutionSurveyAfterDelete(Event $event, Entity $institutionSurveyEntity)
+	{
+		$this->deleteAll(
+			[
+				'institution_id' => $institutionSurveyEntity->institution_id,
+                'academic_period_id' => $institutionSurveyEntity->academic_period_id,
+                'parent_form_id' => $institutionSurveyEntity->survey_form_id
+            ]
+		);
+	}
 }
