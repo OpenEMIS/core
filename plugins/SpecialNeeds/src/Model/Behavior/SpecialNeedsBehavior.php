@@ -1,11 +1,27 @@
 <?php
 namespace SpecialNeeds\Model\Behavior;
 
-use Cake\ORM\Behavior;
 use Cake\Event\Event;
+use Cake\ORM\Behavior;
+use Cake\Utility\Inflector;
 
 class SpecialNeedsBehavior extends Behavior
 {
+    private $_tabFeatures = [
+        'SpecialNeedsReferrals' => 'Referrals',
+        'SpecialNeedsAssessments' => 'Assessments',
+        'SpecialNeedsServices' => 'Services',
+        'SpecialNeedsDevices' => 'Devices',
+        'SpecialNeedsPlans' => 'Plans'
+    ];
+
+    private $_sessionReadKeys = [
+        'Students' => 'Student.Students.name',
+        'Staff' => 'Staff.Staff.name',
+        'Profiles' => 'Auth.User.name',
+        'Directories' => 'Directory.Directories.name'
+    ];
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -17,7 +33,24 @@ class SpecialNeedsBehavior extends Behavior
     {
         $model = $this->_table;
         $controller = $this->_table->controller;
+        $controllerName = $controller->name;
 
+        // Breadcrumbs
+        $navigation = $model->Navigation;
+        $oldTitle = $model->getHeader($model->alias());
+        $newTitle = $this->_tabFeatures[$model->alias()];
+        $newTitle = $model->getHeader($newTitle);
+        $navigation->substituteCrumb($oldTitle, $newTitle);
+
+        // Header
+        $session = $model->request->session();
+        $sessionKey = $this->_sessionReadKeys[$controllerName];
+        $username = $session->read($sessionKey);
+        $postfix = $newTitle;
+        $header = $username . ' - ' . $postfix;
+        $controller->set('contentHeader', $header);
+
+        // Tab elements
         $tabElements = $this->getSpecialNeedsTab();
         $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
         $controller->set('tabElements', $tabElements);
@@ -35,21 +68,13 @@ class SpecialNeedsBehavior extends Behavior
             'controller' => $controllerName
         ];
 
-        $tabFeatures = [
-            'Referrals' => 'SpecialNeedsReferrals',
-            'Assessments' => 'SpecialNeedsAssessments',
-            'Services' => 'SpecialNeedsServices',
-            'Devices' => 'SpecialNeedsDevices',
-            'Plans' => 'SpecialNeedsPlans'
-        ];
-        
         $tabElements = [];
-        foreach ($tabFeatures as $featureName => $feature) {
+        foreach ($this->_tabFeatures as $feature => $featureName) {
             if ($controller->AccessControl->check([$controllerName, $feature, 'index'])) {
                 $featureUrl = array_merge($urlBase, ['action' => $feature]);
                 $tabElements[$feature] = [
                     'url' => $featureUrl,
-                    'text' => $featureName
+                    'text' => __($featureName)
                 ];
             }
         }

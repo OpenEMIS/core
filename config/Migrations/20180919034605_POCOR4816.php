@@ -23,6 +23,26 @@ class POCOR4816 extends AbstractMigration
                 'created' => $today
             ],
             [
+                'en' => 'Referrals',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Services',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Devices',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
+                'en' => 'Plans',
+                'created_user_id' => 1,
+                'created' => $today
+            ],
+            [
                 'en' => 'Accessible',
                 'created_user_id' => 1,
                 'created' => $today
