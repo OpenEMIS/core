@@ -136,6 +136,55 @@ class RecordBehavior extends Behavior
         return $events;
     }
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $model = $this->_table;
+        $tabSection = null;
+        $newData = [];
+        $conditions = [];
+        $unsetQuestionIds = [];
+        // check if survey exists any tab section
+        if (isset($model->request->query['tab_section'])) {
+            $tabSection = $model->request->query['tab_section'];
+        }
+        $SurveyRules = TableRegistry::get('Survey.SurveyRules');
+        $SurveyFormQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $surveyFormId = $data['survey_form_id'];
+        $rules = $SurveyRules
+            ->find('SurveyRulesList', ['survey_form_id' => $surveyFormId])
+            ->innerJoin(
+                [$SurveyFormQuestions->alias() => $SurveyFormQuestions->table()], 
+                [$SurveyFormQuestions->aliasField('survey_question_id = ') . $SurveyRules->aliasField('survey_question_id')]
+            );
+        // get all the survey rules by survey section, if any
+        if ($tabSection) {
+            $conditions[] = $rules->newExpr('REPLACE(' . $SurveyFormQuestions->aliasField('section') . ', " ", "-" ) = "'.$tabSection.'"');
+        }
+        $rules = $rules
+            ->where($conditions)
+            ->toArray();
+        if (!empty($rules)) {
+            foreach ($data['custom_field_values'] as $customFieldValueKey => $customFieldValue) {
+                $newData[$customFieldValue['survey_question_id']] = $customFieldValue;
+            }
+            foreach ($rules as $key => $rule) {
+                foreach ($rule as $supporterFieldKey => $options) {
+                    $dependentOnQuestionSelectedOption = json_decode($options);
+                    $userSelectedOption = $newData[$supporterFieldKey]['number_value'];
+                    if (!(in_array($userSelectedOption, $dependentOnQuestionSelectedOption))) {
+                        $unsetQuestionIds[] = $key;
+                    }
+                }
+            }
+            foreach ($data['custom_field_values'] as $key => $value) {
+                if (in_array($value['survey_question_id'], $unsetQuestionIds)) {
+                    unset($data['custom_field_values'][$key]);
+                }
+            }
+            $data['custom_field_values'] = array_values($data['custom_field_values']);
+        }
+    }
+
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $this->setToolbarButtons($toolbarButtons, $attr, $action);
@@ -380,6 +429,7 @@ class RecordBehavior extends Behavior
                             }
                         }
                     }
+                    $data[$model->alias()]['custom_field_values'] = $settings['fieldValues'];
 
                     $conn = ConnectionManager::get('default');
                     $conn->begin();
