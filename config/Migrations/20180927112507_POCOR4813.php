@@ -8,9 +8,7 @@ class POCOR4813 extends AbstractMigration
         // add delete permission
         $sql = 'UPDATE `security_functions`
                 SET `_delete` = "Surveys.remove"
-                WHERE `controller` = "Institutions"
-                AND `module` = "Institutions"
-                AND `category` = "Surveys"';
+                WHERE `id` = 1025';
 
         $this->execute($sql);
         // end security_functions
@@ -21,9 +19,7 @@ class POCOR4813 extends AbstractMigration
     {
         $sql = 'UPDATE `security_functions`
                 SET `_delete` = null
-                WHERE `controller` = "Institutions"
-                AND `module` = "Institutions"
-                AND `category` = "Surveys"';
+                WHERE `id` = 1025';
 
         $this->execute($sql);
     }
