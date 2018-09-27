@@ -18,7 +18,7 @@ class POCOR4816 extends AbstractMigration
                 'created' => $today
             ],
             [
-                'en' => 'Is this course for Special Education Needs?',
+                'en' => 'This course is Special Educational Needs(SENs) compliant.',
                 'created_user_id' => 1,
                 'created' => $today
             ],

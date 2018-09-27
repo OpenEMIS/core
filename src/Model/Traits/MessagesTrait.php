@@ -1794,7 +1794,7 @@ trait MessagesTrait
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
                 ],
-                'special_education_needs' => 'Is this course for Special Education Needs?',
+                'special_education_needs' => 'This course is Special Educational Needs(SENs) compliant.',
             ],
             'TrainingSessions' => [
                 'code' => [
