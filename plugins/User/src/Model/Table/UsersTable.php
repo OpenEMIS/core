@@ -590,9 +590,22 @@ class UsersTable extends AppTable
             ->allowEmpty('identity_number', function ($context) {
                 if (!empty($context['data']['identity_type_id']) && empty($context['data']['identity_number'])) {
                     return false;
-                } 
+                }
                 return true;
             })
+            ->add('account_type', 'custom', [
+                'rule' => function ($value, $context) {
+                    $accountTypes = ['is_student', 'is_staff', 'is_guardian', 'others'];
+                    return in_array($value, $accountTypes);
+                },
+                'message' => $this->getMessage('Import.value_not_in_list'),
+                'on' => function ($context) {  
+                    if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
+                        return true;
+                    }
+                    return false;
+                }
+            ])
             ;
         return $validator;
     }
