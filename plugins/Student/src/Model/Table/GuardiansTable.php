@@ -68,28 +68,20 @@ class GuardiansTable extends ControllerActionTable
                     $tabElements = $this->controller->getUserTabElements();
                 }
             } elseif ($this->action == 'view') {
-$session = $this->request->session();
-$session->write('Guardian.Guardians.name', $entity->user->name);
-$session->write('Guardian.Guardians.id', $entity->guardian_id);
-$session->write('Guardian.Students.id', $entity->student_id);                
                 $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
 
                 $tabElements = [
                     'Guardians' => ['text' => __('Relation')],
-                    'GuardianUser' => ['text' => __('Overview')]
+                    'GuardianUser' => ['text' => __('General')]
                 ];
                 $action = $this->alias();
-                $actionUser = 'GuardianUser';              
+                $actionUser = 'GuardianUser';
                 if ($this->controller->name == 'Directories') {
                     $action = 'StudentGuardians';
                     $actionUser = 'StudentGuardianUser';
-$guardiantabElements = $this->controller->getUserTabElements();
-                }else {
-$guardiantabElements = $this->controller->getGuardianTabElements();
                 }
-$tabElements = array_merge($tabElements, $guardiantabElements);
                 $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $entity->id])]);
-                $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->guardian_id, 'StudentGuardians.id' => $entity->id])]);               
+                $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->guardian_id, 'StudentGuardians.id' => $entity->id])]);
                 $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
             }
         }
