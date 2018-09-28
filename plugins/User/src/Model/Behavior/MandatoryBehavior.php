@@ -34,7 +34,6 @@ class MandatoryBehavior extends Behavior
 
         $this->_table->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->_table->hasMany('Nationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->_table->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->_table->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
@@ -50,11 +49,7 @@ class MandatoryBehavior extends Behavior
             'ControllerAction.Model.onUpdateFieldContactValue' => 'onUpdateFieldContactValue',
             'ControllerAction.Model.onUpdateFieldNationality' => 'onUpdateFieldNationality',
             'ControllerAction.Model.onUpdateFieldIdentityType' => 'onUpdateFieldIdentityType',
-            'ControllerAction.Model.onUpdateFieldIdentityNumber' => 'onUpdateFieldIdentityNumber',
-            'ControllerAction.Model.onUpdateFieldSpecialNeed' => 'onUpdateFieldSpecialNeed',
-            'ControllerAction.Model.onUpdateFieldSpecialNeedDifficulty' => 'onUpdateFieldSpecialNeedDifficulty',
-            'ControllerAction.Model.onUpdateFieldSpecialNeedComment' => 'onUpdateFieldSpecialNeedComment',
-            'ControllerAction.Model.onUpdateFieldSpecialNeedDate' => 'onUpdateFieldSpecialNeedDate'
+            'ControllerAction.Model.onUpdateFieldIdentityNumber' => 'onUpdateFieldIdentityNumber'
         ];
         $events = array_merge($events, $newEvent);
         return $events;
@@ -133,13 +128,6 @@ class MandatoryBehavior extends Behavior
             $this->_table->field('identity_number', ['visible' => false]);
         }
 
-        if (array_key_exists('SpecialNeeds', $this->_info) && $this->_info['SpecialNeeds'] != 'Excluded') {
-            $this->_table->field('special_need', ['order' => $i++]);
-            $this->_table->field('special_need_difficulty', ['order' => $i++]);
-            $this->_table->field('special_need_comment', ['order' => $i++]);
-            $this->_table->field('special_need_date', ['order' => $i++]);
-        }
-
         // need to set the handling for non-mandatory require = false here
         foreach ($this->_info as $key => $value) {
             if ($value == 'Non-Mandatory') {
@@ -160,7 +148,7 @@ class MandatoryBehavior extends Behavior
         if ($this->_table->action == 'add') {
             $newOptions = [];
 
-            $newOptions['associated'] = ['Identities', 'Nationalities', 'SpecialNeeds', 'Contacts'];
+            $newOptions['associated'] = ['Identities', 'Nationalities', 'Contacts'];
 
             foreach ($this->_info as $key => $value) {
                 if ($value == 'Non-Mandatory') {
@@ -184,7 +172,7 @@ class MandatoryBehavior extends Behavior
 
                             // done for controller v4 for add saving by association 'security_user_id' is pre-set and replaced by cake later with the correct id
 
-                            if (in_array($key, ['SpecialNeeds', 'Nationalities', 'Contacts'])) {
+                            if (in_array($key, ['Nationalities', 'Contacts'])) {
                                 if (array_key_exists($tableName, $data[$this->_table->alias()])) {
                                     foreach ($data[$this->_table->alias()][$tableName] as $tkey => $tvalue) {
                                         // logic to get contact_option_id from contact_type_id as contact_option_id is set as requirePresence, otherwise will have validation error
@@ -250,7 +238,6 @@ class MandatoryBehavior extends Behavior
             'InstitutionStaff' => ['validate' => false],
             'Identities' => ['validate' => false],
             'UserNationalities' => ['validate' => false],
-            'SpecialNeeds' => ['validate' => false],
             'Contacts' => ['validate' => false]
         ];
     }
@@ -332,76 +319,6 @@ class MandatoryBehavior extends Behavior
 
         return $attr;
     }
-
-    public function onUpdateFieldSpecialNeed(Event $event, array $attr, $action, $request)
-    {
-        if (!empty($this->_info)) {
-            if (array_key_exists('SpecialNeeds', $this->_info)) {
-                $attr['empty'] = 'Select';
-            }
-        }
-
-        $SpecialNeedTypes = TableRegistry::get('FieldOption.SpecialNeedTypes');
-        $specialNeedOptions = $SpecialNeedTypes->getList();
-
-        $defaultEntity = $SpecialNeedTypes->find()
-            ->where([$SpecialNeedTypes->aliasField('default') => 1])
-            ->first();
-        if (!empty($defaultEntity)) {
-            $attr['default'] = $defaultEntity->id;
-        }
-
-        $attr['type'] = 'select';
-        $attr['fieldName'] = $this->_table->alias().'.special_needs.0.special_need_type_id';
-        $attr['options'] = $specialNeedOptions->toArray();
-
-        return $attr;
-    }
-
-    public function onUpdateFieldSpecialNeedComment(Event $event, array $attr, $action, $request)
-    {
-        $attr['type'] = 'text';
-        $attr['fieldName'] = $this->_table->alias().'.special_needs.0.comment';
-
-        return $attr;
-    }
-
-
-    public function onUpdateFieldSpecialNeedDate(Event $event, array $attr, $action, $request)
-    {
-        $attr['type'] = 'hidden';
-        $attr['fieldName'] = $this->_table->alias().'.special_needs.0.special_need_date';
-
-        $attr['value'] = date('Y-m-d');
-
-        return $attr;
-    }
-
-    public function onUpdateFieldSpecialNeedDifficulty(Event $event, array $attr, $action, $request)
-    {
-        if (!empty($this->_info)) {
-            if (array_key_exists('SpecialNeedDifficulties', $this->_info)) {
-                $attr['empty'] = 'Select';
-            }
-        }
-
-        $SpecialNeedDifficulties = TableRegistry::get('FieldOption.SpecialNeedDifficulties');
-        $specialNeedDifficultyOptions = $SpecialNeedDifficulties->getList();
-
-        $defaultEntity = $SpecialNeedDifficulties->find()
-            ->where([$SpecialNeedDifficulties->aliasField('default') => 1])
-            ->first();
-        if (!empty($defaultEntity)) {
-            $attr['default'] = $defaultEntity->id;
-        }
-
-        $attr['type'] = 'select';
-        $attr['fieldName'] = $this->_table->alias().'.special_needs.0.special_need_difficulty_id';
-        $attr['options'] = $specialNeedDifficultyOptions->toArray();
-
-        return $attr;
-    }
-
 
     // public function getMandatoryList() {
     //     $list = [0 => __('No'), 1 => __('Yes')];

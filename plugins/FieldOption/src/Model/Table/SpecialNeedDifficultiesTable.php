@@ -11,7 +11,8 @@ class SpecialNeedDifficultiesTable extends ControllerActionTable
     {
         $this->table('special_need_difficulties');
         parent::initialize($config);
-        $this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'special_need_difficulty_id']);
+
+        $this->hasMany('SpecialNeedsAssessments', ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'special_need_difficulty_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('FieldOption.FieldOption');
     }

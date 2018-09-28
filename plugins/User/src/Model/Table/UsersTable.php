@@ -177,7 +177,7 @@ class UsersTable extends AppTable
         $model->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
         $model->hasMany('Identities', ['className' => 'User.Identities',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $model->hasMany('Nationalities', ['className' => 'User.UserNationalities',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds',    'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments',    'foreignKey' => 'security_user_id', 'dependent' => true]);
         $model->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $model->hasMany('Attachments', ['className' => 'User.Attachments',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $model->hasMany('BankAccounts', ['className' => 'User.BankAccounts',    'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -587,6 +587,25 @@ class UsersTable extends AppTable
             ->allowEmpty('username', 'update')
             // password validation now in behavior
             ->allowEmpty('photo_content')
+            ->allowEmpty('identity_number', function ($context) {
+                if (!empty($context['data']['identity_type_id']) && empty($context['data']['identity_number'])) {
+                    return false;
+                }
+                return true;
+            })
+            ->add('account_type', 'custom', [
+                'rule' => function ($value, $context) {
+                    $accountTypes = ['is_student', 'is_staff', 'is_guardian', 'others'];
+                    return in_array($value, $accountTypes);
+                },
+                'message' => $this->getMessage('Import.value_not_in_list'),
+                'on' => function ($context) {  
+                    if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
+                        return true;
+                    }
+                    return false;
+                }
+            ])
             ;
         return $validator;
     }
