@@ -6,6 +6,13 @@ class POCOR4816 extends AbstractMigration
 {
     public function up()
     {
+        // config_items
+        $this->execute('CREATE TABLE `z_4816_config_items` LIKE `config_items`');
+        $this->execute('INSERT INTO `z_4816_config_items` SELECT * FROM `config_items`');
+
+        $this->execute('DELETE FROM `config_items` WHERE `id` IN (75, 99)');
+        // config_items - END
+        
         // locale_content
         $this->execute('CREATE TABLE `z_4816_locale_contents` LIKE `locale_contents`');
         $this->execute('INSERT INTO `z_4816_locale_contents` SELECT * FROM `locale_contents`');
@@ -1505,6 +1512,10 @@ class POCOR4816 extends AbstractMigration
             'comment' => 'This table contains all special needs assessments for all users'
         ]);
         $UserSpecialNeedsAssessments
+            ->addColumn('date', 'date', [
+                'default' => null,
+                'null' => false
+            ])
             ->addColumn('file_name', 'string', [
                 'null' => true,
                 'limit' => 250,
@@ -1563,7 +1574,7 @@ class POCOR4816 extends AbstractMigration
             ->save();
         
         $this->execute('RENAME TABLE `user_special_needs` TO `z_4816_user_special_needs`');
-        $this->execute('INSERT INTO `user_special_needs_assessments` (`id`, `comment`, `security_user_id`, `special_need_type_id`, `special_need_difficulty_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `comment`, `security_user_id`, `special_need_type_id`, `special_need_difficulty_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4816_user_special_needs`');
+        $this->execute('INSERT INTO `user_special_needs_assessments` (`id`, `date`, `comment`, `security_user_id`, `special_need_type_id`, `special_need_difficulty_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `special_need_date`, `comment`, `security_user_id`, `special_need_type_id`, `special_need_difficulty_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4816_user_special_needs`');
 
         // user_special_needs_assessments - END
         
@@ -1747,6 +1758,10 @@ class POCOR4816 extends AbstractMigration
 
     public function down()
     {
+        // config_items
+        $this->execute('DROP TABLE IF EXISTS `config_items`');
+        $this->execute('RENAME TABLE `z_4816_config_items` TO `config_items`');
+
         // locale_content
         $this->execute('DROP TABLE IF EXISTS `locale_contents`');
         $this->execute('RENAME TABLE `z_4816_locale_contents` TO `locale_contents`');
