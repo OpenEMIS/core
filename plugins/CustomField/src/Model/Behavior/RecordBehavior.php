@@ -136,10 +136,10 @@ class RecordBehavior extends Behavior
         return $events;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (isset($this->_table->action) && $this->_table->action == 'edit') {
-            $model = $this->_table;
+        $model = $this->_table;
+        if (isset($model->action) && $model->action == 'edit' && $model->alias() == 'InstitutionSurveys') {
             $tabSection = null;
             $newData = [];
             $conditions = [];
