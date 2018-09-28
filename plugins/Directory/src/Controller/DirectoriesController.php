@@ -98,10 +98,6 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']);
     }
-    public function SpecialNeeds()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']);
-    }
     public function StaffMemberships()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']);
@@ -220,6 +216,29 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
     // End Health
+    
+    // Special Needs
+    public function SpecialNeedsReferrals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsReferrals']);
+    }
+    public function SpecialNeedsAssessments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsAssessments']);
+    }
+    public function SpecialNeedsServices()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsServices']);
+    }
+    public function SpecialNeedsDevices()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDevices']);
+    }
+    public function SpecialNeedsPlans()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
+    }
+    // Special Needs - End
 
     public function Employments()
     {
@@ -508,7 +527,6 @@ class DirectoriesController extends AppController
             'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
-            'SpecialNeeds' => ['text' => __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')]
         ];
