@@ -96,6 +96,7 @@ class TrainingCoursesTable extends ControllerActionTable
         ]);
 
         $this->targetPopulationSelection = $this->getSelectOptions($this->aliasField('target_population_selection'));
+        $this->SENTooltipMessage = $this->getMessage('Training.TrainingCourses.special_education_needs');
     }
 
     public function validationDefault(Validator $validator)
@@ -268,6 +269,16 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->setAllTargetPopulations($entity);
     }
 
+    public function onUpdateFieldSpecialEducationNeeds(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit' || $action == 'add') {
+            $SENOptions = $this->getSelectOptions('general.yesno');
+            $attr['options'] = $SENOptions;
+            $attr['type'] = 'select';
+            return $attr;
+        }
+    }
+
     public function onUpdateFieldCreditHours(Event $event, array $attr, $action, Request $request)
     {
         $creditHours = TableRegistry::get('Configuration.ConfigItems')->value('training_credit_hour');
@@ -396,10 +407,21 @@ class TrainingCoursesTable extends ControllerActionTable
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true],
             'attr' => ['required' => true] // to add red asterisk
         ]);
+        $this->field('special_education_needs', [
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true],
+            'attr' => [
+                'label' => [
+                    'text' => __('SEN') . ' <i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="bottom" uib-tooltip="' . __($this->SENTooltipMessage) . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
+                    'escape' => false, //disable the htmlentities (on LabelWidget) so can show html on label.
+                    'class' => 'tooltip-desc' //css class for label
+                ]
+
+            ]
+        ]);
 
         // Field order
         $this->setFieldOrder([
-            'code', 'name', 'description', 'objective', 'credit_hours', 'duration', 'number_of_months',
+            'code', 'name', 'description', 'objective', 'credit_hours', 'duration', 'number_of_months', 'special_education_needs',
             'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id', 'target_population_selection',
             'target_populations', 'training_providers', 'course_prerequisites', 'specialisations', 'result_types',
             'file_name', 'file_content'
@@ -465,6 +487,26 @@ class TrainingCoursesTable extends ControllerActionTable
             });
 
         return $query;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'special_education_needs') {
+            $tooltipMessage = __('');
+            return __('SEN') . '&nbsp;&nbsp;<i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' . __($this->SENTooltipMessage) . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function onGetSpecialEducationNeeds(Event $event, Entity $entity)
+    {
+        if ($this->action == 'index') {
+            return $entity->special_education_needs == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+        } elseif ($this->action == 'view') {
+            $SENOptions = $this->getSelectOptions('general.yesno');
+            return $SENOptions[$entity->special_education_needs];    
+        }
     }
 
     public function onGetTargetPopulations(Event $event, Entity $entity)
