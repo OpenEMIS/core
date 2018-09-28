@@ -66,6 +66,11 @@ class CustomReportBehavior extends Behavior
             }
         }
 
+        //To prevent memory leak
+        $this->Table = null;
+        TableRegistry::clear();
+        gc_collect_cycles();
+
         return $result;
     }
 
