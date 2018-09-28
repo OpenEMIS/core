@@ -68,10 +68,48 @@ class SpecialNeedsTable extends ControllerActionTable
                 $options['userRole'] = 'Staff';
                 break;
         }
+$session = $this->request->session();
+$guardianID = $session->read('Guardian.Guardians.id');
+$studentID = $session->read('Guardian.Students.id');
         if ($this->controller->name == 'Directories') {
             $type = $this->request->query('type');
             $options['type'] = $type;
             $tabElements = $this->controller->getUserTabElements($options);
+    if (!empty($guardianID)) {
+        $userId = $guardianID;
+        $StudentGuardianID=$this->request->session()->read('Student.Guardians.primaryKey');
+        $newStudentGuardianID=$StudentGuardianID['id'];
+        $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+        $guardianstabElements = [
+            'Guardians' => ['text' => __('Relation')],
+            'GuardianUser' => ['text' => __('Overview')]
+         ];
+        $action = 'StudentGuardians';
+        $actionUser = 'StudentGuardianUser';
+        $guardianstabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $newStudentGuardianID])]);
+        $guardianstabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $userId, 'StudentGuardians.id' => $newStudentGuardianID])]);
+        $guardianId = $userId;
+        $tabElements = array_merge($guardianstabElements, $tabElements);                
+    }
+} elseif ($this->controller->name == 'Students') {
+    $tabElements = $this->controller->getUserTabElements($options);
+    if (!empty($guardianID)) {
+        $userId = $guardianID;
+        $StudentGuardianID=$this->request->session()->read('Student.Guardians.primaryKey');
+        $newStudentGuardianID=$StudentGuardianID['id'];
+        $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+        $guardianstabElements = [
+            'Guardians' => ['text' => __('Relation')],
+            'GuardianUser' => ['text' => __('Overview')]
+         ];
+        $tabElements = $this->controller->getGuardianTabElements($options);
+        $action = 'Guardians';
+        $actionUser = 'GuardianUser';
+        $guardianstabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $newStudentGuardianID])]);
+        $guardianstabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $userId, 'StudentGuardians.id' => $newStudentGuardianID])]);
+        $guardianId = $userId;
+        $tabElements = array_merge($guardianstabElements, $tabElements);                
+    }            
         } else {
             $tabElements = $this->controller->getUserTabElements($options);
         }
