@@ -165,15 +165,18 @@ class GuardianUserTable extends UserTable {
 
         $tabElements = [
             'Guardians' => ['text' => __('Relation')],
-            'GuardianUser' => ['text' => __('General')]
+            'GuardianUser' => ['text' => __('Overview')]
         ];
         $action = 'Guardians';
         $actionUser = $this->alias();
         if ($this->controller->name == 'Directories') {
             $action = 'StudentGuardians';
             $actionUser = 'StudentGuardianUser';
+$guardiantabElements = $this->controller->getUserTabElements();             
+        }else{
+$guardiantabElements = $this->controller->getGuardianTabElements();            
         }
-
+$tabElements = array_merge($tabElements, $guardiantabElements); 
         $encodedParam = $this->request->params['pass'][1];
         $ids = $this->paramsDecode($encodedParam);
 
