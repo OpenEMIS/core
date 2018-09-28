@@ -43,7 +43,10 @@ class CustomReportBehavior extends Behavior
             foreach ($methods as $method) {
                 if (array_key_exists($method, $jsonArray)) {
                     $methodName = '_' . $method;
-                    $this->$methodName($query, $params, $jsonArray[$method]);
+                    if (!$this->$methodName($query, $params, $jsonArray[$method])) {
+                        // return empty option as unable to construct the right query
+                        return [];
+                    }
                 }
             }
 
@@ -311,6 +314,9 @@ class CustomReportBehavior extends Behavior
 
                     if (isset($obj['conditions'])) {
                         $conditions = $this->_processConditions($obj['conditions'], $params);
+                        if ($conditions === null) {
+                            return null;
+                        }
                     }
 
                     $query->find($finder, $conditions);
@@ -331,6 +337,12 @@ class CustomReportBehavior extends Behavior
                 $placeholder = $this->extractPlaceholder($value);
                 if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
                     $conditions[$field] = $params[$placeholder];
+                } 
+                
+                if (array_key_exists($placeholder, $params) && empty($params[$placeholder])) { 
+                    // condition value that are using placeholders are assumed to have dependencies. 
+                    // if no value is found, option should not be constructed.
+                    return null;
                 }
             } else {
                 $conditions[] = $field . " = " . $value;
