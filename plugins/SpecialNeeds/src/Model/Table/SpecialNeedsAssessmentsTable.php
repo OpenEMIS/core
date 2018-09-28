@@ -10,7 +10,6 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
-
 class SpecialNeedsAssessmentsTable extends ControllerActionTable
 {
     public function initialize(array $config)
@@ -39,6 +38,13 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
 
         return $validator
             ->allowEmpty('file_content');
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
+        return $events;
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
@@ -74,6 +80,49 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
+    }
+
+    public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
+    {
+        $institutionId = $params['institution_id'];
+        $studentId = $params['student_id'];
+        $academicPeriodId = $params['academic_period_id'];
+
+        $quantityResult = $this->find()
+            ->where([$this->aliasField('security_user_id') => $studentId])
+            ->all()->toArray();
+
+        $quantity = !empty(count($quantityResult)) ? count($quantityResult) : 0;
+
+        return $quantity;
+    }
+
+    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
+    {
+        $specialNeedList = $this->find()
+            ->contain(['SpecialNeedTypes', 'SpecialNeedDifficulties'])
+            ->where([$this->aliasField('security_user_id') => $studentId])
+            ->all();
+
+        $referenceDetails = [];
+        foreach ($specialNeedList as $key => $obj) {
+            $specialNeedName = $obj->special_need_type->name;
+            $specialNeedDifficulties = $obj->special_need_difficulty->name;
+
+            $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';
+        }
+
+        // tooltip only receieved string to be display
+        $reference = '';
+        if (!empty($referenceDetails)) {
+            foreach ($referenceDetails as $key => $referenceDetailsObj) {
+                $reference = $reference . $referenceDetailsObj . ' <br/>';
+            }
+        } else {
+            $reference = __('No Special Need');
+        }
+
+        return $reference;
     }
 
     private function setupFields($entity = null)
