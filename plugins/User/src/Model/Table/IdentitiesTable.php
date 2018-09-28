@@ -93,31 +93,7 @@ class IdentitiesTable extends ControllerActionTable
 					break;
 			}
 			$tabElements = $this->controller->getUserTabElements($options);
-$session = $this->request->session();
-$guardianID = $session->read('Guardian.Guardians.id');
-$studentID = $session->read('Guardian.Students.id');
-if (!empty($guardianID)) {
-    $userId = $guardianID;
-    $StudentGuardianID=$this->request->session()->read('Student.Guardians.primaryKey');
-    $newStudentGuardianID=$StudentGuardianID['id'];
-    $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
-    $guardianstabElements = [
-        'Guardians' => ['text' => __('Relation')],
-        'GuardianUser' => ['text' => __('Overview')]
-    ];
-        $action = 'StudentGuardians';
-        $actionUser = 'StudentGuardianUser';
-    if ($this->controller->name == 'Students') {
-        $tabElements = $this->controller->getGuardianTabElements($options);
-        $action = 'Guardians';
-        $actionUser = 'GuardianUser';
-    }
-    $guardianstabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $newStudentGuardianID])]);
-    $guardianstabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $userId, 'StudentGuardians.id' => $newStudentGuardianID])]);
-    $guardianId = $userId;
-    $tabElements = array_merge($guardianstabElements, $tabElements);
-}
-        }
+		}
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
