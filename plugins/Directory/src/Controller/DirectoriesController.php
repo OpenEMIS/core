@@ -327,17 +327,12 @@ class DirectoriesController extends AppController
             }
         }
 
-if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'view'|| $this->ControllerAction->paramsPass()[0] == 'index' )) {    
+        if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'index')) {
             $session->delete('Directory.Directories.id');
             $session->delete('Staff.Staff.id');
             $session->delete('Staff.Staff.name');
             $session->delete('Student.Students.id');
             $session->delete('Student.Students.name');
-    $session->delete('Guardian.Guardians.id');
-    $session->delete('Guardian.Students.id');
-} else if ($action == 'StudentGuardians'){
-    $session->delete('Guardian.Guardians.id');
-    $session->delete('Guardian.Students.id');
         } else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit' || $action == 'StudentResults') {
             $id = 0;
             if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
@@ -381,11 +376,7 @@ if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) ||
             $header = $header . ' - ' . $model->getHeader($alias);
 
             $this->set('contentHeader', $header);
-$guardianID = $session->read('Guardian.Guardians.id');
-$studentID = $session->read('Guardian.Students.id');
-if (!empty($guardianID)) {
-    $userId = $guardianID;
-}
+
             if ($model->hasField('security_user_id')) {
                 $model->fields['security_user_id']['type'] = 'hidden';
                 $model->fields['security_user_id']['value'] = $userId;
@@ -464,12 +455,7 @@ if (!empty($guardianID)) {
         $session = $this->request->session();
         if ($model->alias() != 'Directories') {
             if ($session->check('Directory.Directories.id')) {
-                $userId = $session->read('Directory.Directories.id');      
-$guardianID = $session->read('Guardian.Guardians.id');
-$studentID = $session->read('Guardian.Students.id');
-if (!empty($guardianID)) {
-    $userId = $guardianID;
-}   
+                $userId = $session->read('Directory.Directories.id');
                 if ($model->hasField('security_user_id')) {
                     $query->where([$model->aliasField('security_user_id') => $userId]);
                 } else if ($model->hasField('student_id')) {
@@ -514,12 +500,6 @@ if (!empty($guardianID)) {
         $name = $this->name;
 
         $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
-$session = $this->request->session();        
-$guardianID = $session->read('Guardian.Guardians.id');
-$studentID = $session->read('Guardian.Students.id');
-if (!empty($guardianID)) {
-    $id = $guardianID;
-}
 
         $tabElements = [
             $this->name => ['text' => __('Overview')],
@@ -564,9 +544,6 @@ if (!empty($guardianID)) {
             }
         }
 
-if (!empty($guardianID)) {
-    unset($tabElements[$this->name]);
-}
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 

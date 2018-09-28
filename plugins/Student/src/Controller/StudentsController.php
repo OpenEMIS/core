@@ -256,12 +256,6 @@ class StudentsController extends AppController
         $this->Navigation->addCrumb('Students', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']);
         $header = __('Students');
 
-if ($action == 'Guardians' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'index' )) {
-    $session->delete('Guardian.Guardians.id');
-    $session->delete('Guardian.Students.id');
-}
-
-
         if ($action == 'index') {
         } else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit' || $action == 'Results') {
             // add the student name to the header
@@ -332,12 +326,6 @@ if ($action == 'Guardians' && (empty($this->ControllerAction->paramsPass()) || $
             // $params = $this->request->params;
             $this->set('contentHeader', $header);
 
-$guardianID = $session->read('Guardian.Guardians.id');
-$studentID = $session->read('Guardian.Students.id');
-if (!empty($guardianID)) {
-    $userId = $guardianID;
-}
-
             if ($model->hasField('security_user_id')) {
                 $model->fields['security_user_id']['type'] = 'hidden';
                 $model->fields['security_user_id']['value'] = $userId;
@@ -352,12 +340,10 @@ if (!empty($guardianID)) {
                     /**
                      * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
                      */
-if (empty($guardianID)) {
                     if (!$model->exists($idKey)) {
                         $this->Alert->warning('general.notExists');
                         return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
                     }
-}
                 }
             } else if ($model->hasField('student_id')) {
                 $model->fields['student_id']['type'] = 'hidden';
@@ -373,12 +359,10 @@ if (empty($guardianID)) {
                     /**
                      * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
                      */
-if (empty($guardianID)) {                    
                     if (!$model->exists($idKey)) {
                         $this->Alert->warning('general.notExists');
                         return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
                     }
-}                    
                 }
             }
         } else {
@@ -402,11 +386,6 @@ if (empty($guardianID)) {
             if ($session->check('Student.Students.id')) {
                 if ($model->hasField('security_user_id')) {
                     $userId = $session->read('Student.Students.id');
-$guardianID = $session->read('Guardian.Guardians.id');
-$studentID = $session->read('Guardian.Students.id');
-if (!empty($guardianID)) {
-    $userId = $guardianID;
-}
                     $query->where([$model->aliasField('security_user_id') => $userId]);
                 } else if ($model->hasField('student_id')) {
                     $userId = $session->read('Student.Students.id');
@@ -458,79 +437,6 @@ if (!empty($guardianID)) {
 
         return $this->TabPermission->checkTabPermission($tabElements);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-public function getGuardianTabElements($options = [])
-{
-    if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
-        $id = $this->ControllerAction->getQueryString('security_user_id');
-    }
-
-    $plugin = $this->plugin;
-    $name = $this->name;
-
-    $session = $this->request->session();
-    $institutionId = $this->request->session()->read('Institution.Institutions.id');
-    $guardianID = $session->read('Guardian.Guardians.id');
-    $studentID = $session->read('Guardian.Students.id');
-    if (!empty($guardianID)) {
-        $id = $guardianID;
-    }
-
-    $tabElements = [
-        'Accounts' => ['text' => __('Account')],
-        'Identities' => ['text' => __('Identities')],
-        'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
-        'Contacts' => ['text' => __('Contacts')],
-        'Languages' => ['text' => __('Languages')],
-        'SpecialNeeds' => ['text' => __('Special Needs')],
-        'Attachments' => ['text' => __('Attachments')],
-        'Comments' => ['text' => __('Comments')]
-    ];
-
-    foreach ($tabElements as $key => $value) {
-        if ($key == 'Accounts') {
-            $tabElements[$key]['url']['action'] = 'Accounts';
-            $tabElements[$key]['url'][] = 'view';
-            $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
-        } else if ($key == 'Comments') {
-            $url = [
-                    'plugin' => 'Institution',
-                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
-                    'controller' => 'GuardianComments',
-                    'action' => 'index'
-            ];
-            $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
-        } else {
-            $actionURL = $key;
-            if ($key == 'UserNationalities') {
-                $actionURL = 'Nationalities';
-            }
-            $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
-                                            'plugin' => $plugin,
-                                            'controller' => $name,
-                                            'action' => $actionURL,
-                                            'index'],
-                                            ['security_user_id' => $id]
-                                        );
-        }
-    }
-    return $this->TabPermission->checkTabPermission($tabElements);
-}
 
     public function getAcademicTabElements($options = [])
     {
