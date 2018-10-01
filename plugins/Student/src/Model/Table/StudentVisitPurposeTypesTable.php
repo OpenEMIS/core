@@ -10,7 +10,7 @@ class StudentVisitPurposeTypesTable extends ControllerActionTable
         $this->table('student_visit_purpose_types');
         parent::initialize($config);
 
-        // $this->hasMany('', ['className' => '']);
+        $this->hasMany('StudentVisitRequests', ['className' => 'Student.StudentVisitRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentVisits', ['className' => 'Student.StudentVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
         
         $this->addBehavior('FieldOption.FieldOption');
