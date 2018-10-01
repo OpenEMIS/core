@@ -11,20 +11,7 @@ class POCOR4829 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `special_needs_purpose_types`');
         $this->execute('DROP TABLE IF EXISTS `special_needs_visit_types`');
 
-        // // locale_content
-        // $this->execute('CREATE TABLE `z_4829_locale_contents` LIKE `locale_contents`');
-        // $this->execute('INSERT INTO `z_4829_locale_contents` SELECT * FROM `locale_contents`');
-
         $today = date('Y-m-d H:i:s');
-        // $localeData = [
-        //     [
-        //         'en' => '',
-        //         'created_user_id' => 1,
-        //         'created' => $today
-        //     ]
-        // ];
-        // $this->insert('locale_contents', $localeData);        
-        // locale_content - END
         
         // security_functions
         $this->execute('CREATE TABLE `z_4829_security_functions` LIKE `security_functions`');
@@ -573,10 +560,6 @@ class POCOR4829 extends AbstractMigration
 
     public function down()
     {
-        // locale_content
-        // $this->execute('DROP TABLE IF EXISTS `locale_contents`');
-        // $this->execute('RENAME TABLE `z_4829_locale_contents` TO `locale_contents`');
-
         // security_functions
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
         $this->execute('RENAME TABLE `z_4829_security_functions` TO `security_functions`');
