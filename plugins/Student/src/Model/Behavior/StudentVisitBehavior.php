@@ -9,7 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
 class StudentVisitBehavior extends Behavior {
-	private $_tabFeatures = [
+    private $_tabFeatures = [
         'StudentVisitRequests' => 'Requests',
         'StudentVisits' => 'Visits',
     ];
