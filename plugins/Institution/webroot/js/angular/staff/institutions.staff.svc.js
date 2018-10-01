@@ -74,7 +74,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         ConfigItems: 'Configuration.ConfigItems',
         Nationalities: 'FieldOption.Nationalities',
         ContactTypes: 'User.ContactTypes',
-        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes'
+        SpecialNeedTypes: 'SpecialNeeds.SpecialNeedsTypes'
     };
 
     return service;
@@ -783,11 +783,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         return Nationalities
             .select()
             .contain(['IdentityTypes'])
-            .ajax({defer: true});
-    }
-    function getSpecialNeedTypes() {
-        return SpecialNeedTypes
-            .select()
             .ajax({defer: true});
     }
 };

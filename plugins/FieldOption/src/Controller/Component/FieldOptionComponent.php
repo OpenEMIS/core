@@ -99,8 +99,6 @@ class FieldOptionComponent extends Component
         'Languages' => ['className' => 'Languages', 'parent' => 'Others'],
         'LicenseTypes' => ['className' => 'FieldOption.LicenseTypes', 'parent' => 'Others'],
         'LicenseClassifications' => ['className' => 'FieldOption.LicenseClassifications', 'parent' => 'Others'],
-        'SpecialNeedTypes' => ['className' => 'FieldOption.SpecialNeedTypes', 'parent' => 'Others'],
-        'SpecialNeedDifficulties' => ['className' => 'FieldOption.SpecialNeedDifficulties', 'parent' => 'Others'],
         'Countries' => ['className' => 'FieldOption.Countries', 'parent' => 'Others'],
         'Nationalities' => ['className' => 'FieldOption.Nationalities', 'parent' => 'Others'],
         'CommentTypes' => ['className' => 'User.CommentTypes', 'parent' => 'Others'],
@@ -164,8 +162,8 @@ class FieldOptionComponent extends Component
         'ScholarshipInstitutionChoices' => ['className' => 'Scholarship.InstitutionChoiceTypes', 'parent' => 'Scholarship'],
 
     // Special Needs
-        'SpecialNeedTypes' => ['className' => 'FieldOption.SpecialNeedTypes', 'parent' => 'Special Needs'],
-        'SpecialNeedDifficulties' => ['className' => 'FieldOption.SpecialNeedDifficulties', 'parent' => 'Special Needs'],
+        'SpecialNeedsTypes' => ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'parent' => 'Special Needs'],
+        'SpecialNeedsDifficulties' => ['className' => 'SpecialNeeds.SpecialNeedsDifficulties', 'parent' => 'Special Needs'],
         'SpecialNeedsReferrerTypes' => ['className' => 'SpecialNeeds.SpecialNeedsReferrerTypes', 'parent' => 'Special Needs'],
         'SpecialNeedsServiceTypes' => ['className' => 'SpecialNeeds.SpecialNeedsServiceTypes', 'parent' => 'Special Needs'],
         'SpecialNeedsDeviceTypes' => ['className' => 'SpecialNeeds.SpecialNeedsDeviceTypes', 'parent' => 'Special Needs']
