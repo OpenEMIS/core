@@ -912,6 +912,12 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
                 'selected' => ['Students.SpecialNeedsReferrals', 'Students.SpecialNeedsAssessments', 'Students.SpecialNeedsServices', 'Students.SpecialNeedsDevices', 'Students.SpecialNeedsPlans']
+            ],
+            'Students.StudentVisitRequests' => [
+                'title' => 'Visits',
+                'parent' => 'Institutions.Students.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.StudentVisitRequests', 'Students.StudentVisits']
             ]
         ];
         foreach ($navigation as &$n) {
