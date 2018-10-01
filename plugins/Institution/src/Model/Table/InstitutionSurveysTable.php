@@ -148,6 +148,65 @@ class InstitutionSurveysTable extends ControllerActionTable
         ];
     }
 
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+        {
+            // Log::write('debug', 'InstitutionSurveyTableCells');
+            // Log::write('debug', $entity);
+        // $model = $this->_table;
+        if (isset($this->action) && $this->action == 'edit') {
+            // pr($data[$this->alias()]);
+            // pr($this->alias());
+            $tabSection = null;
+            $newData = [];
+            $conditions = [];
+            $unsetQuestionIds = [];
+            // check if survey exists any tab section
+            if (isset($this->request->query['tab_section'])) {
+                $tabSection = $this->request->query['tab_section'];
+            }
+            $SurveyRules = TableRegistry::get('Survey.SurveyRules');
+            $SurveyFormQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+            $surveyFormId = $data[$this->alias()]['survey_form_id'];
+            $rules = $SurveyRules
+                ->find('SurveyRulesList', ['survey_form_id' => $surveyFormId])
+                ->innerJoin(
+                    [$SurveyFormQuestions->alias() => $SurveyFormQuestions->table()], 
+                    [$SurveyFormQuestions->aliasField('survey_question_id = ') . $SurveyRules->aliasField('survey_question_id')]
+                );
+            // get all the survey rules by survey section, if any
+            if ($tabSection) {
+                $conditions[] = $rules->newExpr('REPLACE(' . $SurveyFormQuestions->aliasField('section') . ', " ", "-" ) = "'.$tabSection.'"');
+            }
+            $rules = $rules
+                ->where($conditions)
+                ->toArray();
+            if (!empty($rules)) {
+                foreach ($data[$this->alias()]['custom_field_values'] as $customFieldValueKey => $customFieldValue) {
+                    $newData[$customFieldValue['survey_question_id']] = $customFieldValue;
+                }
+                foreach ($rules as $key => $rule) {
+                    foreach ($rule as $supporterFieldKey => $options) {
+                        $dependentOnQuestionSelectedOption = json_decode($options);
+                        if (isset($newData[$supporterFieldKey])) {
+                            $userSelectedOption = $newData[$supporterFieldKey]['number_value'];
+                            if (!(in_array($userSelectedOption, $dependentOnQuestionSelectedOption))) {
+                                $unsetQuestionIds[] = $key;
+                            }
+                        }
+                    }
+                }
+                foreach ($data[$this->alias()]['custom_field_values'] as $key => $value) {
+                    if (in_array($value['survey_question_id'], $unsetQuestionIds)) {
+                        Log::write('debug', $value);
+                        if ($value['mandatory']) {
+                            $data[$this->alias()]['custom_field_values'][$key]['mandatory'] = 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;

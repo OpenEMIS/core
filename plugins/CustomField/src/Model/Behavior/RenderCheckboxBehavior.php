@@ -4,10 +4,12 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Log\Log;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderCheckboxBehavior extends RenderBehavior
-{
+{   
+    private $postedData = null;
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -39,6 +41,7 @@ class RenderCheckboxBehavior extends RenderBehavior
         // End
 
         $checkedValues = [];
+        $blah = [];
         if (!is_null($savedValue)) {
             $checkedValues =  $savedValue;
         }
@@ -53,7 +56,19 @@ class RenderCheckboxBehavior extends RenderBehavior
         } elseif ($action == 'edit') {
             $form = $event->subject()->Form;
             $unlockFields = [];
-
+            // putting back user data if validation fails.
+            if ($entity->errors()) {
+                if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
+                    if (array_key_exists('custom_field_values', $this->_table->request->data[$this->_table->alias()])) {
+                        $questions = $this->_table->request->data[$this->_table->alias()]['custom_field_values'];
+                        foreach ($questions as $question) {
+                            if ($question['survey_question_id'] == $fieldId) {
+                                $this->postedData[$question['survey_question_id']] = $question;
+                            }
+                        }
+                    }
+                }
+            }
             $html = '';
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
@@ -62,6 +77,10 @@ class RenderCheckboxBehavior extends RenderBehavior
                 $option = ['kd-checkbox-radio' => ''];
                 if (!empty($checkedValues)) {
                     if (in_array($key, $checkedValues)) {
+                        $option['checked'] = true;
+                    }
+                } elseif (!empty($this->postedData) && isset($this->postedData[$fieldId]['number_value'][$key])) {
+                    if ($this->postedData[$fieldId]['number_value'][$key]) {
                         $option['checked'] = true;
                     }
                 }
