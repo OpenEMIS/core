@@ -136,57 +136,6 @@ class RecordBehavior extends Behavior
         return $events;
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        $model = $this->_table;
-        if (isset($model->action) && $model->action == 'edit' && $model->alias() == 'InstitutionSurveys') {
-            $tabSection = null;
-            $newData = [];
-            $conditions = [];
-            $unsetQuestionIds = [];
-            // check if survey exists any tab section
-            if (isset($model->request->query['tab_section'])) {
-                $tabSection = $model->request->query['tab_section'];
-            }
-            $SurveyRules = TableRegistry::get('Survey.SurveyRules');
-            $SurveyFormQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
-            $surveyFormId = $data['survey_form_id'];
-            $rules = $SurveyRules
-                ->find('SurveyRulesList', ['survey_form_id' => $surveyFormId])
-                ->innerJoin(
-                    [$SurveyFormQuestions->alias() => $SurveyFormQuestions->table()], 
-                    [$SurveyFormQuestions->aliasField('survey_question_id = ') . $SurveyRules->aliasField('survey_question_id')]
-                );
-            // get all the survey rules by survey section, if any
-            if ($tabSection) {
-                $conditions[] = $rules->newExpr('REPLACE(' . $SurveyFormQuestions->aliasField('section') . ', " ", "-" ) = "'.$tabSection.'"');
-            }
-            $rules = $rules
-                ->where($conditions)
-                ->toArray();
-            if (!empty($rules)) {
-                foreach ($data['custom_field_values'] as $customFieldValueKey => $customFieldValue) {
-                    $newData[$customFieldValue['survey_question_id']] = $customFieldValue;
-                }
-                foreach ($rules as $key => $rule) {
-                    foreach ($rule as $supporterFieldKey => $options) {
-                        $dependentOnQuestionSelectedOption = json_decode($options);
-                        $userSelectedOption = $newData[$supporterFieldKey]['number_value'];
-                        if (!(in_array($userSelectedOption, $dependentOnQuestionSelectedOption))) {
-                            $unsetQuestionIds[] = $key;
-                        }
-                    }
-                }
-                foreach ($data['custom_field_values'] as $key => $value) {
-                    if (in_array($value['survey_question_id'], $unsetQuestionIds)) {
-                        unset($data['custom_field_values'][$key]);
-                    }
-                }
-                $data['custom_field_values'] = array_values($data['custom_field_values']);
-            }
-        }
-    }
-
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $this->setToolbarButtons($toolbarButtons, $attr, $action);
@@ -437,6 +386,10 @@ class RecordBehavior extends Behavior
                     $conn->begin();
 
                     // POCOR-4799 Modified to only delete all dependent answers only if the selected value is not the show_options value in SurveyRules.
+                    $test = [];
+                    foreach ($entity->custom_field_values as $key => $value) {
+                        $test[$value['survey_question_id']] = $value;
+                    }
                     if (is_null($this->config('moduleKey'))) {
                         if (isset($data[$this->_table->alias()][$this->config('formKey')])) {
                             $surveyFormId = $data[$this->_table->alias()][$this->config('formKey')];
@@ -448,13 +401,18 @@ class RecordBehavior extends Behavior
                                     $SurveyRules->aliasField('enabled') => 1
                                 ])
                                 ->toArray();
-                            foreach ($rules as $rule) {
-                                $ruleShowOptions = json_decode($rule->show_options);
-                                foreach ($entity->custom_field_values as $key => $value) {
-                                    if ($value->survey_question_id == $rule->dependent_question_id && !in_array($value->number_value, $ruleShowOptions)) {
+                            if (!empty($rules)) {
+                                foreach ($rules as $rule) {
+                                    $ruleShowOptions = json_decode($rule->show_options);
+                                    if (isset($test[$rule->dependent_question_id]) && !in_array($test[$rule->dependent_question_id]['number_value'], $ruleShowOptions)) {
                                         $settings['deleteFieldIds'][] = $rule->survey_question_id;
-                                        break;
+                                        foreach ($data[$model->alias()]['custom_field_values'] as $key => $value) {
+                                            if ($value['survey_question_id'] == $rule->survey_question_id) {
+                                                unset($data[$model->alias()]['custom_field_values'][$key]);
+                                            }
+                                        }
                                     }
+                                    $data[$model->alias()]['custom_field_values'] = array_values($data[$model->alias()]['custom_field_values']);
                                 }
                             }
                         }
