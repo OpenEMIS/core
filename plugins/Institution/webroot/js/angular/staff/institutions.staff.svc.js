@@ -785,10 +785,9 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
             .contain(['IdentityTypes'])
             .ajax({defer: true});
     }
-
     function getSpecialNeedTypes() {
         return SpecialNeedTypes
             .select()
             .ajax({defer: true});
-   }
+    }
 };
