@@ -652,7 +652,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                 break;
 
             case 'SpecialNeeds': // have special need date
-                $date = $afterSaveOrDeleteEntity->special_need_date;
+                $date = $afterSaveOrDeleteEntity->date;
                 $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodIdByDate($date);
                 break;
         }
