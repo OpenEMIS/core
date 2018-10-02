@@ -206,7 +206,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
         $specialNeedOptions = [];
 
         if ($action == 'add') {
-            $SpecialNeedTypes = TableRegistry::get('FieldOption.SpecialNeedTypes');
+            $SpecialNeedTypes = TableRegistry::get('SpecialNeeds.SpecialNeedsTypes');
             $specialNeedOptions = $SpecialNeedTypes->getVisibleNeedTypes();
         }
 
