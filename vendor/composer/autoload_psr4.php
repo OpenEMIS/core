@@ -37,6 +37,7 @@ return array(
     'Page\\' => array($vendorDir . '/korditpteltd/kd-cakephp-page/src'),
     'OAuth\\Test\\' => array($baseDir . '/plugins/OAuth/tests'),
     'OAuth\\' => array($baseDir . '/plugins/OAuth/src'),
+    'Mpdf\\' => array($vendorDir . '/mpdf/mpdf/src'),
     'Migrations\\' => array($vendorDir . '/cakephp/migrations/src'),
     'JsonSchema\\' => array($vendorDir . '/justinrainbow/json-schema/src/JsonSchema'),
     'FontLib\\' => array($vendorDir . '/phenx/php-font-lib/src/FontLib'),
