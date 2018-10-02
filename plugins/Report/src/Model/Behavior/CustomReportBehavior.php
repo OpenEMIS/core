@@ -43,7 +43,10 @@ class CustomReportBehavior extends Behavior
             foreach ($methods as $method) {
                 if (array_key_exists($method, $jsonArray)) {
                     $methodName = '_' . $method;
-                    $this->$methodName($query, $params, $jsonArray[$method]);
+                    if ($this->$methodName($query, $params, $jsonArray[$method]) === false) {
+                        // return empty option as unable to construct the right query
+                        return [];
+                    }
                 }
             }
 
@@ -66,7 +69,64 @@ class CustomReportBehavior extends Behavior
             }
         }
 
+        //To prevent memory leak
+        $this->Table = null;
+        TableRegistry::clear();
+        gc_collect_cycles();
+
         return $result;
+    }
+
+    /**
+    * To check if the additional options should be displayed. 
+    * See CustomReportsTable@addBeforeAction
+    *
+    * @param array $optionsCondition - decoded json from filter.json
+    * @param array $params           - parameters from other filters or filter.json
+    *
+    * @return - boolean | If the query returns any rows/results
+    **/
+    public function checkOptionCondition($optionsCondition, array $params)
+    {
+        if (!isset($optionsCondition["model"])) {
+            return false;
+        }
+        $optionModel = $optionsCondition["model"];
+        $optionJoins = isset($optionsCondition["joins"]) ? $optionsCondition["joins"] : [];
+        $optionConditions = isset($optionsCondition["conditions"]) ? $optionsCondition["conditions"] : [];
+
+        $queryTable = TableRegistry::get($optionModel);
+        $query = $queryTable->find();
+
+        // do joins
+        foreach ($optionJoins as $joinData) {
+            if (!isset($joinData["model"])) {
+                continue;
+            }
+            $joinTable = TableRegistry::get($joinData["model"]);
+            $joinType = isset($joinData["type"]) ? $joinData["type"] : "INNER";
+            $joinConditions = isset($joinData["conditions"]) ? $joinData["conditions"] : [];
+
+            $joinConditions = $this->_processConditions($joinConditions, $params);
+
+            $alias = isset($joinData["alias"]) ? $joinData["alias"] : $joinTable->alias();
+
+            switch ($joinType) {
+            case 'INNER':
+                $query->innerJoin([$alias => $joinTable->table()], [$joinConditions]);
+                break;
+            case 'LEFT':
+                $query->leftJoin([$alias => $joinTable->table()], [$joinConditions]);
+                break;
+            }
+        }
+
+        // do conditions
+        foreach ($optionConditions as $conditionData) {
+            $query->where($this->_processConditions($conditionData, $params));
+        }
+
+        return $query->count() > 0;
     }
 
     private function extractPlaceholder($str)
@@ -253,17 +313,9 @@ class CustomReportBehavior extends Behavior
                     $conditions = [];
 
                     if (isset($obj['conditions'])) {
-                        foreach($obj['conditions'] as $field => $value) {
-                            $pos = strpos($value, '${');
-
-                            if ($pos !== false) {
-                                $placeholder = $this->extractPlaceholder($value);
-                                if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
-                                    $conditions[$field] = $params[$placeholder];
-                                }
-                            } else {
-                                $conditions[$field] = $value;
-                            }
+                        $conditions = $this->_processConditions($obj['conditions'], $params);
+                        if ($conditions === false) {
+                            return false;
                         }
                     }
 
@@ -273,6 +325,30 @@ class CustomReportBehavior extends Behavior
                 }
             }
         }
+    }
+
+    private function _processConditions($aryConditions, $params)
+    {
+        $conditions = [];
+        foreach ($aryConditions as $field => $value) {
+            $pos = strpos($value, '${');
+
+            if ($pos !== false) {
+                $placeholder = $this->extractPlaceholder($value);
+                if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
+                    $conditions[$field] = $params[$placeholder];
+                } 
+                
+                if (array_key_exists($placeholder, $params) && empty($params[$placeholder])) { 
+                    // condition value that are using placeholders are assumed to have dependencies. 
+                    // if no value is found, option should not be constructed.
+                    return false;
+                }
+            } else {
+                $conditions[] = $field . " = " . $value;
+            }
+        }
+        return $conditions;
     }
 
     private function _where(Query $query, array $params, array $values)
