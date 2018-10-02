@@ -53,7 +53,7 @@ class RenderCheckboxBehavior extends RenderBehavior
         } elseif ($action == 'edit') {
             $form = $event->subject()->Form;
             $unlockFields = [];
-            
+
             $html = '';
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
