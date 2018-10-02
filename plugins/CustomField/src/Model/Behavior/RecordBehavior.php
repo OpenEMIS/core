@@ -386,9 +386,9 @@ class RecordBehavior extends Behavior
                     $conn->begin();
 
                     // POCOR-4799 Modified to only delete all dependent answers only if the selected value is not the show_options value in SurveyRules.
-                    $test = [];
+                    $entityCustomFieldValues = [];
                     foreach ($entity->custom_field_values as $key => $value) {
-                        $test[$value['survey_question_id']] = $value;
+                        $entityCustomFieldValues[$value['survey_question_id']] = $value;
                     }
                     if (is_null($this->config('moduleKey'))) {
                         if (isset($data[$this->_table->alias()][$this->config('formKey')])) {
@@ -404,7 +404,7 @@ class RecordBehavior extends Behavior
                             if (!empty($rules)) {
                                 foreach ($rules as $rule) {
                                     $ruleShowOptions = json_decode($rule->show_options);
-                                    if (isset($test[$rule->dependent_question_id]) && !in_array($test[$rule->dependent_question_id]['number_value'], $ruleShowOptions)) {
+                                    if (isset($entityCustomFieldValues[$rule->dependent_question_id]) && !in_array($entityCustomFieldValues[$rule->dependent_question_id]['number_value'], $ruleShowOptions)) {
                                         $settings['deleteFieldIds'][] = $rule->survey_question_id;
                                         foreach ($data[$model->alias()]['custom_field_values'] as $key => $value) {
                                             if ($value['survey_question_id'] == $rule->survey_question_id) {
