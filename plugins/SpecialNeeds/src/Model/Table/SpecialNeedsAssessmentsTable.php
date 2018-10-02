@@ -3,6 +3,7 @@ namespace SpecialNeeds\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
+use Cake\Core\Configure;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
@@ -30,6 +31,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
     }
 
     public function validationDefault(Validator $validator)
@@ -90,8 +95,8 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
 
         $quantityResult = $this->find()
             ->where([$this->aliasField('security_user_id') => $studentId])
-            ->all()->toArray();
-
+            ->all()
+            ->toArray();
         $quantity = !empty(count($quantityResult)) ? count($quantityResult) : 0;
 
         return $quantity;
