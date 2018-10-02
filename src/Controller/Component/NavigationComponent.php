@@ -873,7 +873,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
                 'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
-                    'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
+                    'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.Attachments', 'Students.Comments',
                     'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys', 'StudentComments.index', 'StudentComments.view', 'StudentComments.add', 'StudentComments.edit', 'StudentComments.delete', 'Students.StudentTransport']
             ],
             'Institutions.StudentProgrammes.index' => [
@@ -907,6 +907,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Student'],
                 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
+            'Students.SpecialNeedsReferrals' => [
+                'title' => 'Special Needs',
+                'parent' => 'Institutions.Students.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.SpecialNeedsReferrals', 'Students.SpecialNeedsAssessments', 'Students.SpecialNeedsServices', 'Students.SpecialNeedsDevices', 'Students.SpecialNeedsPlans']
+            ]
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
@@ -928,7 +934,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $id])],
                 'selected' => ['Institutions.StaffUser.edit', 'Institutions.StaffAccount', 'Staff.Identities', 'Staff.Nationalities',
-                    'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.SpecialNeeds', 'Staff.Attachments', 'StaffComments.index', 'StaffComments.view', 'StaffComments.add', 'StaffComments.edit', 'StaffComments.delete', 'Staff.History']
+                    'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.Attachments', 'StaffComments.index', 'StaffComments.view', 'StaffComments.add', 'StaffComments.edit', 'StaffComments.delete', 'Staff.History']
             ],
             'Staff.EmploymentStatuses' => [
                 'title' => 'Career',
@@ -961,6 +967,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Staff'],
                 'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'StaffBodyMasses.index', 'StaffBodyMasses.add', 'StaffBodyMasses.edit', 'StaffBodyMasses.view', 'StaffBodyMasses.delete', 'StaffInsurances.index', 'StaffInsurances.add', 'StaffInsurances.edit', 'StaffInsurances.view', 'StaffInsurances.delete']
             ],
+            'Staff.SpecialNeedsReferrals' => [
+                'title' => 'Special Needs',
+                'parent' => 'Institutions.Staff.index',
+                'params' => ['plugin' => 'Staff'],
+                'selected' => ['Staff.SpecialNeedsReferrals', 'Staff.SpecialNeedsAssessments', 'Staff.SpecialNeedsServices', 'Staff.SpecialNeedsDevices', 'Staff.SpecialNeedsPlans']
+            ]
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
@@ -977,7 +989,7 @@ class NavigationComponent extends Component
                 'title' => 'General',
                 'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.Profiles.view', 'Profiles.Profiles.edit', 'Profiles.Profiles.pull', 'Profiles.Accounts', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'ProfileComments.index', 'ProfileComments.view', 'Profiles.Attachments', 'Profiles.History', 'Profiles.SpecialNeeds', 'Profiles.Contacts']
+                'selected' => ['Profiles.Profiles.view', 'Profiles.Profiles.edit', 'Profiles.Profiles.pull', 'Profiles.Accounts', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'ProfileComments.index', 'ProfileComments.view', 'Profiles.Attachments', 'Profiles.History', 'Profiles.Contacts']
             ],
             'Profiles.Healths' => [
                 'title' => 'Health',
@@ -990,6 +1002,12 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Employments', 'Profiles.StaffQualifications', 'Profiles.StaffExtracurriculars', 'Profiles.StaffMemberships', 'Profiles.StaffLicenses', 'Profiles.StaffAwards']
+            ],
+            'Profiles.SpecialNeedsReferrals' => [
+                'title' => 'Special Needs',
+                'parent' => 'Profiles.Profiles',
+                'params' => ['plugin' => 'Profile'],
+                'selected' => ['Profiles.SpecialNeedsReferrals', 'Profiles.SpecialNeedsAssessments', 'Profiles.SpecialNeedsServices', 'Profiles.SpecialNeedsDevices', 'Profiles.SpecialNeedsPlans']
             ],
             'Profiles.ScholarshipApplications' => [
                 'title' => 'Scholarships',
@@ -1009,7 +1027,7 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Directories.index',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments',
-                    'Directories.History', 'Directories.SpecialNeeds', 'Directories.Contacts']
+                    'Directories.History', 'Directories.Contacts']
             ],
             'Directories.Healths' => [
                 'title' => 'Health',
@@ -1023,6 +1041,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.Employments', 'Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffAwards']
             ],
+            'Directories.SpecialNeedsReferrals' => [
+                'title' => 'Special Needs',
+                'parent' => 'Directories.Directories.index',
+                'params' => ['plugin' => 'Directory'],
+                'selected' => ['Directories.SpecialNeedsReferrals', 'Directories.SpecialNeedsAssessments', 'Directories.SpecialNeedsServices', 'Directories.SpecialNeedsDevices', 'Directories.SpecialNeedsPlans']
+            ]
         ];
         return $navigation;
     }

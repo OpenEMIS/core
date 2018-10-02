@@ -89,7 +89,7 @@ class RenderBehavior extends Behavior {
         }
         // field should not be disabled as AuthSecurity will check to ensure that all unlocked fields are present in the POST data
         if (isset($this->surveyRules[$fieldId])) {
-            $value = '<fieldset
+            $value = '<fieldset style="clear: both;"
                 ng-readonly="!RelevancyRulesController.showDropdown('.$this->surveyRules[$fieldId]['dependent_question_id'].', '.$this->surveyRules[$fieldId]['show_options'].');"
                 ng-show="RelevancyRulesController.showDropdown('.$this->surveyRules[$fieldId]['dependent_question_id'].', '.$this->surveyRules[$fieldId]['show_options'].');"
                 >' . $html;

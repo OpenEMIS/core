@@ -1,3 +1,10 @@
+### [3.36.0] - 2018-09-28
+- Developed Inclusive Education (Special Needs) feature in Profiles/Institutions/Directory > Special Needs
+- Implemented a delete button to delete all Survey data in Institution > Survey
+- Implemented Report Queue in Institutions > Report Card > Status page
+- Bug fix on error 404 in Institutions > Staff > Export
+- Bug fix on missing data when saving tables in Institutions > Surveys
+
 ### [3.35.0] - 2018-09-14
 - Developed Scholarship deadline alert feature in Administration > Notification > Alert page
 - Implemented Academic Period and Financial Assistance type filter in Reports > Scholarships > Recipient Payment Structures page

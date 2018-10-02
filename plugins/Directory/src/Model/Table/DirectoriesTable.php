@@ -38,10 +38,11 @@ class DirectoriesTable extends ControllerActionTable
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
         $this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Nationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
+
+        $this->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
 
         $this->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -359,7 +360,7 @@ class DirectoriesTable extends ControllerActionTable
             $this->field('openemis_no', ['user_type' => $userType]);
             switch ($userType) {
                 case self::STUDENT:
-                    $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
+                    $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
                     $this->addBehavior('CustomField.Record', [
                         'model' => 'Student.Students',
                         'behavior' => 'Student',
@@ -377,7 +378,7 @@ class DirectoriesTable extends ControllerActionTable
                     ]);
                     break;
                 case self::STAFF:
-                    $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
+                    $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts']]);
                     $this->addBehavior('CustomField.Record', [
                         'model' => 'Staff.Staff',
                         'behavior' => 'Staff',
@@ -463,7 +464,7 @@ class DirectoriesTable extends ControllerActionTable
                 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'nationality_id',
                 'identity_type_id', 'location_section', 'address', 'postal_code', 'address_area_section', 'address_area_id',
                 'birthplace_area_section', 'birthplace_area_id', 'other_information_section', 'contact_type', 'contact_value', 'nationality',
-                'identity_type', 'identity_number', 'special_need', 'special_need_difficulty', 'special_need_comment', 'special_need_date',
+                'identity_type', 'identity_number',
                 'username', 'password'
             ]);
     }
