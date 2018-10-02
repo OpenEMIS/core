@@ -641,6 +641,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'Staff',
                 'ClassStudents' => [
                     'Users.Genders',
+                    'Users.SpecialNeeds',
                     'EducationGrades',
                     'StudentStatuses',
                     'sort' => [$sortConditions]
@@ -654,6 +655,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'Staff',
                 'ClassStudents' => [
                     'Users.Genders',
+                    'Users.SpecialNeeds',
                     'EducationGrades',
                     'StudentStatuses'
                 ],
