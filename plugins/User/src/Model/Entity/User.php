@@ -77,20 +77,14 @@ class User extends Entity {
 
     protected function _getHasSpecialNeeds()
     {
-        if ($this->has('special_needs') && !empty($this->special_needs)) {
-            return true;
+        if ($this->offsetExists('special_needs')) {
+            // If entity already contain SpecialNeeds, skip table registry
+            return !empty($this->special_needs);
+        } else {
+            // If entity do not contain SpecialNeeds, manual table registry and check
+            $SpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments');
+            return $SpecialNeedsAssessments
+                ->exists([$SpecialNeedsAssessments->aliasField('security_user_id') => $this->id]);
         }
-
-        $SpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments');
-
-        $userId = $this->id;
-        $specialNeedCount = $SpecialNeedsAssessments
-            ->find()
-            ->where([
-                $SpecialNeedsAssessments->aliasField('security_user_id') => $userId
-            ])
-            ->count();
-
-        return $specialNeedCount > 0;
     }   
 }
