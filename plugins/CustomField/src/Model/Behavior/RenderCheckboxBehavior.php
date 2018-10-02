@@ -4,7 +4,6 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Log\Log;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderCheckboxBehavior extends RenderBehavior
@@ -54,6 +53,7 @@ class RenderCheckboxBehavior extends RenderBehavior
         } elseif ($action == 'edit') {
             $form = $event->subject()->Form;
             $unlockFields = [];
+            
             $html = '';
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
