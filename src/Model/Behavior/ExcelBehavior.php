@@ -227,6 +227,9 @@ class ExcelBehavior extends Behavior
             $percentCount = intval($count / 100);
             $pages = ceil($count / $this->config('limit'));
 
+            // Debugging 
+            $pages = 1;
+
             if (isset($sheet['orientation'])) {
                 if ($sheet['orientation'] == 'landscape') {
                     $this->config('orientation', 'landscape');

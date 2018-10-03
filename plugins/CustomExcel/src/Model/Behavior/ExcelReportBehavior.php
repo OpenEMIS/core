@@ -25,7 +25,8 @@ class ExcelReportBehavior extends Behavior
     protected $_defaultConfig = [
         'folder' => 'export',
         'subfolder' => 'customexcel',
-        'format' => 'xlsx',
+        // 'format' => 'xlsx',
+        'format' => 'pdf',
         'download' => true,
         'purge' => true,
         'wrapText' => false,
@@ -47,13 +48,47 @@ class ExcelReportBehavior extends Behavior
 
     private $libraryTypes = [
         'xlsx' => 'Xlsx',
+        // 'pdf' => 'Dompdf'
         'pdf' => 'Dompdf'
+
     ];
+
+    private $lastColumn = 0;
+    private $alphabetValueArr = [
+        'A' => '1',
+        'B' => '2',
+        'C' => '3',
+        'D' => '4',
+        'E' => '5',
+        'F' => '6',
+        'G' => '7',
+        'H' => '8',
+        'I' => '9',
+        'J' => '10',
+        'K' => '11',
+        'L' => '12',
+        'M' => '13',
+        'N' => '14',
+        'O' => '15',
+        'P' => '16',
+        'Q' => '17',
+        'R' => '18',
+        'S' => '19',
+        'T' => '20',
+        'U' => '21',
+        'V' => '22',
+        'W' => '23',
+        'X' => '24',
+        'Y' => '25',
+        'Z' => '26',
+    ];
+
+    private $alphabetHistory = [];
+    private $excelLastRowValue = 0;
 
     public function initialize(array $config)
     {
         parent::initialize($config);
-
         $model = $this->_table;
         $folder = WWW_ROOT . $this->config('folder');
         $subfolder = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder');
@@ -97,6 +132,7 @@ class ExcelReportBehavior extends Behavior
 
     public function renderExcelTemplate(ArrayObject $extra)
     {
+        // pr('renderExcelTemplate');die;
         $model = $this->_table;
         $format = $this->config('format');
 
@@ -111,14 +147,19 @@ class ExcelReportBehavior extends Behavior
 
         $extra['vars'] = $this->getVars($params, $extra);
 
+
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
 
         $temppath = tempnam($extra['path'], $this->config('filename') . '_');
         $extra['file_path'] = $temppath;
+        
 
         $objSpreadsheet = $this->loadExcelTemplate($extra);
         $this->generateExcel($objSpreadsheet, $extra);
+
+        Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
+
 
         $this->saveFile($objSpreadsheet, $temppath, $format);
 
@@ -195,7 +236,6 @@ class ExcelReportBehavior extends Behavior
                 }
             }
         }
-
         return $objSpreadsheet;
     }
 
@@ -214,6 +254,97 @@ class ExcelReportBehavior extends Behavior
         $objSpreadsheet->setActiveSheetIndex(0);
     }
 
+    private function checkLastColumn($targetColumnValue)
+    {
+        $tens = 0;
+        $columnToRemoveOnwards = 0; // instead of $value
+
+        // Loop backward of the targetColumnValue
+        for ($i = strlen($targetColumnValue)-1; $i >= 0; $i--) {
+            $alphabet = $targetColumnValue[$i];
+            $alphabetColumnValue = $this->alphabetValueArr[$alphabet];
+
+            $columnToRemoveOnwards += $alphabetColumnValue * pow(count($this->alphabetValueArr), $tens++);
+            
+        }
+
+        // Update the lastColumn so that later read the HTML can remove the column part
+        $this->lastColumn = $columnToRemoveOnwards;
+
+        // $regex = $this->generateRemovalRegex(14);
+    }
+
+    private function checkLastRow($targetRowValue)
+    {
+        if ($targetRowValue > $this->excelLastRowValue) {
+            $this->excelLastRowValue = $targetRowValue;
+        }
+    }
+
+    private function generateRemovalRegex($prefixRegex, $postfixRegex, $startColumn, $endingColumnn = 255)
+    {
+        $regex = $prefixRegex;
+        $regex .= $this->regexRange($startColumn, $endingColumnn);
+        $regex .= $postfixRegex;
+
+        return $regex;
+    }
+
+    // private function generateRemovalRegex($startColumn, $endingColumnn = 255)
+    // {
+    //     $regex = '/(.*)(column|col)';
+    //     $regex .= $this->regexRange($startColumn, $endingColumnn);
+    //     $regex .= '(.*)/';
+
+    //     return $regex;
+    // }
+
+    private function regexRange($from, $to)
+    {
+        $ranges = array($from);
+        $increment = 1;
+        $next = $from;
+        $higher = true;
+
+        while(true) {
+            $next += $increment;
+
+            if($next + $increment > $to) {
+                if( $next <= $to) {
+                    $ranges[] = $next;
+                }
+                $increment /= 10;
+                $higher = false;
+            } elseif($next % ($increment * 10) === 0) {
+                $ranges[] = $next;
+                $increment = $higher ? $increment * 10 : $increment / 10;
+            }
+
+            if (!$higher && $increment < 10) {
+                break;
+            }
+        }
+
+        $ranges[] = $to + 1;
+        $regex = '(';
+
+        for ($i = 0; $i < sizeof($ranges) - 1; $i++) {
+            $str_from = (string)($ranges[$i]);
+            $str_to = (string)($ranges[$i + 1] - 1);
+
+            for($j = 0; $j < strlen($str_from); $j++) {
+                if($str_from[$j] == $str_to[$j]) {
+                    $regex .= $str_from[$j];
+                } else {
+                    $regex .= "[" . $str_from[$j] . "-" . $str_to[$j] . "]";
+                }
+            }
+            $regex .= "|";
+        }
+
+        return substr($regex, 0, strlen($regex)-1) . ')';
+    }
+
     public function renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
     {
         $type = $attr['type'];
@@ -223,6 +354,20 @@ class ExcelReportBehavior extends Behavior
 
         $targetCell = $objWorksheet->getCell($cellCoordinate);
         $targetColumnValue = $targetCell->getColumn();
+        $targetRowValue = $targetCell->getRow();
+
+        // pr($cellCoordinate);
+        // pr($targetRowValue);
+
+        // To remove the blanks column
+        if (empty($this->alphabetHistory) || !array_key_exists($targetColumnValue, $this->alphabetHistory)) {
+            // Add targetColumnValue to hisotry so that we know that alphabet has been read before.
+            $this->alphabetHistory[$targetColumnValue] = $targetColumnValue;
+            $this->checkLastColumn($targetColumnValue);
+        }
+
+        // To remove the blanks row
+        $this->checkLastRow($targetRowValue);
 
         switch($type) {
             case 'number':
@@ -352,13 +497,91 @@ class ExcelReportBehavior extends Behavior
 
     public function saveFile($objSpreadsheet, $filepath, $format)
     {
+        Log::write('debug', 'ExcelReportBehavior >>> saveFile: '.$format);
         $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
 
         if ($format == 'pdf') {
-            $objWriter->writeAllSheets();
-        }
+            $mpdf = new \Mpdf\Mpdf();
+            Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
 
-        $objWriter->save($filepath);
+            // Convert spreadsheet object into html
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
+            // $writer->setSheetIndex(1);
+            // $writer->writeAllSheets();
+            $writer->save($filepath);
+
+            // Read the html file and convert them into a variable
+            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
+
+            // To remove the columns in html format
+            $prefixRegex = '/(.*)(column|col)';
+            $postfixRegex = '(.*)/';
+            $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->lastColumn);
+
+            $modifiedFile = preg_replace($regexString, "", $file);
+
+            // To remove the columns in html format
+            // .*(tr class="row13">(.|\n)*)</tr>
+            // .*(row)([1][3-9])(">)(.|\n)*</tr>
+            $prefixRegex = '/.*(row)';
+            $postfixRegex = '(">)(.|\n)*<\/tr>/';
+            $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->excelLastRowValue);
+
+            $modifiedFile = preg_replace($regexString, "", $modifiedFile);
+            // pr($modifiedFile);die;
+
+
+            // Write the contents back to the file
+            // file_put_contents($filepath, $modifiedFile);
+            // die;
+
+            $mpdf->AddPage('L'); // Adds a new page in Landscape orientation
+
+            // Write some HTML code:
+            // $mpdf->WriteHTML($modifiedFile);
+
+            $fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
+
+            try {
+                Log::write('debug', 'inside try before modifiedFile');
+                // Log::write('debug', $modifiedFile);
+            $mpdf->WriteHTML($modifiedFile);
+
+
+                Log::write('debug', 'inside try before output');
+
+                    $mpdf->Output($fileName,'D');
+                Log::write('debug', 'inside try after output');
+
+            } catch (Exception $e) {
+                    Log::write('debug', 'error liao');
+            }
+
+            // Output a PDF file download directly to the browser
+            // $mpdf->Output($fileName,'D');
+
+            // Remove the temp file that is converted from excel object and its successfully converted to pdf
+            if ($this->config('purge')) {
+                // delete excel file after successfully converted to pdf
+                $this->deleteFile($filepath);
+            }
+        } else {
+            // xlsx
+            $objWriter->save($filepath);
+
+        }
+        // $writer->save($filepath);
+
+
+        // if ($format == 'pdf') {
+        //     $objWriter->writeAllSheets();
+        // }
+
+        // $objWriter->save($filepath);
+        Log::write('debug', 'died');
+
+        // die;
+
     }
 
     public function downloadFile($filecontent, $filename, $filesize)
@@ -598,7 +821,6 @@ class ExcelReportBehavior extends Behavior
 
         foreach ($cells as $cellCoordinate) {
             $objCell = $objWorksheet->getCell($cellCoordinate);
-
             if (is_object($objCell->getValue())) {
                 $cellValue = $objCell->getValue()->getPlainText();
             } else {
@@ -622,6 +844,7 @@ class ExcelReportBehavior extends Behavior
                 }
             }
         }
+
     }
 
     private function processAdvancedPlaceholder($objSpreadsheet, $objWorksheet, $extra)
@@ -641,7 +864,6 @@ class ExcelReportBehavior extends Behavior
 
             foreach ($this->advancedTypes as $function => $keyword) {
                 $value = $this->getAdvancedTypeKeyword($keyword);
-
                 $pos = strpos($cellValue, $value);
                 if ($pos !== false) {
                     if (method_exists($this, $function)) {
