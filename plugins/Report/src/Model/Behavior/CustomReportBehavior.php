@@ -88,6 +88,11 @@ class CustomReportBehavior extends Behavior
     **/
     public function checkOptionCondition($optionsCondition, array $params)
     {
+        // conditions should not be applied to super_admin
+        if ($this->_table->Auth->user('super_admin')) {
+            return true;
+        }
+
         if (!isset($optionsCondition["model"])) {
             return false;
         }
@@ -318,6 +323,9 @@ class CustomReportBehavior extends Behavior
                             return false;
                         }
                     }
+
+                    // add $options["super_admin"] to finders since they do not have access to auth component
+                    $conditions["super_admin"] = $this->_table->Auth->user('super_admin');
 
                     $query->find($finder, $conditions);
                 } else {
