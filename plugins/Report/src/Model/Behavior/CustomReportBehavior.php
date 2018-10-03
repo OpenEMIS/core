@@ -319,6 +319,9 @@ class CustomReportBehavior extends Behavior
                         }
                     }
 
+                    // add $options["super_admin"] to finders since they do not have access to auth component
+                    $conditions["super_admin"] = $this->_table->Auth->user('super_admin');
+
                     $query->find($finder, $conditions);
                 } else {
                     Log::write('debug', 'Finder (' . $obj['name'] . ') does not exist.');
