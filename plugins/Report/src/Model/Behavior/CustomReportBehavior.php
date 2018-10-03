@@ -88,6 +88,11 @@ class CustomReportBehavior extends Behavior
     **/
     public function checkOptionCondition($optionsCondition, array $params)
     {
+        // conditions should not be applied to super_admin
+        if ($this->_table->Auth->user('super_admin')) {
+            return true;
+        }
+
         if (!isset($optionsCondition["model"])) {
             return false;
         }
