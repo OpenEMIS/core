@@ -73,7 +73,7 @@ class POCOR3594 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end bus_types
+        // end demographic_types
 
        $data = [
             [
