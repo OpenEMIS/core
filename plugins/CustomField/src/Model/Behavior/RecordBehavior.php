@@ -1164,11 +1164,11 @@ class RecordBehavior extends Behavior
                     ->where([$TableCellTable->aliasField($customFieldsForeignKey).' IN ' => $tableCustomFieldIds, $TableCellTable->aliasField($customRecordsForeignKey) => $recordId])
                     ->map(function ($row) use ($tableCellData, $customFieldsForeignKey, $customColumnForeignKey, $customRowForeignKey) {
                         $value = null;
-                        if ($row['number_value']) {
+                        if (isset($row['number_value']) && $row['number_value']) {
                             $value = $row['number_value'];
-                        } elseif ($row['text_value']) {
+                        } elseif (isset($row['text_value']) && $row['text_value']) {
                             $value = $row['text_value'];
-                        } elseif ($row['decimal_value']) {
+                        } elseif (isset($row['decimal_value']) && $row['decimal_value']) {
                             $value = $row['decimal_value'];
                         }
                         $tableCellData[$row[$customFieldsForeignKey]][$row[$customColumnForeignKey]][$row[$customRowForeignKey]] = $value;
