@@ -2707,9 +2707,11 @@ class ValidationBehavior extends Behavior
 
     public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)
     {
-        if ($homeRoomTeacher != 0 && $globalData['data'][$secondaryHomeRoomTeacher] != 0) {
-            if ($homeRoomTeacher == $globalData['data'][$secondaryHomeRoomTeacher]) {
-                return false;
+        if ($homeRoomTeacher != 0 && isset($globalData['data'][$secondaryHomeRoomTeacher]) && is_array($globalData['data'][$secondaryHomeRoomTeacher])) {
+            foreach ($globalData['data'][$secondaryHomeRoomTeacher] as $teacherObj) {
+                if ($homeRoomTeacher == $teacherObj['secondary_staff_id']) {
+                    return false;
+                }
             }
         }
         return true;
