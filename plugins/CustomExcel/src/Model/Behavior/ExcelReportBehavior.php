@@ -356,6 +356,15 @@ class ExcelReportBehavior extends Behavior
         $targetColumnValue = $targetCell->getColumn();
         $targetRowValue = $targetCell->getRow();
 
+        // Log::write('debug', '----------------------getHighestDataRow before---------------------: ');
+        // // $spreadsheet->getSheet(1);
+        // $targetRowValue = $targetCell->getRow();
+        // Log::write('debug', '----------------------getHighestDataRow after---------------------: ');
+        // Log::write('debug', $targetRowValue);
+        // Log::write('debug', $cellValue);
+
+
+
         // pr($cellCoordinate);
         // pr($targetRowValue);
 
@@ -504,31 +513,45 @@ class ExcelReportBehavior extends Behavior
             $mpdf = new \Mpdf\Mpdf();
             Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
 
+            Log::write('debug', '----------------------lastColumn---------------------: ');
+            Log::write('debug', $this->lastColumn);
+            Log::write('debug', '----------------------excelLastRowValue---------------------: ');
+            Log::write('debug', $this->excelLastRowValue);
+
             // Convert spreadsheet object into html
             $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
-            // $writer->setSheetIndex(1);
+            $writer->setSheetIndex(1);
+            
+            Log::write('debug', '----------------------getHighestDataRow before---------------------: ');
+            $objSpreadsheet->getRow();
+            Log::write('debug', '----------------------getHighestDataRow after---------------------: ');
+            Log::write('debug', $objSpreadsheet->getRow());
+
             // $writer->writeAllSheets();
             $writer->save($filepath);
 
             // Read the html file and convert them into a variable
             $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
 
-            // To remove the columns in html format
+            // To remove the extra columns in html format
             $prefixRegex = '/(.*)(column|col)';
             $postfixRegex = '(.*)/';
             $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->lastColumn);
 
             $modifiedFile = preg_replace($regexString, "", $file);
 
-            // To remove the columns in html format
-            // .*(tr class="row13">(.|\n)*)</tr>
-            // .*(row)([1][3-9])(">)(.|\n)*</tr>
+            // To remove the extra rows in html format
             $prefixRegex = '/.*(row)';
             $postfixRegex = '(">)(.|\n)*<\/tr>/';
             $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->excelLastRowValue);
 
             $modifiedFile = preg_replace($regexString, "", $modifiedFile);
-            // pr($modifiedFile);die;
+            Log::write('debug', '----------------------------------------------------------: ');
+            Log::write('debug', $modifiedFile);
+            Log::write('debug', '----------------------------------------------------------: ');
+
+
+            pr($modifiedFile);die;
 
 
             // Write the contents back to the file
