@@ -29,6 +29,7 @@ class ImportUsersTable extends AppTable
         $prefix = explode(",", $prefix);
         $prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
 
+        //when add the accountTypes, please add in User.UsersTable validationDefault function 
         $this->accountTypes = [
             'is_student' => [
                 'id' => 'is_student',
