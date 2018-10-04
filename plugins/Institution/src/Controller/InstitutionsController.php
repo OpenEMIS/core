@@ -1438,6 +1438,7 @@ class InstitutionsController extends AppController
         ];
 
         $studentTabElements = [
+            'Demographics' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' => [
                 'url' => [
