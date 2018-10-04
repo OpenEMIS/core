@@ -126,6 +126,10 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']);
     }
+    public function Demographics()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographics']);
+    }    
     public function StudentAwards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']);
@@ -523,6 +527,7 @@ class DirectoriesController extends AppController
         $tabElements = [
             $this->name => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
+            'Demographics' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
             'Contacts' => ['text' => __('Contacts')],
