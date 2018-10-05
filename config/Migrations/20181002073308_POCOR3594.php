@@ -194,13 +194,16 @@ class POCOR3594 extends AbstractMigration
             ->addIndex('security_user_id')
             ->save();
 
+        $this->execute('CREATE TABLE `z_3594_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_3594_security_functions` SELECT * FROM `security_functions`');
+
         $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 114');
         $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 155');
         $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 291');
 
        $data = [
             [
-                'id' => 2046,
+                'id' => 2047,
                 'name' => 'Demographics',
                 'controller' => 'Students',
                 'module' => 'Institutions',
@@ -256,12 +259,7 @@ class POCOR3594 extends AbstractMigration
     {
         $this->execute('DROP TABLE `demographic_types`');
         $this->execute('DROP TABLE `user_demographics`');
-
-        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 114');
-        $this->execute('DELETE FROM security_functions WHERE id = 2046');
-        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 155');
-        $this->execute('DELETE FROM security_functions WHERE id = 3055');
-        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 291');
-        $this->execute('DELETE FROM security_functions WHERE id = 7068');
+        $this->dropTable('security_functions');
+        $this->table('z_3594_security_functions')->rename('security_functions');
     }    
 }
