@@ -164,12 +164,31 @@ class CustomReportsTable extends AppTable
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-        	$customReports = $this->find('list')->order('name')->toArray();
+            $queryParams = $this->request->data[$this->alias()];
+            $queryParams['user_id'] = $this->Auth->user('id');
+            $queryParams['super_admin'] = $this->Auth->user('super_admin');
+
+            $customReports = $this
+                ->find(
+                    'list', 
+                    ["valueField" => function ($row) {
+                            return $row;
+                    }]
+                )
+                ->order('name')
+                ->toArray();
 
             // for translation
             $reportOptions = [];
-            foreach ($customReports as $key => $name) {
-                $reportOptions[$key] = __($name);
+            foreach ($customReports as $key => $customReport) {
+                if (!$queryParams['super_admin'] // if super admin, allow option
+                    && $customReport->conditions  // only check condition if field exist
+                    && !$this->checkOptionCondition($customReport->conditions, $queryParams)
+                ) {
+                    // skip option
+                    continue;
+                }
+                $reportOptions[$key] = __($customReport->name);
             }
 
             $attr['options'] = $reportOptions;
