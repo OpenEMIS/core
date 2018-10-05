@@ -113,7 +113,7 @@ class CustomReportsTable extends AppTable
                         // get options
                         $queryParams = $this->request->data[$this->alias()];
                         $queryParams['user_id'] = $this->Auth->user('id');
-                        $queryParams['super_admin'] =$this->Auth->user('super_admin');
+                        $queryParams['super_admin'] = $this->Auth->user('super_admin');
                         $byaccess = false;
                         $toSql = false;
                         $options = $this->buildQuery($filterData, $queryParams, $byaccess, $toSql);
