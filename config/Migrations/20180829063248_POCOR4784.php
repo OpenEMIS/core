@@ -16,6 +16,6 @@ class POCOR4784 extends AbstractMigration
     public function down()
     {
         $this->execute('DROP TABLE security_functions');
-        $this->execute('UPDATE TABLE `z_4784_security_functions` TO `security_functions`');
+        $this->table('z_4784_security_functions')->rename('scholarships');
     }
 }
