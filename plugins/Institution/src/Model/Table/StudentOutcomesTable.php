@@ -30,7 +30,8 @@ class StudentOutcomesTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('SecondaryStaff', ['className' => 'User.Users', 'foreignKey' => 'secondary_staff_id']);
+        // $this->belongsTo('SecondaryStaff', ['className' => 'User.Users', 'foreignKey' => 'secondary_staff_id']);
+        $this->hasMany('ClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_class_id']);
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 
@@ -470,8 +471,12 @@ class StudentOutcomesTable extends ControllerActionTable
                 if (!$classPermission && !$subjectPermission) {
                     $query->where(['1 = 0'], [], true);
                 } else {
-                    $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
-                        'InstitutionClasses.id = '.$this->ClassGrades->aliasField('institution_class_id'),
+                    $query
+                        ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
+                            'InstitutionClasses.id = '.$this->ClassGrades->aliasField('institution_class_id'),
+                        ])
+                        ->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                            'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
                         ])
                         ;
 
@@ -480,7 +485,7 @@ class StudentOutcomesTable extends ControllerActionTable
                         $query->where([
                                 'OR' => [
                                     ['InstitutionClasses.staff_id' => $userId],
-                                    ['InstitutionClasses.secondary_staff_id' => $userId]
+                                    ['ClassesSecondaryStaff.secondary_staff_id' => $userId]
                                 ]
                             ]);
                     } else {
@@ -498,7 +503,7 @@ class StudentOutcomesTable extends ControllerActionTable
                             $query->where([
                                 'OR' => [
                                     ['InstitutionClasses.staff_id' => $userId],
-                                    ['InstitutionClasses.secondary_staff_id' => $userId],
+                                    ['ClassesSecondaryStaff.secondary_staff_id' => $userId],
                                     ['InstitutionSubjectStaff.staff_id' => $userId]
                                 ]
                             ]);

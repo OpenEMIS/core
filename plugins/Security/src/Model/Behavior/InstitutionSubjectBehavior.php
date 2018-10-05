@@ -84,7 +84,9 @@ class InstitutionSubjectBehavior extends Behavior
                                         FROM institution_class_subjects
                                         JOIN institution_classes
                                         ON institution_classes.id = institution_class_subjects.institution_class_id
-                                        AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes.secondary_staff_id = ' . $userId . ')
+                                        JOIN institution_classes_secondary_staff
+                                        ON institution_classes_secondary_staff.institution_class_id = institution_classes.id
+                                        AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes_secondary_staff.secondary_staff_id = ' . $userId . ')
                                         WHERE institution_class_subjects.institution_subject_id = InstitutionSubjects.id
                                         LIMIT 1
                                     )'
@@ -186,9 +188,19 @@ class InstitutionSubjectBehavior extends Behavior
                 // Homeroom teacher of the class will be able to view the subject
                 if ($entity->has('classes')) {
                     foreach ($entity->classes as $class) {
-                        if ($class->staff_id == $userId || $class->secondary_staff_id == $userId) {
+                        if ($class->staff_id = $userId) {
                             $isFound = true;
                             break;
+                        }
+
+                        if ($class->has('classes_secondary_staff') && !empty($class->classes_secondary_staff)) {
+                            $secondaryStaffList = $class->classes_secondary_staff;
+                            foreach ($secondaryStaffList as $secondaryStaffEntity) {
+                                if ($secondaryStaffEntity->secondary_staff_id == $userId) {
+                                    $isFound = true;
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -286,7 +298,9 @@ class InstitutionSubjectBehavior extends Behavior
                         FROM institution_class_subjects
                         JOIN institution_classes
                         ON institution_classes.id = institution_class_subjects.institution_class_id
-                        AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes.secondary_staff_id = ' . $userId . ')
+                        JOIN institution_classes_secondary_staff
+                        ON institution_classes_secondary_staff.institution_class_id = institution_classes.id
+                        AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes_secondary_staff.secondary_staff_id = ' . $userId . ')
                         WHERE institution_class_subjects.institution_subject_id = InstitutionSubjects.id
                         LIMIT 1
                     )'
