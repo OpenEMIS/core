@@ -525,6 +525,24 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->field('start_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id']);
+
+        // process Toolbar buttons
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+
+        $url = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StudentBulkAdmission',
+            'add'
+        ];
+
+        $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
+        $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
+        $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Admission');
+        $toolbarButtonsArray['bulkAdmission']['url'] = $url;
+
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
