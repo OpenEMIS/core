@@ -439,7 +439,6 @@ class InstitutionClassesTable extends ControllerActionTable
                 'class_number',
                 'capacity',
                 'staff_id',
-                // 'secondary_staff_id',
                 'total_male_students',
                 'total_female_students',
                 'institution_shift_id',
@@ -452,10 +451,12 @@ class InstitutionClassesTable extends ControllerActionTable
                 'education_stage_order' => $query->func()->min('EducationStages.order')
             ])
             ->contain([
-                'ClassesSecondaryStaff.SecondaryStaff',
-                // 'SecondaryStaff' => [
-                //     'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
-                // ],
+                'ClassesSecondaryStaff' => [
+                    'fields' => ['institution_class_id', 'secondary_staff_id']
+                ],
+                'ClassesSecondaryStaff.SecondaryStaff' => [
+                    'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
+                ],
                 'Staff' => [
                     'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
                 ]
