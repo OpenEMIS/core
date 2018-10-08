@@ -40,29 +40,19 @@ class DemographicsTable extends ControllerActionTable
     {
         $demographicTypes = TableRegistry::get('FieldOption.DemographicTypes');
         $demographicTypesArray = $demographicTypes
-            ->find('list', [
-            'keyField' => 'name',
-            'valueField' => 'description'
-            ])
+            ->find()
             ->toArray();
 
-        $demographicTypes->fields['description']= $demographicTypesArray;
-
-        $this->field('description', [
+        $demographicTypes->fields['demographicsTypes'] = $demographicTypesArray;
+        $demographicTypes->fields['entity'] = $entity;
+        $this->field('demographic_types_id', [
             'type' => 'element',
             'element' => 'User.Demographics/Demographic_description',
             'fields' => $demographicTypes->fields,
-            'formFields' => []
+            'formFields' => [],
+            'model' => 'Demographics',
+            'className' => 'User.Demographics'
         ]);
-        $this->fields['description']['formFields'] = array_keys($this->getFormFields());
-        $this->setFieldOrder([
-            'demographic_types_id', 'indigenous', 'description'
-        ]);
-    }
-
-    private function getFormFields() {
-
-        return ['name'=>'', 'description'=>''];
     }
 
     private function setupTabElements($entity = null)
@@ -86,7 +76,6 @@ class DemographicsTable extends ControllerActionTable
     }
 
     public function beforeAction($event) {
-        $this->fields['demographic_types_id']['type'] = 'select';
         $gradeOptions = $this->getIndigenousOptions();
         $this->fields['indigenous']['type'] = 'select';
         $this->fields['indigenous']['options'] = $gradeOptions;
