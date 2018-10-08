@@ -35,19 +35,29 @@ class MoodleApiComponent extends Component
 
         $response = $http->get($url);
 
-        if ($response->isOk()) {
-            $responseBody = $response->json;
-            if (isset($responseBody["exception"])) {
-                Log::write('debug', "MoodleApiComponent Exception - " . $responseBody["exception"]);
-                Log::write('debug', "MoodleApiComponent Exception Message - " . $responseBody["message"]);
-                return false;
-            } else {
-                return $response;
-            }
-        } else {
-            Log::write('debug', "MoodleApiComponent Exception - response error");
-            Log::write('debug', "MoodleApiComponent Exception response - " . $response);
+        if ($this->_hasError($response)) {
             return false;
+        } else {
+            return $response;
+        }
+    }
+
+    public function post($function = null, $params = null)
+    {
+        if (!$function || !$params) {
+            Log::write('debug', "MoodleApiComponent @post Exception - function or params are null");
+            return false;
+        }
+
+        $url = $this->getUrl($function);
+        $http = new Client();
+
+        $response = $http->post($url, $params);
+
+        if ($this->_hasError($response)) {
+            return false;
+        } else {
+            return $response;
         }
     }
 
@@ -80,6 +90,24 @@ class MoodleApiComponent extends Component
         return self::TOKEN_PARAM . "=" . $this->_token 
                 . "&" . 
                 self::FUNCTION_PARAM . "=" . $function;
+    }
+
+    private function _hasError($response)
+    {
+        if ($response->isOk()) {
+            $responseBody = $response->json;
+            if (isset($responseBody["exception"])) {
+                Log::write('debug', "MoodleApiComponent Exception - " . $responseBody["exception"]);
+                Log::write('debug', "MoodleApiComponent Exception Message - " . $responseBody["message"]);
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            Log::write('debug', "MoodleApiComponent Exception - response error");
+            Log::write('debug', "MoodleApiComponent Exception response - " . $response);
+            return true;
+        }
     }
 
 }
