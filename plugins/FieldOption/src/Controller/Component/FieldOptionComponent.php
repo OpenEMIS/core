@@ -103,7 +103,7 @@ class FieldOptionComponent extends Component
         'Nationalities' => ['className' => 'FieldOption.Nationalities', 'parent' => 'Others'],
         'CommentTypes' => ['className' => 'User.CommentTypes', 'parent' => 'Others'],
         'BehaviourClassifications' => ['className' => 'Student.BehaviourClassifications', 'parent' => 'Others'],
-        'DemographicTypes' => ['className' => 'FieldOption.DemographicTypes', 'parent' => 'Others'],
+        'DemographicWealthQuantileTypes' => ['className' => 'FieldOption.DemographicTypes', 'parent' => 'Others'],
 
     // Infrastructure
         'InfrastructureOwnerships' => ['className' => 'FieldOption.InfrastructureOwnerships', 'parent' => 'Infrastructure'],
