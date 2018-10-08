@@ -76,7 +76,6 @@ class DemographicsTable extends ControllerActionTable
     }
 
     public function beforeAction($event) {
-        $this->fields['hullo']['type'] = 'text';
         $gradeOptions = $this->getIndigenousOptions();
         $this->fields['indigenous']['type'] = 'select';
         $this->fields['indigenous']['options'] = $gradeOptions;
