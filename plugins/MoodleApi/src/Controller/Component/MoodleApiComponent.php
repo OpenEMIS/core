@@ -3,6 +3,7 @@ namespace MoodleApi\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\Http\Client;
+use Cake\Log\Log;
 
 class MoodleApiComponent extends Component
 {
@@ -11,6 +12,7 @@ class MoodleApiComponent extends Component
     const WEB_SERVICE_URL = "webservice/rest/server.php";
     const TOKEN_PARAM = "wstoken";
     const FUNCTION_PARAM = "wsfunction";
+    const JSON_MODE_PARAM = "moodlewsrestformat=json";
 
     public function initialize(array $config)
     {
@@ -18,9 +20,52 @@ class MoodleApiComponent extends Component
         $this->_loadConfig();
     }
 
-    public function testConnection()
+    /**
+     * To call moodle api GET functions. 
+     *
+     * @param string $function - moodle api function name. 
+     *                           Example: core_webservice_get_site_info
+     *
+     * @return string - the response data. Use $response->json to get the json data.
+     */
+    public function get($function = "core_webservice_get_site_info")
     {
-        $url = $this->getUrl($this->constructParams("core_webservice_get_site_info"));
+        $url = $this->getUrl($function);
+        $http = new Client();
+
+        $response = $http->get($url);
+
+        if ($response->isOk()) {
+            $responseBody = $response->json;
+            if (isset($responseBody["exception"])) {
+                Log::write('debug', "MoodleApiComponent Exception - " . $responseBody["exception"]);
+                Log::write('debug', "MoodleApiComponent Exception Message - " . $responseBody["message"]);
+                return false;
+            } else {
+                return $response;
+            }
+        } else {
+            Log::write('debug', "MoodleApiComponent Exception - response error");
+            Log::write('debug', "MoodleApiComponent Exception response - " . $response);
+            return false;
+        }
+    }
+
+    /**
+     * To construct Moodle API URL based on the function name you are calling. 
+     *
+     * @param string $function - moodle api function name. 
+     *                           Example: core_webservice_get_site_info
+     *
+     * @return string - the url to do query for API without params
+     */
+    public function getUrl($function)
+    {
+        return $this->_baseURL 
+                . self::WEB_SERVICE_URL 
+                . "?" 
+                . $this->_constructBasicParams($function)
+                . "&" . self::JSON_MODE_PARAM;
     }
 
     //TODO - load token from configuration instead of hardcode
@@ -30,15 +75,11 @@ class MoodleApiComponent extends Component
         $this->_baseURL = "https://dmo-tst.openemis.org/learning/";
     }
 
-    private function constructParams($function)
+    private function _constructBasicParams($function)
     {
         return self::TOKEN_PARAM . "=" . $this->_token 
                 . "&" . 
                 self::FUNCTION_PARAM . "=" . $function;
     }
 
-    public function getUrl($params = "")
-    {
-        return $this->_baseURL . self::WEB_SERVICE_URL . "?" . $append;
-    }
 }
