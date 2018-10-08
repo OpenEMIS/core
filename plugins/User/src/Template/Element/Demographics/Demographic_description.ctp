@@ -1,27 +1,19 @@
 <?php use Cake\Utility\Inflector;?>
 
-	<div class="table-in-view">
-		<table class="table">
-			<thead>
-				<tr>
-					<?php foreach ($attr['formFields'] as $formField) : ?>
-						<th><?= __(Inflector::humanize(str_replace('_id', '', $formField))) ?></th>
-					<?php endforeach;?>
-				</tr>
-			</thead>
-			<tbody>
-			<?php
-				// iterate each row
-				foreach ($attr['fields']['description'] as $key => $record) :
-			?>
-				<tr>
-					<td><?php echo $key ?></td>
-					<td><?php echo $record ?></td>
-				</tr>
-			<?php
-				endforeach;
-			?>
-			</tbody>
-		</table>
-	</div>
+<div class="input required">
+	<label><?php echo __('Wealth Quintile') ?></label>
+	<div class="input-selection">
+		<?php
 
+			$this->Form->unlockField('demographic_types_id');
+			$selectedValue = $attr['fields']['entity']['demographic_types_id'];
+			foreach ($attr['fields']['demographicsTypes'] as $key => $record) :
+		?>
+			<div class="input">
+				<input <?php echo $selectedValue == $attr['fields']['demographicsTypes'][$key]->id ? "checked=\"checked\"" : ""; ?> value="<?php echo $attr['fields']['demographicsTypes'][$key]->id ?>" kd-checkbox-radio="<?php echo $attr['fields']['demographicsTypes'][$key]->name ?> - <?php echo $attr['fields']['demographicsTypes'][$key]->description ?>" type="radio" id="demographics-demographic-types-id" name="Demographics[demographic_types_id]">
+			</div>
+		<?php
+			endforeach;
+		?>
+	</div>
+</div>	
