@@ -68,21 +68,11 @@ class GuardiansTable extends ControllerActionTable
                     $tabElements = $this->controller->getUserTabElements();
                 }
             } elseif ($this->action == 'view') {
-                $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
-
-                $tabElements = [
-                    'Guardians' => ['text' => __('Relation')],
-                    'GuardianUser' => ['text' => __('General')]
-                ];
-                $action = $this->alias();
-                $actionUser = 'GuardianUser';
                 if ($this->controller->name == 'Directories') {
-                    $action = 'StudentGuardians';
-                    $actionUser = 'StudentGuardianUser';
+                    $tabElements = $this->controller->getUserTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardian']);
+                } elseif ($this->controller->name == 'Students') {
+                    $tabElements = $this->controller->getGuardianTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardian']);
                 }
-                $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $entity->id])]);
-                $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->guardian_id, 'StudentGuardians.id' => $entity->id])]);
-                $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
             }
         }
 
