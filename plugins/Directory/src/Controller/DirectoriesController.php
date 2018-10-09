@@ -373,7 +373,7 @@ class DirectoriesController extends AppController
             }
         }
 
-        if ($action == 'StudentGuardians' || $action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'view')) {
+        if (($action == 'StudentGuardians' || $action == 'Directories') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'view')) {
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
         }
