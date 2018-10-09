@@ -263,7 +263,7 @@ class NavigationComponent extends Component
             'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashHygienes',
             'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
             'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips',
-            'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances', 'InstitutionCommittees', 'InstitutionCommitteeAttachments', 'InstitutionAssets', 'StudentBehaviourAttachments', 'StaffBehaviourAttachments'
+            'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances', 'InstitutionCommittees', 'InstitutionCommitteeAttachments', 'InstitutionAssets', 'StudentBehaviourAttachments', 'StaffBehaviourAttachments', 'Guardians', 'GuardianComments'
         ];
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipsDirectory', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
@@ -874,7 +874,8 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
                 'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
                     'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.Attachments', 'Students.Comments',
-                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys', 'StudentComments.index', 'StudentComments.view', 'StudentComments.add', 'StudentComments.edit', 'StudentComments.delete', 'Students.StudentTransport', 'Students.Demographics']
+                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys', 'StudentComments.index', 'StudentComments.view', 'StudentComments.add', 'StudentComments.edit', 'StudentComments.delete', 'Students.StudentTransport', 'Students.Demographics', 'Guardians.Accounts', 'Guardians.Demographics', 'Guardians.Identities', 'Guardians.Nationalities', 'Guardians.Contacts','Guardians.Languages', 'Guardians.Attachments', 'GuardianComments.index', 'GuardianComments.view', 'GuardianComments.add', 'GuardianComments.edit', 'GuardianComments.delete'
+            ]
             ],
             'Institutions.StudentProgrammes.index' => [
                 'title' => 'Academic',
@@ -1048,6 +1049,13 @@ class NavigationComponent extends Component
                 'selected' => ['Directories.SpecialNeedsReferrals', 'Directories.SpecialNeedsAssessments', 'Directories.SpecialNeedsServices', 'Directories.SpecialNeedsDevices', 'Directories.SpecialNeedsPlans']
             ]
         ];
+
+        $session = $this->request->session();
+        $guardianID = $session->read('Guardian.Guardians.id');
+        if (!empty($guardianID)) {
+            $navigation['Directories.Directories.view']['selected'] = ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull','Directories.History'];
+        }
+
         return $navigation;
     }
 
@@ -1176,6 +1184,12 @@ class NavigationComponent extends Component
                     'selected' => ['Directories.StudentBankAccounts', 'Directories.StudentFees']
                 ],
         ];
+
+        $session = $this->request->session();
+        $guardianID = $session->read('Guardian.Guardians.id');
+        if (!empty($guardianID)) {
+            $navigation['Directories.StudentGuardians']['selected'] = ['Directories.StudentGuardians', 'Directories.StudentGuardianUser', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments', 'Directories.Contacts', 'Directories.Demographics'];
+        }
         return $navigation;
     }
 

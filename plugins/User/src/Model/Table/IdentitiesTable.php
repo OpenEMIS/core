@@ -92,7 +92,18 @@ class IdentitiesTable extends ControllerActionTable
 					$options['userRole'] = 'Staff';
 					break;
 			}
-			$tabElements = $this->controller->getUserTabElements($options);
+            $session = $this->request->session();
+            $guardianID = $session->read('Guardian.Guardians.id');
+            if (!empty($guardianID)) {
+                $userId = $guardianID;
+            }
+            if($this->controller->name == 'Directories' && !empty($guardianID)) {
+                $tabElements = $this->controller->getUserTabElements(['id' => $userId, 'userRole' => 'Guardian']);
+            } elseif ($this->controller->name == 'Guardians') {
+                $tabElements = $this->controller->getGuardianTabElements();
+            } else {
+                $tabElements = $this->controller->getUserTabElements($options);
+            }
 		}
 
 		$this->controller->set('tabElements', $tabElements);
