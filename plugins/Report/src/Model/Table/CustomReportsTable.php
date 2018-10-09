@@ -164,7 +164,7 @@ class CustomReportsTable extends AppTable
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $queryParams = $this->request->data[$this->alias()];
+            $queryParams = $this->request->data[$this->alias()] ? $this->request->data[$this->alias()] : [];
             $queryParams['user_id'] = $this->Auth->user('id');
             $queryParams['super_admin'] = $this->Auth->user('super_admin');
 
