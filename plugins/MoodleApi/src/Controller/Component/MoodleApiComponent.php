@@ -4,6 +4,7 @@ namespace MoodleApi\Controller\Component;
 use Cake\Controller\Component;
 use Cake\Http\Client;
 use Cake\Log\Log;
+use MoodleApi\Controller\Component\MoodleFunction\MoodleUser;
 
 class MoodleApiComponent extends Component
 {
@@ -71,39 +72,14 @@ class MoodleApiComponent extends Component
         }
     }
 
-    /**
-     * To be deleted. This function is to test that create users works.
-     * @return object - the response data. Use $response->json to get the json data.
-     */
-    public function test_create_user()
+    public function createUser($data)
     {
-        $users = array();
-        $users[0]["username"]= "ervinz" . time();
-        $users[0]["password"]= "Password12#$";
-        // $users[0]["createpassword"]= 0;
-        $users[0]["firstname"]= "Ervin";
-        $users[0]["lastname"]= "Kwan";
-        $users[0]["email"]= "ekwanzs" . time() . "@kordit.com";
-        // $users[0]["auth"]= "manual";
-        // $users[0]["idnumber"]= "";
-        // $users[0]["lang"]= "en";
-        // $users[0]["calendartype"]= "gregorian";
-        // $users[0]["theme"]= "";
-        // $users[0]["timezone"]= "Asia/Singapore";
-        // $users[0]["mailformat"]= "";
-        // $users[0]["description"]= "";
-        // $users[0]["city"]= "";
-        // $users[0]["country"]= "";
-        // $users[0]["firstnamephonetic"]= "";
-        // $users[0]["lastnamephonetic"]= "";
-        // $users[0]["middlename"]= "";
-        // $users[0]["alternatename"]= "";
-        // $users[0]["preferences"][0]["type"]= "";
-        // $users[0]["preferences"][0]["value"]= "";
-        // $users[0]["customfields"][0]["type"]= "";
-        // $users[0]["customfields"][0]["value"]= "";
+        dd(MoodleUser::getFunctionParam());
+        if (!MoodleUser::checkUserData($data)) {
+            return false;
+        }
 
-        $response = $this->post("core_user_create_users", ["users" => $users]);
+        $response = $this->post(MoodleUser::getFunctionParam(), ["users" => $data]);
 
         return $response;
     }
@@ -155,6 +131,39 @@ class MoodleApiComponent extends Component
             Log::write('debug', "MoodleApiComponent Exception response - " . $response);
             return true;
         }
+    }
+
+    /**
+     * To be deleted. This function is to test that create users works.
+     * @return object - the response data. Use $response->json to get the json data.
+     */
+    public static function test_create_user()
+    {
+        $users = array();
+        $users[0]["username"]= "ervinz" . time();
+        $users[0]["password"]= "Password12#$";
+        // $users[0]["createpassword"]= 0;
+        $users[0]["firstname"]= "Ervin";
+        $users[0]["lastname"]= "Kwan";
+        $users[0]["email"]= "ekwanzs" . time() . "@kordit.com";
+        // $users[0]["auth"]= "manual";
+        // $users[0]["idnumber"]= "";
+        // $users[0]["lang"]= "en";
+        // $users[0]["calendartype"]= "gregorian";
+        // $users[0]["theme"]= "";
+        // $users[0]["timezone"]= "Asia/Singapore";
+        // $users[0]["mailformat"]= "";
+        // $users[0]["description"]= "";
+        // $users[0]["city"]= "";
+        // $users[0]["country"]= "";
+        // $users[0]["firstnamephonetic"]= "";
+        // $users[0]["lastnamephonetic"]= "";
+        // $users[0]["middlename"]= "";
+        // $users[0]["alternatename"]= "";
+
+        $response = $this->post("core_user_create_users", ["users" => $users]);
+
+        return $response;
     }
 
 }
