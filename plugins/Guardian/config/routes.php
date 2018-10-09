@@ -1,7 +1,7 @@
 <?php
 use Cake\Routing\Router;
 
-Router::scope('/Guardian', ['plugin' => 'Guardian'], function ($routes) {
+Router::scope('/Guardians', ['plugin' => 'Guardian'], function ($routes) {
 
 	$routes->scope('/:controller', [], function ($route) {
         $route->connect('/:action',
@@ -14,7 +14,4 @@ Router::scope('/Guardian', ['plugin' => 'Guardian'], function ($routes) {
             ['action' => '[a-zA-Z]+']
         );
     });
-
-	Router::connect('/Guardians', ['plugin' => 'Guardian', 'controller' => 'Guardians']);
-	Router::connect('/Guardians/:action/*', ['plugin' => 'Guardian', 'controller' => 'Guardians']);
 });
