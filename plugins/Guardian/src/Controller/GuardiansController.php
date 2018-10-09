@@ -120,6 +120,7 @@ class GuardiansController extends AppController
         $this->beforePaginate($event, $model, $query, $extra);
     }
 
+    //Related getGuardianTabElements function in StudentsController
     public function getGuardianTabElements( $options = [])
     {
         if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
