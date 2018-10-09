@@ -37,4 +37,10 @@ class MoodleUser extends MoodleFunction
             "lastname",
             "email"
         ];
+
+    public static function convertDataToParam($data)
+    {
+        $data = [0 => $data];
+        return ["users" => $data];
+    }
 }
