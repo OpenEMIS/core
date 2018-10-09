@@ -74,12 +74,13 @@ class MoodleApiComponent extends Component
 
     public function createUser($data)
     {
-        dd(MoodleUser::getFunctionParam());
-        if (!MoodleUser::checkUserData($data)) {
+        if (!MoodleUser::checkData($data)) {
             return false;
         }
 
-        $response = $this->post(MoodleUser::getFunctionParam(), ["users" => $data]);
+        $data = MoodleUser::convertDataToParam($data);
+
+        $response = $this->post(MoodleUser::getFunctionParam(), $data);
 
         return $response;
     }
@@ -137,33 +138,31 @@ class MoodleApiComponent extends Component
      * To be deleted. This function is to test that create users works.
      * @return object - the response data. Use $response->json to get the json data.
      */
-    public static function test_create_user()
+    public function test_create_user()
     {
         $users = array();
-        $users[0]["username"]= "ervinz" . time();
-        $users[0]["password"]= "Password12#$";
-        // $users[0]["createpassword"]= 0;
-        $users[0]["firstname"]= "Ervin";
-        $users[0]["lastname"]= "Kwan";
-        $users[0]["email"]= "ekwanzs" . time() . "@kordit.com";
-        // $users[0]["auth"]= "manual";
-        // $users[0]["idnumber"]= "";
-        // $users[0]["lang"]= "en";
-        // $users[0]["calendartype"]= "gregorian";
-        // $users[0]["theme"]= "";
-        // $users[0]["timezone"]= "Asia/Singapore";
-        // $users[0]["mailformat"]= "";
-        // $users[0]["description"]= "";
-        // $users[0]["city"]= "";
-        // $users[0]["country"]= "";
-        // $users[0]["firstnamephonetic"]= "";
-        // $users[0]["lastnamephonetic"]= "";
-        // $users[0]["middlename"]= "";
-        // $users[0]["alternatename"]= "";
+        $users["username"]= "ervinz" . time();
+        $users["password"]= "Password12#$";
+        // $users["createpassword"]= 0;
+        $users["firstname"]= "Ervin";
+        $users["lastname"]= "Kwan";
+        $users["email"]= "ekwanzs" . time() . "@kordit.com";
+        // $users["auth"]= "manual";
+        // $users["idnumber"]= "";
+        // $users["lang"]= "en";
+        // $users["calendartype"]= "gregorian";
+        // $users["theme"]= "";
+        // $users["timezone"]= "Asia/Singapore";
+        // $users["mailformat"]= "";
+        // $users["description"]= "";
+        // $users["city"]= "";
+        // $users["country"]= "";
+        // $users["firstnamephonetic"]= "";
+        // $users["lastnamephonetic"]= "";
+        // $users["middlename"]= "";
+        // $users["alternatename"]= "";
 
-        $response = $this->post("core_user_create_users", ["users" => $users]);
-
-        return $response;
+        return $this->createUser($users);
     }
 
 }
