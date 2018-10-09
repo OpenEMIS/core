@@ -497,7 +497,7 @@ class DirectoriesController extends AppController
         $session = $this->request->session();
         if ($model->alias() != 'Directories') {
             if ($session->check('Directory.Directories.id')) {
-                $userId = $session->read('Directory.Directories.id');   
+                $userId = $session->read('Directory.Directories.id');
                 $guardianID = $session->read('Guardian.Guardians.id');
                 if (!empty($guardianID)) {
                     $userId = $guardianID;
