@@ -467,6 +467,7 @@ class StudentsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
+    //Related getGuardianTabElements function in GuardiansController
     public function getGuardianTabElements($options = [])
     {
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardian' && array_key_exists('entity', $options)) {
