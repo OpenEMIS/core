@@ -16,7 +16,7 @@ class MoodleFunction
         return static::$_functionParam;
     }
 
-    public static function _checkUserData($data) 
+    public static function checkData($data) 
     {
         $mandatoryParams = static::$_userMandatoryParams;
         $allowedParams = static::$_userAllowedParams;
