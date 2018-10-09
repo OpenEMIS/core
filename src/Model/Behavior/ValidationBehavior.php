@@ -2848,7 +2848,7 @@ class ValidationBehavior extends Behavior
         }
 
         $query = $InstitutionClasses->find()
-                ->matching('SecondaryStaff.InstitutionStaff.Positions')
+                ->matching('ClassesSecondaryStaff.SecondaryStaff.InstitutionStaff.Positions')
                 ->where([
                     'Positions.id' => $globalData['data']['id']
                 ])
