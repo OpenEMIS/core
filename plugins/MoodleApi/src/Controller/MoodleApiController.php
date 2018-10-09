@@ -10,8 +10,11 @@ class MoodleApiController extends BaseController
         parent::initialize();
     }
 
+    //Example on how to use the component. Goto <base_url>/MoodleApi
     public function index() 
     {
-        echo "hello";die;
+        $this->loadComponent('MoodleApi.MoodleApi');
+
+        dd($this->MoodleApi->test_create_user());
     }
 }
