@@ -874,7 +874,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
                 'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
                     'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.Attachments', 'Students.Comments',
-                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys', 'StudentComments.index', 'StudentComments.view', 'StudentComments.add', 'StudentComments.edit', 'StudentComments.delete', 'Students.StudentTransport']
+                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys', 'StudentComments.index', 'StudentComments.view', 'StudentComments.add', 'StudentComments.edit', 'StudentComments.delete', 'Students.StudentTransport', 'Students.Demographics']
             ],
             'Institutions.StudentProgrammes.index' => [
                 'title' => 'Academic',
@@ -934,7 +934,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $id])],
                 'selected' => ['Institutions.StaffUser.edit', 'Institutions.StaffAccount', 'Staff.Identities', 'Staff.Nationalities',
-                    'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.Attachments', 'StaffComments.index', 'StaffComments.view', 'StaffComments.add', 'StaffComments.edit', 'StaffComments.delete', 'Staff.History']
+                    'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.Attachments', 'StaffComments.index', 'StaffComments.view', 'StaffComments.add', 'StaffComments.edit', 'StaffComments.delete', 'Staff.History', 'Staff.Demographics']
             ],
             'Staff.EmploymentStatuses' => [
                 'title' => 'Career',
@@ -1027,7 +1027,7 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Directories.index',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments',
-                    'Directories.History', 'Directories.Contacts']
+                    'Directories.History', 'Directories.Contacts', 'Directories.Demographics']
             ],
             'Directories.Healths' => [
                 'title' => 'Health',
