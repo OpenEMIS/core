@@ -20,4 +20,29 @@ class AccountsTable extends AppTable {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
+
+    private function setupTabElements()
+    {
+        $options = [
+            'userRole' => '',
+        ];
+        $tabElements = $this->controller->getUserTabElements($options);
+        $session = $this->request->session();
+        $guardianID = $session->read('Guardian.Guardians.id');
+        if (!empty($guardianID)) {
+            $userId = $guardianID;
+        }
+        if($this->controller->name == 'Directories' && !empty($guardianID)) {
+            $tabElements = $this->controller->getUserTabElements(['id' => $userId, 'userRole' => 'Guardian']);
+        }
+
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
+
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        $this->setupTabElements();
+    }
+
 }

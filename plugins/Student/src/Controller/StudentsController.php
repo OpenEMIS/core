@@ -467,6 +467,78 @@ class StudentsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
+    public function getGuardianTabElements($options = [])
+    {
+        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardian' && array_key_exists('entity', $options)) {
+            $session = $this->request->session();
+            $session->write('Guardian.Guardians.name', $options['entity']->user->name);
+            $session->write('Guardian.Guardians.id', $options['entity']->user->id);
+        }
+
+        $session = $this->request->session();
+        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $guardianID = $session->read('Guardian.Guardians.id');
+        if (!empty($guardianID)) {
+            $id = $guardianID;
+        }
+        $tabElements = [
+            'Accounts' => ['text' => __('Account')],
+            'Demographics' => ['text' => __('Demographic')],
+            'Identities' => ['text' => __('Identities')],
+            'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
+            'Contacts' => ['text' => __('Contacts')],
+            'Languages' => ['text' => __('Languages')],
+            'Attachments' => ['text' => __('Attachments')],
+            'Comments' => ['text' => __('Comments')]
+        ];
+
+        foreach ($tabElements as $key => $value) {
+            if ($key == 'Accounts') {
+                $tabElements[$key]['url']['plugin'] = 'Guardian';
+                $tabElements[$key]['url']['controller'] = 'Guardians';
+                $tabElements[$key]['url']['action'] = 'Accounts';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+            } else if ($key == 'Comments') {
+                $url = [
+                        'plugin' => 'Guardian',
+                        'controller' => 'GuardianComments',
+                        'action' => 'index'
+                ];
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
+            } else {
+                $actionURL = $key;
+                if ($key == 'UserNationalities') {
+                    $actionURL = 'Nationalities';
+                }
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
+                                                'plugin' => 'Guardian',
+                                                'controller' => 'Guardians',
+                                                'action' => $actionURL,
+                                                'index'],
+                                                ['security_user_id' => $id]
+                                            );
+            }
+        };
+
+        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardian') 
+        {
+            $session = $this->request->session();
+            $StudentGuardianID = $session->read('Student.Guardians.primaryKey')['id'];
+
+            $relationTabElements = [
+                'Guardians' => ['text' => __('Relation')],
+                'GuardianUser' => ['text' => __('Overview')]
+            ];
+            $url = ['plugin' => 'Student', 'controller' => 'Students'];
+            $relationTabElements['Guardians']['url'] = array_merge($url, ['action' => 'Guardians', 'view', $this->paramsEncode(['id' => $StudentGuardianID])]);
+            $relationTabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'GuardianUser', 'view', $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianID])]);
+            $tabElements = array_merge($relationTabElements, $tabElements);
+        }
+
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }    
+
     public function getAcademicTabElements($options = [])
     {
         $tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElements($options);
