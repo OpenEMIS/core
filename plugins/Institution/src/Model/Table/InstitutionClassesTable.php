@@ -477,16 +477,28 @@ class InstitutionClassesTable extends ControllerActionTable
     public function findHomeOrSecondary(Query $query, array $options)
     {
         if (isset($options['class_id']) && isset($options['staff_id'])) {
+            $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+
             $classId = $options['class_id'];
             $staffId = $options['staff_id'];
+
             $query
+                ->select(['staff_id' => $this->aliasField('staff_id')])
                 ->where([
                     $this->aliasField('id') => $classId,
                     'OR' => [
-                        [$this->aliasField('staff_id') => $staffId],
-                        // [$this->aliasField('secondary_staff_id') => $staffId]
-                    ],
-                 ]);
+                        [$this->aliasField('staff_id') => $staffId]
+                    ]
+                ])
+                ->union(
+                    $InstitutionClassesSecondaryStaff
+                        ->find()
+                        ->select(['staff_id' => $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')])
+                        ->where([
+                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
+                            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId
+                        ])
+                );
             
             return $query;
         }
