@@ -157,7 +157,7 @@ class GuardiansController extends AppController
                     'action' => 'GuardianUser',
                     'view',
                     $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])
-                    ];                                       
+                    ];
             } elseif ($key == 'Accounts') {
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';

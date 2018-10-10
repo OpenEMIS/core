@@ -40,7 +40,9 @@ class SetupTabBehavior extends Behavior
                     $tabElements = $this->_table->controller->getUserTabElements($options);
                 } elseif ($this->_table->controller->name == 'Guardians') {
                     $tabElements = $this->_table->controller->getGuardianTabElements();
-                } 
+                } else {
+                    $tabElements = $this->_table->controller->getUserTabElements();
+                }
             } else {
                 $tabElements = $this->_table->controller->getUserTabElements($options);
             }
