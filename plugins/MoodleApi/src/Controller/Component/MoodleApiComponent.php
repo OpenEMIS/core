@@ -1,4 +1,17 @@
 <?php
+/**
+ * MoodleApiComponent - Uses Cake's HTTP to do webservice call to moodle. 
+ * Moodle does not complies to restful. Only GET and POST is sufficient.
+ * For moodle specifc function logic, please create a class under MoodleFunction.
+ * SEE MoodleFunction\MoodleCreateUser for example. 
+ *
+ * PHP version 7.2
+ *
+ * @category  API
+ * @package   MoodleApi
+ * @author    Ervin Kwan <ekwan@kordit.com>
+ * @copyright 2018 KORDIT PTE LTD
+ */
 namespace MoodleApi\Controller\Component;
 
 use Cake\Controller\Component;
