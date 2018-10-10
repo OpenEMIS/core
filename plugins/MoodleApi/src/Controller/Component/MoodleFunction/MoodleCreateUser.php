@@ -1,7 +1,7 @@
 <?php
 namespace MoodleApi\Controller\Component\MoodleFunction;
 
-class MoodleUser extends MoodleFunction
+class MoodleCreateUser extends MoodleFunction
 {
     protected static $_functionParam = "core_user_create_users";
 
