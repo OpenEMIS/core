@@ -162,11 +162,11 @@ class GuardianUserTable extends UserTable {
     private function setupTabElements($entity)
     {
         $session = $this->request->session();
-        $guardianID = $session->read('Guardian.Guardians.id');
+        $guardianId = $session->read('Guardian.Guardians.id');
         if ($this->controller->name == 'Directories') {
-            $tabElements = $this->controller->getUserTabElements(['id' => $guardianID, 'userRole' => 'Guardian']);
+            $tabElements = $this->controller->getUserTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
         } elseif ($this->controller->name == 'Students') {
-            $tabElements = $this->controller->getGuardianTabElements(['id' => $guardianID, 'userRole' => 'Guardian']);
+            $tabElements = $this->controller->getGuardianTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
         }
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());

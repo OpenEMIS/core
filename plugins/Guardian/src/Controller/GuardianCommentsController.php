@@ -12,14 +12,13 @@ class GuardianCommentsController extends BaseController
     {
         $page = $this->Page;
         $session = $this->request->session();
-        $institutionName = $session->read('Institution.Institutions.name');
         $guardianName = $session->read('Guardian.Guardians.name');
         $guardianId = $session->read('Guardian.Guardians.id');
 
         parent::beforeFilter($event);
 
         // set Header
-        $page->setHeader($guardianName . ' - Comments');
+        $page->setHeader($guardianName . ' - ' . __('Comments'));        
 
         // set QueryString (for findIndex)
         $page->setQueryString('security_user_id', $guardianId);
@@ -45,17 +44,20 @@ class GuardianCommentsController extends BaseController
     public function setupTabElements($options)
     {
         $session = $this->request->session();
-        $guardianID = $session->read('Guardian.Guardians.id');
+        $guardianId = $session->read('Guardian.Guardians.id');
+        $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
 
         $page = $this->Page;
         $plugin = $this->plugin;
 
-        $nationalityId = $this->Users->get($guardianID)->nationality_id;
-        $encodedUserId = $this->paramsEncode(['security_user_id' => $guardianID]);
-        $encodedUserAndNationalityId = $this->paramsEncode(['security_user_id' => $guardianID,'nationality_id' => $nationalityId]);
+        $nationalityId = $this->Users->get($guardianId)->nationality_id;
+        $encodedUserId = $this->paramsEncode(['security_user_id' => $guardianId]);
+        $encodedUserAndNationalityId = $this->paramsEncode(['security_user_id' => $guardianId,'nationality_id' => $nationalityId]);
         $pluralPlugin = Inflector::pluralize($plugin);
 
         $tabElements = [
+            'Guardians' => ['text' => __('Relation')],
+            'GuardianUser' => ['text' => __('Overview')],            
             'Accounts' => ['text' => __('Account')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' =>['text' =>  __('Nationalities')],
@@ -66,19 +68,43 @@ class GuardianCommentsController extends BaseController
         ];
 
         foreach ($tabElements as $action => $obj) {
-            if (in_array($action, ['Accounts'])) {
+            if ($action == 'Guardians') {
+                $url = [
+                        'plugin' => 'Student',
+                        'controller' => 'Students',
+                        'action' => 'Guardians',
+                        'view',
+                        $this->paramsEncode(['id' => $StudentGuardianId])
+                ];
+            } elseif ($action == 'GuardianUser') {
+                $url = [
+                        'plugin' => 'Student',
+                        'controller' => 'Students',
+                        'action' => 'GuardianUser',
+                        'view',
+                        $this->paramsEncode(['id' => $guardianId, 'StudentGuardians.id' => $StudentGuardianId])
+                ];
+            } elseif (in_array($action, ['Accounts'])) {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => $pluralPlugin,
                     'action' => $action,
                     'view',
-                    $this->paramsEncode(['id' => $guardianID])
+                    $this->paramsEncode(['id' => $guardianId])
                 ];
             } elseif ($action == 'Comments') {
                 $url = [
                         'plugin' => 'Guardian',
                         'controller' => 'GuardianComments',
                         'action' => 'index'
+                ];
+            } elseif ($action == 'UserNationalities') {
+                $url = [
+                        'plugin' => 'Guardian',
+                        'controller' => 'Guardians',
+                        'action' => 'Nationalities',
+                        'index',
+                        'queryString' => $encodedUserAndNationalityId
                 ];
             } else {
                 $url = [
@@ -88,27 +114,9 @@ class GuardianCommentsController extends BaseController
                     'index',
                     'queryString' => $encodedUserId
                 ];
-
-                // exceptions
-                if ($action == 'UserNationalities') {
-                    $url['action'] = 'Nationalities';
-                    $url['queryString'] = $encodedUserAndNationalityId;
-                }
             }
             $tabElements[$action]['url'] = $url;
         }
-
-        $StudentGuardianID = $this->request->session()->read('Student.Guardians.primaryKey')['id'];
-        $url = ['plugin' => 'Student', 'controller' => 'Students'];
-        $guardianstabElements = [
-            'Guardians' => ['text' => __('Relation')],
-            'GuardianUser' => ['text' => __('Overview')]
-         ];
-        $action = 'Guardians';
-        $actionUser = 'GuardianUser';
-        $guardianstabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $StudentGuardianID])]);
-        $guardianstabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $guardianID, 'StudentGuardians.id' => $StudentGuardianID])]);
-        $tabElements = array_merge($guardianstabElements, $tabElements);
 
         foreach ($tabElements as $action => $obj) {
             $page->addTab($action)

@@ -10,9 +10,4 @@ class AccountsTable extends AppTable {
 		$this->addBehavior('User.Account', ['permission' => ['Guardian', 'Accounts', 'edit']]);
 		parent::initialize($config);
 	}
-
-	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-		return $validator;
-	}
 }

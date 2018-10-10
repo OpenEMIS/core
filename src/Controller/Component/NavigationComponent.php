@@ -874,7 +874,8 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
                 'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
                     'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.Attachments', 'Students.Comments',
-                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys', 'StudentComments.index', 'StudentComments.view', 'StudentComments.add', 'StudentComments.edit', 'StudentComments.delete', 'Students.StudentTransport', 'Students.Demographics', 'Guardians.Accounts', 'Guardians.Demographics', 'Guardians.Identities', 'Guardians.Nationalities', 'Guardians.Contacts','Guardians.Languages', 'Guardians.Attachments', 'GuardianComments.index', 'GuardianComments.view', 'GuardianComments.add', 'GuardianComments.edit', 'GuardianComments.delete'
+                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys', 'StudentComments.index', 'StudentComments.view', 'StudentComments.add', 'StudentComments.edit', 'StudentComments.delete', 'Students.StudentTransport', 'Students.Demographics',
+                    'Guardians.Accounts', 'Guardians.Demographics', 'Guardians.Identities', 'Guardians.Nationalities', 'Guardians.Contacts','Guardians.Languages', 'Guardians.Attachments', 'GuardianComments.index', 'GuardianComments.view', 'GuardianComments.add', 'GuardianComments.edit', 'GuardianComments.delete'
             ]
             ],
             'Institutions.StudentProgrammes.index' => [

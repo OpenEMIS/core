@@ -26,6 +26,7 @@ class ContactsTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
+        $this->addBehavior('User.SetupTab');
 
         $this->ContactOptionsTable = TableRegistry::get('User.ContactOptions');
         $this->contactOptionsArray = $this->ContactOptionsTable->findCodeList();
@@ -37,51 +38,6 @@ class ContactsTable extends ControllerActionTable
         $this->field('contact_type_id', ['visible' => false]);
 
         $this->setFieldOrder(['description', 'value', 'preferred']);
-    }
-
-    private function setupTabElements()
-    {
-        if ($this->controller->name == 'Scholarships') {
-            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
-        } else {
-            $options = [
-                'userRole' => '',
-            ];
-
-            switch ($this->controller->name) {
-                case 'Students':
-                    $options['userRole'] = 'Students';
-                    break;
-                case 'Staff':
-                    $options['userRole'] = 'Staff';
-                    break;
-            }
-            $session = $this->request->session();
-            $guardianID = $session->read('Guardian.Guardians.id');
-            if (!empty($guardianID)) {
-                $userId = $guardianID;
-            }
-            if($this->controller->name == 'Directories' && !empty($guardianID)) {
-                $tabElements = $this->controller->getUserTabElements(['id' => $userId, 'userRole' => 'Guardian']);
-            } elseif ($this->controller->name == 'Guardians') {
-                $tabElements = $this->controller->getGuardianTabElements();
-            } else {
-                $tabElements = $this->controller->getUserTabElements($options);
-            }
-        }
-        
-        if ($this->controller->name != 'Preferences') {
-            $this->controller->set('selectedAction', $this->alias());
-        } else {
-            $this->controller->set('selectedAction', 'Contacts');
-        }
-
-        $this->controller->set('tabElements', $tabElements);
-    }
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        $this->setupTabElements();
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
