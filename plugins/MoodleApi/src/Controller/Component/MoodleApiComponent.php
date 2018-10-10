@@ -4,7 +4,7 @@ namespace MoodleApi\Controller\Component;
 use Cake\Controller\Component;
 use Cake\Http\Client;
 use Cake\Log\Log;
-use MoodleApi\Controller\Component\MoodleFunction\MoodleUser;
+use MoodleApi\Controller\Component\MoodleFunction\MoodleCreateUser;
 
 class MoodleApiComponent extends Component
 {
@@ -72,15 +72,23 @@ class MoodleApiComponent extends Component
         }
     }
 
+    /**
+     * Creates user on moodle. Return false if fails. 
+     *
+     * @param string $data - params data for user. Check class MoodleCreateUser
+     *                       for available fields.
+     *
+     * @return object - the response data. Use $response->json to get the json data.
+     */
     public function createUser($data)
     {
-        if (!MoodleUser::checkData($data)) {
+        if (!MoodleCreateUser::checkData($data)) {
             return false;
         }
 
-        $data = MoodleUser::convertDataToParam($data);
+        $data = MoodleCreateUser::convertDataToParam($data);
 
-        $response = $this->post(MoodleUser::getFunctionParam(), $data);
+        $response = $this->post(MoodleCreateUser::getFunctionParam(), $data);
 
         return $response;
     }
