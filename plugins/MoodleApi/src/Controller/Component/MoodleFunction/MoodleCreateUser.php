@@ -1,11 +1,22 @@
 <?php
+/**
+ * MoodleCreateUser - Handles any moodle's core_user_create_users logic
+ * To be used with MoodleApiComponent
+ *
+ * PHP version 7.2
+ *
+ * @category  API
+ * @package   MoodleApi
+ * @author    Ervin Kwan <ekwan@kordit.com>
+ * @copyright 2018 KORDIT PTE LTD
+ */
 namespace MoodleApi\Controller\Component\MoodleFunction;
 
 class MoodleCreateUser extends MoodleFunction
 {
-    protected static $_functionParam = "core_user_create_users";
+    protected static $functionParam = "core_user_create_users";
 
-    protected static $_userAllowedParams 
+    protected static $userAllowedParams 
         = [
             "username",
             "password",
@@ -29,7 +40,7 @@ class MoodleCreateUser extends MoodleFunction
             "alternatename"
         ];
 
-    protected static $_userMandatoryParams
+    protected static $userMandatoryParams
         = [
             "username",
             "password",
