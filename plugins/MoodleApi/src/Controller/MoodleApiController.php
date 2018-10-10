@@ -15,6 +15,12 @@ class MoodleApiController extends BaseController
     {
         $this->loadComponent('MoodleApi.MoodleApi');
 
-        dd($this->MoodleApi->test_create_user());
+        $response = $this->MoodleApi->test_create_user();
+
+        if (count($response->error)) {
+            dd($response->error);
+        } else {
+            dd($response->json);
+        }
     }
 }
