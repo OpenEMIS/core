@@ -32,7 +32,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             'Students' => ['index', 'add'],
             'Staff' => ['index', 'add']
         ]);
-
+        $this->addBehavior('User.SetupTab');
         $this->addBehavior('CompositeKey');
 	}
 
@@ -106,50 +106,11 @@ class UserNationalitiesTable extends ControllerActionTable {
 		return $validator->requirePresence('security_user_id', false);
 	}
 
-	private function setupTabElements() 
-    {
-        if ($this->controller->name == 'Scholarships') {
-            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
-        } else {
-        	$options = [
-    			'userRole' => '',
-    		];
-
-    		switch ($this->controller->name) {
-    			case 'Students':
-    				$options['userRole'] = 'Students';
-    				break;
-    			case 'Staff':
-    				$options['userRole'] = 'Staff';
-    				break;
-    		}
-
-            $session = $this->request->session();
-            $guardianID = $session->read('Guardian.Guardians.id');
-            if (!empty($guardianID)) {
-                $userId = $guardianID;
-            }
-            if($this->controller->name == 'Directories' && !empty($guardianID)) {
-                $tabElements = $this->controller->getUserTabElements(['id' => $userId, 'userRole' => 'Guardian']);
-            } elseif ($this->controller->name == 'Guardians') {
-                $tabElements = $this->controller->getGuardianTabElements();
-            } else {
-                $tabElements = $this->controller->getUserTabElements($options);
-            }
-        }
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
-	}
-
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'NationalitiesLookUp'
         ]);
-    }
-
-	public function afterAction(Event $event) {
-		$this->setupTabElements();
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)

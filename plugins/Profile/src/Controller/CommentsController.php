@@ -145,8 +145,8 @@ class CommentsController extends PageController
                 'action' => 'Directories'
             ]);
             $session = $this->request->session();
-            $guardianID = $session->read('Guardian.Guardians.id');
-            if (!empty($guardianID)) {
+            $guardianId = $session->read('Guardian.Guardians.id');
+            if (!empty($guardianId)) {
                     $studentId = $session->read('Student.Students.id');
                     $userName = $this->Users->get($studentId)->name;
                     $encodedUserId = $this->paramsEncode(['id' => $studentId]);

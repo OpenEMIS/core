@@ -403,7 +403,7 @@ class DirectoriesController extends AppController
 
             $alias = $model->alias;
             $guardianId = $session->read('Guardian.Guardians.id');
-            if (!empty($guardianId) && $alias!== 'StudentGuardianUser') {
+            if (!empty($guardianId) && $alias !== 'StudentGuardianUser') {
                 $this->Navigation->addCrumb($model->getHeader('Guardian'. $alias));
                 $header = $session->read('Guardian.Guardians.name');
                 $header = $header . ' - ' . $model->getHeader($alias);
@@ -415,9 +415,9 @@ class DirectoriesController extends AppController
 
             $this->set('contentHeader', $header);
 
-            $guardianID = $session->read('Guardian.Guardians.id');
-            if (!empty($guardianID)) {
-                $userId = $guardianID;
+            $guardianId = $session->read('Guardian.Guardians.id');
+            if (!empty($guardianId)) {
+                $userId = $guardianId;
             }
             if ($model->hasField('security_user_id')) {
                 $model->fields['security_user_id']['type'] = 'hidden';
@@ -498,9 +498,9 @@ class DirectoriesController extends AppController
         if ($model->alias() != 'Directories') {
             if ($session->check('Directory.Directories.id')) {
                 $userId = $session->read('Directory.Directories.id');
-                $guardianID = $session->read('Guardian.Guardians.id');
-                if (!empty($guardianID)) {
-                    $userId = $guardianID;
+                $guardianId = $session->read('Guardian.Guardians.id');
+                if (!empty($guardianId)) {
+                    $userId = $guardianId;
                 }
                 if ($model->hasField('security_user_id')) {
                     $query->where([$model->aliasField('security_user_id') => $userId]);
@@ -547,7 +547,7 @@ class DirectoriesController extends AppController
 
         $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
 
-        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardian' && array_key_exists('entity', $options)) {
+        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
             $session = $this->request->session();
             $session->write('Guardian.Guardians.name', $options['entity']->user->name);
             $session->write('Guardian.Guardians.id', $options['entity']->user->id);
@@ -596,17 +596,17 @@ class DirectoriesController extends AppController
             }
         }
 
-        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardian') 
-        {
+        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians') {
+
             $session = $this->request->session();
-            $StudentGuardianID = $session->read('Student.Guardians.primaryKey')['id'];
+            $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
             $relationTabElements = [
                 'Guardians' => ['text' => __('Relation')],
                 'GuardianUser' => ['text' => __('Overview')]
             ];
             $url = ['plugin' => 'Directory', 'controller' => 'Directories'];
-            $relationTabElements['Guardians']['url'] = array_merge($url, ['action' => 'StudentGuardians', 'view', $this->paramsEncode(['id' => $StudentGuardianID])]);
-            $relationTabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianID])]);
+            $relationTabElements['Guardians']['url'] = array_merge($url, ['action' => 'StudentGuardians', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
+            $relationTabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])]);
             $tabElements = array_merge($relationTabElements, $tabElements);
             unset($tabElements[$this->name]);
         }

@@ -16,6 +16,7 @@ class DemographicsTable extends ControllerActionTable
 
         $this->belongsTo('DemographicTypes', ['className' => 'Student.DemographicTypes', 'foreignKey' => 'demographic_types_id']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+        $this->addBehavior('User.SetupTab');
 
         $this->toggle('remove', false);
     }
@@ -32,8 +33,6 @@ class DemographicsTable extends ControllerActionTable
         if (!empty($query)) {
             $this->toggle('add', false);
         }
-
-        $this->setupTabElements();
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -53,37 +52,6 @@ class DemographicsTable extends ControllerActionTable
             'model' => 'Demographics',
             'className' => 'User.Demographics'
         ]);
-    }
-
-    private function setupTabElements($entity = null)
-    {
-       $options = [
-           'userRole' => '',
-       ];
-
-       switch ($this->controller->name) {
-           case 'Students':
-               $options['userRole'] = 'Students';
-               break;
-           case 'Staff':
-               $options['userRole'] = 'Staff';
-               break;
-       }
-        $session = $this->request->session();
-        $guardianID = $session->read('Guardian.Guardians.id');
-        if (!empty($guardianID)) {
-            $userId = $guardianID;
-        }
-        if($this->controller->name == 'Directories' && !empty($guardianID)) {
-            $tabElements = $this->controller->getUserTabElements(['id' => $userId, 'userRole' => 'Guardian']);
-        } elseif ($this->controller->name == 'Guardians') {
-            $tabElements = $this->controller->getGuardianTabElements();
-        } else {
-            $tabElements = $this->controller->getUserTabElements($options);
-        }
-
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
     }
 
     public function beforeAction($event) {

@@ -23,17 +23,14 @@ class AccountsTable extends AppTable {
 
     private function setupTabElements()
     {
-        $options = [
-            'userRole' => '',
-        ];
-        $tabElements = $this->controller->getUserTabElements($options);
+        $tabElements = $this->controller->getUserTabElements();
         $session = $this->request->session();
-        $guardianID = $session->read('Guardian.Guardians.id');
-        if (!empty($guardianID)) {
-            $userId = $guardianID;
+        $guardianId = $session->read('Guardian.Guardians.id');
+        if (!empty($guardianId)) {
+            $userId = $guardianId;
         }
-        if($this->controller->name == 'Directories' && !empty($guardianID)) {
-            $tabElements = $this->controller->getUserTabElements(['id' => $userId, 'userRole' => 'Guardian']);
+        if($this->controller->name == 'Directories' && !empty($guardianId)) {
+            $tabElements = $this->controller->getUserTabElements(['id' => $userId, 'userRole' => 'Guardians']);
         }
 
         $this->controller->set('tabElements', $tabElements);
