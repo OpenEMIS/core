@@ -137,17 +137,19 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     {
         $data[$this->alias()]['action'] = null;
         $data[$this->alias()]['next_step'] = null;
+        $data[$this->alias()]['assignee_id'] = null;
     }
 
     public function onUpdateFieldAction(Event $event, array $attr, $action, Request $request)
     {
+        $query = $this->WorkflowActions->find('list');
         switch ($this->action) {
             case 'add':
                 $status = null;
                 if (isset($request->data[$this->alias()]['status'])) {
                     $status = $request->data[$this->alias()]['status'];
                 }
-                $options = $this->WorkflowActions->find('list')
+                $options = $query
                     ->where([
                         $this->WorkflowActions->aliasField('workflow_step_id') => $status
                     ])
@@ -161,9 +163,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
                 }
-                $value = $this->WorkflowActions
-                    ->find()
-                    ->select('name')
+                $value = $query
                     ->where([
                         $this->WorkflowActions->aliasField('id') => $currentData->action
                     ])
@@ -181,6 +181,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function addEditOnChangeAction(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $data[$this->alias()]['next_step'] = null;
+        $data[$this->alias()]['assignee_id'] = null;
     }
 
     public function onUpdateFieldNextStep(Event $event, array $attr, $action, Request $request)
@@ -191,10 +192,10 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 if (isset($request->data[$this->alias()]['action']) && $request->data[$this->alias()]['action']) {
                     $action = $request->data[$this->alias()]['action'];
                     $actionObj = $this->WorkflowActions->find()
-                    ->where([
-                        $this->WorkflowActions->aliasField('id') => $action
-                    ])
-                    ->first();
+                        ->where([
+                            $this->WorkflowActions->aliasField('id') => $action
+                        ])
+                        ->first();
                     $nextWorkflowStepId = $actionObj->next_workflow_step_id;
                 }
                 break;
@@ -288,12 +289,14 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function onUpdateFieldBulkStudentAdmission(Event $event, array $attr, $action, Request $request)
     {
         $session = $this->request->session();
+        $userId = $session->read('Auth.User.id');
+        $superAdmin = $this->Session->read('Auth.User.super_admin');
         $institutionId = $session->read('Institution.Institutions.id');
         switch ($this->action) {
             case 'add':
                 $currentStatus = isset($request->data[$this->alias()]['status']) ? $request->data[$this->alias()]['status'] : null;
-                $currentActionId = isset($request->data[$this->alias()]['status']) ? $request->data[$this->alias()]['status'] : null;
-                $currentAssigneeId = isset($request->data[$this->alias()]['status']) ? $request->data[$this->alias()]['status'] : null;
+                // $currentActionId = isset($request->data[$this->alias()]['status']) ? $request->data[$this->alias()]['status'] : null;
+                // $currentAssigneeId = isset($request->data[$this->alias()]['status']) ? $request->data[$this->alias()]['status'] : null;
                 break;
             case 'reconfirm':
                 $sessionKey = $this->registryAlias() . '.confirm';
@@ -308,16 +311,18 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 break;
         }
 
+        $where[$this->StudentAdmission->aliasField('status_id')] = $currentStatus;
+        $where[$this->StudentAdmission->aliasField('institution_id')] = $institutionId;
+        if (!$superAdmin) {
+            $where[$this->StudentAdmission->aliasField('assignee_id')] = $userId;
+        }
         $students = [];
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
         $students = $this->StudentAdmission
             ->find()
             ->contain(['Users', 'Assignees', 'AcademicPeriods', 'EducationGrades', 'InstitutionClasses', 'Statuses'])
-            ->where([
-                $this->StudentAdmission->aliasField('status_id') => $currentStatus,
-                $this->StudentAdmission->aliasField('institution_id') => $institutionId
-            ])
+            ->where($where)
             ->toArray();
         $attr['type'] = 'element';
         $attr['element'] = 'Institution.BulkStudentAdmission/students';
@@ -478,7 +483,6 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 }
             }
         }
-        // die;
         return $this->controller->redirect($url);
     }
 
