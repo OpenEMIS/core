@@ -270,8 +270,6 @@ class ExcelReportBehavior extends Behavior
 
         // Update the lastColumn so that later read the HTML can remove the column part
         $this->lastColumn = $columnToRemoveOnwards;
-
-        // $regex = $this->generateRemovalRegex(14);
     }
 
     private function checkLastRow($targetRowValue)
@@ -290,14 +288,217 @@ class ExcelReportBehavior extends Behavior
         return $regex;
     }
 
-    // private function generateRemovalRegex($startColumn, $endingColumnn = 255)
-    // {
-    //     $regex = '/(.*)(column|col)';
-    //     $regex .= $this->regexRange($startColumn, $endingColumnn);
-    //     $regex .= '(.*)/';
+    private function checkIfNoBorder($cssString)
+    {
+        $positions = ['border-left:none', 'border-right:none', 'border-bottom:none', 'border-top:none'];
 
-    //     return $regex;
-    // }
+        foreach ($positions as $position) {
+            if (strpos($cssString, $position) === false) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function extractBorderStyle($headerString)
+    {
+      $styleList = [
+        'td' => []
+      ];
+      $maxValue = 9999;
+
+      for ($id = 0; $id < $maxValue; $id++) {
+        $targetCssStartTag = 'td.style';
+        $targetCssEndTag = 'th.style';
+
+        $targetCssStartTag .= $id;
+        $targetCssEndTag .= $id;
+
+        // Get the start tag position
+        $targetCssStartPos = strpos($headerString, $targetCssStartTag);
+
+        // Get the end tag position
+        $targetCssEndPos = strpos($headerString, $targetCssEndTag);
+
+        // Get the whole CSS style
+        $targetCss = substr($headerString, $targetCssStartPos, $targetCssEndPos - $targetCssStartPos);
+
+        if (empty($targetCss)) {
+            // When hit until the last Row ID it will stop extracting the border style
+            break;
+        } else {  // Extract all the style within this tag
+          $regexRemoveCssTag= preg_replace("/(".$targetCssStartTag." { )/", '', $targetCss);
+          $regexAddStyle= preg_replace("/( })/", '', $regexRemoveCssTag);
+
+          $styleList['td'][$id] = [
+            'style' => $regexAddStyle,
+            'hasBorder' => !$this->checkIfNoBorder($regexAddStyle)
+          ];
+        }
+      }
+      return $styleList;
+    }
+
+    private function processHtml($htmlFile)
+    {
+        // pr($htmlFile);
+        // die;
+        $processingHtml = $htmlFile;
+        $searchHeadString = '<tbody>';
+        $searchTailString = '</tbody>';
+        $searchHeadLength = strlen($searchHeadString);
+
+        // Process Head
+        $headPos = strpos($processingHtml, $searchHeadString);
+        $headString = substr($processingHtml, 0, $headPos + $searchHeadLength); // Head
+
+        // Process Tail
+        $tailPos = strpos($processingHtml, $searchTailString);
+        $tailString = substr($processingHtml, $tailPos);  // Tail
+
+        // Process String
+        $processingString = substr($processingHtml, $headPos + $searchHeadLength, $tailPos - $headPos - $searchHeadLength);
+
+        // To remove Column and Row
+        $processingString = $this->removeColumnAndRow($processingString);
+
+        // Remove any cells that is empty and do not belongs to any style classes css
+        $processedString = $this->removeEmptyCells($processingString, $headString);
+
+        // To change the border to solid line instead of dotted line
+        $processedHeadString = $this->styleBorderToSolid($headString);
+
+        // To remove empty page at the end of the pdf
+        $searchFormat = 'page-break-after:always';
+        $processedHeadString = str_replace($searchFormat, '', $processedHeadString);
+
+        // Combined all the processed Head, Body, Tail html into one
+        $processedHtml = $processedHeadString.$processedString.$tailString;
+        return $processedHtml;
+    }
+
+    private function displayDisplay($processingString)
+    {
+        pr(htmlspecialchars($processingString));
+        die;
+    }
+
+    private function styleBorderToSolid($headString)
+    {
+        // To make the excel sheet to solid shit
+        $searchFormat = '.gridlines td { border:1px dotted black }';
+        $replaceFormat = '.gridlines td { border:1px solid black }';
+        $headString = str_replace($searchFormat, $replaceFormat, $headString);
+
+        $searchFormat = '.gridlines th { border:1px dotted black }';
+        $replaceFormat = '.gridlines th { border:1px solid black }';
+        $headString = str_replace($searchFormat, $replaceFormat, $headString);
+
+        // To add abit of padding to make the text nicer
+        $searchFormat = '<style>';
+        $replaceFormat = '<style> td { padding: 5px !important}';
+        $headString = str_replace($searchFormat, $replaceFormat, $headString);
+
+        return $headString;
+    }
+
+    private function removeEmptyCells($processingString, $headString)
+    {
+
+        $searchString = '">&nbsp;</td>';    // dotted lines
+        $replaceString = '" style="border:none !important;">&nbsp;</td>';
+        $processingString = str_replace($searchString, $replaceString, $processingString);
+
+        $styleList = $this->extractBorderStyle($headString);
+
+        foreach ($styleList as $styleTag => $list) {
+          $searchFormat = 'style%s null"></%s>';
+          $searchFormat2 = 'style%s"></%s>';
+          $replaceFormat = 'style%s%s" %s></%s>';
+
+          foreach ($list as $id => $cssObj) {
+            $hasBorderStyle = ($cssObj['hasBorder']) ? ' has-border' : '';
+            $borderStyle = ($hasBorderStyle) ? '' : 'style="' . $cssObj['style'] . '"';
+
+            $searchString = sprintf($searchFormat, (string)$id, $styleTag);
+            $searchString2 = sprintf($searchFormat2, (string)$id, $styleTag);
+            $replaceString = sprintf($replaceFormat, (string)$id, $hasBorderStyle, $borderStyle, $styleTag);
+
+            $processingString = str_replace($searchString, $replaceString, $processingString);
+            $processedString = str_replace($searchString2, $replaceString, $processingString);
+          }
+        }
+        return $processedString;
+    }
+
+    private function removeColumnAndRow($processingString)
+    {
+        $processedHtmlRows = [];
+
+        $targetRowValue = $this->excelLastRowValue + 1; // Need to plus 1 (Temp)
+
+        // Remove row and column (Row by Row)
+        for ($id = 0; $id < $targetRowValue; $id++) { 
+            $targetRowString = '<tr class="row'.$id.'">';
+            $targetRowEndString = '</tr>';
+            $targetRowPos = strpos($processingString, $targetRowString);
+            $targetRowEndPos = strpos($processingString, $targetRowEndString);
+
+            // Plus 16 cos include </tr> and 11 spaces
+            $targetRowTotalLengthPos = $targetRowEndPos - $targetRowPos + 16;
+
+            $targetRow = substr($processingString, 0, $targetRowTotalLengthPos);
+
+            // To generate the regular expression for removing the extra rows in the html format
+            $prefixRegex = '/.*(row)';
+            $postfixRegex = '(">)(.|\n)*<\/tr>/';
+            $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->excelLastRowValue);
+
+            $processedHtmlRow = preg_replace($regexString, "", $targetRow);
+
+            // To generate the regular expression for removing the extra columns in the html format
+            $prefixRegex = '/(.*)(column|col)';
+            $postfixRegex = '(.*)/';
+            $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->lastColumn);
+
+
+            $searchFormat = '/(<img src="data:image\/).*(;base64)/';
+            $replacement = '<img src="data:image/jpg;base64';
+            $processedHtmlRow = preg_replace($searchFormat, $replacement, $processedHtmlRow);
+
+
+// if($id == 1) {
+//     pr(htmlspecialchars($processedHtmlRow));
+
+//             die;
+// }
+
+
+
+            // pr(htmlspecialchars($processedHtmlRow));
+            // die;
+            
+
+            // $processedHtmlRows[] = preg_replace($regexString, "", $modifiedRow);
+            $processedHtmlColumn = preg_replace($regexString, "", $processedHtmlRow);
+
+            // Clear up all the empty blank lines using regular expression
+            $processedHtmlRows[] = preg_replace('/^\h*\v+/m', "", $processedHtmlColumn);
+
+
+            // Remove the target row from the main processString
+            $processingString = substr_replace($processingString, "", 0, $targetRowTotalLengthPos);
+        }
+
+        $processedString = '';
+        // Combine back the whole html as a whole
+        for ($id = 0; $id < count($processedHtmlRows); $id ++) { 
+            $processedString .= $processedHtmlRows[$id];
+        }
+
+        return $processedString;
+    }
 
     private function regexRange($from, $to)
     {
@@ -520,12 +721,12 @@ class ExcelReportBehavior extends Behavior
 
             // Convert spreadsheet object into html
             $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
-            $writer->setSheetIndex(1);
+            // $writer->setSheetIndex(1);
             
-            Log::write('debug', '----------------------getHighestDataRow before---------------------: ');
-            $objSpreadsheet->getRow();
-            Log::write('debug', '----------------------getHighestDataRow after---------------------: ');
-            Log::write('debug', $objSpreadsheet->getRow());
+            // Log::write('debug', '----------------------getHighestDataRow before---------------------: ');
+            // $objSpreadsheet->getRow();
+            // Log::write('debug', '----------------------getHighestDataRow after---------------------: ');
+            // Log::write('debug', $objSpreadsheet->getRow());
 
             // $writer->writeAllSheets();
             $writer->save($filepath);
@@ -533,25 +734,31 @@ class ExcelReportBehavior extends Behavior
             // Read the html file and convert them into a variable
             $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
 
-            // To remove the extra columns in html format
-            $prefixRegex = '/(.*)(column|col)';
-            $postfixRegex = '(.*)/';
-            $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->lastColumn);
+            // // To generate the regular expression for removing the extra columns in the html format
+            // $prefixRegex = '/(.*)(column|col)';
+            // $postfixRegex = '(.*)/';
+            // $regexRemoveColumnString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->lastColumn);
 
-            $modifiedFile = preg_replace($regexString, "", $file);
+            // Remove all the redundant rows and columns
+            $processedHtml = $this->processHtml($file);
+
+            // pr(htmlspecialchars($processedHtml));
+            // die;
+
+            // $modifiedFile = preg_replace($regexString, "", $file);
 
             // To remove the extra rows in html format
-            $prefixRegex = '/.*(row)';
-            $postfixRegex = '(">)(.|\n)*<\/tr>/';
-            $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->excelLastRowValue);
+            // $prefixRegex = '/.*(row)';
+            // $postfixRegex = '(">)(.|\n)*<\/tr>/';
+            // $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->excelLastRowValue);
 
-            $modifiedFile = preg_replace($regexString, "", $modifiedFile);
-            Log::write('debug', '----------------------------------------------------------: ');
-            Log::write('debug', $modifiedFile);
-            Log::write('debug', '----------------------------------------------------------: ');
+            // $modifiedFile = preg_replace($regexString, "", $modifiedFile);
+            // Log::write('debug', '----------------------------------------------------------: ');
+            // Log::write('debug', $modifiedFile);
+            // Log::write('debug', '----------------------------------------------------------: ');
 
 
-            pr($modifiedFile);die;
+            // pr($modifiedFile);die;
 
 
             // Write the contents back to the file
@@ -567,13 +774,23 @@ class ExcelReportBehavior extends Behavior
 
             try {
                 Log::write('debug', 'inside try before modifiedFile');
-                // Log::write('debug', $modifiedFile);
-            $mpdf->WriteHTML($modifiedFile);
+                Log::write('debug', $processedHtml);
+
+                $s = '">&nbsp;</td>';
+                $r = '" style="border:none !important;">&nbsp;</td>';
+
+                $s2 = 'null"></td>';
+                $r2 = 'null" style="border:none !important;">&nbsp;</td>';
+
+                // $modifiedFile = str_replace($s, $r, $modifiedFile);
+                // $modifiedFile = str_replace($s2, $r2, $modifiedFile);
+                // pr($processedHtml);die;
+                $mpdf->WriteHTML($processedHtml);
 
 
                 Log::write('debug', 'inside try before output');
 
-                    $mpdf->Output($fileName,'D');
+                $mpdf->Output($fileName.'.pdf','D');
                 Log::write('debug', 'inside try after output');
 
             } catch (Exception $e) {
@@ -581,7 +798,7 @@ class ExcelReportBehavior extends Behavior
             }
 
             // Output a PDF file download directly to the browser
-            // $mpdf->Output($fileName,'D');
+            // $mpdf->Output($fileName.'.pdf','D');
 
             // Remove the temp file that is converted from excel object and its successfully converted to pdf
             if ($this->config('purge')) {
@@ -601,7 +818,7 @@ class ExcelReportBehavior extends Behavior
         // }
 
         // $objWriter->save($filepath);
-        Log::write('debug', 'died');
+        // Log::write('debug', 'died');
 
         // die;
 
