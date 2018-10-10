@@ -9,7 +9,7 @@
 					<thead>
 						<tr>
 							<?php if ($action != 'reconfirm') { ?>
-							<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
+								<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
 							<?php } ?>
 							<th><?= __('Status') ?></th>
 							<th><?= __('Assignee') ?></th>
@@ -28,20 +28,18 @@
 							if (!empty($ssvalue['selected'])) {
 								$onlySelectedStudents[] = $ssvalue['student_id'];
 							}
-						}
-					?>
+						} ?>
 						<tbody>
 							<?php
 							$studentCount = 0;
 							foreach ($attr['data'] as $i => $obj) :
 								if ($action == 'reconfirm') {
 									if (!in_array($obj->student_id, $onlySelectedStudents)) continue;
-								}
-								?>
+								} ?>
 								<tr>
 									<?php if ($action != 'reconfirm') { ?>
-									<td class="checkbox-column tooltip-orange">
-										<?php
+										<td class="checkbox-column tooltip-orange">
+											<?php
 											$alias = $ControllerAction['table']->alias();
 											$fieldPrefix = "$alias.students.$i";
 											echo $this->Form->checkbox("$fieldPrefix.selected", ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
@@ -60,15 +58,14 @@
 									<td><?= $obj->end_date ?></td>
 									<td><?= $obj->comment ?></td>
 								</tr>
-							<?php $studentCount++;
+								<?php $studentCount++;
 							endforeach ?>
-							<?php
-							if ($studentCount <= 0) {
-								?>
-								<tr><td><?= $this->Label->get($ControllerAction['table']->alias().'.noStudentSelected'); ?></td></tr>
-								<?php
-							}
-							 ?>
+							<?php if ($studentCount <= 0) { ?>
+								<tr>
+									<td><?= $this->Label->get($ControllerAction['table']->alias().'.noStudentSelected'); ?>
+									</td>
+								</tr>
+							<?php } ?>
 						</tbody>
 					<?php endif ?>
 				</table>
