@@ -383,9 +383,9 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAdmission']);
     }
-    public function StudentBulkAdmission()
+    public function BulkStudentAdmission()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentBulkAdmission']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.BulkStudentAdmission']);
     }
     public function StudentTransferIn()
     {
