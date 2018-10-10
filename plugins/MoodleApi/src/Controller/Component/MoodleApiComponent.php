@@ -125,8 +125,9 @@ class MoodleApiComponent extends Component
     //TODO - load token from configuration instead of hardcode
     private function _loadConfig()
     {
-        $this->_token = $ConfigItems = TableRegistry::get('Configuration.ConfigItems')->value("api_token");
-        $this->_baseURL = TableRegistry::get('Configuration.ConfigItems')->value("base_url");
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $this->_token = $ConfigItems->value("api_token");
+        $this->_baseURL = $ConfigItems->value("base_url");
     }
 
     private function _constructBasicParams($function)
