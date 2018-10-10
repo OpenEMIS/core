@@ -5,7 +5,6 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
@@ -18,7 +17,7 @@ use App\Model\Table\ControllerActionTable;
 use Workflow\Model\Behavior\WorkflowBehavior;
 use Cake\Log\Log;
 
-class StudentBulkAdmissionTable extends ControllerActionTable
+class BulkStudentAdmissionTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -56,8 +55,8 @@ class StudentBulkAdmissionTable extends ControllerActionTable
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona=false)
     {
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission'];
-        $Navigation->substituteCrumb('Student Bulk Admission', 'Student Admission', $url);
-        $Navigation->addCrumb('Student Bulk Admission');
+        $Navigation->substituteCrumb('Bulk Student Admission', 'Student Admission', $url);
+        $Navigation->addCrumb('Bulk Student Admission');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -321,7 +320,7 @@ class StudentBulkAdmissionTable extends ControllerActionTable
             ])
             ->toArray();
         $attr['type'] = 'element';
-        $attr['element'] = 'Institution.StudentBulkAdmission/students';
+        $attr['element'] = 'Institution.BulkStudentAdmission/students';
         $attr['data'] = $students;
         return $attr;
     }
@@ -385,7 +384,7 @@ class StudentBulkAdmissionTable extends ControllerActionTable
                         $url = [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
-                            'action' => 'StudentBulkAdmission',
+                            'action' => 'BulkStudentAdmission',
                             'reconfirm'
                         ];
                         $this->currentEntity = $entity;
@@ -465,7 +464,6 @@ class StudentBulkAdmissionTable extends ControllerActionTable
                     $transition['model_reference'] = $existingEntityToUpdate->$primaryKey;
                     $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
                     $transitionEntity = $WorkflowTransitions->newEntity($transition);
-
                     if ($WorkflowTransitions->save($transitionEntity)) {
                         $this->Alert->success($this->aliasField('success'), ['reset' => true]);
                     } else {
@@ -475,11 +473,12 @@ class StudentBulkAdmissionTable extends ControllerActionTable
                     $message = 'Bulk student admission failed.';
                     $this->Alert->error($this->aliasField('savingPromotionError'), ['reset' => true]);
                     $this->log($message, 'debug');
-                    $url['action'] = 'StudentBulkAdmission';
+                    $url['action'] = 'BulkStudentAdmission';
                     $url[0] = 'add';
                 }
             }
         }
+        // die;
         return $this->controller->redirect($url);
     }
 
@@ -498,7 +497,7 @@ class StudentBulkAdmissionTable extends ControllerActionTable
                 $cancelUrl = [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
-                            'action' => 'StudentBulkAdmission',
+                            'action' => 'BulkStudentAdmission',
                             'add'
                         ];
                 // $cancelUrl = array_diff_key($cancelUrl, $this->request->data[$this->alias()]);
