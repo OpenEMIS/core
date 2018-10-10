@@ -533,6 +533,11 @@ trait MessagesTrait
             'selectNextGrade' => 'Please select a grade to promote to.',
             'notEnrolled' => 'Not enrolled to any grades'
         ],
+        'StudentBulkAdmission' => [
+            'success' => 'Bulk students admission successful',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+        ],
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
             'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',

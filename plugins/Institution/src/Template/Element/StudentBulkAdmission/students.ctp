@@ -22,20 +22,18 @@
 							<th><?= __('Comment') ?></th>
 						</tr>
 					</thead>
-					<?php if (isset($attr['data'])) :
-							$selectedStudents = array_key_exists('selectedStudents', $attr)? $attr['selectedStudents']: [];
-							$onlySelectedStudents = [];
-							foreach ($selectedStudents as $sskey => $ssvalue) {
-								if (!empty($ssvalue['selected'])) {
-									$onlySelectedStudents[] = $ssvalue['student_id'];
-								}
+					<?php if (isset($attr['data'])) : $selectedStudents = array_key_exists('selectedStudents', $attr) ? $attr['selectedStudents']: [];
+						$onlySelectedStudents = [];
+						foreach ($selectedStudents as $sskey => $ssvalue) {
+							if (!empty($ssvalue['selected'])) {
+								$onlySelectedStudents[] = $ssvalue['student_id'];
 							}
+						}
 					?>
 						<tbody>
 							<?php
 							$studentCount = 0;
 							foreach ($attr['data'] as $i => $obj) :
-								$pendingRequestsCount = $obj->pendingRequestsCount;
 								if ($action == 'reconfirm') {
 									if (!in_array($obj->student_id, $onlySelectedStudents)) continue;
 								}
@@ -44,15 +42,11 @@
 									<?php if ($action != 'reconfirm') { ?>
 									<td class="checkbox-column tooltip-orange">
 										<?php
-											if ($pendingRequestsCount > 0) {
-												echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-orange" data-animation="false" data-container="body" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$this->Label->get($ControllerAction['table']->alias().'.pendingRequest'). '"></i>';
-											} else {
-												$alias = $ControllerAction['table']->alias();
-												$fieldPrefix = "$alias.students.$i";
-												echo $this->Form->checkbox("$fieldPrefix.selected", ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
-												echo $this->Form->hidden("$fieldPrefix.id", ['value' => $obj->id]);
-												echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
-											}
+											$alias = $ControllerAction['table']->alias();
+											$fieldPrefix = "$alias.students.$i";
+											echo $this->Form->checkbox("$fieldPrefix.selected", ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
+											echo $this->Form->hidden("$fieldPrefix.id", ['value' => $obj->id]);
+											echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
 										?>
 									</td>
 									<?php } ?>
