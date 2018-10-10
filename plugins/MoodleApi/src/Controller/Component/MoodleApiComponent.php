@@ -18,6 +18,7 @@ namespace MoodleApi\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\Http\Client;
+use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use MoodleApi\Controller\Component\MoodleFunction\MoodleCreateUser;
 
@@ -124,8 +125,8 @@ class MoodleApiComponent extends Component
     //TODO - load token from configuration instead of hardcode
     private function _loadConfig()
     {
-        $this->_token = "426856ef1e1e4ea867c78d4818915836";
-        $this->_baseURL = "https://dmo-tst.openemis.org/learning/";
+        $this->_token = $ConfigItems = TableRegistry::get('Configuration.ConfigItems')->value("api_token");
+        $this->_baseURL = TableRegistry::get('Configuration.ConfigItems')->value("base_url");
     }
 
     private function _constructBasicParams($function)
