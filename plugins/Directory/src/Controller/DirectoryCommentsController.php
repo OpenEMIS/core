@@ -37,7 +37,7 @@ class DirectoryCommentsController extends BaseController
     {
         $page = $this->Page;
         $session = $this->request->session();
-        $guardianID = $session->read('Guardian.Guardians.id');
+        $guardianId = $session->read('Guardian.Guardians.id');
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
         $nationalityId = $this->Users->get($userId)->nationality_id;
@@ -69,6 +69,14 @@ class DirectoryCommentsController extends BaseController
                     'action' => 'index',
                     'queryString' => $encodedUserId
                 ];
+            } elseif ($action == 'UserNationalities') {
+                $url = [
+                    'plugin' => 'Directory',
+                    'controller' => 'Directories',
+                    'action' => 'Nationalities',
+                    'index',
+                    'queryString' => $encodedUserAndNationalityId
+                ];
             } else {
                 $url = [
                     'plugin' => 'Directory',
@@ -77,23 +85,18 @@ class DirectoryCommentsController extends BaseController
                     'index',
                     'queryString' => $encodedUserId
                 ];
-                // exceptions
-                if ($action == 'UserNationalities') {
-                    $url['action'] = 'Nationalities';
-                    $url['queryString'] = $encodedUserAndNationalityId;
-                }
             }
             $tabElements[$action]['url'] = $url;
         }
-        if (!empty($guardianID)) {
-            $StudentGuardianID = $this->request->session()->read('Student.Guardians.primaryKey')['id'];
+        if (!empty($guardianId)) {
+            $StudentGuardianId = $this->request->session()->read('Student.Guardians.primaryKey')['id'];
             $url = ['plugin' => 'Directory', 'controller' => 'Directories'];
             $guardianstabElements = [
                 'Guardians' => ['text' => __('Relation')],
                 'GuardianUser' => ['text' => __('Overview')]
              ];
-            $guardianstabElements['Guardians']['url'] = array_merge($url, ['action' => 'StudentGuardians', 'view', $this->paramsEncode(['id' => $StudentGuardianID])]);
-            $guardianstabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $guardianID, 'StudentGuardians.id' => $StudentGuardianID])]);
+            $guardianstabElements['Guardians']['url'] = array_merge($url, ['action' => 'StudentGuardians', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
+            $guardianstabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $guardianId, 'StudentGuardians.id' => $StudentGuardianId])]);
             $tabElements = array_merge($guardianstabElements, $tabElements);
         }
 

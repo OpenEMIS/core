@@ -69,9 +69,9 @@ class GuardiansTable extends ControllerActionTable
                 }
             } elseif ($this->action == 'view') {
                 if ($this->controller->name == 'Directories') {
-                    $tabElements = $this->controller->getUserTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardian']);
+                    $tabElements = $this->controller->getUserTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardians']);
                 } elseif ($this->controller->name == 'Students') {
-                    $tabElements = $this->controller->getGuardianTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardian']);
+                    $tabElements = $this->controller->getGuardianTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardians']);
                 }
             }
         }

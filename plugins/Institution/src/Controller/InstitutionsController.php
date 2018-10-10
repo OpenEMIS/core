@@ -896,6 +896,10 @@ class InstitutionsController extends AppController
         $action = $this->request->params['action'];
         $header = __('Institutions');
 
+        if (($action == 'StudentUser' || $action == 'StaffUser') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'view' )) {
+            $session->delete('Guardian.Guardians.id');
+            $session->delete('Guardian.Guardians.name');
+        }
         // this is to cater for back links
         $query = $this->request->query;
 
