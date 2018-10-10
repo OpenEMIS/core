@@ -5,6 +5,8 @@
  * For moodle specifc function logic, please create a class under MoodleFunction.
  * SEE MoodleFunction\MoodleCreateUser for example. 
  *
+ * Use $reponse->error to check error details.
+ *
  * PHP version 7.2
  *
  * @category  API
@@ -49,11 +51,7 @@ class MoodleApiComponent extends Component
 
         $response = $http->get($url);
 
-        if ($this->_hasError($response)) {
-            return false;
-        } else {
-            return $response;
-        }
+        return $this->_checkError($response);
     }
 
     /**
@@ -70,7 +68,9 @@ class MoodleApiComponent extends Component
     {
         if (!$function || !$params) {
             Log::write('debug', "MoodleApiComponent @post Exception - function or params are null");
-            return false;
+            $errorObject = $this->_createErrorObject();
+            $errorObject->error["param_invalid_exception"] = "Please check your data parameters.";
+            return $errorObject;
         }
 
         $url = $this->getUrl($function);
@@ -78,11 +78,7 @@ class MoodleApiComponent extends Component
 
         $response = $http->post($url, $params);
 
-        if ($this->_hasError($response)) {
-            return false;
-        } else {
-            return $response;
-        }
+        return $this->_checkError($response);
     }
 
     /**
@@ -96,7 +92,9 @@ class MoodleApiComponent extends Component
     public function createUser($data)
     {
         if (!MoodleCreateUser::checkData($data)) {
-            return false;
+            $errorObject = $this->_createErrorObject();
+            $errorObject->error["param_invalid_exception"] = "Please check your data parameters.";
+            return $errorObject;
         }
 
         $data = MoodleCreateUser::convertDataToParam($data);
@@ -137,22 +135,38 @@ class MoodleApiComponent extends Component
                 self::FUNCTION_PARAM . "=" . $function;
     }
 
-    private function _hasError($response)
+    private function _checkError(&$response)
     {
+        $this->_initResponseError($response);
         if ($response->isOk()) {
             $responseBody = $response->json;
             if (isset($responseBody["exception"])) {
                 Log::write('debug', "MoodleApiComponent Exception - " . $responseBody["exception"]);
                 Log::write('debug', "MoodleApiComponent Exception Message - " . $responseBody["message"]);
-                return true;
-            } else {
-                return false;
+                $response->error["api_exception"] = $responseBody;
             }
         } else {
             Log::write('debug', "MoodleApiComponent Exception - response error");
             Log::write('debug', "MoodleApiComponent Exception response - " . $response);
-            return true;
+            $response->error["http_exception"] = $response->code;
         }
+        return $response;
+    }
+
+    private function _createErrorObject()
+    {
+        $errorObject = new stdClass();
+        $this->_initResponseError($errorObject);
+        return $errorObject;
+    }
+    
+    private function _initResponseError(&$response)
+    {
+        if (!isset($response->error)) {
+            $response->error = [];
+        }
+
+        return $response;
     }
 
     /**
