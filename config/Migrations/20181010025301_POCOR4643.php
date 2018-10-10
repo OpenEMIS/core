@@ -5,8 +5,6 @@ use Cake\Utility\Text;
 
 class POCOR4643 extends AbstractMigration
 {
-    // private $workflowModelId = 20;
-
     public function up()
     {
         $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 73');
