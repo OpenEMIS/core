@@ -43,7 +43,6 @@ class MoodleCreateUser extends MoodleFunction
     protected static $userMandatoryParams
         = [
             "username",
-            "password",
             "firstname",
             "lastname",
             "email"
