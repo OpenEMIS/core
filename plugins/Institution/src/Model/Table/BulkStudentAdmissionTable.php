@@ -395,6 +395,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             'action' => 'StudentAdmission',
             'index'
         ];
+        $workflowTransitionObj = [];
         foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
             if ($studentObj['selected']) {
                 unset($studentObj['selected']);
@@ -410,28 +411,25 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 $workflowModel = $entity->workflow->id;
                 $workflowAction = $this->getWorkflowActionEntity($entity);
                 if ($this->StudentAdmission->save($existingEntityToUpdate)) {
-                    $this->Alert->success($this->aliasField('success'), ['reset' => true]);
-                    $transition['comment'] = $data[$this->alias()]['comment'];
-                    $transition['prev_workflow_step_name'] = $prevWorkflowStepName;
-                    $transition['workflow_step_name'] = $workflowAction->next_workflow_step['name'];
-                    $transition['workflow_action_name'] = $workflowAction['name'];
-                    $transition['workflow_model_id'] = $workflowModel;
-                    $transition['model_reference'] = $existingEntityToUpdate->$primaryKey;
-                    $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
-                    $transitionEntity = $WorkflowTransitions->newEntity($transition);
-                    if ($WorkflowTransitions->save($transitionEntity)) {
-                        $this->Alert->success($this->aliasField('success'), ['reset' => true]);
-                    } else {
-                        $this->log($entity->errors(), 'debug');
-                    }
-                } else {
-                    $message = 'Bulk student admission failed.';
-                    $this->Alert->error($this->aliasField('savingError'), ['reset' => true]);
-                    $this->log($message, 'debug');
-                    $url['action'] = 'BulkStudentAdmission';
-                    $url[0] = 'add';
+                    $workflowTransition = [];
+                    $workflowTransition['comment'] = $data[$this->alias()]['comment'];
+                    $workflowTransition['prev_workflow_step_name'] = $prevWorkflowStepName;
+                    $workflowTransition['workflow_step_name'] = $workflowAction->next_workflow_step['name'];
+                    $workflowTransition['workflow_action_name'] = $workflowAction['name'];
+                    $workflowTransition['workflow_model_id'] = $workflowModel;
+                    $workflowTransition['model_reference'] = $existingEntityToUpdate->$primaryKey;
+                    $workflowTransitionObj[] = $workflowTransition;
                 }
             }
+        }
+        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+        $workflowTransitionEntities = $WorkflowTransitions->newEntities($workflowTransitionObj);
+        if ($WorkflowTransitions->saveMany($workflowTransitionEntities)) {
+            $this->Alert->success($this->aliasField('success'), ['reset' => true]);
+        } else {
+            $this->log($entity->errors(), 'debug');
+            $url['action'] = 'BulkStudentAdmission';
+            $url[0] = 'edit';
         }
         return $this->controller->redirect($url);
     }
@@ -452,7 +450,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'BulkStudentAdmission',
-                            'add'
+                            'edit'
                         ];
                 $cancelButton['url'] = $cancelUrl;
                 $buttons[0] = $confirmButton;
