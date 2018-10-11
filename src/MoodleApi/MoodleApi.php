@@ -155,7 +155,7 @@ class MoodleApi
 
     private function _createErrorObject()
     {
-        $errorObject = new stdClass();
+        $errorObject = new \stdClass();
         $this->_initResponseError($errorObject);
         return $errorObject;
     }
