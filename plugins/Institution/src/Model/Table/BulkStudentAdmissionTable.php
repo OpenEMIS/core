@@ -9,13 +9,9 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Controller\Component;
-use Cake\I18n\Time;
 use Cake\Utility\Hash;
-use Cake\Utility\Inflector;
-use Cake\ORM\RulesChecker;
-use App\Model\Table\ControllerActionTable;
-use Workflow\Model\Behavior\WorkflowBehavior;
 use Cake\Log\Log;
+use App\Model\Table\ControllerActionTable;
 
 class BulkStudentAdmissionTable extends ControllerActionTable
 {
@@ -26,14 +22,16 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     {
         $this->table('workflow_steps');
         parent::initialize($config);
+
         $this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
         $this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->toggle('remove', false);
+
         $this->toggle('index', false);
         $this->toggle('add', false);
-        $this->toggle('search', false);
         $this->toggle('view', false);
+        $this->toggle('remove', false);
+        $this->toggle('search', false);
 
         $this->_stepsOptions = $this
             ->find('list')
@@ -113,6 +111,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             case 'edit':
                 $toolbarButtons = $extra['toolbarButtons'];
                 $toolbarButtons['back']['url']['action'] = 'StudentAdmission';
+                $toolbarButtons['back']['url'][0] = 'index';
                 break;
         }
     }
@@ -157,7 +156,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
 
     public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
     {
-        // gets all the workflow_steps in which the workflow model belongs to StudentAdmissionTable & returns a list of key-value pair for populating the dropdown. The dropdown contains statuses which have next step(action)
+        /* gets all the workflow_steps in which the workflow model belongs to StudentAdmissionTable & returns a list of key-value pair for populating the dropdown. The dropdown contains statuses which have next step(action) */
         $attr['select'] = false;
         $attr['options'] = $this->_stepsOptions;
         $attr['onChangeReload'] = 'changeStatus';
@@ -204,7 +203,6 @@ class BulkStudentAdmissionTable extends ControllerActionTable
 
     public function onUpdateFieldNextStep(Event $event, array $attr, $action, Request $request)
     {
-        Log::write('debug', 'onUpdateFieldNextStep');
         switch ($this->action) {
             case 'edit':
                 $entity = $attr['entity'];
@@ -269,7 +267,6 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                     $defaultKey = empty($assigneeOptions) ? __('No options') : '-- '.__('Select').' --';
 
                 }
-
                 $attr['options'] = $assigneeOptions;
                 break;
 
@@ -464,7 +461,6 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                             'action' => 'BulkStudentAdmission',
                             'add'
                         ];
-                // $cancelUrl = array_diff_key($cancelUrl, $this->request->data[$this->alias()]);
                 $cancelButton['url'] = $cancelUrl;
                 $buttons[0] = $confirmButton;
                 $buttons[1] = $cancelButton;
