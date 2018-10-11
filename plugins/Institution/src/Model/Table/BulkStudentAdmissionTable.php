@@ -316,13 +316,19 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function reconfirm()
     {
         $this->Alert->info($this->aliasField('reconfirm'), ['reset' => true]);
-
+        $url = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'BulkStudentAdmission',
+            'edit'
+        ];
         $sessionKey = $this->registryAlias() . '.confirm';
         if ($this->Session->check($sessionKey)) {
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
-        } else{
+        } else {
             $this->Alert->warning('general.notExists');
+            return $this->controller->redirect($url);
         }
         $this->field('name', ['visible' => 'hidden']);
         $this->field('category', ['type' => 'hidden']);
@@ -346,6 +352,8 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             }
             $this->controller->set('data', $currentEntity);
         } else {
+            $this->Alert->warning('general.notExists');
+            return $this->controller->redirect($url);
         }
         $this->ControllerAction->renderView('/ControllerAction/edit');
         return true;
@@ -433,7 +441,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                     }
                 } else {
                     $message = 'Bulk student admission failed.';
-                    $this->Alert->error($this->aliasField('savingPromotionError'), ['reset' => true]);
+                    $this->Alert->error($this->aliasField('savingError'), ['reset' => true]);
                     $this->log($message, 'debug');
                     $url['action'] = 'BulkStudentAdmission';
                     $url[0] = 'add';
