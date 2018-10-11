@@ -26,11 +26,8 @@ class AccountsTable extends AppTable {
         $tabElements = $this->controller->getUserTabElements();
         $session = $this->request->session();
         $guardianId = $session->read('Guardian.Guardians.id');
-        if (!empty($guardianId)) {
-            $userId = $guardianId;
-        }
         if($this->controller->name == 'Directories' && !empty($guardianId)) {
-            $tabElements = $this->controller->getUserTabElements(['id' => $userId, 'userRole' => 'Guardians']);
+            $tabElements = $this->controller->getUserTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
         }
 
         $this->controller->set('tabElements', $tabElements);
