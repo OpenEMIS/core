@@ -203,7 +203,7 @@ class POCOR3594 extends AbstractMigration
 
        $data = [
             [
-                'id' => 2047,
+                'id' => 2048,
                 'name' => 'Demographics',
                 'controller' => 'Students',
                 'module' => 'Institutions',
