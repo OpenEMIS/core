@@ -17,6 +17,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
 {
     private $_modelAlias = 'Institution.StudentAdmission';
     private $_stepsOptions;
+    private $_currentData;
 
     public function initialize(array $config)
     {
@@ -115,7 +116,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             case 'reconfirm':
                 $sessionKey = $this->registryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
-                    $currentData = $this->Session->read($sessionKey);
+                    $this->_currentData = $this->Session->read($sessionKey);
                 }
                 break;
         }
@@ -145,11 +146,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             break;
 
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
-                if ($this->Session->check($sessionKey)) {
-                    $currentData = $this->Session->read($sessionKey);
-                }
-                $selectedStatus = $currentData->status;
+                $selectedStatus = $this->_currentData->status;
             break;
 
             default:
@@ -187,10 +184,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
 
             case 'reconfirm':
                 $sessionKey = $this->registryAlias() . '.confirm';
-                if ($this->Session->check($sessionKey)) {
-                    $currentData = $this->Session->read($sessionKey);
-                }
-                $workflowActionEntity = $this->getWorkflowActionEntity($currentData);
+                $workflowActionEntity = $this->getWorkflowActionEntity($this->_currentData);
                 $attr['attr']['value'] = $workflowActionEntity['name'];
             break;
 
@@ -219,13 +213,9 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 break;
 
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
-                if ($this->Session->check($sessionKey)) {
-                    $currentData = $this->Session->read($sessionKey);
-                    $workflowActionEntity = $this->getWorkflowActionEntity($currentData);
-                    if (isset($workflowActionEntity->next_workflow_step)) {
-                        $attr['attr']['value'] = $workflowActionEntity->next_workflow_step->name;
-                    }
+                $workflowActionEntity = $this->getWorkflowActionEntity($this->_currentData);
+                if (isset($workflowActionEntity->next_workflow_step)) {
+                    $attr['attr']['value'] = $workflowActionEntity->next_workflow_step->name;
                 }
                 break;
 
@@ -275,13 +265,9 @@ class BulkStudentAdmissionTable extends ControllerActionTable
 
             case 'reconfirm':
                 $SecurityUsers = TableRegistry::get('Security.Users');
-                $sessionKey = $this->registryAlias() . '.confirm';
-                if ($this->Session->check($sessionKey)) {
-                    $currentData = $this->Session->read($sessionKey);
-                }
                 $value = $SecurityUsers
                     ->find()
-                    ->where([$SecurityUsers->aliasField('id') => $currentData->assignee_id])
+                    ->where([$SecurityUsers->aliasField('id') => $this->_currentData->assignee_id])
                     ->first();
                 $attr['attr']['value'] = $value->name;
                 break;
@@ -300,12 +286,8 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 $students = $entity->student_admission;
                 break;
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
-                if ($this->Session->check($sessionKey)) {
-                    $currentData = $this->Session->read($sessionKey);
-                }
-                $students  = $currentData->student_admission;
-                $attr['selectedStudents'] = ($currentData->has('students'))? $currentData->students : [];
+                $students  = $this->_currentData->student_admission;
+                $attr['selectedStudents'] = ($this->_currentData->has('students'))? $this->_currentData->students : [];
                 break;
             default:
                 break;
