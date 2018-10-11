@@ -19,19 +19,32 @@ use Cake\Log\Log;
 
 class BulkStudentAdmissionTable extends ControllerActionTable
 {
+    private $_modelAlias = 'Institution.StudentAdmission';
+    private $_stepsOptions;
+
     public function initialize(array $config)
     {
         $this->table('workflow_steps');
         parent::initialize($config);
         $this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
         $this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('NextWorkflowSteps', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'next_workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->toggle('remove', false);
         $this->toggle('index', false);
-        $this->toggle('edit', false);
+        $this->toggle('add', false);
         $this->toggle('search', false);
         $this->toggle('view', false);
+
+        $this->_stepsOptions = $this
+            ->find('list')
+            ->contain([
+                'Workflows.WorkflowModels'
+            ])
+            ->matching('WorkflowActions')
+            ->where([
+                'WorkflowModels.model' => $this->_modelAlias
+            ])
+            ->toArray();
     }
 
     public function validationDefault(Validator $validator)
@@ -59,26 +72,54 @@ class BulkStudentAdmissionTable extends ControllerActionTable
         $Navigation->addCrumb('Bulk Student Admission');
     }
 
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $request = $this->request;
+        $session = $this->Session;
+
+        $userId = $session->read('Auth.User.id');
+        $superAdmin = $session->read('Auth.User.super_admin');
+        $institutionId = $session->read('Institution.Institutions.id');
+
+        if ($request->is(['post', 'put'])) {
+            $statusId = $request->data[$this->alias()]['status'];
+        } else {
+            $statusId = key($this->_stepsOptions);
+        }
+        $query->contain([
+            'Workflows',
+            'WorkflowActions',
+            'WorkflowActions.NextWorkflowSteps',
+            'StudentAdmission'=> function ($q) use ($superAdmin, $userId, $institutionId) {
+                $q->where(['StudentAdmission.institution_id' => $institutionId])
+                    ->contain(['Users', 'Assignees', 'AcademicPeriods', 'EducationGrades', 'InstitutionClasses', 'Statuses']);
+                if ($superAdmin) {
+                    return $q;
+                } else {
+                    return $q->where(['StudentAdmission.assignee_id'=> $userId]);
+                }
+            },
+            'Workflows.WorkflowModels'
+        ])
+        ->where([
+            'WorkflowModels.model' => $this->_modelAlias,
+            $this->aliasField('id') => $statusId
+        ], [], true);
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         switch ($this->action) {
-            case 'add':
+            case 'edit':
                 $toolbarButtons = $extra['toolbarButtons'];
                 $toolbarButtons['back']['url']['action'] = 'StudentAdmission';
                 break;
         }
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function editAfterAction(Event $event, $entity, ArrayObject $extra)
     {
-        // To clear the query string from the previous page to prevent logic conflict on this page
-        $this->request->query = [];
-    }
-
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        // might need to change the type to visibility false.
-        $this->field('name', ['visible' => 'hidden']);
+        $this->field('name', ['type' => 'hidden']);
         $this->field('category', ['type' => 'hidden']);
         $this->field('is_editable', ['type' => 'hidden']);
         $this->field('is_removable', ['type' => 'hidden']);
@@ -95,7 +136,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, Request $request)
     {
         switch ($this->action) {
-            case 'add':
+            case 'edit':
                 $selectedStatus = isset($request->data[$this->alias()]['status']) ? $request->data[$this->alias()]['status'] : null;
             break;
 
@@ -117,18 +158,8 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
     {
         // gets all the workflow_steps in which the workflow model belongs to StudentAdmissionTable & returns a list of key-value pair for populating the dropdown. The dropdown contains statuses which have next step(action)
-        $model = $this->StudentAdmission->registryAlias();
-        $options = $this
-            ->find('list')
-            ->contain([
-                'Workflows.WorkflowModels'
-            ])
-            ->matching('WorkflowActions')
-            ->where([
-                'WorkflowModels.model' => $model
-            ])
-            ->toArray();
-        $attr['options'] = $options;
+        $attr['select'] = false;
+        $attr['options'] = $this->_stepsOptions;
         $attr['onChangeReload'] = 'changeStatus';
         return $attr;
     }
@@ -142,18 +173,10 @@ class BulkStudentAdmissionTable extends ControllerActionTable
 
     public function onUpdateFieldAction(Event $event, array $attr, $action, Request $request)
     {
-        $query = $this->WorkflowActions->find('list');
         switch ($this->action) {
-            case 'add':
-                $status = null;
-                if (isset($request->data[$this->alias()]['status'])) {
-                    $status = $request->data[$this->alias()]['status'];
-                }
-                $options = $query
-                    ->where([
-                        $this->WorkflowActions->aliasField('workflow_step_id') => $status
-                    ])
-                    ->toArray();
+            case 'edit':
+                $workflowActions = $attr['entity']->workflow_actions;
+                $options = Hash::combine($workflowActions, '{n}.id', '{n}.name');
                 $attr['options'] = $options;
                 $attr['onChangeReload'] = 'changeAction';
             break;
@@ -163,13 +186,8 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
                 }
-                $value = $query
-                    ->where([
-                        $this->WorkflowActions->aliasField('id') => $currentData->action
-                    ])
-                    ->hydrate(false)
-                    ->first();
-                $attr['attr']['value'] = $value;
+                $workflowActionEntity = $this->getNextWorkflowStepEntity($currentData);
+                $attr['attr']['value'] = $workflowActionEntity['name'];
             break;
 
             default:
@@ -186,17 +204,14 @@ class BulkStudentAdmissionTable extends ControllerActionTable
 
     public function onUpdateFieldNextStep(Event $event, array $attr, $action, Request $request)
     {
+        Log::write('debug', 'onUpdateFieldNextStep');
         switch ($this->action) {
-            case 'add':
-                $nextWorkflowStepId = null;
-                if (isset($request->data[$this->alias()]['action']) && $request->data[$this->alias()]['action']) {
-                    $action = $request->data[$this->alias()]['action'];
-                    $actionObj = $this->WorkflowActions->find()
-                        ->where([
-                            $this->WorkflowActions->aliasField('id') => $action
-                        ])
-                        ->first();
-                    $nextWorkflowStepId = $actionObj->next_workflow_step_id;
+            case 'edit':
+                $entity = $attr['entity'];
+                $workflowActionEntity = $this->getNextWorkflowStepEntity($entity);
+                if (isset($workflowActionEntity->next_workflow_step)) {
+                    $attr['value'] = $workflowActionEntity->next_workflow_step->id;
+                    $attr['attr']['value'] = $workflowActionEntity->next_workflow_step->name;
                 }
                 break;
 
@@ -204,23 +219,15 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 $sessionKey = $this->registryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
+                    $workflowActionEntity = $this->getNextWorkflowStepEntity($currentData);
+                    if (isset($workflowActionEntity->next_workflow_step)) {
+                        $attr['attr']['value'] = $workflowActionEntity->next_workflow_step->name;
+                    }
                 }
-                $nextWorkflowStepId = $currentData->next_step;
                 break;
 
             default:
                 break;
-        }
-        $nextWorkflowStepObj = $this
-            ->find()
-            ->where([
-                $this->aliasField('id') => $nextWorkflowStepId
-            ])
-            ->first();
-        if ($nextWorkflowStepObj) {
-            $attr['value'] = $nextWorkflowStepObj->id;
-            $attr['attr']['value'] = $nextWorkflowStepObj->name;
-            $attr['entity']['next_step'] = $nextWorkflowStepObj->id;
         }
         return $attr;
     }
@@ -228,11 +235,11 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
     {
         switch ($this->action) {
-            case 'add':
-                $nextStepId = isset($attr['entity']['next_step']) ? $attr['entity']['next_step'] : null;
+            case 'edit':
+                $entity = $attr['entity'];
+                $workflowActionEntity = $this->getNextWorkflowStepEntity($entity);
+                $nextStepId = isset($workflowActionEntity->next_workflow_step) ? $workflowActionEntity->next_workflow_step->id : null;
                 $autoAssignAssignee = 0;
-                $StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
-                $model = $StudentAdmission->registryAlias();
                 $workflowModelEntity = $this
                     ->find()
                     ->select('WorkflowModels.is_school_based')
@@ -240,11 +247,10 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                         'Workflows.WorkflowModels'
                     ])
                     ->where([
-                        'WorkflowModels.model' => $model
+                        'WorkflowModels.model' => $this->_modelAlias
                     ])
                     ->hydrate(false)
                     ->first();
-
                 $isSchoolBased = $workflowModelEntity['WorkflowModels']['is_school_based'];
                 if (!$autoAssignAssignee) {
                     $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
@@ -288,42 +294,22 @@ class BulkStudentAdmissionTable extends ControllerActionTable
 
     public function onUpdateFieldBulkStudentAdmission(Event $event, array $attr, $action, Request $request)
     {
-        $session = $this->request->session();
-        $userId = $session->read('Auth.User.id');
-        $superAdmin = $this->Session->read('Auth.User.super_admin');
-        $institutionId = $session->read('Institution.Institutions.id');
         switch ($this->action) {
-            case 'add':
-                $currentStatus = isset($request->data[$this->alias()]['status']) ? $request->data[$this->alias()]['status'] : null;
-                // $currentActionId = isset($request->data[$this->alias()]['status']) ? $request->data[$this->alias()]['status'] : null;
-                // $currentAssigneeId = isset($request->data[$this->alias()]['status']) ? $request->data[$this->alias()]['status'] : null;
+            case 'edit':
+                $entity = $attr['entity'];
+                $students = $entity->student_admission;
                 break;
             case 'reconfirm':
                 $sessionKey = $this->registryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
-                    $entity = $currentData;
                 }
-                $currentStatus  = $entity->status;
-                $attr['selectedStudents'] = ($currentData->has('students'))? $currentData->students: [];
+                $students  = $currentData->student_admission;
+                $attr['selectedStudents'] = ($currentData->has('students'))? $currentData->students : [];
                 break;
             default:
                 break;
         }
-
-        $where[$this->StudentAdmission->aliasField('status_id')] = $currentStatus;
-        $where[$this->StudentAdmission->aliasField('institution_id')] = $institutionId;
-        if (!$superAdmin) {
-            $where[$this->StudentAdmission->aliasField('assignee_id')] = $userId;
-        }
-        $students = [];
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        $students = $this->StudentAdmission
-            ->find()
-            ->contain(['Users', 'Assignees', 'AcademicPeriods', 'EducationGrades', 'InstitutionClasses', 'Statuses'])
-            ->where($where)
-            ->toArray();
         $attr['type'] = 'element';
         $attr['element'] = 'Institution.BulkStudentAdmission/students';
         $attr['data'] = $students;
@@ -368,7 +354,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
         return true;
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
         $process = function ($model, $entity) use ($event, $data) {
             // Removal of some fields that are not in use in the table validation
@@ -383,7 +369,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                                 break;
                             }
                         }
-                    }   
+                    }
                     if ($selectedStudent) {
                         // redirects to confirmation page
                         $url = [
@@ -422,50 +408,24 @@ class BulkStudentAdmissionTable extends ControllerActionTable
         foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
             if ($studentObj['selected']) {
                 unset($studentObj['selected']);
-                $existingEntityToUpdate = $this->StudentAdmission
-                    ->find()
-                    ->where([
-                        $this->StudentAdmission->aliasField('id') => $studentObj['id']
-                    ])
-                    ->first();
+                foreach ($entity->student_admission as $key => $value) {
+                    if ($value['id'] == $studentObj['id']) {
+                        $existingEntityToUpdate = $value;
+                        break;
+                    }
+                }
+                $prevWorkflowStepName = $existingEntityToUpdate->status->name;
                 $existingEntityToUpdate->status_id = $data[$this->alias()]['next_step'];
                 $existingEntityToUpdate->assignee_id = $data[$this->alias()]['assignee_id'];
-                $prevWorkflowStepName = $this
-                    ->find()
-                    ->where([$this->aliasField($primaryKey) => $data[$this->alias()]['status']])
-                    ->hydrate(false)
-                    ->first();
-                $workflowAction = $this->WorkflowActions
-                    ->find()
-                    ->where([
-                        $this->WorkflowActions->aliasField('id') => $data[$this->alias()]['action']
-                    ])
-                    ->hydrate(false)
-                    ->first();
-                $another = $this
-                    ->find()
-                    ->where([
-                        $this->aliasField('id') => $data[$this->alias()]['next_step']
-                    ])
-                    ->hydrate(false)
-                    ->first();
-
-                $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
-                $model = $this->StudentAdmission->registryAlias();
-                $workflowModel = $WorkflowModels
-                    ->find()
-                    ->select('id')
-                    ->where([$WorkflowModels->aliasField('model') => $model])
-                    ->hydrate(false)
-                    ->first();
+                $workflowModel = $entity->workflow->id;
+                $workflowAction = $this->getNextWorkflowStepEntity($entity);
                 if ($this->StudentAdmission->save($existingEntityToUpdate)) {
                     $this->Alert->success($this->aliasField('success'), ['reset' => true]);
-
                     $transition['comment'] = $data[$this->alias()]['comment'];
-                    $transition['prev_workflow_step_name'] = $prevWorkflowStepName['name'];
-                    $transition['workflow_step_name'] = $another['name'];
+                    $transition['prev_workflow_step_name'] = $prevWorkflowStepName;
+                    $transition['workflow_step_name'] = $workflowAction->next_workflow_step['name'];
                     $transition['workflow_action_name'] = $workflowAction['name'];
-                    $transition['workflow_model_id'] = $workflowModel['id'];
+                    $transition['workflow_model_id'] = $workflowModel;
                     $transition['model_reference'] = $existingEntityToUpdate->$primaryKey;
                     $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
                     $transitionEntity = $WorkflowTransitions->newEntity($transition);
@@ -489,7 +449,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         switch ($this->action) {
-            case 'add':
+            case 'edit':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Next');
                 break;
 
@@ -513,5 +473,18 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             default:
                 break;
         }
+    }
+
+    private function getNextWorkflowStepEntity(Entity $entity){
+        if ($entity->has('action')) {
+            $selectedAction = $entity->action;
+            $workflowActions = $entity->workflow_actions;
+            foreach($workflowActions as $key => $actionEntity){
+                if ($actionEntity->id == $selectedAction) {
+                    return $actionEntity;
+                }
+            }
+        }
+        return null;
     }
 }
