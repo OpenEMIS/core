@@ -537,6 +537,7 @@ trait MessagesTrait
             'success' => 'Bulk students admission successful',
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
         ],
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
