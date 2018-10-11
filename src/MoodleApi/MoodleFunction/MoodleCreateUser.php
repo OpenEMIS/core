@@ -10,7 +10,7 @@
  * @author    Ervin Kwan <ekwan@kordit.com>
  * @copyright 2018 KORDIT PTE LTD
  */
-namespace MoodleApi\Controller\Component\MoodleFunction;
+namespace App\MoodleApi\MoodleFunction;
 
 class MoodleCreateUser extends MoodleFunction
 {

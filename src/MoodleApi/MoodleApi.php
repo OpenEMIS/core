@@ -14,15 +14,14 @@
  * @author    Ervin Kwan <ekwan@kordit.com>
  * @copyright 2018 KORDIT PTE LTD
  */
-namespace MoodleApi\Controller\Component;
+namespace App\MoodleApi;
 
-use Cake\Controller\Component;
 use Cake\Http\Client;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
-use MoodleApi\Controller\Component\MoodleFunction\MoodleCreateUser;
+use App\MoodleApi\MoodleFunction\MoodleCreateUser;
 
-class MoodleApiComponent extends Component
+class MoodleApi
 {
     private $_token;
     private $_baseURL;
@@ -31,9 +30,8 @@ class MoodleApiComponent extends Component
     const FUNCTION_PARAM = "wsfunction";
     const JSON_MODE_PARAM = "moodlewsrestformat=json";
 
-    public function initialize(array $config)
+    public function __construct()
     {
-        parent::initialize($config);
         $this->_loadConfig();
     }
 
