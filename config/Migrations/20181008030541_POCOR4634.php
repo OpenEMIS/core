@@ -12,7 +12,7 @@ class POCOR4634 extends AbstractMigration
 
        $data = [
             [
-                'id' => 2048,
+                'id' => 2049,
                 'name' => 'Guardian Accounts',
                 'controller' => 'Guardians',
                 'module' => 'Institutions',
@@ -28,7 +28,7 @@ class POCOR4634 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => 2049,
+                'id' => 2050,
                 'name' => 'Guardian Identities',
                 'controller' => 'Guardians',
                 'module' => 'Institutions',
@@ -44,7 +44,7 @@ class POCOR4634 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => 2050,
+                'id' => 2051,
                 'name' => 'Guardian Nationalities',
                 'controller' => 'Guardians',
                 'module' => 'Institutions',
@@ -60,7 +60,7 @@ class POCOR4634 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => 2051,
+                'id' => 2052,
                 'name' => 'Guardian Contacts',
                 'controller' => 'Guardians',
                 'module' => 'Institutions',
@@ -76,7 +76,7 @@ class POCOR4634 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => 2052,
+                'id' => 2053,
                 'name' => 'Guardian Languages',
                 'controller' => 'Guardians',
                 'module' => 'Institutions',
@@ -92,7 +92,7 @@ class POCOR4634 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => 2053,
+                'id' => 2054,
                 'name' => 'Guardian Attachments',
                 'controller' => 'Guardians',
                 'module' => 'Institutions',
@@ -109,7 +109,7 @@ class POCOR4634 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => 2054,
+                'id' => 2055,
                 'name' => 'Guardian Comments',
                 'controller' => 'GuardianComments',
                 'module' => 'Institutions',
@@ -125,7 +125,7 @@ class POCOR4634 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => 2055,
+                'id' => 2056,
                 'name' => 'Guardian Demographics',
                 'controller' => 'Guardians',
                 'module' => 'Institutions',
