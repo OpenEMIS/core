@@ -531,7 +531,7 @@ class StudentAdmissionTable extends ControllerActionTable
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'BulkStudentAdmission',
-            'add'
+            'edit'
         ];
         $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
         $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
