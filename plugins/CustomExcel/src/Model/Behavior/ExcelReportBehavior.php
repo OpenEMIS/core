@@ -378,15 +378,9 @@ class ExcelReportBehavior extends Behavior
         return $processedHtml;
     }
 
-    private function displayDisplay($processingString)
-    {
-        pr(htmlspecialchars($processingString));
-        die;
-    }
-
     private function styleBorderToSolid($headString)
     {
-        // To make the excel sheet to solid shit
+        // To make the excel sheet to solid sheet
         $searchFormat = '.gridlines td { border:1px dotted black }';
         $replaceFormat = '.gridlines td { border:1px solid black }';
         $headString = str_replace($searchFormat, $replaceFormat, $headString);
@@ -418,6 +412,8 @@ class ExcelReportBehavior extends Behavior
           $replaceFormat = 'style%s%s" %s></%s>';
 
           foreach ($list as $id => $cssObj) {
+            // To do a check is because the content cell and normal empty cell having the same style.
+            // Therefore, check by their main CSS. To determine which one is content cell or normal empty cell.
             $hasBorderStyle = ($cssObj['hasBorder']) ? ' has-border' : '';
             $borderStyle = ($hasBorderStyle) ? '' : 'style="' . $cssObj['style'] . '"';
 
@@ -446,7 +442,10 @@ class ExcelReportBehavior extends Behavior
             $targetRowEndPos = strpos($processingString, $targetRowEndString);
 
             // Plus 16 cos include </tr> and 11 spaces
-            $targetRowTotalLengthPos = $targetRowEndPos - $targetRowPos + 16;
+            // $targetRowTotalLengthPos = $targetRowEndPos - $targetRowPos + 16;
+
+            //targetRowTotalLengthPos means I am getting the initial value to the start of </tr> to the end.
+            $targetRowTotalLengthPos = $targetRowEndPos + $targetRowPos;
 
             $targetRow = substr($processingString, 0, $targetRowTotalLengthPos);
 
@@ -462,7 +461,7 @@ class ExcelReportBehavior extends Behavior
             $postfixRegex = '(.*)/';
             $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->lastColumn);
 
-
+            // To make sure if there's exists a image it will display by removing the 'e'. i.e. jpeg -> jpg
             $searchFormat = '/(<img src="data:image\/).*(;base64)/';
             $replacement = '<img src="data:image/jpg;base64';
             $processedHtmlRow = preg_replace($searchFormat, $replacement, $processedHtmlRow);
@@ -742,7 +741,9 @@ class ExcelReportBehavior extends Behavior
             // Remove all the redundant rows and columns
             $processedHtml = $this->processHtml($file);
 
-            // pr(htmlspecialchars($processedHtml));
+            // pr(htmlspecialchars('lastColumn: '.$this->lastColumn));
+            // pr(htmlspecialchars('excelLastRowValue: '.$this->excelLastRowValue));
+            // pr(htmlspecialchars($file));
             // die;
 
             // $modifiedFile = preg_replace($regexString, "", $file);
