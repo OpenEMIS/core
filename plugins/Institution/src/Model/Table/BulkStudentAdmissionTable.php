@@ -124,18 +124,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, $entity, ArrayObject $extra)
     {
-        $this->field('name', ['type' => 'hidden']);
-        $this->field('category', ['type' => 'hidden']);
-        $this->field('is_editable', ['type' => 'hidden']);
-        $this->field('is_removable', ['type' => 'hidden']);
-        $this->field('is_system_defined', ['type' => 'hidden']);
-        $this->field('status', ['type' => 'select', 'entity' => $entity]);
-        $this->field('action', ['type' => 'select', 'entity' => $entity]);
-        $this->field('workflow_id', ['type' => 'hidden']);
-        $this->field('next_step', ['type' => 'readonly', 'entity' => $entity]);
-        $this->field('assignee_id', ['type' => 'select', 'entity' => $entity]);
-        $this->field('comment', ['type' => 'text']);
-        $this->field('bulk_student_admission', ['entity' => $entity]);
+        $this->setupFields($entity);
     }
 
     public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, Request $request)
@@ -159,9 +148,20 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
     {
         /* gets all the workflow_steps in which the workflow model belongs to StudentAdmissionTable & returns a list of key-value pair for populating the dropdown. The dropdown contains statuses which have next step(action) */
-        $attr['select'] = false;
-        $attr['options'] = $this->_stepsOptions;
-        $attr['onChangeReload'] = 'changeStatus';
+         switch ($this->action) {
+            case 'edit':
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $this->_stepsOptions;
+                $attr['onChangeReload'] = 'changeStatus';
+            break;
+            
+            case 'reconfirm':
+                $selectedStatus = $this->_currentData['status'];
+                $attr['attr']['value'] = $this->_stepsOptions[$selectedStatus];
+                $attr['type'] = 'readonly';
+            break;
+        }
         return $attr;
     }
 
@@ -178,6 +178,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             case 'edit':
                 $workflowActions = $attr['entity']->workflow_actions;
                 $options = Hash::combine($workflowActions, '{n}.id', '{n}.name');
+                $attr['type'] = 'select';
                 $attr['options'] = $options;
                 $attr['onChangeReload'] = 'changeAction';
             break;
@@ -185,6 +186,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             case 'reconfirm':
                 $sessionKey = $this->registryAlias() . '.confirm';
                 $workflowActionEntity = $this->getWorkflowActionEntity($this->_currentData);
+                $attr['type'] = 'readonly';
                 $attr['attr']['value'] = $workflowActionEntity['name'];
             break;
 
@@ -260,6 +262,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                     }
                     $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
                 }
+                $attr['type'] = 'select';
                 $attr['options'] = $assigneeOptions;
                 break;
 
@@ -269,7 +272,21 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                     ->find()
                     ->where([$SecurityUsers->aliasField('id') => $this->_currentData->assignee_id])
                     ->first();
+                $attr['type'] = 'readonly';
                 $attr['attr']['value'] = $value->name;
+                break;
+
+            default:
+                break;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldComment(Event $event, array $attr, $action, Request $request)
+    {
+        switch ($this->action) {
+            case 'reconfirm':
+                $attr['attr']['disabled'] = 'disabled';
                 break;
 
             default:
@@ -301,6 +318,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function reconfirm()
     {
         $this->Alert->info($this->aliasField('reconfirm'), ['reset' => true]);
+        $this->setupFields();
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
@@ -315,18 +333,6 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             $this->Alert->warning('general.notExists');
             return $this->controller->redirect($url);
         }
-        $this->field('name', ['visible' => 'hidden']);
-        $this->field('category', ['type' => 'hidden']);
-        $this->field('is_editable', ['type' => 'hidden']);
-        $this->field('is_removable', ['type' => 'hidden']);
-        $this->field('is_system_defined', ['type' => 'hidden']);
-        $this->field('status', ['type' => 'readonly']);
-        $this->field('action', ['type' => 'readonly']);
-        $this->field('workflow_id', ['type' => 'hidden']);
-        $this->field('next_step', ['type' => 'readonly']);
-        $this->field('assignee_id', ['type' => 'readonly']);
-        $this->field('comment', ['type' => 'readonly']);
-        $this->field('bulk_student_admission', ['type' => 'readonly']);
         if ($currentEntity && !empty($currentEntity)) {
             if ($this->request->is(['post', 'put'])) {
                 if ($currentData instanceOf ArrayObject) {
@@ -426,6 +432,9 @@ class BulkStudentAdmissionTable extends ControllerActionTable
         $workflowTransitionEntities = $WorkflowTransitions->newEntities($workflowTransitionObj);
         if ($WorkflowTransitions->saveMany($workflowTransitionEntities)) {
             $this->Alert->success($this->aliasField('success'), ['reset' => true]);
+            $session = $this->Session;
+            $session->delete($this->registryAlias() . '.confirm');
+            $session->delete($this->registryAlias() . '.Data');
         } else {
             $this->log($entity->errors(), 'debug');
             $url['action'] = 'BulkStudentAdmission';
@@ -473,5 +482,21 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             }
         }
         return null;
+    }
+
+    public function setupFields(Entity $entity = null)
+    {
+        $this->field('name', ['type' => 'hidden']);
+        $this->field('category', ['type' => 'hidden']);
+        $this->field('is_editable', ['type' => 'hidden']);
+        $this->field('is_removable', ['type' => 'hidden']);
+        $this->field('is_system_defined', ['type' => 'hidden']);
+        $this->field('status', ['entity' => $entity]);
+        $this->field('action', ['entity' => $entity]);
+        $this->field('workflow_id', ['type' => 'hidden']);
+        $this->field('next_step', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('assignee_id', ['entity' => $entity]);
+        $this->field('comment', ['type' => 'text']);
+        $this->field('bulk_student_admission', ['entity' => $entity]);
     }
 }

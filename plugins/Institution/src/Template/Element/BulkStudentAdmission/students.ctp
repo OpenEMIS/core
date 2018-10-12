@@ -31,7 +31,6 @@
 						} ?>
 						<tbody>
 							<?php
-							$studentCount = 0;
 							foreach ($attr['data'] as $i => $obj) :
 								if ($action == 'reconfirm') {
 									if (!in_array($obj->student_id, $onlySelectedStudents)) continue;
@@ -58,9 +57,9 @@
 									<td><?= $obj->end_date ?></td>
 									<td><?= $obj->comment ?></td>
 								</tr>
-								<?php $studentCount++;
+								<?php
 							endforeach ?>
-							<?php if ($studentCount <= 0) { ?>
+							<?php if (count($attr['data']) <= 0) { ?>
 								<tr>
 									<td><?= $this->Label->get($ControllerAction['table']->alias().'.noStudentSelected'); ?>
 									</td>
