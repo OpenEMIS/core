@@ -86,6 +86,10 @@ class ExcelReportBehavior extends Behavior
     private $alphabetHistory = [];
     private $excelLastRowValue = 0;
 
+    private $currentWorksheet = null;
+    private $currentWorksheetIndex = 0;
+    private $excelLastRowValueArr = [];
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -272,11 +276,17 @@ class ExcelReportBehavior extends Behavior
         $this->lastColumn = $columnToRemoveOnwards;
     }
 
-    private function checkLastRow($targetRowValue)
+    // To check the sheet for last row
+    private function checkLastRow($targetRowValue, $cellValue)
     {
-        if ($targetRowValue > $this->excelLastRowValue) {
-            $this->excelLastRowValue = $targetRowValue;
+        if (!empty($this->excelLastRowValueArr) && $targetRowValue > $this->excelLastRowValueArr[$this->currentWorksheetIndex]) {
+            $this->excelLastRowValueArr[$this->currentWorksheetIndex]  = $targetRowValue;
+        } else {
+            $this->excelLastRowValueArr[$this->currentWorksheetIndex]  = $targetRowValue;
         }
+        // if ($targetRowValue > $this->excelLastRowValueArr[$this->currentWorksheetIndex]) {
+        //     $this->excelLastRowValueArr[$this->currentWorksheetIndex]  = $targetRowValue;
+        // }
     }
 
     private function generateRemovalRegex($prefixRegex, $postfixRegex, $startColumn, $endingColumnn = 255)
@@ -340,9 +350,9 @@ class ExcelReportBehavior extends Behavior
       return $styleList;
     }
 
-    private function processHtml($htmlFile)
+    private function processHtml($htmlFile, $sheetIndex = 0)
     {
-        // pr($htmlFile);
+        // pr(htmlspecialchars($htmlFile));
         // die;
         $processingHtml = $htmlFile;
         $searchHeadString = '<tbody>';
@@ -361,7 +371,7 @@ class ExcelReportBehavior extends Behavior
         $processingString = substr($processingHtml, $headPos + $searchHeadLength, $tailPos - $headPos - $searchHeadLength);
 
         // To remove Column and Row
-        $processingString = $this->removeColumnAndRow($processingString);
+        $processingString = $this->removeColumnAndRow($processingString, $sheetIndex);
 
         // Remove any cells that is empty and do not belongs to any style classes css
         $processedString = $this->removeEmptyCells($processingString, $headString);
@@ -428,11 +438,11 @@ class ExcelReportBehavior extends Behavior
         return $processedString;
     }
 
-    private function removeColumnAndRow($processingString)
+    private function removeColumnAndRow($processingString, $sheetIndex)
     {
+        // pr(htmlspecialchars($processingString));die;
         $processedHtmlRows = [];
-
-        $targetRowValue = $this->excelLastRowValue + 1; // Need to plus 1 (Temp)
+        $targetRowValue = $this->excelLastRowValueArr[$sheetIndex+1];
 
         // Remove row and column (Row by Row)
         for ($id = 0; $id < $targetRowValue; $id++) { 
@@ -441,20 +451,15 @@ class ExcelReportBehavior extends Behavior
             $targetRowPos = strpos($processingString, $targetRowString);
             $targetRowEndPos = strpos($processingString, $targetRowEndString);
 
-            // Plus 16 cos include </tr> and 11 spaces
-            // $targetRowTotalLengthPos = $targetRowEndPos - $targetRowPos + 16;
+            // Break the loop, if html do not exist current row
+            if ($targetRowPos <= 0) {
+                break;
+            }
 
             //targetRowTotalLengthPos means I am getting the initial value to the start of </tr> to the end.
             $targetRowTotalLengthPos = $targetRowEndPos + $targetRowPos;
 
             $targetRow = substr($processingString, 0, $targetRowTotalLengthPos);
-
-            // To generate the regular expression for removing the extra rows in the html format
-            $prefixRegex = '/.*(row)';
-            $postfixRegex = '(">)(.|\n)*<\/tr>/';
-            $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->excelLastRowValue);
-
-            $processedHtmlRow = preg_replace($regexString, "", $targetRow);
 
             // To generate the regular expression for removing the extra columns in the html format
             $prefixRegex = '/(.*)(column|col)';
@@ -464,27 +469,13 @@ class ExcelReportBehavior extends Behavior
             // To make sure if there's exists a image it will display by removing the 'e'. i.e. jpeg -> jpg
             $searchFormat = '/(<img src="data:image\/).*(;base64)/';
             $replacement = '<img src="data:image/jpg;base64';
-            $processedHtmlRow = preg_replace($searchFormat, $replacement, $processedHtmlRow);
-
-
-// if($id == 1) {
-//     pr(htmlspecialchars($processedHtmlRow));
-
-//             die;
-// }
-
-
-
-            // pr(htmlspecialchars($processedHtmlRow));
-            // die;
-            
+            $processedHtmlRow = preg_replace($searchFormat, $replacement, $targetRow);
 
             // $processedHtmlRows[] = preg_replace($regexString, "", $modifiedRow);
             $processedHtmlColumn = preg_replace($regexString, "", $processedHtmlRow);
 
             // Clear up all the empty blank lines using regular expression
             $processedHtmlRows[] = preg_replace('/^\h*\v+/m', "", $processedHtmlColumn);
-
 
             // Remove the target row from the main processString
             $processingString = substr_replace($processingString, "", 0, $targetRowTotalLengthPos);
@@ -556,18 +547,6 @@ class ExcelReportBehavior extends Behavior
         $targetColumnValue = $targetCell->getColumn();
         $targetRowValue = $targetCell->getRow();
 
-        // Log::write('debug', '----------------------getHighestDataRow before---------------------: ');
-        // // $spreadsheet->getSheet(1);
-        // $targetRowValue = $targetCell->getRow();
-        // Log::write('debug', '----------------------getHighestDataRow after---------------------: ');
-        // Log::write('debug', $targetRowValue);
-        // Log::write('debug', $cellValue);
-
-
-
-        // pr($cellCoordinate);
-        // pr($targetRowValue);
-
         // To remove the blanks column
         if (empty($this->alphabetHistory) || !array_key_exists($targetColumnValue, $this->alphabetHistory)) {
             // Add targetColumnValue to hisotry so that we know that alphabet has been read before.
@@ -576,7 +555,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         // To remove the blanks row
-        $this->checkLastRow($targetRowValue);
+        $this->checkLastRow($targetRowValue, $cellValue);
 
         switch($type) {
             case 'number':
@@ -704,13 +683,58 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
+    private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '') {
+        $mpdf = new \Mpdf\Mpdf();
+        $mpdf->SetTitle($title);
+        $mpdf->SetAuthor($author);
+        $mpdf->SetSubject($subject);
+        
+        if ($filenames) {
+            $filesTotal = sizeof($filenames);
+            $mpdf->SetImportUse();  
+
+
+            Log::write('debug', '----------------------filenames---------------------: ');
+            Log::write('debug', $filenames);
+            Log::write('debug', '----------------------filenames---------------------: ');
+            Log::write('debug', count($filenames));
+
+            for ($i = 0; $i<count($filenames);$i++) {
+                $curFile = $filenames[$i];
+                Log::write('debug', '----------------------curFile---------------------: ');
+                Log::write('debug', $curFile);
+                if (file_exists($curFile)){
+                    $pageCount = $mpdf->SetSourceFile($curFile);
+                    for ($p = 1; $p <= $pageCount; $p++) {
+                        $tplId = $mpdf->ImportPage($p);
+                        $wh = $mpdf->getTemplateSize($tplId);                
+                        if (($p==1)){
+                            $mpdf->state = 0;
+                             $mpdf->AddPage('L', array($wh['w'], $wh['h']));
+                            
+                            $mpdf->UseTemplate ($tplId);
+                        }
+                        else {
+                            $mpdf->state = 1;
+                             $mpdf->AddPage('L', array($wh['w'], $wh['h']));
+
+                            $mpdf->UseTemplate($tplId);    
+                        }
+                    }
+                }                    
+            }                
+        }
+
+        $mpdf->Output($outFile.'final.pdf', "F");
+        unset($mpdf);
+    }
+
     public function saveFile($objSpreadsheet, $filepath, $format)
     {
         Log::write('debug', 'ExcelReportBehavior >>> saveFile: '.$format);
         $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
 
         if ($format == 'pdf') {
-            $mpdf = new \Mpdf\Mpdf();
             Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
 
             Log::write('debug', '----------------------lastColumn---------------------: ');
@@ -720,109 +744,63 @@ class ExcelReportBehavior extends Behavior
 
             // Convert spreadsheet object into html
             $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
-            // $writer->setSheetIndex(1);
-            
-            // Log::write('debug', '----------------------getHighestDataRow before---------------------: ');
-            // $objSpreadsheet->getRow();
-            // Log::write('debug', '----------------------getHighestDataRow after---------------------: ');
-            // Log::write('debug', $objSpreadsheet->getRow());
 
-            // $writer->writeAllSheets();
-            $writer->save($filepath);
+            // This is to store to final processedHtml
+            $processedHtml = '';
+            $filePaths = [];
+            $basePath = $filepath;
+            for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
+                $mpdf = new \Mpdf\Mpdf();
+                $filepath = $basePath.'_'.$sheetIndex;
+                $writer->setSheetIndex($sheetIndex);
+                $writer->save($filepath);
 
-            // Read the html file and convert them into a variable
-            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
+                // Read the html file and convert them into a variable
+                $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
 
-            // // To generate the regular expression for removing the extra columns in the html format
-            // $prefixRegex = '/(.*)(column|col)';
-            // $postfixRegex = '(.*)/';
-            // $regexRemoveColumnString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->lastColumn);
+                // Remove all the redundant rows and columns
+                $processedHtml = $this->processHtml($file, $sheetIndex);
 
-            // Remove all the redundant rows and columns
-            $processedHtml = $this->processHtml($file);
-
-            // pr(htmlspecialchars('lastColumn: '.$this->lastColumn));
-            // pr(htmlspecialchars('excelLastRowValue: '.$this->excelLastRowValue));
-            // pr(htmlspecialchars($file));
-            // die;
-
-            // $modifiedFile = preg_replace($regexString, "", $file);
-
-            // To remove the extra rows in html format
-            // $prefixRegex = '/.*(row)';
-            // $postfixRegex = '(">)(.|\n)*<\/tr>/';
-            // $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->excelLastRowValue);
-
-            // $modifiedFile = preg_replace($regexString, "", $modifiedFile);
-            // Log::write('debug', '----------------------------------------------------------: ');
-            // Log::write('debug', $modifiedFile);
-            // Log::write('debug', '----------------------------------------------------------: ');
+                Log::write('debug', '----------------------processedHtml'.$sheetIndex.'---------------------: ');
+                Log::write('debug', $processedHtml);
+                Log::write('debug', '-----------------------------------------------------------------------: ');
 
 
-            // pr($modifiedFile);die;
+                // Save the processed html into a temp pdf
+                $mpdf->AddPage('L');
+                
+                $mpdf->WriteHTML($processedHtml);
+                $filepath = $filepath.'.pdf';
+
+                $mpdf->Output($filepath,'F');
+                $filePaths[] = $filepath;
+                unset($mdpf);
 
 
-            // Write the contents back to the file
-            // file_put_contents($filepath, $modifiedFile);
-            // die;
+            }
+            Log::write('debug', '----------------------filePaths[]---------------------: ');
+            Log::write('debug', $filePaths);
 
-            $mpdf->AddPage('L'); // Adds a new page in Landscape orientation
-
-            // Write some HTML code:
-            // $mpdf->WriteHTML($modifiedFile);
-
+            // Merge all the pdf that belongs to one report
             $fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
 
-            try {
-                Log::write('debug', 'inside try before modifiedFile');
-                Log::write('debug', $processedHtml);
+            Log::write('debug', '----------------------fileName---------------------: ');
+            Log::write('debug', $fileName);
 
-                $s = '">&nbsp;</td>';
-                $r = '" style="border:none !important;">&nbsp;</td>';
+            $this->mergePDFFiles($filePaths, $fileName, $fileName);
 
-                $s2 = 'null"></td>';
-                $r2 = 'null" style="border:none !important;">&nbsp;</td>';
-
-                // $modifiedFile = str_replace($s, $r, $modifiedFile);
-                // $modifiedFile = str_replace($s2, $r2, $modifiedFile);
-                // pr($processedHtml);die;
-                $mpdf->WriteHTML($processedHtml);
-
-
-                Log::write('debug', 'inside try before output');
-
-                $mpdf->Output($fileName.'.pdf','D');
-                Log::write('debug', 'inside try after output');
-
-            } catch (Exception $e) {
-                    Log::write('debug', 'error liao');
-            }
-
-            // Output a PDF file download directly to the browser
-            // $mpdf->Output($fileName.'.pdf','D');
-
-            // Remove the temp file that is converted from excel object and its successfully converted to pdf
-            if ($this->config('purge')) {
-                // delete excel file after successfully converted to pdf
-                $this->deleteFile($filepath);
-            }
+            // // Remove the temp file that is converted from excel object and its successfully converted to pdf
+            // if ($this->config('purge')) {
+            //     foreach ($filePaths as $filepath) {
+            //         // delete excel file after successfully converted to pdf
+            //         $this->deleteFile($filepath);
+            //     }
+            // }
         } else {
             // xlsx
             $objWriter->save($filepath);
 
         }
-        // $writer->save($filepath);
-
-
-        // if ($format == 'pdf') {
-        //     $objWriter->writeAllSheets();
-        // }
-
-        // $objWriter->save($filepath);
-        // Log::write('debug', 'died');
-
-        // die;
-
     }
 
     public function downloadFile($filecontent, $filename, $filesize)
@@ -1047,6 +1025,11 @@ class ExcelReportBehavior extends Behavior
 
     private function processWorksheet($objSpreadsheet, $objWorksheet, $extra)
     {
+        if($this->currentWorksheet !== $objWorksheet) {
+            $this->currentWorksheetIndex++;
+            $this->currentWorksheet = $objWorksheet;
+        }
+
         $extra['placeholders'] = [];
         $this->processBasicPlaceholder($objSpreadsheet, $objWorksheet, $extra);
 
@@ -1069,6 +1052,8 @@ class ExcelReportBehavior extends Behavior
             }
 
             if (strlen($cellValue) > 0) {
+                $this->checkLastRow($objCell->getRow() ,$cellValue);
+
                 $pos = strpos($cellValue, '${');
 
                 if ($pos !== false) {
