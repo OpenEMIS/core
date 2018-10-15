@@ -98,6 +98,7 @@ class DirectoryCommentsController extends BaseController
             $guardianstabElements['Guardians']['url'] = array_merge($url, ['action' => 'StudentGuardians', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
             $guardianstabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $guardianId, 'StudentGuardians.id' => $StudentGuardianId])]);
             $tabElements = array_merge($guardianstabElements, $tabElements);
+            unset($tabElements['Directories']);
         }
 
         foreach ($tabElements as $action => $obj) {
