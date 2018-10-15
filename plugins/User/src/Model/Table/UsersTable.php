@@ -1008,6 +1008,7 @@ class UsersTable extends AppTable
         ->where([
             $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
             $UserIdentities->aliasField('identity_type_id') => $nationality->identity_type_id,
+            $UserIdentities->aliasField('nationality_id') => $nationality->id,
         ])
         ->order([$UserIdentities->aliasField('created') => 'desc'])
         ->first();
