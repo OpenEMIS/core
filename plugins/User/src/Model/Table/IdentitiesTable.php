@@ -23,6 +23,7 @@ class IdentitiesTable extends ControllerActionTable
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
+		$this->belongsTo('Nationalities', ['className' => 'FieldOption.Nationalities']);
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Students' => ['index', 'add'],
         	'Staff' => ['index', 'add']
@@ -56,6 +57,7 @@ class IdentitiesTable extends ControllerActionTable
 	public function beforeAction($event, ArrayObject $extra)
 	{
 		$this->fields['identity_type_id']['type'] = 'select';
+		$this->fields['nationality_id']['type'] = 'select';
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -108,6 +110,8 @@ class IdentitiesTable extends ControllerActionTable
 	{
 		$validator = parent::validationDefault($validator);
 		return $validator
+			->requirePresence('nationality_id')
+            ->notEmpty('nationality_id')
 			->add('issue_date', 'ruleCompareDate', [
 				'rule' => ['compareDate', 'expiry_date', false]
 			])
