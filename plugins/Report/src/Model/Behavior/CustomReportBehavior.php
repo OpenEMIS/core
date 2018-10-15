@@ -13,6 +13,10 @@ use Cake\Log\Log;
 class CustomReportBehavior extends Behavior
 {
     private $Table = null;
+    private $system_condition_keywords = [
+        "keyField",
+        "valueField"
+    ];
 
     public function buildQuery($jsonArray, array $params, $byaccess = false, $returnSql = false)
     {
@@ -353,7 +357,11 @@ class CustomReportBehavior extends Behavior
                     return false;
                 }
             } else {
-                $conditions[] = $field . " = " . $value;
+                if (in_array($field, $this->system_condition_keywords)) {
+                    $conditions[$field] = $value;
+                } else {
+                    $conditions[] = $field . " = " . $value;
+                }
             }
         }
         return $conditions;
