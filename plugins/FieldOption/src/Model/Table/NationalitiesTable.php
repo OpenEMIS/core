@@ -41,15 +41,6 @@ class NationalitiesTable extends ControllerActionTable
         $Nationalities = $this;
         $identityTypes = $this->IdentityTypes
             ->find('list')
-            ->notMatching('Nationalities', function ($q) use ($Nationalities, $action, $attr) {
-                if ($action == 'edit') {
-                    $entity = $attr['entity'];
-
-                    $q->where([$Nationalities->aliasfield('id <> ') => $entity->id]);
-                }
-
-                return $q->where([$Nationalities->aliasfield('identity_type_id') . ' IS NOT NULL']);
-            })
             ->toArray();
 
         $attr['options'] = $identityTypes;
