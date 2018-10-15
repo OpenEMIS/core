@@ -710,13 +710,13 @@ class ExcelReportBehavior extends Behavior
                         $wh = $mpdf->getTemplateSize($tplId);                
                         if (($p==1)){
                             $mpdf->state = 0;
-                             $mpdf->AddPage('L', array($wh['w'], $wh['h']));
+                             $mpdf->AddPage('L');
                             
                             $mpdf->UseTemplate ($tplId);
                         }
                         else {
                             $mpdf->state = 1;
-                             $mpdf->AddPage('L', array($wh['w'], $wh['h']));
+                             $mpdf->AddPage('L');
 
                             $mpdf->UseTemplate($tplId);    
                         }
@@ -724,7 +724,8 @@ class ExcelReportBehavior extends Behavior
                 }                    
             }                
         }
-
+        // pr($outFile.'final.pdf');die;
+        //Here should be the problem, investigation (take a look)
         $mpdf->Output($outFile.'final.pdf', "F");
         unset($mpdf);
     }
@@ -768,7 +769,7 @@ class ExcelReportBehavior extends Behavior
 
                 // Save the processed html into a temp pdf
                 $mpdf->AddPage('L');
-                
+
                 $mpdf->WriteHTML($processedHtml);
                 $filepath = $filepath.'.pdf';
 
@@ -788,7 +789,6 @@ class ExcelReportBehavior extends Behavior
             Log::write('debug', $fileName);
 
             $this->mergePDFFiles($filePaths, $fileName, $fileName);
-
             // // Remove the temp file that is converted from excel object and its successfully converted to pdf
             // if ($this->config('purge')) {
             //     foreach ($filePaths as $filepath) {
