@@ -17,7 +17,7 @@ class SetupTabBehavior extends Behavior
     private function setupTabElements()
     {
         if ($this->_table->controller->name == 'Scholarships') {
-            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+            $tabElements = $this->_table->controller->ScholarshipTabs->getScholarshipApplicationTabs();
         } else {
             $options = [
                 'userRole' => '',
