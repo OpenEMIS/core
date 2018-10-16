@@ -50,7 +50,6 @@ class WorkflowBehavior extends Behavior
             'type' => true,
             'category' => true
         ]
-
     ];
 
     private $workflowEvents = [
@@ -182,18 +181,23 @@ class WorkflowBehavior extends Behavior
     {
         $model = $this->_table;
 
-        try {
-            switch ($model->alias()) {
-                case "Applications":
-                    $entity = $model->find()->where(['id' => $id])->first();
-                    break;
-                default:
-                    $entity = $model->get($id);
-            }
+        $result = $model
+                ->find()
+                ->where([$model->aliasField('id') => $id])
+                ->all();
+
+        if (!$result->isEmpty()) {
+            $entity = $result->first();
             $this->setAssigneeAsCreator($entity);
             $model->save($entity);
-        } catch (RecordNotFoundException $e) {
-            // Do nothing
+
+        } else {
+            // exception
+            Log::write('error', '---------------------------------------------------------');
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : $result is empty');
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model : '.$model);
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model alias : '.$model->alias());
+            Log::write('error', '---------------------------------------------------------');
         }
     }
 
