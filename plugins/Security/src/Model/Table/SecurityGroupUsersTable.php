@@ -435,7 +435,7 @@ class SecurityGroupUsersTable extends AppTable {
     public function findEmailList(Query $query, array $options)
     {
         $conditions = [
-            $this->aliasField('security_role_id') => $options['securityRoleId'];
+            $this->aliasField('security_role_id') => $options['securityRoleId']
         ];
 
         if (array_key_exists('institutionId', $options)) {
