@@ -135,7 +135,8 @@ trait MessagesTrait
             'ownerAddNotAllowed' => 'You are not allowed to add infrastructure as there are no shifts configured in the current academic period',
             'occupierAddNotAllowed' => 'You are not allowed to add infrastructure as an occupier',
             'occupierEditNotAllowed' => 'You are not allowed to edit infrastructure as an occupier',
-            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier'
+            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier',
+            'accessibilityOption' => 'Designed for use by anyone including those with special needs/disabilities.'
         ],
         'InfrastructureTypes' => [
             'noLevels' => 'No Available Levels',
@@ -786,6 +787,9 @@ trait MessagesTrait
                 'leavePeriodOverlap' => 'Leave period applied overlaps existing records.'
             ],
             'StaffType' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'ScholarshipApplication' => [
                 'value' => 'Days within %d to %d'
             ]
         ],
@@ -1695,7 +1699,9 @@ trait MessagesTrait
                 'rating' => 'Rating',
                 'value' => 'Value',
                 'final_rating' => 'Final Rating',
-                'deleted_competencies' => 'This competency has been removed'
+                'deleted_competencies' => 'This competency has been removed',
+                'circular_dependency' => 'This will lead to a circular dependency',
+                'isNotEditable' => 'Edit operation is not allowed as there are other information linked to this record.'
             ],
             'Competencies' => [
                 'min' => [
@@ -1788,7 +1794,8 @@ trait MessagesTrait
             'TrainingCourses' => [
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
-                ]
+                ],
+                'special_education_needs' => 'This course is Special Educational Needs(SENs) compliant.',
             ],
             'TrainingSessions' => [
                 'code' => [
@@ -2249,6 +2256,13 @@ trait MessagesTrait
             'SurveyForms' => [
                 'custom_filters' => [
                     'ruleNotEmpty' => 'This field cannot be left empty'
+                ]
+            ]
+        ],
+        'SpecialNeeds' => [
+            'SpecialNeedsReferrals' => [
+                'date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ]
         ]
