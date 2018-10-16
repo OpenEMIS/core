@@ -183,7 +183,13 @@ class WorkflowBehavior extends Behavior
         $model = $this->_table;
 
         try {
-            $entity = $model->get($id);
+            switch ($model->alias()) {
+                case "Applications":
+                    $entity = $model->find()->where(['id' => $id])->first();
+                    break;
+                default:
+                    $entity = $model->get($id);
+            }
             $this->setAssigneeAsCreator($entity);
             $model->save($entity);
         } catch (RecordNotFoundException $e) {
