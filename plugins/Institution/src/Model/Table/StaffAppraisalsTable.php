@@ -54,6 +54,12 @@ class StaffAppraisalsTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+        $this->hasMany('AppraisalScoreAnswers', [
+            'className' => 'StaffAppraisal.AppraisalScoreAnswers',
+            'foreignKey' => 'institution_staff_appraisal_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         // for file upload
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -135,19 +141,16 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('staff_id') => $this->staff->id]);
+        $this->field('final_score');
     }
 
-    private function setupTabElements()
+    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
-        $options['type'] = 'staff';
-        $userId = $this->request->query('user_id');
-        if (!is_null($userId)) {
-            $options['user_id'] = $userId;
-        }
-
-        $tabElements = $this->controller->getCareerTabElements($options);
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'StaffAppraisals');
+        $broadcaster = $this;
+        $listeners = [];
+        $listeners[] = $this->AppraisalForms->AppraisalFormsCriteriasScores;
+        
+        $this->dispatchEventToModels('Model.InstitutionStaffAppraisal.addAfterSave', [$entity], $broadcaster, $listeners);
     }
 
     public function findWorkbench(Query $query, array $options)
@@ -238,4 +241,50 @@ class StaffAppraisalsTable extends ControllerActionTable
         return $query;
     }
 
+    public function onGetFinalScore(Event $event, Entity $entity)
+    {
+        $institutionStaffAppraisalsId = $entity->id;
+        $AppraisalFormsCriteriasScores = $this->AppraisalForms->AppraisalFormsCriteriasScores;
+        $AppraisalScoreAnswers = $this->AppraisalScoreAnswers;
+
+        $results = $this->find()
+            ->select([
+                'answer' => $AppraisalScoreAnswers->aliasField('answer')
+            ])
+            ->where([
+                $this->aliasField('id') => $institutionStaffAppraisalsId,
+                $AppraisalFormsCriteriasScores->aliasField('final_score') => 1
+            ])
+            ->innerJoin([$AppraisalFormsCriteriasScores->alias() => $AppraisalFormsCriteriasScores->table()], [
+                $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id = ') . $this->aliasField('appraisal_form_id'),
+            ])
+            ->innerJoin([$AppraisalScoreAnswers->alias() => $AppraisalScoreAnswers->table()], [
+                $AppraisalScoreAnswers->aliasField('appraisal_form_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id'),
+                $AppraisalScoreAnswers->aliasField('appraisal_criteria_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_criteria_id'),
+                $AppraisalScoreAnswers->aliasField('institution_staff_appraisal_id = ') . $institutionStaffAppraisalsId
+            ])
+            ->all();
+
+        $answer = "<i class='fa fa-minus'></i>";
+        if (!$results->isEmpty()) {
+            $resultEntity = $results->first();
+            if ($resultEntity->has('answer') && !is_null($resultEntity->answer)) {
+                $answer = $resultEntity->answer. ' ';
+            }
+        }
+        return $answer;
+    }
+
+    private function setupTabElements()
+    {
+        $options['type'] = 'staff';
+        $userId = $this->request->query('user_id');
+        if (!is_null($userId)) {
+            $options['user_id'] = $userId;
+        }
+
+        $tabElements = $this->controller->getCareerTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'StaffAppraisals');
+    }
 }

@@ -283,11 +283,13 @@ class SecurityGroupUsersTable extends AppTable {
 
                         // School based assignee
                         $where = [
-                            $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                            'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                                    ['Institutions.id' => $institutionId]],
                             $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
                         ];
                         $schoolBasedAssigneeQuery = $SecurityGroupUsers
-                            ->find('userList', ['where' => $where]);
+                            ->find('userList', ['where' => $where])
+                            ->leftJoinWith('SecurityGroups.Institutions');
 
                         Log::write('debug', 'School based assignee query:');
                         Log::write('debug', $schoolBasedAssigneeQuery->sql());

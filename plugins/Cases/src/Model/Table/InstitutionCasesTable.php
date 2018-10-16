@@ -91,6 +91,17 @@ class InstitutionCasesTable extends ControllerActionTable
         $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
         $featureOptions = $WorkflowRules->getFeatureOptions();
 
+        $newFeatureOption = [];
+
+        //Order to follow what is defined at OptionsTrait
+        foreach($this->getSelectOptions("WorkflowRules.features") as $key => $value) {
+            if(array_key_exists($key, $featureOptions)) {
+                $newFeatureOption[$key] = $featureOptions[$key]; 
+            }
+        }
+
+        $featureOptions = $newFeatureOption;
+        
         if (!is_null($this->request->query('feature')) && array_key_exists($this->request->query('feature'), $featureOptions)) {
             $selectedFeature = $this->request->query('feature');
         } else {

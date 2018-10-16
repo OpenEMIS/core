@@ -82,7 +82,7 @@ class RisksTable extends ControllerActionTable
                 'threshold' => ['type' => 'number']
             ]
         ],
-        'User.SpecialNeeds' => [
+        'SpecialNeeds.SpecialNeedsAssessments' => [
             'SpecialNeeds' => [
                 'name' => 'Special Needs',
                 'operator' => 2,
