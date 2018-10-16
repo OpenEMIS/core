@@ -1454,7 +1454,7 @@ class InstitutionsController extends AppController
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'Guardians' => ['text' => __('Guardians')],
-            'StudentSurveys' => ['text' => __('Surveys')],
+            //'StudentSurveys' => ['text' => __('Surveys')],
             'StudentTransport' => ['text' => __('Transport')]
         ];
 
