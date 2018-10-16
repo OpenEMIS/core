@@ -18,7 +18,6 @@ class StaffController extends AppController
         'UserNationalities',
         'Contacts',
         'UserLanguages',
-        'SpecialNeeds',
         'Attachments',
         'Comments',
 
@@ -54,6 +53,13 @@ class StaffController extends AppController
 
         // staff attendances
         'InstitutionStaffAttendances',
+
+        // special needs
+        'SpecialNeedsReferrals',
+        'SpecialNeedsAssessments',
+        'SpecialNeedsServices',
+        'SpecialNeedsDevices',
+        'SpecialNeedsPlans'
     ];
 
     public function initialize()
@@ -119,10 +125,6 @@ class StaffController extends AppController
     public function Languages()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']);
-    }
-    public function SpecialNeeds()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']);
     }
     public function Memberships()
     {
@@ -252,6 +254,29 @@ class StaffController extends AppController
                 break;
         }
     }
+    
+    // Special Needs
+    public function SpecialNeedsReferrals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsReferrals']);
+    }
+    public function SpecialNeedsAssessments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsAssessments']);
+    }
+    public function SpecialNeedsServices()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsServices']);
+    }
+    public function SpecialNeedsDevices()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDevices']);
+    }
+    public function SpecialNeedsPlans()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
+    }
+    // Special Needs - End
     // End
 
     public function beforeFilter(Event $event)

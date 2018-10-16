@@ -1,3 +1,36 @@
+### [3.36.0] - 2018-09-28
+- Developed Inclusive Education (Special Needs) feature in Profiles/Institutions/Directory > Special Needs
+- Implemented a delete button to delete all Survey data in Institution > Survey
+- Implemented Report Queue in Institutions > Report Card > Status page
+- Bug fix on error 404 in Institutions > Staff > Export
+- Bug fix on missing data when saving tables in Institutions > Surveys
+
+### [3.35.0] - 2018-09-14
+- Developed Scholarship deadline alert feature in Administration > Notification > Alert page
+- Implemented Academic Period and Financial Assistance type filter in Reports > Scholarships > Recipient Payment Structures page
+- Bug fix on Identity type in Directory > General > Overview page
+
+### [3.34.0] - 2018-09-07
+- Developed User Default Identity Report in Reports > Directory 
+- Developed Staff Appraisal calculated fields in Administration > Appraisals > Scores
+- Implemented additional column called Nationality in Report > Institution > Staff (Assigned) report
+- Implemented default filters in Institutions > Cases
+- Bug fix on Institutions > Survey Rules during xform generation for OpenEMIS Survey
+- Bug fix on ability to save reords in Institutions > Performance > Outcomes 
+
+### [3.33.1] - 2018-09-07
+- Bug fix on ability to save records in Institution Survey table question type
+- Bug fix on 404 error when Institution Survey rules answer was changed
+- Bug fix on Institution Survey when Dependent question disappears 
+
+### [3.33.0] - 2018-09-03
+- Developed changes to Class Attendance Marked Report in Reports > Institution > Class Attendance Marked
+- Developed post event rule for Secondary Teacher and Principal in Administration > Workflow > Rules
+- Developed additional Financial Assistance type (Full scholarship, Partial scholarship, Grant, Distance Learning)
+- Developed option to configure Scholarship Institution Choice in Administration > Scholarship > Applications > Institution Choices
+- Developed feature to export Scholarships > Recipients > Payment Structures
+- Introduced Annual Award Amount to Scholarships > Recipients > Payment Structures
+
 ### [3.32.3] - 2018-08-23
 - Developed a feature to email all students their report card in Institutions > Report Card > Status
 - Added Partial Scholarships and Grants to Scholarship module in Administration > Scholarships

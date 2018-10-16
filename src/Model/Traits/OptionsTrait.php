@@ -117,20 +117,20 @@ trait OptionsTrait
             ],
             'WorkflowRules' => [
                 'features' => [
-                    'StaffBehaviours' => [
-                        'className' => 'Institution.StaffBehaviours',
-                        'url' => [
-                            'plugin' => 'Institution',
-                            'controller' => 'Institutions',
-                            'action' => 'StaffBehaviours'
-                        ]
-                    ],
                     'StudentAttendances' => [
                         'className' => 'Institution.InstitutionStudentAbsences',
                         'url' => [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'StudentAbsences'
+                        ]
+                    ],
+                    'StaffBehaviours' => [
+                        'className' => 'Institution.StaffBehaviours',
+                        'url' => [
+                            'plugin' => 'Institution',
+                            'controller' => 'Institutions',
+                            'action' => 'StaffBehaviours'
                         ]
                     ]
                 ]
@@ -182,6 +182,16 @@ trait OptionsTrait
                     'before_after' => [
                         1 => __('Days before staff end date'),
                         2 => __('Days after staff end date')
+                    ]
+                ],
+                'ScholarshipApplication' => [
+                    'workflow_category' => [
+                        1 => __('To Do'),
+                        2 => __('In Progress'),
+                        3 => __('Done'),
+                    ],
+                    'before_after' => [
+                        1 => __('Days before application close date')
                     ]
                 ]
             ]
