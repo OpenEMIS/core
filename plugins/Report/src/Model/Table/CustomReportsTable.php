@@ -183,7 +183,7 @@ class CustomReportsTable extends AppTable
             foreach ($customReports as $key => $customReport) {
                 if (!$queryParams['super_admin'] // if super admin, allow option
                     && $customReport->conditions  // only check condition if field exist
-                    && !$this->checkOptionCondition($customReport->conditions, $queryParams)
+                    && !$this->checkOptionCondition(json_decode($customReport->conditions, true), $queryParams)
                 ) {
                     // skip option
                     continue;
