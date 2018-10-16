@@ -790,6 +790,9 @@ trait MessagesTrait
             ],
             'ScholarshipApplication' => [
                 'value' => 'Days within %d to %d'
+            ],
+            'ScholarshipDisbursement' => [
+                'value' => 'Days within %d to %d'
             ]
         ],
         'UserBodyMasses' => [
