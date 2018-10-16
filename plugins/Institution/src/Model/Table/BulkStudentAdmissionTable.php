@@ -417,6 +417,18 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 $workflowModel = $entity->workflow->id;
                 $workflowAction = $this->getWorkflowActionEntity($entity);
                 if ($this->StudentAdmission->save($existingEntityToUpdate)) {
+                    if (!empty($workflowAction->event_key)) {
+                        $id = $existingEntityToUpdate->$primaryKey;
+                        $subject = $this->StudentAdmission;
+                        $eventKeys = explode(",", $workflowAction->event_key);
+
+                        foreach ($eventKeys as $eventKey) {
+                            $event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
+                            if ($event->isStopped()) {
+                                return $event->result;
+                            }
+                        }
+                    }
                     $workflowTransition = [];
                     $workflowTransition['comment'] = $data[$this->alias()]['comment'];
                     $workflowTransition['prev_workflow_step_name'] = $prevWorkflowStepName;
