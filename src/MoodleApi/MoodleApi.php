@@ -90,15 +90,9 @@ class MoodleApi
      */
     public function createUser($data)
     {
-        if (!MoodleCreateUser::checkData($data)) {
-            $errorObject = $this->_createErrorObject();
-            $errorObject->error["param_invalid_exception"] = "Please check your data parameters.";
-            return $errorObject;
-        }
+        $moodleUser = new MoodleCreateUser($data);
 
-        $data = MoodleCreateUser::convertDataToParam($data);
-
-        $response = $this->post(MoodleCreateUser::getFunctionParam(), $data);
+        $response = $this->post(MoodleCreateUser::getFunctionParam(), $moodleUser->getData());
 
         return $response;
     }
