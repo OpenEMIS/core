@@ -251,6 +251,12 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
                 }
             });
         }
+        if (vm.presentCount == 0) {
+            vm.presentCount = '-'
+        }
+        if (vm.absenceCount == 0) {
+            vm.absenceCount = '-'
+        }
     }
 
     vm.setGridData = function() {
