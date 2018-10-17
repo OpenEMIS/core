@@ -58,6 +58,7 @@ class IdentitiesTable extends ControllerActionTable
 	{
 		$this->fields['identity_type_id']['type'] = 'select';
 		$this->fields['nationality_id']['type'] = 'select';
+		$this->setFieldOrder(['identity_type_id', 'nationality_id', 'number', 'issue_date', 'expiry_date', 'issue_location', 'comments']);
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -110,8 +111,6 @@ class IdentitiesTable extends ControllerActionTable
 	{
 		$validator = parent::validationDefault($validator);
 		return $validator
-			->requirePresence('nationality_id')
-            ->notEmpty('nationality_id')
 			->add('issue_date', 'ruleCompareDate', [
 				'rule' => ['compareDate', 'expiry_date', false]
 			])
