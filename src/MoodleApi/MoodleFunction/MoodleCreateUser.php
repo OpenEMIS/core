@@ -48,9 +48,51 @@ class MoodleCreateUser extends MoodleFunction
             "email"
         ];
 
-    public static function convertDataToParam($data)
+    /**
+     * Converts data array into moodle restful format
+     *
+     * @return null
+     */
+    protected function convertDataToParam()
     {
-        $data = [0 => $data];
-        return ["users" => $data];
+        $this->data = [0 => $this->data];
+        $this->data = ["users" => $this->data];
+    }
+
+    /**
+     * Converts an entity object into array data and stores in $this->data 
+     *
+     * @param object $entity - \User\Model\Entity\User
+     *
+     * @return null
+     */
+    protected function convertEntityToData($entity)
+    {
+        if (!$entity instanceof \User\Model\Entity\User) {
+            $this->setError("Entity Datatype is not \User\Model\Entity\User");
+        }
+
+        $users = array();
+        $users["username"] = $entity->username;
+        $users["password"]= $this->generatePassword($entity);
+        $users["firstname"] = $entity->first_name;
+        $users["lastname"] = $entity->last_name;
+        //Hardcode for now first
+        $users["email"] = $entity->openemis_no . "@kordit.com";
+
+        $this->data = $users;
+    }
+
+    /**
+     * Generate password based on a certain hardcoded pattern. 
+     * To create a system configuration such that user can define the pattern.
+     *
+     * @param object $entity - \User\Model\Entity\User
+     *
+     * @return string - password
+     */
+    private function generatePassword($entity)
+    {
+        return $entity->openemis_no . "_Moodle"; 
     }
 }
