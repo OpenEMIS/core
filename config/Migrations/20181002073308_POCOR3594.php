@@ -221,7 +221,7 @@ class POCOR3594 extends AbstractMigration
             [
                 'id' => 3055,
                 'name' => 'Demographics',
-                'controller' => 'Staff  ',
+                'controller' => 'Staff',
                 'module' => 'Institutions',
                 'category' => 'Staff - General',
                 'parent_id' => 3000,
@@ -237,7 +237,7 @@ class POCOR3594 extends AbstractMigration
             [
                 'id' => 7068,
                 'name' => 'Demographics',
-                'controller' => 'Directories  ',
+                'controller' => 'Directories',
                 'module' => 'Directory',
                 'category' => 'General',
                 'parent_id' => 7000,
