@@ -11,8 +11,9 @@
  * @copyright 2018 KORDIT PTE LTD
  */
 namespace App\MoodleApi\MoodleFunction;
+use Cake\Log\Log;
 
-class MoodleFunction
+abstract class MoodleFunction
 {
     protected static $functionParam = "";
 
@@ -22,13 +23,38 @@ class MoodleFunction
     protected static $userMandatoryParams
         = [];
 
-    public static function getFunctionParam()
+    protected $data = [];
+
+    public function __construct($data)
     {
-        return static::$functionParam;
+        if (is_array($data)) {
+            $this->data = $data;
+        } else {
+            $this->convertEntityToData($data);
+        }
+        $this->checkData();
+        $this->convertDataToParam();
     }
 
-    public static function checkData($data) 
+    /**
+     * Converts an entity object into array data and stores in $this->data 
+     *
+     * @param entity $data - 
+     *
+     * @return null
+     */
+    abstract protected function convertEntityToData($data);
+
+    /**
+     * Converts data array into moodle restful format
+     *
+     * @return null
+     */
+    abstract protected function convertDataToParam();
+
+    private function checkData() 
     {
+        $data = $this->data;
         $mandatoryParams = static::$userMandatoryParams;
         $allowedParams = static::$userAllowedParams;
         $mandatoryFieldCount = 0;
@@ -39,16 +65,29 @@ class MoodleFunction
                     $mandatoryFieldCount++;
                 }
             } else {
-                //TODO - ERROR LOGGING
-                return false;
+                $this->setError("This paramter is now allowed. Param: " . $param . ".");
             }
         }
 
-        if ($mandatoryFieldCount == count($mandatoryParams)) {
-            return true;
-        } else {
-            //TODO - ERROR LOGGING
-            return false;
+        if ($mandatoryFieldCount < count($mandatoryParams)) {
+            $this->setError("Not all mandatory fields are set.");
         }
+    }
+
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    public static function getFunctionParam()
+    {
+        return static::$functionParam;
+    }
+
+    private function setError($msg)
+    {
+        throw new \Exception($msg);
+        Log::write('debug', "MoodleFunction.php - " . $msg);
+        Log::write('error', "MoodleFunction.php - " . $msg);
     }
 }
