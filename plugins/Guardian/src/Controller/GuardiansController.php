@@ -61,9 +61,9 @@ class GuardiansController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']);
     }
-    public function Demographics()
+    public function Demographic()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographics']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
     }    
 
     public function beforeFilter(Event $event)
@@ -134,7 +134,7 @@ class GuardiansController extends AppController
             'Guardians' => ['text' => __('Relation')],
             'GuardianUser' => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
-            'Demographics' => ['text' => __('Demographic')],
+            'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
             'Contacts' => ['text' => __('Contacts')],
