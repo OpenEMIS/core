@@ -35,6 +35,13 @@ class AppraisalCriteriasTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+        // Added
+        $this->hasOne('AppraisalScores', ['className' => 'StaffAppraisal.AppraisalFormsCriteriasScores', 
+            'foreignKey' => 'appraisal_criteria_id', 
+            'saveStrategy' => 'replace',
+            'dependent' => true, 
+            'cascadeCallbacks' => true]);
+
         $this->setDeleteStrategy('restrict');
     }
 

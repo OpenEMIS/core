@@ -41,7 +41,11 @@ class TrackDeleteBehavior extends Behavior
             $entityTable = TableRegistry::get($source);
             $entityData = $entity->toArray();
             $session = new Session();
-            $userId = $session->read('Auth.User.id');
+            if (is_null($session->read('Auth.User.id'))) {
+                $userId = 1;    // Super Admin
+            }else {
+                $userId = $session->read('Auth.User.id');
+            }
             if (!is_array($entityTable->primaryKey())) { // single primary key
                 $referenceKey = $entity->{$entityTable->primaryKey()};
             } else { // composite primary keys
@@ -87,7 +91,7 @@ class TrackDeleteBehavior extends Behavior
         }
     }
 
-    public function convertBinaryResourceToString($phpResourceFile)
+    private function convertBinaryResourceToString($phpResourceFile)
     {
         $file = '';
         while (!feof($phpResourceFile)) {

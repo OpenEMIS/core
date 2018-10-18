@@ -1,6 +1,7 @@
 <?php
 namespace Restful\Controller\Component;
 
+use Exception;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
 
@@ -14,9 +15,25 @@ class DownloadFileComponent extends Component
     {
         $model = TableRegistry::get($this->request->model);
         $data = $model->get($id);
+
+        $modelSchema = $model->schema();
+        if (is_null($modelSchema->column($fileNameField))) {
+            throw new Exception("Invalid file name field", 500);
+        }
+
+        $fieldContentColumn = $modelSchema->column($fileContentField);
+        if (is_null($fieldContentColumn) || $fieldContentColumn['type'] != 'binary') {
+            throw new Exception("Invalid file content field", 500);
+        }
+
+        if (is_null($data->{$fileContentField})) {
+            throw new Exception("File content not found", 404);
+        }
+
         $fileName = $data->{$fileNameField};
         $pathInfo = pathinfo($fileName);
         $file = stream_get_contents($data->{$fileContentField});
+
         if ($this->config('base64Encode')) {
             $this->_registry->getController()->set([
                 'extension' => $pathInfo['extension'],

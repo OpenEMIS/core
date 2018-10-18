@@ -26,6 +26,9 @@ class InstitutionsController extends AppController
     public $activeObj = null;
 
     private $features = [
+        // general
+        'InstitutionAttachments',
+
         // academic
         'InstitutionShifts',
         'InstitutionGrades',
@@ -120,7 +123,7 @@ class InstitutionsController extends AppController
 
         // outcomes
         'StudentOutcomes',
-        'ImportOutcomeResults'
+        'ImportOutcomeResults',
 
         // misc
         // 'IndividualPromotion',
@@ -141,13 +144,12 @@ class InstitutionsController extends AppController
         parent::initialize();
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
-            'Attachments'       => ['className' => 'Institution.InstitutionAttachments'],
-
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
             'Staff'             => ['className' => 'Institution.Staff'],
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
 
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
+            'StudentAbsences'   => ['className' => 'Institution.InstitutionStudentAbsences'],
             'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
             'AttendanceExport'  => ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
             'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
@@ -165,12 +167,13 @@ class InstitutionsController extends AppController
             'ImportStaffAttendances'    => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
             'ImportStudentAttendances'  => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
             'ImportInstitutionSurveys'  => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
-            'ImportStudents'            => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
+            'ImportStudentAdmission'    => ['className' => 'Institution.ImportStudentAdmission', 'actions' => ['add']],
             'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
             'ImportInstitutionTextbooks'=> ['className' => 'Institution.ImportInstitutionTextbooks', 'actions' => ['add']],
             'ImportOutcomeResults'      => ['className' => 'Institution.ImportOutcomeResults', 'actions' => ['add']],
             'ImportStaffLeave'          => ['className' => 'Institution.ImportStaffLeave', 'actions' => ['add']],
-            'ImportInstitutionPositions'=> ['className' => 'Institution.ImportInstitutionPositions', 'actions' => ['add']]
+            'ImportInstitutionPositions'=> ['className' => 'Institution.ImportInstitutionPositions', 'actions' => ['add']],
+            'ImportStudentBodyMasses'   => ['className' => 'Institution.ImportStudentBodyMasses', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -180,6 +183,10 @@ class InstitutionsController extends AppController
     }
 
     // CAv4
+    public function Attachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAttachments']);
+    }
 
     public function StaffAppraisals()
     {
@@ -400,6 +407,15 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentAbsences']);
     }
+    public function FeederOutgoingInstitutions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.FeederOutgoingInstitutions']);
+    }
+
+    public function FeederIncomingInstitutions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.FeederIncomingInstitutions']);
+    }    
     // End
 
     // AngularJS
@@ -1224,6 +1240,9 @@ class InstitutionsController extends AppController
                             $model->aliasField('location_institution_id') => $institutionId
                         ];
                         $exists = $model->exists($params);
+                    } elseif (in_array($model->alias(), ['FeederOutgoingInstitutions'])) {
+                        $params[$model->aliasField('feeder_institution_id')] = $institutionId;
+                        $exists = $model->exists($params);
                     } else {
                         $checkExists = function ($model, $params) {
                             return $model->exists($params);
@@ -1432,17 +1451,18 @@ class InstitutionsController extends AppController
             ],
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
-            'SpecialNeeds' => ['text' => __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'Guardians' => ['text' => __('Guardians')],
-            'StudentSurveys' => ['text' => __('Surveys')]
+            'StudentSurveys' => ['text' => __('Surveys')],
+            'StudentTransport' => ['text' => __('Transport')]
         ];
 
         if ($type == 'Staff') {
             $studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
             unset($studentTabElements['Guardians']);
             unset($studentTabElements['StudentSurveys']);   // Only Student has Survey tab
+            unset($studentTabElements['StudentTransport']);   // Only Student has Transport tab
         }
 
         $tabElements = array_merge($tabElements, $studentTabElements);

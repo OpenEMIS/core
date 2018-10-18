@@ -22,7 +22,7 @@ class CustomFieldListBehavior extends Behavior {
 		'model' => null,
 		'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
 		'fieldValueClass' => ['className' => 'CustomField.CustomFieldValues', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true],
-		'tableCellClass' => ['className' => 'CustomField.CustomTableCells', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true],
+		'tableCellClass' => ['className' => 'CustomField.CustomTableCells', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace'],
 		'condition' => [],
 	];
 
@@ -194,7 +194,15 @@ class CustomFieldListBehavior extends Behavior {
 					->find()
 					->where([$TableCellTable->aliasField($customFieldsForeignKey).' IN ' => $tableCustomFieldIds, $TableCellTable->aliasField($customRecordsForeignKey) => $recordId])
 				    ->map(function ($row) use ($tableCellData, $customFieldsForeignKey, $customColumnForeignKey, $customRowForeignKey) {
-				        $tableCellData[$row[$customFieldsForeignKey]][$row[$customColumnForeignKey]][$row[$customRowForeignKey]] = $row['text_value'];
+				    	$value = null;
+                        if (isset($row['number_value']) && $row['number_value']) {
+                            $value = $row['number_value'];
+                        } elseif (isset($row['text_value']) && $row['text_value']) {
+                            $value = $row['text_value'];
+                        } elseif (isset($row['decimal_value']) && $row['decimal_value']) {
+                            $value = $row['decimal_value'];
+                        }
+				        $tableCellData[$row[$customFieldsForeignKey]][$row[$customColumnForeignKey]][$row[$customRowForeignKey]] = $value;
 				        return $row;
 				    })
 				    ->toArray();
