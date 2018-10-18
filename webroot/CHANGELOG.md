@@ -1,3 +1,71 @@
+### [3.36.0] - 2018-09-28
+- Developed Inclusive Education (Special Needs) feature in Profiles/Institutions/Directory > Special Needs
+- Implemented a delete button to delete all Survey data in Institution > Survey
+- Implemented Report Queue in Institutions > Report Card > Status page
+- Bug fix on error 404 in Institutions > Staff > Export
+- Bug fix on missing data when saving tables in Institutions > Surveys
+
+### [3.35.0] - 2018-09-14
+- Developed Scholarship deadline alert feature in Administration > Notification > Alert page
+- Implemented Academic Period and Financial Assistance type filter in Reports > Scholarships > Recipient Payment Structures page
+- Bug fix on Identity type in Directory > General > Overview page
+
+### [3.34.0] - 2018-09-07
+- Developed User Default Identity Report in Reports > Directory 
+- Developed Staff Appraisal calculated fields in Administration > Appraisals > Scores
+- Implemented additional column called Nationality in Report > Institution > Staff (Assigned) report
+- Implemented default filters in Institutions > Cases
+- Bug fix on Institutions > Survey Rules during xform generation for OpenEMIS Survey
+- Bug fix on ability to save reords in Institutions > Performance > Outcomes 
+
+### [3.33.1] - 2018-09-07
+- Bug fix on ability to save records in Institution Survey table question type
+- Bug fix on 404 error when Institution Survey rules answer was changed
+- Bug fix on Institution Survey when Dependent question disappears 
+
+### [3.33.0] - 2018-09-03
+- Developed changes to Class Attendance Marked Report in Reports > Institution > Class Attendance Marked
+- Developed post event rule for Secondary Teacher and Principal in Administration > Workflow > Rules
+- Developed additional Financial Assistance type (Full scholarship, Partial scholarship, Grant, Distance Learning)
+- Developed option to configure Scholarship Institution Choice in Administration > Scholarship > Applications > Institution Choices
+- Developed feature to export Scholarships > Recipients > Payment Structures
+- Introduced Annual Award Amount to Scholarships > Recipients > Payment Structures
+
+### [3.32.3] - 2018-08-23
+- Developed a feature to email all students their report card in Institutions > Report Card > Status
+- Added Partial Scholarships and Grants to Scholarship module in Administration > Scholarships
+- Added Scholarships Disbursement (Detailed) and Scholarship Enrollment reports in Reports module
+- Developed a feature to retrieve Institution image through API
+
+### [3.32.2] - 2018-08-13
+- Bug fix on deleting rows and columns for table question type in Survey module
+
+### [3.32.0] - 2018-08-03
+- Developed School Feeder feature in Institutions Module
+- Developed function to save class for next academic period in Institution > Students > Promotions page
+- Developed feature to email student report card in Institution > Report Card
+
+### [3.31.0] - 2018-07-20
+- Developed student pending admission API
+- Developed Potential Wrong Birthdates in Reports > Data Quality 
+- Developed function to import height and weight for multiple students
+
+### [3.30.2] - 2018-07-13
+- Developed additional placeholders in Student Report Card
+
+### [3.30.1] - 2018-07-05
+- Added Started On and Completed On in Institutions > Report Cards
+
+### [3.30.0] - 2018-07-02
+- Developed audit reports via feature
+- Implemented status column in Institution > Students > Import feature
+- Change date format in Audit Report to yyyy-mm-dd to enable sorting
+
+### [3.30.0] - 2018-07-02
+- Developed audit reports via feature
+- Implemented status column in Institution > Students > Import feature
+- Change date format in Audit Report to yyyy-mm-dd to enable sorting
+
 ### [3.29.0] - 2018-06-22
 - Data patch on Positions feature
 - Develop Student Attendance Summary Report

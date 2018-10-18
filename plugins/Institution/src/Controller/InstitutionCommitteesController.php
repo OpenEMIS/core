@@ -49,6 +49,9 @@ class InstitutionCommitteesController extends PageController
         $page->move('institution_committee_type_id')->after('academic_period_id')->setLabel('Type');
 
         $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
+
+        $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $page->setQueryString('academic_period_id', $academicPeriodId);
     }
 
     public function index()
@@ -67,9 +70,6 @@ class InstitutionCommitteesController extends PageController
 
         $page->addFilter('institution_committee_type_id')
             ->setOptions($institutionCommitteeTypes);
-
-        $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $page->setQueryString('academic_period_id', $academicPeriodId);
     }
 
     public function view($id)
@@ -92,6 +92,10 @@ class InstitutionCommitteesController extends PageController
 
         $page->get('institution_committee_type_id')
             ->setControlType('select');
+        $page->get('start_time')
+            ->setRequired(true);
+        $page->get('end_time')
+            ->setRequired(true);
     }
     public function setupTabElements($encodedInstitutionId, $query)
     {

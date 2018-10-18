@@ -70,7 +70,7 @@ class ScholarshipRecipientsTable extends AppTable
             ->add('approved_amount', [
                 'comparison' => [
                     'rule' => function ($value, $context) {
-                        return floatval($value) <= floatval($context['data']['maximum_award_amount']);
+                        return floatval($value) <= floatval($context['data']['total_award_amount']);
                     }
                 ],
                 'validateDecimal' => [
@@ -201,6 +201,7 @@ class ScholarshipRecipientsTable extends AppTable
                         'code',
                         'name',
                         'maximum_award_amount',
+                        'total_amount',
                         'scholarship_financial_assistance_type_id'
                     ]
                 ],
@@ -290,6 +291,7 @@ class ScholarshipRecipientsTable extends AppTable
                         'code',
                         'name',
                         'maximum_award_amount',
+                        'total_amount',
                         'scholarship_financial_assistance_type_id'
                     ]
                 ],

@@ -248,6 +248,7 @@ angular.module('kd.orm.svc', [])
         },
 
         save: function(data) {
+            data['action_type'] = 'default'; // flag to distinguish between angular & external API call
             this._method = 'POST';
             var settings = {
                 headers: {'Content-Type': 'application/json'},
