@@ -302,6 +302,9 @@ class InstitutionSubjectStudentsTable extends AppTable
         $count = $this
             ->find()
             ->contain('Users')
+            ->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
+            })
             ->where([$this->Users->aliasField('gender_id') => $gender_id])
             ->where([$this->aliasField('institution_subject_id') => $subjectId])
             ->count()
@@ -315,6 +318,9 @@ class InstitutionSubjectStudentsTable extends AppTable
         $count = $this
             ->find()
             ->contain('Users')
+            ->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
+            })
             ->where([$this->Users->aliasField('gender_id') => $gender_id])
             ->where([$this->aliasField('institution_subject_id') => $subjectId])
             ->count()
@@ -324,15 +330,13 @@ class InstitutionSubjectStudentsTable extends AppTable
     
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew()) { 
+        if($entity->isNew() || $entity->dirty('student_status_id')) {
             $id = $entity->institution_subject_id;
             $countMale = $this->getMaleCountBySubject($id);
             $countFemale = $this->getFemaleCountBySubject($id);
             $this->InstitutionSubjects->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
         }
-
     }
-
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {   

@@ -37,7 +37,7 @@ class AppraisalAnswersTable extends AppTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->answer === '' || is_null($entity->answer)) {
             $this->delete($entity);

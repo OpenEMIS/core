@@ -13,6 +13,7 @@ function SgTreeController($scope, $window, SgTreeSvc) {
     Controller.displayCountry = 0;
     Controller.loaded = false;
     Controller.triggerLoad = triggerLoad;
+    Controller.triggerOnChange = false;
     $scope.textConfig = {
         multipleSelection: '%tree_no_of_item items selected'
     };
@@ -56,9 +57,17 @@ function SgTreeController($scope, $window, SgTreeSvc) {
         }
     }
 
-    $scope.$watch('outputModelText', function (newValue) {
+     $scope.$watch('outputModelText', function (newValue, oldValue) {
         if (typeof newValue !== 'undefined' && newValue.length > 0) {
             Controller.outputValue = newValue[0].id;
+            if (Controller.triggerOnChange) {
+                setTimeout(function() {
+                    if (oldValue.length != 0 && Controller.outputValue != null && Controller.outputValue != oldValue[0].id) {
+                        $('#reload').val('changeAreaEducation').click();
+                        return false;
+                    }
+                }, 1);
+            }
         }
     });
 }
