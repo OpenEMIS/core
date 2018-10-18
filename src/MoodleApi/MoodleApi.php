@@ -1,9 +1,9 @@
 <?php
 /**
- * MoodleApiComponent - Uses Cake's HTTP to do webservice call to moodle. 
+ * MoodleApiComponent - Uses Cake's HTTP to do webservice call to moodle.
  * Moodle does not complies to restful. Only GET and POST is sufficient.
  * For moodle specifc function logic, please create a class under MoodleFunction.
- * SEE MoodleFunction\MoodleCreateUser for example. 
+ * SEE MoodleFunction\MoodleCreateUser for example.
  *
  * Use $reponse->error to check error details.
  *
@@ -36,9 +36,9 @@ class MoodleApi
     }
 
     /**
-     * To call moodle api GET functions. 
+     * To call moodle api GET functions.
      *
-     * @param string $function - moodle api function name. 
+     * @param string $function - moodle api function name.
      *                           Example: core_webservice_get_site_info
      *
      * @return object - the response data. Use $response->json to get the json data.
@@ -54,12 +54,12 @@ class MoodleApi
     }
 
     /**
-     * To call moodle api POST functions. 
+     * To call moodle api POST functions.
      *
-     * @param string $function - moodle api function name. 
+     * @param string $function - moodle api function name.
      *                           Example: core_webservice_get_site_info
      *
-     * @param array $params - look at moodle api for the structure. 
+     * @param array $params - look at moodle api for the structure.
      *
      * @return object - the response data. Use $response->json to get the json data.
      */
@@ -81,7 +81,7 @@ class MoodleApi
     }
 
     /**
-     * Creates user on moodle. Return false if fails. 
+     * Creates user on moodle. Return false if fails.
      *
      * @param string $data - params data for user. Check class MoodleCreateUser
      *                       for available fields.
@@ -153,7 +153,7 @@ class MoodleApi
         $this->_initResponseError($errorObject);
         return $errorObject;
     }
-    
+
     private function _initResponseError(&$response)
     {
         if (!isset($response->error)) {
