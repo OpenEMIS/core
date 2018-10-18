@@ -20,6 +20,7 @@ use Cake\Http\Client;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use App\MoodleApi\MoodleFunction\MoodleCreateUser;
+use MoodleApi\Model\Table\MoodleApiLogTable;
 
 class MoodleApi
 {
@@ -94,24 +95,46 @@ class MoodleApi
 
         $response = $this->post(MoodleCreateUser::getFunctionParam(), $moodleUser->getData());
 
+        $this->_apiLog(MoodleCreateUser::getFunctionParam(), $moodleUser->getData(), $response, "createUser", $data);
+
         return $response;
     }
 
     /**
-     * To construct Moodle API URL based on the function name you are calling. 
+     * To construct Moodle API URL based on the function name you are calling.
      *
-     * @param string $function - moodle api function name. 
+     * @param string $function - moodle api function name.
      *                           Example: core_webservice_get_site_info
      *
      * @return string - the url to do query for API without params
      */
     public function getUrl($function)
     {
-        return $this->_baseURL 
-                . self::WEB_SERVICE_URL 
-                . "?" 
+        return $this->_baseURL
+                . self::WEB_SERVICE_URL
+                . "?"
                 . $this->_constructBasicParams($function)
                 . "&" . self::JSON_MODE_PARAM;
+    }
+
+    private function _apiLog($action, $param, $response, $callback, $callbackData)
+    {
+        $apiLogTable = TableRegistry::get("MoodleApi.MoodleApiLog");
+        $apiInstance = $apiLogTable->newEntity();
+
+        if ($response->isOk()) {
+            $status = MoodleApiLogTable::STATUS_SUCCESS;
+        } else {
+            $status = MoodleApiLogTable::STATUS_FAILED;
+        }
+        $apiInstance->action = $action;
+        $apiInstance->params = json_encode($param);
+        $apiInstance->response = json_encode($response);
+        $apiInstance->status = $status;
+        $apiInstance->callback = $callback;
+        $apiInstance->callback_param = json_encode($callbackData);
+
+        $apiLogTable->save($apiInstance);
     }
 
     //TODO - load token from configuration instead of hardcode
@@ -124,8 +147,8 @@ class MoodleApi
 
     private function _constructBasicParams($function)
     {
-        return self::TOKEN_PARAM . "=" . $this->_token 
-                . "&" . 
+        return self::TOKEN_PARAM . "=" . $this->_token
+                . "&" .
                 self::FUNCTION_PARAM . "=" . $function;
     }
 
