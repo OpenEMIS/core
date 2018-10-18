@@ -138,9 +138,9 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']);
     }
-    public function Demographics()
+    public function Demographic()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographics']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
     }
     public function StudentTransport()
     {
