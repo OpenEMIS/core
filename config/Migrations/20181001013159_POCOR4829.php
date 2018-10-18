@@ -37,7 +37,7 @@ class POCOR4829 extends AbstractMigration
                 '_edit' => 'StudentVisitRequests.edit',
                 '_add' => 'StudentVisitRequests.add',
                 '_delete' => 'StudentVisitRequests.remove',
-                '_execute' => null,
+                '_execute' => 'StudentVisitRequests.download',
                 'order' => 150,
                 'visible' => 1,
                 'description' => null,
@@ -55,7 +55,7 @@ class POCOR4829 extends AbstractMigration
                 '_edit' => 'StudentVisits.edit',
                 '_add' => 'StudentVisits.add',
                 '_delete' => 'StudentVisits.remove',
-                '_execute' => null,
+                '_execute' => 'StudentVisits.download',
                 'order' => 151,
                 'visible' => 1,
                 'description' => null,
@@ -64,7 +64,33 @@ class POCOR4829 extends AbstractMigration
             ]
         ];
         $this->insert('security_functions', $securityFunctionData);
+
+        /*
+            Updated Special Needs permissions with download permission
+            Institution > Students
+                - Referrals   (id: 2041, order: 145) - SpecialNeedsReferrals
+                - Assessments (id: 2042, order: 146) - SpecialNeedsAssessments
+                - Services    (id: 2043, order: 147) - SpecialNeedsServices
+                - Plans       (id: 2045, order: 149) - SpecialNeedsPlans
+
+            Institution > Staff 
+                - Referrals   (id: 3050, order: 188) + 5 - SpecialNeedsReferrals
+                - Assessments (id: 3051, order: 189) + 5 - SpecialNeedsAssessments
+                - Services    (id: 3052, order: 190) + 5 - SpecialNeedsServices
+                - Plans       (id: 3054, order: 192) + 5 - SpecialNeedsPlans
+
+            Directories
+                - Referrals   (id: 7063, order: 332) + 10 - SpecialNeedsReferrals
+                - Assessments (id: 7064, order: 333) + 10 - SpecialNeedsAssessments
+                - Services    (id: 7065, order: 334) + 10 - SpecialNeedsServices
+                - Plans       (id: 7067, order: 336) + 10 - SpecialNeedsPlans
+         */
+
         // security_functions - END
+        $this->execute('UPDATE `security_functions` SET `_execute` = "SpecialNeedsReferrals.download" WHERE `id` IN (2041, 3050, 7063)');
+        $this->execute('UPDATE `security_functions` SET `_execute` = "SpecialNeedsAssessments.download" WHERE `id` IN (2042, 3051, 7064)');
+        $this->execute('UPDATE `security_functions` SET `_execute` = "SpecialNeedsServices.download" WHERE `id` IN (2043, 3052, 7065)');
+        $this->execute('UPDATE `security_functions` SET `_execute` = "SpecialNeedsPlans.download" WHERE `id` IN (2045, 3054, 7067)');
 
         // student_visit_types
         $StudentVisitTypes = $this->table('student_visit_types', [
