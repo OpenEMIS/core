@@ -57,7 +57,8 @@ class GuardianCommentsController extends BaseController
 
         $tabElements = [
             'Guardians' => ['text' => __('Relation')],
-            'GuardianUser' => ['text' => __('Overview')],            
+            'GuardianUser' => ['text' => __('Overview')],
+            'Demographic' => ['text' => __('Demographic')],            
             'Accounts' => ['text' => __('Account')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' =>['text' =>  __('Nationalities')],
