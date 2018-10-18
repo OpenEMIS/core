@@ -498,7 +498,7 @@ class StudentsController extends AppController
             'Guardians' => ['text' => __('Relation')],
             'GuardianUser' => ['text' => __('Overview')],            
             'Accounts' => ['text' => __('Account')],
-            'Demographics' => ['text' => __('Demographic')],
+            'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
             'Contacts' => ['text' => __('Contacts')],
