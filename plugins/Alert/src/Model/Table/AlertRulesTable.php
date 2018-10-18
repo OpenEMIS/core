@@ -281,22 +281,25 @@ class AlertRulesTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
-            $feature = $entity->feature;
 
-            if (in_array($feature, ['ScholarshipApplication'])) {
-                $attr['type'] = 'disabled';
-                $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
-                $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
-            } else {
-                $roleOptions = $this->SecurityRoles
-                    ->find('list')
-                    ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->primaryKey()), $this->SecurityRoles->aliasField('name')])
-                    ->find('visible')
-                    ->find('order')
-                    ->toArray();
+            if ($entity->has('feature')) {
+                $feature = $entity->feature;
 
-                $attr['type'] = 'chosenSelect';
-                $attr['options'] = $roleOptions;
+                if (in_array($feature, ['ScholarshipApplication'])) {
+                    $attr['type'] = 'disabled';
+                    $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+                    $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+                } else {
+                    $roleOptions = $this->SecurityRoles
+                        ->find('list')
+                        ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->primaryKey()), $this->SecurityRoles->aliasField('name')])
+                        ->find('visible')
+                        ->find('order')
+                        ->toArray();
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['options'] = $roleOptions;
+                }
             }
         }
 
