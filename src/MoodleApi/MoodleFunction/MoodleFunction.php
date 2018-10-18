@@ -17,7 +17,7 @@ abstract class MoodleFunction
 {
     protected static $functionParam = "";
 
-    protected static $userAllowedParams 
+    protected static $userAllowedParams
         = [];
 
     protected static $userMandatoryParams
@@ -37,9 +37,9 @@ abstract class MoodleFunction
     }
 
     /**
-     * Converts an entity object into array data and stores in $this->data 
+     * Converts an entity object into array data and stores in $this->data
      *
-     * @param entity $data - 
+     * @param entity $data -
      *
      * @return null
      */
@@ -52,7 +52,7 @@ abstract class MoodleFunction
      */
     abstract protected function convertDataToParam();
 
-    private function checkData() 
+    private function checkData()
     {
         $data = $this->data;
         $mandatoryParams = static::$userMandatoryParams;
