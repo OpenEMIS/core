@@ -220,6 +220,7 @@ class CommentsController extends PageController
         $tabElements = [
             $pluralPlugin => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
+            'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' =>['text' =>  __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],
@@ -301,7 +302,7 @@ class CommentsController extends PageController
         $tabElements = [
             $userRole.'User' => ['text' => __('Overview')],
             $userRole.'Account' => ['text' => __('Account')],
-            'Demographics' => ['text' => __('Demographic')],
+            'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' =>['text' =>  __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],

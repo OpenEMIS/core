@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
-class DemographicsTable extends ControllerActionTable
+class DemographicTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -74,7 +74,7 @@ class DemographicsTable extends ControllerActionTable
         if ($field == 'demographic_types_id') {
             return __('Wealth Quintile');
         } elseif ($field == 'indigenous') {
-            return __('Indigenous Peoples');
+            return __('Indigenous People');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
