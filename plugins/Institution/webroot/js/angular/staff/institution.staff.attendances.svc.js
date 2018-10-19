@@ -20,7 +20,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         getDayListOptions:getDayListOptions,
         getStaffAttendances: getStaffAttendances,
         getAllStaffAttendances: getAllStaffAttendances,
+        // getAllDayAllStaffAttendances: getAllDayAllStaffAttendances,
         getColumnDefs: getColumnDefs,
+        getAllDayColumnDefs: getAllDayColumnDefs,
         saveStaffAttendanceTimeIn:saveStaffAttendanceTimeIn,
         saveStaffAttendanceTimeOut:saveStaffAttendanceTimeOut,
     };
@@ -125,6 +127,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
 
 
     function getAllStaffAttendances(params) {
+        console.log('params');
+        console.log(params);
         var extra = {
             institution_id: params.institution_id,
             academic_period_id: params.academic_period_id,
@@ -137,18 +141,55 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
 
         var success = function(response, deferred) {
             var staffAttendances = response.data.data;
-
+            console.log('staffAttendances');
+            console.log(staffAttendances);
             if (angular.isObject(staffAttendances)) {
                 deferred.resolve(staffAttendances);
             } else {
                 deferred.reject('ERROR');
             }
         };
-
-        return Staff
+        if (params.day_id != -1) {
+            console.log('paramsDayID is not All Days');
+            return Staff
             .find('AllStaffAttendances', extra)
             .ajax({success: success, defer: true});
+        } else {
+            console.log('paramsDayID is -1');
+            return Staff
+                .find('AllDayAllStaffAttendances', extra)
+                .ajax({success: success, defer: true});
+        }
     }
+
+    // function getAllDayAllStaffAttendances(params) {
+    //     console.log('params');
+    //     console.log(params);
+    //     var extra = {
+    //         institution_id: params.institution_id,
+    //         academic_period_id: params.academic_period_id,
+    //         week_id: params.week_id,
+    //         week_start_day: params.week_start_day,
+    //         week_end_day: params.week_end_day,
+    //         day_id: params.day_id,
+    //         day_date: params.day_date,
+    //     };
+
+    //     var success = function(response, deferred) {
+    //         var staffAttendances = response.data.data;
+    //         console.log('staffAttendances');
+    //         console.log(staffAttendances);
+    //         if (angular.isObject(staffAttendances)) {
+    //             deferred.resolve(staffAttendances);
+    //         } else {
+    //             deferred.reject('ERROR');
+    //         }
+    //     };
+
+    //     return Staff
+    //         .find('AllDayAllStaffAttendances', extra)
+    //         .ajax({success: success, defer: true});
+    // }
 
     function getColumnDefs(staffAttendances) {
         var columnDefs = [];
@@ -244,6 +285,45 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         //         }
         //     }
         // });
+
+        return columnDefs;
+    }
+
+    // column definitions
+    function getAllDayColumnDefs(dayList, attendancePeriodList) {
+        console.log('getAllDayColumnDefs');
+        console.log(dayList);
+        var columnDefs = [];
+        var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
+        var isRtl = document.querySelector("html").classList.contains("rtl");
+        var direction = 'left';
+        if (isMobile) {
+            direction = '';
+        } else if (isRtl) {
+            direction = 'right';
+        }
+
+        columnDefs.push({
+            headerName: "Name",
+            field: "_matchingData.Users.name_with_id",
+            // filterParams: filterParams,
+            pinned: direction,
+            menuTabs: [],
+            filter: "text"
+        });
+
+        angular.forEach(dayList, function(dayObj, dayKey) {
+            if (dayObj.id != -1) {
+                // var test = new Date(dayObj.date);
+                // var dayText = test.getDay();
+                var dayText = dayObj.name;
+                var colDef = {
+                    headerName: dayText,
+                    menuTabs: [],
+                };
+                columnDefs.push(colDef);
+            }
+        });
 
         return columnDefs;
     }
@@ -463,7 +543,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         minutes = timeSplit[1];
         seconds = timeSplit[2];
         // console.log(timeSplit);
-        if (hours > 12){ 
+        if (hours > 12){
             meridian = "PM";
         } else {
             meridian = "AM";
@@ -474,7 +554,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         //00 does not exists in 12-hour time format hence need to convert 00 back to 12,
         //else timepicker will display wrong timing when error when user selects 12AM
         if (hours == 0) hours = 12;
-        
+
         var sHours = hours.toString();
         var sMinutes = minutes.toString();
         // var sSeconds = seconds.toString();
@@ -520,6 +600,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             console.log('is new entity');
             return InstitutionStaffAttendances.save(staffAttendanceData);
         }
-    } 
+    }
 
 };
