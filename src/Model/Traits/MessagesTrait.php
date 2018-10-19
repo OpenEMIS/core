@@ -1565,6 +1565,16 @@ trait MessagesTrait
                     'ruleValidDate' => 'You have entered an invalid date.'
                 ],
             ],
+            'StudentVisitRequests' => [
+                'date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period'
+                ]
+            ],
+            'StudentVisits' => [
+                'date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period'
+                ]
+            ]
         ],
         'Profile' => [
             'Guardians' => [
