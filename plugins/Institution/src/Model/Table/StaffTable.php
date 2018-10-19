@@ -1050,7 +1050,7 @@ class StaffTable extends ControllerActionTable
             'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
         ];
 
-        if (!Configure::read('schoolMode')) {    
+        if (!Configure::read('schoolMode')) {
             $coreAssociationArray = [
                 'Institution.InstitutionRubrics' => 'InstitutionRubrics',
                 'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
@@ -1960,7 +1960,7 @@ class StaffTable extends ControllerActionTable
 
         $weekStartDate = $options['week_start_day'];
         $weekEndDate = $options['week_end_day'];
-        
+
         $dayId = $options['day_id'];
         $dayDate = $options['day_date'];
 
@@ -1970,7 +1970,7 @@ class StaffTable extends ControllerActionTable
             $weekStartDate = $dayDate;
             $weekEndDate = $dayDate;
         }
-        
+
         //Gets all the days in the selected week based on its start date end date
         $startDate = new DateTime($weekStartDate);
         $endDate = new DateTime($weekEndDate);
@@ -2092,6 +2092,314 @@ class StaffTable extends ControllerActionTable
             });
 
         // Log::write('debug', $query);
+        return $query;
+    }
+
+    public function findAllDayAllStaffAttendances(Query $query, array $options)
+    {
+        Log::write('debug', 'AllDayAllStaffAttendances');
+        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
+        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+
+        $weekStartDate = $options['week_start_day'];
+        $weekEndDate = $options['week_end_day'];
+
+        $dayId = $options['day_id'];
+        $dayDate = $options['day_date'];
+
+        // $where = [];
+
+        if ($dayId != -1) {
+            $weekStartDate = $dayDate;
+            $weekEndDate = $dayDate;
+        }
+
+        //Gets all the days in the selected week based on its start date end date
+        $startDate = new DateTime($weekStartDate);
+        $endDate = new DateTime($weekEndDate);
+        $interval = new DateInterval('P1D');
+        $daterange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
+
+        // To get all the dates of the working days only
+        $workingDaysArr = [];
+        $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
+        foreach ($daterange as $date) {
+            $dayText = $date->format('l');
+            if (in_array($dayText, $workingDays)) {
+                $workingDaysArr[] = $date;
+            }
+        }
+        $allStaffAttendances = $InstitutionStaffAttendances
+            ->find()
+            ->where([
+                $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate."'",
+                $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate."'",
+            ])
+            ->toArray();
+        // Log::write('debug', $allStaffAttendances);
+
+        $query = $query
+        //     ->select([
+        //         $this->aliasField('institution_id'),
+        //         $this->aliasField('staff_id'),
+        //         $this->Users->aliasField('openemis_no'),
+        //         $this->Users->aliasField('first_name'),
+        //         $this->Users->aliasField('middle_name'),
+        //         $this->Users->aliasField('third_name'),
+        //         $this->Users->aliasField('last_name'),
+        //         $this->Users->aliasField('preferred_name'),
+        //         $InstitutionStaffAttendances->aliasField('id'),
+        //         $InstitutionStaffAttendances->aliasField('time_in'),
+        //         $InstitutionStaffAttendances->aliasField('time_out'),
+        //         $InstitutionStaffAttendances->aliasField('date'),
+        //         $StaffLeaveTable->aliasField('status_id'),
+        //         $StaffLeaveTable->aliasField('staff_leave_type_id'),
+        //         $StaffLeaveTable->aliasField('date_from'),
+        //         $StaffLeaveTable->aliasField('date_to'),
+        //         $StaffLeaveTable->aliasField('start_time'),
+        //         $StaffLeaveTable->aliasField('end_time'),
+        //         $StaffLeaveTable->aliasField('full_day'),
+        //         $StaffLeaveTable->aliasField('comments'),
+        //     ])
+        //     ->leftJoin(
+        //         [$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
+        //         [
+        //             $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+        //             $InstitutionStaffAttendances->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+        //             $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate."'",
+        //             $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate."'",
+        //         ]
+        //     )
+            ->matching('Users')
+        //     ->leftJoin([$StaffLeaveTable->alias() => $StaffLeaveTable->table()], [
+        //         $StaffLeaveTable->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+        //         $StaffLeaveTable->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+        //         $StaffLeaveTable->aliasField("date_to >= '") . $weekStartDate. "'",
+        //         $StaffLeaveTable->aliasField("date_from <= '") . $weekEndDate. "'"
+        //     ])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('staff_status_id') => 1
+            ])
+            ->order([
+                $this->Users->aliasField('first_name')
+            ])
+        //     ->group([
+        //         $this->aliasField('staff_id'),
+        //         $this->aliasField('institution_id'),
+        //         $InstitutionStaffAttendances->aliasField('academic_period_id'),
+        //         $InstitutionStaffAttendances->aliasField('date')
+        //     ])
+            ->formatResults(function (ResultSetInterface $results) use ($allStaffAttendances, $workingDaysArr) {
+                $results = $results->toArray();
+        //         $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+        //         $formatResultDates = [];
+                // Log::write('debug', '$results');
+                // Log::write('debug', $results);
+                // Log::write('debug', '$allStaffAttendances');
+                // Log::write('debug', $allStaffAttendances);
+                // Log::write('debug', '$workingDaysArr');
+                // Log::write('debug', $workingDaysArr);
+                $cloneResults = [];
+                foreach ($results as $result) {
+                    $cloneResult = clone $result;
+                    $tmp = [];
+                    $blah = [];
+                    foreach ($allStaffAttendances as $key => $value) {
+                        if ($result->staff_id == $value['staff_id']) {
+                            $tmp['isNew'] = false;
+                            $tmp['date'] = $value['date']->format('l, d F Y');
+                            $tmp['time_in'] = $value['time_in'];
+                            $tmp['time_out'] = $value['time_out'];
+                            $blah[] = $tmp;
+                        }
+                    }
+                    $cloneResult->InstitutionStaffAttendances = $blah;
+                    $cloneResults[]= $cloneResult;
+                }
+
+                foreach ($cloneResults as $key => $value) {
+                    $test = [];
+                    $institutionStaffAttendances = $value->InstitutionStaffAttendances;
+                    $resultCount = count($institutionStaffAttendances);
+                    Log::write('debug', '$institutionStaffAttendances');
+                    Log::write('debug', $institutionStaffAttendances);
+                    Log::write('debug', '$resultCount');
+                    Log::write('debug', $resultCount);
+                    if ($resultCount > 0) {
+                        foreach ($institutionStaffAttendances as $k => $v) {
+                            $tmp = [];
+                            foreach ($workingDaysArr as $key => $value) {
+                                if ($v == $value->format('l, d F Y')) {
+                                     $tmp[] = $v;
+                                } else {
+                                    $tmp['isNew'] = true;
+                                    $tmp['date'] = $value->format('l, d F Y');
+                                    $tmp['time_in'] = null;
+                                    $tmp['time_out'] =  null;
+                                }
+                                $blah[] = $tmp;
+                            }
+                            Log::write('debug', '$blah');
+                            Log::write('debug', $blah);
+                        }
+                        // Log::write('debug', '$test');
+                        // Log::write('debug', $test);
+                    } else {
+                        foreach ($workingDaysArr as $k => $date) {
+                            $tmp['isNew'] = true;
+                            $tmp['date'] = $date->format('l, d F Y');
+                            $tmp['time_in'] = null;
+                            $tmp['time_out'] =  null;
+                            $test[] = $tmp;
+                        }
+                        // Log::write('debug', '$test');
+                        // Log::write('debug', $test);
+                    }
+
+                }
+                // foreach ($workingDaysArr as $date) {
+                // foreach ($cloneResults as $key => $value) {
+                //     $InstitutionStaffAttendance = $value->InstitutionStaffAttendances;
+                //     foreach ($workingDaysArr as $date) {
+                //         foreach ($InstitutionStaffAttendance as $key => $value) {
+                //             # code...
+                //         }
+                //     }
+                // }
+                    // $workingDay = $date->format('Y-m-d');
+                    // Log::write('debug', '$workingDay');
+                    // Log::write('debug', $workingDay);
+                    // Log::write('debug', 'format date');
+                    // Log::write('debug', $value['date']->format('Y-m-d'));
+                    // if ($value['date']->format('Y-m-d') == $workingDay){
+                    //     Log::write('debug', 'went in but dk why');
+                    //     $tmp['isNew'] = false;
+                    // } else {
+                    //     Log::write('debug', 'no same ley weird');
+                    //     $tmp['isNew'] = true;
+                    //     // $tmp['date'] = $date->format('l, d F Y');
+                    // }
+                // }
+                // foreach ($cloneResults as $key => $value) {
+                //     //array
+                //     $InstitutionStaffAttendance = $value->InstitutionStaffAttendances;
+                //     foreach ($InstitutionStaffAttendance as $key => $value) {
+                //         foreach ($workingDaysArr as $date) {
+                //             $workingDay = $date->format('Y-m-d');
+                //             if ($InstitutionStaffAttendanceDate == $workingDay){
+                //                 $cloneResult['isNew'] = false;
+                //                 $cloneResult['date'] = date("l, d F Y", strtotime($InstitutionStaffAttendanceDate));
+                //                 $finalFormatResultDates[] = $cloneResult;
+                //                 // $found = true;
+                //                 Log::write('debug', 'same');
+                //             } else {
+                //                 $cloneResult['isNew'] = true;
+                //                 $cloneResult['date'] = $date->format('l, d F Y');
+                //                 $cloneResult->InstitutionStaffAttendances['time_in'] = null;
+                //                 $cloneResult->InstitutionStaffAttendances['time_out'] = null;
+                //                 $cloneResult->InstitutionStaffAttendances['date'] = $workingDay;
+                //                 $finalFormatResultDates[] = $cloneResult;
+                //                 Log::write('debug', 'no same no same');
+                //             }
+                //         }
+                //     }
+                // }
+        //         foreach ($results as $result) {
+        //             $dayDate = $result->InstitutionStaffAttendances['date'];
+        //             $cloneResult = clone $result;
+        //             $tmp = [];
+        //             $tmp['StaffLeave'] = $StaffLeaveTable
+        //                 ->find()
+        //                 ->matching('StaffLeaveTypes')
+        //                 ->matching('Statuses')
+        //                 ->where([
+        //                     $StaffLeaveTable->aliasField('staff_id = ') . $cloneResult->staff_id,
+        //                     $StaffLeaveTable->aliasField('institution_id = ') . $cloneResult->institution_id,
+        //                     $StaffLeaveTable->aliasField("date_to >= '") . $weekEndDate. "'",
+        //                     $StaffLeaveTable->aliasField("date_from <= '") . $weekStartDate. "'"
+        //                 ])
+        //                 ->order([$StaffLeaveTable->aliasField('created DESC')])
+        //                 ->limit(2);
+        //             // end
+        //             $url = Router::url([
+        //                 'plugin' => 'Institution',
+        //                 'controller' => 'Institutions',
+        //                 'action' => 'StaffLeave',
+        //                 'index',
+        //                 'user_id' => $cloneResult->staff_id
+        //             ]);
+        //             // end
+
+        //             $cloneResult['StaffLeave'] = $tmp['StaffLeave'];
+        //             $cloneResult['url'] = $url;
+        //             $cloneResult['date'] = date("l, d F Y", strtotime($dayDate));
+        //             // Log::write('debug', $cloneResult);
+
+        //             if ($cloneResult->InstitutionStaffAttendances['date']) {
+        //                 $cloneResult['isNew'] = false;
+        //             }else{
+        //                 $cloneResult['isNew'] = true;
+        //                 // $cloneResult->InstitutionStaffAttendances['time_in'] = null;
+        //                 // $cloneResult->InstitutionStaffAttendances['time_out'] = null;
+        //                 $cloneResult->InstitutionStaffAttendances['date'] = $dayDate;
+        //             }
+        //             // Log::write('debug', $cloneResult);
+        //             $formatResultDates[] = $cloneResult;
+        //         }
+        //         Log::write('debug', '$formatResultDates');
+        //         Log::write('debug', $formatResultDates);
+        //         Log::write('debug', '$workingDaysArr');
+        //         Log::write('debug', $workingDaysArr);
+        //         $resultsCount = count($formatResultDates);
+        //         $finalFormatResultDates = [];
+        //         // foreach ($workingDaysArr as $date) {
+        //         //     $i = 1;
+        //         //     $found = false;
+        //         //     $workingDay = $date->format('Y-m-d');
+        //             // Log::write('debug', $workingDay);
+        //             // $finalFormatResultDates = [];
+        //             foreach ($formatResultDates as $formatResultDate) {
+        //                 foreach ($workingDaysArr as $date) {
+        //                 // $i = 1;
+        //                 // $found = false;
+        //                 $workingDay = $date->format('Y-m-d');
+        //                 $cloneResult = clone $formatResultDate;
+        //                 // Log::write('debug', '$cloneResult');
+        //                 // Log::write('debug', $cloneResult);
+        //                 $InstitutionStaffAttendanceDate = $cloneResult->InstitutionStaffAttendances['date'];
+        //                 Log::write('debug', '$InstitutionStaffAttendanceDate');
+        //                 Log::write('debug', $InstitutionStaffAttendanceDate);
+        //                 Log::write('debug', '$workingDay');
+        //                 Log::write('debug', $workingDay);
+        //                 if ($InstitutionStaffAttendanceDate == $workingDay){
+        //                     $cloneResult['isNew'] = false;
+        //                     $cloneResult['date'] = date("l, d F Y", strtotime($InstitutionStaffAttendanceDate));
+        //                     $finalFormatResultDates[] = $cloneResult;
+        //                     // $found = true;
+        //                     Log::write('debug', 'same');
+        //                 } else {
+        //                     $cloneResult['isNew'] = true;
+        //                     $cloneResult['date'] = $date->format('l, d F Y');
+        //                     $cloneResult->InstitutionStaffAttendances['time_in'] = null;
+        //                     $cloneResult->InstitutionStaffAttendances['time_out'] = null;
+        //                     $cloneResult->InstitutionStaffAttendances['date'] = $workingDay;
+        //                     $finalFormatResultDates[] = $cloneResult;
+        //                     Log::write('debug', 'no same no same');
+        //                 }
+        //             }
+        //         }
+        //         Log::write('debug', '$finalFormatResultDates');
+        //         Log::write('debug', $finalFormatResultDates);
+        //         return $finalFormatResultDates;
+            });
+        Log::write('debug', '$query');
+        Log::write('debug', $query);
         return $query;
     }
 }

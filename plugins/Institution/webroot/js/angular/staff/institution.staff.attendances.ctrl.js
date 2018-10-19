@@ -91,7 +91,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
 
     // error
     vm.error = function (error) {
-        console.log(error);   
+        console.log(error);
     }
 
     vm.setAcademicPeriodList = function(academicPeriods) {
@@ -121,7 +121,8 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
 
     vm.setDayListOptions = function(dayListOptions) {
         vm.dayListOptions = dayListOptions;
-        // console.log(dayListOptions);
+        console.log('dayListOptions');
+        console.log(dayListOptions);
         if (dayListOptions.length > 0) {
             angular.forEach(dayListOptions, function(day) {
                 if (day.selected == true) {
@@ -267,7 +268,12 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
 
     vm.setColumnDef = function() {
         var columnDefs = [];
-        columnDefs = InstitutionStaffAttendancesSvc.getColumnDefs(vm.staffList);
+        if (vm.selectedDay != -1) {
+            columnDefs = InstitutionStaffAttendancesSvc.getColumnDefs(vm.selectedAttendancePeriod);
+        } else {
+            columnDefs = InstitutionStaffAttendancesSvc.getAllDayColumnDefs(vm.dayListOptions, vm.attendancePeriodOptions);
+        }
+
         if (angular.isDefined(vm.gridOptions.api)) {
             vm.gridOptions.api.setColumnDefs(columnDefs);
             vm.gridOptions.api.sizeColumnsToFit();
