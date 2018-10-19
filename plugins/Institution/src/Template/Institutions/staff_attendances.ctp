@@ -200,6 +200,27 @@ $institutionId = $paramsQuery['institution_id'];
                             <h1 class="data-header">{{$ctrl.absenceCount}}</h1>
                         </div>
                     </div>
+                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                        <!-- <i class="kd-address-book icon"></i> -->
+                        <i class="kd-students icon"></i>
+                        <div class="data-field">
+                            <h4><?= __('Total Attendance') ?></h4>    
+                            <h1 class="data-header">{{$ctrl.allAttendances}}</h1>
+                        </div>
+                    </div>
+                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                        <div class="data-field">
+                            <h4><?= __('No. of Present') ?></h4>    
+                            <h1 class="data-header">{{$ctrl.allPresentCount}}</h1>
+                        </div>
+                    </div>
+                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                        <div class="data-field">
+                            <h4><?= __('No. of Staff on Leave') ?></h4>    
+                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
+                        </div>
+                    </div>
+
                 </div>
                 <h4>{{$ctrl.selectedFormattedDayDate}}</h4>
                 <div id="institution-staff-attendances-table" class="table-wrapper">
