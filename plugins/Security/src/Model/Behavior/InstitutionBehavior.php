@@ -40,6 +40,10 @@ class InstitutionBehavior extends Behavior
 	{
 		$userId = $options['userId'];
 
+		if (isset($options["super_admin"]) && $options["super_admin"]) {
+			return $query;
+		}
+
 		$institutionTableClone1 = clone $this->_table;
 		$institutionTableClone1->alias('InstitutionSecurityArea');
 		// find from security areas

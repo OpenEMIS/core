@@ -13,6 +13,10 @@ use Cake\Log\Log;
 class CustomReportBehavior extends Behavior
 {
     private $Table = null;
+    private $system_condition_keywords = [
+        "keyField",
+        "valueField"
+    ];
 
     public function buildQuery($jsonArray, array $params, $byaccess = false, $returnSql = false)
     {
@@ -88,6 +92,11 @@ class CustomReportBehavior extends Behavior
     **/
     public function checkOptionCondition($optionsCondition, array $params)
     {
+        // conditions should not be applied to super_admin
+        if ($this->_table->Auth->user('super_admin')) {
+            return true;
+        }
+
         if (!isset($optionsCondition["model"])) {
             return false;
         }
@@ -319,6 +328,9 @@ class CustomReportBehavior extends Behavior
                         }
                     }
 
+                    // add $options["super_admin"] to finders since they do not have access to auth component
+                    $conditions["super_admin"] = $this->_table->Auth->user('super_admin');
+
                     $query->find($finder, $conditions);
                 } else {
                     Log::write('debug', 'Finder (' . $obj['name'] . ') does not exist.');
@@ -345,7 +357,11 @@ class CustomReportBehavior extends Behavior
                     return false;
                 }
             } else {
-                $conditions[] = $field . " = " . $value;
+                if (in_array($field, $this->system_condition_keywords)) {
+                    $conditions[$field] = $value;
+                } else {
+                    $conditions[] = $field . " = " . $value;
+                }
             }
         }
         return $conditions;
