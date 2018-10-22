@@ -130,7 +130,6 @@ class StaffContactsTable extends AppTable  {
     }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-		// $query->where(['Users.is_staff' => 1]);
         $query
             ->contain([
                 'Users' => [
