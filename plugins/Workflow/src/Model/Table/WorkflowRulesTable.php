@@ -607,7 +607,7 @@ class WorkflowRulesTable extends ControllerActionTable
         return $securityRoleCode;
     }
 
-    private function getWorkflowFirstStep($workflowId, $hydrate = false)
+    public function getWorkflowFirstStep($workflowId, $hydrate = false)
     {
         $WorkflowStepsTable = $this->Workflows->WorkflowSteps;
         $workflowFirstStep = $WorkflowStepsTable
