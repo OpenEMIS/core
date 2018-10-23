@@ -134,7 +134,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 sort: 'asc',
                 filterParams: {
                     filterOptions: ['contains'],
-                },                
+                },
                 filter: "text",
                 menuTabs: menuTabs,
             });
