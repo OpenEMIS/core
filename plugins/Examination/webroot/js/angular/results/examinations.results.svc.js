@@ -115,7 +115,6 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 field: "registration_no",
                 filterParams: {
                     filterOptions: ['contains'],
-                    newRowsAction: 'keep'
                 },
                 filter: "text",
                 menuTabs: menuTabs,
@@ -125,7 +124,6 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 field: "openemis_id",
                 filterParams: {
                     filterOptions: ['contains'],
-                    newRowsAction: 'keep'
                 },
                 filter: "text",
                 menuTabs: menuTabs,
@@ -136,7 +134,6 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 sort: 'asc',
                 filterParams: {
                     filterOptions: ['contains'],
-                    newRowsAction: 'keep'
                 },                
                 filter: "text",
                 menuTabs: menuTabs,
