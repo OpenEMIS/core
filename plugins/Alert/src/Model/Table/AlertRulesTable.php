@@ -48,6 +48,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleStaffLeave');
         $this->addBehavior('Alert.AlertRuleStaffType');
         $this->addBehavior('Alert.AlertRuleScholarshipApplication');
+        $this->addBehavior('Alert.AlertRuleScholarshipDisbursement');
     }
 
     public function validationDefault(Validator $validator)
@@ -84,20 +85,23 @@ class AlertRulesTable extends ControllerActionTable
 
     public function afterSaveCommit(Event $event, Entity $entity) 
     {
-        if (in_array($entity->feature, ['ScholarshipApplication']) && $entity->isNew()) {
-            $AlertRoles = TableRegistry::get('Alert.AlertsRoles');
+        if ($entity->isNew()) {
+            $feature = $entity->feature;
 
-            $alertRoleData = [
-                'alert_rule_id' => $entity->id,
-                'security_role_id' => self::ASSIGN_TO_ASSIGNEE
-            ];
+            if (in_array($feature, ['ScholarshipApplication'])) {
+                $AlertRoles = TableRegistry::get('Alert.AlertsRoles');
 
-            $alertRoleEntity = $AlertRoles->newEntity($alertRoleData);
-            
-            if ($AlertRoles->save($alertRoleEntity)) {
-            } else {
-                Log::write('error', 'Error saving roles to assigee.');
-                Log::write('error', $alertRoleEntity);
+                $alertRoleData = [
+                    'alert_rule_id' => $entity->id,
+                    'security_role_id' => self::ASSIGN_TO_ASSIGNEE
+                ];
+
+                $alertRoleEntity = $AlertRoles->newEntity($alertRoleData);
+                if ($AlertRoles->save($alertRoleEntity)) {
+                } else {
+                    Log::write('error', 'Error saving roles to assigee.');
+                    Log::write('error', $alertRoleEntity);
+                }
             }
         }
     }
@@ -277,20 +281,25 @@ class AlertRulesTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
-            if ($entity->has('feature') && in_array($entity->feature, ['ScholarshipApplication'])) {
-                $attr['type'] = 'disabled';
-                $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
-                $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
-            } else {
-                $roleOptions = $this->SecurityRoles
-                    ->find('list')
-                    ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->primaryKey()), $this->SecurityRoles->aliasField('name')])
-                    ->find('visible')
-                    ->find('order')
-                    ->toArray();
 
-                $attr['type'] = 'chosenSelect';
-                $attr['options'] = $roleOptions;
+            if ($entity->has('feature')) {
+                $feature = $entity->feature;
+
+                if (in_array($feature, ['ScholarshipApplication'])) {
+                    $attr['type'] = 'disabled';
+                    $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+                    $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+                } else {
+                    $roleOptions = $this->SecurityRoles
+                        ->find('list')
+                        ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->primaryKey()), $this->SecurityRoles->aliasField('name')])
+                        ->find('visible')
+                        ->find('order')
+                        ->toArray();
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['options'] = $roleOptions;
+                }
             }
         }
 
@@ -331,15 +340,15 @@ class AlertRulesTable extends ControllerActionTable
         }
 
         $role = [];
-        if ($data->has('security_roles')) {
-            foreach ($data->security_roles as $key => $value) {
-                $role[] = $value->name;
-            }
-        }
-
         $feature = $this->featureList[$entity->id];
         if (in_array($feature, ['ScholarshipApplication'])) {
-            $role = [__(self::ASSIGNEE_ROLE)];
+            $role[] = __(self::ASSIGNEE_ROLE);
+        } else {
+            if ($data->has('security_roles')) {
+                foreach ($data->security_roles as $key => $value) {
+                    $role[] = $value->name;
+                }
+            }
         }
 
         return (!empty($role))? implode(', ', $role): ' ';
