@@ -36,8 +36,13 @@ class DirectoryCommentsController extends BaseController
     public function setupTabElements($options)
     {
         $page = $this->Page;
+        
         $session = $this->request->session();
         $guardianId = $session->read('Guardian.Guardians.id');
+        $studentId = $session->read('Student.Students.id');
+        $isStudent = $session->read('Directory.Directories.is_student');
+        $isGuardian = $session->read('Directory.Directories.is_guardian');
+
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
         $nationalityId = $this->Users->get($userId)->nationality_id;
@@ -89,7 +94,7 @@ class DirectoryCommentsController extends BaseController
             }
             $tabElements[$action]['url'] = $url;
         }
-        if (!empty($guardianId)) {
+        if (!empty($guardianId) && !empty($isStudent)) {
             $StudentGuardianId = $this->request->session()->read('Student.Guardians.primaryKey')['id'];
             $url = ['plugin' => 'Directory', 'controller' => 'Directories'];
             $guardianstabElements = [
@@ -98,6 +103,17 @@ class DirectoryCommentsController extends BaseController
              ];
             $guardianstabElements['Guardians']['url'] = array_merge($url, ['action' => 'StudentGuardians', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
             $guardianstabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $guardianId, 'StudentGuardians.id' => $StudentGuardianId])]);
+            $tabElements = array_merge($guardianstabElements, $tabElements);
+            unset($tabElements['Directories']);
+        } elseif (!empty($studentId) && !empty($isGuardian)) {
+            $StudentGuardianId = $this->request->session()->read('Student.Guardians.primaryKey')['id'];
+            $url = ['plugin' => 'Directory', 'controller' => 'Directories'];
+            $guardianstabElements = [
+                'Students' => ['text' => __('Relation')],
+                'StudentUser' => ['text' => __('Overview')]
+             ];
+            $guardianstabElements['Students']['url'] = array_merge($url, ['action' => 'GuardianStudents', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
+            $guardianstabElements['StudentUser']['url'] = array_merge($url, ['action' => 'GuardianStudentUser', 'view', $this->paramsEncode(['id' => $studentId, 'StudentGuardians.id' => $StudentGuardianId])]);
             $tabElements = array_merge($guardianstabElements, $tabElements);
             unset($tabElements['Directories']);
         }

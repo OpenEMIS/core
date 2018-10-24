@@ -111,6 +111,8 @@ class ProfilesController extends AppController
     public function StudentOutcomes()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']); }
     public function ScholarshipApplications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipApplications']); }
     public function Demographic()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']); }
+    public function ProfileStudents()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Students']); }
+    public function ProfileStudentUser()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.StudentUser']); }
 
     // health
     public function Healths()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
