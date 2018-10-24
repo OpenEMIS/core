@@ -525,7 +525,7 @@ class DirectoriesController extends AppController
                         return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
                     }
                 }
-            }           
+            }
         } else {
             if ($model->alias() == 'ImportUsers') {
                 $this->Navigation->addCrumb($model->getHeader($model->alias()));
@@ -646,7 +646,7 @@ class DirectoriesController extends AppController
                     'controller' => 'DirectoryComments',
                     'action' => 'index'
                 ];
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);   
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
             } else {
                 $actionURL = $key;
                 if ($key == 'UserNationalities') {
