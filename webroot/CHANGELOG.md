@@ -1,3 +1,11 @@
+### [3.37.0] - 2018-10-19
+- Developed Demographics feature in Users > General > Demographics tab
+- Developed Scholarship Award Disbursement Alert in Administration > Communications > Alert Rules
+- Implmented ability to bulk update Student Pending Admission status in Institutions > Students > Pending Admission filter
+- Implemented ability to access Guardian's information from Institutions > Students > Guardian
+- Implemented comments field for Reassign action in all workflow-enabled feature
+- Implemented Inclusive Education Visits feature in Institutions > Students > Visits
+
 ### [3.36.0] - 2018-09-28
 - Developed Inclusive Education (Special Needs) feature in Profiles/Institutions/Directory > Special Needs
 - Implemented a delete button to delete all Survey data in Institution > Survey

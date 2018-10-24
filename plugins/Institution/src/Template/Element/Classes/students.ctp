@@ -147,6 +147,7 @@
 						<th><?= $this->Label->get('Users.gender_id'); ?></th>
 						<th><?= $this->Label->get($attr['model'] . '.education_grade'); ?></th>
 						<th><?= __('Student Status') ?></th>
+						<th><?= __('Special Needs') ?></th>
 						<?php if ($action=='edit') { ?>
 							<th class="cell-delete"></th>
 						<?php } ?>
@@ -205,6 +206,15 @@
 						<td><?= __($obj->student_gender) ?></td>
 						<td><?= (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
 						<td><?= __($obj->student_status_name) ?></td>
+						<td>
+							<?php
+								if ($obj->user->has_special_needs) {
+									echo "<i class='fa fa-check'></i>";
+								} else {
+									echo "<i class='fa fa-times'></i>";
+								}
+							?> 
+						</td>
 					</tr>
 
 				<?php endif;?>

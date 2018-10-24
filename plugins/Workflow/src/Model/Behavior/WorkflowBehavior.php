@@ -1260,6 +1260,11 @@ class WorkflowBehavior extends Behavior
                     'type' => 'select',
                     'class'=> 'workflow-reassign-new-assignee',
                     'assignee-url' => $assigneeUrl
+                ],
+                'comment' => [
+                    'label' => __('Comment'),
+                    'type' => 'textarea',
+                    'class'=> 'workflow-reassign-comment'
                 ]
             ]);
 
@@ -1921,8 +1926,11 @@ class WorkflowBehavior extends Behavior
                     $model->aliasField('id') => $requestData['id']
                 ])
                 ->first();
-                
-            $this->WorkflowTransitions->trackChanges($workflowModelEntity, $entity, $assigneeId);
+            $requestDataComment = null;
+            if (isset($requestData['comment'])) {
+                $requestDataComment = $requestData['comment'];
+            }
+            $this->WorkflowTransitions->trackChanges($workflowModelEntity, $entity, $assigneeId, $requestDataComment);
 
             $entity->assignee_id = $assigneeId;
             $model->save($entity);
