@@ -158,6 +158,14 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']);
     }
+    public function GuardianStudents()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Guardian.Students']);
+    }
+    public function GuardianStudentUser()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Guardian.StudentUser']);
+    }
     public function StudentReportCards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']);
@@ -376,6 +384,8 @@ class DirectoriesController extends AppController
         if (($action == 'StudentGuardians' || $action == 'Directories') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'view' || $this->ControllerAction->paramsPass()[0] == 'edit')) {
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
+            $session->delete('Student.Students.id');
+            $session->delete('Student.Students.name');
         }
 
         $this->set('contentHeader', $header);
@@ -403,10 +413,18 @@ class DirectoriesController extends AppController
 
             $alias = $model->alias;
             $guardianId = $session->read('Guardian.Guardians.id');
-            if (!empty($guardianId) && $alias !== 'StudentGuardianUser') {
+            $studentId = $session->read('Student.Students.id');
+            $isStudent = $session->read('Directory.Directories.is_student');
+            $isGuardian = $session->read('Directory.Directories.is_guardian');
+
+            if (!empty($guardianId) && $alias !== 'StudentGuardianUser' && !empty($isStudent)) {
                 $this->Navigation->addCrumb($model->getHeader('Guardian'. $alias));
                 $header = $session->read('Guardian.Guardians.name');
                 $header = $header . ' - ' . $model->getHeader($alias);
+            } elseif (!empty($studentId) && $alias !== 'GuardianStudents' && $alias !== 'GuardianStudentUser' && !empty($isGuardian)) {
+                $this->Navigation->addCrumb($model->getHeader('Student'. $alias));
+                $header = $session->read('Student.Students.name');
+                $header = $header . ' - ' . $model->getHeader($alias);                
             } else {
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = $header . ' - ' . $model->getHeader($alias);
@@ -416,9 +434,16 @@ class DirectoriesController extends AppController
             $this->set('contentHeader', $header);
 
             $guardianId = $session->read('Guardian.Guardians.id');
-            if (!empty($guardianId)) {
+            $studentId = $session->read('Student.Students.id');            
+            $isGuardian = $session->read('Directory.Directories.is_guardian');
+            $isStudent = $session->read('Directory.Directories.is_student');
+
+            if (!empty($guardianId) && !empty($isStudent)) {
                 $userId = $guardianId;
+            } elseif (!empty($studentId) && !empty($isGuardian)) {
+                $userId = $studentId;
             }
+
             if ($model->hasField('security_user_id')) {
                 $model->fields['security_user_id']['type'] = 'hidden';
                 $model->fields['security_user_id']['value'] = $userId;
@@ -458,6 +483,28 @@ class DirectoriesController extends AppController
                         return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
                     }
                 }
+            } else if ($model->hasField('guardian_id') && !empty($isGuardian)) {
+
+                $model->fields['guardian_id']['type'] = 'hidden';
+                $model->fields['guardian_id']['value'] = $userId;
+
+                if (count($this->request->pass) > 1) {
+                    $modelId = $this->request->pass[1]; // id of the sub model
+
+                    $userId = $session->read('Directory.Directories.id');
+
+                    $ids = $this->ControllerAction->paramsDecode($modelId);
+                    $idKey = $this->ControllerAction->getIdKeys($model, $ids);
+                    $idKey[$model->aliasField('guardian_id')] = $userId;
+                    $exists = $model->exists($idKey);
+                    /**
+                     * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+                     */
+                    if (!$exists) {
+                        $this->Alert->warning('general.notExists');
+                        return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
+                    }
+                }
             } else if ($model->hasField('student_id')) {
                 $model->fields['student_id']['type'] = 'hidden';
                 $model->fields['student_id']['value'] = $userId;
@@ -478,7 +525,7 @@ class DirectoriesController extends AppController
                         return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
                     }
                 }
-            }
+            }           
         } else {
             if ($model->alias() == 'ImportUsers') {
                 $this->Navigation->addCrumb($model->getHeader($model->alias()));
@@ -499,15 +546,30 @@ class DirectoriesController extends AppController
             if ($session->check('Directory.Directories.id')) {
                 $userId = $session->read('Directory.Directories.id');
                 $guardianId = $session->read('Guardian.Guardians.id');
-                if (!empty($guardianId)) {
-                    $userId = $guardianId;
-                }
-                if ($model->hasField('security_user_id')) {
-                    $query->where([$model->aliasField('security_user_id') => $userId]);
-                } else if ($model->hasField('student_id')) {
-                    $query->where([$model->aliasField('student_id') => $userId]);
-                } else if ($model->hasField('staff_id')) {
-                    $query->where([$model->aliasField('staff_id') => $userId]);
+                $studentId = $session->read('Student.Students.id');
+                $isGuardian = $session->read('Directory.Directories.is_guardian');
+
+                if (!empty($isGuardian)) {
+                    if ($model->hasField('security_user_id')) {
+                        if (!empty($studentId)) {
+                             $query->where([$model->aliasField('security_user_id') => $studentId]);
+                        }else {
+                            $query->where([$model->aliasField('security_user_id') => $userId]);
+                        }
+                    } else if ($model->hasField('guardian_id')) {
+                        $query->where([$model->aliasField('guardian_id') => $userId]);
+                    }
+                } else {
+                    if (!empty($guardianId)) {
+                        $userId = $guardianId;
+                    }
+                    if ($model->hasField('security_user_id')) {
+                        $query->where([$model->aliasField('security_user_id') => $userId]);
+                    } else if ($model->hasField('student_id')) {
+                        $query->where([$model->aliasField('student_id') => $userId]);
+                    } else if ($model->hasField('staff_id')) {
+                        $query->where([$model->aliasField('staff_id') => $userId]);
+                    }
                 }
             } else {
                 $this->Alert->warning('general.noData');
@@ -551,6 +613,10 @@ class DirectoriesController extends AppController
             $session = $this->request->session();
             $session->write('Guardian.Guardians.name', $options['entity']->user->name);
             $session->write('Guardian.Guardians.id', $options['entity']->user->id);
+        } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students' && array_key_exists('entity', $options)) {
+            $session = $this->request->session();
+            $session->write('Student.Students.name', $options['entity']->user->name);
+            $session->write('Student.Students.id', $options['entity']->user->id);            
         }
 
         $tabElements = [
@@ -580,7 +646,7 @@ class DirectoriesController extends AppController
                     'controller' => 'DirectoryComments',
                     'action' => 'index'
                 ];
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);   
             } else {
                 $actionURL = $key;
                 if ($key == 'UserNationalities') {
@@ -597,7 +663,6 @@ class DirectoriesController extends AppController
         }
 
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians') {
-
             $session = $this->request->session();
             $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
             $relationTabElements = [
@@ -607,6 +672,18 @@ class DirectoriesController extends AppController
             $url = ['plugin' => 'Directory', 'controller' => 'Directories'];
             $relationTabElements['Guardians']['url'] = array_merge($url, ['action' => 'StudentGuardians', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
             $relationTabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])]);
+            $tabElements = array_merge($relationTabElements, $tabElements);
+            unset($tabElements[$this->name]);
+        } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students') {
+            $session = $this->request->session();
+            $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
+            $relationTabElements = [
+                'Students' => ['text' => __('Relation')],
+                'StudentUser' => ['text' => __('Overview')]
+            ];
+            $url = ['plugin' => 'Directory', 'controller' => 'Directories'];
+            $relationTabElements['Students']['url'] = array_merge($url, ['action' => 'GuardianStudents', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
+            $relationTabElements['StudentUser']['url'] = array_merge($url, ['action' => 'GuardianStudentUser', 'view', $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])]);
             $tabElements = array_merge($relationTabElements, $tabElements);
             unset($tabElements[$this->name]);
         }
@@ -627,6 +704,20 @@ class DirectoriesController extends AppController
         ];
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+
+    public function getGuardianStudentTabElements($options = [])
+    {
+        // $type = (array_key_exists('type', $options))? $options['type']: null;
+        $plugin = $this->plugin;
+        $name = $this->name;
+        $tabElements = [
+            'Students' => [
+                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'GuardianStudents'],
+                'text' => __('Students')
+            ],
+        ];
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }    
 
     public function getAcademicTabElements($options = [])
     {

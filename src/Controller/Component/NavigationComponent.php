@@ -294,6 +294,7 @@ class NavigationComponent extends Component
             $session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
+            $isGuardian = $session->read('Directory.Directories.is_guardian');
 
             if ($isStaff) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
@@ -304,12 +305,18 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
+
+            if ($isGuardian) {
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
+                $session->write('Directory.Directories.reload', true);
+            }
         } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
             $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
 
             $session = $this->request->session();
             $isStudent = $session->read('Auth.User.is_student');
             $isStaff = $session->read('Auth.User.is_staff');
+            $isGuardian = $session->read('Auth.User.is_guardian');
 
             if ($isStaff) {
                 $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileStaffNavigation());
@@ -320,6 +327,11 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileStudentNavigation());
                 $session->write('Profile.Profiles.reload', true);
             }
+
+            if ($isGuardian) {
+                $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileGuardianNavigation());
+                $session->write('Profile.Profiles.reload', true);
+            }            
         }
 
         $navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
@@ -1092,7 +1104,10 @@ class NavigationComponent extends Component
 
         $session = $this->request->session();
         $guardianID = $session->read('Guardian.Guardians.id');
-        if (!empty($guardianID)) {
+        $isStudent = $session->read('Directory.Directories.is_student');
+        $studentId = $session->read('Student.Students.id');
+        $isGuardian = $session->read('Directory.Directories.is_guardian');
+        if ((!empty($guardianID) && !empty($isStudent)) || (!empty($studentId) && !empty($isGuardian))) {
             $navigation['Directories.Directories.view']['selected'] = ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull','Directories.History'];
         }
 
@@ -1159,6 +1174,24 @@ class NavigationComponent extends Component
         ];
         return $navigation;
     }
+
+    public function getProfileGuardianNavigation()
+    {
+        $navigation = [
+            'Profiles.Guardian' => [
+                'title' => 'Guardian',
+                'parent' => 'Profiles.Profiles',
+                'link' => false,
+            ],
+                'Profiles.ProfileStudents.index' => [
+                    'title' => 'Students',
+                    'parent' => 'Profiles.Guardian',
+                    'params' => ['plugin' => 'Profile'],
+                    'selected' => ['Profiles.ProfileStudents', 'Profiles.ProfileStudentUser']
+                ],
+        ];
+        return $navigation;
+    }    
 
     public function getDirectoryStaffNavigation()
     {
@@ -1227,11 +1260,38 @@ class NavigationComponent extends Component
 
         $session = $this->request->session();
         $guardianID = $session->read('Guardian.Guardians.id');
-        if (!empty($guardianID)) {
+        $isStudent = $session->read('Directory.Directories.is_student');
+        if (!empty($guardianID) && !empty($isStudent)) {
             $navigation['Directories.StudentGuardians']['selected'] = ['Directories.StudentGuardians', 'Directories.StudentGuardianUser', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments', 'Directories.Contacts', 'Directories.Demographic'];
         }
         return $navigation;
     }
+
+    public function getDirectoryGuardianNavigation()
+    {
+        $navigation = [
+            'Directories.Student' => [
+                'title' => 'Guardian',
+                'parent' => 'Directories.Directories.index',
+                'link' => false,
+            ],
+                'Directories.GuardianStudents' => [
+                    'title' => 'Students',
+                    'parent' => 'Directories.Student',
+                    'params' => ['plugin' => 'Directory'],
+                    'selected' => ['Directories.GuardianStudents']
+                ],
+        ];
+        $session = $this->request->session();
+        $studentId = $session->read('Student.Students.id');
+        $isGuardian = $session->read('Directory.Directories.is_guardian');
+        if (!empty($studentId) && !empty($isGuardian)) {
+            $navigation['Directories.GuardianStudents']['selected'] = ['Directories.GuardianStudents', 'Directories.GuardianStudentUser', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments', 'Directories.Contacts', 'Directories.Demographic'];
+        }
+
+        return $navigation;
+    }
+
 
     public function getReportNavigation()
     {
