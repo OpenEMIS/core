@@ -33,16 +33,20 @@ class SetupTabBehavior extends Behavior
             }
             $session = $this->_table->request->session();
             $guardianId = $session->read('Guardian.Guardians.id');
-            if (!empty($guardianId)) {
-                if ($this->_table->controller->name == 'Directories') {
-                    $options['userRole'] = 'Guardians';
-                    $options['id'] = $guardianId;
-                    $tabElements = $this->_table->controller->getUserTabElements($options);
-                } elseif ($this->_table->controller->name == 'Guardians') {
-                    $tabElements = $this->_table->controller->getGuardianTabElements();
+            $studentId = $session->read('Student.Students.id');
+            $isStudent = $session->read('Directory.Directories.is_student');
+            $isGuardian = $session->read('Directory.Directories.is_guardian');
+
+            if ($this->_table->controller->name == 'Directories') {
+                if (!empty($isGuardian) && !empty($studentId)) {
+                    $tabElements = $this->_table->controller->getUserTabElements(['id' => $studentId, 'userRole' => 'Students']);
+                } elseif (!empty($isStudent) && !empty($guardianId)) {
+                    $tabElements = $this->_table->controller->getUserTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
                 } else {
                     $tabElements = $this->_table->controller->getUserTabElements();
                 }
+            } elseif ($this->_table->controller->name == 'Guardians') {
+                $tabElements = $this->_table->controller->getGuardianTabElements();
             } else {
                 $tabElements = $this->_table->controller->getUserTabElements($options);
             }
