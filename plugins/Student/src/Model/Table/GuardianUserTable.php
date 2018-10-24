@@ -161,28 +161,13 @@ class GuardianUserTable extends UserTable {
 
     private function setupTabElements($entity)
     {
-        $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
-
-        $tabElements = [
-            'Guardians' => ['text' => __('Relation')],
-            'GuardianUser' => ['text' => __('General')]
-        ];
-        $action = 'Guardians';
-        $actionUser = $this->alias();
+        $session = $this->request->session();
+        $guardianId = $session->read('Guardian.Guardians.id');
         if ($this->controller->name == 'Directories') {
-            $action = 'StudentGuardians';
-            $actionUser = 'StudentGuardianUser';
+            $tabElements = $this->controller->getUserTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
+        } elseif ($this->controller->name == 'Students') {
+            $tabElements = $this->controller->getGuardianTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
         }
-
-        $encodedParam = $this->request->params['pass'][1];
-        $ids = $this->paramsDecode($encodedParam);
-
-        $guardianId = $ids['id'];
-        $studentGuardiansId = $ids['StudentGuardians.id'];
-
-        $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $studentGuardiansId])]);
-        $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->id, 'StudentGuardians.id' => $studentGuardiansId])]);
-        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
     }

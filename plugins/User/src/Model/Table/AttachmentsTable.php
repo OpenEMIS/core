@@ -20,6 +20,7 @@ class AttachmentsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
+        $this->addBehavior('User.SetupTab');
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
@@ -109,31 +110,6 @@ class AttachmentsTable extends ControllerActionTable
         }
 
         $query->contain(['SecurityRoles']);
-    }
-
-    private function setupTabElements()
-    {
-        $options = [
-            'userRole' => '',
-        ];
-
-        switch ($this->controller->name) {
-            case 'Students':
-                $options['userRole'] = 'Students';
-                break;
-            case 'Staff':
-                $options['userRole'] = 'Staff';
-                break;
-        }
-
-        $tabElements = $this->controller->getUserTabElements($options);
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
-    }
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        $this->setupTabElements();
     }
 
 /******************************************************************************************************************
