@@ -115,7 +115,7 @@ class UpdateIndexesShell extends Shell
                 ];
                 break;
 
-            case 'SpecialNeeds': // no institution_id, no academic_period_id
+            case 'SpecialNeedsAssessments': // no institution_id, no academic_period_id
                 $condition = [$CriteriaModel->aliasField('security_user_id') . ' IN ' => $institutionStudentsList];
                 break;
 
@@ -136,7 +136,7 @@ class UpdateIndexesShell extends Shell
 
             // for cli-debug.log to see still updating
             $studentId = $criteriaModelEntity->student_id;
-            if ($key == 'SpecialNeeds') {
+            if ($key == 'SpecialNeedsAssessments') {
                 $studentId = $criteriaModelEntity->security_user_id;
                 $criteriaModelEntity['institution_id'] = $institutionId;
             }

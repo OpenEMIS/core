@@ -139,6 +139,10 @@ class StaffController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']);
     }
+    public function Demographic()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
+    }
     public function Awards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']);
