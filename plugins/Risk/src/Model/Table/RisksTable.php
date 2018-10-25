@@ -82,8 +82,8 @@ class RisksTable extends ControllerActionTable
                 'threshold' => ['type' => 'number']
             ]
         ],
-        'User.SpecialNeeds' => [
-            'SpecialNeeds' => [
+        'SpecialNeeds.SpecialNeedsAssessments' => [
+            'SpecialNeedsAssessments' => [
                 'name' => 'Special Needs',
                 'operator' => 2,
                 'threshold' => ['type' => 'number']
@@ -155,7 +155,11 @@ class RisksTable extends ControllerActionTable
 
         $criteriaOptions = [];
         foreach ($criteriaData as $key => $obj) {
-            $criteriaOptions[$key] = __(Inflector::humanize(Inflector::underscore($key)));
+            if ($key == 'SpecialNeedsAssessments') {
+                $criteriaOptions[$key] = $obj['name'];
+            } else {
+                $criteriaOptions[$key] = __(Inflector::humanize(Inflector::underscore($key)));
+            }
         }
         ksort($criteriaOptions); // sorting the option by Key
 

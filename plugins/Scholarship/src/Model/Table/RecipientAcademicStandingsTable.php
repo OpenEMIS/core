@@ -2,6 +2,7 @@
 namespace Scholarship\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
 
 class RecipientAcademicStandingsTable extends AppTable
 {
@@ -15,5 +16,19 @@ class RecipientAcademicStandingsTable extends AppTable
         $this->belongsTo('Semesters', ['className' => 'Scholarship.Semesters', 'foreignKey' => 'scholarship_semester_id']);
         $this->belongsTo('Recipients', ['className' => 'User.Users', 'foreignKey' => 'recipient_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+           ->add('gpa', [
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9],
+                    'message' => 'GPA should be between 0 to 9'
+                ]
+            ])
+            ;
     }
 }

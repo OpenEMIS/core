@@ -21,18 +21,21 @@ class InstitutionChoicesController extends PageController
         $this->loadModel('Area.AreaAdministratives');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Scholarship.ApplicationInstitutionChoices');
+        $this->loadModel('Scholarship.InstitutionChoiceTypes');
 
         $this->loadComponent('Scholarship.ScholarshipTabs');
 
         $this->Page->loadElementsFromTable($this->ApplicationInstitutionChoices);
 
         $this->locationTypeOptions = $this->getSelectOptions('InstitutionChoices.location_type');
+        $this->institutionChoiceOptions = $this->InstitutionChoiceTypes->getList()->toArray();
     }
 
     public function implementedEvents()
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderLocationType'] = 'onRenderLocationType';
+        $event['Controller.Page.onRenderScholarshipInstitutionChoiceTypeId'] = 'onRenderScholarshipInstitutionChoiceTypeId';
         return $event;
     }
 
@@ -45,7 +48,7 @@ class InstitutionChoicesController extends PageController
         $page->get('scholarship_institution_choice_status_id')
             ->setLabel('Status');
 
-        $page->get('institution_name')
+        $page->get('scholarship_institution_choice_type_id')
             ->setLabel('Institution');
 
         $page->get('education_field_of_study_id')
@@ -54,6 +57,11 @@ class InstitutionChoicesController extends PageController
         $page->get('is_selected')
             ->setLabel('Selection');
 
+        $page->get('start_date')
+            ->setLabel('Commencement Date');
+
+        $page->get('end_date')
+            ->setLabel('Completion Date');
         $page->exclude(['order']);
     }
 
@@ -68,7 +76,7 @@ class InstitutionChoicesController extends PageController
         
         $page->exclude(['estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id']);
         
-        $this->reorderFields();        
+        $this->reorderFields();
     }
 
     public function view($id)
@@ -76,6 +84,8 @@ class InstitutionChoicesController extends PageController
         parent::view($id);
         
         $page = $this->Page;
+        $page->get('scholarship_institution_choice_type_id')
+                ->setLabel('Institution');;
         $this->reorderFields();
     }
 
@@ -105,6 +115,11 @@ class InstitutionChoicesController extends PageController
         $page->get('country_id')
             ->setControlType('select')
             ->setParams('Countries');
+        
+        $page->get('scholarship_institution_choice_type_id')
+                ->setControlType('select')
+                ->setOptions($this->institutionChoiceOptions)
+                ->setLabel('Institution');
 
         $page->get('qualification_level_id')
             ->setControlType('select');
@@ -212,12 +227,26 @@ class InstitutionChoicesController extends PageController
         }
     }
 
+    public function onRenderScholarshipInstitutionChoiceTypeId(Event $event, Entity $entity, PageElement $element)
+    {
+        $page = $this->Page;
+
+        if ($page->is(['index', 'view', 'delete'])) {
+            $value = $this->institutionChoiceOptions[$entity->scholarship_institution_choice_type_id];
+
+            return $value;
+        }
+    }
+
     private function reorderFields()
     {
         $page = $this->Page;
 
+        $page->get('education_field_of_study_id')
+             ->setLabel('Area of Study');
+
         $page->move('country_id')->after('location_type');
-        $page->move('scholarship_institution_choice_status_id')->after('institution_name');
+        $page->move('scholarship_institution_choice_status_id')->after('scholarship_institution_choice_type_id');
         $page->move('education_field_of_study_id')->after('estimated_cost');
         $page->move('qualification_level_id')->after('course_name');
     }

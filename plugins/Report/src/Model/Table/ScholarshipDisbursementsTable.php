@@ -118,16 +118,34 @@ class ScholarshipDisbursementsTable extends AppTable  {
         }
 
         if (!empty($recipientList)) {
+            $paymentStructuresQuery = $this->RecipientDisbursements->find();
+            $paymentStructuresResult = $paymentStructuresQuery
+                ->select([
+                    $this->RecipientDisbursements->aliasField('recipient_id'),
+                    $this->RecipientDisbursements->aliasField('scholarship_id'),
+                    'total_disbursement' => $paymentStructuresQuery->func()->sum('amount'),
+                    'RecipientPaymentStructures.name'
+                ])
+
+                ->contain([
+                    'RecipientPaymentStructures'
+                ])
+
+                ->group([
+                    $this->RecipientDisbursements->aliasField('scholarship_recipient_payment_structure_id'),             
+                ])
+                ->all();
+
             $disbursementQuery = $this->RecipientDisbursements->find();
             $disbursementResult = $disbursementQuery
                 ->select([
                     $this->RecipientDisbursements->aliasField('recipient_id'),
                     $this->RecipientDisbursements->aliasField('scholarship_id'),
-                    'total_disbursement' => $disbursementQuery->func()->sum('amount')  
+                    'total_disbursement' => $disbursementQuery->func()->sum('amount')
                 ])
                 ->group([
                     $this->RecipientDisbursements->aliasField('recipient_id'),
-                    $this->RecipientDisbursements->aliasField('scholarship_id')                
+                    $this->RecipientDisbursements->aliasField('scholarship_id')
                 ])
                 ->all();
 
@@ -232,8 +250,9 @@ class ScholarshipDisbursementsTable extends AppTable  {
                 'approved_amount' => $this->aliasField('approved_amount'),
             ])
             ->where($conditions)
-            ->formatResults(function (ResultSetInterface $results) use ($recipientList) {
-                return $results->map(function ($row) use ($recipientList) {
+            ->formatResults(function (ResultSetInterface $results) use ($recipientList, $paymentStructuresResult) {
+                $finalResultSet = [];
+                $resultSet =  $results->map(function ($row) use ($recipientList, $paymentStructuresResult) {
                     $recipientId = $row->recipient_id;
                     $scholarshipId = $row->scholarship_id;
 
@@ -246,6 +265,30 @@ class ScholarshipDisbursementsTable extends AppTable  {
 
                     return $row;
                 });
+
+                $arrayPaymentStructureResult = $paymentStructuresResult->toArray();
+                foreach ($resultSet as $singleSet) {
+                    $hasPaymentStructure = false;
+
+                    foreach ($arrayPaymentStructureResult as $paymentStrucureRow) {
+                        if ($paymentStrucureRow->recipient_id == $singleSet->recipient_id
+                            && $paymentStrucureRow->scholarship_id == $singleSet->scholarship_id 
+                            && !isset($paymentStrucureRow->hasUsed)) {
+                            $recipientPaymentStructure = $paymentStrucureRow->recipient_payment_structure;
+                            $singleSet->payment_structure = $recipientPaymentStructure->name;
+                            $singleSet->disbursement_amount = $paymentStrucureRow->total_disbursement;
+
+                            $finalResultSet[] = clone $singleSet;
+                            $paymentStrucureRow->hasUsed = true;
+                            $hasPaymentStructure = true;
+                        }
+                    }
+
+                    if (!$hasPaymentStructure) {
+                        $finalResultSet[] = $singleSet;
+                    }
+                }
+                return $finalResultSet;
            });
     }
     
@@ -318,6 +361,18 @@ class ScholarshipDisbursementsTable extends AppTable  {
             'type' => 'decimal',
             'label' =>  __('Outstanding Amount')
         ];
+        $newArray[] = [
+            'key' => 'payment_structure',
+            'field' => 'payment_structure',
+            'type' => 'string',
+            'label' =>  __('Payment Structure')
+        ];
+        $newArray[] = [
+            'key' => 'disbursementAmount',
+            'field' => 'disbursement_amount',
+            'type' => 'string',
+            'label' =>  __('Disbursement Amount')
+        ];        
    
         $newFields = array_merge($fields->getArrayCopy(), $newArray);
         $fields->exchangeArray($newArray);

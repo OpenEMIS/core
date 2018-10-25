@@ -381,6 +381,10 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAdmission']);
     }
+    public function BulkStudentAdmission()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.BulkStudentAdmission']);
+    }
     public function StudentTransferIn()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferIn']);
@@ -938,6 +942,10 @@ class InstitutionsController extends AppController
         $action = $this->request->params['action'];
         $header = __('Institutions');
 
+        if (($action == 'StudentUser' || $action == 'StaffUser') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'view' )) {
+            $session->delete('Guardian.Guardians.id');
+            $session->delete('Guardian.Guardians.name');
+        }
         // this is to cater for back links
         $query = $this->request->query;
 
@@ -1486,6 +1494,7 @@ class InstitutionsController extends AppController
         ];
 
         $studentTabElements = [
+            'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' => [
                 'url' => [
@@ -1499,7 +1508,6 @@ class InstitutionsController extends AppController
             ],
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
-            'SpecialNeeds' => ['text' => __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'Guardians' => ['text' => __('Guardians')],
