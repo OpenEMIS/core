@@ -71,7 +71,6 @@ class InstitutionClassBehavior extends Behavior
                                     'OR' => [ // cater for both homeroom teacher and secondary teacher
                                         "InstitutionClasses.staff_id" => $userId,
                                         "InstitutionClassesSecondaryStaff.secondary_staff_id" => $userId
-                                        // "InstitutionClasses.secondary_staff_id" => $userId
                                     ]
                                 ]
                             ]
@@ -156,12 +155,8 @@ class InstitutionClassBehavior extends Behavior
                         'OR' => [
                             [$this->_table->aliasField('staff_id') => $userId],
                             ['InstitutionClassesSecondaryStaff.secondary_staff_id' => $userId]
-                            // [$this->_table->aliasField('secondary_staff_id') => $userId]
                         ]
                     ]);
-
-                    // pr($query);
-                    // die;
                 } else {
                     $query->where(['1 = 0']);
                 }
