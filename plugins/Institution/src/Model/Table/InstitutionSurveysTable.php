@@ -58,7 +58,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             // 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
             'recordKey' => 'institution_survey_id',
             'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true,]
         ]);
         $this->addBehavior('Excel', ['pages' => ['view']]);
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
@@ -71,7 +71,6 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedNameSearch');
 
         $this->toggle('add', false);
-        $this->toggle('remove', false); // For Institution Survey, delete button will be disabled regardless settings in Workflow
     }
 
     public function implementedEvents()
@@ -88,6 +87,16 @@ class InstitutionSurveysTable extends ControllerActionTable
         $query
             ->select(['code' => 'Institutions.code', 'description' => 'SurveyForms.description', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])
             ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives']);
+    }
+
+    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $broadcaster = $this;
+        $listeners[] = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
+
+        if (!empty($listeners)) {
+            $this->dispatchEventToModels('Model.InstitutionSurveys.afterDelete', [$entity], $broadcaster, $listeners);
+        }
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -139,13 +148,58 @@ class InstitutionSurveysTable extends ControllerActionTable
         ];
     }
 
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $tabSection = null;
+        $newData = [];
+        $conditions = [];
+        // check if survey exists any tab section
+        if (isset($this->request->query['tab_section'])) {
+            $tabSection = $this->request->query['tab_section'];
+        }
+        $SurveyRules = TableRegistry::get('Survey.SurveyRules');
+        $SurveyFormQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $surveyFormId = $data[$this->alias()]['survey_form_id'];
+        $rules = $SurveyRules
+            ->find('SurveyRulesList', ['survey_form_id' => $surveyFormId])
+            ->innerJoin(
+                [$SurveyFormQuestions->alias() => $SurveyFormQuestions->table()], 
+                [$SurveyFormQuestions->aliasField('survey_question_id = ') . $SurveyRules->aliasField('survey_question_id')]
+            );
+        // get all the survey rules by survey section, if any
+        if ($tabSection) {
+            $conditions[] = $rules->newExpr('REPLACE(' . $SurveyFormQuestions->aliasField('section') . ', " ", "-" ) = "'.$tabSection.'"');
+        }
+        $rules = $rules
+            ->where($conditions)
+            ->toArray();
+        if (!empty($rules)) {
+            foreach ($data[$this->alias()]['custom_field_values'] as $customFieldValueKey => $customFieldValue) {
+                $newData[$customFieldValue['survey_question_id']] = $customFieldValue;
+                $newData[$customFieldValue['survey_question_id']]['dataKey'] = $customFieldValueKey;
+            }
+            foreach ($rules as $key => $rule) {
+                foreach ($rule as $supportFieldKey => $options) {
+                    $supportQuestionOptions = json_decode($options);
+                    if (isset($newData[$supportFieldKey])) {
+                        $userSelectedOption = $newData[$supportFieldKey]['number_value'];
+                        if (!(in_array($userSelectedOption, $supportQuestionOptions)) && $newData[$key]['mandatory'] == 1) {
+                            $dataAliasKey = $newData[$key]['dataKey'];
+                            $data[$this->alias()]['custom_field_values'][$dataAliasKey]['mandatory'] = 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;
         $listeners = [];
         $listeners[] = TableRegistry::get('Student.StudentSurveys');
         $listeners[] = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
-
+        $listeners[] = TableRegistry::get('Institution.InstitutionSurveyTableCells');
         if (!empty($listeners)) {
             $this->dispatchEventToModels('Model.InstitutionSurveys.afterSave', [$entity], $broadcaster, $listeners);
         }
@@ -425,6 +479,18 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         $this->field('description');
         $this->setFieldOrder(['academic_period_id', 'survey_form_id', 'description']);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity) {
+        // to get all the workflow steps for this model
+        $workflow = $this->getWorkflow($this->registryAlias(), $entity);
+        if (!empty($workflow)) {
+            foreach ($workflow->workflow_steps as $workflowStep) {
+                if ($entity->status->id == $workflowStep->id && !($workflowStep->is_removable)) {
+                    $this->toggle('remove', false);
+                }
+            }
+        }
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)

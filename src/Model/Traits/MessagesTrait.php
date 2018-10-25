@@ -135,7 +135,8 @@ trait MessagesTrait
             'ownerAddNotAllowed' => 'You are not allowed to add infrastructure as there are no shifts configured in the current academic period',
             'occupierAddNotAllowed' => 'You are not allowed to add infrastructure as an occupier',
             'occupierEditNotAllowed' => 'You are not allowed to edit infrastructure as an occupier',
-            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier'
+            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier',
+            'accessibilityOption' => 'Designed for use by anyone including those with special needs/disabilities.'
         ],
         'InfrastructureTypes' => [
             'noLevels' => 'No Available Levels',
@@ -532,6 +533,12 @@ trait MessagesTrait
             'selectNextGrade' => 'Please select a grade to promote to.',
             'notEnrolled' => 'Not enrolled to any grades'
         ],
+        'BulkStudentAdmission' => [
+            'success' => 'Bulk students admission successful',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
+        ],
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
             'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
@@ -786,6 +793,12 @@ trait MessagesTrait
             ],
             'StaffType' => [
                 'value' => 'Days within %d to %d'
+            ],
+            'ScholarshipApplication' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'ScholarshipDisbursement' => [
+                'value' => 'Days within %d to %d'
             ]
         ],
         'UserBodyMasses' => [
@@ -847,7 +860,10 @@ trait MessagesTrait
                 ],
                 'institution_provider_id' => [
                     'ruleLinkedSector' => 'Please select a provider linked to the chosen Sector'
-                ]
+                ],
+                'classification' => [
+                    'validClassification' => 'Please enter a valid Classification',
+                ],
             ],
             'InstitutionContacts' => [
                 'email' => [
@@ -1549,6 +1565,16 @@ trait MessagesTrait
                     'ruleValidDate' => 'You have entered an invalid date.'
                 ],
             ],
+            'StudentVisitRequests' => [
+                'date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period'
+                ]
+            ],
+            'StudentVisits' => [
+                'date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period'
+                ]
+            ]
         ],
         'Profile' => [
             'Guardians' => [
@@ -1691,7 +1717,9 @@ trait MessagesTrait
                 'rating' => 'Rating',
                 'value' => 'Value',
                 'final_rating' => 'Final Rating',
-                'deleted_competencies' => 'This competency has been removed'
+                'deleted_competencies' => 'This competency has been removed',
+                'circular_dependency' => 'This will lead to a circular dependency',
+                'isNotEditable' => 'Edit operation is not allowed as there are other information linked to this record.'
             ],
             'Competencies' => [
                 'min' => [
@@ -1784,7 +1812,8 @@ trait MessagesTrait
             'TrainingCourses' => [
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
-                ]
+                ],
+                'special_education_needs' => 'This course is Special Educational Needs(SENs) compliant.',
             ],
             'TrainingSessions' => [
                 'code' => [
@@ -2063,7 +2092,7 @@ trait MessagesTrait
             ],
             'ScholarshipRecipients' => [
                 'approved_amount' => [
-                    'comparison' => 'Approved Amount cannot be more than Total Award Amount',
+                    'comparison' => 'Approved Award Amount cannot be more than Total Award Amount',
                     'validateDecimal' => 'Value cannot be more than two decimal places',
                     'ruleCheckApprovedWithEstimated' => 'Approved Amount cannot be less than the Estimated Amounts',
                     'ruleCheckApprovedWithDisbursed' => 'Approved Amount cannot be less than the Disbursed Amounts',
@@ -2245,6 +2274,13 @@ trait MessagesTrait
             'SurveyForms' => [
                 'custom_filters' => [
                     'ruleNotEmpty' => 'This field cannot be left empty'
+                ]
+            ]
+        ],
+        'SpecialNeeds' => [
+            'SpecialNeedsReferrals' => [
+                'date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ]
         ]

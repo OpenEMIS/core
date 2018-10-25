@@ -83,13 +83,6 @@ class ScholarshipsTable extends AppTable  {
     {
         $attr['options'] = $this->AcademicPeriods->getYearList();
         $attr['default'] = $this->AcademicPeriods->getCurrent();
-        
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            if ($feature == 'Report.RecipientPaymentStructures') {
-                $attr['type'] = 'hidden';
-            } 
-        }
         return $attr;
     }
 
@@ -102,13 +95,6 @@ class ScholarshipsTable extends AppTable  {
         $attr['select'] = false;
         $attr['attr']['label'] = __('Financial Assistance Type');
         $attr['options'] = $financialAssistanceTypeOptions;
-
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            if ($feature == 'Report.RecipientPaymentStructures') {
-                $attr['type'] = 'hidden';
-            } 
-        }
         return $attr;
     }
 
@@ -129,6 +115,21 @@ class ScholarshipsTable extends AppTable  {
         $query
             ->contain([
                 'Loans.PaymentFrequencies',
+                'FinancialAssistanceTypes' => [
+                    'fields' => [
+                        'financial_assistance_types_name' => 'FinancialAssistanceTypes.name',
+                    ]
+                ],
+                'FundingSources' => [
+                    'fields' => [
+                        'funding_sources_name' => 'FundingSources.name',
+                    ]
+                ],
+                'AcademicPeriods' => [
+                    'fields' => [
+                        'academic_periods_name' => 'AcademicPeriods.name',
+                    ]
+                ],
                 'FieldOfStudies' => [
                     'fields' => [
                         'FieldOfStudies.name',
@@ -143,9 +144,20 @@ class ScholarshipsTable extends AppTable  {
                 ]
             ])
             ->select([
-                'interest_rate' => 'Loans.interest_rate', 
-                'interest_rate_type' => 'Loans.interest_rate_type', 
-                'loan_term' => 'Loans.loan_term', 
+                'scholarship_code' => $this->aliasField('code'),
+                'scholarship_name' => $this->aliasField('name'),
+                'scholarship_description' => $this->aliasField('description'),
+                'scholarship_application_open_date' => $this->aliasField('application_open_date'),
+                'scholarship_application_close_date' => $this->aliasField('application_close_date'),
+                'scholarship_maximum_award_amount' => $this->aliasField('maximum_award_amount'),
+                'scholarship_total_amount' => $this->aliasField('total_amount'),
+                'scholarship_duration' => $this->aliasField('duration'),
+                'scholarship_bond' => $this->aliasField('bond'),
+                'scholarship_requirements' => $this->aliasField('requirements'),
+                'scholarship_instructions' => $this->aliasField('instructions'),
+                'interest_rate' => 'Loans.interest_rate',
+                'interest_rate_type' => 'Loans.interest_rate_type',
+                'loan_term' => 'Loans.loan_term',
                 'payment_frequency_name' => 'PaymentFrequencies.name'
             ])
             ->where($conditions); 
@@ -154,6 +166,91 @@ class ScholarshipsTable extends AppTable  {
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
     {       
         $newArray = [];
+
+         $newArray[] = [
+            'key' => 'scholarship.code',
+            'field' => 'scholarship_code',
+            'type' => 'string',
+            'label' =>  __('Code')
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.name',
+            'field' => 'scholarship_name',
+            'type' => 'string',
+            'label' =>  __('Name')
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.description',
+            'field' => 'scholarship_description',
+            'type' => 'string',
+            'label' => __('Description')
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.application_open_date',
+            'field' => 'scholarship_application_open_date',
+            'type' => 'date',
+            'label' => 'Application Open Date'
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.application_close_date',
+            'field' => 'scholarship_application_close_date',
+            'type' => 'date',
+            'label' => 'Application Close Date'
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.maximum_award_amount',
+            'field' => 'maximum_award_amount',
+            'type' => 'string',
+            'label' => __('Annual Award Amount')
+        ];
+         $newArray[] = [
+            'key' => 'scholarship.scholarship_total_amount',
+            'field' => 'scholarship_total_amount',
+            'type' => 'string',
+            'label' =>  __('Total Award Amount')
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.scholarship_duration',
+            'field' => 'scholarship_duration',
+            'type' => 'string',
+            'label' =>  __('Duration')
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.scholarship_bond',
+            'field' => 'scholarship_bond',
+            'type' => 'string',
+            'label' => __('Bond')
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.scholarship_requirements',
+            'field' => 'scholarship_requirements',
+            'type' => 'string',
+            'label' => 'Requirements'
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.scholarship_instructions',
+            'field' => 'scholarship_instructions',
+            'type' => 'string',
+            'label' => 'Instructions'
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.financial_assistance_types_name',
+            'field' => 'financial_assistance_types_name',
+            'type' => 'string',
+            'label' => __('Scholarship Financial Assistance Type')
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.funding_sources_name',
+            'field' => 'funding_sources_name',
+            'type' => 'string',
+            'label' => __('Scholarship Funding Sources')
+        ];
+        $newArray[] = [
+            'key' => 'scholarship.academic_periods_name',
+            'field' => 'academic_periods_name',
+            'type' => 'string',
+            'label' => __('Academic Periods')
+        ];
         $newArray[] = [
             'key' => 'FieldOfStudies.name',
             'field' => 'all_field_of_studies',
@@ -190,8 +287,7 @@ class ScholarshipsTable extends AppTable  {
             'label' => __('Payment Frequency')
         ];
    
-        $newFields = array_merge($fields->getArrayCopy(), $newArray);
-        $fields->exchangeArray($newFields);
+        $fields->exchangeArray($newArray);
     }
 
     public function onExcelGetInterestRateType(Event $event, Entity $entity)

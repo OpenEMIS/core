@@ -55,8 +55,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $events['Model.Guardians.afterDelete'] = 'afterSaveOrDelete';
 
         // student with special need
-        $events['Model.SpecialNeeds.afterSave'] = 'afterSaveOrDelete';
-        $events['Model.SpecialNeeds.afterDelete'] = 'afterSaveOrDelete';
+        $events['Model.SpecialNeedsAssessments.afterSave'] = 'afterSaveOrDelete';
+        $events['Model.SpecialNeedsAssessments.afterDelete'] = 'afterSaveOrDelete';
 
         // student dropout (Students), repeated (IndividualPromotion), Overage will trigger the Students
         $events['Model.Students.afterSave'] = 'afterSaveOrDelete';
@@ -624,7 +624,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                 $studentId = $afterSaveOrDeleteEntity->id;
                 break;
 
-            case 'SpecialNeeds': // The student_id is the Id
+            case 'SpecialNeedsAssessments': // The security_user_id is the Id
                 $studentId = $afterSaveOrDeleteEntity->security_user_id;
                 break;
         }
@@ -651,8 +651,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                 $academicPeriodId = $this->AcademicPeriods->getCurrent();
                 break;
 
-            case 'SpecialNeeds': // have special need date
-                $date = $afterSaveOrDeleteEntity->special_need_date;
+            case 'SpecialNeedsAssessments': // have special need date
+                $date = $afterSaveOrDeleteEntity->date;
                 $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodIdByDate($date);
                 break;
         }
@@ -673,7 +673,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
                 break;
 
-            case 'SpecialNeeds':
+            case 'SpecialNeedsAssessments':
                 $studentId = $afterSaveOrDeleteEntity->security_user_id;
                 $Students = TableRegistry::get('Institution.Students');
                 $institutionId = $Students->getInstitutionIdByUser($studentId, $academicPeriodId);

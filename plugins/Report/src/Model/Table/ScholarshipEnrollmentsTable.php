@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -21,6 +22,7 @@ class ScholarshipEnrollmentsTable extends AppTable
 
         $this->belongsTo('Applications', ['className' => 'Scholarship.Applications', 'foreignKey' => ['applicant_id', 'scholarship_id']]);
         $this->belongsTo('Countries', ['className' => 'FieldOption.Countries', 'foreignKey' => 'country_id']);
+        $this->belongsTo('InstitutionChoiceTypes', ['className' => 'Scholarship.InstitutionChoiceTypes', 'foreignKey' => 'scholarship_institution_choice_type_id']);
         $this->belongsTo('InstitutionChoiceStatuses', ['className' => 'Scholarship.InstitutionChoiceStatuses', 'foreignKey' => 'scholarship_institution_choice_status_id']);
         $this->belongsTo('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies' , 'foreignKey' => 'education_field_of_study_id']);
         $this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels',  'foreignKey' =>'qualification_level_id' ]);
@@ -36,6 +38,8 @@ class ScholarshipEnrollmentsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
+        $RecipientAcademicStandings = TableRegistry::get('Scholarship.RecipientAcademicStandings');
+        $Semesters = TableRegistry::get('Scholarship.Semesters');
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $financialAssistanceType = $requestData->scholarship_financial_assistance_type_id;
@@ -60,6 +64,7 @@ class ScholarshipEnrollmentsTable extends AppTable
                 'Applicants' => [
                     'fields' => [
                         'openemis_no' => 'Applicants.openemis_no',
+                        'email' => 'Applicants.email',
                         'Applicants.first_name',
                         'Applicants.middle_name',
                         'Applicants.third_name',
@@ -83,6 +88,11 @@ class ScholarshipEnrollmentsTable extends AppTable
                         'identity_type_name' => 'MainIdentityTypes.name',
                     ]
                 ],
+                'InstitutionChoiceTypes' => [
+                    'fields' => [
+                        'institution_name' => 'InstitutionChoiceTypes.name',
+                    ]
+                ],
                 'Scholarships' => [
                     'fields' => [
                         'name',
@@ -103,6 +113,18 @@ class ScholarshipEnrollmentsTable extends AppTable
                         'name',
                     ]
                 ],
+                'InstitutionChoiceStatuses' => [
+                    'fields' => [
+                        'name' => 'InstitutionChoiceStatuses.name',
+                    ]
+                ],
+            ])
+            ->leftJoin([$RecipientAcademicStandings->alias() => $RecipientAcademicStandings->table()], [
+                $RecipientAcademicStandings->aliasField('recipient_id'). ' = ' .$this->aliasField('applicant_id'),
+                $RecipientAcademicStandings->aliasField('scholarship_id'). ' = ' .$this->aliasField('scholarship_id'),
+            ])
+            ->leftJoin([$Semesters->alias() => $Semesters->table()], [
+                $RecipientAcademicStandings->aliasField('scholarship_semester_id'). ' = ' .$Semesters->aliasField('id'),
             ])
             ->where([
                 $conditions
@@ -110,7 +132,6 @@ class ScholarshipEnrollmentsTable extends AppTable
             ->select([
                 $this->aliasField('applicant_id'),
                 $this->aliasField('scholarship_id'),
-                $this->aliasField('institution_name'),
                 $this->aliasField('location_type'),
                 $this->aliasField('course_name'),
                 $this->aliasField('start_date'),
@@ -118,7 +139,9 @@ class ScholarshipEnrollmentsTable extends AppTable
                 $this->aliasField('country_id'),
                 $this->aliasField('education_field_of_study_id'),
                 $this->aliasField('qualification_level_id'),
-            ]);          
+                'gpa' => $RecipientAcademicStandings->aliasField('gpa'),
+                'semesterName' => $Semesters->aliasField('name'),
+            ]);
     }
 
    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
@@ -167,6 +190,13 @@ class ScholarshipEnrollmentsTable extends AppTable
         ];
 
         $newFields[] = [
+            'key' => 'Applicants.email',
+            'field' => 'email',
+            'type' => 'string',
+            'label' => __('Email')
+        ];
+
+        $newFields[] = [
             'key' => 'ScholarshipApplications.scholarship_id',
             'field' => 'scholarship_id',
             'type' => 'integer',
@@ -188,7 +218,7 @@ class ScholarshipEnrollmentsTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'institution_name',
+            'key' => 'InstitutionChoiceTypes.name',
             'field' => 'institution_name',
             'type' => 'string',
             'label' => __('Institution')
@@ -198,7 +228,7 @@ class ScholarshipEnrollmentsTable extends AppTable
             'key' => 'education_field_of_study_id',
             'field' => 'education_field_of_study_id',
             'type' => 'string',
-            'label' => __('Field of Study')
+            'label' => __('Area of Study')
         ];
 
         $newFields[] = [
@@ -219,14 +249,35 @@ class ScholarshipEnrollmentsTable extends AppTable
             'key' => 'StartDate',
             'field' => 'start_date',
             'type' => 'date',
-            'label' => __('Start Date')
+            'label' => __('Commencement Date')
         ];
 
         $newFields[] = [
             'key' => 'EndDate',
             'field' => 'end_date',
             'type' => 'date',
-            'label' => __('End Date')
+            'label' => __('Completion Date')
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionChoiceStatuses.name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => __('Status')
+        ];
+
+        $newFields[] = [
+            'key' => 'gpa',
+            'field' => 'gpa',
+            'type' => 'string',
+            'label' => __('GPA')
+        ];
+
+        $newFields[] = [
+            'key' => 'semesterName',
+            'field' => 'semesterName',
+            'type' => 'string',
+            'label' => __('Semester')
         ];
 
         $fields->exchangeArray($newFields);

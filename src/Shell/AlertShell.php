@@ -45,16 +45,22 @@ class AlertShell extends Shell
         return $model->getModelAlertData($threshold);
     }
 
-    public function getEmailList($securityRoleRecords, $institutionId)
+    public function getEmailList($securityRoleRecords, $institutionId = null)
     {
         $emailList = [];
 
         foreach ($securityRoleRecords as $securityRolesObj) {
-            $securityRoleId = $securityRolesObj->id;
+            $options = [
+                'securityRoleId' => $securityRolesObj->id
+            ];
+
+            if (!is_null($institutionId)) {
+                $options['institutionId'] = $institutionId;
+            }
 
             // all staff within securityRole and institution
             $emailListResult = $this->SecurityGroupUsers
-                ->find('emailList', ['securityRoleId' => $securityRoleId, 'institutionId' => $institutionId])
+                ->find('emailList', $options)
                 ->toArray()
             ;
 
