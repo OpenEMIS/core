@@ -52,7 +52,7 @@ class InstitutionsController extends AppController
         'StaffUser',
         'StaffAccount',
         'StaffLeave',
-        'StaffAppraisals', 
+        'StaffAppraisals',
         'StaffTrainingNeeds',
         'StaffTrainingApplications',
         'StaffTrainingResults',

@@ -81,8 +81,6 @@ class POCOR4603 extends AbstractMigration
             $this->insert('institution_classes_secondary_staff', $classStaffRecords);
         }
 
-        // $this->execute('INSERT INTO `institution_classes_secondary_staff` (`institution_class_id`, `secondary_staff_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `secondary_staff_id`, `modified_user_id`, `modified`, `created_user_id`, `created`  FROM `institution_classes` WHERE `institution_classes`.`secondary_staff_id` <> 0');
-
         // institution_classes
         $this->execute('RENAME TABLE `institution_classes` TO `z_4603_institution_classes`');
         $InstitutionClasses = $this->table('institution_classes', [
