@@ -55,7 +55,7 @@ class CounsellingsController extends PageController
     public function index()
     {
         $page = $this->Page;
-        $page->exclude(['file_name', 'file_content', 'student_id']);
+        $page->exclude(['file_name', 'file_content', 'student_id', 'guidance_utilized', 'comment']);
 
         // set default ordering
         $page->setQueryOption('order', [$this->Counsellings->aliasField('date') => 'DESC']);
@@ -84,6 +84,9 @@ class CounsellingsController extends PageController
         $page->get('file_content')
             ->setLabel('Attachment')
             ->setAttributes('fileNameField', 'file_name');
+
+        $this->reorderFields();
+
         parent::view($id);
     }
 
@@ -111,5 +114,20 @@ class CounsellingsController extends PageController
         $page->get('file_content')
             ->setLabel('Attachment')
             ->setAttributes('fileNameField', 'file_name');
+
+        $this->reorderFields();
+    }
+
+    private function reorderFields()
+    {
+        $page = $this->Page;
+
+        $page->move('counselor_id')->after('date');
+        $page->move('guidance_type_id')->after('counselor_id');
+        $page->move('guidance_utilized')->after('guidance_type_id');
+        $page->move('description')->after('guidance_utilized');
+        $page->move('intervention')->after('description');
+        $page->move('comment')->after('intervention');
+        $page->move('file_content')->after('comment');
     }
 }

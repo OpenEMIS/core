@@ -17,6 +17,7 @@ use App\Model\Table\ControllerActionTable;
 class ReportCardStatusesTable extends ControllerActionTable
 {
     private $statusOptions = [];
+    private $reportProcessList = [];
 
     // for status
     CONST NEW_REPORT = 1;
@@ -48,6 +49,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->ReportCards = TableRegistry::get('ReportCard.ReportCards');
         $this->StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $this->ReportCardEmailProcesses = TableRegistry::get('ReportCard.ReportCardEmailProcesses');
+        $this->ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
 
         $this->statusOptions = [
             self::NEW_REPORT => __('New'),
@@ -155,20 +157,43 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('status', ['sort' => ['field' => 'report_card_status']]);
-        $this->field('started_on');
-        $this->field('completed_on');
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('report_card');
+        $this->field('status', ['sort' => ['field' => 'report_card_status']]);
+        $this->field('started_on');
+        $this->field('completed_on');
         $this->field('email_status');
         $this->fields['next_institution_class_id']['visible'] = false;
+        $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder(['status', 'started_on', 'completed_on', 'openemis_no', 'student_id', 'academic_period_id', 'report_card', 'email_status']);
+        $this->field('report_queue');
+        $this->setFieldOrder(['openemis_no', 'student_id', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+
+        // SQL Query to get the current processing list for report_queue table
+        $this->reportProcessList = $this->ReportCardProcesses
+            ->find()
+            ->select([
+                $this->ReportCardProcesses->aliasField('report_card_id'),
+                $this->ReportCardProcesses->aliasField('institution_class_id'),
+                $this->ReportCardProcesses->aliasField('student_id'),
+                $this->ReportCardProcesses->aliasField('institution_id'),
+                $this->ReportCardProcesses->aliasField('education_grade_id'),
+                $this->ReportCardProcesses->aliasField('academic_period_id')
+            ])
+            ->where([
+                $this->ReportCardProcesses->aliasField('status') => $this->ReportCardProcesses::NEW_PROCESS
+            ])
+            ->order([
+                $this->ReportCardProcesses->aliasField('created'),
+                $this->ReportCardProcesses->aliasField('student_id')
+            ])
+            ->hydrate(false)
+            ->toArray();
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -264,7 +289,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ]
             )
             ->autoFields(true)
-            ->where($where);
+            ->where($where)
+            ->all();
 
         if (is_null($this->request->query('sort'))) {
             $query
@@ -387,9 +413,9 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('institution_class_id', ['type' => 'integer']);
-        $this->setFieldOrder(['academic_period_id', 'status', 'started_on', 'completed_on', 'openemis_no', 'student_id',  'report_card', 'institution_class_id']);
+        $this->field('academic_period_id', ['visible' => true]);
+        $this->setFieldOrder(['academic_period_id', 'institution_class_id', 'openemis_no', 'student_id', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
     }
-
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -458,6 +484,33 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
 
         return $value;
+    }
+
+    public function onGetReportQueue(Event $event, Entity $entity)
+    {
+        if ($entity->has('report_card_id')) {
+            $reportCardId = $entity->report_card_id;
+        } else if (!is_null($this->request->query('report_card_id'))) {
+            $reportCardId = $this->request->query('report_card_id');
+        }
+        
+        $search = [
+            'report_card_id' => $reportCardId,
+            'institution_class_id' => $entity->institution_class_id,
+            'student_id' => $entity->student_id,
+            'institution_id' => $entity->institution_id,
+            'education_grade_id' => $entity->education_grade_id,
+            'academic_period_id' => $entity->academic_period_id
+        ];
+
+        $resultIndex = array_search($search, $this->reportProcessList);
+
+        if ($resultIndex !== false) {
+            $totalQueueCount = count($this->reportProcessList);
+            return sprintf(__('%s of %s'), $resultIndex + 1, $totalQueueCount);
+        } else {
+            return '<i class="fa fa-minus"></i>';
+        }
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)

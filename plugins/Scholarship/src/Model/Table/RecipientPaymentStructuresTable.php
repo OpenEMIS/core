@@ -28,6 +28,11 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->hasMany('RecipientPaymentStructureEstimates', ['className' => 'Scholarship.RecipientPaymentStructureEstimates', 'foreignKey' => 'scholarship_recipient_payment_structure_id', 'dependent' => true, 'cascadeCallbacks' => true,  'saveStrategy' => 'replace']);
         $this->hasMany('RecipientDisbursements', ['className' => 'Scholarship.RecipientDisbursements', 'foreignKey' => 'scholarship_recipient_payment_structure_id', 'dependent' => true, 'cascadeCallbacks' => true,  'saveStrategy' => 'replace']);
+
+        $this->addBehavior('Excel', [
+            'pages' => ['index'],
+            'autoFields' => false
+        ]);
         
         $this->setDeleteStrategy('restrict');
     }
@@ -58,6 +63,130 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             $this->toggle('add', false);
             $this->Alert->warning($this->aliasField('noApprovedAmount'));
         }
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
+        $recipientId = $this->ControllerAction->getQueryString('recipient_id');
+
+        $query
+            ->select([
+                'name' => $this->aliasField('name'),
+                'recipient_id' => $this->aliasField('recipient_id'),
+                'scholarship_id' => $this->aliasField('scholarship_id'),
+                'academic_period_id' => $this->aliasField('academic_period_id')
+            ])
+            ->contain([
+                'Recipients' => [
+                    'fields' => [
+                        'Recipients.id',
+                        'Recipients.first_name',
+                        'Recipients.middle_name',
+                        'Recipients.third_name',
+                        'Recipients.last_name',
+                        'Recipients.preferred_name'
+                    ]
+                ],
+                'Scholarships' => [
+                    'fields' => [
+                        'Scholarships.id',
+                        'Scholarships.name'
+                    ]
+                ],
+                'AcademicPeriods' => [
+                    'fields' => [
+                        'AcademicPeriods.id',
+                        'AcademicPeriods.name'
+                    ]
+                ],
+            ])
+            ->matching('ScholarshipRecipients', function ($q) {
+                return $q->select([
+                    'approved_amount' => 'ScholarshipRecipients.approved_amount',
+                ]);
+            })
+            ->matching('RecipientPaymentStructureEstimates.DisbursementCategories', function ($q) {
+                return $q->select([
+                    'estimated_disbursement_date' => 'RecipientPaymentStructureEstimates.estimated_disbursement_date',
+                    'estimated_amount' => 'RecipientPaymentStructureEstimates.estimated_amount',
+                    'comments' => 'RecipientPaymentStructureEstimates.comments',
+                    'disbursement_category' => 'DisbursementCategories.name'
+                ]);
+            })
+            ->where([
+                $this->aliasField('recipient_id') => $recipientId,
+                $this->aliasField('scholarship_id') => $scholarshipId
+            ])
+            ->order(['academic_period_id', 'estimated_disbursement_date']);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+    {
+        $newArray = [];
+        $newArray[] = [
+            'key' => 'RecipientPaymentStructures.recipient_id',
+            'field' => 'recipient_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newArray[] = [
+            'key' => 'RecipientPaymentStructures.scholarship_id',
+            'field' => 'scholarship_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newArray[] = [
+            'key' => 'RecipientPaymentStructures.academic_period_id',
+            'field' => 'academic_period_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newArray[] = [
+            'key' => 'RecipientPaymentStructures.name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => __('Payment Structure Name')
+        ];
+
+        $newArray[] = [
+            'key' => 'DisbursementCategories.name',
+            'field' => 'disbursement_category',
+            'type' => 'string',
+            'label' => __('Disbursement Category')
+        ];
+
+        $newArray[] = [
+            'key' => 'RecipientPaymentStructureEstimates.estimated_amount',
+            'field' => 'estimated_amount',
+            'type' => 'integer',
+            'label' => $this->Scholarships->addCurrencySuffix('Estimated Amount')
+        ];
+
+        $newArray[] = [
+            'key' => 'RecipientPaymentStructureEstimates.estimated_disbursement_date',
+            'field' => 'estimated_disbursement_date',
+            'type' => 'date',
+            'label' => ''
+        ];
+
+        $newArray[] = [
+            'key' => 'RecipientPaymentStructureEstimates.comments',
+            'field' => 'comments',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newArray[] = [
+            'key' => 'ScholarshipRecipients.approved_amount',
+            'field' => 'approved_amount',
+            'type' => 'string',
+            'label' => 'Approved Award Amount'
+        ];
+
+        $fields->exchangeArray($newArray);
     }
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
@@ -152,10 +281,18 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             'attr' => ['label' => $this->Scholarships->addCurrencySuffix('Balance Amount')],
             'entity' => $entity
         ]);
+
+        $this->field('annual_award_amount', [
+            'type' => 'disabled',
+            'after' => 'balance_amount',
+            'visible' => ['view' => false, 'add' => true, 'edit' => true],
+            'attr' => ['label' => $this->Scholarships->addCurrencySuffix('Annual Award Amount')],
+            'entity' => $entity
+        ]);
        
         $this->field('disbursement_category_id', [
             'type' => 'custom_disbursement_category',
-            'after' => 'balance_amount'
+            'after' => 'annual_award_amount'
         ]);
     }
 
@@ -393,6 +530,18 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         }
 
         return $attr;
+    }
+
+    public function onUpdateFieldAnnualAwardAmount(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $annualAmount = $entity->scholarship->maximum_award_amount;
+            $attr['attr']['value'] =  $annualAmount;
+
+            return $attr;
+        }
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
