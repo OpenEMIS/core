@@ -133,6 +133,10 @@ class POCOR3906 extends AbstractMigration
                 'null' => true,
                 ]
             )
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'null' => true
+            ])
             ->addColumn(
                 'modified_user_id', 'integer', [
                 'default' => null,

@@ -25,12 +25,12 @@ $this->start('toolbar');
 <?php endif; ?> -->
 
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view'" ng-click="$ctrl.onEditClick()">
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1" ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
     </button>
 
-    <a href="<?=$historyUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('History') ?>" >
+    <a href="<?=$historyUrl ?>">
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('History') ?>"  ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1">
             <i class="fa fa-file-text"></i>
         </button>
     </a>
@@ -58,8 +58,8 @@ $institutionId = $paramsQuery['institution_id'];
 <div class="alert {{class}}" ng-hide="message == null">
     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
 </div> -->
-<!-- <style>
-    .attendance-dashboard .data-section.single-day {
+<style>
+    ./*attendance-dashboard .data-section.single-day {
         width: 32%;
     }
 
@@ -75,9 +75,9 @@ $institutionId = $paramsQuery['institution_id'];
 
     .splitter-filter .input-selection.attendance {
         width: 100%;
-    }
+    }*/
 
-    #institution-staff-attendances-table .sg-theme .ag-cell {
+    /*#institution-staff-attendances-table .sg-theme .ag-cell {
         display: flex;
         flex-flow: column wrap;
         justify-content: center;
@@ -91,19 +91,19 @@ $institutionId = $paramsQuery['institution_id'];
 
     #institution-staff-attendances-table .ag-cell .reason-wrapper .input-select-wrapper {
         margin-bottom: 15px;
-    }
+    }*/
 
-    #institution-staff-attendances-table .ag-cell textarea#comment.error,
+    /*#institution-staff-attendances-table .ag-cell textarea#comment.error,
     #institution-staff-attendances-table .ag-cell #staff_absence_reason_id select.error,
     #institution-staff-attendances-table .ag-cell #absence_type_id select.error {
         border-color: #CC5C5C !important;
-    }
-    
-    #institution-staff-attendances-table .ag-cell textarea#comment:focus {
-        outline: none;
-    }
+    }*/
 
-    #institution-staff-attendances-table .ag-cell textarea#comment {
+/*    #institution-staff-attendances-table .ag-cell textarea#comment:focus {
+        outline: none;
+    }*/
+
+/*    #institution-staff-attendances-table .ag-cell textarea#comment {
         display: block;
         padding: 5px 10px;
         -webkit-border-radius: 3px;
@@ -112,18 +112,18 @@ $institutionId = $paramsQuery['institution_id'];
         height: 70px;
         width: 100%;
         border: 1px solid #CCC;
-    }
+    }*/
 
-    #institution-staff-attendances-table .ag-cell .input-select-wrapper {
+    /*#institution-staff-attendances-table .ag-cell .input-select-wrapper {
         margin-bottom: 0;
     }
 
     #institution-staff-attendances-table .ag-cell .input-select-wrapper select {
         background: #FFFFFF;
         display: block;
-    }
+    }*/
 
-    #institution-staff-attendances-table .ag-cell .absence-reason,
+/*    #institution-staff-attendances-table .ag-cell .absence-reason,
     #institution-staff-attendances-table .ag-cell .absences-comment {
         overflow: hidden;
         white-space: normal;
@@ -131,19 +131,19 @@ $institutionId = $paramsQuery['institution_id'];
         max-height: 70px;
         display: flex;
         align-items: baseline;
-    }
+    }*/
 
-    #institution-staff-attendances-table .ag-cell .absence-reason span,
+/*    #institution-staff-attendances-table .ag-cell .absence-reason span,
     #institution-staff-attendances-table .ag-cell .absences-comment span {
         margin: 0 10px;
-    }
+    }*/
 
 
-    #institution-staff-attendances-table .ag-cell .absence-reason + .absences-comment  {
+/*    #institution-staff-attendances-table .ag-cell .absence-reason + .absences-comment  {
         margin-top: 15px;
-    }
-    
-    #institution-staff-attendances-table .sg-theme .ag-header-cell.children-period .ag-header-cell-label {
+    }*/
+
+   /* #institution-staff-attendances-table .sg-theme .ag-header-cell.children-period .ag-header-cell-label {
         display: flex;
         justify-content: center;
         padding: 10px 0;
@@ -159,17 +159,17 @@ $institutionId = $paramsQuery['institution_id'];
 
     #institution-staff-attendances-table .sg-theme .children-cell {
         text-align: center;
-    }
+    }*/
 
-    #institution-staff-attendances-table .sg-theme .ag-row-hover {
+   /* #institution-staff-attendances-table .sg-theme .ag-row-hover {
         background-color: #FDFEE6 !important;
     }
 
     .rtl #institution-staff-attendances-table .sg-theme .ag-header-group-cell {
         border-right: 0;
         border-left: 1px solid #DDDDDD;
-    }
-</style> -->
+    }*/
+</style>
 
 <div class="panel">
     <div class="panel-body" style="position: relative;">
@@ -188,39 +188,26 @@ $institutionId = $paramsQuery['institution_id'];
                             <h1 class="data-header">{{$ctrl.totalStaff}}</h1>
                         </div>
                     </div>
-                    <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
-                        <div class="data-field">
-                            <h4><?= __('No. of Staff Present') ?></h4>   
-                            <h1 class="data-header">{{$ctrl.presentCount}}</h1>
-                        </div>
-                    </div>
-                    <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
-                        <div class="data-field">
-                            <h4><?= __('No. of Staff on Leave') ?></h4>    
-                            <h1 class="data-header">{{$ctrl.absenceCount}}</h1>
-                        </div>
-                    </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <!-- <i class="kd-address-book icon"></i> -->
                         <i class="kd-students icon"></i>
                         <div class="data-field">
-                            <h4><?= __('Total Attendance') ?></h4>    
+                            <h4><?= __('Total Attendance') ?></h4>
                             <h1 class="data-header">{{$ctrl.allAttendances}}</h1>
                         </div>
                     </div>
-                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                    <div class="data-section">
                         <div class="data-field">
-                            <h4><?= __('No. of Present') ?></h4>    
+                            <h4><?= __('No. of Present') ?></h4>
                             <h1 class="data-header">{{$ctrl.allPresentCount}}</h1>
                         </div>
                     </div>
-                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                    <div class="data-section">
                         <div class="data-field">
-                            <h4><?= __('No. of Staff on Leave') ?></h4>    
-                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
+                            <h4><?= __('No. of Staff on Leave') ?></h4>
+                            <h1 class="data-header">{{$ctrl.allLeaveCount}}</h1>
                         </div>
                     </div>
-
                 </div>
                 <h4>{{$ctrl.selectedFormattedDayDate}}</h4>
                 <div id="institution-staff-attendances-table" class="table-wrapper">
@@ -228,7 +215,7 @@ $institutionId = $paramsQuery['institution_id'];
                 </div>
             </bg-pane>
 
-            <bg-pane class="split-content splitter-slide-out splitter-filter" min-size-p="20" max-size-p="20" size-p="20">
+            <bg-pane class="split-content splitter-slide-out splitter-filter">
                 <div class="split-content-header">
                     <h3><?= __('Filter') ?></h3>
                 </div>

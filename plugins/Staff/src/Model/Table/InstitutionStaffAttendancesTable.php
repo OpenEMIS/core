@@ -21,19 +21,19 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         ]);
         $this->addBehavior('CompositeKey');
         // cannot work for Institution > Attendance > Staff
-        // $this->addBehavior('TrackActivity', ['target' => 'User.InstitutionStaffAttendanceActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
+        $this->addBehavior('TrackActivity', ['target' => 'User.InstitutionStaffAttendanceActivities', 'key' => 'security_user_id', 'keyField' => 'staff_id']);
 	}
 
-   public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
+   // public function validationDefault(Validator $validator)
+   //  {
+   //      $validator = parent::validationDefault($validator);
 
-        return $validator
-            ->add('time_in', 'ruleCompareTime', [
-                'rule' => ['compareTime', 'time_out', false],
-                'on' => function ($context) {
-                    return !empty($context['data']['time_out']);
-                }
-            ]);
-    }
+   //      return $validator
+   //          ->add('time_in', 'ruleCompareTime', [
+   //              'rule' => ['compareTime', 'time_out', false],
+   //              'on' => function ($context) {
+   //                  return !empty($context['data']['time_out']);
+   //              }
+   //          ]);
+   //  }
 }
