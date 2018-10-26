@@ -57,8 +57,23 @@ class IdentitiesTable extends ControllerActionTable
 
 	public function beforeAction($event, ArrayObject $extra)
 	{
+        $UserNationalityTable = TableRegistry::get('User.UserNationalities');
+        $userId = null;
+        $queryString = $this->getQueryString();
+        if (isset($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        }
+        $NationalityOptions = $UserNationalityTable
+            ->find('list',
+                ['keyField' => '_matchingData.NationalitiesLookUp.id',
+                'valueField' => '_matchingData.NationalitiesLookUp.name'
+            ])
+            ->matching('NationalitiesLookUp')
+            ->where([$UserNationalityTable->aliasField('security_user_id') => $userId])
+            ->toArray();
 		$this->fields['identity_type_id']['type'] = 'select';
 		$this->fields['nationality_id']['type'] = 'select';
+        $this->fields['nationality_id']['options'] = $NationalityOptions;
 		$this->setFieldOrder(['identity_type_id', 'nationality_id', 'number', 'issue_date', 'expiry_date', 'issue_location', 'comments']);
 	}
 
