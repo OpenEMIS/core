@@ -103,7 +103,9 @@ class IdentitiesTable extends ControllerActionTable
 			])
 			->add('expiry_date',  [
             ])
-            ->add('identity_type_id',  [
+            ->add('identity_type_id', 'ruleCustomIdentityType', [
+                'rule' => ['validateCustomIdentityType'],
+                'provider' => 'table',
             ])
             ->add('number', 'ruleCustomIdentityNumber', [
 				'rule' => ['validateCustomIdentityNumber'],
