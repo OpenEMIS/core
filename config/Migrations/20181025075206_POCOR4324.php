@@ -621,7 +621,7 @@ class POCOR4324 extends AbstractMigration
             `_edit` = "StudentAttendances.edit",
             `_add` = NULL,
             `_delete` = NULL,
-            `_execute` = "StudentAttendances.excel"
+            `_execute` = NULL
             WHERE `id` = 1014
         ');
 
@@ -654,7 +654,8 @@ class POCOR4324 extends AbstractMigration
         $this->execute('
             UPDATE `security_role_functions` SET
             `_add` = 0,
-            `_delete` = 0
+            `_delete` = 0,
+            `_execute` = 0
             WHERE `security_role_id` = 1014
         ');
         // security_role_functions - end
