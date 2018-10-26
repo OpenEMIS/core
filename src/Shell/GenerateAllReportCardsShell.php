@@ -47,7 +47,7 @@ class GenerateAllReportCardsShell extends Shell
 
             if (!empty($recordToProcess)) {
                 $this->out('Generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
-                $this->out('Total memory used: ' . memory_get_usage());
+                // $this->out('Total memory used: ' . memory_get_usage());
                 $this->ReportCardProcesses->updateAll(['status' => $this->ReportCardProcesses::RUNNING], [
                     'report_card_id' => $recordToProcess['report_card_id'],
                     'institution_class_id' => $recordToProcess['institution_class_id'],
@@ -66,7 +66,7 @@ class GenerateAllReportCardsShell extends Shell
                 }
 
                 $this->out('End generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
-                $this->out('Total memory used: ' . memory_get_usage());
+                // $this->out('Total memory used: ' . memory_get_usage());
                 $this->recursiveCallToMyself($this->args[0]);
             } else {
                 $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
@@ -81,7 +81,6 @@ class GenerateAllReportCardsShell extends Shell
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
-            $this->out('debug: ' . $shellCmd);
         } catch(\Exception $ex) {
             $this->out('error : ' . __METHOD__ . ' exception when recursiveCallToMyself : '. $ex);
         }

@@ -351,6 +351,9 @@ class ExcelReportBehavior extends Behavior
     {
         $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
         $objWriter->save($filepath);
+        $objSpreadsheet->disconnectWorksheets();
+        unset($objWriter, $objSpreadsheet);
+        $objPHPExcel->garbageCollect();
     }
 
     public function downloadFile($filecontent, $filename, $filesize)
@@ -371,6 +374,7 @@ class ExcelReportBehavior extends Behavior
     {
         $file = new File($filepath);
         $file->delete();
+        $file->close();
     }
 
     public function getParams($controller)
