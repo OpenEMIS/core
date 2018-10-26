@@ -52,6 +52,7 @@ class GenerateAllReportCardsShell extends Shell
 
                 if (!empty($recordToProcess)) {
                     $this->out('Generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
+                    $this->out('Total memory used: ' . memory_get_usage());
                     $this->ReportCardProcesses->updateAll(['status' => $this->ReportCardProcesses::RUNNING], [
                         'report_card_id' => $recordToProcess['report_card_id'],
                         'institution_class_id' => $recordToProcess['institution_class_id'],
@@ -70,6 +71,16 @@ class GenerateAllReportCardsShell extends Shell
                     }
 
                     $this->out('End generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
+                    $this->out('Total memory used: ' . memory_get_usage());
+                    //To prevent memory leak
+                    $this->ReportCards = null;
+                    $this->ReportCardProcesses = null;
+                    $this->SystemProcesses = null;
+                    $excelParams = null;
+                    TableRegistry::clear();
+                    gc_collect_cycles();
+                    $this->initialize();
+                    $this->out('Total memory used: ' . memory_get_usage() . " (after clearing memory space)");
                 } else {
                     $exit = true;
                     $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
