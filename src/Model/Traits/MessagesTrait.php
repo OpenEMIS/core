@@ -1422,7 +1422,8 @@ trait MessagesTrait
             ],
             'Identities' => [
                 'identity_type_id' => [
-                    'ruleNotBlank' => 'Please select a Type'
+                    'ruleNotBlank' => 'Please select a Type',
+                    'custom_validation' => 'Identity Type exists for this Nationality'
                 ],
                 'issue_location' => [
                     'ruleNotBlank' => 'Please enter a valid Issue Location'
