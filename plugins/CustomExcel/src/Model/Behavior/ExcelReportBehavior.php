@@ -353,7 +353,7 @@ class ExcelReportBehavior extends Behavior
         $objWriter->save($filepath);
         $objSpreadsheet->disconnectWorksheets();
         unset($objWriter, $objSpreadsheet);
-        $objPHPExcel->garbageCollect();
+        gc_collect_cycles();
     }
 
     public function downloadFile($filecontent, $filename, $filesize)
