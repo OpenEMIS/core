@@ -68,7 +68,6 @@ class GenerateAllReportCardsShell extends Shell
                 $this->out('End generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
                 $this->out('Total memory used: ' . memory_get_usage());
                 $this->recursiveCallToMyself($this->args[0]);
-                $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
             } else {
                 $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
             }
