@@ -209,7 +209,7 @@ class DirectoriesTable extends ControllerActionTable
             ->where(function ($exp, $q) use ($subqueryTwo) {
                 return $exp->notExists($subqueryTwo);
             });
-        
+
 
         foreach ($query as $row) {
             $this->updateAll(
@@ -217,7 +217,7 @@ class DirectoriesTable extends ControllerActionTable
                 ['id' => $row->id]
             );
         }
-  
+
     }
 
     public function getCustomFilter(Event $event)
@@ -268,6 +268,8 @@ class DirectoriesTable extends ControllerActionTable
         $options['auto_search'] = true;
 
         $this->dashboardQuery = clone $query;
+
+        //pr($query); die;
     }
 
     public function findStudentsInSchool(Query $query, array $options)
@@ -603,42 +605,55 @@ class DirectoriesTable extends ControllerActionTable
     {
         $this->fields = [];
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
+
         $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
+
         switch ($userType) {
             case self::ALL:
-                // Do nothing
+                $this->field('institution', ['order' => 50]);
+                $this->field('date_of_birth', ['order' => 51]);
                 break;
             case self::STUDENT:
                 $this->field('institution', ['order' => 50]);
-                $this->field('student_status', ['order' => 51]);
+                $this->field('date_of_birth', ['order' => 51]);
+                $this->field('student_status', ['order' => 52]);
                 break;
-
             case self::STAFF:
                 $this->field('institution', ['order' => 50]);
+                $this->field('date_of_birth', ['order' => 51]);
                 break;
-
             case self::GUARDIAN:
+                $this->field('institution', ['order' => 50]);
+                $this->field('date_of_birth', ['order' => 51]);
                 break;
-
             case self::OTHER:
+                $this->field('institution', ['order' => 50]);
+                $this->field('date_of_birth', ['order' => 51]);
                 break;
         }
+
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
         if ($this->action == 'index') {
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
+
             switch ($userType) {
+                case self::ALL:
+                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
+                   break;
                 case self::STUDENT:
-                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'student_status']);
+                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth', 'student_status']);
                     break;
                 case self::STAFF:
-                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution']);
+                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
                     break;
-
-                default:
-                    break;
+                case self::GUARDIAN:
+                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
+                case self::OTHER:
+                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
+                   break;
             }
         }
     }
