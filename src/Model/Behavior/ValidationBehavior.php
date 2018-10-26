@@ -1970,6 +1970,26 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    public static function validateCustomIdentityType($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
+            $UserIdentities = TableRegistry::get('User.Identities');
+            $IdentityTypesData = $UserIdentities
+                ->find()
+                ->where([
+                    $UserIdentities->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+                    $UserIdentities->aliasField('identity_type_id') => $field,
+                    $UserIdentities->aliasField('nationality_id') => $globalData['data']['nationality_id'],
+                ])
+                ->first();
+        }
+        if (!empty($IdentityTypesData)) {
+            return $model->getMessage('User.Identities.identity_type_id.custom_validation');
+        }
+        return true;
+    }
+
     public static function validateCustomPattern($field, $code, array $globalData)
     {
         $pattern = '';
