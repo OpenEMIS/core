@@ -40,24 +40,26 @@ class StaffContactsTable extends AppTable  {
                     ->find()
                     ->where([
                         $userIdentities->aliasField('security_user_id') => $entity->security_user_id,
-                    ]) 
+                    ])
+                    ->contain(['IdentityTypes'])
                     ->select([
-                    'IdentityNumber' => $userIdentities->aliasField('number')
+                    'IdentityTypes' => $userIdentities->IdentityTypes->aliasField('name'),
+                    'IdentityNumber' => $userIdentities->aliasField('number'),
                         ])
                     ->toArray();
 
         if(!empty($result)) {
             foreach ($result as $single) {
                 if ($single->IdentityNumber == end($result)->IdentityNumber) {
-                    $IdentityNumber .= $single->IdentityNumber;
+                    $IdentityNumber .= $single->IdentityTypes .' - '. $single->IdentityNumber;
                 } else {
-                    $IdentityNumber .= $single->IdentityNumber . ', ';
+                    $IdentityNumber .= $single->IdentityTypes .' - '. $single->IdentityNumber . ', ';
                 }
             }
         }
 
         return $IdentityNumber;
-    }
+    }    
 
     public function onExcelGetNationality(Event $event, Entity $entity)
     {
