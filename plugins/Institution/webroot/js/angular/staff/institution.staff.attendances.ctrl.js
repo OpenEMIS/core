@@ -270,6 +270,9 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
                 if (vm.allPresentCount == 0) {
                     vm.allPresentCount = '-';
                 }
+                if (vm.allLeaveCount == 0) {
+                    vm.allLeaveCount = '-';
+                }
             });
         }
     }
