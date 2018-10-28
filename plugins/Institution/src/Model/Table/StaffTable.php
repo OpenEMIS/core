@@ -2081,6 +2081,14 @@ class StaffTable extends ControllerActionTable
                         if ($dayId != -1) {
                             $row->date = $dateStr;
                         }
+                        $historyUrl = Router::url([
+                            'plugin' => 'Staff',
+                            'controller' => 'Staff',
+                            'action' => 'InstitutionStaffAttendanceActivities',
+                            'index',
+                            'user_id' => $staffId
+                        ]);
+                        $row->historyUrl = $historyUrl;
                     }
                     // gets all the staff leave
                     foreach ($staffTimeRecords as $key => $staffTimeRecord) {

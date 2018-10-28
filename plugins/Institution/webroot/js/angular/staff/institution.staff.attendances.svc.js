@@ -279,7 +279,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                 var full_day = staffLeave.full_day;
                 // var leaveStatusName = staffLeave._matchingData.Statuses.name;
                 var leaveTypeName = staffLeave.staffLeaveTypeName;
-                data += '<i class="fa kd-attendance"></i> <font color="#CC5C5C">'+leaveTypeName + '</font><br>';
+                data += '<font color="#CC5C5C"><i class="fa-calendar-check-o"></i> '+leaveTypeName + '</font><br>';
 
                 // if (!full_day){
                 //     data += start_time + '<br>' + end_time + '<br>';
@@ -446,13 +446,12 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             //end of time out element
             return divElement;
         } else {
-            var time = '';
+            var time = '<i class="fa fa-minus"></i>';
+            var historyUrl = data.historyUrl;
             if(timeIn && timeOut){
-                time = '<i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '<br><i class="fa-external-link"></i> ' + convert12Timeformat(timeOut);
+                time = '<font color= "#77B576"><i class="fa-external-link-square"></i> '+ convert12Timeformat(timeIn) + '<br><i class="fa-external-link"></i> ' + convert12Timeformat(timeOut) +'</font><br><i class="fa fa-file-text" style=" color: #FFFFFF; background-color:  #6699CC; border: 1px solid #6699CC;"></i><a href= "'+ historyUrl + '"target="_blank"> View History Log</a>';
             } else if (timeIn && !timeOut) {
                 time = '<i class="fa-external-link"></i> '+ convert12Timeformat(timeIn);
-            } else {
-                time = '<i class="fa fa-minus"></i>';
             }
             return time;
         }
@@ -463,13 +462,13 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         var timeOut = params.time_out;
         var time = '';
         if (timeIn && timeOut){
-            time = '<i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '<br><i class="fa-external-link"></i> ' + convert12Timeformat(timeOut);
+            time = '<font color= "#77B576"><i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '<br><i class="fa-external-link"></i> ' + convert12Timeformat(timeOut) +  '</font>';
         } else if (timeIn && !timeOut) {
             time = '<i class="fa-external-link"></i> '+ convert12Timeformat(timeIn);
         }
         if (angular.isDefined(params.leave) && params.leave.length != 0) {
             angular.forEach(params.leave, function(leave) {
-                time += '<br><i class="fa kd-attendance"></i> <font color="#CC5C5C">'+ leave.staffLeaveTypeName +'</font>';
+                time += '<br><font color="#CC5C5C"> <i class="fa-calendar-check-o"></i> '+ leave.staffLeaveTypeName +'</font>';
                 if (leave.isFullDay) {
                     time += '<br><font color="#CC5C5C">(Full Day)</font><br>';
                 } else if (leave.startTime && leave.endTime) {
@@ -513,6 +512,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         if (hours == 0) hours = 12;
 
         var sHours = hours.toString();
+        if (sHours.length == 1) {
+            sHours = "0" + sHours;
+        }
         var sMinutes = minutes.toString();
         // var sSeconds = seconds.toString();
         return sHours + ":" + sMinutes + " " + meridian;
@@ -594,7 +596,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
     function getViewCommentElement(data) {
         // console.log(data);
         var comment = data;
-        var html = '';
+        var html = '<i class="fa fa-minus"></i>';
         if (comment != null) {
             // the icon dunch wanna come out :((
             html = '<i class="fa kd-comment"></i>' + comment;
@@ -609,14 +611,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         var scope = params.context.scope;
         var value = params.value;
         var eTextarea = document.createElement("textarea");
-        eTextarea.setAttribute("placeholder", "Comments");
+        eTextarea.setAttribute("placeholder", "");
         eTextarea.setAttribute("id", dataKey);
 
         // if (hasError(data, dataKey)) {
         //     eTextarea.setAttribute("class", "error");
         // }
 
-        // eTextarea.value = data.value;
+        eTextarea.value = params.value;
         eTextarea.addEventListener('blur', function () {
             var oldValue = params.value;
             var newValue = eTextarea.value;

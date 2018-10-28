@@ -81,7 +81,14 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
         // $selectedPeriod = $this->request->query['academic_period_id'];
-        $staffId = $this->Session->read('Staff.Staff.id');
+        // $staffId = $this->Session->read('Staff.Staff.id');
+        // pr($this->request->query('user_id'));die;
+        if ($this->request->query('user_id') !== null) {
+            $staffId = $this->request->query('user_id');
+        } else {
+            $staffId = $this->Session->read('Staff.Staff.id');
+        }
+
         $periodOptions = $AcademicPeriod->getYearList();
 
         if (empty($this->request->query['academic_period_id'])) {
