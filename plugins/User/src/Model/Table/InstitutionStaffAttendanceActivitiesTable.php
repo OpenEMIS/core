@@ -83,11 +83,11 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
         // $selectedPeriod = $this->request->query['academic_period_id'];
         // $staffId = $this->Session->read('Staff.Staff.id');
         // pr($this->request->query('user_id'));die;
-        if ($this->request->query('user_id') !== null) {
-            $staffId = $this->request->query('user_id');
-        } else {
-            $staffId = $this->Session->read('Staff.Staff.id');
-        }
+        // if ($this->request->query('user_id') !== null) {
+        //     $staffId = $this->request->query('user_id');
+        // } else {
+        //     $staffId = $this->Session->read('Staff.Staff.id');
+        // }
 
         $periodOptions = $AcademicPeriod->getYearList();
 
@@ -205,7 +205,7 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
             // End setup days
 
             $conditions = [
-                    $InstitutionStaffAttendances->aliasField('staff_id') => $staffId,
+                    // $InstitutionStaffAttendances->aliasField('staff_id') => $staffId,
                     $InstitutionStaffAttendances->aliasField('academic_period_id') => $selectedPeriod,
                     $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
                 ];
