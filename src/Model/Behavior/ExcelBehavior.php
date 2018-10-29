@@ -250,7 +250,6 @@ class ExcelBehavior extends Behavior
                 $hasGroupRow = (!empty($groupList));
 
                 if ($hasGroupRow) {
-
                     $subjectsHeaderRow = [];
                     $subjectsColWidth = [];
                     $groupStartingIndex = 0;
@@ -301,7 +300,6 @@ class ExcelBehavior extends Behavior
                     $headerRow = array_merge($headerRow, $sheet['additionalHeader']);
                 }
 
-                //$writer->writeSheetHeader($sheetName, $headerFormat, false); // true will surpress the header.
                 $writer->writeSheetHeader($sheetName, $headerFormat, true);
                 $writer->writeSheetRow($sheetName, $headerRow, $headerStyle);
 

@@ -304,21 +304,21 @@ class StudentOutcomesTable extends ControllerActionTable
             'key' => 'Institutions.name',
             'field' => 'institution_name',
             'type' => 'string',
-            'label' => 'School'
+            'label' => __('Institution')
         ];
 
        $newFields[] = [
             'key' => 'Institutions.institution_code',
             'field' => 'institution_code',
             'type' => 'string',
-            'label' => 'School Code'
+            'label' => __('Institution') . " " . __('Code')
         ];
 
         $newFields[] = [
             'key' => 'EducationSubjects.name',
             'field' => 'education_grade_name',
             'type' => 'string',
-            'label' => 'Grade'
+            'label' => __('Grade')
         ];
 
         $newFields[] = [
@@ -338,7 +338,7 @@ class StudentOutcomesTable extends ControllerActionTable
             'key' => 'StudentOutcomes.student',
             'field' => 'student',
             'type' => 'string',
-            'label' => 'Student Name'
+            'label' => __('Student Name')
         ];
 
         $newFields[] = [
