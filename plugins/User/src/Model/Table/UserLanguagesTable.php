@@ -10,6 +10,7 @@ class UserLanguagesTable extends ControllerActionTable {
 		parent::initialize($config);
 
         $this->behaviors()->get('ControllerAction')->config('actions.search', false);
+        $this->addBehavior('User.SetupTab');
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Languages', ['className' => 'Languages']);
@@ -57,28 +58,5 @@ class UserLanguagesTable extends ControllerActionTable {
 				'rule' => ['range', -1, 6]
 			])
 		;
-	}
-
-	private function setupTabElements() {
-		$options = [
-			'userRole' => '',
-		];
-
-		switch ($this->controller->name) {
-			case 'Students':
-				$options['userRole'] = 'Students';
-				break;
-			case 'Staff':
-				$options['userRole'] = 'Staff';
-				break;
-		}
-
-		$tabElements = $this->controller->getUserTabElements($options);
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Languages');
-	}
-
-	public function afterAction(Event $event, $data) {
-		$this->setupTabElements();
 	}
 }
