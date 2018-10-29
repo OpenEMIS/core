@@ -54,7 +54,6 @@ class POCOR4815 extends AbstractMigration
             }
 
             $data[] = [
-                'id' => $value->id,
                 'identity_type_id' => $value->identity_type_id,
                 'number' => $value->number,
                 'issue_date' => $issueDate,
