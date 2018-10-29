@@ -316,15 +316,22 @@ class StaffController extends AppController
         /**
          * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
+        $userId = null;
         $session = $this->request->session();
-        if ($session->check('Staff.Staff.id')) {
-            $header = '';
+        if (isset($this->request->query['user_id']) && $this->request->query['user_id']) {
+            $userId = $this->request->query['user_id'];
+        }else if ($session->check('Staff.Staff.id')) {
             $userId = $session->read('Staff.Staff.id');
+        }
+        if ($userId) {
+            $header = '';
+            // $userId = $session->read('Staff.Staff.id');
 
-            if ($session->check('Staff.Staff.name')) {
-                $header = $session->read('Staff.Staff.name');
-            }
-
+            // if ($session->check('Staff.Staff.name')) {
+            //     $header = $session->read('Staff.Staff.name');
+            // }
+            $entity = $this->Staff->get($userId);
+            $header = $entity->name;
             $primaryKey = $model->primaryKey();
 
             $alias = $model->alias;
@@ -398,19 +405,39 @@ class StaffController extends AppController
         $session = $this->request->session();
 
         if ($model->alias() != 'Staff') {
-            if ($session->check('Staff.Staff.id')) {
+            if ($this->request->query('user_id') !== null) {
+                $userId = $this->request->query('user_id');
+            } else if ($session->check('Staff.Staff.id')) {
                 $userId = $session->read('Staff.Staff.id');
-                if ($model->hasField('security_user_id')) {
-                    $query->where([$model->aliasField('security_user_id') => $userId]);
-                } else if ($model->hasField('staff_id')) {
-                    $query->where([$model->aliasField('staff_id') => $userId]);
-                }
             } else {
                 $this->Alert->warning('general.noData');
                 $event->stopPropagation();
                 return $this->redirect(['action' => 'index']);
             }
+            if ($userId) {
+                if ($model->hasField('security_user_id')) {
+                    $query->where([$model->aliasField('security_user_id') => $userId]);
+                } else if ($model->hasField('staff_id')) {
+                    $query->where([$model->aliasField('staff_id') => $userId]);
+                }
+            }
         }
+
+
+        // if ($model->alias() != 'Staff') {
+        //     if ($session->check('Staff.Staff.id')) {
+        //         $userId = $session->read('Staff.Staff.id');
+        //         if ($model->hasField('security_user_id')) {
+        //             $query->where([$model->aliasField('security_user_id') => $userId]);
+        //         } else if ($model->hasField('staff_id')) {
+        //             $query->where([$model->aliasField('staff_id') => $userId]);
+        //         }
+        //     } else {
+        //         $this->Alert->warning('general.noData');
+        //         $event->stopPropagation();
+        //         return $this->redirect(['action' => 'index']);
+        //     }
+        // }
     }
 
     public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)

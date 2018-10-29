@@ -253,7 +253,6 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     vm.setAllStaffAttendances = function(staffList) {
         vm.staffList = staffList;
         vm.totalStaff = staffList.length;
-        console.log(staffList);
         if (staffList.length > 0) {
             angular.forEach(staffList, function(staff) {
                 // for All Days Dashboard
@@ -267,13 +266,13 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
                         vm.allLeaveCount = vm.allLeaveCount + 1;
                     }
                 });
-                if (vm.allPresentCount == 0) {
-                    vm.allPresentCount = '-';
-                }
-                if (vm.allLeaveCount == 0) {
-                    vm.allLeaveCount = '-';
-                }
             });
+            if (vm.allPresentCount == 0) {
+                vm.allPresentCount = '-';
+            }
+            if (vm.allLeaveCount == 0) {
+                vm.allLeaveCount = '-';
+            }
         }
     }
 
@@ -305,7 +304,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         vm.action = 'edit';
         vm.gridOptions.context.action = vm.action;
         vm.setColumnDef();
-        AlertSvc.info($scope, 'Time in and Time Out will be automatically saved.');
+        AlertSvc.info($scope, 'Attendance will be saved automatically.');
     };
 
     vm.onBackClick = function() {
