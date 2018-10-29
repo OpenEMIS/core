@@ -36,7 +36,7 @@ class PageController extends BaseController
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 3];
+        $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 5];
         $events['Controller.Page.onRenderBinary'] = 'onRenderBinary';
         return $events;
     }

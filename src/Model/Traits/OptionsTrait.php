@@ -193,6 +193,12 @@ trait OptionsTrait
                     'before_after' => [
                         1 => __('Days before application close date')
                     ]
+                ],
+                'ScholarshipDisbursement' => [
+                    'before_after' => [
+                        1 => __('Days before disbursement date'),
+                        2 => __('Days after disbursement date')
+                    ]
                 ]
             ]
         ];
