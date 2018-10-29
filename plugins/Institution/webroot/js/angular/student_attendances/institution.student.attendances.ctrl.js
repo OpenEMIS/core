@@ -86,7 +86,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     // ready
     angular.element(document).ready(function () {
-        InstitutionStudentAttendancesSvc.init(angular.baseUrl);
+        InstitutionStudentAttendancesSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';
         vm.gridOptions.context.mode = vm.action;
 
@@ -133,17 +133,17 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             }, vm.error)
             .then(function(classStudents) {
                 vm.updateClassStudentList(classStudents);
-                vm.initGrid();
             }, vm.error)
             .finally(function() {
+                vm.initGrid();
                 UtilsSvc.isAppendLoader(false);
             });
         }
     });
 
     // error
-    vm.error = function (error) {
-        console.log(error);   
+    vm.error = function (error, test) {
+        return $q.reject(error);
     }
 
     // update data
@@ -399,6 +399,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
         }, vm.error)
         .then(function(attendancePeriodOptions) {
+            var markedParams = vm.getIsMarkedParams();
+            console.log('markedParams', markedParams);
             vm.updateAttendancePeriodList(attendancePeriodOptions);
             return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
         }, vm.error)
@@ -408,10 +410,10 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
-            vm.setGridData();
-            vm.setColumnDef();
         }, vm.error)
         .finally(function() {
+            vm.setGridData();
+            vm.setColumnDef();
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -433,10 +435,10 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
-            vm.setGridData();
-            vm.setColumnDef();
         }, vm.error)
         .finally(function() {
+            vm.setGridData();
+            vm.setColumnDef();
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -454,10 +456,10 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
-            vm.setGridData();
-            vm.setColumnDef();
             }, vm.error)
         .finally(function() {
+            vm.setGridData();
+            vm.setColumnDef();
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -475,10 +477,10 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
-            vm.setGridData();
-            vm.setColumnDef();
         }, vm.error)
         .finally(function() {
+            vm.setGridData();
+            vm.setColumnDef();
             UtilsSvc.isAppendLoader(false);
         }); 
     }

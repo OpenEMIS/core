@@ -39,6 +39,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         'PRESENT': 'fa fa-minus',
     };
 
+    const ALL_DAY_VALUE = -1;
+
     var translateText = {
         'original': {
             'Name': 'Name',
@@ -55,6 +57,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         'translated': {
         }
     };
+
+    var controllerScope;
 
     var models = {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
@@ -93,7 +97,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     return service;
 
-    function init(baseUrl) {
+    function init(baseUrl, scope) {
+        controllerScope = scope;
         KdDataSvc.base(baseUrl);
         KdDataSvc.controllerAction('StudentAttendances');
         KdDataSvc.init(models);
@@ -221,8 +226,13 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     function getClassOptions(institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             var classList = response.data.data;
-            if (angular.isObject(classList) && classList.length > 0) {
-                deferred.resolve(classList);
+            if (angular.isObject(classList)) {
+                if (classList.length > 0) {
+                    deferred.resolve(classList);
+                } else {
+                    AlertSvc.warning(controllerScope, 'You do not have any classes');
+                    deferred.reject('You do not have any classess');
+                }
             } else {
                 deferred.reject('There was an error when retrieving the class list');
             }
@@ -268,6 +278,10 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             week_end_day: params.week_end_day,
         };
 
+        if (extra.attendance_period_id == '' || extra.institution_class_id == '' || extra.academic_period_id == '') {
+            return $q.reject('There was an error when retrieving the class student list');
+        }
+
         var success = function(response, deferred) {
             var classStudents = response.data.data;
             if (angular.isObject(classStudents)) {
@@ -290,6 +304,10 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             day_id: params.day_id,
             attendance_period_id: params.attendance_period_id
         };
+
+        if (extra.day_id == ALL_DAY_VALUE) {
+            return $q.resolve(false);
+        }
 
         var success = function(response, deferred) {
             var count = response.data.total;
