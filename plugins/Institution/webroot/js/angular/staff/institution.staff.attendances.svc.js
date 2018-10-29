@@ -451,7 +451,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             if(timeIn && timeOut){
                 time = '<font color= "#77B576"><i class="fa-external-link-square"></i> '+ convert12Timeformat(timeIn) + '<br><i class="fa-external-link"></i> ' + convert12Timeformat(timeOut) +'</font><br><i class="fa fa-file-text" style=" color: #FFFFFF; background-color:  #6699CC; border: 1px solid #6699CC;"></i><a href= "'+ historyUrl + '"target="_blank"> View History Log</a>';
             } else if (timeIn && !timeOut) {
-                time = '<i class="fa-external-link"></i> '+ convert12Timeformat(timeIn);
+                time = '<font color= "#77B576"><i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '</font>';
             }
             return time;
         }
@@ -464,7 +464,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         if (timeIn && timeOut){
             time = '<font color= "#77B576"><i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '<br><i class="fa-external-link"></i> ' + convert12Timeformat(timeOut) +  '</font>';
         } else if (timeIn && !timeOut) {
-            time = '<i class="fa-external-link"></i> '+ convert12Timeformat(timeIn);
+            time = '<font color= "#77B576"><i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '</font>';
         }
         if (angular.isDefined(params.leave) && params.leave.length != 0) {
             angular.forEach(params.leave, function(leave) {
