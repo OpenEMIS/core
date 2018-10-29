@@ -331,9 +331,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             setTimeout(function(event) {
                 var timepickerControl = $('#' + timeinPickerId).timepicker({defaultTime: timeIn});
                 $('#' + timeinPickerId).timepicker().on("hide.timepicker", function (e) {
-                    // console.log('saving start time.........');
-                    // console.log(e.time);
-                    // console.log(time_in);
                     var time_in = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
                     saveStaffAttendanceTimeIn(params.data, params.value, time_in, academicPeriodId)
                     .then(
@@ -605,11 +602,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
     }
 
     function getEditCommentElement(params) {
-        console.log('params');
-        console.log(params);
         var dataKey = 'comment';
         var scope = params.context.scope;
         var value = params.value;
+        var date = params.data.date;
         var eTextarea = document.createElement("textarea");
         eTextarea.setAttribute("placeholder", "");
         eTextarea.setAttribute("id", dataKey);
@@ -622,15 +618,17 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         eTextarea.addEventListener('blur', function () {
             var oldValue = params.value;
             var newValue = eTextarea.value;
-            console.log(newValue);
+            // console.log(newValue);
             // UtilsSvc.isAppendSpinner(true, 'institution-student-attendances-table');
-            saveStaffAttendanceComment(params, newValue)
+            saveStaffAttendanceComment(params, newValue, date)
             .then(
                 function(response) {
-                    console.log(response);
+                    // console.log(response);
                     if(response.data.error.length == 0){
+                        console.log(newValue);
                         AlertSvc.success(scope, 'Comment successfully saved.');
-                        params.value.comment = newValue;
+                        console.log(params);
+                        params.data.attendance[date].comment = newValue;
                     } else {
                         AlertSvc.error(scope, 'There was an error when saving the record');
                     }
