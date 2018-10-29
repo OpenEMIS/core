@@ -374,7 +374,6 @@ class ExcelReportBehavior extends Behavior
     {
         $file = new File($filepath);
         $file->delete();
-        $file->close();
     }
 
     public function getParams($controller)
