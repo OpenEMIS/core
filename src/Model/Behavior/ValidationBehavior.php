@@ -1978,7 +1978,10 @@ class ValidationBehavior extends Behavior
         if (!empty($globalData['data']['id'])) {
             $conditions[$UserIdentities->aliasField('id'). ' NOT IN']=  $globalData['data']['id'];
         }
-        if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
+
+        if (!(array_key_exists('security_user_id', $globalData['data']))) {
+            return true;
+        } else if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
             $IdentityTypesData = $UserIdentities
                 ->find()
                 ->where([
