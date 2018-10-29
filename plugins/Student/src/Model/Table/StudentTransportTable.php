@@ -25,23 +25,23 @@ class StudentTransportTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['type' => 'integer']);
-        $this->field('institution_trip_id', ['type' => 'integer']);        
-        $this->field('trip_type_id', ['type' => 'integer']);    
-        $this->field('provider_id', ['type' => 'integer']);  
+        $this->field('institution_trip_id', ['type' => 'integer']);
+        $this->field('trip_type_id', ['type' => 'integer']);
+        $this->field('provider_id', ['type' => 'integer']);
         $this->field('bus_id', ['type' => 'integer']);
 
-        $this->setupTabElements();                              
+        $this->setupTabElements();
     }
 
     public function viewAfterAction(Event $event)
     {
         $this->field('academic_period_id', ['type' => 'integer']);
-        $this->field('institution_trip_id', ['type' => 'integer']);        
-        $this->field('trip_type_id', ['type' => 'integer']);    
-        $this->field('Provider_id', ['type' => 'integer']);  
+        $this->field('institution_trip_id', ['type' => 'integer']);
+        $this->field('trip_type_id', ['type' => 'integer']);
+        $this->field('Provider_id', ['type' => 'integer']);
         $this->field('Bus_id', ['type' => 'integer']);
     }
 

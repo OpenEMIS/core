@@ -110,6 +110,7 @@ class ProfilesController extends AppController
     public function StaffBehaviours()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']); }
     public function StudentOutcomes()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']); }
     public function ScholarshipApplications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipApplications']); }
+    public function Demographic()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']); }
 
     // health
     public function Healths()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
@@ -370,6 +371,7 @@ class ProfilesController extends AppController
         $tabElements = [
             $this->name => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
+            'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
             'Contacts' => ['text' => __('Contacts')],
