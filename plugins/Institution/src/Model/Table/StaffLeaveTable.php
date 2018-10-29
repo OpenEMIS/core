@@ -143,7 +143,7 @@ class StaffLeaveTable extends ControllerActionTable
                     if ($isDateInRange && !$isUpdate) {
                         //If leave date applied overlaps existing records and both are non full day leave, check for overlapping in time.
                         if($comparisonFullDay == 0 && $isFullDayLeave == 0){
-                            $count = $this
+                            $overlapHalfDayLeaveRecords = $this
                             ->find()
                             ->where([
                                 $this->aliasField('staff_id') => $staffId,
@@ -154,7 +154,7 @@ class StaffLeaveTable extends ControllerActionTable
                                 $this->aliasField('id !=') => $entityId,
                             ])
                             ->count();
-                            if ($count >= 2) {
+                            if ($overlapHalfDayLeaveRecords >= 2) {
                                 $overlap = true;
                                 break;
                             } else if (($comparisonStartTime <= $entityEndTime) && ($comparisonEndTime >= $entityStartTime)) {
