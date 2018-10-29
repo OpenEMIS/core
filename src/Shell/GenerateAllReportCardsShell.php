@@ -22,10 +22,10 @@ class GenerateAllReportCardsShell extends Shell
 
     public function main()
     {
-        if (!empty($this->args[0])) {
-            $pid = getmypid();
-            $systemProcessId = !empty($this->args[0]) ? $this->args[0] : 0;
-            $this->SystemProcesses->updatePid($systemProcessId, $pid);
+        if (!empty($this->args[0]) && !empty($this->args[1])) {
+            $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllReportCards', getmypid(), $this->args[0], '', $this->args[1]);
+            $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
+
             $recordToProcess = $this->ReportCardProcesses->find()
                 ->select([
                     $this->ReportCardProcesses->aliasField('report_card_id'),
@@ -47,7 +47,6 @@ class GenerateAllReportCardsShell extends Shell
 
             if (!empty($recordToProcess)) {
                 $this->out('Generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
-                // $this->out('Total memory used: ' . memory_get_usage());
                 $this->ReportCardProcesses->updateAll(['status' => $this->ReportCardProcesses::RUNNING], [
                     'report_card_id' => $recordToProcess['report_card_id'],
                     'institution_class_id' => $recordToProcess['institution_class_id'],
@@ -66,17 +65,18 @@ class GenerateAllReportCardsShell extends Shell
                 }
 
                 $this->out('End generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
-                // $this->out('Total memory used: ' . memory_get_usage());
-                $this->recursiveCallToMyself($this->args[0]);
+                $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
+                $this->recursiveCallToMyself($this->args);
             } else {
                 $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
             }
         }
+        posix_kill(getmypid(), SIGKILL);
     }
 
     private function recursiveCallToMyself($args)
     {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards '.$args;
+        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards '.$args[0] . " " . $args[1];
         $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
