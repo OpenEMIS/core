@@ -234,7 +234,7 @@ $panelHeader = $this->fetch('panelHeader');
                 </div>
             </bg-pane>
 
-            <bg-pane class="split-content splitter-slide-out splitter-filter" min-size-p="20" max-size-p="20" size-p="20">
+            <bg-pane class="split-content splitter-slide-out splitter-filter" min-size-p="20" max-size-p="30" size-p="20">
                 <div class="split-content-header">
                     <h3><?= __('Filter') ?></h3>
                 </div>
