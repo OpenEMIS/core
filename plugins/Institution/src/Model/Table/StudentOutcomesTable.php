@@ -328,8 +328,8 @@ class StudentOutcomesTable extends ControllerActionTable
         ];
 
         $newFields[] = [
-            'key' => 'Student.id',
-            'field' => 'student_id',
+            'key' => 'Student.openemis_no',
+            'field' => 'openemis_no',
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
@@ -461,6 +461,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $institutionId = $session->read('Institution.Institutions.id');
         $AccessControl = $this->AccessControl;
         $userId = $session->read('Auth.User.id');
+
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         if (!$AccessControl->isAdmin()) {
             if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
