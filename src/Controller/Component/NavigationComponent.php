@@ -1103,11 +1103,9 @@ class NavigationComponent extends Component
         ];
 
         $session = $this->request->session();
-        $guardianID = $session->read('Guardian.Guardians.id');
-        $isStudent = $session->read('Directory.Directories.is_student');
-        $studentId = $session->read('Student.Students.id');
-        $isGuardian = $session->read('Directory.Directories.is_guardian');
-        if ((!empty($guardianID) && !empty($isStudent)) || (!empty($studentId) && !empty($isGuardian))) {
+        $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
+        $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
+        if (!empty($studentToGuardian) || !empty($guardianToStudent)) {
             $navigation['Directories.Directories.view']['selected'] = ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull','Directories.History'];
         }
 
@@ -1259,9 +1257,8 @@ class NavigationComponent extends Component
         ];
 
         $session = $this->request->session();
-        $guardianID = $session->read('Guardian.Guardians.id');
-        $isStudent = $session->read('Directory.Directories.is_student');
-        if (!empty($guardianID) && !empty($isStudent)) {
+        $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
+        if (!empty($studentToGuardian)) {
             $navigation['Directories.StudentGuardians']['selected'] = ['Directories.StudentGuardians', 'Directories.StudentGuardianUser', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments', 'Directories.Contacts', 'Directories.Demographic'];
         }
         return $navigation;
@@ -1270,22 +1267,21 @@ class NavigationComponent extends Component
     public function getDirectoryGuardianNavigation()
     {
         $navigation = [
-            'Directories.Student' => [
+            'Directories.Guardian' => [
                 'title' => 'Guardian',
                 'parent' => 'Directories.Directories.index',
                 'link' => false,
             ],
                 'Directories.GuardianStudents' => [
                     'title' => 'Students',
-                    'parent' => 'Directories.Student',
+                    'parent' => 'Directories.Guardian',
                     'params' => ['plugin' => 'Directory'],
                     'selected' => ['Directories.GuardianStudents']
                 ],
         ];
         $session = $this->request->session();
-        $studentId = $session->read('Student.Students.id');
-        $isGuardian = $session->read('Directory.Directories.is_guardian');
-        if (!empty($studentId) && !empty($isGuardian)) {
+        $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
+        if (!empty($guardianToStudent)) {
             $navigation['Directories.GuardianStudents']['selected'] = ['Directories.GuardianStudents', 'Directories.GuardianStudentUser', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments', 'Directories.Contacts', 'Directories.Demographic'];
         }
 
