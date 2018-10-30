@@ -85,6 +85,11 @@ class StudentsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $session = $this->request->session();
+        $userId = $session->read('Directory.Directories.id');
+        $conditions[$this->aliasField('guardian_id')] = $userId;
+        $query->where($conditions, [], true);
+
         $search = $this->getSearchKey();
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
