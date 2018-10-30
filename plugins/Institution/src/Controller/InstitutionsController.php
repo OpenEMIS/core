@@ -1463,14 +1463,12 @@ class InstitutionsController extends AppController
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'Guardians' => ['text' => __('Guardians')],
-            'StudentSurveys' => ['text' => __('Surveys')],
             'StudentTransport' => ['text' => __('Transport')]
         ];
 
         if ($type == 'Staff') {
             $studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
             unset($studentTabElements['Guardians']);
-            unset($studentTabElements['StudentSurveys']);   // Only Student has Survey tab
             unset($studentTabElements['StudentTransport']);   // Only Student has Transport tab
         }
 
