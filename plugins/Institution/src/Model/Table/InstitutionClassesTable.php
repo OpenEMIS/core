@@ -1348,30 +1348,15 @@ class InstitutionClassesTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
 
-        $conditions = [
-            $this->aliasField('institution_id') => $institutionId,
-            $this->aliasField('academic_period_id') => $academicPeriodId
-        ];
-
-        $user = $options['user'];
-
-        if (!$user['super_admin']) {
-            $staffId = $user['id'];
-            $conditions['OR'] = [
-                $this->aliasField('staff_id') => $staffId,
-                $this->aliasField('secondary_staff_id') => $staffId
-            ];
-        }
-
-        // unset user in options so it will not trigger the beforeFind() that uses other permissions (My Classes, All Classes, My Subjects, All Subjects to do class filtering)
-        unset($options['user']);
-
         return $query
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('name')
             ])
-            ->where($conditions)
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
             ->order([$this->aliasField('name')]);
     }
 
