@@ -36,11 +36,13 @@ class SetupTabBehavior extends Behavior
             $studentId = $session->read('Student.Students.id');
             $isStudent = $session->read('Directory.Directories.is_student');
             $isGuardian = $session->read('Directory.Directories.is_guardian');
+            $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
+            $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
 
             if ($this->_table->controller->name == 'Directories') {
-                if (!empty($isGuardian) && !empty($studentId)) {
+                if (!empty($isGuardian) && !empty($studentId) && !empty($guardianToStudent)) {
                     $tabElements = $this->_table->controller->getUserTabElements(['id' => $studentId, 'userRole' => 'Students']);
-                } elseif (!empty($isStudent) && !empty($guardianId)) {
+                } elseif (!empty($isStudent) && !empty($guardianId) && !empty($studentToGuardian)) {
                     $tabElements = $this->_table->controller->getUserTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
                 } else {
                     $tabElements = $this->_table->controller->getUserTabElements();

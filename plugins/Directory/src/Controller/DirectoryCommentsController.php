@@ -42,6 +42,8 @@ class DirectoryCommentsController extends BaseController
         $studentId = $session->read('Student.Students.id');
         $isStudent = $session->read('Directory.Directories.is_student');
         $isGuardian = $session->read('Directory.Directories.is_guardian');
+        $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
+        $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
 
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
@@ -94,7 +96,7 @@ class DirectoryCommentsController extends BaseController
             }
             $tabElements[$action]['url'] = $url;
         }
-        if (!empty($guardianId) && !empty($isStudent)) {
+        if (!empty($guardianId) && !empty($isStudent) && !empty($studentToGuardian)) {
             $StudentGuardianId = $this->request->session()->read('Student.Guardians.primaryKey')['id'];
             $url = ['plugin' => 'Directory', 'controller' => 'Directories'];
             $guardianstabElements = [
@@ -105,7 +107,7 @@ class DirectoryCommentsController extends BaseController
             $guardianstabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $guardianId, 'StudentGuardians.id' => $StudentGuardianId])]);
             $tabElements = array_merge($guardianstabElements, $tabElements);
             unset($tabElements['Directories']);
-        } elseif (!empty($studentId) && !empty($isGuardian)) {
+        } elseif (!empty($studentId) && !empty($isGuardian) && !empty($guardianToStudent)) {
             $StudentGuardianId = $this->request->session()->read('Student.Guardians.primaryKey')['id'];
             $url = ['plugin' => 'Directory', 'controller' => 'Directories'];
             $guardianstabElements = [
