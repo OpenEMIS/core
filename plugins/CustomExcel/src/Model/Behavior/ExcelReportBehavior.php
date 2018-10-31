@@ -351,6 +351,9 @@ class ExcelReportBehavior extends Behavior
     {
         $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
         $objWriter->save($filepath);
+        $objSpreadsheet->disconnectWorksheets();
+        unset($objWriter, $objSpreadsheet);
+        gc_collect_cycles();
     }
 
     public function downloadFile($filecontent, $filename, $filesize)
