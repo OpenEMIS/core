@@ -71,6 +71,11 @@ class RenderDropdownBehavior extends RenderBehavior {
                                     if (array_key_exists($fieldKey, $question)) {
                                         $this->postedData[$question[$fieldKey]] = $question['number_value'];
                                     }
+                                    // put data back when validation fails
+                                    if (array_key_exists($fieldId, $this->postedData)) {
+                                        $selectedValue = $this->postedData[$fieldId];
+                                        $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
+                                    }
                                 }
                             }
                         }
