@@ -4,6 +4,7 @@ namespace Profile\Controller;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Core\Configure;
+use Cake\ORM\TableRegistry;
 use App\Controller\PageController;
 
 class CommentsController extends PageController
@@ -143,14 +144,63 @@ class CommentsController extends PageController
                 'controller' => 'Directories',
                 'action' => 'Directories'
             ]);
-            $page->addCrumb($userName, [
-                'plugin' => 'Directory',
-                'controller' => 'Directories',
-                'action' => 'Directories',
-                'view',
-                $encodedUserId
+            $session = $this->request->session();
+            $guardianId = $session->read('Guardian.Guardians.id');
+            if (!empty($guardianId)) {
+                    $studentId = $session->read('Student.Students.id');
+                    $userName = $this->Users->get($studentId)->name;
+                    $encodedUserId = $this->paramsEncode(['id' => $studentId]);
+                    $page->addCrumb($userName, [
+                    'plugin' => 'Directory',
+                    'controller' => 'Directories',
+                    'action' => 'Directories',
+                    'view',
+                    $encodedUserId
+                ]);
+                $page->addCrumb('Guardian Comments');
+            } else {
+                $page->addCrumb($userName, [
+                    'plugin' => 'Directory',
+                    'controller' => 'Directories',
+                    'action' => 'Directories',
+                    'view',
+                    $encodedUserId
+                ]);
+                $page->addCrumb('Comments');
+            }
+        } else if ($plugin == 'Guardian') {
+            $User = TableRegistry::get('User.Users');
+            $session = $this->request->session();
+            $institutionName = $session->read('Institution.Institutions.name');
+            $institutionId = $session->read('Institution.Institutions.id');
+            $studentId = $session->read('Student.Students.id');
+            $entity = $User->get($studentId);
+            $name = $entity->name;
+
+            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+            $page->addCrumb('Institutions', [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Institutions',
+                'index'
             ]);
-            $page->addCrumb('Comments');
+            $page->addCrumb($institutionName, [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'dashboard',
+                'institutionId' => $encodedInstitutionId,
+                $encodedInstitutionId
+            ]);
+            $page->addCrumb('Students',[
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Students']);
+            $page->addCrumb($name, [
+                    'plugin' => 'Institution', 
+                    'controller' => 'Institutions', 
+                    'action' => 'StudentUser', 
+                    'view', $this->paramsEncode(['id' => $studentId])]);
+            $page->addCrumb('Guardian Comments');
         }
     }
 
@@ -170,6 +220,7 @@ class CommentsController extends PageController
         $tabElements = [
             $pluralPlugin => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
+            'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' =>['text' =>  __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],
@@ -251,11 +302,11 @@ class CommentsController extends PageController
         $tabElements = [
             $userRole.'User' => ['text' => __('Overview')],
             $userRole.'Account' => ['text' => __('Account')],
+            'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' =>['text' =>  __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
-            'SpecialNeeds' =>['text' =>  __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')]
         ];
@@ -264,7 +315,6 @@ class CommentsController extends PageController
         if ($userRole == 'Student') {
             $studentTabElements = [
                 'Guardians' => ['text' => __('Guardians')],
-                'StudentSurveys' => ['text' => __('Surveys')],
                 'StudentTransport' => ['text' => __('Transport')]
             ];
             $tabElements = array_merge($tabElements, $studentTabElements);

@@ -38,8 +38,8 @@ class WorkflowsTable extends AppTable
             'Report.WorkflowStudentTransferIn' => 'Institutions > Student Transfer > Receiving',   
             'Report.WorkflowStudentTransferOut' => 'Institutions > Student Transfer > Sending',
             'Report.WorkflowStaffAppraisal' => 'Staff > Career > Appraisals',
-            'Report.WorkflowScholarshipsApplication' => 'Administration > Scholarships > Applications'
-
+            'Report.WorkflowScholarshipsApplication' => 'Administration > Scholarships > Applications',
+            'Report.WorkflowStudentVisitRequest' => 'Student > Visits > Requests'
         ]
     ];
 
