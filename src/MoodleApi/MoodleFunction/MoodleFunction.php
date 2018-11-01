@@ -25,13 +25,9 @@ abstract class MoodleFunction
 
     protected $data = [];
 
-    public function __construct($data)
+    public function __construct($entity)
     {
-        if (is_array($data)) {
-            $this->data = $data;
-        } else {
-            $this->convertEntityToData($data);
-        }
+        $this->convertEntityToData($entity);
         $this->checkData();
         $this->convertDataToParam();
     }
