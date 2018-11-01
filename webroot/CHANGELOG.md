@@ -1,3 +1,9 @@
+### [3.38.0] - 2018-10-30
+- Developed feature to allow user to set Longitude and Latitude to mandatory in Administration > System Setup > System Config
+- Developed export feature for Institution > Performance > Outcome
+- Implemented OpenEMIS ID and User's default identity in Reports > Staff/Students > Contacts Report
+- Bug fix on report card generation process
+
 ### [3.37.0] - 2018-10-19
 - Developed Demographics feature in Users > General > Demographics tab
 - Developed Scholarship Award Disbursement Alert in Administration > Communications > Alert Rules
