@@ -387,7 +387,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
-            cellHeight: 30
+            cellHeight: 30,
+            newRowsAction: 'keep'
         };
         var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
         var isRtl = document.querySelector("html").classList.contains("rtl");
@@ -447,7 +448,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
-            cellHeight: 30
+            cellHeight: 30,
+            newRowsAction: 'keep'
         };
         var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
         var isRtl = document.querySelector("html").classList.contains("rtl");
