@@ -20,7 +20,9 @@ class MoodleCreateUserBehavior extends Behavior
     {
         if ($entity->isNew()) { //For Add action only
             $moodleApi = new MoodleApi();
-            $response = $moodleApi->createUser($entity);
+            if ($moodleApi->enableUserCreation()) {
+                $response = $moodleApi->createUser($entity);
+            }
             // dd($response);
             // Log::write('debug', "response from directory");
             // Log::write('debug', $response);
