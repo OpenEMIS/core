@@ -91,13 +91,22 @@ class MoodleApi
      */
     public function createUser($data)
     {
-        $moodleUser = new MoodleCreateUser($data);
+        if ($this->enableUserCreation()) {
+            $moodleUser = new MoodleCreateUser($data);
 
-        $response = $this->post(MoodleCreateUser::getFunctionParam(), $moodleUser->getData());
+            $response = $this->post(MoodleCreateUser::getFunctionParam(), $moodleUser->getData());
 
-        $this->_apiLog(MoodleCreateUser::getFunctionParam(), $moodleUser->getData(), $response, "createUser", $data);
+            $this->_apiLog(MoodleCreateUser::getFunctionParam(), $moodleUser->getData(), $response, __METHOD__, $data);
 
-        return $response;
+            $data = $response->json;
+            $data = $data["0"];
+
+            $moodleUser->linkMoodletoOpenEmis($data['id'], $data['username']);
+
+            return $response;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -117,6 +126,11 @@ class MoodleApi
                 . "&" . self::JSON_MODE_PARAM;
     }
 
+    public function enableUserCreation()
+    {
+        return isset($this->_enableUserCreation) && $this->_enableUserCreation;
+    }
+
     private function _apiLog($action, $param, $response, $callback, $callbackData)
     {
         $apiLogTable = TableRegistry::get("MoodleApi.MoodleApiLog");
@@ -132,7 +146,7 @@ class MoodleApi
         $apiInstance->response = json_encode($response);
         $apiInstance->status = $status;
         $apiInstance->callback = $callback;
-        $apiInstance->callback_param = json_encode($callbackData);
+        $apiInstance->callback_param = serialize($callbackData);
 
         $apiLogTable->save($apiInstance);
     }
@@ -142,6 +156,7 @@ class MoodleApi
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $this->_token = $ConfigItems->value("api_token");
         $this->_baseURL = $ConfigItems->value("base_url");
+        $this->_enableUserCreation = $ConfigItems->value("core_user_create_users");
     }
 
     private function _constructBasicParams($function)

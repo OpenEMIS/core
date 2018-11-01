@@ -11,6 +11,7 @@
  * @copyright 2018 KORDIT PTE LTD
  */
 namespace App\MoodleApi\MoodleFunction;
+use Cake\ORM\TableRegistry;
 
 class MoodleCreateUser extends MoodleFunction
 {
@@ -48,6 +49,8 @@ class MoodleCreateUser extends MoodleFunction
             "email"
         ];
 
+    private $openemis_no;
+
     /**
      * Converts data array into moodle restful format
      *
@@ -72,14 +75,15 @@ class MoodleCreateUser extends MoodleFunction
             $this->setError("Entity Datatype is not \User\Model\Entity\User");
         }
 
+        $this->openemis_no = $entity->openemis_no;
+
         $users = array();
         $users["username"] = $entity->username;
-        $users["password"]= $this->generatePassword($entity);
+        $users["password"]= $this->generatePassword();
         $users["firstname"] = $entity->first_name;
         $users["lastname"] = $entity->last_name;
-        //Hardcode for now first
+        //TOOD - Hardcode for now first
         $users["email"] = $entity->openemis_no . "@kordit.com";
-
         $this->data = $users;
     }
 
@@ -91,8 +95,20 @@ class MoodleCreateUser extends MoodleFunction
      *
      * @return string - password
      */
-    private function generatePassword($entity)
+    private function generatePassword()
     {
-        return $entity->openemis_no . "_Moodle";
+        return $this->openemis_no . "_Moodle";
+    }
+
+    public function linkMoodletoOpenEmis($moodleId, $moodleUsername)
+    {
+        $MoodleApiCreatedUsers = TableRegistry::get("MoodleApi.MoodleApiCreatedUsers");
+        $instance = $MoodleApiCreatedUsers->newEntity();
+
+        $instance->moodle_user_id = $moodleId;
+        $instance->moodle_username = $moodleUsername;
+        $instance->core_user_id = $this->openemis_no;
+
+        $MoodleApiCreatedUsers->save($instance);
     }
 }

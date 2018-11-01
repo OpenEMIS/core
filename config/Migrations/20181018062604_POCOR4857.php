@@ -54,7 +54,7 @@ class POCOR4857 extends AbstractMigration
         ])
         ->addColumn('callback_param', 'text', [
             'null' => false,
-            'comment' => 'stores param data in json'
+            'comment' => 'stores serialized param data'
         ])
         ->addIndex('action')
         ->addIndex('created_user_id')

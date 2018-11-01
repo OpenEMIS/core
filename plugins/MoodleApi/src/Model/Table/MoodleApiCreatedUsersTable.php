@@ -9,7 +9,7 @@ use Cake\Utility\Inflector;
 
 use App\Model\Table\ControllerActionTable;
 
-class MoodleApiLogTable extends ControllerActionTable
+class MoodleApiCreatedUsersTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
