@@ -80,7 +80,7 @@ abstract class MoodleFunction
         return static::$functionParam;
     }
 
-    private function setError($msg)
+    protected function setError($msg)
     {
         throw new \Exception($msg);
         Log::write('debug', "MoodleFunction.php - " . $msg);
