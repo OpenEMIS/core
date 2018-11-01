@@ -480,7 +480,8 @@ trait MessagesTrait
         ],
         'WorkflowActions' => [
             'add_event' => 'Add Event',
-            'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
+            'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.',
+            'no_two_post_event' => 'Only one post event for each action is allowed.'
         ],
         'WorkflowRules' => [
             'process' => [
