@@ -16,7 +16,7 @@ class MoodleCreateUser extends MoodleFunction
 {
     protected static $functionParam = "core_user_create_users";
 
-    protected static $userAllowedParams 
+    protected static $userAllowedParams
         = [
             "username",
             "password",
@@ -60,7 +60,7 @@ class MoodleCreateUser extends MoodleFunction
     }
 
     /**
-     * Converts an entity object into array data and stores in $this->data 
+     * Converts an entity object into array data and stores in $this->data
      *
      * @param object $entity - \User\Model\Entity\User
      *
@@ -84,7 +84,7 @@ class MoodleCreateUser extends MoodleFunction
     }
 
     /**
-     * Generate password based on a certain hardcoded pattern. 
+     * Generate password based on a certain hardcoded pattern.
      * To create a system configuration such that user can define the pattern.
      *
      * @param object $entity - \User\Model\Entity\User
@@ -93,6 +93,6 @@ class MoodleCreateUser extends MoodleFunction
      */
     private function generatePassword($entity)
     {
-        return $entity->openemis_no . "_Moodle"; 
+        return $entity->openemis_no . "_Moodle";
     }
 }

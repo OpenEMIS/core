@@ -137,7 +137,6 @@ class MoodleApi
         $apiLogTable->save($apiInstance);
     }
 
-    //TODO - load token from configuration instead of hardcode
     private function _loadConfig()
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
