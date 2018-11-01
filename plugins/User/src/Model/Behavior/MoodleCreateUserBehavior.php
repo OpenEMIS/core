@@ -7,6 +7,8 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use App\MoodleApi\MoodleApi;
+use Cake\Log\Log;
+use Cake\ORM\TableRegistry;
 
 class MoodleCreateUserBehavior extends Behavior
 {
@@ -18,14 +20,21 @@ class MoodleCreateUserBehavior extends Behavior
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        if ($entity instanceof \Institution\Model\Entity\Student) {
+            $entity = $this->convertStudentToUser($entity);
+        }
+
         if ($entity->isNew()) { //For Add action only
             $moodleApi = new MoodleApi();
             if ($moodleApi->enableUserCreation()) {
                 $response = $moodleApi->createUser($entity);
             }
-            // dd($response);
-            // Log::write('debug', "response from directory");
-            // Log::write('debug', $response);
         }
+    }
+
+    private function convertStudentToUser($entity)
+    {
+        $Users = TableRegistry::get('Security.Users');
+        return $Users->find()->where(['id' => $entity->student_id])->first();
     }
 }

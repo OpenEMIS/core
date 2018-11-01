@@ -98,10 +98,12 @@ class MoodleApi
 
             $this->_apiLog(MoodleCreateUser::getFunctionParam(), $moodleUser->getData(), $response, __METHOD__, $data);
 
-            $data = $response->json;
-            $data = $data["0"];
+            if ($response->isOk()) {
+                $data = $response->json;
+                $data = $data["0"];
 
-            $moodleUser->linkMoodletoOpenEmis($data['id'], $data['username']);
+                $moodleUser->linkMoodletoOpenEmis($data['id'], $data['username']);
+            }
 
             return $response;
         } else {
@@ -172,13 +174,13 @@ class MoodleApi
         if ($response->isOk()) {
             $responseBody = $response->json;
             if (isset($responseBody["exception"])) {
-                Log::write('debug', "MoodleApiComponent Exception - " . $responseBody["exception"]);
-                Log::write('debug', "MoodleApiComponent Exception Message - " . $responseBody["message"]);
+                Log::write('debug', "MoodleApi Exception - " . $responseBody["exception"]);
+                Log::write('debug', "MoodleApi Exception Message - " . $responseBody["message"]);
                 $response->error["api_exception"] = $responseBody;
             }
         } else {
-            Log::write('debug', "MoodleApiComponent Exception - response error");
-            Log::write('debug', "MoodleApiComponent Exception response - " . $response);
+            Log::write('debug', "MoodleApi Exception - response error");
+            Log::write('debug', "MoodleApi Exception response - " . $response);
             $response->error["http_exception"] = $response->code;
         }
         return $response;

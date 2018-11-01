@@ -47,6 +47,7 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Institution.StudentCascadeDelete'); // for cascade delete on student related tables from an institution
         $this->addBehavior('AcademicPeriod.AcademicPeriod'); // to make sure it is compatible with v4
+        $this->addBehavior('User.MoodleCreateUser');
 
         $this->addBehavior('Excel', [
             'excludes' => ['start_year', 'end_year', 'previous_institution_student_id'],
