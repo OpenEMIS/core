@@ -307,7 +307,6 @@ class CommentsController extends PageController
             'UserNationalities' =>['text' =>  __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
-            'SpecialNeeds' =>['text' =>  __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')]
         ];
@@ -316,7 +315,6 @@ class CommentsController extends PageController
         if ($userRole == 'Student') {
             $studentTabElements = [
                 'Guardians' => ['text' => __('Guardians')],
-                'StudentSurveys' => ['text' => __('Surveys')],
                 'StudentTransport' => ['text' => __('Transport')]
             ];
             $tabElements = array_merge($tabElements, $studentTabElements);
