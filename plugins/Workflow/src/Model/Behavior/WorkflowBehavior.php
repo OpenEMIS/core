@@ -58,6 +58,12 @@ class WorkflowBehavior extends Behavior
             'text' => 'Assign Back to Creator',
             'description' => 'Performing this action will assign the current record back to creator.',
             'method' => 'onAssignBack'
+        ],
+        [
+            'value' => 'Workflow.onAssignBackToScholarshipApplicant',
+            'text' => 'Assign back to Scholarship Applicant',
+            'description' => 'Performing this action will assign the current record back to scholarship applicant.',
+            'method' => 'onAssignBackToScholarshipApplicant'
         ]
     ];
 
@@ -197,6 +203,30 @@ class WorkflowBehavior extends Behavior
             Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model : '.$model);
             Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model alias : '.$model->alias());
+            Log::write('error', '---------------------------------------------------------');
+        }
+    }
+
+    public function onAssignBackToScholarshipApplicant(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $model = $this->_table;
+
+        $result = $model
+                ->find()
+                ->where([$model->aliasField('id') => $id])
+                ->all();
+
+        if (!$result->isEmpty()) {
+            $entity = $result->first();
+            $this->setAssigneeAsScholarshipApplicant($entity);
+            $model->save($entity);
+
+        } else {
+            // exception
+            Log::write('error', '---------------------------------------------------------');
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : $result is empty');
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : model : '.$model);
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : model alias : '.$model->alias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -1569,7 +1599,7 @@ class WorkflowBehavior extends Behavior
                             $actionObj->assignee_required = 1;
                             foreach ($events as $eventKey) {
                                 // assignee is required by default unless onAssignBack event is added
-                                if ($eventKey == 'Workflow.onAssignBack') {
+                                if ($eventKey == 'Workflow.onAssignBack' || $eventKey == 'Workflow.onAssignBackToScholarshipApplicant') {
                                     $actionObj->assignee_required = 0;
                                 }
                                 $key = array_search($eventKey, array_column($eventArray, 'value'));
@@ -1721,6 +1751,13 @@ class WorkflowBehavior extends Behavior
     {
         if ($entity->has('created_user_id')) {
             $entity->assignee_id = $entity->created_user_id;
+        }
+    }
+
+    public function setAssigneeAsScholarshipApplicant(Entity $entity)
+    {
+        if ($entity->has('applicant_id')) {
+            $entity->assignee_id = $entity->applicant_id;
         }
     }
 
