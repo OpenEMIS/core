@@ -410,15 +410,14 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     }
 
     public function findResults(Query $query, array $options) {
+        $Users = $this->Users;
+        $SubjectStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsSubjectsStudents');
+        $ItemResults = TableRegistry::get('Examination.ExaminationItemResults');
         $examinationId = $options['examination_id'];
         $examinationCentreId = $options['examination_centre_id'];
         $examinationItemId = $options['examination_item_id'];
 
-        $Users = $this->Users;
-        $SubjectStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsSubjectsStudents');
-        $ItemResults = TableRegistry::get('Examination.ExaminationItemResults');
-
-        return $query
+        $query
             ->select([
                 $ItemResults->aliasField('id'),
                 $ItemResults->aliasField('marks'),
@@ -465,5 +464,29 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             ->order([
                 $Users->aliasField('first_name'), $Users->aliasField('last_name')
             ]);
+
+        if (array_key_exists('filter.openemis_id', $options)) {
+            $openemisId = (string)$options['filter.openemis_id'];
+            $sqlString = sprintf('%%%s%%', $openemisId);
+            $query->where(function ($exp, Query $q) use ($Users, $sqlString) {
+                return $exp->like($Users->aliasField('openemis_no'), $sqlString);
+            });
+        }
+
+        if (array_key_exists('filter.name', $options)) {
+            $name = (string)$options['filter.name'];
+            $sqlString = sprintf('%%%s%%', $name);
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $sqlString]);
+        }
+
+        if (array_key_exists('filter.registration_no', $options)) {
+            $registrationNo = (string)$options['filter.registration_no'];
+            $sqlString = sprintf('%%%s%%', $registrationNo);
+            $query->where(function ($exp, Query $q) use ($sqlString) {
+                return $exp->like($this->aliasField('registration_number'), $sqlString);
+            });
+        }        
+
+        return $query;
     }
 }
