@@ -279,11 +279,12 @@ class ExcelReportBehavior extends Behavior
     // To check the sheet for last row
     private function checkLastRow($targetRowValue, $cellValue)
     {
-        if (!empty($this->excelLastRowValueArr) && $targetRowValue > $this->excelLastRowValueArr[$this->currentWorksheetIndex]) {
+        if (!empty($this->excelLastRowValueArr) && array_key_exists($this->currentWorksheetIndex,$this->excelLastRowValueArr) && $targetRowValue > $this->excelLastRowValueArr[$this->currentWorksheetIndex]) {
             $this->excelLastRowValueArr[$this->currentWorksheetIndex]  = $targetRowValue;
         } else {
             $this->excelLastRowValueArr[$this->currentWorksheetIndex]  = $targetRowValue;
         }
+        // pr($this->excelLastRowValueArr);die;
         // if ($targetRowValue > $this->excelLastRowValueArr[$this->currentWorksheetIndex]) {
         //     $this->excelLastRowValueArr[$this->currentWorksheetIndex]  = $targetRowValue;
         // }
@@ -726,7 +727,14 @@ class ExcelReportBehavior extends Behavior
         }
         // pr($outFile.'final.pdf');die;
         //Here should be the problem, investigation (take a look)
-        $mpdf->Output($outFile.'final.pdf', "F");
+        //Unable to download in chrome. Must see how to dl.
+        $finalPDF_file = $outFile.'final.pdf';
+
+        Log::write('debug', 'mergePDFFiles >>> output: '.$finalPDF_file);
+
+
+        // $mpdf->Output($outFile.'final.pdf', "F");
+        $mpdf->Output($finalPDF_file, "D");
         unset($mpdf);
     }
 
@@ -797,6 +805,8 @@ class ExcelReportBehavior extends Behavior
             //     }
             // }
         } else {
+            // pr($filepath);die;
+
             // xlsx
             $objWriter->save($filepath);
 
@@ -805,6 +815,14 @@ class ExcelReportBehavior extends Behavior
 
     public function downloadFile($filecontent, $filename, $filesize)
     {
+        Log::write('debug', '----------------------downloadFile---------------------: ');
+        Log::write('debug', '----------------------filecontent---------------------: ');
+        Log::write('debug', $filecontent);
+        Log::write('debug', '----------------------filename---------------------: ');
+        Log::write('debug', $filename);
+        Log::write('debug', '----------------------filesize---------------------: ');
+        Log::write('debug', $filesize);
+
         header("Pragma: public", true);
         header("Expires: 0"); // set expiration time
         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
