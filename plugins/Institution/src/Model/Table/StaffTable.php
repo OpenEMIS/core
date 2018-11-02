@@ -60,6 +60,7 @@ class StaffTable extends ControllerActionTable
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
+        $this->addBehavior('User.MoodleCreateUser');
 
         $this->addBehavior('Excel', [
             'excludes' => ['start_year', 'end_year', 'security_group_user_id'],
@@ -1045,7 +1046,7 @@ class StaffTable extends ControllerActionTable
             'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
         ];
 
-        if (!Configure::read('schoolMode')) {    
+        if (!Configure::read('schoolMode')) {
             $coreAssociationArray = [
                 'Institution.InstitutionRubrics' => 'InstitutionRubrics',
                 'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
