@@ -14,7 +14,8 @@ class StudentAbsenceReasonsTable extends ControllerActionTable
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'OpenEMIS_Classroom' => ['index']
+            'OpenEMIS_Classroom' => ['index'],
+            'StudentAttendances' => ['index', 'view']
         ]);
     }
 }

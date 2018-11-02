@@ -1342,6 +1342,12 @@ class NavigationComponent extends Component
                     'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Stages', 'Educations.Subjects', 'Educations.GradeSubjects', 'Educations.Certifications',
                             'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
                 ],
+                'Attendances.StudentMarkTypes' => [
+                    'title' => 'Attendances',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Attendance'],
+                    'selected' => ['Attendance.StudentMarkTypes']
+                ],
                 'FieldOptions.index' => [
                     'title' => 'Field Options',
                     'parent' => 'SystemSetup',
