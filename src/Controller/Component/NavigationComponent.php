@@ -901,7 +901,6 @@ class NavigationComponent extends Component
                         'Students.History',
                         'Students.GuardianUser',
                         'Institutions.StudentUser.pull',
-                        'Students.StudentSurveys',
                         'StudentComments.index',
                         'StudentComments.view',
                         'StudentComments.add',
