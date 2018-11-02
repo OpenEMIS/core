@@ -22,6 +22,8 @@ class MoodleCreateUserBehavior extends Behavior
     {
         if ($entity instanceof \Institution\Model\Entity\Student) {
             $entity = $this->convertStudentToUser($entity);
+        } else if ($entity instanceof \Institution\Model\Entity\Staff) {
+            $entity = $this->convertStaffToUser($entity);
         }
 
         if ($entity->isNew()) { //For Add action only
@@ -36,5 +38,11 @@ class MoodleCreateUserBehavior extends Behavior
     {
         $Users = TableRegistry::get('Security.Users');
         return $Users->find()->where(['id' => $entity->student_id])->first();
+    }
+
+    private function convertStaffToUser($entity)
+    {
+        $Users = TableRegistry::get('Security.Users');
+        return $Users->find()->where(['id' => $entity->staff_id])->first();
     }
 }
