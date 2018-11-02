@@ -205,7 +205,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             .ajax({success: success, defer: true});
     }
 
-    function getDayListOptions(academicPeriodId, weekId) {
+    function getDayListOptions(academicPeriodId, weekId, institutionId) {
         var success = function(response, deferred) {
             var dayList = response.data.data;
             if (angular.isObject(dayList) && dayList.length > 0) {
@@ -218,7 +218,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return AcademicPeriods
             .find('daysForPeriodWeek', {
                 academic_period_id: academicPeriodId,
-                week_id: weekId
+                week_id: weekId,
+                institution_id: institutionId
             })
             .ajax({success: success, defer: true});
     }
