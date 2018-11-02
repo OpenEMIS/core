@@ -159,6 +159,7 @@ class StudentAttendancesTable extends AppTable
                 ->find('DaysForPeriodWeek', [
                     'academic_period_id' => $academicPeriodId,
                     'week_id' => $weekId,
+                    'institution_id' => $institutionId,
                     'exclude_all' => true
                 ])
                 ->toArray();
