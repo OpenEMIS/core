@@ -59,7 +59,7 @@ $institutionId = $paramsQuery['institution_id'];
     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
 </div> -->
 <style>
-    ./*attendance-dashboard .data-section.single-day {
+    .attendance-dashboard .data-section.single-day {
         width: 32%;
     }
 
@@ -75,9 +75,9 @@ $institutionId = $paramsQuery['institution_id'];
 
     .splitter-filter .input-selection.attendance {
         width: 100%;
-    }*/
+    }
 
-    /*#institution-staff-attendances-table .sg-theme .ag-cell {
+    #institution-staff-attendances-table .sg-theme .ag-cell {
         display: flex;
         flex-flow: column wrap;
         justify-content: center;
@@ -91,19 +91,19 @@ $institutionId = $paramsQuery['institution_id'];
 
     #institution-staff-attendances-table .ag-cell .reason-wrapper .input-select-wrapper {
         margin-bottom: 15px;
-    }*/
+    }
 
-    /*#institution-staff-attendances-table .ag-cell textarea#comment.error,
+    #institution-staff-attendances-table .ag-cell textarea#comment.error,
     #institution-staff-attendances-table .ag-cell #staff_absence_reason_id select.error,
     #institution-staff-attendances-table .ag-cell #absence_type_id select.error {
         border-color: #CC5C5C !important;
-    }*/
+    }
 
-/*    #institution-staff-attendances-table .ag-cell textarea#comment:focus {
+    #institution-staff-attendances-table .ag-cell textarea#comment:focus {
         outline: none;
-    }*/
+    }
 
-/*    #institution-staff-attendances-table .ag-cell textarea#comment {
+    #institution-staff-attendances-table .ag-cell textarea#comment {
         display: block;
         padding: 5px 10px;
         -webkit-border-radius: 3px;
@@ -112,18 +112,18 @@ $institutionId = $paramsQuery['institution_id'];
         height: 70px;
         width: 100%;
         border: 1px solid #CCC;
-    }*/
+    }
 
-    /*#institution-staff-attendances-table .ag-cell .input-select-wrapper {
+    #institution-staff-attendances-table .ag-cell .input-select-wrapper {
         margin-bottom: 0;
     }
 
     #institution-staff-attendances-table .ag-cell .input-select-wrapper select {
         background: #FFFFFF;
         display: block;
-    }*/
+    }
 
-/*    #institution-staff-attendances-table .ag-cell .absence-reason,
+    #institution-staff-attendances-table .ag-cell .absence-reason,
     #institution-staff-attendances-table .ag-cell .absences-comment {
         overflow: hidden;
         white-space: normal;
@@ -131,19 +131,19 @@ $institutionId = $paramsQuery['institution_id'];
         max-height: 70px;
         display: flex;
         align-items: baseline;
-    }*/
+    }
 
-/*    #institution-staff-attendances-table .ag-cell .absence-reason span,
+    #institution-staff-attendances-table .ag-cell .absence-reason span,
     #institution-staff-attendances-table .ag-cell .absences-comment span {
         margin: 0 10px;
-    }*/
+    }
 
 
-/*    #institution-staff-attendances-table .ag-cell .absence-reason + .absences-comment  {
+    #institution-staff-attendances-table .ag-cell .absence-reason + .absences-comment  {
         margin-top: 15px;
-    }*/
+    }
 
-   /* #institution-staff-attendances-table .sg-theme .ag-header-cell.children-period .ag-header-cell-label {
+    #institution-staff-attendances-table .sg-theme .ag-header-cell.children-period .ag-header-cell-label {
         display: flex;
         justify-content: center;
         padding: 10px 0;
@@ -159,16 +159,30 @@ $institutionId = $paramsQuery['institution_id'];
 
     #institution-staff-attendances-table .sg-theme .children-cell {
         text-align: center;
-    }*/
+    }
 
-   /* #institution-staff-attendances-table .sg-theme .ag-row-hover {
+    #institution-staff-attendances-table .sg-theme .ag-row-hover {
         background-color: #FDFEE6 !important;
     }
 
     .rtl #institution-staff-attendances-table .sg-theme .ag-header-group-cell {
         border-right: 0;
         border-left: 1px solid #DDDDDD;
-    }*/
+    }
+
+    #institution-staff-attendances-table .sg-theme .time-view {
+        padding: 5px;
+    }
+
+    #institution-staff-attendances-table .sg-theme .time-view > i {
+        margin: 0 5px 0 0;
+    }
+
+    .rtl #institution-staff-attendances-table .sg-theme .time-view > i {
+        margin: 0 0 0 5px;
+    }
+}
+
 </style>
 
 <div class="panel">

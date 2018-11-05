@@ -81,10 +81,9 @@ class StaffLeaveTable extends ControllerActionTable
         $academicPeriodId = $entity->academic_period_id;
         $isFullDayLeave = $entity->full_day;
         $entityId = $entity->id;
-        /* 
+        /*
             Non full day leave is always assume to be 0.5 since staff can only apply 2 non full day leave
             Set start_time and end_time to null, in the case when user first choose Full Day = No and then Full Day = Yes. If start_time and end_time is not set to null, the start_time and end_time will be saved which shouldn't be the case.
-
         */
         if ($isFullDayLeave == 1) {
             $day = 1;
@@ -101,7 +100,7 @@ class StaffLeaveTable extends ControllerActionTable
         $exisitingLeaveRecords = $this
             ->find()
             ->select([
-                 $this->aliasField('id'),
+                $this->aliasField('id'),
                 $this->aliasField('date_from'),
                 $this->aliasField('date_to'),
                 $this->aliasField('full_day'),
