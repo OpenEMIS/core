@@ -1856,10 +1856,7 @@ class StaffTable extends ControllerActionTable
         $endDate = new DateTime($weekEndDate);
         $interval = new DateInterval('P1D');
         $daterange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
-        // Log::write('debug', $weekStartDate);
-        // Log::write('debug', $weekEndDate);
-        // Log::write('debug', $startDate);
-        // Log::write('debug', $endDate);
+
         // To get all the dates of the working days only
         $workingDaysArr = [];
         $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
@@ -1942,15 +1939,12 @@ class StaffTable extends ControllerActionTable
                         $i++;
                     }
                 }
-                Log::write('debug', $formatResultDates);
                 return $formatResultDates;
             });
-
-        Log::write('debug', $query);
         return $query;
     }
 
-    public function findAllDayAllStaffAttendances(Query $query, array $options)
+    public function findAllStaffAttendances(Query $query, array $options)
     {
         $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -2041,6 +2035,7 @@ class StaffTable extends ControllerActionTable
 
                     if (array_key_exists($staffId, $leaveByStaffIdRecords)) {
                         $staffLeaveRecords = $leaveByStaffIdRecords[$staffId];
+                        $staffLeaveRecords = array_slice($staffLeaveRecords, 0, 2);
                     }
 
                     $staffTimeRecords = [];
@@ -2054,7 +2049,6 @@ class StaffTable extends ControllerActionTable
 
                             if ($dateStr == $staffAttendanceDate) {
                                 $found = true;
-
                                 //isNew determines if record is existing data
                                 $attendanceData = [
                                     'dateStr' => $dateStr,
@@ -2092,17 +2086,17 @@ class StaffTable extends ControllerActionTable
                     }
                     // gets all the staff leave
                     foreach ($staffTimeRecords as $key => $staffTimeRecord) {
-                        $bla = [];
+                        $leave = [];
                         foreach ($staffLeaveRecords as $staffLeaveRecord) {
                             $dateFrom = $staffLeaveRecord['date_from']->format('Y-m-d');
                             $dateTo = $staffLeaveRecord['date_to']->format('Y-m-d');
-                           if ($dateFrom <= $key && $dateTo >= $key) {
+                            if ($dateFrom <= $key && $dateTo >= $key) {
                                $tmp['isFullDay'] = $staffLeaveRecord['full_day'];
                                $tmp['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
                                $tmp['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
                                $tmp['staffLeaveTypeName'] = $staffLeaveRecord['_matchingData']['StaffLeaveTypes']['name'];
-                               $bla[] = $tmp;
-                           }
+                               $leave[] = $tmp;
+                            }
                         }
                         $url = Router::url([
                             'plugin' => 'Institution',
@@ -2111,7 +2105,7 @@ class StaffTable extends ControllerActionTable
                             'index',
                             'user_id' => $staffId
                         ]);
-                        $staffTimeRecords[$key]['leave'] = $bla;
+                        $staffTimeRecords[$key]['leave'] = $leave;
                         $staffTimeRecords[$key]['url'] = $url;
                     }
                     $row->attendance = $staffTimeRecords;

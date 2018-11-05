@@ -1,11 +1,16 @@
 <?php
+use Cake\I18n\Date;
 use Phinx\Migration\AbstractMigration;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Security;
 
 class POCOR3906 extends AbstractMigration
 {
     public function up()
     {
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaffAbsences = TableRegistry::get('Institution.InstitutionStaffAbsences');
+        $InstitutionStaffLeave = TableRegistry::get('Institution.StaffLeave');
         // Last testing is to ensure that the migration will work if institution_staff_leave is empty!!!
         // institution_staff_attendance_activities
         $StaffAttendanceActivities = $this->table(
@@ -36,15 +41,13 @@ class POCOR3906 extends AbstractMigration
                 'limit' => 128,
                 'null' => false,
             ])
-            ->addColumn('old_value', 'string', [
+            ->addColumn('old_value', 'text', [
                 'default' => null,
-                'limit' => 255,
-                'null' => true,
+                'null' => true
             ])
-            ->addColumn('new_value', 'string', [
+            ->addColumn('new_value', 'text', [
                 'default' => null,
-                'limit' => 255,
-                'null' => true,
+                'null' => true
             ])
             ->addColumn('operation', 'string', [
                 'default' => null,
@@ -170,9 +173,61 @@ class POCOR3906 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
+        $staffAbsences = $InstitutionStaffAbsences
+            ->find()
+            ->contain('StaffAbsenceReasons')
+            ->toArray();
+
+        $tmp = [];
+        foreach ($staffAbsences as $key => $value) {
+            $startDate = strtotime($value->start_date);
+            $endDate = strtotime($value->end_date);
+            $datediff = $endDate - $startDate;
+            $days = round($datediff / (60 * 60 * 24));
+            $comment = '';
+            if ($value->full_day) {
+                $comment = 'Absent (Full Day)';
+            } else {
+                $comment = 'Absent:'. date('H:i:s', strtotime($value->start_time)).'-'.date('H:i:s', strtotime($value->end_time));
+            }
+            if (isset($value->staff_absence_reason['name'])) {
+                $comment = $comment.'. '.$value->staff_absence_reason['name'];
+            }
+            if ($value->comment) {
+                $comment = $comment.'. '.$value->comment;
+            }
+            if ($value->modified) {
+                $modified = date('Y-m-d H:i:s', strtotime($value->modified));
+            } else {
+                $modified = null;
+            }
+
+            $academicPeriodId = $AcademicPeriods->getAcademicPeriodId($value->start_date, $value->end_date);
+            for ($i = 0; $i <= $days; $i++) {
+                $hashString = [$value->staff_id, $value->institution_id, $academicPeriodId, date('Y-m-d', strtotime($value->start_date. ' + '.$i.' days'))];
+                $id = Security::hash(implode(',', $hashString), 'sha256');
+                $tmp[] = [
+                    'id' => $id,
+                    'staff_id' => $value->staff_id,
+                    'institution_id' => $value->institution_id,
+                    'academic_period_id' => $academicPeriodId,
+                    'date' => date('Y-m-d', strtotime($value->start_date. ' + '.$i.' days')),
+                    'time_in' => null,
+                    'time_out' => null,
+                    'comment' => $comment,
+                    'modified_user_id' => $value->modified_user_id,
+                    'modified' => $modified,
+                    'created_user_id' => '1',
+                    'created' => date('Y-m-d H:i:s', strtotime($value->created))
+                ];
+            }
+        }
+        if (!empty($tmp)) {
+            $InstitutionStaffAttendances->insert($tmp);
+            $InstitutionStaffAttendances->saveData();
+        }
+
         // institution_staff_leave
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $InstitutionStaffLeave = TableRegistry::get('Institution.StaffLeave');
         $institutionStaffLeaveOrigin = $InstitutionStaffLeave
             ->find()
             ->toArray();
@@ -337,7 +392,6 @@ class POCOR3906 extends AbstractMigration
     {
         $this->dropTable('institution_staff_attendances');
         $this->dropTable('institution_staff_attendance_activities');
-
         $this->execute('DROP TABLE IF EXISTS institution_staff_leave');
         $this->execute('RENAME TABLE `z_3906_institution_staff_leave` TO `institution_staff_leave`');
     }
