@@ -259,7 +259,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
                 // if (vm.selectedDay == -1) {
                 angular.forEach(staff.attendance, function(attendance) {
                     vm.allAttendances = vm.allAttendances + 1 ;
-                    if (!attendance.isNew) {
+                    if (attendance.time_in) {
                         vm.allPresentCount = vm.allPresentCount + 1;
                     }
                     if (attendance.leave.length > 0) {
@@ -283,7 +283,6 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     }
 
     vm.setColumnDef = function() {
-        console.log('setColumnDef');
         var columnDefs = [];
         if (vm.selectedDay == -1) {
             columnDefs = InstitutionStaffAttendancesSvc.getAllDayColumnDefs(vm.dayListOptions);

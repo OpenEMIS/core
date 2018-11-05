@@ -2,10 +2,10 @@ angular
     .module('institution.staff.attendances.svc', ['kd.data.svc', 'alert.svc'])
     .service('InstitutionStaffAttendancesSvc', InstitutionStaffAttendancesSvc);
 
-InstitutionStaffAttendancesSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc'];
+InstitutionStaffAttendancesSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc', 'UtilsSvc'];
 
-function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
-    var models = {
+function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
+   var models = {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         InstitutionStaffAttendances: 'Staff.InstitutionStaffAttendances',
         Staff: 'Institution.Staff'
@@ -14,19 +14,15 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
     var service = {
         init: init,
         translate: translate,
-
         getAcademicPeriodOptions: getAcademicPeriodOptions,
         getWeekListOptions: getWeekListOptions,
         getDayListOptions:getDayListOptions,
-        getStaffAttendances: getStaffAttendances,
         getAllStaffAttendances: getAllStaffAttendances,
-        // getAllDayAllStaffAttendances: getAllDayAllStaffAttendances,
         getColumnDefs: getColumnDefs,
         getAllDayColumnDefs: getAllDayColumnDefs,
         saveStaffAttendanceTimeIn:saveStaffAttendanceTimeIn,
         saveStaffAttendanceTimeOut:saveStaffAttendanceTimeOut,
     };
-
     return service;
 
     function init(baseUrl) {
@@ -50,10 +46,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             if (angular.isObject(periods) && periods.length > 0) {
                 deferred.resolve(periods);
             } else {
-                deferred.reject('ERROR');
+                deferred.reject('There was an error when retrieving the academic periods');
             }
         };
-
         return AcademicPeriods
             .find('SchoolAcademicPeriod')
             .ajax({success: success, defer: true});
@@ -64,17 +59,15 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             var academicPeriodObj = response.data.data;
             if (angular.isDefined(academicPeriodObj) && academicPeriodObj.length > 0) {
                 var weeks = academicPeriodObj[0].weeks;
-
                 if (angular.isDefined(weeks) && weeks.length > 0) {
                     deferred.resolve(weeks);
                 } else {
-                    deferred.reject('ERROR ONE');
+                    deferred.reject('There was an error when retrieving the week list');
                 }
             } else {
-                deferred.reject('ERROR TWO');
+                deferred.reject('There was an error when retrieving the week list');
             }
         };
-
         return AcademicPeriods
             .find('WeeksForPeriod', {
                 academic_period_id: academicPeriodId
@@ -91,37 +84,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                 deferred.reject('There was an error when retrieving the day list');
             }
         };
-
         return AcademicPeriods
             .find('DaysForPeriodWeek', {
                 academic_period_id: academicPeriodId,
                 week_id: weekId
             })
-            .ajax({success: success, defer: true});
-    }
-
-    function getStaffAttendances(params) {
-        var extra = {
-            staff_id : params.staff_id,
-            institution_id: params.institution_id,
-            academic_period_id: params.academic_period_id,
-            week_id: params.week_id,
-            week_start_day: params.week_start_day,
-            week_end_day: params.week_end_day,
-        };
-
-        var success = function(response, deferred) {
-            var staffAttendances = response.data.data;
-
-            if (angular.isObject(staffAttendances)) {
-                deferred.resolve(staffAttendances);
-            } else {
-                deferred.reject('ERROR');
-            }
-        };
-
-        return Staff
-            .find('StaffAttendances', extra)
             .ajax({success: success, defer: true});
     }
 
@@ -135,21 +102,21 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             day_id: params.day_id,
             day_date: params.day_date,
         };
-
         var success = function(response, deferred) {
-            var staffAttendances = response.data.data;
-            if (angular.isObject(staffAttendances)) {
-                deferred.resolve(staffAttendances);
+            var allStaffAttendances = response.data.data;
+            if (angular.isObject(allStaffAttendances)) {
+                deferred.resolve(allStaffAttendances);
             } else {
-                deferred.reject('ERROR');
+                deferred.reject('There was an error when retrieving the staff attendances');
             }
         };
         return Staff
-            .find('AllDayAllStaffAttendances', extra)
+            .find('AllStaffAttendances', extra)
             .ajax({success: success, defer: true});
     }
 
-    function getColumnDefs(selectedDate) {
+    // column definitions
+    function getColumnDefs(selectedDayDate) {
         var columnDefs = [];
         var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
         var isRtl = document.querySelector("html").classList.contains("rtl");
@@ -183,23 +150,18 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
 
         columnDefs.push({
             headerName: "Time in - Time Out",
-            field: "attendance." + selectedDate,
+            field: "attendance." + selectedDayDate,
             menuTabs: [],
             cellRenderer: function(params) {
                 if (angular.isDefined(params.value) && params.value !== null && angular.isDefined(params.context.action)) {
-                    // var action = params.context.action;
-                    // var data = params.data;
-                    // var rowIndex = params.rowIndex;
-                    // var timeIn = params.data.InstitutionStaffAttendances.time_in;
-                    return getTimeInTimeOutElement(params);
-                    // return params.value.time_in + ' - ' + params.value.time_out;
+                    return getSingleDayTimeInTimeOutElement(params);
                 }
             }
         });
 
         columnDefs.push({
             headerName: "Leaves",
-            field: "attendance." + selectedDate,
+            field: "attendance." + selectedDayDate,
             menuTabs: [],
             cellRenderer: function(params) {
                 if (angular.isDefined(params.value) &&params.value != null && angular.isDefined(params.context.action)) {
@@ -207,22 +169,19 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                 }
             }
         });
-        // comments for attendance
+
         columnDefs.push({
             headerName: "Comments",
-            field: "attendance." + selectedDate + ".comment",
+            field: "attendance." + selectedDayDate + ".comment",
             menuTabs: [],
+            cellClass: 'comment-flex',
             cellRenderer: function(params) {
-                // if (angular.isDefined(params.value) && params.value != null && angular.isDefined(params.context.action)) {
                 return getCommentElement(params);
-                // }
             }
         });
-
         return columnDefs;
     }
 
-    // column definitions
     function getAllDayColumnDefs(dayList) {
         var columnDefs = [];
         var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
@@ -251,8 +210,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                     field: 'attendance.' + dayObj.date,
                     cellRenderer: function(params) {
                         if (angular.isDefined(params.value) && params.value !== null) {
-                            return getTimeInTimeOutElementTwo(params.value);
-                            // return params.value.time_in + ' - ' + params.value.time_out;
+                            return getAllDayTimeInTimeOutElement(params.value);
                         } else {
                             return '<i class="fa fa-minus"></i>';
                         }
@@ -261,7 +219,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                 columnDefs.push(colDef);
             }
         });
-
         return columnDefs;
     }
 
@@ -270,41 +227,46 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         var url = params.url;
         var data = '';
         if (staffLeaves.length > 0) {
+            data = '<div>';
             angular.forEach(staffLeaves, function(staffLeave) {
-                // var statusId = staffLeave.status_id;
-                // var leaveTypeId = staffLeave.staff_leave_type_id;
-                var url = "hello";
-                var start_time = staffLeave.start_time;
-                var end_time = staffLeave.end_time;
-                var full_day = staffLeave.full_day;
-                // var leaveStatusName = staffLeave._matchingData.Statuses.name;
+                var start_time = staffLeave.startTime;
+                var end_time = staffLeave.endTime;
+                var full_day = staffLeave.isFullDay;
                 var leaveTypeName = staffLeave.staffLeaveTypeName;
                 data += '<font color="#CC5C5C"><i class="fa-calendar-check-o"></i> '+leaveTypeName + '</font><br>';
-
-                // if (!full_day){
-                //     data += start_time + '<br>' + end_time + '<br>';
-                // }
-                // data += 'end of an index <br>';
+                if (!full_day){
+                    data += '<font color="#CC5C5C">' + convert12Timeformat(start_time) + ' - ' + convert12Timeformat(end_time) + '</font><br>';
+                }
             });
-            data += '<i class="fa fa-file-text" style=" color: #FFFFFF; background-color:  #6699CC; border: 1px solid #6699CC;"></i><a href= "'+url+ '"target="_blank"> View Details</a>';
+            data += '<span><i class="fa fa-file-text-o"></i><a href= "'+url+ '"target="_blank"> View Details</a></span></div>';
         } else {
             data = '<i class="fa fa-minus"></i>';
-;
         }
         return data;
     }
 
-    function getTimeInTimeOutElement(params) {
+    function setError(data, dataKey, error) {
+        if (angular.isUndefined(data.save_error)) {
+            data.save_error = {};
+        }
+
+        data.save_error[dataKey] = error;
+    }
+
+    function getSingleDayTimeInTimeOutElement(params) {
         var action = params.context.action;
         var academicPeriodId = params.context.period;
+        var scope = params.context.scope;
+        var timeIn = params.value.time_in;
+        var timeOut = params.value.time_out;
         var data = params.data;
         var rowIndex = params.rowIndex;
         var timeinPickerId = 'time-in-' + rowIndex;
         var timeoutPickerId = 'time-out-' + rowIndex;
-        var timeIn = params.value.time_in;
-        var timeOut = params.value.time_out;
-        var scope = params.context.scope;
-        if(action == 'edit') {
+        var time = '';
+        var historyUrl = data.historyUrl;
+
+        if (action == 'edit') {
             if(timeIn == null || timeIn == ""){
                 timeIn = '';
             }else{
@@ -315,44 +277,57 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             }else{
                 timeOut = convert12Timeformat(timeOut);
             }
-            // time in element
+
+            /* start of time in element */
             var divElement = document.createElement('div');
             divElement.setAttribute('class', 'input');
-            var inputDivElement = document.createElement('div');
-            inputDivElement.setAttribute('id', timeinPickerId);
-            inputDivElement.setAttribute('class', 'input-group time');
-            var inputElement = document.createElement('input');
-            inputElement.setAttribute('class', 'form-control');
-            var spanElement = document.createElement('span');
-            spanElement.setAttribute('class', 'input-group-addon');
-            var iconElement = document.createElement('i');
-            iconElement.setAttribute('class', 'glyphicon glyphicon-time');
+            var timeInInputDivElement = document.createElement('div');
+            timeInInputDivElement.setAttribute('id', timeinPickerId);
+            timeInInputDivElement.setAttribute('class', 'input-group time');
+            var timeInInputElement = document.createElement('input');
+            timeInInputElement.setAttribute('class', 'form-control');
+            var timeInSpanElement = document.createElement('span');
+            timeInSpanElement.setAttribute('class', 'input-group-addon');
+            var timeInIconElement = document.createElement('i');
+            timeInIconElement.setAttribute('class', 'glyphicon glyphicon-time');
+
+            if (hasError(data, 'time_in')) {
+                timeInInputElement.setAttribute("class", "form-control form-error");
+            }
 
             setTimeout(function(event) {
                 var timepickerControl = $('#' + timeinPickerId).timepicker({defaultTime: timeIn});
                 $('#' + timeinPickerId).timepicker().on("hide.timepicker", function (e) {
+                    UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
                     var time_in = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
-                    saveStaffAttendanceTimeIn(params.data, params.value, time_in, academicPeriodId)
+                    saveStaffAttendanceTimeIn(data, params.value, time_in, academicPeriodId)
                     .then(
                         function(response) {
-                            // console.log(response.data.error.length);
+                            clearError(data, 'time_in');
                             if(response.data.error.length == 0){
                                 AlertSvc.success(scope, 'Time in record successfully saved.');
                                 params.value.isNew = false;
                                 params.value.time_in = time_in;
+                                setError(data, 'time_in', false);
                             }else{
-                                 AlertSvc.error(scope, response.data.error.time_in.ruleCompareTime);
+                                setError(data, 'time_in', true);
+                                console.log(response.data.error);
+                                AlertSvc.error(scope, response.data.error.time_out.ruleCompareTimeReverse);
                             }
                         },
                         function(error) {
-                            console.log(error);
+                            console.log('error', error);
+                            clearError(data, 'time_in');
+                            setError(data, 'time_in', true);
                             AlertSvc.error(scope, 'There was an error when saving record');
                         }
                     )
                     .finally(function() {
+                        UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                        console.log('attendance.' + data.date);
                         var refreshParams = {
                             columns: [
-                                'time_in',
+                                'attendance.' + data.date,
                             ],
                             force: true
                         };
@@ -367,57 +342,63 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                 });
             }, 1);
 
-            inputElement.addEventListener('click', function(event) {
+            timeInInputElement.addEventListener('click', function(event) {
                 $('#' + timeinPickerId).timepicker();
             });
 
-            spanElement.appendChild(iconElement);
-            inputDivElement.appendChild(inputElement);
-            inputDivElement.appendChild(spanElement);
-            divElement.appendChild(inputDivElement);
-            //end of time in element
+            timeInSpanElement.appendChild(timeInIconElement);
+            timeInInputDivElement.appendChild(timeInInputElement);
+            timeInInputDivElement.appendChild(timeInSpanElement);
+            divElement.appendChild(timeInInputDivElement);
+            /* end of time in element */
 
-            // time out element
-            var inputDivElement2 = document.createElement('div');
-            inputDivElement2.setAttribute('id', timeoutPickerId);
-            inputDivElement2.setAttribute('class', 'input-group time');
-            var inputElement2 = document.createElement('input');
-            inputElement2.setAttribute('class', 'form-control');
-            var spanElement2 = document.createElement('span');
-            spanElement2.setAttribute('class', 'input-group-addon');
-            var iconElement2 = document.createElement('i');
-            iconElement2.setAttribute('class', 'glyphicon glyphicon-time');
+            /* start of time out element */
+            var timeOutInputDivElement = document.createElement('div');
+            timeOutInputDivElement.setAttribute('id', timeoutPickerId);
+            timeOutInputDivElement.setAttribute('class', 'input-group time');
+            var timeOutInputElement = document.createElement('input');
+            timeOutInputElement.setAttribute('class', 'form-control');
+            var timeOutSpanElement = document.createElement('span');
+            timeOutSpanElement.setAttribute('class', 'input-group-addon');
+            var timeOutIconElement = document.createElement('i');
+            timeOutIconElement.setAttribute('class', 'glyphicon glyphicon-time');
+
+            if (hasError(data, 'time_out')) {
+                timeOutInputElement.setAttribute("class", "form-control form-error");
+            }
 
             setTimeout(function(event) {
-                var timepickerControl2 = $('#' + timeoutPickerId).timepicker({defaultTime: timeOut});
+                var timeOutPickerControl = $('#' + timeoutPickerId).timepicker({defaultTime: timeOut});
                 $('#' + timeoutPickerId).timepicker().on("hide.timepicker", function (e) {
-                    // console.log('saving start time.........');
-                    // console.log(e.time);
-                    // convertTimeformat(e.time.hours, e.time.minutes, e.time.seconds);
+                    UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
                     var time_out = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
-                    // console.log(time_in);
-                    // data.InstitutionStaffAttendances.start_time = start_time;
-                    saveStaffAttendanceTimeOut(params.data, params.value, time_out, academicPeriodId)
+                    saveStaffAttendanceTimeOut(data, params.value, time_out, academicPeriodId)
                     .then(
                         function(response) {
-                            // console.log(response.data.error.length);
+                            clearError(data, 'time_out');
                             if(response.data.error.length == 0){
                                 AlertSvc.success(scope, 'Time out record successfully saved.');
                                 params.value.isNew = false;
                                 params.value.time_out = time_out;
+                                setError(data, 'time_out', false);
                             }else{
-                                 AlertSvc.error(scope, response.data.error.time_out.ruleCompareTime);
+                                // console.log(response.data.error);
+                                setError(data, 'time_out', true);
+                                AlertSvc.error(scope, response.data.error.time_out.ruleCompareTimeReverse);
                             }
                         },
                         function(error) {
+                            clearError(data, 'time_out');
+                            setError(data, 'time_out', true);
                             console.log(error);
                             AlertSvc.error(scope, 'There was an error when saving record');
                         }
                     )
                     .finally(function() {
+                        UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
                         var refreshParams = {
                             columns: [
-                                'time_out',
+                                'attendance.' + data.date,
                             ],
                             force: true
                         };
@@ -427,34 +408,51 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
                 $(document).on('DOMMouseScroll mousewheel scroll', function() {
                     window.clearTimeout(t);
                     t = setTimeout(function(event) {
-                        timepickerControl2.timepicker('place');
+                        timeOutPickerControl.timepicker('place');
                     });
                 });
             }, 1);
 
-            inputElement2.addEventListener('click', function(event) {
+            timeOutInputElement.addEventListener('click', function(event) {
                 $('#' + timeoutPickerId).timepicker();
             });
-
-            spanElement2.appendChild(iconElement2);
-            inputDivElement2.appendChild(inputElement2);
-            inputDivElement2.appendChild(spanElement2);
-            divElement.appendChild(inputDivElement2);
-            //end of time out element
+            timeOutSpanElement.appendChild(timeOutIconElement);
+            timeOutInputDivElement.appendChild(timeOutInputElement);
+            timeOutInputDivElement.appendChild(timeOutSpanElement);
+            divElement.appendChild(timeOutInputDivElement);
+            /* end of time out element */
             return divElement;
         } else {
-            var time = '<i class="fa fa-minus"></i>';
-            var historyUrl = data.historyUrl;
-            if(timeIn && timeOut){
-                time = '<font color= "#77B576"><i class="fa-external-link-square"></i> '+ convert12Timeformat(timeIn) + '<br><i class="fa-external-link"></i> ' + convert12Timeformat(timeOut) +'</font><br><i class="fa fa-file-text" style=" color: #FFFFFF; background-color:  #6699CC; border: 1px solid #6699CC;"></i><a href= "'+ historyUrl + '"target="_blank"> View History Log</a>';
-            } else if (timeIn && !timeOut) {
-                time = '<font color= "#77B576"><i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '</font>';
+            // always clear error data here.
+            clearError(data, 'time_out');
+            clearError(data, 'time_in');
+
+            if (timeIn) {
+                time = '<div class="time-view"><i class="fa-external-link-square"></i>' + convert12Timeformat(timeIn) + '</div>';
+
+                if (timeOut) {
+                    time += '<div class="time-view"><i class="fa-external-link"></i>' + convert12Timeformat(timeOut) + '</div>';
+                } else {
+                    time += '<div class="time-view"><i class="fa-external-link"></i></div>';
+                }
+
+                time += '<div class="time-view"> <a href= "'+ historyUrl + '"target="_blank"> <i class="fa fa-file-text-o"></i>  View History Log </a></div>';
+            } else {
+                time = '<i class="fa fa-minus"></i>';
             }
+
+            // if(timeIn && timeOut){
+            //     time += '<font color= "#77B576"><i class="fa-external-link-square"></i> '+ convert12Timeformat(timeIn) + '<br><i class="fa-external-link"></i> ' + convert12Timeformat(timeOut) +'</font><br><span><i class="fa fa-file-text" style=" color: #FFFFFF; background-color:  #6699CC; border: 1px solid #6699CC;"></i><a href= "'+ historyUrl + '"target="_blank"> View History Log</a></span>';
+            // } else if (timeIn && !timeOut) {
+            //     time += '<font color= "#77B576"><i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '</font>';
+            // } else {
+            //     time = '<i class="fa fa-minus"></i>';
+            // }
             return time;
         }
     }
 
-    function getTimeInTimeOutElementTwo(params) {
+    function getAllDayTimeInTimeOutElement(params) {
         var timeIn = params.time_in;
         var timeOut = params.time_out;
         var time = '';
@@ -477,6 +475,78 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             time = '<i class="fa fa-minus"></i>';
         }
         return time;
+    }
+
+    function getCommentElement(params) {
+        var action = params.context.action;
+        var divElement = '';
+        if (action == 'edit') {
+            divElement = getEditCommentElement(params);
+        } else {
+            divElement = getViewCommentElement(params.value);
+        }
+        return divElement;
+    }
+
+    function getViewCommentElement(data) {
+        var comment = data;
+        var html = '<i class="fa fa-minus"></i>';
+        if (comment != null) {
+            // the icon dunch wanna come out :((
+            html = `
+                <div class="comment-wrapper" style="display: flex; flex-flow: row nowrap;">
+                    <i class="fa kd-comment comment-flow" style="display: block; width: 15px; height: 15px; border: 1px solid black;"></i>
+                    <div class="comment-text" style="text-overflow: ellipsis; white-space: normal; overflow: auto; width: 80%; margin: 0 auto;" >` + comment +
+                    `</div>
+                </div>`;
+        }
+        return html;
+    }
+
+    function getEditCommentElement(params) {
+        var dataKey = 'comment';
+        var scope = params.context.scope;
+        var value = params.value;
+        var date = params.data.date;
+        var eTextarea = document.createElement("textarea");
+        eTextarea.setAttribute("placeholder", "");
+        eTextarea.setAttribute("id", dataKey);
+        eTextarea.setAttribute('style','height: 100%; width:100%;');
+
+        eTextarea.value = params.value;
+        eTextarea.addEventListener('blur', function () {
+            var oldValue = params.value;
+            var newValue = eTextarea.value;
+            if (newValue) {
+                UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
+                saveStaffAttendanceComment(params, newValue, date)
+                .then(
+                    function(response) {
+                        UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                        if(response.data.error.length == 0){
+                            AlertSvc.success(scope, 'Comment successfully saved.');
+                            params.data.attendance[date].comment = newValue;
+                        } else {
+                            AlertSvc.error(scope, 'There was an error when saving the record');
+                        }
+                    },
+                    function(error) {
+                        UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                        AlertSvc.error(scope, 'There was an error when saving the record');
+                    }
+                )
+                .finally(function() {
+                    var refreshParams = {
+                        columns: [
+                            'comment'
+                        ],
+                        force: true
+                    };
+                    params.api.refreshCells(refreshParams);
+                });
+            }
+        });
+        return eTextarea;
     }
 
     function convert24Timeformat(hours, minutes, seconds, meridian) {
@@ -517,16 +587,16 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
         return sHours + ":" + sMinutes + " " + meridian;
     }
 
-    function saveStaffAttendanceTimeIn(data, params, time, academicPeriodId) {
-        var isNew = params.isNew;
-        var timeIn = params.time_in;
+    function saveStaffAttendanceTimeIn(data, value, time, academicPeriodId) {
+        var isNew = value.isNew;
+        var timeIn = value.time_in;
         var staffAttendanceData = {
             staff_id: data.staff_id,
             institution_id: data.institution_id,
             academic_period_id: academicPeriodId,
-            date: params.dateStr,
+            date: value.dateStr,
             time_in: time,
-            time_out: params.time_out
+            time_out: value.time_out
         };
         if(!data.isNew && timeIn != null){
             return InstitutionStaffAttendances.edit(staffAttendanceData);
@@ -567,88 +637,26 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc)
             time_out: value.time_out,
             comment: comment
         };
-        console.log(staffAttendanceData);
         if(!value.isNew && timeOut != null){
-            console.log('updating entity');
             return InstitutionStaffAttendances.edit(staffAttendanceData);
         }else{
-            console.log('saving new eentity');
             return InstitutionStaffAttendances.save(staffAttendanceData);
         }
     }
 
-    function getCommentElement(params) {
-        console.log('Rendering before action');
-        var action = params.context.action;
-        var divElement = '';
-        if (action == 'edit') {
-            console.log('Getting Comment Element');
-            divElement = getEditCommentElement(params);
-        } else {
-            divElement = getViewCommentElement(params.value);
-        }
-        return divElement;
+    function hasError(data, key) {
+        return (angular.isDefined(data.save_error) && angular.isDefined(data.save_error[key]) && data.save_error[key]);
     }
 
-    function getViewCommentElement(data) {
-        // console.log(data);
-        var comment = data;
-        var html = '<i class="fa fa-minus"></i>';
-        if (comment != null) {
-            // the icon dunch wanna come out :((
-            html = '<i class="fa kd-comment"></i>' + comment;
+    function clearError(data, skipKey) {
+        if (angular.isUndefined(data.save_error)) {
+            data.save_error = {};
         }
-        return html;
-    }
 
-    function getEditCommentElement(params) {
-        var dataKey = 'comment';
-        var scope = params.context.scope;
-        var value = params.value;
-        var date = params.data.date;
-        var eTextarea = document.createElement("textarea");
-        eTextarea.setAttribute("placeholder", "");
-        eTextarea.setAttribute("id", dataKey);
-
-        // if (hasError(data, dataKey)) {
-        //     eTextarea.setAttribute("class", "error");
-        // }
-
-        eTextarea.value = params.value;
-        eTextarea.addEventListener('blur', function () {
-            var oldValue = params.value;
-            var newValue = eTextarea.value;
-            // console.log(newValue);
-            // UtilsSvc.isAppendSpinner(true, 'institution-student-attendances-table');
-            saveStaffAttendanceComment(params, newValue, date)
-            .then(
-                function(response) {
-                    // console.log(response);
-                    if(response.data.error.length == 0){
-                        console.log(newValue);
-                        AlertSvc.success(scope, 'Comment successfully saved.');
-                        console.log(params);
-                        params.data.attendance[date].comment = newValue;
-                    } else {
-                        AlertSvc.error(scope, 'There was an error when saving the record');
-                    }
-                },
-                function(error) {
-                    AlertSvc.error(scope, 'There was an error when saving the record');
-                }
-            )
-            .finally(function() {
-                var refreshParams = {
-                    columns: [
-                        'comment'
-                    ],
-                    force: true
-                };
-                console.log('refreshing');
-                params.api.refreshCells(refreshParams);
-                // UtilsSvc.isAppendSpinner(false, 'institution-student-attendances-table');
-            });
-        });
-        return eTextarea;
+        angular.forEach(data.save_error, function(error, key) {
+            if (key != skipKey) {
+                data.save_error[key] = false;
+            }
+        })
     }
 };

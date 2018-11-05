@@ -170,7 +170,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         var scope = params.context.scope;
         if(action == 'edit') {
             if(timeIn == null){
-                timeIn = 'current';
+                timeIn = '';
             }else{
                 timeIn = convert12Timeformat(timeIn);
                 console.log(timeIn);
@@ -242,10 +242,10 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
 
             return divElement;
         } else {
-            if(timeIn == null){
-                timeIn = '-';
+            if(timeIn){
+                timeIn = '<font color= "#77B576"><i class="fa-external-link-square"></i>'+convert12Timeformat(timeIn)+'</font>';
             }else{
-                timeIn = convert12Timeformat(timeIn);
+                timeIn = '<i class="fa fa-minus"></i>';
             }
 
             return timeIn;
@@ -261,7 +261,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         var scope = params.context.scope;
         if(action == 'edit') {
             if(timeOut == null){
-                timeOut = 'current';
+                timeOut = '';
             }else{
                 timeOut = convert12Timeformat(timeOut);
                 // console.log(endTime);
@@ -333,10 +333,10 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
 
             return divElement;
         } else {
-            if(timeOut == null){
-                timeOut = '-';
+            if(timeOut){
+                timeOut = '<font color= "#77B576"><i class="fa-external-link-square"></i>'+convert12Timeformat(timeOut) + '</font>';
             }else{
-                timeOut = convert12Timeformat(timeOut);
+                timeOut = '<i class="fa fa-minus"></i>';
             }
             return timeOut;
         }
