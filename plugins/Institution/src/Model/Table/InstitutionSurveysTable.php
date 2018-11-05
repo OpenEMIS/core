@@ -148,6 +148,51 @@ class InstitutionSurveysTable extends ControllerActionTable
         ];
     }
 
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $tabSection = null;
+        $newData = [];
+        $conditions = [];
+        // check if survey exists any tab section
+        if (isset($this->request->query['tab_section'])) {
+            $tabSection = $this->request->query['tab_section'];
+        }
+        $SurveyRules = TableRegistry::get('Survey.SurveyRules');
+        $SurveyFormQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $surveyFormId = $data[$this->alias()]['survey_form_id'];
+        $rules = $SurveyRules
+            ->find('SurveyRulesList', ['survey_form_id' => $surveyFormId])
+            ->innerJoin(
+                [$SurveyFormQuestions->alias() => $SurveyFormQuestions->table()], 
+                [$SurveyFormQuestions->aliasField('survey_question_id = ') . $SurveyRules->aliasField('survey_question_id')]
+            );
+        // get all the survey rules by survey section, if any
+        if ($tabSection) {
+            $conditions[] = $rules->newExpr('REPLACE(' . $SurveyFormQuestions->aliasField('section') . ', " ", "-" ) = "'.$tabSection.'"');
+        }
+        $rules = $rules
+            ->where($conditions)
+            ->toArray();
+        if (!empty($rules)) {
+            foreach ($data[$this->alias()]['custom_field_values'] as $customFieldValueKey => $customFieldValue) {
+                $newData[$customFieldValue['survey_question_id']] = $customFieldValue;
+                $newData[$customFieldValue['survey_question_id']]['dataKey'] = $customFieldValueKey;
+            }
+            foreach ($rules as $key => $rule) {
+                foreach ($rule as $supportFieldKey => $options) {
+                    $supportQuestionOptions = json_decode($options);
+                    if (isset($newData[$supportFieldKey])) {
+                        $userSelectedOption = $newData[$supportFieldKey]['number_value'];
+                        if (!(in_array($userSelectedOption, $supportQuestionOptions)) && $newData[$key]['mandatory'] == 1) {
+                            $dataAliasKey = $newData[$key]['dataKey'];
+                            $data[$this->alias()]['custom_field_values'][$dataAliasKey]['mandatory'] = 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;

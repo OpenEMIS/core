@@ -641,6 +641,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'Staff',
                 'ClassStudents' => [
                     'Users.Genders',
+                    'Users.SpecialNeeds',
                     'EducationGrades',
                     'StudentStatuses',
                     'sort' => [$sortConditions]
@@ -654,6 +655,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'Staff',
                 'ClassStudents' => [
                     'Users.Genders',
+                    'Users.SpecialNeeds',
                     'EducationGrades',
                     'StudentStatuses'
                 ],
@@ -1339,6 +1341,23 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $multiGradeData = $this->find('list', $multiGradeOptions);
         return $multiGradeData->toArray();
+    }
+
+    public function findClassesByInstitutionAndAcademicPeriod(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+
+        return $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('name')
+            ])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->order([$this->aliasField('name')]);
     }
 
     public function getSubjectClasses($institutionId, $academicPeriodId, $gradeId, $subjectId)

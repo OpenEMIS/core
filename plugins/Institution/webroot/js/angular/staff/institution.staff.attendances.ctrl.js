@@ -81,7 +81,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         }, vm.error)
         .then(function(weekList) {
             vm.setWeekList(weekList);
-            return InstitutionStaffAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek);
+            return InstitutionStaffAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
         }, vm.error)
         .then(function(dayListOptions) {
             vm.setDayListOptions(dayListOptions);
@@ -115,7 +115,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         .then(function(weekListOptions) {
             vm.gridOptions.context.period = vm.selectedAcademicPeriod;
             vm.setWeekList(weekListOptions);
-            return InstitutionStaffAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek);
+            return InstitutionStaffAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
         }, vm.error)
         .then(function(dayListOptions) {
             vm.setDayListOptions(dayListOptions);
@@ -143,7 +143,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         vm.allPresentCount = 0;
         vm.allAttendances = 0;
         vm.allLeaveCount = 0;
-        InstitutionStaffAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek)
+        InstitutionStaffAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId)
         .then(function(dayListOptions) {
             vm.setDayListOptions(dayListOptions);
             return InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams());

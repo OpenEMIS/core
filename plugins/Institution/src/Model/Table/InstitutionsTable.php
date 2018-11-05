@@ -21,6 +21,7 @@ use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 
 class InstitutionsTable extends ControllerActionTable
 {
@@ -193,12 +194,15 @@ class InstitutionsTable extends ControllerActionTable
         ];
 
         $this->setDeleteStrategy('restrict');
+
+        $this->addBehavior('Institution.LatLong');  
     }
 
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-
+        $validator = $this->LatLongValidation();
+     
         $validator
             ->add('date_opened', [
                     'ruleCompare' => [
@@ -217,17 +221,6 @@ class InstitutionsTable extends ControllerActionTable
                 'rule' => 'checkPendingWorkbench',
                 'last' => true
             ])
-
-            ->allowEmpty('longitude')
-            ->add('longitude', 'ruleLongitude', [
-                    'rule' => 'checkLongitude'
-                ])
-
-            ->allowEmpty('latitude')
-            ->add('latitude', 'ruleLatitude', [
-                    'rule' => 'checkLatitude'
-                ])
-
             ->add('classification', [
                 'validClassification' => [
                     'rule' => ['range', 1, 2],
@@ -543,6 +536,14 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('logo_name', ['visible' => false]);
         if ($this->action != 'index') {
             $this->field('logo_content', ['type' => 'image']);
+        }
+
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $LatLongPermission = $ConfigItems->value("latitude_longitude");
+
+        if ($LatLongPermission == LatLongOptions::EXCLUDED) {
+            $this->field('longitude', ['visible' => false]);
+            $this->field('latitude', ['visible' => false]);
         }
     }
 
