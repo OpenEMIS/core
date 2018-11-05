@@ -113,14 +113,18 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             columnDefs.push({
                 headerName: "Registration Number",
                 field: "registration_no",
-                filterParams: filterParams,
+                filterParams: {
+                    filterOptions: ['contains'],
+                },
                 filter: "text",
                 menuTabs: menuTabs,
             });
             columnDefs.push({
                 headerName: "OpenEMIS ID",
                 field: "openemis_id",
-                filterParams: filterParams,
+                filterParams: {
+                    filterOptions: ['contains'],
+                },
                 filter: "text",
                 menuTabs: menuTabs,
             });
@@ -128,7 +132,9 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 headerName: "Name",
                 field: "name",
                 sort: 'asc',
-                filterParams: filterParams,
+                filterParams: {
+                    filterOptions: ['contains'],
+                },
                 filter: "text",
                 menuTabs: menuTabs,
             });
@@ -159,7 +165,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 field: 'mark',
                 filterParams: filterParams,
                 filter: "number",
-                menuTabs: menuTabs,
+                menuTabs: [],
             };
 
             var extra = {};
@@ -221,7 +227,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                     }
                 },
                 filterParams: filterParams,
-                menuTabs: menuTabs,
+                menuTabs: [],
             });
 
             var bodyDir = getComputedStyle(document.body).direction;
@@ -242,7 +248,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
 
         cols = angular.merge(cols, {
             filter: 'number',
-            menuTabs: [ "filterMenuTab" ],
+            menuTabs: [],
             cellStyle: function(params) {
                 if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < passMark) {
                     return {color: '#CC5C5C'};
@@ -347,7 +353,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             });
         } else {
             cols = angular.merge(cols, {
-                menuTabs: [ "filterMenuTab" ],
+                menuTabs: [],
                 cellRenderer: function(params) {
                     if (angular.isDefined(params.value)) {
                         var cellValue = '';
@@ -376,7 +382,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         return cols;
     };
 
-    function getRowData(academicPeriodId, examinationId, examinationCentreId, subject, limit, page) {
+    function getRowData(academicPeriodId, examinationId, examinationCentreId, subject, limit, page, filterModel) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.error)) {
                 deferred.reject(response.data.error);
@@ -440,13 +446,20 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             }
         };
 
+        var finderOptions = {
+            examination_id: examinationId,
+            examination_centre_id: examinationCentreId,
+            examination_item_id: subject.id,
+        };
+
+        for (var field in filterModel) {
+            var filterKey = 'filter.' + field;
+            finderOptions[filterKey] = filterModel[field]['filter'];
+        }
+
         return ExaminationCentreStudentsTable
             .select()
-            .find('Results', {
-                examination_id: examinationId,
-                examination_centre_id: examinationCentreId,
-                examination_item_id: subject.id
-            })
+            .find('Results', finderOptions)
             .limit(limit)
             .page(page)
             .ajax({success: success, defer: true});

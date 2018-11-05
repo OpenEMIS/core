@@ -149,8 +149,6 @@ class InstitutionsController extends AppController
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
 
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
-            'StudentAbsences'   => ['className' => 'Institution.InstitutionStudentAbsences'],
-            'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
             'AttendanceExport'  => ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
             'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
             'Promotion'         => ['className' => 'Institution.StudentPromotion', 'actions' => ['add']],
@@ -383,6 +381,10 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAdmission']);
     }
+    public function BulkStudentAdmission()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.BulkStudentAdmission']);
+    }
     public function StudentTransferIn()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferIn']);
@@ -419,6 +421,50 @@ class InstitutionsController extends AppController
     // End
 
     // AngularJS
+    public function StudentAttendances()
+    {
+        $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
+        // $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
+        // $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
+        $_excel = false;
+        $_import = false;
+        
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        // issue
+        $excelUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StudentAttendances',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+            'excel'
+        ];
+
+        $importUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'ImportStudentAttendances',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+            'add'
+        ];
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+
+        $this->set('_edit', $_edit);
+        $this->set('_excel', $_excel);
+        $this->set('_import', $_import);
+        $this->set('excelUrl', Router::url($excelUrl));
+        $this->set('importUrl', Router::url($importUrl));
+        $this->set('institution_id', $institutionId);
+        $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
+    }
+
     public function Results()
     {
         $classId = $this->ControllerAction->getQueryString('class_id');
@@ -927,6 +973,10 @@ class InstitutionsController extends AppController
         $action = $this->request->params['action'];
         $header = __('Institutions');
 
+        if (($action == 'StudentUser' || $action == 'StaffUser') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'view' )) {
+            $session->delete('Guardian.Guardians.id');
+            $session->delete('Guardian.Guardians.name');
+        }
         // this is to cater for back links
         $query = $this->request->query;
 
@@ -1051,6 +1101,12 @@ class InstitutionsController extends AppController
     {
         $action = $this->request->action;
         switch ($action) {
+            case 'StudentAttendances':
+                $this->Angular->addModules([
+                    'institution.student.attendances.ctrl',
+                    'institution.student.attendances.svc'
+                ]);
+                break;
             case 'Results':
                 $this->Angular->addModules([
                     'alert.svc',
@@ -1476,6 +1532,7 @@ class InstitutionsController extends AppController
         ];
 
         $studentTabElements = [
+            'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' => [
                 'url' => [
@@ -1492,14 +1549,12 @@ class InstitutionsController extends AppController
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'Guardians' => ['text' => __('Guardians')],
-            'StudentSurveys' => ['text' => __('Surveys')],
             'StudentTransport' => ['text' => __('Transport')]
         ];
 
         if ($type == 'Staff') {
             $studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
             unset($studentTabElements['Guardians']);
-            unset($studentTabElements['StudentSurveys']);   // Only Student has Survey tab
             unset($studentTabElements['StudentTransport']);   // Only Student has Transport tab
         }
 
