@@ -83,22 +83,6 @@ $institutionId = $paramsQuery['institution_id'];
         justify-content: center;
     }
 
-    #institution-staff-attendances-table .ag-cell .reason-wrapper {
-        position: relative;
-        width: 100%;
-        display: inline-block;
-    }
-
-    #institution-staff-attendances-table .ag-cell .reason-wrapper .input-select-wrapper {
-        margin-bottom: 15px;
-    }
-
-    #institution-staff-attendances-table .ag-cell textarea#comment.error,
-    #institution-staff-attendances-table .ag-cell #staff_absence_reason_id select.error,
-    #institution-staff-attendances-table .ag-cell #absence_type_id select.error {
-        border-color: #CC5C5C !important;
-    }
-
     #institution-staff-attendances-table .ag-cell textarea#comment:focus {
         outline: none;
     }
@@ -121,26 +105,6 @@ $institutionId = $paramsQuery['institution_id'];
     #institution-staff-attendances-table .ag-cell .input-select-wrapper select {
         background: #FFFFFF;
         display: block;
-    }
-
-    #institution-staff-attendances-table .ag-cell .absence-reason,
-    #institution-staff-attendances-table .ag-cell .absences-comment {
-        overflow: hidden;
-        white-space: normal;
-        text-overflow: ellipsis;
-        max-height: 70px;
-        display: flex;
-        align-items: baseline;
-    }
-
-    #institution-staff-attendances-table .ag-cell .absence-reason span,
-    #institution-staff-attendances-table .ag-cell .absences-comment span {
-        margin: 0 10px;
-    }
-
-
-    #institution-staff-attendances-table .ag-cell .absence-reason + .absences-comment  {
-        margin-top: 15px;
     }
 
     #institution-staff-attendances-table .sg-theme .ag-header-cell.children-period .ag-header-cell-label {
@@ -171,15 +135,37 @@ $institutionId = $paramsQuery['institution_id'];
     }
 
     #institution-staff-attendances-table .sg-theme .time-view {
-        padding: 5px;
+        padding: 4px;
+        font-size: 13px;
     }
 
     #institution-staff-attendances-table .sg-theme .time-view > i {
-        margin: 0 5px 0 0;
+        margin: 0 8px 0 0;
+        font-weight: bold;
     }
 
     .rtl #institution-staff-attendances-table .sg-theme .time-view > i {
-        margin: 0 0 0 5px;
+        margin: 0 0 0 8px;
+        font-weight: bold;
+    }
+
+    #institution-staff-attendances-table .sg-theme .comment-wrapper {
+        display: flex;
+        flex-flow: row nowrap;
+    }
+
+    #institution-staff-attendances-table .sg-theme .comment-wrapper> i {
+        padding: 4px;
+        font-weight: bold;
+    }
+
+    #institution-staff-attendances-table .sg-theme .comment-text {
+        text-overflow: ellipsis;
+        white-space: normal;
+        overflow: auto;
+        width: 90%;
+        padding: 0 4px;
+        font-size: 13px;
     }
 }
 

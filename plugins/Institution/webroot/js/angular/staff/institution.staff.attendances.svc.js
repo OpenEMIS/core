@@ -228,18 +228,18 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var url = params.url;
         var data = '';
         if (staffLeaves.length > 0) {
-            data = '<div>';
+            data = '<div class="comment-text">';
             angular.forEach(staffLeaves, function(staffLeave) {
                 var start_time = staffLeave.startTime;
                 var end_time = staffLeave.endTime;
                 var full_day = staffLeave.isFullDay;
                 var leaveTypeName = staffLeave.staffLeaveTypeName;
-                data += '<font color="#CC5C5C"><i class="fa-calendar-check-o"></i> '+leaveTypeName + '</font><br>';
+                data += '<div class = "time-view"><font color="#CC5C5C"><i class="fa fa-calendar-check-o"></i> '+leaveTypeName + '</font></div>';
                 if (!full_day){
-                    data += '<font color="#CC5C5C">' + convert12Timeformat(start_time) + ' - ' + convert12Timeformat(end_time) + '</font><br>';
+                    data += '<div class = "time-view"><font color="#CC5C5C">' + convert12Timeformat(start_time) + ' - ' + convert12Timeformat(end_time) + '</font></div>';
                 }
             });
-            data += '<span><i class="fa fa-file-text-o"></i><a href= "'+url+ '"target="_blank"> View Details</a></span></div>';
+            data += '<div class = "time-view"><i class="fa fa-file-text-o" style="color: #72C6ED;"></i><a href="'+url+ '"target="_blank">View Details</a></div>';
         } else {
             data = '<i class="fa fa-minus"></i>';
         }
@@ -428,15 +428,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             clearError(data, 'time_out');
             clearError(data, 'time_in');
             if (timeIn) {
-                time = '<div class="time-view"><i class="fa-external-link-square"></i>' + convert12Timeformat(timeIn) + '</div>';
+                time = '<div class="time-view"><font color="#77B576"><i class="fa fa-external-link-square"></i> ' + convert12Timeformat(timeIn) + '</font></div>';
 
                 if (timeOut) {
-                    time += '<div class="time-view"><i class="fa-external-link"></i>' + convert12Timeformat(timeOut) + '</div>';
+                    time += '<div class="time-view"><font color="#77B576"><i class=" fa fa-external-link"></i> ' + convert12Timeformat(timeOut) + '</font></div>';
                 } else {
-                    time += '<div class="time-view"><i class="fa-external-link"></i></div>';
+                    time += '<div class="time-view"><font color="#77B576"><i class="fa fa-external-link"></i></font>/div>';
                 }
-
-                time += '<div class="time-view"> <a href= "'+ historyUrl + '"target="_blank"> <i class="fa fa-file-text-o"></i>  View History Log </a></div>';
+                time += '<div class="time-view"><i class="fa fa-file-text-o" style="color: #72C6ED;"></i><a href= "'+ historyUrl + '"target="_blank">View History Log </a></div>';
             } else {
                 time = '<i class="fa fa-minus"></i>';
             }
@@ -449,19 +448,20 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var timeOut = params.time_out;
         var time = '';
         if (timeIn && timeOut){
-            time = '<font color= "#77B576"><i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '<br><i class="fa-external-link"></i> ' + convert12Timeformat(timeOut) +  '</font>';
+            time = '<div class="time-view"><font color= "#77B576"><i class="fa fa-external-link-square"></i> '+ convert12Timeformat(timeIn) + '</div><div class="time-view"><i class="fa fa-external-link"></i> ' + convert12Timeformat(timeOut) +  '</font></div>';
         } else if (timeIn && !timeOut) {
-            time = '<font color= "#77B576"><i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '</font>';
+            time = '<div class="time-view"><font color= "#77B576"><i class="fa fa-external-link-square"></i> '+ convert12Timeformat(timeIn) + '</font></div>';
         }
         if (angular.isDefined(params.leave) && params.leave.length != 0) {
             angular.forEach(params.leave, function(leave) {
-                time += '<br><font color="#CC5C5C"> <i class="fa-calendar-check-o"></i> '+ leave.staffLeaveTypeName +'</font>';
+                time += '<div class="time-view"><font color="#CC5C5C"><i class="fa fa-calendar-check-o"></i> '+ leave.staffLeaveTypeName +'</font></div>';
                 if (leave.isFullDay) {
-                    time += '<br><font color="#CC5C5C">(Full Day)</font><br>';
+                    time += '<div class="time-view"><font color="#CC5C5C">(Full Day)</font></div>';
                 } else if (leave.startTime && leave.endTime) {
-                    time += '<br><font color="#CC5C5C">'+ convert12Timeformat(leave.startTime) + ' - '+ convert12Timeformat(leave.endTime)+'</font><br>';
+                    time += '<div class="time-view"><font color="#CC5C5C">'+ convert12Timeformat(leave.startTime) + ' - '+ convert12Timeformat(leave.endTime)+'</font></div>';
                 }
             });
+            time = '<div class="comment-text">'+ time +'</div>';
         }
         if (time == '') {
             time = '<i class="fa fa-minus"></i>';
@@ -484,13 +484,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var comment = data;
         var html = '<i class="fa fa-minus"></i>';
         if (comment != null) {
-            // the icon dunch wanna come out :((
-            html = `
-                <div class="comment-wrapper" style="display: flex; flex-flow: row nowrap;">
-                    <i class="fa kd-comment comment-flow" style="display: block; width: 15px; height: 15px;"></i>
-                    <div class="comment-text" style="text-overflow: ellipsis; white-space: normal; overflow: auto; width: 80%; margin: 0 auto;" >` + comment +
-                    `</div>
-                </div>`;
+            html = `<div class="comment-wrapper"><i class="fa kd-comment comment-flow"></i><div class="comment-text">` + comment + `</div></div>`;
         }
         return html;
     }

@@ -243,7 +243,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             return divElement;
         } else {
             if(timeIn){
-                timeIn = '<font color= "#77B576"><i class="fa-external-link-square"></i>'+convert12Timeformat(timeIn)+'</font>';
+                timeIn = '<div class = "time-view"><i class="fa fa-external-link-square"></i>'+convert12Timeformat(timeIn)+'</div>';
             }else{
                 timeIn = '<i class="fa fa-minus"></i>';
             }
@@ -334,7 +334,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             return divElement;
         } else {
             if(timeOut){
-                timeOut = '<font color= "#77B576"><i class="fa-external-link-square"></i>'+convert12Timeformat(timeOut) + '</font>';
+                timeOut = '<div class = "time-view"><i class="fa fa-external-link"></i>'+convert12Timeformat(timeOut) + '</div>';
             }else{
                 timeOut = '<i class="fa fa-minus"></i>';
             }
@@ -360,7 +360,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         minutes = timeSplit[1];
         seconds = timeSplit[2];
         console.log(timeSplit);
-        if (hours > 12){ 
+        if (hours > 12){
             meridian = "PM";
         } else {
             meridian = "AM";
@@ -370,7 +370,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         //00 does not exists in 12-hour time format hence need to convert 00 back to 12,
         //else timepicker will display wrong timing when error when user selects 12AM
         if (hours == 0) hours = 12;
-        
+
         var sHours = hours.toString();
         var sMinutes = minutes.toString();
         // var sSeconds = seconds.toString();
@@ -415,6 +415,6 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             console.log('is new entity');
             return InstitutionStaffAttendances.save(staffAttendanceData);
         }
-    } 
+    }
 
 };
