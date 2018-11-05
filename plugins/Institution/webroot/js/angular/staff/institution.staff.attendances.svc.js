@@ -75,7 +75,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             .ajax({success: success, defer: true});
     }
 
-    function getDayListOptions(academicPeriodId, weekId) {
+    function getDayListOptions(academicPeriodId, weekId, institutionId) {
         var success = function(response, deferred) {
             var dayList = response.data.data;
             if (angular.isObject(dayList) && dayList.length > 0) {
@@ -87,7 +87,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         return AcademicPeriods
             .find('DaysForPeriodWeek', {
                 academic_period_id: academicPeriodId,
-                week_id: weekId
+                week_id: weekId,
+                institution_id: institutionId,
             })
             .ajax({success: success, defer: true});
     }
@@ -203,7 +204,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
         angular.forEach(dayList, function(dayObj, dayKey) {
             if (dayObj.id != -1) {
-                var dayText = dayObj.shortName;
+                var dayText = dayObj.name;
                 var colDef = {
                     headerName: dayText,
                     menuTabs: [],
@@ -426,7 +427,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             // always clear error data here.
             clearError(data, 'time_out');
             clearError(data, 'time_in');
-
             if (timeIn) {
                 time = '<div class="time-view"><i class="fa-external-link-square"></i>' + convert12Timeformat(timeIn) + '</div>';
 
@@ -440,14 +440,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             } else {
                 time = '<i class="fa fa-minus"></i>';
             }
-
-            // if(timeIn && timeOut){
-            //     time += '<font color= "#77B576"><i class="fa-external-link-square"></i> '+ convert12Timeformat(timeIn) + '<br><i class="fa-external-link"></i> ' + convert12Timeformat(timeOut) +'</font><br><span><i class="fa fa-file-text" style=" color: #FFFFFF; background-color:  #6699CC; border: 1px solid #6699CC;"></i><a href= "'+ historyUrl + '"target="_blank"> View History Log</a></span>';
-            // } else if (timeIn && !timeOut) {
-            //     time += '<font color= "#77B576"><i class="fa-external-link"></i> '+ convert12Timeformat(timeIn) + '</font>';
-            // } else {
-            //     time = '<i class="fa fa-minus"></i>';
-            // }
             return time;
         }
     }
@@ -495,7 +487,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             // the icon dunch wanna come out :((
             html = `
                 <div class="comment-wrapper" style="display: flex; flex-flow: row nowrap;">
-                    <i class="fa kd-comment comment-flow" style="display: block; width: 15px; height: 15px; border: 1px solid black;"></i>
+                    <i class="fa kd-comment comment-flow" style="display: block; width: 15px; height: 15px;"></i>
                     <div class="comment-text" style="text-overflow: ellipsis; white-space: normal; overflow: auto; width: 80%; margin: 0 auto;" >` + comment +
                     `</div>
                 </div>`;

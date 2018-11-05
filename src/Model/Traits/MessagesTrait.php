@@ -533,6 +533,12 @@ trait MessagesTrait
             'selectNextGrade' => 'Please select a grade to promote to.',
             'notEnrolled' => 'Not enrolled to any grades'
         ],
+        'BulkStudentAdmission' => [
+            'success' => 'Bulk students admission successful',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
+        ],
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
             'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
@@ -790,6 +796,9 @@ trait MessagesTrait
                 'value' => 'Days within %d to %d'
             ],
             'ScholarshipApplication' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'ScholarshipDisbursement' => [
                 'value' => 'Days within %d to %d'
             ]
         ],
@@ -1557,6 +1566,16 @@ trait MessagesTrait
                     'ruleValidDate' => 'You have entered an invalid date.'
                 ],
             ],
+            'StudentVisitRequests' => [
+                'date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period'
+                ]
+            ],
+            'StudentVisits' => [
+                'date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period'
+                ]
+            ]
         ],
         'Profile' => [
             'Guardians' => [

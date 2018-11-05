@@ -83,8 +83,10 @@ class AcademicPeriodsTable extends AppTable
             'Results' => ['index'],
             'StudentExaminationResults' => ['index'],
             'OpenEMIS_Classroom' => ['index', 'view'],
-            'InstitutionStaffAttendances' => ['index', 'view']
+            'InstitutionStaffAttendances' => ['index', 'view'],
+            'StudentAttendances' => ['index', 'view']
         ]);
+        $this->addBehavior('Institution.Calendar');
     }
 
     public function validationDefault(Validator $validator)
@@ -975,10 +977,43 @@ class AcademicPeriodsTable extends AppTable
             });
     }
 
+    public function findPeriodHasClass(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $currentYearId = $this->getCurrent();
+
+        return $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('name')
+            ])
+            ->find('years')
+            ->matching('InstitutionClasses', function ($q) use ($institutionId) {
+                return $q->where(['InstitutionClasses.institution_id' => $institutionId]);
+            })
+            ->group([$this->aliasField('id')])
+            ->formatResults(function (ResultSetInterface $results) use ($currentYearId) {
+                return $results->map(function ($row) use ($currentYearId) {
+                    if ($row->id == $currentYearId) {
+                        $row->selected = true;
+                    }
+                    return $row;
+                });
+            });
+    }
+
     public function findDaysForPeriodWeek(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
         $weekId = $options['week_id'];
+        $institutionId = $options['institution_id'];
+
+        // pass true if you need school closed data
+        if (array_key_exists('school_closed_required', $options)) {
+            $schoolClosedRequired = $options['school_closed_required'];
+        } else {
+            $schoolClosedRequired = false;
+        }
 
         $model = $this;
 
@@ -988,11 +1023,15 @@ class AcademicPeriodsTable extends AppTable
         $weeks = $model->getAttendanceWeeks($academicPeriodId);
         $week = $weeks[$weekId];
 
-        $dayOptions[] = [
-            'id' => -1,
-            'name' => __('All Days'),
-            'date' => -1
-        ];
+        if (isset($options['exclude_all']) && $options['exclude_all']) {
+            $dayOptions = [];
+        } else {
+            $dayOptions[] = [
+                'id' => -1,
+                'name' => __('All Days'),
+                'date' => -1
+            ];
+        }
 
         $schooldays = [];
         for ($i = 0; $i < $daysPerWeek; ++$i) {
@@ -1005,15 +1044,25 @@ class AcademicPeriodsTable extends AppTable
 
         do {
             if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
-                // $schoolClosed = $this->isSchoolClosed($firstDayOfWeek) ? __('School Closed') : '';
+                if ($schoolClosedRequired == false) {
+                    $schoolClosed = false;
+                } else {
+                    $schoolClosed = $this->isSchoolClosed($firstDayOfWeek, $institutionId);
+                }
+                $suffix = $schoolClosed ? __('School Closed') : '';
 
-                $dayOptions[] = [
+                $data = [
                     'id' => $firstDayOfWeek->dayOfWeek,
-                    // 'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ') ' . $schoolClosed,
-                    'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ')',
-                    'shortName' => __($firstDayOfWeek->format('l')),
+                    'day' => __($firstDayOfWeek->format('l')),
+                    'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ') ' . $suffix,
                     'date' => $firstDayOfWeek->format('Y-m-d'),
                 ];
+
+                if ($schoolClosed) {
+                    $data['closed'] = true;
+                }
+
+                $dayOptions[] = $data;
 
                 if (is_null($today) || $firstDayOfWeek->isToday()) {
                     end($dayOptions);
