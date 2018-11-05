@@ -215,9 +215,11 @@ class POCOR4324 extends AbstractMigration
             }
         }
 
-        $StudentAttendanceMarkRecords
-            ->insert($dateData)
-            ->save();
+        if (!empty($dateData)) {
+            $StudentAttendanceMarkRecords
+                ->insert($dateData)
+                ->save();
+        }
         // student_attendance_marked_records - end
 
 
@@ -470,13 +472,17 @@ class POCOR4324 extends AbstractMigration
                 } while ($startDate->lte($endDate));
             }
 
-            $InstitutionStudentAbsences
-                ->insert($absenceMainData)
-                ->save();
-
-            $InstitutionStudentAbsenceDetails
-                ->insert($absenceDetailData)
-                ->save();
+            if (!empty($absenceMainData)) {
+                $InstitutionStudentAbsences
+                    ->insert($absenceMainData)
+                    ->save();    
+            }
+            
+            if (!empty($absenceDetailData)) {
+                $InstitutionStudentAbsenceDetails
+                    ->insert($absenceDetailData)
+                    ->save();    
+            }
         }
 
         // locale_contents - start
