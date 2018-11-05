@@ -251,8 +251,10 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
 
                         var eCell = document.createElement('div');
                         eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
+                        eCell.setAttribute("style","height:100%");
 
                         var eSelect = document.createElement("select");
+
                         angular.forEach(gradingOptions, function(value, key) {
                             var eOption = document.createElement("option");
                             eOption.setAttribute("value", key);
@@ -307,6 +309,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                         }
 
                         var eCell = document.createElement('div');
+                        eCell.setAttribute("style","height:100%");
                         var eLabel = document.createTextNode(cellValue);
                         eCell.appendChild(eLabel);
                     }
@@ -323,9 +326,12 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                         var oldValue = params.value;
 
                         var eCell = document.createElement('div');
-                        var textInput = document.createElement('input');
+                        //var textInput = document.createElement('input');
+                        var textInput = document.createElement('textarea');
+
                         textInput.setAttribute("type", "text");
                         textInput.setAttribute("class", "oe-cell-editable");
+                        textInput.setAttribute("style","height:100%");
                         textInput.value = params.value;
                         eCell.appendChild(textInput);
 
@@ -407,7 +413,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         };
         return InstitutionOutcomeResults.save(saveObj);
     }
- 
+
     function saveOutcomeComments(params) {
         var comments = params.data.result;
         var studentId = params.data.student_id;
