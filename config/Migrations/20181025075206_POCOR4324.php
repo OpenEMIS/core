@@ -475,13 +475,13 @@ class POCOR4324 extends AbstractMigration
             if (!empty($absenceMainData)) {
                 $InstitutionStudentAbsences
                     ->insert($absenceMainData)
-                    ->save();    
+                    ->save();
             }
             
             if (!empty($absenceDetailData)) {
                 $InstitutionStudentAbsenceDetails
                     ->insert($absenceDetailData)
-                    ->save();    
+                    ->save();
             }
         }
 
