@@ -326,7 +326,6 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                         var oldValue = params.value;
 
                         var eCell = document.createElement('div');
-                        //var textInput = document.createElement('input');
                         var textInput = document.createElement('textarea');
 
                         textInput.setAttribute("type", "text");
