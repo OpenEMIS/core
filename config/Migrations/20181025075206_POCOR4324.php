@@ -181,7 +181,7 @@ class POCOR4324 extends AbstractMigration
                         ->first();
 
                     if (!is_null($classEntity)) {
-                        $institutionClassesList[$institutionClassId] = $classEntity->institution_id;
+                        $institutionClassesList[$institutionClassId] = $classEntity->institution_id;    
                         $institutionId = $institutionClassesList[$institutionClassId];
                     }
                 }
@@ -388,7 +388,7 @@ class POCOR4324 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
         // institution_student_absence_details - end
-
+        
         // $weekdays = [
         //  0 => __('Sunday'),
         //  1 => __('Monday'),
@@ -399,7 +399,7 @@ class POCOR4324 extends AbstractMigration
         //  6 => __('Saturday'),
         // ];
 
-        // flatten to single day and insert
+        // flatten to single day and insert 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
@@ -480,7 +480,7 @@ class POCOR4324 extends AbstractMigration
         }
 
         // locale_contents - start
-        // backup
+        // backup 
         $this->execute('CREATE TABLE `z_4324_locale_contents` LIKE `locale_contents`');
         $this->execute('INSERT INTO `z_4324_locale_contents` SELECT * FROM `locale_contents`');
         $today = date('Y-m-d H:i:s');
