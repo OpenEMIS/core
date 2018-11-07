@@ -7,8 +7,8 @@ function StaffAttendancesController($scope, $q, $window, $http, UtilsSvc, AlertS
     var vm = this;
 
     vm.action = 'view';
-    vm.staffId
-    vm.institutionId;
+    vm.staffId;
+    vm.institutionId = '';
 
     vm.academicPeriodOptions = [];
     vm.selectedAcademicPeriod = '';
@@ -80,7 +80,7 @@ function StaffAttendancesController($scope, $q, $window, $http, UtilsSvc, AlertS
 
     // error
     vm.error = function (error) {
-        console.log(error);   
+        console.log(error);
     }
 
     vm.setAcademicPeriodList = function(academicPeriods) {

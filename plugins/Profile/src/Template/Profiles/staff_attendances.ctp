@@ -10,7 +10,7 @@ $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this-
 $this->start('contentBody');
 $panelHeader = $this->fetch('panelHeader');
 $paramsQuery = $this->ControllerAction->getQueryString();
-$institutionId = $paramsQuery['institution_id'];
+$staffId = $paramsQuery['staff_id'];
 ?>
 <?= $this->element('OpenEmis.alert') ?>
 <div class="alert {{class}}" ng-hide="message == null">
@@ -42,7 +42,7 @@ $institutionId = $paramsQuery['institution_id'];
         </div>
     </div>
 </div>
-<div ng-init="$ctrl.institutionId=<?= $institution_id ?>;$ctrl.staffId=<?= $staff_id ?>;">
+<div ng-init="$ctrl.staffId=<?= $staff_id ?>;">
     <div id="staff-attendances-table" class="table-wrapper">
         <div ng-if="$ctrl.gridOptions" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
     </div>
