@@ -417,6 +417,90 @@ class POCOR4324 extends AbstractMigration
         $absenceMainData = [];
         $absenceDetailData = [];
 
+        /* new migration patch - running loops of 1000 records */
+        $countData = $this->fetchAll('SELECT COUNT(*) AS `COUNT` FROM `z_4324_institution_student_absences`');
+        $count = $countData[0]['COUNT'];
+        $MAX_PER_LOOP = 1000;
+
+        $loop = ceil($count / $MAX_PER_LOOP);
+
+        for ($i = 1; $i <= $loop; ++$i) {
+            $currentLoop = [];
+            $absenceMainData = [];
+            $absenceDetailData = [];
+
+            // possible issues on data lost - might need to come out with another way to get unique data
+            $sql = 'SELECT * FROM `z_4324_institution_student_absences` GROUP BY `student_id`, `institution_id`, `start_date` LIMIT ' . $MAX_PER_LOOP . ' OFFSET ' . ($i * $MAX_PER_LOOP);
+            $currentLoop = $this->fetchAll($sql);
+
+            foreach ($currentLoop as $value) {
+                $data = [];
+                $data['student_id'] = $value['student_id'];
+                $data['institution_id'] = $value['institution_id'];
+                $data['absence_type_id'] = $value['absence_type_id'];
+                $data['modified_user_id'] = $value['modified_user_id'];
+                $data['modified'] = $value['modified'];
+                $data['created_user_id'] = $value['created_user_id'];
+                $data['created'] = $value['created'];
+
+                $startDate = new Date($value['start_date']);
+                $endDate = new Date($value['end_date']);
+
+                do {
+                    $date = $startDate->copy();
+                    $dateKey = ($startDate->format('N')) % 7;
+
+                    if (in_array($dateKey, $workingDays)) {
+                        $academicPeriodId = $AcademicPeriods->getAcademicPeriodIdByDate($date);
+                        $data['date'] = $date->format('Y-m-d');
+                        $data['academic_period_id'] = $academicPeriodId;
+
+                        // get institution_class_id by academic_period_id, institution_id, student_id
+                        $result = $InstitutionClassStudents
+                            ->find()
+                            ->where([
+                                $InstitutionClassStudents->aliasField('academic_period_id') => $academicPeriodId,
+                                $InstitutionClassStudents->aliasField('institution_id') => $value['institution_id'],
+                                $InstitutionClassStudents->aliasField('student_id') => $value['student_id']
+                            ]);
+
+                        if (!$result->isEmpty()) {
+                            $classId = $result->first()->institution_class_id;
+                            $data['institution_class_id'] = $classId;
+
+                            $absenceData = $data;
+                            $absenceData['institution_student_absence_day_id'] = $value['institution_student_absence_day_id'];
+
+                            $detailData = $data;
+                            $detailData['student_absence_reason_id'] = $value['student_absence_reason_id'];
+                            $detailData['comment'] = $value['comment'];
+                            $detailData['period'] = 1;
+
+                            $absenceMainData[] = $absenceData;
+                            $absenceDetailData[] = $detailData;
+                        } else {
+                            // pr('this data does not have a class');
+                        }
+                    }
+                    $startDate->addDay();
+                } while ($startDate->lte($endDate));
+            }
+
+            if (!empty($absenceMainData)) {
+                $InstitutionStudentAbsences
+                    ->insert($absenceMainData)
+                    ->save();
+            }
+            
+            if (!empty($absenceDetailData)) {
+                $InstitutionStudentAbsenceDetails
+                    ->insert($absenceDetailData)
+                    ->save();
+            }
+        }
+        /* end of new migration patch */
+
+        /* old migration patch - memory exhaust
         $rows = $this->fetchAll('SELECT * FROM `z_4324_institution_student_absences`');
         if (count($rows) > 0) {
             foreach ($rows as $value) {
@@ -467,7 +551,7 @@ class POCOR4324 extends AbstractMigration
                         } else {
                             // pr('this data does not have a class');
                         }
-                     }
+                    }
                     $startDate->addDay();
                 } while ($startDate->lte($endDate));
             }
@@ -484,6 +568,7 @@ class POCOR4324 extends AbstractMigration
                     ->save();
             }
         }
+        */
 
         // locale_contents - start
         // backup
