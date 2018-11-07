@@ -372,8 +372,10 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         if (hours == 0) hours = 12;
 
         var sHours = hours.toString();
+        if (sHours.length == 1) {
+            sHours = "0" + sHours;
+        }
         var sMinutes = minutes.toString();
-        // var sSeconds = seconds.toString();
         return sHours + ":" + sMinutes + " " + meridian;
     }
 

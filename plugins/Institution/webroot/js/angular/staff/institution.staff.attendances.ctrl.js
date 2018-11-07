@@ -7,7 +7,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     var vm = this;
 
     vm.action = 'view';
-    vm.staffId
+    vm.staffId;
     vm.institutionId;
 
     vm.academicPeriodOptions = [];
@@ -256,7 +256,6 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         if (staffList.length > 0) {
             angular.forEach(staffList, function(staff) {
                 // for All Days Dashboard
-                // if (vm.selectedDay == -1) {
                 angular.forEach(staff.attendance, function(attendance) {
                     vm.allAttendances = vm.allAttendances + 1 ;
                     if (attendance.time_in) {
@@ -313,5 +312,4 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         vm.setColumnDef();
         AlertSvc.reset($scope);
     };
-
 }
