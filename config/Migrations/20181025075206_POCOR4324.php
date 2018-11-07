@@ -181,7 +181,7 @@ class POCOR4324 extends AbstractMigration
                         ->first();
 
                     if (!is_null($classEntity)) {
-                        $institutionClassesList[$institutionClassId] = $classEntity->institution_id;        
+                        $institutionClassesList[$institutionClassId] = $classEntity->institution_id;            
                         $institutionId = $institutionClassesList[$institutionClassId];
                     }
                 }
@@ -388,7 +388,7 @@ class POCOR4324 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
         // institution_student_absence_details - end
-
+        
         // $weekdays = [
         //  0 => __('Sunday'),
         //  1 => __('Monday'),
