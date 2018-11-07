@@ -62,7 +62,7 @@ class InstitutionsController extends AppController
 
         // attendances
         'StaffAbsences',
-        'StaffAttendances',
+        'InstitutionStaffAttendances',
         'InstitutionStudentAbsences',
         'StudentAttendances',
 
@@ -878,9 +878,9 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function StaffAttendances()
+    public function InstitutionStaffAttendances()
     {
-        $_edit = $this->AccessControl->check(['Staff', 'StaffAttendances', 'edit']);
+        $_edit = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendances', 'edit']);
 
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
@@ -1188,7 +1188,7 @@ class InstitutionsController extends AppController
                 }
                 break;
 
-            case 'StaffAttendances':
+            case 'InstitutionStaffAttendances':
                 $this->Angular->addModules([
                     'institution.staff.attendances.ctrl',
                     'institution.staff.attendances.svc'
