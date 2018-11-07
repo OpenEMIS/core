@@ -543,10 +543,10 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution']
                 ],
 
-                'Institutions.StaffAttendances.index' => [
+                'Institutions.InstitutionStaffAttendances.index' => [
                     'title' => 'Staff',
                     'parent' => 'Institution.Attendance',
-                    'selected' => ['Institutions.StaffAttendances', 'Institutions.StaffAbsences', 'Institutions.ImportStaffAttendances'],
+                    'selected' => ['Institutions.InstitutionStaffAttendances', 'Institutions.StaffAbsences', 'Institutions.ImportStaffAttendances'],
                     'params' => ['plugin' => 'Institution']
                 ],
 
@@ -980,7 +980,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.InstitutionStaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave'],
+                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',

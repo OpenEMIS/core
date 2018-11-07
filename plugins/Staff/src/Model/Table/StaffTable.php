@@ -304,9 +304,8 @@ class StaffTable extends AppTable
             'Positions' => ['text' => __('Positions')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Absences')],
             'StaffLeave' => ['text' => __('Leave')],
-            'InstitutionStaffAttendances' => ['text' => __('Attendances')],
+            'StaffAttendances' => ['text' => __('Attendances')],
             'Behaviours' => ['text' => __('Behaviours')],
             'StaffAppraisals' => ['text' => __('Appraisals')],
         ];

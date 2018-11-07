@@ -52,7 +52,7 @@ class StaffController extends AppController
         'Tests',
 
         // staff attendances
-        'InstitutionStaffAttendances',
+        'StaffAttendances',
 
         // special needs
         'SpecialNeedsReferrals',
@@ -75,7 +75,6 @@ class StaffController extends AppController
             'Sections'          => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
             'Classes'           => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
             'Qualifications'    => ['className' => 'Staff.Qualifications'],
-            'Absences'          => ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
             'Extracurriculars'  => ['className' => 'Staff.Extracurriculars'],
             'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
             'ImportStaff'       => ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
@@ -216,7 +215,7 @@ class StaffController extends AppController
     }
 
     // AngularJS
-    public function InstitutionStaffAttendances()
+    public function StaffAttendances()
     {
         $_edit = $this->AccessControl->check(['Staff', 'StaffAttendances', 'edit']);
 
@@ -242,7 +241,7 @@ class StaffController extends AppController
         $this->set('institution_id', $institutionId);
         $this->set('staff_id', $staffId);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', 'InstitutionStaffAttendances');
+        $this->set('selectedAction', 'StaffAttendances');
         $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
     }
 
@@ -250,7 +249,7 @@ class StaffController extends AppController
     {
         $action = $this->request->action;
         switch ($action) {
-            case 'InstitutionStaffAttendances':
+            case 'StaffAttendances':
                 $this->Angular->addModules([
                     'staff.attendances.ctrl',
                     'staff.attendances.svc'
