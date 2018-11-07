@@ -7,7 +7,8 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-
+use Cake\Utility\Inflector;
+use Cake\Routing\Router;
 use App\Controller\AppController;
 
 class ProfilesController extends AppController
@@ -27,6 +28,7 @@ class ProfilesController extends AppController
         'StaffSubjects',
         'StaffBehaviours',
         'Licenses',
+        'StaffAttendances',
     ];
 
     public function initialize()
@@ -122,7 +124,7 @@ class ProfilesController extends AppController
     public function HealthMedications()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']); }
     public function HealthTests()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']); }
     // End Health
-    
+
     // Special Needs
     public function SpecialNeedsReferrals()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsReferrals']); }
     public function SpecialNeedsAssessments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsAssessments']); }
@@ -132,6 +134,27 @@ class ProfilesController extends AppController
     // Special Needs - End
 
     public function Employments()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']); }
+    // AngularJS
+    public function StaffAttendances()
+    {
+        $institutionId = null;
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $staffId = $session->read('Staff.Staff.id');
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        $tabElements = $this->getCareerTabElements();
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+        $this->set('institution_id', $institutionId);
+        $this->set('staff_id', $staffId);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', 'Attendances');
+        $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
+    }
     // End
 
     public function implementedEvents()
@@ -196,6 +219,12 @@ class ProfilesController extends AppController
                     'alert.svc',
                     'student.examination_results.ctrl',
                     'student.examination_results.svc'
+                ]);
+                break;
+            case 'StaffAttendances':
+                $this->Angular->addModules([
+                    'staff.attendances.ctrl',
+                    'staff.attendances.svc'
                 ]);
                 break;
         }
@@ -482,6 +511,7 @@ class ProfilesController extends AppController
             'Subjects' => ['text' => __('Subjects')],
             'Absences' => ['text' => __('Absences')],
             'Leave' => ['text' => __('Leave')],
+            'Attendances' => ['text' => __('Attendances')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
         ];
