@@ -558,7 +558,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             meridian = "AM";
         }
         if (hours > 12) hours = hours - 12;
-        // if (hours < 10) hours = "0" + hours;
 
         //00 does not exists in 12-hour time format hence need to convert 00 back to 12,
         //else timepicker will display wrong timing when error when user selects 12AM
@@ -569,7 +568,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             sHours = "0" + sHours;
         }
         var sMinutes = minutes.toString();
-        // var sSeconds = seconds.toString();
         return sHours + ":" + sMinutes + " " + meridian;
     }
 
