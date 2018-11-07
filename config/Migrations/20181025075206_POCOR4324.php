@@ -58,6 +58,7 @@ class POCOR4324 extends AbstractMigration
         /*
             Admin setup for student_attendance_mark_type.
             For future, if institution level wants to override, create table institution_student_attendance_mark_type (primary key: institution_id, education_grade_id, academic_period_id)
+            
             Attendance per day will read from institution_student_attendance_mark_type.
             If no record found, read from student_attendance_mark_types
             If no record found, default is Day type, per day 1
