@@ -30,7 +30,6 @@ class DirectoriesController extends AppController
             'StaffSections'             => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
             'StaffClasses'          => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
             'StaffQualifications'   => ['className' => 'Staff.Qualifications'],
-            'StaffAbsences'             => ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
             'StaffExtracurriculars'     => ['className' => 'Staff.Extracurriculars'],
             'TrainingResults'       => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 
@@ -722,7 +721,6 @@ class DirectoriesController extends AppController
             'Positions' => ['text' => __('Positions')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Absences')],
             'Leave' => ['text' => __('Leave')],
             'Attendances' => ['text' => __('Attendances')],
             'Behaviours' => ['text' => __('Behaviours')],
