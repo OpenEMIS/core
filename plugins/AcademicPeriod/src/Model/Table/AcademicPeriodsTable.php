@@ -86,6 +86,7 @@ class AcademicPeriodsTable extends AppTable
             'InstitutionStaffAttendances' => ['index', 'view'],
             'StudentAttendances' => ['index', 'view']
         ]);
+        
         $this->addBehavior('Institution.Calendar');
     }
 
