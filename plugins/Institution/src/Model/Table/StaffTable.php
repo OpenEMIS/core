@@ -1847,6 +1847,10 @@ class StaffTable extends ControllerActionTable
 
         $staffId = $options['staff_id'];
         $institutionId = $options['institution_id'];
+        $conditions = [];
+        if ($institutionId != '') {
+            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        }
         // $academicPeriodId = $options['academic_period_id'];
         $weekStartDate = $options['week_start_day'];
         $weekEndDate = $options['week_end_day'];
@@ -1894,8 +1898,8 @@ class StaffTable extends ControllerActionTable
             ->matching('Users')
             ->where([
                 $this->aliasField('staff_id') => $staffId,
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('staff_status_id') => 1
+                $this->aliasField('staff_status_id') => 1,
+                $conditions
             ])
             ->group([
                 $InstitutionStaffAttendances->aliasField('staff_id'),
@@ -1906,10 +1910,6 @@ class StaffTable extends ControllerActionTable
             ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr) {
                 $results = $results->toArray();
                 $resultsCount = count($results);
-                // Log::write('debug', '$resultsCount');
-                // Log::write('debug', $resultsCount);
-                // Log::write('debug', $results);
-                // $i = 1;
                 $formatResultDates = [];
                 foreach ($workingDaysArr as $date) {
                     $i = 1;

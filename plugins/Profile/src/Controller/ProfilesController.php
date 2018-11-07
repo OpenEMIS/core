@@ -138,13 +138,7 @@ class ProfilesController extends AppController
     public function StaffAttendances()
     {
         $institutionId = null;
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
-        } else {
-            $session = $this->request->session();
-            $staffId = $session->read('Staff.Staff.id');
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
+        $staffId = $this->Auth->user('id');
         $tabElements = $this->getCareerTabElements();
 
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
