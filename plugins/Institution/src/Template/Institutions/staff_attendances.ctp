@@ -1,12 +1,11 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Institution.angular/staff/institution.staff.attendances.svc', ['block' => true]); ?>
 <?= $this->Html->script('Institution.angular/staff/institution.staff.attendances.ctrl', ['block' => true]); ?>
-<?= $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min', ['block' => true]); ?>
+<?= $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min', ['block' => true]);?>
 <?= $this->Html->css('ControllerAction.../plugins/timepicker/css/bootstrap-timepicker.min', ['block' => true]); ?>
 <?php
 $this->start('toolbar');
 ?>
-
 <!-- <?php if ($_excel) : ?>
     <a href="<?=$excelUrl ?>" ng-show="$ctrl.action == 'view'">
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" >
@@ -23,7 +22,6 @@ $this->start('toolbar');
     </a>
 </button>
 <?php endif; ?> -->
-
 <?php if ($_edit) : ?>
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1" ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
@@ -39,7 +37,6 @@ $this->start('toolbar');
         <i class="fa kd-back"></i>
     </button>
 <?php endif; ?>
-
 <?php
 $this->end();
 ?>
@@ -53,11 +50,6 @@ $panelHeader = $this->fetch('panelHeader');
 $paramsQuery = $this->ControllerAction->getQueryString();
 $institutionId = $paramsQuery['institution_id'];
 ?>
-
-<!-- <?= $this->element('OpenEmis.alert') ?>
-<div class="alert {{class}}" ng-hide="message == null">
-    <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
-</div> -->
 <style>
     .attendance-dashboard .data-section.single-day {
         width: 32%;
@@ -168,9 +160,7 @@ $institutionId = $paramsQuery['institution_id'];
         font-size: 13px;
     }
 }
-
 </style>
-
 <div class="panel">
     <div class="panel-body" style="position: relative;">
         <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;" float-btn="false">
@@ -178,7 +168,6 @@ $institutionId = $paramsQuery['institution_id'];
                 <div class="alert {{class}}" ng-hide="message == null">
                     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
                 </div>
-
                 <div class="overview-box alert attendance-dashboard" ng-class="disableElement" ng-show="$ctrl.action == 'view'">
                     <a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
                     <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
@@ -190,7 +179,7 @@ $institutionId = $paramsQuery['institution_id'];
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <!-- <i class="kd-address-book icon"></i> -->
-                        <i class="kd-students icon"></i>
+                        <i class="kd-staff icon"></i>
                         <div class="data-field">
                             <h4><?= __('Total Attendance') ?></h4>
                             <h1 class="data-header">{{$ctrl.allAttendances}}</h1>
@@ -214,7 +203,6 @@ $institutionId = $paramsQuery['institution_id'];
                     <div ng-if="$ctrl.gridReady" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
                 </div>
             </bg-pane>
-
             <bg-pane class="split-content splitter-slide-out splitter-filter">
                 <div class="split-content-header">
                     <h3><?= __('Filter') ?></h3>
@@ -243,8 +231,6 @@ $institutionId = $paramsQuery['institution_id'];
         </bg-splitter>
     </div>
 </div>
-
-
 <?php
 $this->end();
 ?>

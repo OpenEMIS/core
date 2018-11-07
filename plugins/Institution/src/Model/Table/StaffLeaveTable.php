@@ -10,7 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\Network\Request;
-use Cake\Validation\Validator;
+use Cake\Validation\Validator;  
 use Cake\Datasource\ResultSetInterface;
 
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
@@ -92,11 +92,9 @@ class StaffLeaveTable extends ControllerActionTable
         } else {
             $day = 0.5;
         }
-
         $entityStartTime = $entity->start_time;
         $entityEndTime = $entity->end_time;
-
-
+        
         $exisitingLeaveRecords = $this
             ->find()
             ->select([
