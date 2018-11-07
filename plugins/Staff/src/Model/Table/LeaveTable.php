@@ -22,7 +22,9 @@ class LeaveTable extends ControllerActionTable
         $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
-
+        $this->addBehavior('Workflow.Workflow', [
+            'model' => 'Institution.StaffLeave'
+        ]);
         $this->addBehavior('ControllerAction.FileUpload', [
             // 'name' => 'file_name',
             // 'content' => 'file_content',
@@ -32,8 +34,8 @@ class LeaveTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-        $this->toggle('add', false);
-        $this->toggle('edit', false);
+        // $this->toggle('add', false);
+        // $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
 

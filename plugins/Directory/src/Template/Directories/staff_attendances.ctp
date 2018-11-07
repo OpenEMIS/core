@@ -28,14 +28,14 @@ $staffId = $paramsQuery['staff_id'];
     <div class="toolbar-wrapper">
             <div class="input select">
                 <div class="input-select-wrapper">
-                    <select name="academic_period" ng-options="period.id as period.name for period in $ctrl.academicPeriodOptions" ng-model="$ctrl.selectedAcademicPeriod" ng-change="$ctrl.changeAcademicPeriod();">
+                    <select class="form-control" name="academic_period" ng-options="period.id as period.name for period in $ctrl.academicPeriodOptions" ng-model="$ctrl.selectedAcademicPeriod" ng-change="$ctrl.changeAcademicPeriod();">
                         <option value="" ng-if="$ctrl.academicPeriodOptions.length == 0"><?= __('No Options') ?></option>
                     </select>
                 </div>
             </div>
         <div class="input select">
             <div class="input-select-wrapper">
-                <select name="week" ng-options="week.id as week.name for week in $ctrl.weekListOptions" ng-model="$ctrl.selectedWeek" ng-change="$ctrl.changeWeek();">
+                <select class="form-control" name="week" ng-options="week.id as week.name for week in $ctrl.weekListOptions" ng-model="$ctrl.selectedWeek" ng-change="$ctrl.changeWeek();">
                     <option value="" ng-if="$ctrl.weekListOptions.length == 0"><?= __('No Options') ?></option>
                 </select>
             </div>

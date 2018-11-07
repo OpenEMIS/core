@@ -1915,18 +1915,15 @@ class StaffTable extends ControllerActionTable
                     $i = 1;
                     $found = false;
                     $workingDay = $date->format('Y-m-d');
-                    // Log::write('debug', $workingDay);
                     foreach ($results as $result) {
                         $cloneResult = clone $result;
                         $InstitutionStaffAttendanceDate = $cloneResult->InstitutionStaffAttendances['date'];
                         if ($InstitutionStaffAttendanceDate == $workingDay){
-                            // Log::write('debug', $cloneResult);
                             $cloneResult['isNew'] = false;
                             $cloneResult['date'] = date("l, d F Y", strtotime($InstitutionStaffAttendanceDate));
                             $formatResultDates[] = $cloneResult;
                             $found = true;
                         }
-
                         //if iteration is in the last index of cloneResult and the date still cannot be found, insert the date in and also set the start_time and end_time to null
                         if ($i == $resultsCount && !$found) {
                             $cloneResult['isNew'] = true;
@@ -2086,16 +2083,16 @@ class StaffTable extends ControllerActionTable
                     }
                     // gets all the staff leave
                     foreach ($staffTimeRecords as $key => $staffTimeRecord) {
-                        $leave = [];
+                        $leaveRecords = [];
                         foreach ($staffLeaveRecords as $staffLeaveRecord) {
                             $dateFrom = $staffLeaveRecord['date_from']->format('Y-m-d');
                             $dateTo = $staffLeaveRecord['date_to']->format('Y-m-d');
                             if ($dateFrom <= $key && $dateTo >= $key) {
-                               $tmp['isFullDay'] = $staffLeaveRecord['full_day'];
-                               $tmp['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
-                               $tmp['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
-                               $tmp['staffLeaveTypeName'] = $staffLeaveRecord['_matchingData']['StaffLeaveTypes']['name'];
-                               $leave[] = $tmp;
+                               $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
+                               $leaveRecord['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
+                               $leaveRecord['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
+                               $leaveRecord['staffLeaveTypeName'] = $staffLeaveRecord['_matchingData']['StaffLeaveTypes']['name'];
+                               $leaveRecords[] = $leaveRecord;
                             }
                         }
                         $url = Router::url([
@@ -2105,7 +2102,7 @@ class StaffTable extends ControllerActionTable
                             'index',
                             'user_id' => $staffId
                         ]);
-                        $staffTimeRecords[$key]['leave'] = $leave;
+                        $staffTimeRecords[$key]['leave'] = $leaveRecords;
                         $staffTimeRecords[$key]['url'] = $url;
                     }
                     $row->attendance = $staffTimeRecords;
