@@ -22,7 +22,6 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         saveStaffAttendanceTimeIn:saveStaffAttendanceTimeIn,
         saveStaffAttendanceTimeOut:saveStaffAttendanceTimeOut,
     };
-
     return service;
 
     function init(baseUrl) {
@@ -49,7 +48,6 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                 deferred.reject('ERROR');
             }
         };
-
         return AcademicPeriods
             .find('SchoolAcademicPeriod')
             .ajax({success: success, defer: true});
@@ -70,7 +68,6 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                 deferred.reject('ERROR TWO');
             }
         };
-
         return AcademicPeriods
             .find('WeeksForPeriod', {
                 academic_period_id: academicPeriodId
@@ -97,7 +94,6 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                 deferred.reject('ERROR');
             }
         };
-
         return Staff
             .find('StaffAttendances', extra)
             .ajax({success: success, defer: true});
@@ -132,11 +128,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             field: "time_in",
             menuTabs: [],
             cellRenderer: function(params) {
-                console.log('params', params);
                 if (angular.isDefined(params.context.action)) {
-                    // var action = params.context.action;
-                    // var data = params.data;
-                    // var rowIndex = params.rowIndex;
                     var timeIn = params.data.InstitutionStaffAttendances.time_in;
                     return getTimeInElement(params);
                 }
@@ -149,15 +141,11 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             menuTabs: [],
             cellRenderer: function(params) {
                 if (angular.isDefined(params.context.action)) {
-                    // var action = params.context.action;
-                    // var data = params.data;
-                    // var rowIndex = params.rowIndex;
                     var timeOut = params.data.InstitutionStaffAttendances.time_out;
                     return getTimeOutElement(params);
                 }
             }
         });
-
         return columnDefs;
     }
 
@@ -168,12 +156,11 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         var timepickerId = 'time-in-' + rowIndex;
         var timeIn = params.data.InstitutionStaffAttendances.time_in;
         var scope = params.context.scope;
-        if(action == 'edit') {
-            if(timeIn == null){
+        if (action == 'edit') {
+            if (timeIn == null) {
                 timeIn = '';
-            }else{
+            } else {
                 timeIn = convert12Timeformat(timeIn);
-                console.log(timeIn);
             }
             var divElement = document.createElement('div');
             divElement.setAttribute('class', 'input');
@@ -190,21 +177,15 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             setTimeout(function(event) {
                 var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: timeIn});
                 $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
-                    console.log('saving start time.........');
-                    console.log(e.time);
-                    // convertTimeformat(e.time.hours, e.time.minutes, e.time.seconds);
                     var time_in = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
-                    console.log(time_in);
-                    // data.InstitutionStaffAttendances.start_time = start_time;
                     saveStaffAttendanceTimeIn(data, params, time_in)
                     .then(
                         function(response) {
-                            // console.log(response.data.error.length);
-                            if(response.data.error.length == 0){
+                            if (response.data.error.length == 0) {
                                 AlertSvc.success(scope, 'Time in record successfully saved.');
                                 data.isNew = false;
                                 data.InstitutionStaffAttendances.time_in = time_in;
-                            }else{
+                            } else {
                                  AlertSvc.error(scope, response.data.error.time_in.ruleCompareTime);
                             }
                         },
@@ -242,12 +223,11 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
 
             return divElement;
         } else {
-            if(timeIn){
+            if (timeIn) {
                 timeIn = '<div class = "time-view"><i class="fa fa-external-link-square"></i>'+convert12Timeformat(timeIn)+'</div>';
-            }else{
+            } else {
                 timeIn = '<i class="fa fa-minus"></i>';
             }
-
             return timeIn;
         }
     }
@@ -259,12 +239,11 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         var timepickerId = 'time-out-' + rowIndex;
         var timeOut = params.data.InstitutionStaffAttendances.time_out;
         var scope = params.context.scope;
-        if(action == 'edit') {
-            if(timeOut == null){
+        if (action == 'edit') {
+            if (timeOut == null) {
                 timeOut = '';
-            }else{
+            } else {
                 timeOut = convert12Timeformat(timeOut);
-                // console.log(endTime);
             }
             var divElement = document.createElement('div');
             divElement.setAttribute('class', 'input');
@@ -281,19 +260,15 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             setTimeout(function(event) {
                 var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: timeOut});
                     $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
-                    console.log('saving end-time.........');
-                    // console.log(e.time);
-                    // convertTimeformat(e.time.hours, e.time.minutes, e.time.seconds);
                     var time_out = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
-                    console.log(time_out);
                     saveStaffAttendanceTimeOut(data, params, time_out)
                     .then(
                         function(response) {
-                            if(response.data.error.length == 0){
+                            if (response.data.error.length == 0) {
                                 AlertSvc.success(scope, 'Time Out record successfully saved.');
                                 data.isNew = false;
                                 data.InstitutionStaffAttendances.time_out = time_out;
-                            }else{
+                            } else {
                                  AlertSvc.error(scope, response.data.error.time_in.ruleCompareTime);
                             }
                         },
@@ -313,14 +288,12 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                     });
                 });
                 $(document).on('DOMMouseScroll mousewheel scroll', function() {
-                    console.log('scroll1');
                     window.clearTimeout(t);
                     t = setTimeout(function(event) {
                         timepickerControl.timepicker('place');
                     });
                 });
             }, 1);
-
 
             inputElement.addEventListener('click', function(event) {
                 $('#' + timepickerId).timepicker();
@@ -333,9 +306,9 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
 
             return divElement;
         } else {
-            if(timeOut){
+            if (timeOut) {
                 timeOut = '<div class = "time-view"><i class="fa fa-external-link"></i>'+convert12Timeformat(timeOut) + '</div>';
-            }else{
+            } else {
                 timeOut = '<i class="fa fa-minus"></i>';
             }
             return timeOut;
@@ -359,8 +332,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         hours = timeSplit[0];
         minutes = timeSplit[1];
         seconds = timeSplit[2];
-        console.log(timeSplit);
-        if (hours > 12){
+        if (hours > 12) {
             meridian = "PM";
         } else {
             meridian = "AM";
@@ -390,11 +362,9 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             time_in: time,
             time_out: data.InstitutionStaffAttendances.time_out
         };
-        if(!data.isNew && timeIn != null){
-            console.log('is not new entity');
+        if (!data.isNew && timeIn != null) {
             return InstitutionStaffAttendances.edit(staffAttendanceData);
-        }else{
-            console.log('is new entity');
+        } else {
             return InstitutionStaffAttendances.save(staffAttendanceData);
         }
     }
@@ -410,11 +380,9 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             time_in: data.InstitutionStaffAttendances.time_in,
             time_out: time,
         };
-        if(!data.isNew && timeOut != null){
-            console.log('is not new entity');
+        if (!data.isNew && timeOut != null) {
             return InstitutionStaffAttendances.edit(staffAttendanceData);
-        }else{
-            console.log('is new entity');
+        } else {
             return InstitutionStaffAttendances.save(staffAttendanceData);
         }
     }
