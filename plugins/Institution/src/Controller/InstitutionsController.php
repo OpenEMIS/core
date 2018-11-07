@@ -337,10 +337,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']);
     }
-    // public function StaffAttendances()
-    // {
-    //     $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']);
-    // }
     public function Risks()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Risks']);
@@ -893,23 +889,8 @@ class InstitutionsController extends AppController
             $staffId = $session->read('Staff.Staff.id');
             $institutionId = $session->read('Institution.Institutions.id');
         }
-        // $tabElements = $this->getCareerTabElements();
-
-        // $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-        // $this->Navigation->addCrumb($crumbTitle);
-
-        // $historyUrl = $this->ControllerAction->url('index');
-        // $historyUrl['plugin'] = 'Staff';
-        // $historyUrl['controller'] = 'Staff';
-        // $historyUrl['action'] = 'InstitutionStaffAttendanceActivities';
-
-        // // pr($url);die;
-        // $this->set('historyUrl', Router::url($historyUrl));
         $this->set('_edit', $_edit);
         $this->set('institution_id', $institutionId);
-        // $this->set('staff_id', $staffId);
-        // $this->set('tabElements', $tabElements);
-        // $this->set('selectedAction', 'InstitutionStaffAttendances');
         $this->set('ngController', 'InstitutionStaffAttendancesCtrl as $ctrl');
     }
     
