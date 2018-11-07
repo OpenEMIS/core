@@ -58,7 +58,7 @@ class POCOR4324 extends AbstractMigration
         /*
             Admin setup for student_attendance_mark_type.
             For future, if institution level wants to override, create table institution_student_attendance_mark_type (primary key: institution_id, education_grade_id, academic_period_id)
-
+        
             Attendance per day will read from institution_student_attendance_mark_type.
             If no record found, read from student_attendance_mark_types
             If no record found, default is Day type, per day 1
@@ -181,7 +181,7 @@ class POCOR4324 extends AbstractMigration
                         ->first();
 
                     if (!is_null($classEntity)) {
-                        $institutionClassesList[$institutionClassId] = $classEntity->institution_id;    
+                        $institutionClassesList[$institutionClassId] = $classEntity->institution_id;        
                         $institutionId = $institutionClassesList[$institutionClassId];
                     }
                 }
@@ -222,7 +222,7 @@ class POCOR4324 extends AbstractMigration
 
 
         // institution_student_absences - start
-        // backup
+        // backup 
         $this->execute('CREATE TABLE `z_4324_institution_student_absences` LIKE `institution_student_absences`');
         $this->execute('INSERT INTO `z_4324_institution_student_absences` SELECT * FROM `institution_student_absences`');
         $this->execute('DROP TABLE IF EXISTS `institution_student_absences`');
@@ -388,7 +388,7 @@ class POCOR4324 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
         // institution_student_absence_details - end
-        
+
         // $weekdays = [
         //  0 => __('Sunday'),
         //  1 => __('Monday'),
@@ -480,7 +480,7 @@ class POCOR4324 extends AbstractMigration
         }
 
         // locale_contents - start
-        // backup 
+        // backup
         $this->execute('CREATE TABLE `z_4324_locale_contents` LIKE `locale_contents`');
         $this->execute('INSERT INTO `z_4324_locale_contents` SELECT * FROM `locale_contents`');
         $today = date('Y-m-d H:i:s');
