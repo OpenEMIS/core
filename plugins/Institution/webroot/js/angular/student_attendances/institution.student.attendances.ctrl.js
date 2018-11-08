@@ -113,7 +113,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             }, vm.error)
             .then(function(weekListOptions) {
                 vm.updateWeekList(weekListOptions);
-                return InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek);
+                return InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
             }, vm.error)
             .then(function(dayListOptions) {
                 vm.updateDayList(dayListOptions);
@@ -388,7 +388,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         InstitutionStudentAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod)
         .then(function(weekListOptions) {
             vm.updateWeekList(weekListOptions);
-            return InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek);
+            return InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
         }, vm.error)
         .then(function(dayListOptions) {
             vm.updateDayList(dayListOptions);
@@ -424,7 +424,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         vm.selectedWeekStartDate = weekObj.start_day;
         vm.selectedWeekEndDate = weekObj.end_day;
         vm.gridOptions.context.week = vm.selectedWeek;
-        InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek)
+        InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId)
         .then(function(dayListOptions) {
             vm.updateDayList(dayListOptions);
             return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
