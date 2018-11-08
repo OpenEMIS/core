@@ -283,8 +283,8 @@ class ImportOutcomeResultBehavior extends Behavior
             }
 
             $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
-            $education_subject = $this->_table->request->query['education_subject'];
-            $subjectName = $educationSubjectsTable->get($education_subject)->name;
+            $education_subject_id = $this->_table->request->query['education_subject'];
+            $subjectName = $educationSubjectsTable->get($education_subject_id)->name;
 
             // check correct template
             $header = array($subjectName, 'Outcome -->');
@@ -311,7 +311,7 @@ class ImportOutcomeResultBehavior extends Behavior
             $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
             $aryOutcomeCriteria = $outcomeCriteriasTable->find()
             ->where([
-                $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject,
+                $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
                 $outcomeCriteriasTable->aliasField('outcome_template_id') => $template
             ])
             ->toArray();
@@ -373,7 +373,7 @@ class ImportOutcomeResultBehavior extends Behavior
                         'outcome_template_id' => $template,
                         'outcome_period_id' => $this->_table->request->data['ImportOutcomeResults']['outcome_period'],
                         'education_grade_id' => $outcomeCriteriaEntity->education_grade_id,
-                        'education_subject_id' => $education_subject,
+                        'education_subject_id' => $education_subject_id,
                         'institution_id' => $this->_table->request->session()->read('Institution.Institutions.id'),
                         'academic_period_id' => $this->_table->request->data['ImportOutcomeResults']['academic_period']
                     ]);
@@ -503,10 +503,6 @@ class ImportOutcomeResultBehavior extends Behavior
 
                         $tempPassedRecord = new ArrayObject($tempPassedRecord);
 
-                        // individual import models can specifically define the passed record values which are to be exported
-                        $params = [$clonedEntity, $columns, $tempPassedRecord, $originalRow];
-                        $this->dispatchEvent($this->_table, $this->eventKey('onImportSetModelPassedRecord'), 'onImportSetModelPassedRecord', $params);
-
                         $dataPassed[] = $tempPassedRecord->getArrayCopy();
                     }
 
@@ -620,9 +616,6 @@ class ImportOutcomeResultBehavior extends Behavior
     public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = '')
     {
         //set the image
-        if (empty($title)) {
-            $title = $dataSheetName;
-        }
         $activeSheet = $objPHPExcel->getActiveSheet();
         $activeSheet->setTitle($dataSheetName);
 
@@ -685,8 +678,8 @@ class ImportOutcomeResultBehavior extends Behavior
         $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName,  __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
 
         $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
-        $education_subject = $this->_table->request->query['education_subject'];
-        $name = $educationSubjectsTable->get($education_subject)->name;
+        $education_subject_id = $this->_table->request->query['education_subject'];
+        $name = $educationSubjectsTable->get($education_subject_id)->name;
 
         $activeSheet->setCellValue("A2", $name);
         $activeSheet->setCellValue("B2", "Outcome -->");
@@ -700,15 +693,15 @@ class ImportOutcomeResultBehavior extends Behavior
         $template = $this->_table->request->query['template'];
 
         $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
-        $array = $outcomeCriteriasTable->find()
+        $arrayOutcomeCriteriasTable = $outcomeCriteriasTable->find()
         ->where([
-            $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject,
+            $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
             $outcomeCriteriasTable->aliasField('outcome_template_id') => $template
         ])
         ->toArray();
 
         $suggestedRowHeight = 0;
-        foreach ($array as $key => $value) {
+        foreach ($arrayOutcomeCriteriasTable as $key => $value) {
             $key = $key + 2;
             $alpha = $this->getExcelColumnAlpha($key);
             $activeSheet->setCellValue($alpha . 1, $value->id);
@@ -758,10 +751,10 @@ class ImportOutcomeResultBehavior extends Behavior
 
         }
         // -1 to start from A, +2 is for education subject and outcome-->, -1+2=+1
-        $arrayLastAlpha = $this->getExcelColumnAlpha(count($array)+1);
+        $arrayLastAlpha = $this->getExcelColumnAlpha(count($arrayOutcomeCriteriasTable)+1);
         $activeSheet->mergeCells('C3:'. $arrayLastAlpha.'3');
         // -1 to start from A, +2 is for education subject and outcome-->, +1 comment after criteria name, -1+2+1=+2
-        $Comment = $this->getExcelColumnAlpha(count($array)+2);
+        $Comment = $this->getExcelColumnAlpha(count($arrayOutcomeCriteriasTable)+2);
         $activeSheet->setCellValue($Comment . '3', "Comment");
         $activeSheet->getColumnDimension($Comment)->setAutoSize(true);
 
@@ -817,13 +810,13 @@ class ImportOutcomeResultBehavior extends Behavior
             }
         }
 
-        $education_subject = $this->_table->request->query['education_subject'];
+        $education_subject_id = $this->_table->request->query['education_subject'];
         $template = $this->_table->request->query['template'];
 
         $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
         $outcomeCriteriasArray = $outcomeCriteriasTable->find()
         ->where([
-            $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject,
+            $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
             $outcomeCriteriasTable->aliasField('outcome_template_id') => $template
         ])
         ->toArray();
