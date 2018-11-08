@@ -162,6 +162,81 @@ class POCOR4324 extends AbstractMigration
             ->addIndex('institution_class_id')
             ->save();
 
+        /* new migration patch - running loops of 30 records (30 * 30 = max 900 records to insert) */
+        $recordsMaxPerLoop = 30;
+        $recordsCountData = $this->fetchAll('SELECT COUNT(*) AS `COUNT` FROM `institution_class_attendance_records`');
+        $recordCount = $recordsCountData[0]['COUNT'];
+        $recordLoop = ceil($recordCount / $recordsMaxPerLoop);
+
+        $dateData = [];
+        $institutionClassesList = []; // class_id - institution_id pair
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+
+        for ($j = 1; $j < $recordLoop; ++$j) {
+            $dateData = [];
+            $records = [];
+            $sql = 'SELECT * FROM `institution_class_attendance_records` LIMIT ' . $recordsMaxPerLoop . ' OFFSET ' . ($j * $recordsMaxPerLoop);
+
+            $records = $this->fetchAll($sql);
+
+            if (count($records) > 0) {
+                foreach ($records as $value) {
+                    $institutionClassId = $value['institution_class_id'];
+                    $academicPeriodId = $value['academic_period_id'];
+
+                    if (isset($institutionClassesList[$institutionClassId])) {
+                        $institutionId = $institutionClassesList[$institutionClassId];
+                    } else {
+                        $classEntity = $InstitutionClasses
+                            ->find()
+                            ->select([$InstitutionClasses->aliasField('institution_id')])
+                            ->where([$InstitutionClasses->aliasField('id') => $institutionClassId])
+                            ->first();
+
+                        if (!is_null($classEntity)) {
+                            $institutionClassesList[$institutionClassId] = $classEntity->institution_id;           
+                            $institutionId = $institutionClassesList[$institutionClassId];
+                        }
+                    }
+
+                    if (!is_null($institutionId)) {
+                        $year = $value['year'];
+                        $month = $value['month'];
+                        $dayPrefix = 'day_';
+
+                        for ($i = 1; $i <= 31; ++$i) {
+                            /*
+                                0 = Not marked
+                                1 = Marked
+                                -1 = Not valid
+                             */
+                            $dayColumn = $dayPrefix . $i;
+                            if ($value[$dayColumn] == 1) {
+                                $day = $i;
+
+                                $date = (new Date($year . '-' . $month . '-' . $day))->format('Y-m-d');
+                                $dateData[] = [
+                                    'institution_class_id' => $institutionClassId,
+                                    'academic_period_id' => $academicPeriodId,
+                                    'institution_id' => $institutionId,
+                                    'date' => $date,
+                                    'period' => 1
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!empty($dateData)) {
+                $StudentAttendanceMarkRecords
+                    ->insert($dateData)
+                    ->save();
+            }
+        }
+        /* end of new migration patch */
+
+        /* old migration patch - memory exhaust
         $institutionClassesList = []; // class_id - institution_id pair
         $dateData = [];
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
@@ -192,11 +267,11 @@ class POCOR4324 extends AbstractMigration
                     $dayPrefix = 'day_';
 
                     for ($i = 1; $i <= 31; ++$i) {
-                        /*
-                            0 = Not marked
-                            1 = Marked
-                            -1 = Not valid
-                         */
+                        
+                        //    0 = Not marked
+                        //    1 = Marked
+                        //    -1 = Not valid
+
                         $dayColumn = $dayPrefix . $i;
                         if ($value[$dayColumn] == 1) {
                             $day = $i;
@@ -215,11 +290,13 @@ class POCOR4324 extends AbstractMigration
             }
         }
 
-        $StudentAttendanceMarkRecords
-            ->insert($dateData)
-            ->save();
+        if (!empty($dateData)) {
+            $StudentAttendanceMarkRecords
+                ->insert($dateData)
+                ->save();
+        }
         // student_attendance_marked_records - end
-
+        */
 
         // institution_student_absences - start
         // backup 
@@ -415,6 +492,90 @@ class POCOR4324 extends AbstractMigration
         $absenceMainData = [];
         $absenceDetailData = [];
 
+        /* new migration patch - running loops of 1000 records */
+        $countData = $this->fetchAll('SELECT COUNT(*) AS `COUNT` FROM `z_4324_institution_student_absences`');
+        $count = $countData[0]['COUNT'];
+        $MAX_PER_LOOP = 1000;
+
+        $loop = ceil($count / $MAX_PER_LOOP);
+
+        for ($i = 1; $i <= $loop; ++$i) {
+            $currentLoop = [];
+            $absenceMainData = [];
+            $absenceDetailData = [];
+
+            // possible issues on data lost - might need to come out with another way to get unique data
+            $sql = 'SELECT * FROM `z_4324_institution_student_absences` GROUP BY `student_id`, `institution_id`, `start_date` LIMIT ' . $MAX_PER_LOOP . ' OFFSET ' . ($i * $MAX_PER_LOOP);
+            $currentLoop = $this->fetchAll($sql);
+
+            foreach ($currentLoop as $value) {
+                $data = [];
+                $data['student_id'] = $value['student_id'];
+                $data['institution_id'] = $value['institution_id'];
+                $data['absence_type_id'] = $value['absence_type_id'];
+                $data['modified_user_id'] = $value['modified_user_id'];
+                $data['modified'] = $value['modified'];
+                $data['created_user_id'] = $value['created_user_id'];
+                $data['created'] = $value['created'];
+
+                $startDate = new Date($value['start_date']);
+                $endDate = new Date($value['end_date']);
+
+                do {
+                    $date = $startDate->copy();
+                    $dateKey = ($startDate->format('N')) % 7;
+
+                    if (in_array($dateKey, $workingDays)) {
+                        $academicPeriodId = $AcademicPeriods->getAcademicPeriodIdByDate($date);
+                        $data['date'] = $date->format('Y-m-d');
+                        $data['academic_period_id'] = $academicPeriodId;
+
+                        // get institution_class_id by academic_period_id, institution_id, student_id
+                        $result = $InstitutionClassStudents
+                            ->find()
+                            ->where([
+                                $InstitutionClassStudents->aliasField('academic_period_id') => $academicPeriodId,
+                                $InstitutionClassStudents->aliasField('institution_id') => $value['institution_id'],
+                                $InstitutionClassStudents->aliasField('student_id') => $value['student_id']
+                            ]);
+
+                        if (!$result->isEmpty()) {
+                            $classId = $result->first()->institution_class_id;
+                            $data['institution_class_id'] = $classId;
+
+                            $absenceData = $data;
+                            $absenceData['institution_student_absence_day_id'] = $value['institution_student_absence_day_id'];
+
+                            $detailData = $data;
+                            $detailData['student_absence_reason_id'] = $value['student_absence_reason_id'];
+                            $detailData['comment'] = $value['comment'];
+                            $detailData['period'] = 1;
+
+                            $absenceMainData[] = $absenceData;
+                            $absenceDetailData[] = $detailData;
+                        } else {
+                            // pr('this data does not have a class');
+                        }
+                    }
+                    $startDate->addDay();
+                } while ($startDate->lte($endDate));
+            }
+
+            if (!empty($absenceMainData)) {
+                $InstitutionStudentAbsences
+                    ->insert($absenceMainData)
+                    ->save();
+            }
+            
+            if (!empty($absenceDetailData)) {
+                $InstitutionStudentAbsenceDetails
+                    ->insert($absenceDetailData)
+                    ->save();
+            }
+        }
+        /* end of new migration patch */
+
+        /* old migration patch - memory exhaust
         $rows = $this->fetchAll('SELECT * FROM `z_4324_institution_student_absences`');
         if (count($rows) > 0) {
             foreach ($rows as $value) {
@@ -465,19 +626,24 @@ class POCOR4324 extends AbstractMigration
                         } else {
                             // pr('this data does not have a class');
                         }
-                     }
+                    }
                     $startDate->addDay();
                 } while ($startDate->lte($endDate));
             }
 
-            $InstitutionStudentAbsences
-                ->insert($absenceMainData)
-                ->save();
-
-            $InstitutionStudentAbsenceDetails
-                ->insert($absenceDetailData)
-                ->save();
+            if (!empty($absenceMainData)) {
+                $InstitutionStudentAbsences
+                    ->insert($absenceMainData)
+                    ->save();
+            }
+            
+            if (!empty($absenceDetailData)) {
+                $InstitutionStudentAbsenceDetails
+                    ->insert($absenceDetailData)
+                    ->save();
+            }
         }
+        */
 
         // locale_contents - start
         // backup
@@ -666,7 +832,11 @@ class POCOR4324 extends AbstractMigration
         $this->dropTable('student_attendance_types');
         $this->dropTable('student_attendance_mark_types');
         $this->dropTable('student_attendance_marked_records');
-
+       
+        // $this->execute('DROP TABLE IF EXISTS `student_attendance_types`');
+        // $this->execute('DROP TABLE IF EXISTS `student_attendance_mark_types`');
+        // $this->execute('DROP TABLE IF EXISTS `student_attendance_marked_records`');
+        
         $this->dropTable('institution_student_absence_details');
         $this->dropTable('institution_student_absences');
         $this->execute('RENAME TABLE `z_4324_institution_student_absences` TO `institution_student_absences`');
