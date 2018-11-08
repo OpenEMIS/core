@@ -1045,7 +1045,6 @@ class StaffTable extends ControllerActionTable
 
         $associationArray = [
             'Institution.StaffPositionProfiles' => 'StaffChangeInAssignment',
-            'Institution.StaffAbsences' => 'StaffAbsences',
             'Institution.StaffLeave' => 'StaffLeave',
             'Institution.InstitutionClasses' =>'InstitutionClasses',
             'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
@@ -1153,19 +1152,6 @@ class StaffTable extends ControllerActionTable
             ;
         foreach ($staffBehavioursData as $key => $value) {
             $StaffBehaviours->delete($value);
-        }
-
-        // Staff absence associated to institution must be deleted.
-        $StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
-        $staffAbsencesData = $StaffAbsences->find()
-            ->where([
-                $StaffAbsences->aliasField('staff_id') => $entity->staff_id,
-                $StaffAbsences->aliasField('institution_id') => $entity->institution_id,
-            ])
-            ->toArray()
-            ;
-        foreach ($staffAbsencesData as $key => $value) {
-            $StaffAbsences->delete($value);
         }
 
         // Rubrics related to staff must be deleted. (institution_site_quality_rubrics)
