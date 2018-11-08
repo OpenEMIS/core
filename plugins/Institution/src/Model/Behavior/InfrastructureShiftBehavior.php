@@ -122,12 +122,16 @@ class InfrastructureShiftBehavior extends Behavior
         $session = $model->request->session();
         $sessionKey = $model->registryAlias() . '.warning';
 
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $institutionId = $session->read('Institution.Institutions.id');
+        $classification = $InstitutionsTable->get($institutionId)->classification;
+
         if ($this->isOccupier) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierAddNotAllowed');
             $url = $model->url('index');
             $event->stopPropagation();
             return $model->controller->redirect($url);
-        } else if ($this->isOwner == false && $this->isOccupier == false) {
+        } else if ($this->isOwner == false && $this->isOccupier == false && $classification == $InstitutionsTable::ACADEMIC) {
             $session->write($sessionKey, 'InstitutionInfrastructures.ownerAddNotAllowed');
             $url = $model->url('index');
             $event->stopPropagation();
