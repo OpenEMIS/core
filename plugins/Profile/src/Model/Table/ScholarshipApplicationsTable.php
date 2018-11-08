@@ -188,7 +188,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             $scholarshipEntity = $this->Scholarships->get($scholarshipId, ['contain' => [
                 'AcademicPeriods',
                 'FinancialAssistanceTypes',
-                'Loans.PaymentFrequencies',
+                'Loans.PaymentFrequencies'
             ]]);
             $entity->scholarship_id = $scholarshipId;
             $entity->scholarship = $scholarshipEntity;
