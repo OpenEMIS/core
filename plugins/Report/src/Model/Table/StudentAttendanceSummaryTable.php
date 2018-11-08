@@ -87,148 +87,180 @@ class StudentAttendanceSummaryTable extends AppTable
         ];
 
         $query
-            ->contain([
-                'Institutions' => [
-                    'fields' => [
-                        'Institutions.id',
-                        'Institutions.name'
-                    ]
-                ],
-                'AcademicPeriods' => [
-                    'fields' => [
-                        'AcademicPeriods.name'
-                    ]
-                ],
-                'InstitutionClassStudents' => function ($q) use ($enrolledStatus) {
-                    return $q
-                        ->select([
-                            'id',
-                            'student_id',
-                            'institution_class_id',
-                            'academic_period_id',
-                            'institution_id',
-                            'student_status_id'
-                        ])
-                        ->where(['InstitutionClassStudents.student_status_id' => $enrolledStatus]);
-                }
-            ])
-            ->matching('EducationGrades', function ($q) use ($gradeId) {
-                return $q->where([
-                    'EducationGrades.id' => $gradeId
-                ]);
-            })
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('name'),
-                $this->aliasField('institution_id'),
-                $this->aliasField('academic_period_id')
+                'institution_name' => 'Institutions.name',
+                'academic_period_name' => 'AcademicPeriods.name'
             ])
+            ->innerJoin(['Institutions' => 'institutions'], [
+                $this->aliasField('institution_id = ') . 'Institutions.id'
+            ])
+            ->innerJoin(['AcademicPeriods' => 'academic_periods'], [
+                $this->aliasField('academic_period_id = ') . 'AcademicPeriods.id'
+            ])
+            ->innerJoin(['ClassGrades' => 'institution_class_grades'], [
+                $this->aliasField('id = ') . 'ClassGrades.institution_class_id',
+                'ClassGrades.education_grade_id = ' . $gradeId
+            ])
+            ->hydrate(false)
             ->where($conditions);
 
-            $results = $query->toArray();
+        pr('query now');
+        pr($query->toArray());
+        die;
+
+        // $query
+        //     ->contain([
+        //         'Institutions' => [
+        //             'fields' => [
+        //                 'Institutions.id',
+        //                 'Institutions.name'
+        //             ]
+        //         ],
+        //         'AcademicPeriods' => [
+        //             'fields' => [
+        //                 'AcademicPeriods.name'
+        //             ]
+        //         ],
+        //         'InstitutionClassStudents' => function ($q) use ($enrolledStatus) {
+        //             return $q
+        //                 ->select([
+        //                     'id',
+        //                     'student_id',
+        //                     'institution_class_id',
+        //                     'academic_period_id',
+        //                     'institution_id',
+        //                     'student_status_id'
+        //                 ])
+        //                 ->where(['InstitutionClassStudents.student_status_id' => $enrolledStatus]);
+        //         }
+        //     ])
+        //     ->matching('EducationGrades', function ($q) use ($gradeId) {
+        //         return $q->where([
+        //             'EducationGrades.id' => $gradeId
+        //         ]);
+        //     })
+        //     ->select([
+        //         $this->aliasField('id'),
+        //         $this->aliasField('name'),
+        //         $this->aliasField('institution_id'),
+        //         $this->aliasField('academic_period_id')
+        //     ])
+        //     ->where($conditions);
+
+        //     $results = $query->toArray();
+        //     pr('rrr');
+        //     pr($results);
+        //     die;
 
             //To get a list of dates based on user's input start and end dates
-            $begin = $startDate;
-            $end = $endDate;
-            $end = $end->modify('+1 day');
+        //     $begin = $startDate;
+        //     $end = $endDate;
+        //     $end = $end->modify('+1 day');
 
-            $interval = new DateInterval('P1D');
-            $daterange = new DatePeriod($begin, $interval, $end);
-            $formattedDates = [];
+        //     $interval = new DateInterval('P1D');
+        //     $daterange = new DatePeriod($begin, $interval, $end);
+        //     $formattedDates = [];
 
-            // To get all the dates of the working days only
-            foreach ($daterange as $date) {
-                $dayText = $date->format('l');
-                if (in_array($dayText, $this->workingDays)) {
-                    $formattedDates[] = $date;
-                }
-            }
+        //     // To get all the dates of the working days only
+        //     foreach ($daterange as $date) {
+        //         $dayText = $date->format('l');
+        //         if (in_array($dayText, $this->workingDays)) {
+        //             $formattedDates[] = $date;
+        //         }
+        //     }
 
-            //Insert each date from $formattedDates into each and every entity
-            $formattedDateResults = [];
-            foreach ($formattedDates as $key => $formattedDate) {
-                foreach ($results as $result) {
-                    $cloneResult =  clone $result;
-                    $cloneResult['date'] = $formattedDate;
-                    $formattedDateResults[] = $cloneResult;
-                }
-            }
+        //     //Insert each date from $formattedDates into each and every entity
+        //     $formattedDateResults = [];
+        //     foreach ($formattedDates as $key => $formattedDate) {
+        //         foreach ($results as $result) {
+        //             $cloneResult =  clone $result;
+        //             $cloneResult['date'] = $formattedDate;
+        //             $formattedDateResults[] = $cloneResult;
+        //         }
+        //     }
 
-            // To get the student absent count for each date
-            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-            $institutionStudentAbsences = $InstitutionStudentAbsences
-                ->find()
-                ->where([
-                    $InstitutionStudentAbsences->aliasField('start_date >=') => $startDate->format("Y-m-d"),
-                    $InstitutionStudentAbsences->aliasField('end_date <=') => $endDate->format("Y-m-d"),
-                    $InstitutionStudentAbsences->aliasField('institution_id') => $institutionId,
-                ])
-                ->toArray();
+        //     // To get the student absent count for each date
+        //     $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        //     $institutionStudentAbsences = $InstitutionStudentAbsences
+        //         ->find()
+        //         ->where([
+        //             $InstitutionStudentAbsences->aliasField('date >=') => $startDate->format("Y-m-d"),
+        //             $InstitutionStudentAbsences->aliasField('date <=') => $endDate->format("Y-m-d"),
+        //             $InstitutionStudentAbsences->aliasField('institution_id') => $institutionId,
+        //         ])
+        //         ->toArray();
 
-            $absentStudentArray = [];
-            foreach ($institutionStudentAbsences as $key => $absentRecords) {
-                if (!array_key_exists($absentRecords->student_id, $absentStudentArray)) {
-                    $absentStudentArray[$absentRecords->student_id] = [];
-                }
-                $startDate = $this->formatDate($absentRecords->start_date);
-                $absentStudentArray[$absentRecords->student_id][$startDate] = true;
-            }
+        //     pr('-------');
+        //     pr($institutionStudentAbsences);
+        //     pr('-------');
+        //     die;
 
-            $rowData = [];
-            foreach ($formattedDateResults as $k => $formattedDateResult) {
-                $absenceCount = 0;
-                $lateCount = 0;
-                $currentDate = $this->formatDate($formattedDateResult->date);
-                if (count($institutionStudentAbsences) > 0) {
-                    foreach ($institutionStudentAbsences as $key => $value) {
-                        $absentStartDate = $this->formatDate($value->start_date);
-                        $absentEndDate = $this->formatDate($value->end_date);
+        //     $absentStudentArray = [];
+        //     foreach ($institutionStudentAbsences as $key => $absentRecords) {
+        //         if (!array_key_exists($absentRecords->student_id, $ )) {
+        //             $absentStudentArray[$absentRecords->student_id] = [];
+        //         }
+        //         $startDate = $this->formatDate($absentRecords->start_date);
+        //         $absentStudentArray[$absentRecords->student_id][$startDate] = true;
+        //     }
 
-                        if (($absentStartDate <= $currentDate && $absentEndDate >= $currentDate) && $value->institution_id == $formattedDateResult->institution_id) {
-                            $institutionClassStudents = $formattedDateResult->institution_class_students;
-                            foreach ($institutionClassStudents as $key => $institutionClassStudent) {
-                                if ($institutionClassStudent->student_id == $value->student_id) {
-                                    if ($value->absence_type_id == 3) {
-                                        $lateCount++;
-                                    } else {
-                                        $absenceCount++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                $formattedDateResult['absence_count'] = $absenceCount;
-                $formattedDateResult['late_count'] = $lateCount;
-                $rowData[] = $formattedDateResult;
-            }
+        //     $rowData = [];
+        //     foreach ($formattedDateResults as $k => $formattedDateResult) {
+        //         $absenceCount = 0;
+        //         $lateCount = 0;
+        //         $currentDate = $this->formatDate($formattedDateResult->date);
+        //         if (count($institutionStudentAbsences) > 0) {
+        //             foreach ($institutionStudentAbsences as $key => $value) {
+        //                 $absentStartDate = $this->formatDate($value->start_date);
+        //                 $absentEndDate = $this->formatDate($value->end_date);
 
-            //To get the attendance mark status for each date
-            $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
-            $classAttendanceRecords = $ClassAttendanceRecords
-                ->find()
-                ->where([
-                    $ClassAttendanceRecords->aliasField('academic_period_id') => $academicPeriodId
-                ])
-                ->toArray();
+        //                 if (($absentStartDate <= $currentDate && $absentEndDate >= $currentDate) && $value->institution_id == $formattedDateResult->institution_id) {
+        //                     $institutionClassStudents = $formattedDateResult->institution_class_students;
+        //                     foreach ($institutionClassStudents as $key => $institutionClassStudent) {
+        //                         if ($institutionClassStudent->student_id == $value->student_id) {
+        //                             if ($value->absence_type_id == 3) {
+        //                                 $lateCount++;
+        //                             } else {
+        //                                 $absenceCount++;
+        //                             }
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         $formattedDateResult['absence_count'] = $absenceCount;
+        //         $formattedDateResult['late_count'] = $lateCount;
+        //         $rowData[] = $formattedDateResult;
+        //     }
 
-            $rowResults = [];
-            foreach ($rowData as $key => $value) {
-                    $month = $value->date->format('n');
-                    $day_text = 'day_'.$value->date->format('j');
-                foreach ($classAttendanceRecords as $k => $classAttendanceRecord) {
-                    if ($classAttendanceRecord->institution_class_id == $value->id
-                        && $classAttendanceRecord->month == $month) {
-                        $value['class_attendance_records'] = $classAttendanceRecord->{$day_text};
-                    }
-                }
-                $rowResults[] = $value;
-            }
+        //     //To get the attendance mark status for each date
+        //     $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+        //     $classAttendanceRecords = $ClassAttendanceRecords
+        //         ->find()
+        //         ->where([
+        //             $ClassAttendanceRecords->aliasField('academic_period_id') => $academicPeriodId
+        //         ])
+        //         ->toArray();
 
-        $query
-            ->formatResults(function (ResultSetInterface $results) use ($rowResults) {
-                return $rowResults;
-            });
+        //     $rowResults = [];
+        //     foreach ($rowData as $key => $value) {
+        //             $month = $value->date->format('n');
+        //             $day_text = 'day_'.$value->date->format('j');
+        //         foreach ($classAttendanceRecords as $k => $classAttendanceRecord) {
+        //             if ($classAttendanceRecord->institution_class_id == $value->id
+        //                 && $classAttendanceRecord->month == $month) {
+        //                 $value['class_attendance_records'] = $classAttendanceRecord->{$day_text};
+        //             }
+        //         }
+        //         $rowResults[] = $value;
+        //     }
+
+        // $query
+        //     ->formatResults(function (ResultSetInterface $results) use ($rowResults) {
+        //         return $rowResults;
+        //     });
     }
 
     public function onExcelRenderTotalStudents(Event $event, Entity $entity, $attr)
