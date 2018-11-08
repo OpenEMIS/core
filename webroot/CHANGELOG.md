@@ -1,3 +1,8 @@
+### [3.40.0] - 2018-11-02
+- Redeveloped Student Attendance feature
+- Implemented single day attendance record for Student attendance
+- Bug fix on Search bar in Institution > Attendance > Students page
+
 ### [3.38.0] - 2018-10-30
 - Developed feature to allow user to set Longitude and Latitude to mandatory in Administration > System Setup > System Config
 - Developed export feature for Institution > Performance > Outcome

@@ -704,9 +704,13 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
 
+            $startDate = $extra['report_card_start_date']->format('Y-m-d');
+            $endDate = $extra['report_card_end_date']->format('Y-m-d');
+
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
             $studentAbsenceResults = $InstitutionStudentAbsences
-                ->find('inDateRange', ['start_date' => $extra['report_card_start_date'], 'end_date' => $extra['report_card_end_date']])
+                ->find()
+                // ->find('inDateRange', ['start_date' => $extra['report_card_start_date'], 'end_date' => $extra['report_card_end_date']])
                 ->innerJoin(
                     [$this->alias() => $this->table()],
                     [
@@ -717,18 +721,10 @@ class ReportCardsTable extends AppTable
                 )
                 ->where([
                     $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id']
+                    $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
+                    $InstitutionStudentAbsences->aliasField('date') . ' >= ' => $startDate,
+                    $InstitutionStudentAbsences->aliasField('date') . ' <= ' => $endDate,
                 ])
-                ->formatResults(function (ResultSetInterface $results) {
-                    return $results->map(function ($row) {
-                        $startDate = $row['start_date'];
-                        $endDate = $row['end_date'];
-                        $interval = $endDate->diff($startDate);
-                        // plus 1 day because if absence for the same day, interval diff return zero
-                        $row['number_of_days'] = $interval->days + 1;
-                        return $row;
-                    });
-                })
                 ->hydrate(false)
                 ->all();
 
@@ -744,14 +740,13 @@ class ReportCardsTable extends AppTable
 
             // sum all number_of_days a student absence in an academic period
             foreach ($studentAbsenceResults as $key => $obj) {
-                $numberOfDays = $obj['number_of_days'];
                 $absenceType = $absenceTypes[$obj['absence_type_id']];
 
                 if (in_array($absenceType, ['EXCUSED', 'UNEXCUSED'])) {
-                    $results['TOTAL_ABSENCE']['number_of_days'] += $numberOfDays;
+                    $results['TOTAL_ABSENCE']['number_of_days'] += 1;
                 }
 
-                $results[$absenceType]['number_of_days'] += $numberOfDays;
+                $results[$absenceType]['number_of_days'] += 1;
             }
             return $results;
         }
