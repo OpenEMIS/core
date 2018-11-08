@@ -323,7 +323,7 @@ class ImportOutcomeResultBehavior extends Behavior
 
 
             $institutionOutcomeSubjectCommentsTable = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
-            $OutcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+            $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
 
             if (!$this->isCorrectTemplate($header, $sheet, 2, 2)) {
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
@@ -357,13 +357,13 @@ class ImportOutcomeResultBehavior extends Behavior
                 if (!empty($comment)) {
                     $outcomeCriteriaId = $sheet->getCellByColumnAndRow(2, 1)->getValue();
 
-                    $outcomeCriteriaEntity = $OutcomeCriteriasTable->find()
+                    $outcomeCriteriaEntity = $outcomeCriteriasTable->find()
                         ->matching('Templates')
                         ->contain('OutcomeGradingTypes.GradingOptions')
                         ->where([
-                            $OutcomeCriteriasTable->aliasField('id') => $outcomeCriteriaId,
-                            $OutcomeCriteriasTable->aliasField('outcome_template_id') => $template,
-                            $OutcomeCriteriasTable->aliasField('academic_period_id') => $this->_table->request->data['ImportOutcomeResults']['academic_period']
+                            $outcomeCriteriasTable->aliasField('id') => $outcomeCriteriaId,
+                            $outcomeCriteriasTable->aliasField('outcome_template_id') => $template,
+                            $outcomeCriteriasTable->aliasField('academic_period_id') => $this->_table->request->data['ImportOutcomeResults']['academic_period']
                         ])
                         ->first();
 
@@ -384,10 +384,10 @@ class ImportOutcomeResultBehavior extends Behavior
 
                 for ($column = 2; $column <= $totalColumns; $column++) {
                     $cell = $sheet->getCellByColumnAndRow($column, $row);
-                    $originalValue = $cell->getValue();
+                    $gradeValue = $cell->getValue();
 
                     // if there is no any data, just skip
-                    if (empty($originalValue)) {
+                    if (empty($gradeValue)) {
                         continue;
                     }
 
@@ -693,7 +693,7 @@ class ImportOutcomeResultBehavior extends Behavior
         $template = $this->_table->request->query['template'];
 
         $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
-        $arrayOutcomeCriteriasTable = $outcomeCriteriasTable->find()
+        $arrayOutcomeCriterias = $outcomeCriteriasTable->find()
         ->where([
             $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
             $outcomeCriteriasTable->aliasField('outcome_template_id') => $template
@@ -701,7 +701,7 @@ class ImportOutcomeResultBehavior extends Behavior
         ->toArray();
 
         $suggestedRowHeight = 0;
-        foreach ($arrayOutcomeCriteriasTable as $key => $value) {
+        foreach ($arrayOutcomeCriterias as $key => $value) {
             $key = $key + 2;
             $alpha = $this->getExcelColumnAlpha($key);
             $activeSheet->setCellValue($alpha . 1, $value->id);
@@ -751,10 +751,10 @@ class ImportOutcomeResultBehavior extends Behavior
 
         }
         // -1 to start from A, +2 is for education subject and outcome-->, -1+2=+1
-        $arrayLastAlpha = $this->getExcelColumnAlpha(count($arrayOutcomeCriteriasTable)+1);
+        $arrayLastAlpha = $this->getExcelColumnAlpha(count($arrayOutcomeCriterias)+1);
         $activeSheet->mergeCells('C3:'. $arrayLastAlpha.'3');
         // -1 to start from A, +2 is for education subject and outcome-->, +1 comment after criteria name, -1+2+1=+2
-        $Comment = $this->getExcelColumnAlpha(count($arrayOutcomeCriteriasTable)+2);
+        $Comment = $this->getExcelColumnAlpha(count($arrayOutcomeCriterias)+2);
         $activeSheet->setCellValue($Comment . '3', "Comment");
         $activeSheet->getColumnDimension($Comment)->setAutoSize(true);
 
@@ -1070,8 +1070,6 @@ class ImportOutcomeResultBehavior extends Behavior
      */
     protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols, ArrayObject $extra)
     {
-        // $references = [$sheet, $mapping, $columns, $lookup, $totalColumns, $row, $activeModel, $systemDateFormat];
-        // $commentColumn = $references['commentColumn'];
         $numberColumn = $references['numberColumn'];
         $sheet = $references['sheet'];
         $totalColumns = $references['totalColumns'];
@@ -1087,7 +1085,7 @@ class ImportOutcomeResultBehavior extends Behavior
         $outcomeId = $sheet->getCellByColumnAndRow($numberColumn, 1);
         $outcomeIdValue = $outcomeId->getValue();
         $cell = $sheet->getCellByColumnAndRow($numberColumn, $row);
-        $originalValue = $cell->getValue();
+        $gradeValue = $cell->getValue();
 
         $usersTable = TableRegistry::get('User.Users');
 
@@ -1098,12 +1096,12 @@ class ImportOutcomeResultBehavior extends Behavior
             ])
             ->first();
 
-        $GradingId = TableRegistry::get('Outcome.OutcomeGradingOptions');
+        $outcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
 
-        $Grading = $GradingId->find()
+        $Grading = $outcomeGradingOptionsTable->find()
             ->select(['id'])
             ->where([
-                $GradingId->aliasField('name') => $originalValue
+                $outcomeGradingOptionsTable->aliasField('name') => $gradeValue
             ])
             ->first();
 
@@ -1118,7 +1116,7 @@ class ImportOutcomeResultBehavior extends Behavior
         }
         $originalRow[] = $outcomeIdValue;
         $originalRow[] = $studentValue;
-        $originalRow[] = $originalValue;
+        $originalRow[] = $gradeValue;
 
         // add condition to check if its importing institutions
         $plugin = $this->config('plugin');
