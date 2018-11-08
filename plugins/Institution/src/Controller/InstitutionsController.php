@@ -61,7 +61,6 @@ class InstitutionsController extends AppController
         // 'StaffPositionProfiles',
 
         // attendances
-        'StaffAbsences',
         'InstitutionStaffAttendances',
         'InstitutionStudentAbsences',
         'StudentAttendances',
@@ -312,10 +311,6 @@ class InstitutionsController extends AppController
     public function Programmes()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionGrades']);
-    }
-    public function StaffAbsences()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']);
     }
     public function StaffBehaviours()
     {
