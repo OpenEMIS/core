@@ -1006,6 +1006,7 @@ class AcademicPeriodsTable extends AppTable
     {
         $academicPeriodId = $options['academic_period_id'];
         $weekId = $options['week_id'];
+        $institutionId = $options['institution_id'];
 
         $model = $this;
 
@@ -1036,7 +1037,7 @@ class AcademicPeriodsTable extends AppTable
 
         do {
             if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
-                $schoolClosed = $this->isSchoolClosed($firstDayOfWeek);
+                $schoolClosed = $this->isSchoolClosed($firstDayOfWeek, $institutionId);
                 $suffix = $schoolClosed ? __('School Closed') : '';
 
                 $data = [
