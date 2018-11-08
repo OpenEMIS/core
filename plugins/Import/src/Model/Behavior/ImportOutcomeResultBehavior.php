@@ -325,10 +325,10 @@ class ImportOutcomeResultBehavior extends Behavior
 
             $educationSubjects = TableRegistry::get('Education.EducationSubjects');
             $education_subject = $this->_table->request->query['education_subject'];
-            $name = $educationSubjects->get($education_subject)->name;
+            $subjectName = $educationSubjects->get($education_subject)->name;
 
             // check correct template
-            $header = array($name, 'Outcome -->');
+            $header = array($subjectName, 'Outcome -->');
 
             //calculate number of student
             $classId = $this->_table->request->query['class'];
@@ -340,99 +340,90 @@ class ImportOutcomeResultBehavior extends Behavior
                 ->matching('EducationGrades')
                 ->matching($StudentStatuses->alias(), function ($q) use ($StudentStatuses) {
                     return $q->where([$StudentStatuses->aliasField('code') => 'CURRENT']);
-                })                
+                })
                 ->where([
                     $institutionClassStudents->aliasField('institution_class_id') => $classId
                 ])
                 ->toArray();
-            //student ID start from is after row 3, so $arrayMaxStudent will add 3
-            $arrayMaxStudent = count($arrayStudent) +3;
-
 
             // calculate outcome criterias
             $template = $this->_table->request->query['template'];
 
             $outcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
-            $array = $outcomeCriterias->find()
+            $aryOutcomeCriteria = $outcomeCriterias->find()
             ->where([
                 $outcomeCriterias->aliasField('education_subject_id') => $education_subject,
                 $outcomeCriterias->aliasField('outcome_template_id') => $template
             ])
             ->toArray();
-            $totalColumns = count($array);
-            $arraytotalColumns = count($totalColumns) +3;
+            $totalCriteria = count($aryOutcomeCriteria);
+            $totalColumns = count($totalCriteria) + 3;
 
             //comment will be last after outcomecriterias
-            $commentColumn = $arraytotalColumns + 1;
+            $commentColumn = $totalColumns + 1;
 
 
             $institutionOutcomeSubjectComments = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
             $this->OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
 
-            for ($row = 4; $row <= $arrayMaxStudent; ++$row) {
+            if (!$this->isCorrectTemplate($header, $sheet, 2, 2)) {
+                $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
 
-                    //start the check is correct Template
-                    if ($row == 4) { // skip header but check if the uploaded template is correct
-                        if (!$this->isCorrectTemplate($header, $sheet, 2, 2)) {
-                            $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
+                return false;
+            }
 
-                            return false;
-                        }
-                        // continue;
+            $numberOfStudents = count($arrayStudent);
+            for ($row = 4; $row < $numberOfStudents + 4; $row++) {
+
+                if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop
+                    if ($this->checkRowCells($sheet, $totalColumns, $row) === false) { // make sure there is no data in this row
+                        break;
                     }
+                }
 
                 // do the save for the comment
                 $student = $sheet->getCellByColumnAndRow(0, $row);
-                $studentValue = $student->getValue();
-                $userId = TableRegistry::get('User.Users');
+                $studentOpenEmisId = $student->getValue();
+                $UsersTable = TableRegistry::get('User.Users');
 
-                $User = $userId->find()
+                $User = $UsersTable->find()
                     ->select(['id'])
                     ->where([
-                        $userId->aliasField('openemis_no') => $studentValue
+                        $UsersTable->aliasField('openemis_no') => $studentOpenEmisId
                     ])
                     ->first();
 
-                $comment = $sheet->getCellByColumnAndRow($commentColumn, $row);
-                $commentValue = $comment->getValue();
+                $comment = $sheet->getCellByColumnAndRow($commentColumn, $row)->getValue();
 
-                $outcomeCriteriaId = $sheet->getCellByColumnAndRow(2, 1);
-                $outcomeCriteriaIdValue = $outcomeCriteriaId->getValue();
+                if (!empty($comment)) {
+                    $outcomeCriteriaId = $sheet->getCellByColumnAndRow(2, 1)->getValue();
 
-                $outcomeCriteriaEntity = $this->OutcomeCriterias->find()
-                    ->matching('Templates')
-                    ->contain('OutcomeGradingTypes.GradingOptions')
-                    ->where([
-                        $this->OutcomeCriterias->aliasField('id') => $outcomeCriteriaIdValue,
-                        $this->OutcomeCriterias->aliasField('outcome_template_id') => $template,
-                        $this->OutcomeCriterias->aliasField('academic_period_id') => $this->_table->request->data['ImportOutcomeResults']['academic_period']
-                    ])
-                    ->first();
+                    $outcomeCriteriaEntity = $this->OutcomeCriterias->find()
+                        ->matching('Templates')
+                        ->contain('OutcomeGradingTypes.GradingOptions')
+                        ->where([
+                            $this->OutcomeCriterias->aliasField('id') => $outcomeCriteriaId,
+                            $this->OutcomeCriterias->aliasField('outcome_template_id') => $template,
+                            $this->OutcomeCriterias->aliasField('academic_period_id') => $this->_table->request->data['ImportOutcomeResults']['academic_period']
+                        ])
+                        ->first();
 
-                $institutionOutcomeSubjectCommentsData = $institutionOutcomeSubjectComments->newEntity([
-                    'comments' => $commentValue,
-                    'student_id' => $User->id,
-                    'outcome_template_id' => $template,
-                    'outcome_period_id' => $this->_table->request->data['ImportOutcomeResults']['outcome_period'],
-                    'education_grade_id' => $outcomeCriteriaEntity->education_grade_id,
-                    'education_subject_id' => $education_subject,
-                    'institution_id' => $this->_table->request->session()->read('Institution.Institutions.id'),
-                    'academic_period_id' => $this->_table->request->data['ImportOutcomeResults']['academic_period']
-                ]);
+                    $institutionOutcomeSubjectCommentsData = $institutionOutcomeSubjectComments->newEntity([
+                        'comments' => $comment,
+                        'student_id' => $User->id,
+                        'outcome_template_id' => $template,
+                        'outcome_period_id' => $this->_table->request->data['ImportOutcomeResults']['outcome_period'],
+                        'education_grade_id' => $outcomeCriteriaEntity->education_grade_id,
+                        'education_subject_id' => $education_subject,
+                        'institution_id' => $this->_table->request->session()->read('Institution.Institutions.id'),
+                        'academic_period_id' => $this->_table->request->data['ImportOutcomeResults']['academic_period']
+                    ]);
 
-                if (!empty($commentValue)) {
                     $institutionOutcomeSubjectComments->save($institutionOutcomeSubjectCommentsData);
                 }
                 // end of save comment
 
-                    for ($column = 2; $column <= $arraytotalColumns; ++$column) {
-
-                    if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop
-                        if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
-                            break;
-                        }
-                    }
-
+                for ($column = 2; $column <= $totalColumns; $column++) {
                     $cell = $sheet->getCellByColumnAndRow($column, $row);
                     $originalValue = $cell->getValue();
 
@@ -449,7 +440,7 @@ class ImportOutcomeResultBehavior extends Behavior
                         'commentColumn'=>$commentColumn,
                         'numberColumn'=>$column,
                         'sheet'=>$sheet,
-                        'totalColumns'=>$totalColumns,
+                        'totalColumns'=>$totalCriteria,
                         'row'=>$row,
                         'activeModel'=>$activeModel,
                         'systemDateFormat'=>$systemDateFormat,
@@ -458,7 +449,7 @@ class ImportOutcomeResultBehavior extends Behavior
                     $originalRow = new ArrayObject;
                     $checkCustomColumn = new ArrayObject;
                     $extra['entityValidate'] = true;
-                    $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
+                    $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
 
                     $tempRow = $tempRow->getArrayCopy();
                     // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
@@ -698,7 +689,7 @@ class ImportOutcomeResultBehavior extends Behavior
     {
         $activeSheet = $objPHPExcel->getActiveSheet();
         $activeSheet->setCellValue("C1", $title);
-    }    
+    }
 
     public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign = 2, $applyFillFontSetting = [], $applyCellBorder = [])
     {
@@ -753,7 +744,7 @@ class ImportOutcomeResultBehavior extends Behavior
         }
 
         $template = $this->_table->request->query['template'];
-        
+
         $outcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
         $array = $outcomeCriterias->find()
         ->where([
@@ -774,7 +765,7 @@ class ImportOutcomeResultBehavior extends Behavior
             $activeSheet->getColumnDimension( $alpha )->setWidth(35);
         }
         $activeSheet->getRowDimension(1)->setRowHeight(80);
-        $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);        
+        $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
 
         $classId = $this->_table->request->query['class'];
         $institutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
@@ -803,14 +794,14 @@ class ImportOutcomeResultBehavior extends Behavior
             ])
             ->toArray();
 
-        $i = 4;    
+        $i = 4;
         foreach ($arrayStudent as $key => $value) {
             $activeSheet->setCellValue('A' . $i, $value->_matchingData['Users']->openemis_no);
             $activeSheet->setCellValue('B' . $i, $value->_matchingData['Users']->name);
             $i++;
             $activeSheet->getColumnDimension('A')->setAutoSize(true);
             $activeSheet->getColumnDimension('B')->setAutoSize(true);
-            
+
         }
         // -1 to start from A, +2 is for education subject and outcome-->, -1+2=+1
         $arrayLastAlpha = $this->getExcelColumnAlpha(count($array)+1);
@@ -901,7 +892,7 @@ class ImportOutcomeResultBehavior extends Behavior
                 $institutionClassStudents->aliasField('institution_class_id') => $classId
             ])
             ->toArray();
-        //the student ID start from row 4, so student need to add to array 4    
+        //the student ID start from row 4, so student need to add to array 4
         $arrayMaxStudent = count($studentArray) +4;
         //A is 0 in excel column, so 2 is C
         for ($column = 2; $column <= $totalColumns; ++$column) {
@@ -959,7 +950,7 @@ class ImportOutcomeResultBehavior extends Behavior
             $objPHPExcel = new \PHPExcel();
 
             $rowData = 3;
-        
+
             $this->setResultDataTemplate($objPHPExcel, $dataSheetName, $newHeader, $type);
 
             $activeSheet = $objPHPExcel->getActiveSheet();
@@ -1022,7 +1013,7 @@ class ImportOutcomeResultBehavior extends Behavior
         for ($col=0; $col < $totalColumns; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
             $value = $cell->getValue();
-            if (empty($value)) {
+            if (!empty($value)) {
                 $cellsState[] = false;
             } else {
                 $cellsState[] = true;
@@ -1187,7 +1178,7 @@ class ImportOutcomeResultBehavior extends Behavior
         }
         $originalRow[] = $outcomeIdValue;
         $originalRow[] = $studentValue;
-        $originalRow[] = $originalValue;        
+        $originalRow[] = $originalValue;
 
         // add condition to check if its importing institutions
         $plugin = $this->config('plugin');
