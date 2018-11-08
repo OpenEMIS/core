@@ -174,6 +174,10 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             var iconElement = document.createElement('i');
             iconElement.setAttribute('class', 'glyphicon glyphicon-time');
 
+            if (hasError(data, 'time_in')) {
+                inputElement.setAttribute("class", "form-control form-error");
+            }
+
             setTimeout(function(event) {
                 var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: timeIn});
                 $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
@@ -181,16 +185,20 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                     saveStaffAttendanceTimeIn(data, params, time_in)
                     .then(
                         function(response) {
+                            clearError(data, 'time_in');
                             if (response.data.error.length == 0) {
                                 AlertSvc.success(scope, 'Time in record successfully saved.');
                                 data.isNew = false;
                                 data.InstitutionStaffAttendances.time_in = time_in;
+                                setError(data, 'time_in', false);
                             } else {
-                                 AlertSvc.error(scope, response.data.error.time_in.ruleCompareTime);
+                                setError(data, 'time_in', true);
+                                AlertSvc.error(scope, response.data.error.time_out.ruleCompareTimeReverse);
                             }
                         },
                         function(error) {
-                            console.log(error);
+                            clearError(data, 'time_in');
+                            setError(data, 'time_in', true);
                             AlertSvc.error(scope, 'There was an error when saving record');
                         }
                     )
@@ -223,6 +231,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
 
             return divElement;
         } else {
+            clearError(data, 'time_in');
             if (timeIn) {
                 timeIn = '<div class = "time-view"><i class="fa fa-external-link-square"></i>'+convert12Timeformat(timeIn)+'</div>';
             } else {
@@ -257,6 +266,10 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
             var iconElement = document.createElement('i');
             iconElement.setAttribute('class', 'glyphicon glyphicon-time');
 
+            if (hasError(data, 'time_out')) {
+                timeOutInputElement.setAttribute("class", "form-control form-error");
+            }
+
             setTimeout(function(event) {
                 var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: timeOut});
                     $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
@@ -264,15 +277,20 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
                     saveStaffAttendanceTimeOut(data, params, time_out)
                     .then(
                         function(response) {
+                            clearError(data, 'time_out');
                             if (response.data.error.length == 0) {
                                 AlertSvc.success(scope, 'Time Out record successfully saved.');
                                 data.isNew = false;
                                 data.InstitutionStaffAttendances.time_out = time_out;
+                                setError(data, 'time_out', false);
                             } else {
-                                 AlertSvc.error(scope, response.data.error.time_in.ruleCompareTime);
+                                setError(data, 'time_out', true);
+                                AlertSvc.error(scope, response.data.error.time_out.ruleCompareTimeReverse);
                             }
                         },
                         function(error) {
+                            clearError(data, 'time_out');
+                            setError(data, 'time_out', true);
                             console.log(error);
                             AlertSvc.error(scope, 'There was an error when saving record');
                         }
@@ -306,6 +324,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
 
             return divElement;
         } else {
+            clearError(data, 'time_out');
             if (timeOut) {
                 timeOut = '<div class = "time-view"><i class="fa fa-external-link"></i>'+convert12Timeformat(timeOut) + '</div>';
             } else {
@@ -367,6 +386,30 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
         } else {
             return InstitutionStaffAttendances.save(staffAttendanceData);
         }
+    }
+
+    function hasError(data, key) {
+        return (angular.isDefined(data.save_error) && angular.isDefined(data.save_error[key]) && data.save_error[key]);
+    }
+
+    function clearError(data, skipKey) {
+        if (angular.isUndefined(data.save_error)) {
+            data.save_error = {};
+        }
+
+        angular.forEach(data.save_error, function(error, key) {
+            if (key != skipKey) {
+                data.save_error[key] = false;
+            }
+        })
+    }
+
+    function setError(data, dataKey, error) {
+        if (angular.isUndefined(data.save_error)) {
+            data.save_error = {};
+        }
+
+        data.save_error[dataKey] = error;
     }
 
     function saveStaffAttendanceTimeOut(data, context, time) {
