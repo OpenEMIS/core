@@ -7,6 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class StudentAttendanceMarkedRecordsTable extends AppTable
 {
@@ -40,5 +41,11 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 $this->aliasField('date') => $day,
                 $this->aliasField('period') => $period
             ]);
+    }
+
+    public function afterSaveCommit(Event $event, Entity $entity)
+    {
+        $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+        $ClassAttendanceRecords->dispatchEvent('Model.StudentAttendances.afterSaveCommit', [$entity], $ClassAttendanceRecords);
     }
 }
