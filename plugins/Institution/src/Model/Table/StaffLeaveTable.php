@@ -128,7 +128,6 @@ class StaffLeaveTable extends ControllerActionTable
                 $count = $count + $day;
                 foreach ($exisitingLeaveRecords as $key => $value) {
                     $comparisonId = $value->id;
-                    $isUpdate = $comparisonId == $entityId;
                     $dateFromStr = $value->date_from->format("Y-m-d");
                     $dateToStr = $value->date_to->format("Y-m-d");
                     $comparisonDateStr = $date->format("Y-m-d");
@@ -137,7 +136,7 @@ class StaffLeaveTable extends ControllerActionTable
                     $comparisonFullDay = $value->full_day;
                     $isDateInRange = $this->checkDateInRange($dateFromStr, $dateToStr, $comparisonDateStr);
 
-                    if ($isDateInRange && !$isUpdate) {
+                    if ($isDateInRange && $entity->isNew()) {
                         //If leave date applied overlaps existing records and both are non full day leave, check for overlapping in time.
                         if($comparisonFullDay == 0 && $isFullDayLeave == 0){
                             $overlapHalfDayLeaveRecords = $this
@@ -200,9 +199,7 @@ class StaffLeaveTable extends ControllerActionTable
         $this->field('full_day', [
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         ]);
-        $this->field('academic_period_id', [
-            'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true]
-        ]);
+        
         $this->field('staff_id', ['type' => 'hidden']);
 
         $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'time', 'start_time', 'full_day', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
@@ -234,6 +231,10 @@ class StaffLeaveTable extends ControllerActionTable
         $this->field('assignee_id', ['entity' => $entity]); //send entity information
         $this->field('start_time', ['entity' => $entity]);
         $this->field('end_time', ['entity' => $entity]);
+        $this->field('academic_period_id', [
+            'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
+            'entity' => $entity
+        ]);
         
         // after $this->field(), field ordering will mess up, so need to reset the field order
         $this->setFieldOrder(['staff_leave_type_id', 'academic_period_id','date_from', 'date_to', 'full_day', 'start_time', 'end_time','number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
@@ -287,6 +288,14 @@ class StaffLeaveTable extends ControllerActionTable
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            if ($entity->isNew()) {
+                $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+                $attr['value'] = $currentAcademicPeriodId;
+                $attr['attr']['value'] = $currentAcademicPeriodId;
+             }
+
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $attr['type'] = 'select';
             $attr['options'] = $periodOptions;
