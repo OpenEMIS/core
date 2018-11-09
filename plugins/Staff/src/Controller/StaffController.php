@@ -218,7 +218,7 @@ class StaffController extends AppController
     public function StaffAttendances()
     {
         $_edit = $this->AccessControl->check(['Staff', 'StaffAttendances', 'edit']);
-
+        $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
         } else {
@@ -238,6 +238,7 @@ class StaffController extends AppController
 
         $this->set('historyUrl', Router::url($historyUrl));
         $this->set('_edit', $_edit);
+        $this->set('_history', $_history);
         $this->set('institution_id', $institutionId);
         $this->set('staff_id', $staffId);
         $this->set('tabElements', $tabElements);

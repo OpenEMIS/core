@@ -393,7 +393,7 @@ class POCOR3906 extends AbstractMigration
         $this->execute('RENAME TABLE `institution_staff_absences` TO `z_3906_institution_staff_absences`');
         $this->execute('RENAME TABLE `staff_absence_reasons` TO `z_3906_staff_absence_reasons`');
 
-        // Create backup for security_functions     
+        // Create backup for security_functions
         $this->execute('CREATE TABLE `z_3906_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `z_3906_security_functions` SELECT * FROM `security_functions`');
 
@@ -417,21 +417,36 @@ class POCOR3906 extends AbstractMigration
         // insert new row to security_fuctions for Staff > Attendance Career Tab
         $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 3016');
         $order = $row['order'];
-        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= ' . $order);
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` >= ' . $order);
         $table = $this->table('security_functions');
         $data = [
-            'id' => 3056,
-            'name' => 'Attendances',
-            'controller' => 'Staff',
-            'module' => 'Institutions',
-            'category' => 'Staff - Career',
-            'parent_id' => 3000,
-            '_view' => 'StaffAttendances.index',
-            '_edit' => 'StaffAttendances.edit',
-            'order' => $order + 1,
-            'visible' => 1,
-            'created_user_id' => '1',
-            'created' => date('Y-m-d H:i:s')
+            [
+                'id' => 3056,
+                'name' => 'Attendances',
+                'controller' => 'Staff',
+                'module' => 'Institutions',
+                'category' => 'Staff - Career',
+                'parent_id' => 3000,
+                '_view' => 'StaffAttendances.index',
+                '_edit' => 'StaffAttendances.edit',
+                'order' => $order + 1,
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => 3057,
+                'name' => 'Attendances Activities',
+                'controller' => 'Staff',
+                'module' => 'Institutions',
+                'category' => 'Staff - Career',
+                'parent_id' => 3000,
+                '_view' => 'InstitutionStaffAttendanceActivities.index',
+                'order' => $order + 2,
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
         ];
         $table->insert($data);
         $table->saveData();

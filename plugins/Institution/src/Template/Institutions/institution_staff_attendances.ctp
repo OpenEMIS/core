@@ -27,12 +27,6 @@ $this->start('toolbar');
         <i class="fa kd-edit"></i>
     </button>
 
-    <a href="<?=$historyUrl ?>">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('History') ?>"  ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1">
-            <i class="fa fa-file-text"></i>
-        </button>
-    </a>
-
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit'" ng-click="$ctrl.onBackClick()">
         <i class="fa kd-back"></i>
     </button>
@@ -163,7 +157,7 @@ $institutionId = $paramsQuery['institution_id'];
 </style>
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;" float-btn="false">
+        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>; $ctrl.history=<?= $_history ? $_history : 0 ?>;" float-btn="false">
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">
                     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
