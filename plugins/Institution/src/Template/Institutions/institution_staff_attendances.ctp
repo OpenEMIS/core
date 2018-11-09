@@ -197,7 +197,7 @@ $institutionId = $paramsQuery['institution_id'];
                     <div ng-if="$ctrl.gridReady" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
                 </div>
             </bg-pane>
-            <bg-pane class="split-content splitter-slide-out splitter-filter">
+            <bg-pane class="split-content splitter-slide-out splitter-filter" min-size-p="20" max-size-p="30" size-p="20">
                 <div class="split-content-header">
                     <h3><?= __('Filter') ?></h3>
                 </div>
