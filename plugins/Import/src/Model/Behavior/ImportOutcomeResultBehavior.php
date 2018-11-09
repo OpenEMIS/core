@@ -334,12 +334,6 @@ class ImportOutcomeResultBehavior extends Behavior
             $numberOfStudents = count($arrayStudent);
             for ($row = 4; $row < $numberOfStudents + 4; $row++) {
 
-                if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop
-                    if ($this->checkRowCells($sheet, $totalColumns, $row) === false) { // make sure there is no data in this row
-                        break;
-                    }
-                }
-
                 // do the save for the comment
                 $student = $sheet->getCellByColumnAndRow(0, $row);
                 $studentOpenEmisId = $student->getValue();
@@ -938,28 +932,6 @@ class ImportOutcomeResultBehavior extends Behavior
     public function getExcelColumnAlpha($column_number)
     {
         return PHPExcel_Cell::stringFromColumnIndex($column_number);
-    }
-
-    /**
-     * Check if all the columns in the row is not empty
-     * @param  WorkSheet $sheet      The worksheet object
-     * @param  integer $totalColumns Total number of columns to be checked
-     * @param  integer $row          Row number
-     * @return boolean               the result to be return as true or false
-     */
-    public function checkRowCells($sheet, $totalColumns, $row)
-    {
-        $cellsState = [];
-        for ($col=0; $col < $totalColumns; $col++) {
-            $cell = $sheet->getCellByColumnAndRow($col, $row);
-            $value = $cell->getValue();
-            if (!empty($value)) {
-                $cellsState[] = false;
-            } else {
-                $cellsState[] = true;
-            }
-        }
-        return in_array(true, $cellsState);
     }
 
     /**
