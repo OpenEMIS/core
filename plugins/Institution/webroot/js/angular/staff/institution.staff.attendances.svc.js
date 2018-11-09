@@ -244,14 +244,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         return data;
     }
 
-    function setError(data, dataKey, error) {
-        if (angular.isUndefined(data.save_error)) {
-            data.save_error = {};
-        }
-
-        data.save_error[dataKey] = error;
-    }
-
     function getSingleDayTimeInTimeOutElement(params) {
         var action = params.context.action;
         var academicPeriodId = params.context.period;
@@ -384,42 +376,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         return eTextarea;
     }
 
-    function convert24Timeformat(hours, minutes, seconds, meridian) {
-        if (meridian == "PM" && hours < 12) hours = hours + 12;
-        if (meridian == "AM" && hours == 12) hours = hours - 12;
-        var sHours = hours.toString();
-        var sMinutes = minutes.toString();
-        var sSeconds = seconds.toString();
-        if (hours < 10) sHours = "0" + sHours;
-        if (minutes < 10) sMinutes = "0" + sMinutes;
-        if (seconds < 10) sSeconds = "0" + sSeconds;
-        return sHours + ":" + sMinutes + ":" + sSeconds;
-    }
-
-    function convert12Timeformat(time) {
-        var timeSplit = time.split(":");
-        hours = timeSplit[0];
-        minutes = timeSplit[1];
-        seconds = timeSplit[2];
-        if (hours > 12){
-            meridian = "PM";
-        } else {
-            meridian = "AM";
-        }
-        hours = (hours % 12) || 12;
-
-        //00 does not exists in 12-hour time format hence need to convert 00 back to 12,
-        //else timepicker will display wrong timing when error when user selects 12AM
-        if (hours == 0) hours = 12;
-
-        var sHours = hours.toString();
-        if (sHours.length == 1) {
-            sHours = "0" + sHours;
-        }
-        var sMinutes = minutes.toString();
-        return sHours + ":" + sMinutes + " " + meridian;
-    }
-
     function createTimeElement(params, timeKey, rowIndex)
     {
         var data = params.data;
@@ -502,6 +458,42 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         return timeInputDivElement;
     }
 
+    function convert24Timeformat(hours, minutes, seconds, meridian) {
+        if (meridian == "PM" && hours < 12) hours = hours + 12;
+        if (meridian == "AM" && hours == 12) hours = hours - 12;
+        var sHours = hours.toString();
+        var sMinutes = minutes.toString();
+        var sSeconds = seconds.toString();
+        if (hours < 10) sHours = "0" + sHours;
+        if (minutes < 10) sMinutes = "0" + sMinutes;
+        if (seconds < 10) sSeconds = "0" + sSeconds;
+        return sHours + ":" + sMinutes + ":" + sSeconds;
+    }
+
+    function convert12Timeformat(time) {
+        var timeSplit = time.split(":");
+        hours = timeSplit[0];
+        minutes = timeSplit[1];
+        seconds = timeSplit[2];
+        if (hours > 12){
+            meridian = "PM";
+        } else {
+            meridian = "AM";
+        }
+        hours = (hours % 12) || 12;
+
+        //00 does not exists in 12-hour time format hence need to convert 00 back to 12,
+        //else timepicker will display wrong timing when error when user selects 12AM
+        if (hours == 0) hours = 12;
+
+        var sHours = hours.toString();
+        if (sHours.length == 1) {
+            sHours = "0" + sHours;
+        }
+        var sMinutes = minutes.toString();
+        return sHours + ":" + sMinutes + " " + meridian;
+    }
+
     function saveStaffAttendance(params, dataKey, dataValue, academicPeriodId) {
         var dateString = params.data.date;
         var staffAttendanceData = {
@@ -520,6 +512,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         } else {
             return InstitutionStaffAttendances.save(staffAttendanceData);
         }
+    }
+
+    function setError(data, dataKey, error) {
+        if (angular.isUndefined(data.save_error)) {
+            data.save_error = {};
+        }
+
+        data.save_error[dataKey] = error;
     }
 
     function hasError(data, key) {
