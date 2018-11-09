@@ -1963,6 +1963,10 @@ class StaffTable extends ControllerActionTable
                     [
                         $StaffLeaveTable->aliasField("date_from <= '") . $weekEndDate. "'",
                         $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate. "'"
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField("date_from <= '") . $weekStartDate. "'",
+                        $StaffLeaveTable->aliasField("date_to >= '") . $weekEndDate. "'"
                     ]
                 ]
             ];
