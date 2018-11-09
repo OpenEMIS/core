@@ -275,7 +275,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 } else {
                     time += '<div class="time-view"><font color="#77B576"><i class="fa fa-external-link"></i></font></div>';
                 }
-                time += '<div class="time-view"><i class="fa fa-file-text-o" style="color: #72C6ED;"></i><a href= "'+ historyUrl + '"target="_blank">View History Log </a></div>';
+                if (params.context.history) {
+                    time += '<div class="time-view"><i class="fa fa-file-text-o" style="color: #72C6ED;"></i><a href= "'+ historyUrl + '"target="_blank">View History Log </a></div>';
+                }
             } else {
                 time = '<i class="fa fa-minus"></i>';
             }
@@ -406,7 +408,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
                 var time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
-                saveStaffAttendance(params.value, timeKey, time24Hour, academicPeriodId)
+                saveStaffAttendance(params, timeKey, time24Hour, academicPeriodId)
                 .then(
                     function(response) {
                         clearError(data, timeKey);
@@ -430,7 +432,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 )
                 .finally(function() {
                     UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
-                    console.log('attendance.' + data.date);
                     var refreshParams = {
                         columns: [
                             'attendance.' + data.date,
@@ -505,9 +506,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             time_out: params.data.attendance[dateString].time_out,
             comment: params.data.attendance[dateString].comment
         };
-
         staffAttendanceData[dataKey] = dataValue;
-        if(!params.isNew) {
+        if(!params.data.attendance[dateString].isNew) {
             return InstitutionStaffAttendances.edit(staffAttendanceData);
         } else {
             return InstitutionStaffAttendances.save(staffAttendanceData);
