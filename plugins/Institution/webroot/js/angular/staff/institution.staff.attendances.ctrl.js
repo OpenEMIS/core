@@ -9,7 +9,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     vm.action = 'view';
     vm.staffId;
     vm.institutionId;
-
+    vm.history = false;
     vm.academicPeriodOptions = [];
     vm.selectedAcademicPeriod = '';
 
@@ -38,6 +38,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
             period: vm.selectedAcademicPeriod,
             action: vm.action,
             scope: $scope,
+            history: vm.history,
         },
         columnDefs: [],
         rowData: [],
@@ -70,7 +71,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         InstitutionStaffAttendancesSvc.init(angular.baseUrl);
         vm.action = 'view';
         vm.gridOptions.context.action = vm.action;
-
+        vm.gridOptions.context.history = vm.history;
         UtilsSvc.isAppendLoader(true);
         InstitutionStaffAttendancesSvc.getAcademicPeriodOptions()
         .then(function(academicPeriods) {

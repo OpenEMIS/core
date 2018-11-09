@@ -2019,6 +2019,9 @@ class StaffTable extends ControllerActionTable
             ->order([
                 $this->Users->aliasField('first_name')
             ])
+            ->group([
+                 $this->aliasField('staff_id')
+            ])
             ->formatResults(function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
                 return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
                     $staffId = $row->staff_id;

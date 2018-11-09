@@ -875,8 +875,8 @@ class InstitutionsController extends AppController
 
     public function InstitutionStaffAttendances()
     {
-        $_edit = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendances', 'edit']);
-
+        $_edit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'edit']);
+        $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
         } else {
@@ -884,6 +884,7 @@ class InstitutionsController extends AppController
             $institutionId = $session->read('Institution.Institutions.id');
         }
         $this->set('_edit', $_edit);
+        $this->set('_history', $_history);
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStaffAttendancesCtrl as $ctrl');
     }
