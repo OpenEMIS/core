@@ -298,17 +298,14 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         hours = timeSplit[0];
         minutes = timeSplit[1];
         seconds = timeSplit[2];
-        if (hours > 12) {
+        if (hours >= 12) {
             meridian = "PM";
         } else {
             meridian = "AM";
         }
-        if (hours > 12) hours = hours - 12;
-
         //00 does not exists in 12-hour time format hence need to convert 00 back to 12,
         //else timepicker will display wrong timing when error when user selects 12AM
-        if (hours == 0) hours = 12;
-
+        hours = (hours % 12) || 12;
         var sHours = hours.toString();
         if (sHours.length == 1) {
             sHours = "0" + sHours;
