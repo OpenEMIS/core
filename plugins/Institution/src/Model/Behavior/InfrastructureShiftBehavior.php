@@ -116,22 +116,27 @@ class InfrastructureShiftBehavior extends Behavior
         }
     }
 
+    private function isAcademicInstitution()
+    {
+        $session = $this->_table->request->session();
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $institutionId = $session->read('Institution.Institutions.id');
+        $classification = $InstitutionsTable->get($institutionId)->classification;
+        return $classification == $InstitutionsTable::ACADEMIC;
+    }
+
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $session = $model->request->session();
         $sessionKey = $model->registryAlias() . '.warning';
 
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $institutionId = $session->read('Institution.Institutions.id');
-        $classification = $InstitutionsTable->get($institutionId)->classification;
-
         if ($this->isOccupier) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierAddNotAllowed');
             $url = $model->url('index');
             $event->stopPropagation();
             return $model->controller->redirect($url);
-        } else if ($this->isOwner == false && $this->isOccupier == false && $classification == $InstitutionsTable::ACADEMIC) {
+        } else if ($this->isOwner == false && $this->isOccupier == false && $this->isAcademicInstitution()) {
             $session->write($sessionKey, 'InstitutionInfrastructures.ownerAddNotAllowed');
             $url = $model->url('index');
             $event->stopPropagation();
@@ -145,7 +150,7 @@ class InfrastructureShiftBehavior extends Behavior
         $session = $model->request->session();
         $sessionKey = $model->registryAlias() . '.warning';
 
-        if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
+        if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false && $this->isAcademicInstitution())) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierEditNotAllowed');
             $url = $model->url('index');
             $event->stopPropagation();
@@ -159,7 +164,7 @@ class InfrastructureShiftBehavior extends Behavior
         $session = $model->request->session();
         $sessionKey = $model->registryAlias() . '.warning';
 
-        if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
+        if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false && $this->isAcademicInstitution())) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierDeleteNotAllowed');
             $url = $model->url('index');
             $event->stopPropagation();
