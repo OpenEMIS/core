@@ -115,12 +115,6 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         });
 
         columnDefs.push({
-            headerName: "institution id",
-            field: "institution_id",
-            hide: true,
-        });
-
-        columnDefs.push({
             headerName: "Time in",
             field: "time_in",
             menuTabs: [],
