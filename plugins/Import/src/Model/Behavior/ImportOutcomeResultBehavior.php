@@ -324,6 +324,14 @@ class ImportOutcomeResultBehavior extends Behavior
 
             $institutionOutcomeSubjectCommentsTable = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
             $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+            $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
+
+            $educationGradeId = $outcomeTemplatesTable->find()
+                ->where([
+                    $outcomeTemplatesTable->aliasField('id') => $template,
+                ])
+                ->extract('education_grade_id')
+                ->first();
 
             if (!$this->isCorrectTemplate($header, $sheet, 2, 2)) {
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
@@ -349,24 +357,12 @@ class ImportOutcomeResultBehavior extends Behavior
                 $comment = $sheet->getCellByColumnAndRow($commentColumn, $row)->getValue();
 
                 if (!empty($comment)) {
-                    $outcomeCriteriaId = $sheet->getCellByColumnAndRow(2, 1)->getValue();
-
-                    $outcomeCriteriaEntity = $outcomeCriteriasTable->find()
-                        ->matching('Templates')
-                        ->contain('OutcomeGradingTypes.GradingOptions')
-                        ->where([
-                            $outcomeCriteriasTable->aliasField('id') => $outcomeCriteriaId,
-                            $outcomeCriteriasTable->aliasField('outcome_template_id') => $template,
-                            $outcomeCriteriasTable->aliasField('academic_period_id') => $this->_table->request->data['ImportOutcomeResults']['academic_period']
-                        ])
-                        ->first();
-
                     $institutionOutcomeSubjectCommentsData = $institutionOutcomeSubjectCommentsTable->newEntity([
                         'comments' => $comment,
                         'student_id' => $User->id,
                         'outcome_template_id' => $template,
                         'outcome_period_id' => $this->_table->request->data['ImportOutcomeResults']['outcome_period'],
-                        'education_grade_id' => $outcomeCriteriaEntity->education_grade_id,
+                        'education_grade_id' => $educationGradeId,
                         'education_subject_id' => $education_subject_id,
                         'institution_id' => $this->_table->request->session()->read('Institution.Institutions.id'),
                         'academic_period_id' => $this->_table->request->data['ImportOutcomeResults']['academic_period']
@@ -503,7 +499,7 @@ class ImportOutcomeResultBehavior extends Behavior
                 }
             }
 
-            $resultHeader = array('Outcome Criteria Id', 'OpenEMIS ID', 'Outcome Grading Option Id');
+            $resultHeader = array('Outcome Criteria Id', 'OpenEMIS ID', 'Outcome Grading Option');
 
             $session = $this->_table->Session;
             $completedData = [
@@ -578,7 +574,7 @@ class ImportOutcomeResultBehavior extends Behavior
                 'type' => 'element',
                 'override' => true,
                 'visible' => true,
-                'element' => 'Import./results',
+                'element' => 'Import./outcomeresults',
                 'rowClass' => 'row-reset',
                 'results' => $completedData
             ]);
