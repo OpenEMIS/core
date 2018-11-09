@@ -392,6 +392,16 @@ class POCOR3906 extends AbstractMigration
         // tables relating to the staff absences will no longer be used.
         $this->execute('RENAME TABLE `institution_staff_absences` TO `z_3906_institution_staff_absences`');
         $this->execute('RENAME TABLE `staff_absence_reasons` TO `z_3906_staff_absence_reasons`');
+
+        // modify security_functions to remove all the absence permission
+        $sql = 'UPDATE `security_functions` SET
+            `_view` = "StaffAttendances.index",
+            `_edit` = "StaffAttendances.edit",
+            `_add` = null,
+            `_delete` = null,
+            `_execute` = null
+            WHERE `id` = 1018';
+        $this->execute($sql);
     }
 
     public function down()
@@ -402,5 +412,13 @@ class POCOR3906 extends AbstractMigration
         $this->execute('RENAME TABLE `z_3906_institution_staff_leave` TO `institution_staff_leave`');
         $this->execute('RENAME TABLE `z_3906_institution_staff_absences` TO `institution_staff_absences`');
         $this->execute('RENAME TABLE `z_3906_staff_absence_reasons` TO `staff_absence_reasons`');
+        $sql = 'UPDATE `security_functions` SET
+            `_view` = "StaffAttendances.index|StaffAbsences.index|StaffAbsences.view",
+            `_edit` = "StaffAttendances.edit|StaffAttendances.indexEdit|StaffAbsences.edit",
+            `_add` = "StaffAbsences.add",
+            `_delete` = "StaffAbsences.remove",
+            `_execute` = "StaffAttendances.excel|StaffAbsences.excel"
+            WHERE `id` = 1018';
+        $this->execute($sql);
     }
 }
