@@ -393,15 +393,48 @@ class POCOR3906 extends AbstractMigration
         $this->execute('RENAME TABLE `institution_staff_absences` TO `z_3906_institution_staff_absences`');
         $this->execute('RENAME TABLE `staff_absence_reasons` TO `z_3906_staff_absence_reasons`');
 
+        // Create backup for security_functions     
+        $this->execute('CREATE TABLE `z_3906_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_3906_security_functions` SELECT * FROM `security_functions`');
+
         // modify security_functions to remove all the absence permission
         $sql = 'UPDATE `security_functions` SET
-            `_view` = "StaffAttendances.index",
-            `_edit` = "StaffAttendances.edit",
+            `_view` = "InstitutionStaffAttendances.index",
+            `_edit` = "InstitutionStaffAttendances.edit",
             `_add` = null,
             `_delete` = null,
             `_execute` = null
             WHERE `id` = 1018';
         $this->execute($sql);
+
+        $sql = 'UPDATE `security_role_functions` SET
+            `_add` = 0,
+            `_delete` = 0,
+            `_execute` = 0
+            WHERE `security_function_id` = 1018';
+        $this->execute($sql);
+
+        // insert new row to security_fuctions for Staff > Attendance Career Tab
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 3016');
+        $order = $row['order'];
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= ' . $order);
+        $table = $this->table('security_functions');
+        $data = [
+            'id' => 3056,
+            'name' => 'Attendances',
+            'controller' => 'Staff',
+            'module' => 'Institutions',
+            'category' => 'Staff - Career',
+            'parent_id' => 3000,
+            '_view' => 'StaffAttendances.index',
+            '_edit' => 'StaffAttendances.edit',
+            'order' => $order + 1,
+            'visible' => 1,
+            'created_user_id' => '1',
+            'created' => date('Y-m-d H:i:s')
+        ];
+        $table->insert($data);
+        $table->saveData();
     }
 
     public function down()
@@ -412,13 +445,7 @@ class POCOR3906 extends AbstractMigration
         $this->execute('RENAME TABLE `z_3906_institution_staff_leave` TO `institution_staff_leave`');
         $this->execute('RENAME TABLE `z_3906_institution_staff_absences` TO `institution_staff_absences`');
         $this->execute('RENAME TABLE `z_3906_staff_absence_reasons` TO `staff_absence_reasons`');
-        $sql = 'UPDATE `security_functions` SET
-            `_view` = "StaffAttendances.index|StaffAbsences.index|StaffAbsences.view",
-            `_edit` = "StaffAttendances.edit|StaffAttendances.indexEdit|StaffAbsences.edit",
-            `_add` = "StaffAbsences.add",
-            `_delete` = "StaffAbsences.remove",
-            `_execute` = "StaffAttendances.excel|StaffAbsences.excel"
-            WHERE `id` = 1018';
-        $this->execute($sql);
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('RENAME TABLE `z_3906_security_functions` TO `security_functions`');
     }
 }
