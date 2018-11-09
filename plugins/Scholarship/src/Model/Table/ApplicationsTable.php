@@ -323,7 +323,7 @@ class ApplicationsTable extends ControllerActionTable
 
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add') {
+        if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
             $displayValue = $entity->applicant->name_with_id;
             $value = $entity->applicant_id;
