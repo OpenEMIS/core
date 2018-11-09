@@ -197,15 +197,15 @@ class POCOR3906 extends AbstractMigration
                 $modified = null;
             }
 
-            $AcademicPeriod = $AcademicPeriods
+            $academicPeriodId = $AcademicPeriods
                 ->find()
                 ->where([
                     $AcademicPeriods->aliasField('start_date') . ' <= ' => $value['start_date'],
                     $AcademicPeriods->aliasField('end_date') . ' >= ' => $value['end_date'],
                     $AcademicPeriods->aliasField('code') . ' <> ' => 'all'
                 ])
+                ->extract('id')
                 ->first();
-            $academicPeriodId = $AcademicPeriod->id;
             for ($i = 0; $i <= $days; $i++) {
                 $hashString = [$value['staff_id'], $value['institution_id'], $academicPeriodId, date('Y-m-d', strtotime($value['start_date']. ' + '.$i.' days'))];
                 $id = Security::hash(implode(',', $hashString), 'sha256');

@@ -25,8 +25,6 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
 
     // All attendances for a given day
     vm.totalStaff = '';
-    vm.presentCount = 0;
-    vm.absenceCount = 0;
 
     // All attendances for a given week
     vm.allAttendances = 0;
@@ -99,18 +97,12 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     // error
     vm.error = function (error) {
         console.log(error);
+        return $q.reject('There is an error retrieving the data.');
     }
 
     //onChange
     vm.changeAcademicPeriod = function() {
         UtilsSvc.isAppendLoader(true);
-        vm.presentCount = 0;
-        vm.absenceCount = 0;
-        vm.totalStaff = 0;
-
-        vm.allPresentCount = 0;
-        vm.allAttendances = 0;
-        vm.allLeaveCount = 0;
         InstitutionStaffAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod)
         .then(function(weekListOptions) {
             vm.gridOptions.context.period = vm.selectedAcademicPeriod;
@@ -136,13 +128,6 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         var weekObj = vm.weekListOptions.find(obj => obj.id == vm.selectedWeek);
         vm.selectedStartDate = weekObj.start_day;
         vm.selectedEndDate = weekObj.end_day;
-        vm.presentCount = 0;
-        vm.absenceCount = 0;
-        vm.totalStaff = 0;
-
-        vm.allPresentCount = 0;
-        vm.allAttendances = 0;
-        vm.allLeaveCount = 0;
         InstitutionStaffAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId)
         .then(function(dayListOptions) {
             vm.setDayListOptions(dayListOptions);
@@ -164,16 +149,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         var dayObj = vm.dayListOptions.find(obj => obj.id == vm.selectedDay);
         vm.selectedDayDate = dayObj.date;
         vm.selectedFormattedDayDate = dayObj.name;
-        // vm.schoolClosed = (angular.isDefined(dayObj.closed) && dayObj.closed) ? true : false;
-        // vm.gridOptions.context.schoolClosed = vm.schoolClosed;
         vm.gridOptions.context.date = vm.selectedDay;
-        vm.presentCount = 0;
-        vm.absenceCount = 0;
-        vm.totalStaff = 0;
-
-        vm.allPresentCount = 0;
-        vm.allAttendances = 0;
-        vm.allLeaveCount = 0;
         InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams())
         .then(function(allStaffAttendances) {
             vm.setAllStaffAttendances(allStaffAttendances);
@@ -251,6 +227,11 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     }
 
     vm.setAllStaffAttendances = function(staffList) {
+        vm.allPresentCount = 0;
+        vm.totalStaff = 0;
+        vm.allAttendances = 0;
+        vm.allLeaveCount = 0;
+
         vm.staffList = staffList;
         vm.totalStaff = staffList.length;
         if (staffList.length > 0) {
@@ -286,7 +267,6 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         if (vm.selectedDay == -1) {
             columnDefs = InstitutionStaffAttendancesSvc.getAllDayColumnDefs(vm.dayListOptions);
         } else {
-            console.log('hahaha');
             columnDefs = InstitutionStaffAttendancesSvc.getColumnDefs(vm.selectedDayDate);
         }
 
@@ -306,7 +286,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     };
 
     vm.onBackClick = function() {
-        console.log('onBackClick');
+        vm.setAllStaffAttendances(vm.staffList);
         vm.action = 'view';
         vm.gridOptions.context.action = vm.action;
         vm.setColumnDef();

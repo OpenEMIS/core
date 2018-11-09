@@ -16,15 +16,16 @@ use App\Model\Table\ControllerActionTable;
 
 use Page\Traits\EncodingTrait;
 
-class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
-	private $allDayOptions = [];
-	public function initialize(array $config) {
+class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable 
+{
+    private $allDayOptions = [];
+    public function initialize(array $config)
+    {
         parent::initialize($config);
-
-		$this->belongsTo('Users', 		['className' => 'User.Users', 'foreignKey'=>'security_user_id']);
-		$this->belongsTo('CreatedUser', ['className' => 'User.Users', 'foreignKey'=>'created_user_id']);
-		$this->addBehavior('AcademicPeriod.AcademicPeriod');
-		$this->addBehavior('AcademicPeriod.Period');
+        $this->belongsTo('Users',       ['className' => 'User.Users', 'foreignKey'=>'security_user_id']);
+        $this->belongsTo('CreatedUser', ['className' => 'User.Users', 'foreignKey'=>'created_user_id']);
+        $this->addBehavior('AcademicPeriod.AcademicPeriod');
+        $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('Activity');
 
         $this->toggle('add', false);
@@ -34,7 +35,7 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
         $this->toggle('search', false);
     }
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(Event $event, ArrayObject $extra) {
         $this->field('field');
         $this->field('old_value', ['sort' => false]);
         $this->field('new_value', ['sort' => false]);
@@ -48,7 +49,7 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
             'url' => [
                 'plugin' => 'Staff',
                 'controller' => 'Staff',
-                'action' => 'InstitutionStaffAttendances',
+                'action' => 'StaffAttendances',
                 '0' => 'index',
             ],
             'type' => 'button',
@@ -62,15 +63,15 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
             ]
         ];
         // $this->setupTabElements();
-	}
+    }
 
-	//might need to remove this cause wireframe never set
+    //might need to remove this cause wireframe never set
     private function setupTabElements()
     {
-		$options['type'] = 'staff';
-		$tabElements = $this->controller->getCareerTabElements($options);
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'InstitutionStaffAttendances');
+        $options['type'] = 'staff';
+        $tabElements = $this->controller->getCareerTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'InstitutionStaffAttendances');
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -80,14 +81,12 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        // $selectedPeriod = $this->request->query['academic_period_id'];
-        // $staffId = $this->Session->read('Staff.Staff.id');
-        // pr($this->request->query('user_id'));die;
-        // if ($this->request->query('user_id') !== null) {
-        //     $staffId = $this->request->query('user_id');
-        // } else {
-        //     $staffId = $this->Session->read('Staff.Staff.id');
-        // }
+        if ($this->request->query('user_id') !== null) {
+            $staffId = $this->request->query('user_id');
+            $this->Session->write('Staff.Staff.id', $staffId);
+        } else {
+            $staffId = $this->Session->read('Staff.Staff.id');
+        }
 
         $periodOptions = $AcademicPeriod->getYearList();
 
@@ -232,15 +231,15 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable {
             }
 
             $query
-            	->find('all')
-            	->innerJoin([$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()], [
-            		$this->aliasField('model_reference = ') .  $InstitutionStaffAttendances->aliasField('id'),
-            	])
+                ->find('all')
+                ->innerJoin([$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()], [
+                    $this->aliasField('model_reference = ') .  $InstitutionStaffAttendances->aliasField('id'),
+                ])
                 ->where($conditions);
 
             $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
         } else {
-        	//To-Do: Add alert here if no data
+            //To-Do: Add alert here if no data
             // $query->where([$this->aliasField('staff_id') => 0]);
 
             // $this->field('type');
