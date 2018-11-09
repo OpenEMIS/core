@@ -574,7 +574,7 @@ class ImportOutcomeResultBehavior extends Behavior
                 'type' => 'element',
                 'override' => true,
                 'visible' => true,
-                'element' => 'Import./outcomeresults',
+                'element' => 'Import./outcome_results',
                 'rowClass' => 'row-reset',
                 'results' => $completedData
             ]);
