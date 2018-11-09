@@ -62,16 +62,6 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
                 'title' => __('Back')
             ]
         ];
-        // $this->setupTabElements();
-    }
-
-    //might need to remove this cause wireframe never set
-    private function setupTabElements()
-    {
-        $options['type'] = 'staff';
-        $tabElements = $this->controller->getCareerTabElements($options);
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'InstitutionStaffAttendances');
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -204,14 +194,12 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
             // End setup days
 
             $conditions = [
-                    // $InstitutionStaffAttendances->aliasField('staff_id') => $staffId,
                     $InstitutionStaffAttendances->aliasField('academic_period_id') => $selectedPeriod,
                     $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
                 ];
             if ($selectedDay == -1) {
                 $startDate = $weekStartDate;
                 $endDate = $weekEndDate;
-
                 $selectedFormatStartDate = date_format($startDate, 'Y-m-d');
                 $selectedFormatEndDate = date_format($endDate, 'Y-m-d');
                 $dateConditions = [
@@ -238,14 +226,6 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
                 ->where($conditions);
 
             $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
-        } else {
-            //To-Do: Add alert here if no data
-            // $query->where([$this->aliasField('staff_id') => 0]);
-
-            // $this->field('type');
-            // $this->field('reason');
-
-            // $this->Alert->warning('StaffAttendances.noStaff');
         }
     }
 
@@ -259,6 +239,4 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-
-    // To-Do: Create new function to convert time to 12hour format if function does not exists
 }
