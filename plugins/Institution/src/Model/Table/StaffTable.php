@@ -1951,8 +1951,20 @@ class StaffTable extends ControllerActionTable
             ];
         } else {
             $where = [
-                $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate. "'",
-                $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate. "'"
+                'OR' => [
+                    [
+                        $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate. "'",
+                        $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate. "'"
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate. "'",
+                        $StaffLeaveTable->aliasField("date_to >= '") . $weekStartDate. "'"
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField("date_from <= '") . $weekEndDate. "'",
+                        $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate. "'"
+                    ]
+                ]
             ];
         }
 

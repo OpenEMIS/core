@@ -881,7 +881,6 @@ class InstitutionsController extends AppController
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
         } else {
             $session = $this->request->session();
-            $staffId = $session->read('Staff.Staff.id');
             $institutionId = $session->read('Institution.Institutions.id');
         }
         $this->set('_edit', $_edit);
