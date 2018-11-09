@@ -46,7 +46,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         rowHeight: 125,
         minColWidth: 200,
         enableColResize: true,
-        enableSorting: false,
+        enableSorting: true,
         unSortIcon: true,
         enableFilter: true,
         suppressMenuHide: true,

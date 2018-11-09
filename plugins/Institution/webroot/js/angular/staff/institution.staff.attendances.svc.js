@@ -117,6 +117,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
     // column definitions
     function getColumnDefs(selectedDayDate) {
         var columnDefs = [];
+        var menuTabs = [ "filterMenuTab" ];
+        var filterParams = {
+            cellHeight: 30,
+            newRowsAction: 'keep'
+        };
         var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
         var isRtl = document.querySelector("html").classList.contains("rtl");
         var direction = 'left';
@@ -127,30 +132,19 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
 
         columnDefs.push({
-            headerName: "Date",
-            field: "date",
-            filter: "text",
-            hide: true,
-            menuTabs: []
-        });
-
-        columnDefs.push({
             headerName: "Name",
             field: "_matchingData.Users.name_with_id",
             filter: "text",
-            menuTabs: []
-        });
-
-        columnDefs.push({
-            headerName: "institution id",
-            field: "institution_id",
-            hide: true,
+            filterParams: filterParams,
+            pinned: direction,
+            menuTabs: menuTabs,
         });
 
         columnDefs.push({
             headerName: "Time in - Time Out",
             field: "attendance." + selectedDayDate,
             menuTabs: [],
+            suppressSorting: true,
             cellRenderer: function(params) {
                 if (angular.isDefined(params.value) && params.value !== null && angular.isDefined(params.context.action)) {
                     return getSingleDayTimeInTimeOutElement(params);
@@ -162,6 +156,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             headerName: "Leaves",
             field: "attendance." + selectedDayDate,
             menuTabs: [],
+            suppressSorting: true,
             cellRenderer: function(params) {
                 if (angular.isDefined(params.value) &&params.value != null && angular.isDefined(params.context.action)) {
                     return getStaffLeaveElement(params.value);
@@ -173,6 +168,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             headerName: "Comments",
             field: "attendance." + selectedDayDate + ".comment",
             menuTabs: [],
+            suppressSorting: true,
             cellClass: 'comment-flex',
             cellRenderer: function(params) {
                 return getCommentElement(params);
@@ -183,6 +179,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     function getAllDayColumnDefs(dayList) {
         var columnDefs = [];
+        var menuTabs = [ "filterMenuTab" ];
+        var filterParams = {
+            cellHeight: 30,
+            newRowsAction: 'keep'
+        };
         var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
         var isRtl = document.querySelector("html").classList.contains("rtl");
         var direction = 'left';
@@ -195,10 +196,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         columnDefs.push({
             headerName: "Name",
             field: "_matchingData.Users.name_with_id",
-            // filterParams: filterParams,
+            filterParams: filterParams,
             pinned: direction,
-            menuTabs: [],
-            filter: "text"
+            menuTabs: menuTabs,
+            filter: "text",
         });
         angular.forEach(dayList, function(dayObj, dayKey) {
             if (dayObj.id != -1) {
@@ -207,6 +208,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                     headerName: dayText,
                     menuTabs: [],
                     field: 'attendance.' + dayObj.date,
+                    suppressSorting: true,
                     cellRenderer: function(params) {
                         if (angular.isDefined(params.value) && params.value !== null) {
                             return getAllDayTimeInTimeOutElement(params.value);
