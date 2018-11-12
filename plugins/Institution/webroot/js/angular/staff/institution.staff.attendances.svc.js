@@ -350,6 +350,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             var newValue = eTextarea.value;
             if (newValue && oldValue != newValue) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
+                if (params.data.attendance[date].comment == null) {
+                    params.data.attendance[date].isNew = true;
+                }
                 saveStaffAttendance(params, dataKey, newValue, academicPeriodId)
                 .then(
                     function(response) {
@@ -357,6 +360,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                         if(response.data.error.length == 0){
                             AlertSvc.success(scope, 'Comment successfully saved.');
                             params.data.attendance[date].comment = newValue;
+                            params.data.attendance[date].isNew = false;
                         } else {
                             AlertSvc.error(scope, 'There was an error when saving the record');
                         }
