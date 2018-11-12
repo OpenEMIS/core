@@ -350,6 +350,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             var newValue = eTextarea.value;
             if (newValue && oldValue != newValue) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
+                if (params.data.attendance[date].comment == null) {
+                    params.data.attendance[date].isNew = true;
+                }
                 saveStaffAttendance(params, dataKey, newValue, academicPeriodId)
                 .then(
                     function(response) {
@@ -357,6 +360,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                         if(response.data.error.length == 0){
                             AlertSvc.success(scope, 'Comment successfully saved.');
                             params.data.attendance[date].comment = newValue;
+                            params.data.attendance[date].isNew = false;
                         } else {
                             AlertSvc.error(scope, 'There was an error when saving the record');
                         }
@@ -386,7 +390,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var academicPeriodId = params.context.period;
         var timepickerId = (timeKey == 'time_in') ? 'time-in-' : 'time-out-';
         timepickerId += rowIndex;
-         var time = '';
+        var time = '';
         if (params.value[timeKey] != null && params.value[timeKey] != "") {
             time = convert12Timeformat(params.value[timeKey]);
         }
@@ -409,6 +413,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time});
             $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
+                if (params.value[timeKey] == null) {
+                    params.value.isNew = true;
+                }
                 var time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
                 saveStaffAttendance(params, timeKey, time24Hour, academicPeriodId)
                 .then(
