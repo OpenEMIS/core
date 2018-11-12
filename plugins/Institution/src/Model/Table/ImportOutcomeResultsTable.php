@@ -122,7 +122,7 @@ class ImportOutcomeResultsTable extends AppTable
                 ->where($conditions)
                 ->group([
                     'EducationSubjects.id',
-                ])                
+                ])
                 ->toArray();
 
                 $attr['options'] = $allowedEducationSubjectList;
@@ -142,7 +142,7 @@ class ImportOutcomeResultsTable extends AppTable
                 }
             }
         }
-    }    
+    }
 
     public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, Request $request)
     {
