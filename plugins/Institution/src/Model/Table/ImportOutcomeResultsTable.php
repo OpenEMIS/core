@@ -54,7 +54,7 @@ class ImportOutcomeResultsTable extends AppTable
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         $request = $this->request;
-        if (empty($request->query('template')) || empty($request->query('education_subject'))) {
+        if (empty($request->query('education_subject'))) {
             unset($buttons[0]);
             unset($buttons[1]);
         }
@@ -72,6 +72,13 @@ class ImportOutcomeResultsTable extends AppTable
 
     public function addAfterAction(Event $event, Entity $entity)
     {
+        $this->dependency = [];
+        $this->dependency["academic_period"] = ["class"];
+        $this->dependency["class"] = ["outcome_template"];
+        $this->dependency["outcome_template"] = ["outcome_period"];
+        $this->dependency["outcome_period"] = ["education_subject"];
+        $this->dependency["education_subject"] = ["select_file"];
+
         $this->ControllerAction->field('academic_period', ['type' => 'select']);
         $this->ControllerAction->field('class', ['type' => 'select']);
         $this->ControllerAction->field('outcome_template', ['type' => 'select', 'visible' => false]);
@@ -79,17 +86,44 @@ class ImportOutcomeResultsTable extends AppTable
         $this->ControllerAction->field('education_subject', ['type' => 'select', 'visible' => false]);
         $this->ControllerAction->field('select_file', ['visible' => false]);
         $this->ControllerAction->setFieldOrder(['academic_period', 'class', 'outcome_template', 'outcome_period', 'education_subject', 'select_file']);
+
+        $currentFieldName = (strtolower(str_replace("change", "", $entity->submit)));
+
+        if (isset($this->request->data[$this->alias()])) {
+            $unsetFlag = false;
+            $aryRequestData = $this->request->data[$this->alias()];
+            foreach ($aryRequestData as $requestData => $value) {
+                if ($unsetFlag) {
+                    unset($this->request->query[$requestData]);
+                    unset($this->request->data[$this->alias()][$requestData]);
+                }
+
+                if ($currentFieldName == $requestData) {
+                    $unsetFlag = true;
+                }
+            }
+
+            $aryRequestData = $this->request->data[$this->alias()];
+            foreach ($aryRequestData as $requestData => $value) {
+                if (isset($this->dependency[$requestData])) {
+                    $aryDependencies = $this->dependency[$requestData];
+                    foreach ($aryDependencies as $dependency) {
+                        $this->ControllerAction->field($dependency, ['visible' => true]);
+                    }
+                }
+            }
+        }
     }
 
     public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
 
-            if (!empty($request->query('outcome_period'))) {
-                $attr['visible'] = true;
-            } else {
-                $attr['visible'] = false;
-            }
+            // if (!empty($request->query('outcome_period'))) {
+            //     $attr['visible'] = true;
+            // } else {
+            //     $attr['visible'] = false;
+            // }
 
             $conditions = [];
             if (!empty($request->data[$this->alias()]['academic_period']) && !empty($request->data[$this->alias()]['outcome_template'])) {
@@ -98,7 +132,7 @@ class ImportOutcomeResultsTable extends AppTable
                     $this->OutcomeCriterias->aliasField('outcome_template_id') => $request->data[$this->alias()]['outcome_template']
                 ];
             }
-       
+
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
             $classId = $this->request->query('class');
@@ -174,7 +208,7 @@ class ImportOutcomeResultsTable extends AppTable
                 }
                 if (array_key_exists('education_subject', $request->data[$this->alias()])) {
                     unset($request->data[$this->alias()]['education_subject']);
-                }                   
+                }
                 if (array_key_exists('outcome_template', $request->data[$this->alias()])) {
                     unset($request->data[$this->alias()]['outcome_template']);
                 }
@@ -290,11 +324,11 @@ class ImportOutcomeResultsTable extends AppTable
             $classId = $request->query('class');
             $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-            if (!empty($request->query('class'))) {
-                $attr['visible'] = true;
-            } else {
-                $attr['visible'] = false;
-            }
+            // if (!empty($request->query('class'))) {
+            //     $attr['visible'] = true;
+            // } else {
+            //     $attr['visible'] = false;
+            // }
 
             // if class id is not null, then filter Outcome Template by class_grades of the class else by institution_grades of the school
             if (!is_null($classId) && !empty($classId)) {
@@ -343,7 +377,7 @@ class ImportOutcomeResultsTable extends AppTable
                 }
                 if (array_key_exists('education_subject', $request->data[$this->alias()])) {
                     unset($request->data[$this->alias()]['education_subject']);
-                }                
+                }
                 if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
                     unset($request->data[$this->alias()]['outcome_period']);
                 }
@@ -356,11 +390,11 @@ class ImportOutcomeResultsTable extends AppTable
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
 
-            if (!empty($request->query('template'))) {
-                $attr['visible'] = true;
-            } else {
-                $attr['visible'] = false;
-            }
+            // if (!empty($request->query('template'))) {
+            //     $attr['visible'] = true;
+            // } else {
+            //     $attr['visible'] = false;
+            // }
 
             $outcomePeriodOptions = [];
             if (!is_null($request->query('template'))) {
@@ -392,7 +426,7 @@ class ImportOutcomeResultsTable extends AppTable
                 }
                 if (array_key_exists('education_subject', $request->data[$this->alias()])) {
                     unset($request->data[$this->alias()]['education_subject']);
-                }                
+                }
             }
         }
     }
@@ -400,11 +434,11 @@ class ImportOutcomeResultsTable extends AppTable
     public function onUpdateFieldSelectFile(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            if (!empty($request->query('template')) && !empty($request->query('education_subject'))) {
-                $attr['visible'] = true;
-            } else {
-                $attr['visible'] = false;
-            }
+            // if (!empty($request->query('template')) && !empty($request->query('education_subject'))) {
+            //     $attr['visible'] = true;
+            // } else {
+            //     $attr['visible'] = false;
+            // }
         }
         return $attr;
     }
