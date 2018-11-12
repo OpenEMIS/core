@@ -187,7 +187,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         var academicPeriodId = params.context.period;
         var timepickerId = (timeKey == 'time_in') ? 'time-in-' : 'time-out-';
         timepickerId += rowIndex;
-         var time = '';
+        var time = '';
         if (data.InstitutionStaffAttendances[timeKey] != null && data.InstitutionStaffAttendances[timeKey] != "") {
             time = convert12Timeformat(data.InstitutionStaffAttendances[timeKey]);
         }
@@ -209,6 +209,9 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
             var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time});
             $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
+                if (data.InstitutionStaffAttendances[timeKey] == null) {
+                    data.isNew = true;
+                }
                 var time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
                 saveStaffAttendance(data, timeKey, time24Hour, academicPeriodId)
                 .then(
