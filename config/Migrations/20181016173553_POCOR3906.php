@@ -393,9 +393,11 @@ class POCOR3906 extends AbstractMigration
         $this->execute('RENAME TABLE `institution_staff_absences` TO `z_3906_institution_staff_absences`');
         $this->execute('RENAME TABLE `staff_absence_reasons` TO `z_3906_staff_absence_reasons`');
 
-        // Create backup for security_functions
+        // Create backup for security_functions and security_role_functions
         $this->execute('CREATE TABLE `z_3906_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `z_3906_security_functions` SELECT * FROM `security_functions`');
+        $this->execute('CREATE TABLE `z_3906_security_role_functions` LIKE `security_role_functions`');
+        $this->execute('INSERT INTO `z_3906_security_role_functions` SELECT * FROM `security_role_functions`');
 
         // modify security_functions to remove all the absence permission
         $sql = 'UPDATE `security_functions` SET
@@ -413,11 +415,22 @@ class POCOR3906 extends AbstractMigration
             `_execute` = 0
             WHERE `security_function_id` = 1018';
         $this->execute($sql);
-
-        // insert new row to security_fuctions for Staff > Attendance Career Tab
+        // remove the staff absence in institution
+        $this->execute('DELETE FROM security_functions WHERE id = 3015');
+        // remove the staff absence in directory
+        $this->execute('DELETE FROM security_functions WHERE id = 7024');
+        // remove the staff absence permission in the security_role_functions for both institution and directory
+        $this->execute('DELETE FROM security_role_functions WHERE security_function_id in (3015, 7024)');
+        // insert new row to security_fuctions for Staff > Attendance Career Tab for Institutions
         $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 3016');
         $order = $row['order'];
         $this->execute('UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` >= ' . $order);
+
+        // insert new row to security_fuctions for Staff > Attendance Career Tab for Directories
+        $directoryRow = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 7025');
+        $directoryorder = $directoryRow['order'];
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= ' . $directoryorder);
+
         $table = $this->table('security_functions');
         $data = [
             [
@@ -446,7 +459,20 @@ class POCOR3906 extends AbstractMigration
                 'visible' => 1,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
-            ]
+            ],
+            [
+                'id' => 7071,
+                'name' => 'Attendances',
+                'controller' => 'Directories',
+                'module' => 'Directory',
+                'category' => 'Staff - Career',
+                'parent_id' => 7000,
+                '_view' => 'StaffAttendances.index',
+                'order' => $directoryorder + 1,
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
         ];
         $table->insert($data);
         $table->saveData();
@@ -462,5 +488,7 @@ class POCOR3906 extends AbstractMigration
         $this->execute('RENAME TABLE `z_3906_staff_absence_reasons` TO `staff_absence_reasons`');
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
         $this->execute('RENAME TABLE `z_3906_security_functions` TO `security_functions`');
+        $this->execute('DROP TABLE IF EXISTS `security_role_functions`');
+        $this->execute('RENAME TABLE `z_3906_security_role_functions` TO `security_role_functions`');
     }
 }
