@@ -843,6 +843,7 @@ class POCOR4324 extends AbstractMigration
                     ->insert($overlapInsertDetailData)
                     ->save();
             }
+        }
         /* end of new migration patch */
 
         /* old migration patch - memory exhaust
