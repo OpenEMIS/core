@@ -3,6 +3,7 @@
 use Cake\I18n\Date;
 use Cake\ORM\TableRegistry;
 use Phinx\Migration\AbstractMigration;
+use Cake\Utility\Hash;
 
 class POCOR4324 extends AbstractMigration
 {
