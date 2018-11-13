@@ -369,13 +369,6 @@ class ImportOutcomeResultsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldSelectFile(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-        }
-        return $attr;
-    }
-
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $requestData = $this->request->data[$this->alias()];
