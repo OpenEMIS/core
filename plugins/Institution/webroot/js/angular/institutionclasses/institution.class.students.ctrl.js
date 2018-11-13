@@ -43,7 +43,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         {headerName: 'Name', field: 'name'},
         {headerName: 'Gender', field: 'gender_name'},
         {headerName: 'Education Grade', field: 'education_grade_name'},
-        {headerName: 'Student Status', field: 'student_status_name'}
+        {headerName: 'Student Status', field: 'student_status_name'},
+        {headerName: 'Special Needs', field: 'special_needs'}
     ];
     Controller.assignedStudents = {};
     Controller.unassignedStudents = {};
@@ -93,6 +94,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                         student_status_name: value.student_status.name,
                         gender_name: value.user.gender.name,
                         student_id: value.student_id,
+                        special_needs: (value.user.has_special_needs) ? "<i class='fa fa-check'></i>" : "<i class='fa fa-times'></i>",
                         encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
                             {
                                 student_id: value.student_id,
@@ -128,6 +130,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                         student_status_name: value.student_status_name,
                         gender_name: value.gender_name,
                         student_id: value.id,
+                        special_needs: (value.has_special_needs) ? "<i class='fa fa-check'></i>" : "<i class='fa fa-times'></i>",
                         encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
                             {
                                 student_id: value.id,

@@ -3,6 +3,7 @@ namespace SpecialNeeds\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
+use Cake\Core\Configure;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
@@ -17,8 +18,8 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->table('user_special_needs_assessments');
         parent::initialize($config);
 
-        $this->belongsTo('SpecialNeedTypes', ['className' => 'FieldOption.SpecialNeedTypes']);
-        $this->belongsTo('SpecialNeedDifficulties', ['className' => 'FieldOption.SpecialNeedDifficulties', 'foreignKey' => 'special_need_difficulty_id']);
+        $this->belongsTo('SpecialNeedTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes']);
+        $this->belongsTo('SpecialNeedDifficulties', ['className' => 'SpecialNeeds.SpecialNeedsDifficulties', 'foreignKey' => 'special_need_difficulty_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
@@ -30,6 +31,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
     }
 
     public function validationDefault(Validator $validator)
@@ -63,6 +68,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
+        $this->field('date', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->setFieldOrder(['special_need_type_id', 'special_need_difficulty_id']);
     }
@@ -90,8 +96,8 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
 
         $quantityResult = $this->find()
             ->where([$this->aliasField('security_user_id') => $studentId])
-            ->all()->toArray();
-
+            ->all()
+            ->toArray();
         $quantity = !empty(count($quantityResult)) ? count($quantityResult) : 0;
 
         return $quantity;
@@ -127,12 +133,13 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
+        $this->field('date');
         $this->field('special_need_type_id', ['type' => 'select']);
         $this->field('special_need_difficulty_id', ['type' => 'select']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('comment', ['type' => 'text']);
 
-        $this->setFieldOrder(['special_need_type_id', 'special_need_difficulty_id', 'file_name', 'file_content', 'comment']);
+        $this->setFieldOrder(['date', 'special_need_type_id', 'special_need_difficulty_id', 'file_name', 'file_content', 'comment']);
     }
 }
