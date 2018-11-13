@@ -7,7 +7,8 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-
+use Cake\Utility\Inflector;
+use Cake\Routing\Router;
 use App\Controller\AppController;
 
 class DirectoriesController extends AppController
@@ -29,7 +30,6 @@ class DirectoriesController extends AppController
             'StaffSections'             => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
             'StaffClasses'          => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
             'StaffQualifications'   => ['className' => 'Staff.Qualifications'],
-            'StaffAbsences'             => ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
             'StaffExtracurriculars'     => ['className' => 'Staff.Extracurriculars'],
             'TrainingResults'       => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 
@@ -288,6 +288,27 @@ class DirectoriesController extends AppController
             $this->set('ngController', 'StudentExaminationResultsCtrl as StudentExaminationResultsController');
         }
     }
+
+    public function StaffAttendances()
+    {
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $staffId = $session->read('Staff.Staff.id');
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        $tabElements = $this->getCareerTabElements();
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+        $this->set('institution_id', $institutionId);
+        $this->set('staff_id', $staffId);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', 'Attendances');
+        $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
+    }
+
     // End
 
     private function attachAngularModules()
@@ -307,6 +328,12 @@ class DirectoriesController extends AppController
                     'alert.svc',
                     'student.examination_results.ctrl',
                     'student.examination_results.svc'
+                ]);
+                break;
+            case 'StaffAttendances':
+                $this->Angular->addModules([
+                    'staff.attendances.ctrl',
+                    'staff.attendances.svc'
                 ]);
                 break;
         }
@@ -694,8 +721,8 @@ class DirectoriesController extends AppController
             'Positions' => ['text' => __('Positions')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Absences')],
             'Leave' => ['text' => __('Leave')],
+            'Attendances' => ['text' => __('Attendances')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
         ];
