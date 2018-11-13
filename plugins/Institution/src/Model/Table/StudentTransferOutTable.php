@@ -183,8 +183,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         ->where([
                             $model->aliasField('student_id') => $studentId,
                             $model->aliasField('institution_id') => $previousInstitutionId,
-                            $model->aliasField('start_date >=') => $dateRequested,
-                            $model->aliasField('end_date <=') => $today
+                            $model->aliasField('date >=') => $dateRequested,
+                            $model->aliasField('date <=') => $today
                         ])
                         ->count();
                     if ($absenceCount) {
