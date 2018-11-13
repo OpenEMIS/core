@@ -321,7 +321,7 @@ Plugin::load('StaffAppraisal', ['routes' => true, 'autoload' => true]);
 Plugin::load('Scholarship', ['routes' => true, 'autoload' => true]);
 Plugin::load('Email', ['routes' => true, 'autoload' => true]);
 Plugin::load('SpecialNeeds', ['routes' => true, 'autoload' => true]);
-Plugin::load('MoodleApi', ['routes' => false, 'autoload' => true]);
+Plugin::load('MoodleApi', ['routes' => true, 'autoload' => true]);
 
 $pluginPath = Configure::read('plugins');
 foreach ($pluginPath as $key => $path) {
