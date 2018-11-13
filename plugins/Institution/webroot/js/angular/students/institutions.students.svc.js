@@ -70,7 +70,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         ConfigItems: 'Configuration.ConfigItems',
         Nationalities: 'FieldOption.Nationalities',
         ContactTypes: 'User.ContactTypes',
-        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes',
+        SpecialNeedTypes: 'SpecialNeeds.SpecialNeedsTypes',
         StudentTransferIn: 'Institution.StudentTransferIn',
         StudentTransferReasons: 'Student.StudentTransferReasons'
     };

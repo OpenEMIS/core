@@ -493,7 +493,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         } else if (!is_null($this->request->query('report_card_id'))) {
             $reportCardId = $this->request->query('report_card_id');
         }
-        
+
         $search = [
             'report_card_id' => $reportCardId,
             'institution_class_id' => $entity->institution_class_id,
@@ -856,10 +856,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
-            $name = 'GenerateAllReportCards';
-            $pid = '';
             $processModel = $this->registryAlias();
-            $eventName = '';
             $passArray = [
                 'institution_id' => $institutionId,
                 'institution_class_id' => $institutionClassId,
@@ -868,14 +865,11 @@ class ReportCardStatusesTable extends ControllerActionTable
             if (!is_null($studentId)) {
                 $passArray['student_id'] = $studentId;
             }
-            $params = json_encode($passArray);            
-            $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
-            $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, 0);
+            $params = json_encode($passArray);
 
-            $args = '';
-            $args .= !is_null($systemProcessId) ? ' '.$systemProcessId : '';
+            $args = $processModel . " " . $params;
 
-            $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards'.$args;
+            $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards '.$args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
             try {
@@ -975,7 +969,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake EmailAllReportCards'.$args;
             $logs = ROOT . DS . 'logs' . DS . 'EmailAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
-            
+
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);
