@@ -371,4 +371,72 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         ]);
     }
 
+    public function checkIfTransferEnabled($institutionId = 0)
+    {
+
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+
+        //StaffReleaseByTypes
+        $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
+        $staffReleaseByTypesJsonString = $ConfigItems->value('staff_release_by_types');
+        $staffReleaseByTypesJsonData = stripslashes(html_entity_decode($staffReleaseByTypesJsonString));
+        $staffReleaseByTypesValues = json_decode($staffReleaseByTypesJsonData,true);;
+
+        if (array_key_exists('selection', $staffReleaseByTypesValues)) {
+            if ($staffReleaseByTypesValues['selection'] !== self::SELECTION_DISABLE) {
+                if (array_key_exists('values', $staffReleaseByTypesValues)) {
+                    $enableStaffReleasesByTypeIds = explode(",", $staffReleaseByTypesValues['values']);
+                    if (in_array($institutionTypeId, $enableStaffReleasesByTypeIds)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        //StaffReleaseBySector
+        $institutionSectorId = $Institutions->get($institutionId)->institution_sector_id;
+        $staffReleaseBySectorsJsonString = $ConfigItems->value('staff_release_by_sectors');
+        $staffReleaseBySectorsJsonData = stripslashes(html_entity_decode($staffReleaseBySectorsJsonString));
+        $staffReleaseBySectorsValues = json_decode($staffReleaseBySectorsJsonData,true);
+
+        if (array_key_exists('selection', $staffReleaseBySectorsValues)) {
+            if ($staffReleaseBySectorsValues['selection'] !== self::SELECTION_DISABLE) {
+                if (array_key_exists('values', $staffReleaseBySectorsValues)) {
+                    $enableStaffReleasesBySectorsIds = explode(",", $staffReleaseBySectorsValues['values']);
+                    if (in_array($institutionSectorId, $enableStaffReleasesBySectorsIds)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function checkStaffReleaseRestrictedBetweenSameType($institutionId = 0, $compareInstitutionId = 0)
+    {
+        $isRestricted = false;
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+
+        $restrictStaffTransferBetweenSameType = $ConfigItems->value('restrict_staff_release_between_same_type');
+        if ($restrictStaffTransferBetweenSameType) {
+            $sameType = $this->compareInstitutionType($institutionId, $compareInstitutionId);
+
+            if (!$sameType) {
+                $isRestricted = true;
+            }
+        }
+        return $isRestricted;
+    }
+
+    public function compareInstitutionType($institutionId = 0, $compareInstitutionId = 0)
+    {
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
+        $compareInstitutionTypeId = $Institutions->get($compareInstitutionId)->institution_type_id;
+
+        return $institutionTypeId == $compareInstitutionTypeId;
+    }
+
 }

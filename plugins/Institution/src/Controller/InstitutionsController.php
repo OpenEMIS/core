@@ -413,11 +413,18 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.FeederOutgoingInstitutions']);
     }
-
     public function FeederIncomingInstitutions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.FeederIncomingInstitutions']);
-    }    
+    }
+    public function StaffReleaseIn()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffReleaseIn']);
+    }
+    public function StaffReleaseOut()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffReleaseOut']);
+    }
     // End
 
     // AngularJS
@@ -428,7 +435,7 @@ class InstitutionsController extends AppController
         // $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
         $_excel = false;
         $_import = false;
-        
+
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
         } else {

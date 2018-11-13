@@ -87,6 +87,9 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('StaffTransferIn', ['className' => 'Institution.StaffTransferIn', 'foreignKey' => 'new_institution_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+        //Staff release yh test
+        $this->hasMany('StaffReleaseOut', ['className' => 'Institution.StaffReleaseOut', 'foreignKey' => 'previous_institution_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+
         $this->hasMany('Students', ['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentBehaviours', ['className' => 'Institution.StudentBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStudentAbsences', ['className' => 'Institution.InstitutionStudentAbsences', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -195,14 +198,14 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
 
-        $this->addBehavior('Institution.LatLong');  
+        $this->addBehavior('Institution.LatLong');
     }
 
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
         $validator = $this->LatLongValidation();
-     
+
         $validator
             ->add('date_opened', [
                     'ruleCompare' => [
@@ -226,7 +229,7 @@ class InstitutionsTable extends ControllerActionTable
                     'rule' => ['range', 1, 2],
                 ]
             ])
-            
+
             // ->add('address', 'ruleMaximum255', [
             // 		'rule' => ['maxLength', 255],
             // 		'message' => 'Maximum allowable character is 255',
@@ -324,7 +327,7 @@ class InstitutionsTable extends ControllerActionTable
             ->where(function ($exp, $q) use ($subquery) {
                 return $exp->notExists($subquery);
             });
-        
+
         foreach ($query as $row) {
             $this->updateAll(
                 ['area_administrative_id' => null],
@@ -485,7 +488,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('institution_status_id');
         $this->field('institution_sector_id', ['type' => 'select', 'onChangeReload' => true]);
         if ($this->action == 'index' || $this->action == 'view') {
-            $this->field('contact_person', ['visible' => false]); 
+            $this->field('contact_person', ['visible' => false]);
             $this->field('institution_provider_id', ['type' => 'select']);
         }
         $this->field('institution_type_id');
