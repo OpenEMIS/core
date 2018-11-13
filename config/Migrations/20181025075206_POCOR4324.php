@@ -568,8 +568,6 @@ class POCOR4324 extends AbstractMigration
         $loop = ceil($count / $MAX_PER_LOOP);
 
         for ($i = 1; $i <= $loop; ++$i) {
-            pr('> Loop ' . $i);
-
             $currentLoop = [];
             $absenceMainData = [];
             $absenceDetailData = [];
@@ -677,7 +675,6 @@ class POCOR4324 extends AbstractMigration
             $currentLoop = [];
             $absenceMainData = [];
             $absenceDetailData = [];
-            pr('> Loop ' . $i . ' done. ' . $dataCount . ' inserted.');
         }
 
         $overlapArray = [];
@@ -843,6 +840,7 @@ class POCOR4324 extends AbstractMigration
                     ->insert($overlapInsertDetailData)
                     ->save();
             }
+        }
         /* end of new migration patch */
 
         /* old migration patch - memory exhaust
