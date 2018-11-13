@@ -277,7 +277,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         }
     }
 
-    public function findInstitutionStaffTransferIn(Query $query, array $options)
+    public function findInstitutionStaffReleaseIn(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $incomingInstitution = self::INCOMING;
@@ -301,7 +301,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $query;
     }
 
-    public function findInstitutionStaffTransferOut(Query $query, array $options)
+    public function findInstitutionStaffReleaseOut(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $outgoingInstitution = self::OUTGOING;
