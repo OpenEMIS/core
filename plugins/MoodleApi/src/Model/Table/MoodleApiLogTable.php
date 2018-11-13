@@ -13,9 +13,20 @@ class MoodleApiLogTable extends ControllerActionTable
 {
     const STATUS_SUCCESS = 1;
     const STATUS_FAILED = 2;
+    //UPDATE getStatuses() if you add new status
+
 
     public function initialize(array $config)
     {
         parent::initialize($config);
     }
+
+    public function getStatuses()
+    {
+        return [
+            self::STATUS_SUCCESS => "Success",
+            self::STATUS_FAILED => "Failed"
+        ];
+    }
+
 }
