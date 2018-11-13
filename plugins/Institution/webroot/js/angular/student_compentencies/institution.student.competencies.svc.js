@@ -197,9 +197,12 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                     var oldValue = params.value;
 
                     var eCell = document.createElement('div');
-                    var commentInput = document.createElement('input');
+
+                    var commentInput = document.createElement('textarea');
+
                     commentInput.setAttribute("type", "text");
                     commentInput.setAttribute("class", "oe-cell-editable");
+                    commentInput.setAttribute("style","height:100%");
 
                     commentInput.value = '';
                     if (angular.isDefined(params.value)) {
@@ -265,9 +268,11 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                     var oldValue = params.value;
 
                     var eCell = document.createElement('div');
-                    var textInput = document.createElement('input');
+                    var textInput = document.createElement('textarea');
                     textInput.setAttribute("type", "text");
                     textInput.setAttribute("class", "oe-cell-editable");
+                    textInput.setAttribute("style", "height:100%");
+
                     textInput.value = params.value;
                     eCell.appendChild(textInput);
 
@@ -340,7 +345,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             cellRenderer: function(params) {
                 var periodEditable = params.data.period_editable;
                 var studentStatus = params.data.student_status;
-                
+
                 var gradingOptions = {
                     0 : {
                         id: '',
@@ -359,7 +364,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
 
                     var eCell = document.createElement('div');
                     eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
-
+                    eCell.setAttribute("style","height:100%")
                     var eSelect = document.createElement("select");
 
                     angular.forEach(gradingOptions, function(obj, key) {

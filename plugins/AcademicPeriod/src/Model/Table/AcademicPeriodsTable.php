@@ -83,9 +83,10 @@ class AcademicPeriodsTable extends AppTable
             'Results' => ['index'],
             'StudentExaminationResults' => ['index'],
             'OpenEMIS_Classroom' => ['index', 'view'],
+            'InstitutionStaffAttendances' => ['index', 'view'],
             'StudentAttendances' => ['index', 'view']
         ]);
-
+        
         $this->addBehavior('Institution.Calendar');
     }
 
@@ -925,32 +926,7 @@ class AcademicPeriodsTable extends AppTable
 
         return $academicPeriodId;
     }
-
-    public function findPeriodHasClass(Query $query, array $options)
-    {
-        $institutionId = $options['institution_id'];
-        $currentYearId = $this->getCurrent();
-
-        return $query
-            ->select([
-                $this->aliasField('id'),
-                $this->aliasField('name')
-            ])
-            ->find('years')
-            ->matching('InstitutionClasses', function ($q) use ($institutionId) {
-                return $q->where(['InstitutionClasses.institution_id' => $institutionId]);
-            })
-            ->group([$this->aliasField('id')])
-            ->formatResults(function (ResultSetInterface $results) use ($currentYearId) {
-                return $results->map(function ($row) use ($currentYearId) {
-                    if ($row->id == $currentYearId) {
-                        $row->selected = true;
-                    }
-                    return $row;
-                });
-            });
-    }
-
+    
     public function findWeeksForPeriod(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
@@ -1002,11 +978,43 @@ class AcademicPeriodsTable extends AppTable
             });
     }
 
+    public function findPeriodHasClass(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $currentYearId = $this->getCurrent();
+
+        return $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('name')
+            ])
+            ->find('years')
+            ->matching('InstitutionClasses', function ($q) use ($institutionId) {
+                return $q->where(['InstitutionClasses.institution_id' => $institutionId]);
+            })
+            ->group([$this->aliasField('id')])
+            ->formatResults(function (ResultSetInterface $results) use ($currentYearId) {
+                return $results->map(function ($row) use ($currentYearId) {
+                    if ($row->id == $currentYearId) {
+                        $row->selected = true;
+                    }
+                    return $row;
+                });
+            });
+    }
+
     public function findDaysForPeriodWeek(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
         $weekId = $options['week_id'];
         $institutionId = $options['institution_id'];
+
+        // pass true if you need school closed data
+        if (array_key_exists('school_closed_required', $options)) {
+            $schoolClosedRequired = $options['school_closed_required'];
+        } else {
+            $schoolClosedRequired = false;
+        }
 
         $model = $this;
 
@@ -1037,7 +1045,11 @@ class AcademicPeriodsTable extends AppTable
 
         do {
             if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
-                $schoolClosed = $this->isSchoolClosed($firstDayOfWeek, $institutionId);
+                if ($schoolClosedRequired == false) {
+                    $schoolClosed = false;
+                } else {
+                    $schoolClosed = $this->isSchoolClosed($firstDayOfWeek, $institutionId);
+                }
                 $suffix = $schoolClosed ? __('School Closed') : '';
 
                 $data = [
