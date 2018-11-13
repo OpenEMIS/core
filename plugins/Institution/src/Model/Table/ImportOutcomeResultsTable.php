@@ -87,7 +87,8 @@ class ImportOutcomeResultsTable extends AppTable
         $this->ControllerAction->field('select_file', ['visible' => false]);
         $this->ControllerAction->setFieldOrder(['academic_period', 'class', 'outcome_template', 'outcome_period', 'education_subject', 'select_file']);
 
-        $currentFieldName = (strtolower(str_replace("change", "", $entity->submit)));
+        //Assumptiopn - onChangeReload must be named in this format: change<field_name>. E.g changeClass
+        $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
 
         if (isset($this->request->data[$this->alias()])) {
             $unsetFlag = false;
@@ -95,17 +96,16 @@ class ImportOutcomeResultsTable extends AppTable
             foreach ($aryRequestData as $requestData => $value) {
                 if ($unsetFlag) {
                     unset($this->request->query[$requestData]);
-                    unset($this->request->data[$this->alias()][$requestData]);
+                    $this->request->data[$this->alias()][$requestData] = 0;
                 }
 
-                if ($currentFieldName == $requestData) {
+                if ($currentFieldName == str_replace("_", "", $requestData)) {
                     $unsetFlag = true;
                 }
             }
-
             $aryRequestData = $this->request->data[$this->alias()];
             foreach ($aryRequestData as $requestData => $value) {
-                if (isset($this->dependency[$requestData])) {
+                if (isset($this->dependency[$requestData]) && $value) {
                     $aryDependencies = $this->dependency[$requestData];
                     foreach ($aryDependencies as $dependency) {
                         $this->ControllerAction->field($dependency, ['visible' => true]);
@@ -118,13 +118,7 @@ class ImportOutcomeResultsTable extends AppTable
     public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-
-            // if (!empty($request->query('outcome_period'))) {
-            //     $attr['visible'] = true;
-            // } else {
-            //     $attr['visible'] = false;
-            // }
-
+            
             $conditions = [];
             if (!empty($request->data[$this->alias()]['academic_period']) && !empty($request->data[$this->alias()]['outcome_template'])) {
                 $conditions[] = [
@@ -192,28 +186,11 @@ class ImportOutcomeResultsTable extends AppTable
     public function addOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['period']);
-        unset($request->query['education_subject']);
-        unset($request->query['class']);
-        unset($request->query['template']);
-        unset($request->query['outcome_period']);
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('academic_period', $request->data[$this->alias()])) {
                     $request->query['period'] = $request->data[$this->alias()]['academic_period'];
-                }
-                if (array_key_exists('class', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['class']);
-                }
-                if (array_key_exists('education_subject', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['education_subject']);
-                }
-                if (array_key_exists('outcome_template', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_template']);
-                }
-                if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_period']);
                 }
             }
         }
@@ -294,24 +271,11 @@ class ImportOutcomeResultsTable extends AppTable
     public function addOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['class']);
-        unset($request->query['education_subject']);
-        unset($request->query['template']);
-        unset($request->query['outcome_period']);
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('class', $request->data[$this->alias()])) {
                     $request->query['class'] = $request->data[$this->alias()]['class'];
-                }
-                if (array_key_exists('education_subject', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['education_subject']);
-                }
-                if (array_key_exists('outcome_template', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_template']);
-                }
-                if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_period']);
                 }
             }
         }
@@ -324,11 +288,6 @@ class ImportOutcomeResultsTable extends AppTable
             $classId = $request->query('class');
             $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-            // if (!empty($request->query('class'))) {
-            //     $attr['visible'] = true;
-            // } else {
-            //     $attr['visible'] = false;
-            // }
 
             // if class id is not null, then filter Outcome Template by class_grades of the class else by institution_grades of the school
             if (!is_null($classId) && !empty($classId)) {
@@ -366,20 +325,11 @@ class ImportOutcomeResultsTable extends AppTable
     public function addOnChangeOutcomeTemplate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['template']);
-        unset($request->query['outcome_period']);
-        unset($request->query['education_subject']);
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('outcome_template', $request->data[$this->alias()])) {
                     $request->query['template'] = $request->data[$this->alias()]['outcome_template'];
-                }
-                if (array_key_exists('education_subject', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['education_subject']);
-                }
-                if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_period']);
                 }
             }
         }
@@ -389,12 +339,6 @@ class ImportOutcomeResultsTable extends AppTable
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
-
-            // if (!empty($request->query('template'))) {
-            //     $attr['visible'] = true;
-            // } else {
-            //     $attr['visible'] = false;
-            // }
 
             $outcomePeriodOptions = [];
             if (!is_null($request->query('template'))) {
@@ -416,16 +360,11 @@ class ImportOutcomeResultsTable extends AppTable
     public function addOnChangeOutcomePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['outcome_period']);
-        unset($request->query['education_subject']);
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
                     $request->query['outcome_period'] = $request->data[$this->alias()]['outcome_period'];
-                }
-                if (array_key_exists('education_subject', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['education_subject']);
                 }
             }
         }
@@ -434,11 +373,6 @@ class ImportOutcomeResultsTable extends AppTable
     public function onUpdateFieldSelectFile(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            // if (!empty($request->query('template')) && !empty($request->query('education_subject'))) {
-            //     $attr['visible'] = true;
-            // } else {
-            //     $attr['visible'] = false;
-            // }
         }
         return $attr;
     }
