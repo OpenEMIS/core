@@ -63,7 +63,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 if (Controller.studentOptions.length > 0) {
                     Controller.selectedStudent = Controller.studentOptions[0].student_id;
                     Controller.selectedStudentStatusCode = Controller.studentOptions[0].student_status.code;
-                    Controller.selectedStudentStatus = Controller.studentOptions[0].student_status.name;  
+                    Controller.selectedStudentStatus = Controller.studentOptions[0].student_status.name;
                 } else {
                     AlertSvc.warning(Controller, "Please setup students for this class");
                 }
@@ -82,7 +82,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 } else {
                     AlertSvc.warning(Controller, "Please setup outcome periods for the selected template");
                 }
-                
+
                 return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId);
             }, function (error) {
                 console.log(error);
@@ -297,8 +297,8 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
             Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
         }, function (error) {
         });
-    }   
- 
+    }
+
     function initGrid() {
         return AggridLocaleSvc.getTranslatedGridLocale()
         .then(function(localeText){
@@ -313,7 +313,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 columnDefs: [],
                 rowData: [],
                 headerHeight: 38,
-                rowHeight: 38,
+                rowHeight: 58,
                 minColWidth: 100,
                 enableColResize: true,
                 enableSorting: false,
@@ -358,7 +358,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 columnDefs: [],
                 rowData: [],
                 headerHeight: 38,
-                rowHeight: 38,
+                rowHeight: 58,
                 minColWidth: 100,
                 enableColResize: true,
                 enableSorting: false,
