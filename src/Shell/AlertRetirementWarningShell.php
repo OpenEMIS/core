@@ -51,7 +51,7 @@ class AlertRetirementWarningShell extends AlertShell
 
                     if (!empty($institutionStaffRecords)) {
                         foreach ($institutionStaffRecords as $institutionStaffObj) {
-                            $vars['institution'] = $institutionStaffObj['institution'];
+                        $vars['institution'] = $institutionStaffObj['institution'];
                             $institutionId = $vars['institution']['id'];
 
                             // add the age to $vars.
