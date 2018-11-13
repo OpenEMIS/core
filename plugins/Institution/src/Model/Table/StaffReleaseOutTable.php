@@ -44,15 +44,10 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
-
-
             if ($data->offsetExists('positions_held')) {
                 $institutionStaffId = $data->offsetGet('positions_held');
                 $data->offsetSet('previous_institution_staff_id', $institutionStaffId);
             }
-            //$data->offsetSet('previous_effective_date', null);
-            //$data->offsetSet('previous_FTE', null);
-            //$data->offsetSet('previous_staff_type_id', null);
         }
     }
 
@@ -91,7 +86,7 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
         $session = $this->request->session();
         $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
 
-        $query->find('InstitutionStaffTransferOut', ['institution_id' => $institutionId]);
+        $query->find('InstitutionStaffReleaseOut', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'NewInstitutions' => ['code']];
 
         // sort
@@ -124,40 +119,40 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
             $staffUserUrl['action'] = 'StaffUser';
             $staffUserUrl[1] = $this->paramsEncode(['id' => $userId]);
 
-            // check pending transfers
-            // $pendingTransfer = $this->find()
-            //     ->matching('Statuses.WorkflowStepsParams', function ($q) {
-            //         return $q->where(['WorkflowStepsParams.name' => 'institution_owner']);
-            //     })
-            //     ->where([
-            //         $this->aliasField('staff_id') => $userId,
-            //         $this->Statuses->aliasField('category <> ') => self::DONE
-            //     ])
-            //     ->first();
+            //check pending release to be done
+            $pendingRelease = $this->find()
+                ->matching('Statuses.WorkflowStepsParams', function ($q) {
+                    return $q->where(['WorkflowStepsParams.name' => 'institution_owner']);
+                })
+                ->where([
+                    $this->aliasField('staff_id') => $userId,
+                    $this->Statuses->aliasField('category <> ') => self::DONE
+                ])
+                ->first();
 
-            // if (!empty($pendingTransfer)) {
-            //     // check if the outgoing institution can view the transfer record
-            //     $visible = 0;
-            //     if ($pendingTransfer->previous_institution_id == $institutionId) {
-            //         $institutionOwner = $pendingTransfer->_matchingData['WorkflowStepsParams']->value;
-            //         if ($institutionOwner == self::OUTGOING || $pendingTransfer->all_visible) {
-            //             $visible = 1;
-            //         }
-            //     }
+            if (!empty($pendingRelease)) {
+                // check if the outgoing institution can view the release record
+                $visible = 0;
+                if ($pendingRelease->previous_institution_id == $institutionId) {
+                    $institutionOwner = $pendingRelease->_matchingData['WorkflowStepsParams']->value;
+                    if ($institutionOwner == self::OUTGOING || $pendingRelease->all_visible) {
+                        $visible = 1;
+                    }
+                }
 
-            //     if ($visible) {
-            //         $url = $this->url('view');
-            //         $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
-            //         $event->stopPropagation();
-            //         return $this->controller->redirect($url);
-            //     } else {
-            //         $this->Alert->warning($this->aliasField('existingStaffTransfer'), ['reset' => true]);
-            //         $event->stopPropagation();
-            //         return $this->controller->redirect($staffUserUrl);
-            //     }
-            //}
+                if ($visible) {
+                    $url = $this->url('view');
+                    $url[1] = $this->paramsEncode(['id' => $pendingRelease->id]);
+                    $event->stopPropagation();
+                    return $this->controller->redirect($url);
+                } else {
+                    $this->Alert->warning($this->aliasField('existingStaffTransfer'), ['reset' => true]);
+                    $event->stopPropagation();
+                    return $this->controller->redirect($staffUserUrl);
+                }
+            }
 
-            // if no pending transfers
+            // if no pending release
             $StaffTable = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
@@ -366,29 +361,8 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
     public function onUpdateFieldPreviousFTE(Event $event, array $attr, $action, Request $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
-            //if (isset($this->request->data[$this->alias()]['transfer_type']) && $request->data[$this->alias()]['transfer_type'] == self::PARTIAL_TRANSFER) {
-            //     $options = $this->fteOptions;
+            $attr['type'] = 'hidden';
 
-            // //    if (isset($this->request->data[$this->alias()]['positions_held']) && !empty($this->request->data[$this->alias()]['positions_held'])) {
-            //         $institutionStaffId = $this->request->data[$this->alias()]['positions_held'];
-            //         $staffEntity = $this->PreviousInstitutionStaff->get($institutionStaffId);
-
-            //         if (!empty($staffEntity)) {
-            //             // only show fte options less than the current fte
-            //             foreach ($options as $key => $option) {
-            //                 if ($key >= $staffEntity->FTE) {
-            //                     unset($options[$key]);
-            //                 }
-            //             }
-            //         }
-            // //    }
-
-                // // need to specify select option for approve action
-                // $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $options;
-                // $attr['type'] = 'select';
-            //} else {
-                $attr['type'] = 'hidden';
-            //}
             return $attr;
         }
     }
@@ -431,7 +405,7 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
                         $conditions['institution_type_id'] = $institutionTypeId;
                     }
                 }
-                // end: restrict staff transfer by type
+                // end: restrict staff release between same type
 
                 $options = $this->NewInstitutions->find('list', [
                         'keyField' => 'id',

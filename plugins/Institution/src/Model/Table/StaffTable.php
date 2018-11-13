@@ -35,6 +35,9 @@ class StaffTable extends ControllerActionTable
     const PENDING_PROFILE = -1;
     const PENDING_TRANSFERIN = -2;
     const PENDING_TRANSFEROUT = -3;
+    const PENDING_RELEASEIN = -4;
+    const PENDING_RELEASEOUT = -5;
+
 
     private $dashboardQuery = null;
 
@@ -416,6 +419,7 @@ class StaffTable extends ControllerActionTable
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
 
         $selectedStatus = $this->request->query('staff_status_id');
+
         switch ($selectedStatus) {
             case self::PENDING_PROFILE:
                 $event->stopPropagation();
@@ -437,6 +441,24 @@ class StaffTable extends ControllerActionTable
                     'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'controller' => 'Institutions',
                     'action' => 'StaffTransferOut'
+                ]);
+                break;
+            case self::PENDING_RELEASEIN:
+                $event->stopPropagation();
+                return $this->controller->redirect([
+                    'plugin'=>'Institution',
+                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StaffReleaseIn'
+                ]);
+                break;
+            case self::PENDING_RELEASEOUT:
+                $event->stopPropagation();
+                return $this->controller->redirect([
+                    'plugin' => 'Institution',
+                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StaffReleaseOut'
                 ]);
                 break;
         }
@@ -545,9 +567,19 @@ class StaffTable extends ControllerActionTable
             ->find('InstitutionStaffTransferOut', ['institution_id' => $institutionId, 'pending_records' => true])
             ->count();
 
+        $InstitutionStaffReleasesTable = TableRegistry::get('Institution.InstitutionStaffReleases');
+        $staffTransferInRecord = $InstitutionStaffReleasesTable
+            ->find('InstitutionStaffReleaseIn', ['institution_id' => $institutionId, 'pending_records' => true])
+            ->count();
+        $staffReleaseOutRecord = $InstitutionStaffReleasesTable
+            ->find('InstitutionStaffReleaseOut', ['institution_id' => $institutionId, 'pending_records' => true])
+            ->count();
+
         $statusOptions[self::PENDING_PROFILE] = __('Pending Change in Assignment'). ' - '. $staffPositionProfilesRecordCount;
         $statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In'). ' - ' . $staffTransferInRecord;
         $statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out'). ' - ' . $staffTransferOutRecord;
+        $statusOptions[self::PENDING_RELEASEIN] = __('Pending Release In'). ' - ' . $staffTransferInRecord;
+        $statusOptions[self::PENDING_RELEASEOUT] = __('Pending Release Out'). '-' . $staffReleaseOutRecord;
 
         $selectedStatus = $this->queryString('staff_status_id', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
@@ -1045,7 +1077,7 @@ class StaffTable extends ControllerActionTable
             'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
         ];
 
-        if (!Configure::read('schoolMode')) {    
+        if (!Configure::read('schoolMode')) {
             $coreAssociationArray = [
                 'Institution.InstitutionRubrics' => 'InstitutionRubrics',
                 'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
