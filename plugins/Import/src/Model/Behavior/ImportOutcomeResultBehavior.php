@@ -306,7 +306,7 @@ class ImportOutcomeResultBehavior extends Behavior
                 ->toArray();
 
             // calculate outcome criterias
-            $template = $this->_table->request->query['template'];
+            $template = $this->_table->request->query['outcome_template'];
 
             $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
             $aryOutcomeCriteria = $outcomeCriteriasTable->find()
@@ -680,7 +680,7 @@ class ImportOutcomeResultBehavior extends Behavior
             $activeSheet->setCellValue($alpha . 3, $value);
         }
 
-        $template = $this->_table->request->query['template'];
+        $template = $this->_table->request->query['outcome_template'];
 
         $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
         $arrayOutcomeCriterias = $outcomeCriteriasTable->find()
@@ -787,7 +787,7 @@ class ImportOutcomeResultBehavior extends Behavior
     {
         $outcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
         $education_subject_id = $this->_table->request->query['education_subject'];
-        $template = $this->_table->request->query['template'];
+        $template = $this->_table->request->query['outcome_template'];
 
         $gradeOptionArray = $outcomeGradingOptionsTable->find()
             ->select(['name'])
