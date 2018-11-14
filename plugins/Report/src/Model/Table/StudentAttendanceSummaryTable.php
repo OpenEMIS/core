@@ -12,7 +12,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Utility\Hash;
 use Institution\Model\Table\ClassAttendanceRecordsTable as RecordMarkedType;
 
 use Cake\Log\Log;
@@ -156,8 +155,6 @@ class StudentAttendanceSummaryTable extends AppTable
                 ])
                 ->toArray();
 
-            // $recordsData = Hash::combine($institutionStudentAbsencesRecords, '{n}.institution_id', '{n}', '{n}.student_id');
-
             $rowData = [];
             foreach ($formattedDateResults as $k => $formattedDateResult) {
                 $absenceCount = 0;
@@ -206,7 +203,6 @@ class StudentAttendanceSummaryTable extends AppTable
                         $value['class_attendance_records'] = $classAttendanceRecord->{$day_text};
                     }
                 }
-
                 $rowResults[] = $value;
             }
 
@@ -214,8 +210,6 @@ class StudentAttendanceSummaryTable extends AppTable
             ->formatResults(function (ResultSetInterface $results) use ($rowResults) {
                 return $rowResults;
             });
-
-
     }
 
     public function onExcelRenderTotalStudents(Event $event, Entity $entity, $attr)
