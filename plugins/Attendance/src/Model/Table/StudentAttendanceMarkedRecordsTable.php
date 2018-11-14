@@ -7,7 +7,6 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Log\Log;
 
 class StudentAttendanceMarkedRecordsTable extends AppTable
 {

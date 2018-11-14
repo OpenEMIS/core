@@ -5,7 +5,6 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
-use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 
 class ClassAttendanceRecordsTable extends AppTable
@@ -33,10 +32,6 @@ class ClassAttendanceRecordsTable extends AppTable
 
     public function markedRecordAfterSave(Event $event, Entity $entity)
     {
-        // Log::write('error', '--------');
-        // Log::write('error', $entity);
-        // Log::write('error', '--------');
-
         $institutionClassId = $entity->institution_class_id;
         $institutionId = $entity->institution_id;
         $academicPeriodId = $entity->academic_period_id;
@@ -45,12 +40,6 @@ class ClassAttendanceRecordsTable extends AppTable
         $year = $date->format('Y');
         $month = $date->format('n');
         $day = $date->format('j');
-
-        // Log::write('error', '---- date');
-        // Log::write('error', $year);
-        // Log::write('error', $month);
-        // Log::write('error', $day);
-        // Log::write('error', '---- date');
 
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
         $totalMarkedCount = $StudentAttendanceMarkTypes
