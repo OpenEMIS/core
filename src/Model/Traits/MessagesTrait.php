@@ -309,10 +309,6 @@ trait MessagesTrait
             'amount' => 'Amount',
             'noStudentFees' => 'No Student Fees',
         ],
-        // 'InstitutionStaffAbsences' => [
-        //  'first_date_absent' => 'First Day Of Absence',
-        //  'last_date_absent' => 'Last Day Of Absence'
-        // ],
         'InstitutionAssessments' => [
             'noAssessments' => 'No Assessments',
             'noClasses' => 'No Classes'
@@ -407,10 +403,6 @@ trait MessagesTrait
             'noStaff' => 'No Available Staff',
             'noReasons' => 'You need to configure Staff Absence Reasons first.',
             'lateTime' => 'Late time should not be earlier than start time.'
-        ],
-        'StaffAbsences' => [
-            'noStaff' => 'No Available Staff',
-            'noShift' => 'There are no shifts configured for the selected academic period, will be using system configuration timing.'
         ],
         'StaffBehaviours' => [
             'date_of_behaviour' => 'Date',
@@ -789,7 +781,8 @@ trait MessagesTrait
                 'value' => 'Days within %d to %d'
             ],
             'StaffLeave' => [
-                'value' => 'Days within %d to %d'
+                'value' => 'Days within %d to %d',
+                'leavePeriodOverlap' => 'Leave period applied overlaps existing records.'
             ],
             'StaffType' => [
                 'value' => 'Days within %d to %d'
@@ -919,11 +912,6 @@ trait MessagesTrait
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'timeRangeHint' => 'Time should be between %s and %s'
-            ],
-            'StaffAbsences' => [
-                'end_time' => [
-                    'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
-                ]
             ],
             'StaffLeave' => [
                 'date_to' => [
