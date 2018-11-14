@@ -1652,6 +1652,16 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'selected' => ['Calendars.index', 'Calendars.view', 'Calendars.add', 'Calendars.edit', 'Calendars.delete']
             ],
+            'Administration.MoodleApi' => [
+                'title' => 'MoodleApi',
+                'parent' => 'Administration',
+                'link' => false,
+            ],
+                'MoodleApi.log' => [
+                    'title' => 'Log',
+                    'parent' => 'Administration.MoodleApi',
+                    'selected' => ['MoodleApiLog.index']
+                ]
         ];
         return $navigation;
     }
