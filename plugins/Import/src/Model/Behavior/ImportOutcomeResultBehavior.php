@@ -306,7 +306,7 @@ class ImportOutcomeResultBehavior extends Behavior
                 ->toArray();
 
             // calculate outcome criterias
-            $template = $this->_table->request->query['template'];
+            $template = $this->_table->request->query['outcome_template'];
 
             $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
             $aryOutcomeCriteria = $outcomeCriteriasTable->find()
@@ -316,7 +316,7 @@ class ImportOutcomeResultBehavior extends Behavior
             ])
             ->toArray();
             $totalCriteria = count($aryOutcomeCriteria);
-            $totalColumns = count($totalCriteria) + 3;
+            $totalColumns = $totalCriteria + 1;
 
             //comment will be last after outcomecriterias
             $commentColumn = $totalColumns + 1;
@@ -680,7 +680,7 @@ class ImportOutcomeResultBehavior extends Behavior
             $activeSheet->setCellValue($alpha . 3, $value);
         }
 
-        $template = $this->_table->request->query['template'];
+        $template = $this->_table->request->query['outcome_template'];
 
         $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
         $arrayOutcomeCriterias = $outcomeCriteriasTable->find()
@@ -786,9 +786,12 @@ class ImportOutcomeResultBehavior extends Behavior
     public function setCodesDataTemplate($objPHPExcel)
     {
         $outcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
+        $education_subject_id = $this->_table->request->query['education_subject'];
+        $template = $this->_table->request->query['outcome_template'];
 
         $gradeOptionArray = $outcomeGradingOptionsTable->find()
             ->select(['name'])
+            ->where([$outcomeGradingOptionsTable->aliasField('outcome_grading_type_id') => $template])
             ->toArray();
 
         $dropDownList = '';
@@ -799,9 +802,6 @@ class ImportOutcomeResultBehavior extends Behavior
                 $dropDownList .= $singleGradeOptionArray->name . ', ';
             }
         }
-
-        $education_subject_id = $this->_table->request->query['education_subject'];
-        $template = $this->_table->request->query['template'];
 
         $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
         $outcomeCriteriasArray = $outcomeCriteriasTable->find()
