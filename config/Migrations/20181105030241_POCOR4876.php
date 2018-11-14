@@ -34,24 +34,6 @@ class POCOR4876 extends AbstractMigration
             'comment' => 'This table contains all the staff transfer requests'
         ]);
         $InstitutionStaffReleases
-            ->addColumn('staff_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to security_users.id'
-            ])
-            ->addColumn('new_institution_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to institutions.id'
-            ])
-            ->addColumn('previous_institution_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to institutions.id'
-            ])
             ->addColumn('status_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -63,6 +45,50 @@ class POCOR4876 extends AbstractMigration
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to security_users.id'
+            ])
+            ->addColumn('staff_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to security_users.id'
+            ])
+            ->addColumn('previous_institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
+            ])
+            ->addColumn('previous_institution_staff_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true,
+                'comment' => 'links to institution_staff.id'
+            ])
+            ->addColumn('previous_staff_type_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true,
+                'comment' => 'links to staff_types.id'
+            ])
+            ->addColumn('previous_FTE', 'decimal', [
+                'default' => null,
+                'precision' => 5,
+                'scale' => 2,
+                'null' => true
+            ])
+            ->addColumn('previous_start_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('previous_end_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('new_institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
             ])
             ->addColumn('new_institution_position_id', 'integer', [
                 'default' => null,
@@ -87,32 +113,6 @@ class POCOR4876 extends AbstractMigration
                 'null' => true
             ])
             ->addColumn('new_end_date', 'date', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('previous_institution_staff_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true,
-                'comment' => 'links to institution_staff.id'
-            ])
-            ->addColumn('previous_staff_type_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true,
-                'comment' => 'links to staff_types.id'
-            ])
-            ->addColumn('previous_FTE', 'decimal', [
-                'default' => null,
-                'precision' => 5,
-                'scale' => 2,
-                'null' => true
-            ])
-            ->addColumn('previous_end_date', 'date', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('previous_effective_date', 'date', [
                 'default' => null,
                 'null' => true
             ])
@@ -151,16 +151,16 @@ class POCOR4876 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('staff_id')
-            ->addIndex('new_institution_id')
             ->addIndex('previous_institution_id')
             ->addIndex('status_id')
             ->addIndex('assignee_id')
-            ->addIndex('new_institution_position_id')
-            ->addIndex('new_staff_type_id')
             ->addIndex('previous_institution_staff_id')
             ->addIndex('previous_staff_type_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
+            ->addIndex('new_institution_id')
+            ->addIndex('new_institution_position_id')
+            ->addIndex('new_staff_type_id')
             ->save();
 
         //Insert 3 rows into config item table for Staff Release.
@@ -824,7 +824,88 @@ class POCOR4876 extends AbstractMigration
                 'visible' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffReleaseIn',
+                'field' => 'previous_institution_id',
+                'module_name' => 'Institution -> Staff Release In',
+                'field_name' => 'Current Institution',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffReleaseIn',
+                'field' => 'new_FTE',
+                'module_name' => 'Institution -> Staff Release In',
+                'field_name' => 'FTE',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffReleaseIn',
+                'field' => 'new_institution_position_id',
+                'module_name' => 'Institution -> Staff Release In',
+                'field_name' => 'Institution Position',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffReleaseIn',
+                'field' => 'new_staff_type_id',
+                'module_name' => 'Institution -> Staff Release In',
+                'field_name' => 'Staff Type',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffReleaseIn',
+                'field' => 'new_start_date',
+                'module_name' => 'Institution -> Staff Release In',
+                'field_name' => 'Start Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffReleaseIn',
+                'field' => 'new_end_date',
+                'module_name' => 'Institution -> Staff Release In',
+                'field_name' => 'End Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffReleaseIn',
+                'field' => 'previous_end_date',
+                'module_name' => 'Institution -> Staff Release In',
+                'field_name' => 'End Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffReleaseIn',
+                'field' => 'comment',
+                'module_name' => 'Institution -> Staff Release In',
+                'field_name' => 'Release Comments',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
             ]
+
         ];
         $this->insert('labels', $labels);
 
