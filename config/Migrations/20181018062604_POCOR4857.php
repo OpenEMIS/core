@@ -15,7 +15,9 @@ class POCOR4857 extends AbstractMigration
 {
     public function up()
     {
-        $this->table('moodle_api_log', [ //Create the table
+        //Moodle Api Log Table
+
+        $this->table('moodle_api_log', [
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table serves as a log. It also stores failed attempts.',
             'id' => true //Auto increment id and primary key
@@ -61,7 +63,10 @@ class POCOR4857 extends AbstractMigration
         ->addIndex('status')
         ->save();
 
-        $this->table('moodle_api_created_users', [ //Create the table
+
+        //Moodle Api Created Users Table
+
+        $this->table('moodle_api_created_users', [
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'To store the moodle user_id that was created and link to which account in openemis',
             'id' => true //Auto increment id and primary key
@@ -92,11 +97,29 @@ class POCOR4857 extends AbstractMigration
         ->addIndex('core_user_id')
         ->addIndex('moodle_username')
         ->save();
+
+        //Security Table backup
+        $this->execute('CREATE TABLE `z_4857_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_4857_security_functions` SELECT * FROM `security_functions`');
+
+        $this->execute("INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+            VALUES ('9000', 'MoodleApi Log', 'MoodleApi', 'Administration', 'MoodleApi', '5000',
+            'index|view',
+            'edit',
+            'add',
+            'remove',
+            NULL,
+            '369', '1', NULL, NULL, NULL, '1', NOW())");
+
     }
 
     public function down()
     {
         $this->dropTable('moodle_api_log');
         $this->dropTable('moodle_api_created_users');
+
+        // Security Table recover backup
+        $this->execute('DROP TABLE security_functions');
+        $this->execute('RENAME TABLE `z_4784_security_functions` TO `security_functions`');
     }
 }
