@@ -1,3 +1,12 @@
+### [3.41.0] - 2018-11-14
+- Implemented a feature to pre-populate Next Class
+- Re-developed Outcomes Import template
+- Re-developed Staff attendance feature
+- Implemented auto-assign to Scholarship Applicant at Open Status
+- Bug fix on institutions > Infrastructures
+- Bug fix on Institutions > Students > Promotions
+- Bug fix on Institutions > Students > Academic > Programmes
+
 ### [3.40.0] - 2018-11-02
 - Redeveloped Student Attendance feature
 - Implemented single day attendance record for Student attendance
