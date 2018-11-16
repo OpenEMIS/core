@@ -37,9 +37,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
         'Institution.InstitutionClasses' => [
             'HomeroomTeacher'
         ],
-        'Institution.StaffAbsences' => [
-            'StaffAttendance'
-        ],
         'Institution.StaffTransferOut' => [
             'StaffTransfer'
         ],

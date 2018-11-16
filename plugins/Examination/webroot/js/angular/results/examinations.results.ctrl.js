@@ -91,11 +91,12 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                 enableColResize: false,
                 enableSorting: false,
                 unSortIcon: true,
-                enableFilter: false,
+                enableFilter: true,
                 suppressMenuHide: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
                 rowModelType: 'infinite',
+                enableServerSideFilter: true,
                 // Removed options - Issues in ag-Grid AG-828
                 // suppressCellSelection: true,
 
@@ -149,7 +150,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                 enableColResize: false,
                 enableSorting: false,
                 unSortIcon: true,
-                enableFilter: false,
+                enableFilter: true,
                 suppressMenuHide: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
@@ -160,6 +161,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                 // Added options
                 suppressContextMenu: true,
                 stopEditingWhenGridLosesFocus: true,
+                enableServerSideFilter: true,
                 ensureDomOrder: true,
                 pagination: true,
                 paginationPageSize: 10,
@@ -213,10 +215,11 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
         var dataSource = {
             pageSize: limit,
             getRows: function (params) {
+                var filterModel = params.filterModel;
                 var page = parseInt(params.startRow / limit) + 1;
 
                 UtilsSvc.isAppendSpinner(true, 'examination-result-table');
-                ExaminationsResultsSvc.getRowData(academicPeriodId, examinationId, vm.examinationCentreId, subject, limit, page)
+                ExaminationsResultsSvc.getRowData(academicPeriodId, examinationId, vm.examinationCentreId, subject, limit, page, filterModel)
                 .then(function(response) {
                     var lastRowIndex = response.data.total;
 

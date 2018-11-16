@@ -28,4 +28,12 @@ class WorkflowInstitutionTable extends AppTable
             'autoFields' => false
         ]);
     }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $query
+            ->where([
+                $this->aliasField('status_id !=') => '-1'
+            ]);
+    }
 }
