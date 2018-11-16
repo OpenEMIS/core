@@ -41,8 +41,8 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         // New institution data
-        //$this->belongsTo('NewPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'new_institution_position_id']);
-        //$this->belongsTo('NewStaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'new_staff_type_id']);
+        $this->belongsTo('NewPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'new_institution_position_id']);
+        $this->belongsTo('NewStaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'new_staff_type_id']);
         // Previous institution data
         $this->belongsTo('PreviousInstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'previous_institution_staff_id']);
         $this->belongsTo('PreviousStaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'previous_staff_type_id']);
@@ -58,8 +58,8 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     private $workflowEvents = [
         [
             'value' => 'Workflow.onTransferStaff',
-            'text' => 'Transfer Staff',
-            'description' => 'Performing this action will transfer the staff to the selected institution.',
+            'text' => 'Release Staff',
+            'description' => 'Performing this action will release the staff to the selected institution.',
             'method' => 'onTransferStaff',
             'unique' => true
         ]
@@ -113,34 +113,13 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         }
         $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => 'AllowPositionType']);
 
+        //Update institution_staff table the staff record
         if ($StaffTable->save($newEntity)) {
             if (!empty($entity->previous_institution_staff_id)) {
-                $transferType = $entity->transfer_type;
                 $oldRecord = $StaffTable->get($entity->previous_institution_staff_id);
 
-                if ($transferType == self::FULL_TRANSFER) {
-                    // end previous institution staff record
-                    $oldRecord->end_date = $entity->previous_end_date;
-                    $StaffTable->save($oldRecord);
-                } else if ($transferType == self::PARTIAL_TRANSFER) {
-                    // end previous institution staff record
-                    $oldRecord->end_date = $entity->previous_end_date;
-                    $StaffTable->save($oldRecord);
-
-                    // add new institution staff record in previous institution
-                    $newRecord = [
-                        'FTE' => $entity->previous_FTE,
-                        'start_date' => $entity->previous_effective_date,
-                        'start_year' => $entity->previous_effective_date->year,
-                        'staff_id' => $entity->staff_id,
-                        'staff_type_id' => $entity->previous_staff_type_id,
-                        'staff_status_id' => $StaffStatusesTable->getIdByCode('ASSIGNED'),
-                        'institution_id' => $oldRecord->institution_id,
-                        'institution_position_id' => $oldRecord->institution_position_id
-                    ];
-                    $newEntity = $StaffTable->newEntity($newRecord, ['validate' => 'AllowPositionType']);
-                    $StaffTable->save($newEntity);
-                }
+                $oldRecord->end_date = $entity->previous_end_date;
+                $StaffTable->save($oldRecord);
             }
         }
     }
