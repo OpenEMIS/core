@@ -31,13 +31,13 @@ $this->start('toolbar');
     ?>
     <?php if ($_edit) : ?>
         <!-- Show buttons when action is view: -->
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="onEditClick()">
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && editPermissionForSelectedSubject" ng-click="onEditClick()">
             <i class="fa kd-edit"></i>
         </button>
         <!-- End -->
 
         <!-- Show buttons when action is edit: -->
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit'" ng-click="onBackClick()">
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit' && editPermissionForSelectedSubject" ng-click="onBackClick()">
             <i class="fa kd-back"></i>
         </button>
         <!-- End -->
