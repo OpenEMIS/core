@@ -367,11 +367,7 @@ class POCOR3906 extends AbstractMigration
         // end of overlappingRecords
 
         // start of nonoverlappingRecords
-        if ($mergedDataSql) {
-            $countData = $this->fetchAll('SELECT count(*) AS `COUNT` FROM `institution_staff_absences` LEFT JOIN `staff_absence_reasons`on `institution_staff_absences`.`staff_absence_reason_id` = `staff_absence_reasons`.`id` where `institution_staff_absences`.`id` NOT IN '.$mergedDataSql);
-        } else {
-            $countData = $this->fetchAll('SELECT count(*) AS `COUNT` FROM `institution_staff_absences` LEFT JOIN `staff_absence_reasons`on `institution_staff_absences`.`staff_absence_reason_id` = `staff_absence_reasons`.`id`');
-        }
+        $countData = $this->fetchAll('SELECT count(*) AS `COUNT` FROM `institution_staff_absences` LEFT JOIN `staff_absence_reasons`on `institution_staff_absences`.`staff_absence_reason_id` = `staff_absence_reasons`.`id` where `institution_staff_absences`.`id` NOT IN '.$mergedDataSql);
         $count = $countData[0]['COUNT'];
         $MAX_PER_LOOP = 10000;
         $iteration = ceil($count / $MAX_PER_LOOP);
