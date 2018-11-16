@@ -23,15 +23,16 @@ class POCOR4876 extends AbstractMigration
         $this->execute('INSERT INTO `z_4876_workflow_actions` SELECT * FROM `workflow_actions`');
         $this->execute('CREATE TABLE `z_4876_workflow_steps_params` LIKE `workflow_steps_params`');
         $this->execute('INSERT INTO `z_4876_workflow_steps_params` SELECT * FROM `workflow_steps_params`');
-
         $this->execute('CREATE TABLE `z_4876_labels` LIKE `labels`');
         $this->execute('INSERT INTO `z_4876_labels` SELECT * FROM `labels`');
+        $this->execute('CREATE TABLE `z_4876_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_4876_security_functions` SELECT * FROM `security_functions`');
         // end backup
 
         //Create table for staff release
         $InstitutionStaffReleases = $this->table('institution_staff_releases', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the staff transfer requests'
+            'comment' => 'This table contains all the staff release requests'
         ]);
         $InstitutionStaffReleases
             ->addColumn('status_id', 'integer', [
@@ -137,7 +138,7 @@ class POCOR4876 extends AbstractMigration
                 'limit' => 11,
                 'null' => true
             ])
-            ->addColumn('modified', 'date', [
+            ->addColumn('modified', 'datetime', [
                 'default' => null,
                 'null' => true
             ])
@@ -450,7 +451,7 @@ class POCOR4876 extends AbstractMigration
                 'visible' => '1',
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
-                'event_key' => NULL,
+                'event_key' => 'Workflow.onTransferStaff',
                 'workflow_step_id' => $outPendingReleaseStatusId,
                 'next_workflow_step_id' => $outReleaseStatusId,
                 'created_user_id' => '1',
@@ -858,6 +859,26 @@ class POCOR4876 extends AbstractMigration
             [
                 'id' => Text::uuid(),
                 'module' => 'StaffReleaseIn',
+                'field' => 'previous_start_date',
+                'module_name' => 'Institution -> Staff Release In',
+                'field_name' => 'Position Start Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffReleaseIn',
+                'field' => 'previous_end_date',
+                'module_name' => 'Institution -> Staff Release In',
+                'field_name' => 'Position End Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffReleaseIn',
                 'field' => 'new_staff_type_id',
                 'module_name' => 'Institution -> Staff Release In',
                 'field_name' => 'Staff Type',
@@ -870,7 +891,7 @@ class POCOR4876 extends AbstractMigration
                 'module' => 'StaffReleaseIn',
                 'field' => 'new_start_date',
                 'module_name' => 'Institution -> Staff Release In',
-                'field_name' => 'Start Date',
+                'field_name' => 'Position Start Date',
                 'visible' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -880,17 +901,7 @@ class POCOR4876 extends AbstractMigration
                 'module' => 'StaffReleaseIn',
                 'field' => 'new_end_date',
                 'module_name' => 'Institution -> Staff Release In',
-                'field_name' => 'End Date',
-                'visible' => '1',
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'id' => Text::uuid(),
-                'module' => 'StaffReleaseIn',
-                'field' => 'previous_end_date',
-                'module_name' => 'Institution -> Staff Release In',
-                'field_name' => 'End Date',
+                'field_name' => 'Position End Date',
                 'visible' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -909,7 +920,47 @@ class POCOR4876 extends AbstractMigration
         ];
         $this->insert('labels', $labels);
 
-        //update seucrity functions for staff release
+        // update the security_table order
+        $updateOrder = 'UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` >= 94';
+        $this->execute($updateOrder);
+
+        //insert into seucrity_functions for staff release
+        $seucrityFunctionsData = [
+            [
+                'id' => 1089,
+                'name' => 'Staff Release In',
+                'controller' => 'Institutions',
+                'module' => 'Institutions',
+                'category' => 'Staff',
+                'parent_id' => 8,
+                '_view' => 'StaffReleaseIn.index|StaffReleaseIn.view|StaffReleaseIn.approve',
+                '_edit' => 'StaffReleaseIn.edit',
+                '_delete' => 'StaffReleaseIn.remove',
+                'order' => 94,
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => 1090,
+                'name' => 'Staff Release Out',
+                'controller' => 'Institutions',
+                'module' => 'Institutions',
+                'category' => 'Staff',
+                'parent_id' => 8,
+                '_view' => 'StaffReleaseOut.index|StaffReleaseOut.view|StaffReleaseOut.approve',
+                '_edit' => 'StaffReleaseOut.edit',
+                '_add' => 'StaffReleaseOut.add',
+                '_delete' => 'StaffReleaseOut.remove',
+                'order' => 95,
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+
+        $this->insert('security_functions', $seucrityFunctionsData);
+
     }
 
     public function down()
@@ -929,7 +980,9 @@ class POCOR4876 extends AbstractMigration
         $this->table('z_4876_workflow_steps_params')->rename('workflow_steps_params');
         $this->execute('DROP TABLE `labels`');
         $this->table('z_4876_labels')->rename('labels');
-        $this->dropTable('institution_staff_releases');
+        $this->execute('DROP TABLE `institution_staff_releases`');
+        $this->execute('DROP TABLE `security_functions`');
+        $this->table('z_4876_security_functions')->rename('security_functions');
     }
 }
 

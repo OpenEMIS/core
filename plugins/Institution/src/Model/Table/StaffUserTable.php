@@ -222,20 +222,12 @@ class StaffUserTable extends ControllerActionTable
 
     private function addReleaseButton(Entity $entity, ArrayObject $extra)
     {
-        //check staffrelease options in config against curent school
-        //eg if Staff Release Type is Pre­Primary and Primary
-        //thus if school is no  preprimary or primary button wont appear
-        //eg check against config_items value against institution institution_id_type
-
-
-        // if($this->AccessControl->check([$this->controller->name, 'StaffReleaseOut', 'add'])) {
+        if($this->AccessControl->check([$this->controller->name, 'StaffReleaseOut', 'add'])) {
             $session = $this->request->session();
             $toolbarButtons = $extra['toolbarButtons'];
             $StaffTable = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
             $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
-
 
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
             $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
@@ -243,7 +235,15 @@ class StaffUserTable extends ControllerActionTable
 
             $enableStaffRelease = $ConfigStaffReleaseTable->checkIfTransferEnabled($institutionId);
 
-            if ($enableStaffRelease) {
+            $assignedStaffRecords = $StaffTable->find()
+                ->where([
+                    $StaffTable->aliasField('staff_id') => $userId,
+                    $StaffTable->aliasField('institution_id') => $institutionId,
+                    $StaffTable->aliasField('staff_status_id') => $assignedStatus
+                ])
+                ->count();
+
+            if ($enableStaffRelease && $assignedStaffRecords > 0) {
                 $url = [
                     'plugin' => $this->controller->plugin,
                     'controller' => $this->controller->name,
@@ -254,15 +254,14 @@ class StaffUserTable extends ControllerActionTable
 
                 $releaseButton = $toolbarButtons['back'];
                 $releaseButton['type'] = 'button';
-                //$releaseButton['label'] = '<i class="fa kd-release"></i>';
+                $releaseButton['label'] = '<i class="fa kd-release"></i>';
                 $releaseButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
                 $releaseButton['attr']['title'] = __('Release');
                 $releaseButton['url'] = $this->setQueryString($url, ['user_id' => $userId]);
 
                 $toolbarButtons['release'] = $releaseButton;
             }
-
-        // }
+        }
     }
 
     private function addTransferButton(Entity $entity, ArrayObject $extra)

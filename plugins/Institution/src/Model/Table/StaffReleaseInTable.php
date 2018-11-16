@@ -31,12 +31,47 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->add('new_start_date', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'previous_end_date', false],
+                'message' => __('Release to Position Start Date should not be earlier than Release From Position Start Date'),
+                'on' => function ($context) {
+                    return array_key_exists('previous_end_date', $context['data']) && !empty($context['data']['previous_end_date']);
+                }
+            ])
+            ->add('new_end_date', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'new_start_date', false],
+                'message' => __('Release to Position End Date should not be earlier than Release to Position Start Date'),
+                'on' => function ($context) {
+                    return array_key_exists('new_end_date', $context['data']) && !empty($context['data']['new_end_date']);
+                }
+            ])
+            ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id']);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['UpdateAssignee.onSetSchoolBasedConditions'] = 'onSetSchoolBasedConditions';
+        return $events;
+    }
+
+    public function onSetSchoolBasedConditions(Event $event, Entity $entity, $where)
+    {
+        $where[$this->aliasField('new_institution_id')] = $entity->id;
+        unset($where[$this->aliasField('institution_id')]);
+        return $where;
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         parent::beforeAction($event, $extra);
 
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
-        $this->field('previous_staff_type_id', ['type' => 'hidden']);
+        //$this->field('previous_staff_type_id', ['type' => 'hidden']);
         $this->field('previous_FTE', ['type' => 'hidden']);
         $this->field('transfer_type', ['type' => 'hidden']);
     }
@@ -50,22 +85,14 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         $this->field('previous_end_date', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
         $this->field('new_institution_id', ['type' => 'hidden']);
-        $this->field('new_institution_position_id', ['type' => 'hidden']);
         $this->field('new_staff_type_id', ['type' => 'hidden']);
         $this->field('new_FTE', ['type' => 'hidden']);
-        $this->field('new_start_date', ['type' => 'hidden']);
         $this->field('new_end_date', ['type' => 'hidden']);
 
-        //$this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
-        //$this->field('current_institution');
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
-        $this->field('current_institution', ['sort' => ['field' => 'PreviousInstitutions.code']]);
-        $this->field('start_date', ['sort' => ['field' => 'new_start_date']]);
-        $this->field('institution_position');
-        // $this->field('new_start_date', ['sort' => ['field' => 'new_start_date']]);
-        // $this->field('new_institution_position_id');
-
-        $this->setFieldOrder(['status_id', 'assignee_id', 'staff_id', 'current_institution', 'new_start_date', 'new_institution_position_id']);
+        $this->field('previous_institution_id', ['sort' => ['field' => 'PreviousInstitutions.code']]);
+        $this->field('new_start_date', ['sort' => ['field' => 'new_start_date']]);
+        $this->setFieldOrder(['status_id', 'assignee_id', 'staff_id', 'previous_institution_id', 'new_start_date', 'new_institution_position_id']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -86,7 +113,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         // search
         $search = $this->getSearchKey();
         if (!empty($search)) {
-            $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
+            $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]) ;
             $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
         }
     }
@@ -95,36 +122,20 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
     {
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Release From')]);
         $this->field('staff_id', ['entity' => $entity]);
-        $this->field('current_institution', ['entity' => $entity]);
+        $this->field('previous_institution_id', ['entity' => $entity]);
         $this->field('positions_held', ['entity' => $entity]);
-
-        // to populate current institution staff fields based on selected positions_held
-        $FTE = $staffType = $startDate = $startDateFormatted = '';
-        if (isset($this->request->data[$this->alias()]['positions_held']) && !empty($this->request->data[$this->alias()]['positions_held'])) {
-            $institutionStaffId = $this->request->data[$this->alias()]['positions_held'];
-            $staffEntity = $this->PreviousInstitutionStaff->get($institutionStaffId, ['contain' => ['StaffTypes']]);
-            if (!empty($staffEntity)) {
-                $FTE = $this->fteOptions["$staffEntity->previous_FTE"];
-                $staffType = $staffEntity->staff_type->name;
-                $startDate = $staffEntity->start_date->format('Y-m-d');
-                $startDateFormatted = $this->formatDate($staffEntity->start_date);
-            }
-        }
-
-        $this->field('FTE', ['type' => 'readonly', 'attr' => ['value' => $FTE]]);
-        $this->field('staff_type_id', ['type' => 'readonly', 'attr' => ['value' => $staffType]]);
-        $this->field('position_start_date');
-        $this->field('position_end_date');
-        $this->field('previous_start_date', ['type' => 'hidden']);
-        $this->field('previous_end_date', ['type' => 'hidden']);
+        $this->field('FTE', ['type' => 'readonly']);
+        $this->field('staff_type_id', ['type' => 'readonly']);
+        $this->field('previous_start_date');
+        $this->field('previous_end_date');
         $this->field('previous_FTE', ['type' => 'hidden']);
-        $this->field('previous_staff_type_id', ['type' => 'hidden']);
+        // $this->field('previous_staff_type_id', ['type' => 'hidden']);
 
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Release To')]);
         $this->field('new_institution_id', ['entity' => $entity]);
+        $this->field('new_institution_position_id');
         $this->field('new_staff_type_id');
         $this->field('new_FTE');
-        $this->field('new_institution_position_id');
         $this->field('new_start_date');
         $this->field('new_end_date');
 
@@ -152,53 +163,29 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         return $value;
     }
 
-    public function onGetCurrentInstitution(Event $event, Entity $entity)
-    {
-        $value = '';
-        if (!empty($entity->previous_institution)) {
-            $value = $entity->previous_institution->name;
-        }
-        return $value;
-    }
-
-    public function onGetStartDate(Event $event, Entity $entity)
-    {
-        $value = '';
-        if (!empty($entity->new_start_date)) {
-            $value = $entity->new_start_date;
-        }
-        return $value;
-    }
-
-    public function onGetInstitutionPositionId(Event $event, Entity $entity)
-    {
-        $value = '';
-        if (!empty($entity->previous_institution_staff_id)) {
-            $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id, ['contain' => ['Positions']]);
-            $value = $StaffEntity->position->name;
-        }
-        return $value;
-    }
-
     public function onGetFTE(Event $event, Entity $entity)
     {
         $value = '';
-        if (!empty($entity->previous_institution_staff_id)) {
-            $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id);
-            $value = $this->fteOptions["$StaffEntity->FTE"];
+        if (!empty($entity->previous_FTE)) {
+            $value = $this->fteOptions["$entity->previous_FTE"];
         }
         return $value;
     }
 
     public function onGetPositionsHeld(Event $event, Entity $entity)
     {
+        $value = $this->getPositionsHeld($entity);
+        return $value;
+    }
+
+    public function getPositionsHeld(Entity $entity)
+    {
         $value = '';
-        // pr($entity);die;
         if (!empty($entity->previous_institution_staff_id)) {
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
 
-            if ($entity->has('previous_institution_staff')) {
-                $institutionId = $entity->previous_institution_staff->institution_id;
+            if ($entity->has('previous_institution')) {
+                $institutionId = $entity->previous_institution->id;
             }
 
             if ($entity->has('user')) {
@@ -229,38 +216,73 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
                 $value = implode(",",$positions);
             }
         }
+
         return $value;
     }
 
-    public function onGetPositionStartDate(Event $event, Entity $entity)
+    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $value = '';
-        if ($entity->has('previous_start_date')) {
-            $value = $this->formatDate($entity->previous_start_date);
+        //$this->request->data[$this->alias()]['transfer_type'] = $entity->transfer_type;
+        if (!empty($entity->previous_institution_staff_id)) {
+            $this->request->data[$this->alias()]['positions_held'] = $entity->previous_institution_staff_id;
         }
-        return $value;
+        //to allow institution_position field to be populated on first load
+        $this->request->data[$this->alias()]['new_institution_id'] = $entity->new_institution_id;
+        $this->request->data[$this->alias()]['new_FTE'] = $entity->new_FTE;
+        $this->request->data[$this->alias()]['new_start_date'] = $entity->new_start_date;
+        $this->request->data[$this->alias()]['new_end_date'] = $entity->new_end_date;
     }
 
-
-    public function onGetPositionEndDate(Event $event, Entity $entity)
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $value = '';
-        if ($entity->has('previous_end_date')) {
-            $value = $this->formatDate($entity->previous_end_date);
-        }
-        return $value;
+        $query->contain(['Users', 'NewInstitutions', 'PreviousInstitutions']);
     }
 
-    // public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
-    // {
-    //     if (in_array($action, ['add', 'edit', 'approve'])) {
-    //         $entity = $attr['entity'];
-    //         $attr['type'] = 'readonly';
-    //         $attr['value'] = $entity->staff_id;
-    //         $attr['attr']['value'] = $entity->user->name_with_id;
-    //         return $attr;
-    //     }
-    // }
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('previous_information_header', ['type' => 'section', 'title' => __('Release From')]);
+        $this->field('staff_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('previous_institution_id', ['entity' => $entity]);
+
+        // to populate current institution staff fields based on selected positions_held
+        $FTE = $staffType = $startDate = $startDateFormatted = '';
+        $FTE = $this->fteOptions["$entity->previous_FTE"];
+        $positionsHeld = $this->getPositionsHeld($entity);
+        $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id, ['contain' => ['StaffTypes']]);
+        // $test = $StaffEntity->staff_type->name;
+        //pr($StaffEntity);die;
+
+        $this->field('positions_held', ['type' => 'readonly', 'attr' => ['value' => $positionsHeld]]);
+        $this->field('FTE', ['type' => 'readonly', 'attr' => ['value' => $FTE]]);
+
+        $this->field('previous_staff_type_id', ['type' => 'readonly', 'entity' => $entity]);
+        //$this->field('staff_type', ['type' => 'readonly', 'entity' => $entity]);
+
+        $this->field('previous_start_date', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('previous_end_date', ['type' => 'readonly', 'entity' => $entity]);
+
+        $this->field('new_information_header', ['type' => 'section', 'title' => __('Release To')]);
+        $this->field('new_institution_id', ['entity' => $entity]);
+
+        $this->field('new_start_date', ['entity' => $entity]);
+        $this->field('new_end_date', ['entity' => $entity]);
+        $this->field('new_FTE', ['type' => 'select']);
+        $this->field('new_institution_position_id', ['type' => 'select']);
+        $this->field('new_staff_type_id', ['type' => 'select']);
+        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
+        $this->field('comment');
+    }
+
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array($action, ['add', 'edit', 'approve'])) {
+            $entity = $attr['entity'];
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->staff_id;
+            $attr['attr']['value'] = $entity->user->name_with_id;
+            return $attr;
+        }
+    }
 
     public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, Request $request)
     {
@@ -276,60 +298,6 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
                 $attr['attr']['value'] = $entity->previous_institution->code_name;
             }
             $attr['type'] = 'readonly';
-            return $attr;
-        }
-    }
-
-    public function onUpdateFieldPositionsHeld(Event $event, array $attr, $action, Request $request)
-    {
-        if (in_array($action, ['add', 'edit', 'approve'])) {
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            $entity = $attr['entity'];
-
-            if ($this->action == 'add') {
-                // using institution_staff entity
-                $institutionId = $entity->institution_id;
-            } else {
-                // using institution_staff_transfer entity
-                $institutionId = $entity->previous_institution_id ;
-            }
-
-            $staffEntity = $this->PreviousInstitutionStaff->find()
-                ->select([
-                    $this->PreviousInstitutionStaff->aliasField('id'),
-                    'Positions.position_no',
-                    'Positions.staff_position_title_id'
-                ])
-                ->matching('Positions')
-                ->where([
-                    $this->PreviousInstitutionStaff->aliasField('institution_id') => $institutionId,
-                    $this->PreviousInstitutionStaff->aliasField('staff_id') => $entity->staff_id,
-                    $this->PreviousInstitutionStaff->aliasField('staff_status_id') => $StaffStatuses->getIdByCode('ASSIGNED')
-                ])
-                ->order([$this->PreviousInstitutionStaff->aliasField('created') => 'DESC'])
-                ->toArray();
-
-            $options = [];
-            foreach ($staffEntity as $staff) {
-                $options[$staff->id] = $staff->_matchingData['Positions']->name;
-            }
-
-            if (!isset($this->request->data[$this->alias()]['positions_held'])) {
-                reset($options);
-                $this->request->data[$this->alias()]['positions_held'] = key($options);
-            }
-
-            if ($this->action == 'add') {
-                $attr['type'] = 'select';
-                $attr['select'] = false;
-                $attr['options'] = $options;
-                $attr['onChangeReload'] = true;
-            } else {
-
-                $attr['type'] = 'readonly';
-                //$attr['value'] = implode(" ", $options);
-                $attr['attr']['value'] = implode(",", $options);
-            }
             return $attr;
         }
     }
@@ -383,60 +351,44 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        //$this->request->data[$this->alias()]['transfer_type'] = $entity->transfer_type;
+    public function onUpdateFieldPreviousStaffTypeId(Event $event, array $attr, $action, Request $request){
+        if (in_array($action, ['edit', 'approve'])) {
+            $entity = $attr['entity'];
 
-        // if (!empty($entity->previous_institution_staff_id)) {
-        //     $this->request->data[$this->alias()]['positions_held'] = $entity->previous_institution_staff_id;
-        // }
+            if (!empty($entity->previous_institution_staff_id)) {
+                $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id, ['contain' => ['StaffTypes']]);
+
+                $attr['attr']['value'] = $StaffEntity->staff_type->name;
+                //pr($StaffEntity);die;
+            }
+        }
+        return $attr;
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, Request $request)
     {
-        $query->contain(['Users', 'NewInstitutions', 'PreviousInstitutions']);
+        if (in_array($action, ['edit', 'approve'])) {
+            $entity = $attr['entity'];
+
+            if (!empty($entity->previous_end_date)) {
+                $attr['value'] = $entity->previous_end_date->format('Y-m-d');
+                $attr['attr']['value'] = $this->formatDate($entity->previous_end_date);
+            }
+            return $attr;
+        }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function onUpdateFieldPreviousStartDate(Event $event, array $attr, $action, Request $request)
     {
-        $this->field('previous_information_header', ['type' => 'section', 'title' => __('Release From')]);
-        $this->field('staff_id', ['entity' => $entity]);
-        $this->field('previous_institution_id', ['entity' => $entity]);
-        $this->field('positions_held', ['type' => 'readonly', 'entity' => $entity]);
+        if (in_array($action, ['edit', 'approve'])) {
+            $entity = $attr['entity'];
 
-        // to populate current institution staff fields based on selected positions_held
-        $FTE = $staffType = $startDate = $startDateFormatted = '';
-        // if (isset($this->request->data[$this->alias()]['positions_held']) && !empty($this->request->data[$this->alias()]['positions_held'])) {
-        //     $institutionStaffId = $this->request->data[$this->alias()]['positions_held'];
-        //     $staffEntity = $this->PreviousInstitutionStaff->get($institutionStaffId, ['contain' => ['StaffTypes']]);
-        //     if (!empty($staffEntity)) {
-        //         $FTE = $this->fteOptions["$staffEntity->previous_FTE"];
-        //         $staffType = $staffEntity->staff_type->name;
-        //         $startDate = $staffEntity->start_date->format('Y-m-d');
-        //         $startDateFormatted = $this->formatDate($staffEntity->start_date);
-        //     }
-        // }
-
-        $this->field('FTE', ['type' => 'readonly', 'attr' => ['value' => $FTE]]);
-        $this->field('staff_type_id', ['type' => 'readonly', 'attr' => ['value' => $staffType]]);
-
-        $this->field('position_start_date');
-        $this->field('position_end_date');
-
-        $this->field('previous_start_date', ['type' => 'hidden']);
-        $this->field('previous_end_date', ['type' => 'hidden']);
-        $this->field('previous_FTE', ['type' => 'hidden']);
-        $this->field('previous_staff_type_id', ['type' => 'hidden']);
-
-        $this->field('new_information_header', ['type' => 'section', 'title' => __('Release To')]);
-        $this->field('new_institution_id', ['entity' => $entity]);
-        $this->field('new_start_date', ['entity' => $entity]);
-        $this->field('new_end_date', ['entity' => $entity]);
-
-        $this->field('new_institution_position_id', ['entity' => $entity]);
-
-        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
-        $this->field('comment');
+            if (!empty($entity->previous_start_date)) {
+                $attr['value'] = $entity->previous_start_date->format('Y-m-d');
+                $attr['attr']['value'] = $this->formatDate($entity->previous_start_date);
+            }
+            return $attr;
+        }
     }
 
     public function onUpdateFieldNewInstitutionPositionId(Event $event, array $attr, $action, Request $request)
