@@ -5,12 +5,14 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
+use Cake\ORM\TableRegistry;
 
 class ClassAttendanceRecordsTable extends AppTable
 {
     const NOT_VALID = -1;
     const NOT_MARKED = 0;
     const MARKED = 1;
+    const PARTIAL_MARKED = 2;
     const DAY_COLUMN_PREFIX = 'day_';
 
     public function initialize(array $config)
@@ -19,6 +21,56 @@ class ClassAttendanceRecordsTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.StudentAttendances.afterSaveCommit'] = 'markedRecordAfterSave';
+        return $events;
+    }
+
+    public function markedRecordAfterSave(Event $event, Entity $entity)
+    {
+        $institutionClassId = $entity->institution_class_id;
+        $institutionId = $entity->institution_id;
+        $academicPeriodId = $entity->academic_period_id;
+        $date = $entity->date;
+
+        $year = $date->format('Y');
+        $month = $date->format('n');
+        $day = $date->format('j');
+
+        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+        $totalMarkedCount = $StudentAttendanceMarkTypes
+            ->find()
+            ->where([
+                $StudentAttendanceMarkTypes->aliasField('institution_id') => $institutionId,
+                $StudentAttendanceMarkTypes->aliasField('academic_period_id') => $academicPeriodId,
+                $StudentAttendanceMarkTypes->aliasField('institution_class_id') => $institutionClassId,
+                $StudentAttendanceMarkTypes->aliasField('date') => $date 
+            ])
+            ->count();
+
+        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($institutionClassId, $academicPeriodId);
+
+        if ($totalMarkedCount >= $attendancePerDay) {
+            $markedType = self::MARKED;
+        } else {
+            $markedType = self::PARTIAL_MARKED;
+        }
+
+        $entityData = [
+            'institution_class_id' => $institutionClassId,
+            'academic_period_id' => $academicPeriodId,
+            'year' => $year,
+            'month' => $month,
+            self::DAY_COLUMN_PREFIX . $day => $markedType
+        ];
+
+        $entity = $this->newEntity($entityData);
+        $this->save($entity);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
