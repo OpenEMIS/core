@@ -21,8 +21,8 @@ class LeaveTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
-
         $this->addBehavior('ControllerAction.FileUpload', [
             // 'name' => 'file_name',
             // 'content' => 'file_content',

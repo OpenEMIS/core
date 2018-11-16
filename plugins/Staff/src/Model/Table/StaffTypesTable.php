@@ -9,8 +9,7 @@ class StaffTypesTable extends ControllerActionTable
     {
         $this->table('staff_types');
         parent::initialize($config);
-
-        $this->hasMany('StaffAttendances', ['className' => 'Institution.StaffAttendances']);
+        
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles']);
         $this->hasMany('Staff', ['className' => 'Institution.Staff']);
         $this->hasMany('StaffTransferIn', ['className' => 'Institution.StaffTransferIn', 'foreignKey' => 'new_staff_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
