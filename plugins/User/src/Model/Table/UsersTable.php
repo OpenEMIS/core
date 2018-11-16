@@ -290,6 +290,7 @@ class UsersTable extends AppTable
                 $this->aliasField('last_name'),
                 $this->aliasField('preferred_name')
             ])
+            ->contain('SpecialNeeds')
             ->group([$this->aliasField('id')])
             ->order([$this->aliasField('first_name', 'last_name')]) // POCOR-2547 sort list of staff and student by name
             ->formatResults(function ($results) use ($institutionClassId, $institutionId) {
@@ -307,7 +308,8 @@ class UsersTable extends AppTable
                         'gender_id' => $result->gender_id,
                         'gender_name' => __($result->gender_name),
                         'institution_id' => $institutionId,
-                        'institution_class_id' => $institutionClassId
+                        'institution_class_id' => $institutionClassId,
+                        'has_special_needs' => $result->has_special_needs
                     ];
                 }
                 return $arrReturn;

@@ -434,16 +434,21 @@ class SecurityGroupUsersTable extends AppTable {
 
     public function findEmailList(Query $query, array $options)
     {
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $securityGroupId = $Institutions->get($options['institutionId'])->security_group_id;
+        $conditions = [
+            $this->aliasField('security_role_id') => $options['securityRoleId']
+        ];
+
+        if (array_key_exists('institutionId', $options)) {
+            $institutionId = $options['institutionId'];
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $securityGroupId = $Institutions->get($institutionId)->security_group_id;
+            $conditions[$this->aliasField('security_group_id')] = $securityGroupId;
+        }
 
         return $query
             ->matching('Users', function ($q) {
                 return $q->where(['email' . ' IS NOT NULL']);
             })
-            ->where([
-                'security_group_id' => $securityGroupId,
-                'security_role_id' => $options['securityRoleId']
-            ]);
+            ->where($conditions);
     }
 }

@@ -1,3 +1,31 @@
+### [3.41.0] - 2018-11-14
+- Implemented a feature to pre-populate Next Class
+- Re-developed Outcomes Import template
+- Re-developed Staff attendance feature
+- Implemented auto-assign to Scholarship Applicant at Open Status
+- Bug fix on institutions > Infrastructures
+- Bug fix on Institutions > Students > Promotions
+- Bug fix on Institutions > Students > Academic > Programmes
+
+### [3.40.0] - 2018-11-02
+- Redeveloped Student Attendance feature
+- Implemented single day attendance record for Student attendance
+- Bug fix on Search bar in Institution > Attendance > Students page
+
+### [3.38.0] - 2018-10-30
+- Developed feature to allow user to set Longitude and Latitude to mandatory in Administration > System Setup > System Config
+- Developed export feature for Institution > Performance > Outcome
+- Implemented OpenEMIS ID and User's default identity in Reports > Staff/Students > Contacts Report
+- Bug fix on report card generation process
+
+### [3.37.0] - 2018-10-19
+- Developed Demographics feature in Users > General > Demographics tab
+- Developed Scholarship Award Disbursement Alert in Administration > Communications > Alert Rules
+- Implmented ability to bulk update Student Pending Admission status in Institutions > Students > Pending Admission filter
+- Implemented ability to access Guardian's information from Institutions > Students > Guardian
+- Implemented comments field for Reassign action in all workflow-enabled feature
+- Implemented Inclusive Education Visits feature in Institutions > Students > Visits
+
 ### [3.36.0] - 2018-09-28
 - Developed Inclusive Education (Special Needs) feature in Profiles/Institutions/Directory > Special Needs
 - Implemented a delete button to delete all Survey data in Institution > Survey
