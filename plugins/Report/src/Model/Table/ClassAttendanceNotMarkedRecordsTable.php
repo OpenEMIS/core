@@ -12,6 +12,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Institution\Model\Table\ClassAttendanceRecordsTable as MarkedType;
 
 class ClassAttendanceNotMarkedRecordsTable extends AppTable
 {
@@ -192,15 +193,21 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                             if (isset($schoolClosedDays[$institutionId]) &&
                                 isset($schoolClosedDays[$institutionId][$dayFormat]) &&
                                 $schoolClosedDays[$institutionId][$dayFormat] == 0) {
-                                $status = __('School Closed');
-                            } elseif (isset($attendanceRecord) && $attendanceRecord[$dayColumn] == 1) {
-                                $status = __('Marked');
-                                $mark++;
-                            } else {
-                                $status = __('Not Marked');
-                                $unmark++;
-                            }      
+                                    $status = __('School Closed');
+                            } elseif (isset($attendanceRecord)) {
+                                if ($attendanceRecord[$dayColumn] == MarkedType::MARKED) {
+                                    $status = __('Marked');
+                                    $mark++;
+                                } elseif ($attendanceRecord[$dayColumn] == MarkedType::PARTIAL_MARKED) {
+                                    $status = __('Partial Marked');
+                                    $unmark++;
+                                } else { // MarkedType::NOT_MARKED
+                                    $status = __('Not Marked');
+                                    $unmark++;
+                                }
+                            }    
                         }
+
                         $row->total_mark = $mark;
                         $row->total_unmark = $unmark;
                         $row->{$dayColumn} = $status;
