@@ -37,14 +37,14 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         return $validator
             ->add('new_start_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'previous_end_date', false],
-                'message' => __('Release to Position Start Date should not be earlier than Release From Position Start Date'),
+                // 'message' => __('Release to Position Start Date should not be earlier than Release From Position Start Date'),
                 'on' => function ($context) {
                     return array_key_exists('previous_end_date', $context['data']) && !empty($context['data']['previous_end_date']);
                 }
             ])
             ->add('new_end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'new_start_date', false],
-                'message' => __('Release to Position End Date should not be earlier than Release to Position Start Date'),
+                // 'message' => __('Release to Position End Date should not be earlier Release to Position Start Date'),
                 'on' => function ($context) {
                     return array_key_exists('new_end_date', $context['data']) && !empty($context['data']['new_end_date']);
                 }
@@ -78,7 +78,6 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('previous_institution_id', ['type' => 'hidden']);
         $this->field('previous_staff_type_id', ['type' => 'hidden']);
         $this->field('previous_FTE', ['type' => 'hidden']);
         $this->field('previous_start_date', ['type' => 'hidden']);
@@ -129,7 +128,6 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         $this->field('previous_start_date');
         $this->field('previous_end_date');
         $this->field('previous_FTE', ['type' => 'hidden']);
-        // $this->field('previous_staff_type_id', ['type' => 'hidden']);
 
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Release To')]);
         $this->field('new_institution_id', ['entity' => $entity]);
@@ -138,7 +136,6 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         $this->field('new_FTE');
         $this->field('new_start_date');
         $this->field('new_end_date');
-
 
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
         $this->field('comment');
@@ -153,16 +150,6 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         return $value;
     }
 
-    public function onGetStaffTypeId(Event $event, Entity $entity)
-    {
-        $value = '';
-        if (!empty($entity->previous_institution_staff_id)) {
-            $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id, ['contain' => ['StaffTypes']]);
-            $value = $StaffEntity->staff_type->name;
-        }
-        return $value;
-    }
-
     public function onGetFTE(Event $event, Entity $entity)
     {
         $value = '';
@@ -172,57 +159,8 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         return $value;
     }
 
-    public function onGetPositionsHeld(Event $event, Entity $entity)
-    {
-        $value = $this->getPositionsHeld($entity);
-        return $value;
-    }
-
-    public function getPositionsHeld(Entity $entity)
-    {
-        $value = '';
-        if (!empty($entity->previous_institution_staff_id)) {
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-
-            if ($entity->has('previous_institution')) {
-                $institutionId = $entity->previous_institution->id;
-            }
-
-            if ($entity->has('user')) {
-                $staffId = $entity->user->id;
-            }
-
-            $staffEntity = $this->PreviousInstitutionStaff->find()
-                ->select([
-                    $this->PreviousInstitutionStaff->aliasField('id'),
-                    'Positions.position_no',
-                    'Positions.staff_position_title_id'
-                ])
-                ->matching('Positions')
-                ->where([
-                    $this->PreviousInstitutionStaff->aliasField('institution_id') => $institutionId,
-                    $this->PreviousInstitutionStaff->aliasField('staff_id') => $staffId,
-                    $this->PreviousInstitutionStaff->aliasField('staff_status_id') => $StaffStatuses->getIdByCode('ASSIGNED')
-                ])
-                ->order([$this->PreviousInstitutionStaff->aliasField('created') => 'DESC'])
-                ->toArray();
-
-            $positions = [];
-            foreach ($staffEntity as $staff) {
-                $positions[$staff->id] = $staff->_matchingData['Positions']->name;
-            }
-
-            if (!empty($positions)) {
-                $value = implode(",",$positions);
-            }
-        }
-
-        return $value;
-    }
-
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        //$this->request->data[$this->alias()]['transfer_type'] = $entity->transfer_type;
         if (!empty($entity->previous_institution_staff_id)) {
             $this->request->data[$this->alias()]['positions_held'] = $entity->previous_institution_staff_id;
         }
@@ -249,15 +187,10 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         $FTE = $this->fteOptions["$entity->previous_FTE"];
         $positionsHeld = $this->getPositionsHeld($entity);
         $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id, ['contain' => ['StaffTypes']]);
-        // $test = $StaffEntity->staff_type->name;
-        //pr($StaffEntity);die;
 
         $this->field('positions_held', ['type' => 'readonly', 'attr' => ['value' => $positionsHeld]]);
         $this->field('FTE', ['type' => 'readonly', 'attr' => ['value' => $FTE]]);
-
         $this->field('previous_staff_type_id', ['type' => 'readonly', 'entity' => $entity]);
-        //$this->field('staff_type', ['type' => 'readonly', 'entity' => $entity]);
-
         $this->field('previous_start_date', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('previous_end_date', ['type' => 'readonly', 'entity' => $entity]);
 
@@ -288,15 +221,8 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
-            if ($action == 'add') {
-                // using institution_staff entity
-                $attr['value'] = $entity->institution_id;
-                $attr['attr']['value'] = $entity->institution->code_name;
-            } else {
-                // using institution_staff_transfer entity
-                $attr['value'] = $entity->previous_institution_id;
-                $attr['attr']['value'] = $entity->previous_institution->code_name;
-            }
+            $attr['value'] = $entity->previous_institution_id;
+            $attr['attr']['value'] = $entity->previous_institution->code_name;
             $attr['type'] = 'readonly';
             return $attr;
         }
@@ -306,60 +232,22 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->new_institution_id;
+            $attr['attr']['value'] = $entity->new_institution->code_name;
 
-            if ($action == 'add') {
-                // using institution_staff entity
-                $conditions = [];
-                $conditions[$this->NewInstitutions->aliasField('id <>')] = $entity->institution_id;
-
-                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-                $Institutions = TableRegistry::get('Institution.Institutions');
-
-                //restrict staff release between same type
-                //TBC !!!!
-                $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_release_between_same_type');
-                if ($restrictStaffTransferByType) {
-                    if ($entity->has('institution_id')) {
-                        $institutionId = $entity->institution_id;
-
-                        $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
-
-                        $conditions['institution_type_id'] = $institutionTypeId;
-                    }
-                }
-                // end: restrict staff release between same type
-
-                $options = $this->NewInstitutions->find('list', [
-                        'keyField' => 'id',
-                        'valueField' => 'code_name'
-                    ])
-                    ->where($conditions)
-                    ->order($this->NewInstitutions->aliasField('code'))
-                    ->toArray();
-
-                $attr['type'] = 'chosenSelect';
-                $attr['attr']['multiple'] = false;
-                $attr['select'] = true;
-                $attr['options'] = $options;
-            } else {
-                // using institution_staff_transfer entity
-                $attr['type'] = 'readonly';
-                $attr['value'] = $entity->new_institution_id;
-                $attr['attr']['value'] = $entity->new_institution->code_name;
-            }
             return $attr;
         }
     }
 
-    public function onUpdateFieldPreviousStaffTypeId(Event $event, array $attr, $action, Request $request){
+    public function onUpdateFieldPreviousStaffTypeId(Event $event, array $attr, $action, Request $request)
+    {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
 
             if (!empty($entity->previous_institution_staff_id)) {
                 $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id, ['contain' => ['StaffTypes']]);
-
                 $attr['attr']['value'] = $StaffEntity->staff_type->name;
-                //pr($StaffEntity);die;
             }
         }
         return $attr;

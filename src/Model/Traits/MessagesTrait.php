@@ -1307,6 +1307,19 @@ trait MessagesTrait
                     'ruleCompareTimeReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
+            'StaffReleaseIn' => [
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'Start Date should not be earlier than Current Institution End Date'
+                ],
+                'new_end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ]
+            ],
+            'StaffReleaseOut' => [
+                'previous_end_date' => [
+                    'ruleCompareDateReverse' => 'Position End Date should not be earlier than Position Start Date'
+                ]
+            ]
         ],
         'User' => [
             'Users' => [
@@ -2180,7 +2193,7 @@ trait MessagesTrait
                'position_grades' => [
                     'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
                 ]
-            ] 
+            ]
         ],
         'Configuration' => [
             'ConfigProductLists' => [
