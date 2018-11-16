@@ -6,6 +6,7 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Attendance\Model\Table\StudentAttendanceTypesTable as AttendanceTypes;
+use Cake\Log\Log;
 
 class StudentAttendanceMarkTypesTable extends AppTable
 {
@@ -49,6 +50,35 @@ class StudentAttendanceMarkTypesTable extends AppTable
     public function isDefaultType($attendancePerDay, $attendanceTypeId)
     {
         return ($attendancePerDay == self::DEFAULT_ATTENDANCE_PER_DAY && $attendanceTypeId == AttendanceTypes::DAY);
+    }
+
+    public function getAttendancePerDayByClass($classId, $academicPeriodId)
+    {
+        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $gradeId = $InstitutionClassGrades
+            ->find()
+            ->where([$InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+            ->extract('education_grade_id')
+            ->first();
+
+        if (!is_null($gradeId)) {
+            $attendancePerDay = $this
+                ->find()
+                ->where([
+                    $this->aliasField('education_grade_id') => $gradeId,
+                    $this->aliasField('academic_period_id') => $academicPeriodId
+                ])
+                ->extract('attendance_per_day')
+                ->first();
+
+            if (!is_null($attendancePerDay)) {
+                return $attendancePerDay;
+            } else {
+                return self::DEFAULT_ATTENDANCE_PER_DAY;
+            }
+        } else {
+            Log::write('error', 'Error extracting education_grade_id for class_id ' . $classId);
+        }
     }
 
     public function getAttendancePerDayOptionsByClass($classId, $academicPeriodId)
