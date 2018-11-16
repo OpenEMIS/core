@@ -36,8 +36,7 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
         $validator = parent::validationDefault($validator);
         return $validator->notEmpty(['positions_held','previous_end_date','new_institution_id', 'workflow_assignee_id'])
             ->add('previous_end_date', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'position_start_date', false],
-                'message' => 'The date cannot be before start date'
+                'rule' => ['compareDateReverse', 'position_start_date', false]
             ]);
     }
 
@@ -224,11 +223,12 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Release From')]);
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Release To')]);
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
-        $this->field('institution_position_id');
+        $this->field('positions_held', ['entity' => $entity]);
         $this->field('FTE');
         $this->field('staff_type_id');
         $this->field('position_start_date');
 
+        $this->field('institution_position_id', ['type' => 'hidden']);
         $this->field('previous_start_date', ['type' => 'hidden']);
         $this->field('previous_FTE', ['type' => 'hidden']);
         $this->field('previous_staff_type_id', ['type' => 'hidden']);
@@ -248,24 +248,15 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
         ]);
     }
 
-    public function onGetStaffId(Event $event, Entity $entity)
-    {
-        $value = '';
-        if ($entity->has('user')) {
-            $value = $entity->user->name_with_id;
-        }
-        return $value;
-    }
-
-    public function onGetStaffTypeId(Event $event, Entity $entity)
-    {
-        $value = '';
-        if (!empty($entity->previous_institution_staff_id)) {
-            $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id, ['contain' => ['StaffTypes']]);
-            $value = $StaffEntity->staff_type->name;
-        }
-        return $value;
-    }
+    // public function onGetStaffTypeId(Event $event, Entity $entity)
+    // {
+    //     $value = '';
+    //     if (!empty($entity->previous_institution_staff_id)) {
+    //         $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id, ['contain' => ['StaffTypes']]);
+    //         $value = $StaffEntity->staff_type->name;
+    //     }
+    //     return $value;
+    // }
 
     public function onGetInstitutionPositionId(Event $event, Entity $entity)
     {
@@ -425,8 +416,6 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->data[$this->alias()]['transfer_type'] = $entity->transfer_type;
-
         if (!empty($entity->previous_institution_staff_id)) {
             $this->request->data[$this->alias()]['positions_held'] = $entity->previous_institution_staff_id;
         }
@@ -447,6 +436,86 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
         // redirect to view page of record after save
         $extra['redirect'][0] = 'view';
         $extra['redirect'][1] = $this->paramsEncode(['id' => $entity->id]);
+    }
+
+    public function findWorkbench(Query $query, array $options)
+    {
+        pr('heree');die;
+
+        $controller = $options['_controller'];
+        $session = $controller->request->session();
+
+        $userId = $session->read('Auth.User.id');
+        $Statuses = $this->Statuses;
+        $StepsParams = $this->Statuses->WorkflowStepsParams;
+        $doneStatus = self::DONE;
+        $outgoingInstitution = self::OUTGOING;
+
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('status_id'),
+                $this->aliasField('new_institution_id'),
+                $this->aliasField('previous_institution_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created'),
+                $this->Statuses->aliasField('name'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name'),
+                $this->NewInstitutions->aliasField('code'),
+                $this->NewInstitutions->aliasField('name'),
+                $this->PreviousInstitutions->aliasField('code'),
+                $this->PreviousInstitutions->aliasField('name'),
+                $this->CreatedUser->aliasField('openemis_no'),
+                $this->CreatedUser->aliasField('first_name'),
+                $this->CreatedUser->aliasField('middle_name'),
+                $this->CreatedUser->aliasField('third_name'),
+                $this->CreatedUser->aliasField('last_name'),
+                $this->CreatedUser->aliasField('preferred_name')
+            ])
+            ->contain([$this->Users->alias(), $this->NewInstitutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias()])
+            ->matching($Statuses->alias().'.'.$StepsParams->alias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $outgoingInstitution) {
+                return $q->where([
+                    $Statuses->aliasField('category <> ') => $doneStatus,
+                    $StepsParams->aliasField('name') => 'institution_owner',
+                    $StepsParams->aliasField('value') => $outgoingInstitution
+                ]);
+            })
+            ->where([$this->aliasField('assignee_id') => $userId])
+            ->order([$this->aliasField('created') => 'DESC'])
+            ->formatResults(function (ResultSetInterface $results) {
+                return $results->map(function ($row) {
+                    $url = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffReleaseOut',
+                        'view',
+                        $this->paramsEncode(['id' => $row->id]),
+                        'institution_id' => $row->previous_institution_id
+                    ];
+
+                    if (is_null($row->modified)) {
+                        $receivedDate = $this->formatDate($row->created);
+                    } else {
+                        $receivedDate = $this->formatDate($row->modified);
+                    }
+
+                    $row['url'] = $url;
+                    $row['status'] = __($row->_matchingData['Statuses']->name);
+                    $row['request_title'] = sprintf(__('%s to %s'), $row->user->name_with_id, $row->new_institution->code_name);
+                    $row['institution'] = $row->previous_institution->code_name;
+                    $row['received_date'] = $receivedDate;
+                    $row['requester'] = $row->created_user->name_with_id;
+
+                    return $row;
+                });
+            });
+
+        return $query;
     }
 
 }

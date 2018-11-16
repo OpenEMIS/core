@@ -21,11 +21,6 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     const INCOMING = 1;
     const OUTGOING = 2;
 
-    // Transfer Type
-    const FULL_TRANSFER = 1;
-    const PARTIAL_TRANSFER = 2;
-    const NO_CHANGE = 3;
-
     // fte options
     public $fteOptions = [];
 
@@ -57,10 +52,10 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
 
     private $workflowEvents = [
         [
-            'value' => 'Workflow.onTransferStaff',
+            'value' => 'Workflow.onReleaseStaff',
             'text' => 'Release Staff',
             'description' => 'Performing this action will release the staff to the selected institution.',
-            'method' => 'onTransferStaff',
+            'method' => 'onReleaseStaff',
             'unique' => true
         ]
     ];
@@ -90,7 +85,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         }
     }
 
-    public function onTransferStaff(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onReleaseStaff(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $StaffTable = TableRegistry::get('Institution.Staff');
         $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
@@ -204,16 +199,6 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         }
     }
 
-    public function onGetNewFTE(Event $event, Entity $entity)
-    {
-        $value = '';
-        if ($entity->has('new_FTE')) {
-            $fte = $entity->new_FTE;
-            $value = $this->fteOptions["$fte"];
-        }
-        return $value;
-    }
-
     public function onGetPreviousFTE(Event $event, Entity $entity)
     {
         $value = '';
@@ -233,6 +218,16 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $value;
     }
 
+    public function onGetNewFTE(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('new_FTE')) {
+            $fte = $entity->new_FTE;
+            $value = $this->fteOptions["$fte"];
+        }
+        return $value;
+    }
+
     public function onGetNewInstitutionId(Event $event, Entity $entity)
     {
         $value = '';
@@ -241,6 +236,74 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         }
         return $value;
     }
+
+    public function onGetStaffId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->name_with_id;
+        }
+        return $value;
+    }
+
+    public function onGetStaffTypeId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if (!empty($entity->previous_institution_staff_id)) {
+            $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id, ['contain' => ['StaffTypes']]);
+            $value = $StaffEntity->staff_type->name;
+        }
+        return $value;
+    }
+
+    public function onGetPositionsHeld(Event $event, Entity $entity)
+    {
+        $value = $this->getPositionsHeld($entity);
+        return $value;
+    }
+
+    public function getPositionsHeld(Entity $entity)
+    {
+        $value = '';
+        if (!empty($entity->previous_institution_staff_id)) {
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+
+            if ($entity->has('previous_institution')) {
+                $institutionId = $entity->previous_institution->id;
+            }
+
+            if ($entity->has('user')) {
+                $staffId = $entity->user->id;
+            }
+
+            $staffEntity = $this->PreviousInstitutionStaff->find()
+                ->select([
+                    $this->PreviousInstitutionStaff->aliasField('id'),
+                    'Positions.position_no',
+                    'Positions.staff_position_title_id'
+                ])
+                ->matching('Positions')
+                ->where([
+                    $this->PreviousInstitutionStaff->aliasField('institution_id') => $institutionId,
+                    $this->PreviousInstitutionStaff->aliasField('staff_id') => $staffId,
+                    $this->PreviousInstitutionStaff->aliasField('staff_status_id') => $StaffStatuses->getIdByCode('ASSIGNED')
+                ])
+                ->order([$this->PreviousInstitutionStaff->aliasField('created') => 'DESC'])
+                ->toArray();
+
+            $positions = [];
+            foreach ($staffEntity as $staff) {
+                $positions[$staff->id] = $staff->_matchingData['Positions']->name;
+            }
+
+            if (!empty($positions)) {
+                $value = implode(",",$positions);
+            }
+        }
+
+        return $value;
+    }
+
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
