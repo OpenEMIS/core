@@ -28,7 +28,6 @@ class ImportCompetencyResultsTable extends AppTable
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $this->CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
         $this->CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
-        $this->CompetencyItems = TableRegistry::get('Competency.CompetencyItems');
     }
 
     public function implementedEvents()

@@ -98,9 +98,9 @@ class ImportBehavior extends Behavior
         'ods'   => ['application/vnd.oasis.opendocument.spreadsheet'],
         'zip'   => ['application/zip']
     ];
-    protected $institutionId = false;
-    protected $recordHeader = '';
-    protected $customText = '';
+    private $institutionId = false;
+    private $recordHeader = '';
+    private $customText = '';
 
     public function initialize(array $config)
     {
@@ -138,7 +138,7 @@ class ImportBehavior extends Behavior
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
     }
 
-    protected function isCustomText()
+    private function isCustomText()
     {
         $this->customText = $this->config('custom_text');
         if (!empty($this->customText) && strlen($this->customText) > 0) {
@@ -826,7 +826,7 @@ class ImportBehavior extends Behavior
         return $array;
     }
 
-    protected function _generateDownloadableFile($data, $type, $header, $systemDateFormat)
+    private function _generateDownloadableFile($data, $type, $header, $systemDateFormat)
     {
         if (!empty($data)) {
             $downloadFolder = $this->prepareDownload();
@@ -927,7 +927,7 @@ class ImportBehavior extends Behavior
      * @param  integer      $row            Row number
      * @return boolean                      the result to be return as true or false
      */
-    protected function isCorrectTemplate($header, $sheet, $totalColumns, $row)
+    public function isCorrectTemplate($header, $sheet, $totalColumns, $row)
     {
         $cellsValue = [];
         for ($col=0; $col < $totalColumns; $col++) {
