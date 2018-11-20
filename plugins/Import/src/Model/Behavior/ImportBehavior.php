@@ -89,7 +89,7 @@ class ImportBehavior extends Behavior
         'custom_text' => ''
     ];
     protected $rootFolder = 'import';
-    private $_fileTypesMap = [
+    protected $_fileTypesMap = [
         // 'csv'    => 'text/plain',
         // 'csv'    => 'text/csv',
         'xls'   => ['application/vnd.ms-excel', 'application/vnd.ms-office'],
@@ -98,9 +98,9 @@ class ImportBehavior extends Behavior
         'ods'   => ['application/vnd.oasis.opendocument.spreadsheet'],
         'zip'   => ['application/zip']
     ];
-    private $institutionId = false;
-    private $recordHeader = '';
-    private $customText = '';
+    protected $institutionId = false;
+    protected $recordHeader = '';
+    protected $customText = '';
 
     public function initialize(array $config)
     {
@@ -138,7 +138,7 @@ class ImportBehavior extends Behavior
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
     }
 
-    private function isCustomText()
+    protected function isCustomText()
     {
         $this->customText = $this->config('custom_text');
         if (!empty($this->customText) && strlen($this->customText) > 0) {
@@ -812,7 +812,7 @@ class ImportBehavior extends Behavior
      * @param  string $systemDateFormat System Date Format which varies across deployed environments.
      * @return Array                    The columns value that will be written to a downloadable excel file.
      */
-    private function _getReorderedEntityArray(Entity $entity, array $columns, ArrayObject $originalRow, $systemDateFormat)
+    protected function _getReorderedEntityArray(Entity $entity, array $columns, ArrayObject $originalRow, $systemDateFormat)
     {
         $array = [];
         foreach ($columns as $col => $property) {
@@ -826,7 +826,7 @@ class ImportBehavior extends Behavior
         return $array;
     }
 
-    private function _generateDownloadableFile($data, $type, $header, $systemDateFormat)
+    protected function _generateDownloadableFile($data, $type, $header, $systemDateFormat)
     {
         if (!empty($data)) {
             $downloadFolder = $this->prepareDownload();
@@ -927,7 +927,7 @@ class ImportBehavior extends Behavior
      * @param  integer      $row            Row number
      * @return boolean                      the result to be return as true or false
      */
-    public function isCorrectTemplate($header, $sheet, $totalColumns, $row)
+    protected function isCorrectTemplate($header, $sheet, $totalColumns, $row)
     {
         $cellsValue = [];
         for ($col=0; $col < $totalColumns; $col++) {
@@ -1453,7 +1453,7 @@ class ImportBehavior extends Behavior
         return $period->toArray();
     }
 
-    private function eventKey($key)
+    protected function eventKey($key)
     {
         return 'Model.import.' . $key;
     }
