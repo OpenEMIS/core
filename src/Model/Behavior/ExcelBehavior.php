@@ -10,6 +10,7 @@ use Cake\I18n\Time;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\EventTrait;
 use Cake\I18n\I18n;
+use Cake\Utility\Hash;
 use XLSXWriter;
 
 // Events
@@ -210,12 +211,12 @@ class ExcelBehavior extends Behavior
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
             }
-            
+
             $this->contain($query, $fields, $table);
             // To auto include the default fields. Using select will turn off autoFields by default
             // This is set so that the containable data will still be in the array.
             $autoFields = $this->config('autoFields');
-            
+
             if (!isset($autoFields) || $autoFields == true) {
                 $query->autoFields(true);
             }
@@ -246,6 +247,50 @@ class ExcelBehavior extends Behavior
                 $headerRow = [];
                 $headerStyle = [];
                 $headerFormat = [];
+
+                // Handling of Group field for merging cells for first 2 row
+                $groupList = Hash::extract($fields, '{n}.group');
+                $hasGroupRow = (!empty($groupList));
+
+                if ($hasGroupRow) {
+                    $subjectsHeaderRow = [];
+                    $subjectsColWidth = [];
+                    $groupStartingIndex = 0;
+                    $groupName = '';
+                    $subjectHeaderstyle = ['halign' => 'center'];
+
+                    foreach ($fields as $index => $attr) {
+                        $subjectsHeaderRow[$index] = "";
+
+                        if (array_key_exists('group', $attr)) {
+                            if ($groupName !== $attr['group']) {
+                                $groupStartingIndex = $index;
+                                $groupName = $attr['group'];
+                            }
+
+                            $groupKey = $groupName . $groupStartingIndex;
+
+                            if (!array_key_exists($groupKey, $subjectsColWidth)) {
+                                $subjectsColWidth[$groupKey] = [];
+                                $subjectsColWidth[$groupKey]['start_col'] = $index;
+                                $subjectsHeaderRow[$index]  = $attr['group'];
+                            }
+
+                            $subjectsColWidth[$groupKey]['end_col'] = $index;
+
+                        } else {
+                            $groupName = '';
+                        }
+                    }
+
+                    $writer->writeSheetRow($sheetName, $subjectsHeaderRow, $subjectHeaderstyle);
+
+                    foreach ($subjectsColWidth as $obj) {
+                        $writer->markMergedCell($sheetName, $start_row=0, $start_col=$obj['start_col'], $end_row=0, $end_col=$obj['end_col']);
+                    }
+                }
+                // End of handling of Group field for merging cells
+
                 foreach ($fields as $attr) {
                     $headerRow[] = $attr['label'];
                     $headerStyle[] = isset($attr['style']) ? $attr['style'] : [];
@@ -258,8 +303,7 @@ class ExcelBehavior extends Behavior
                     $headerRow = array_merge($headerRow, $sheet['additionalHeader']);
                 }
 
-                $writer->writeSheetHeader($sheetName, $headerFormat, true); // true will surpress the header.
-
+                $writer->writeSheetHeader($sheetName, $headerFormat, true);
                 $writer->writeSheetRow($sheetName, $headerRow, $headerStyle);
 
                 $this->dispatchEvent($table, $this->eventKey('onExcelAfterHeader'), 'onExcelAfterHeader', [$settings], true);

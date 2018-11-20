@@ -30,6 +30,18 @@ class RecipientPaymentStructuresTable extends AppTable  {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        $financialAssistanceType = $requestData->scholarship_financial_assistance_type_id;
+
+        $conditions = [
+            $this->Scholarships->aliasField('academic_period_id') => $academicPeriodId
+        ];
+
+        if ($financialAssistanceType != -1) {
+            $conditions[$this->Scholarships->aliasField('scholarship_financial_assistance_type_id')] = $financialAssistanceType;
+        }
+
         $query
             ->contain([
                 'Recipients' => [
@@ -41,13 +53,24 @@ class RecipientPaymentStructuresTable extends AppTable  {
                         'third_name',
                         'last_name',
                         'preferred_name',
-                        'gender_id'
+                        'gender_id',
+                        'identity_number' => 'Recipients.identity_number',
                     ]
                 ],
                 'Recipients.Genders' => [
                     'fields' => [
                         'code',
                         'name'
+                    ]
+                ],
+                'Recipients.MainNationalities' => [
+                    'fields' => [
+                        'nationality_name' => 'MainNationalities.name',
+                    ]
+                ],
+                'Recipients.MainIdentityTypes' => [
+                    'fields' => [
+                        'identity_type_name' => 'MainIdentityTypes.name',
                     ]
                 ],
                 'Scholarships' => [
@@ -78,6 +101,7 @@ class RecipientPaymentStructuresTable extends AppTable  {
                 'estimated_amount' => 'RecipientPaymentStructureEstimates.estimated_amount',
                 'category_name' => 'DisbursementCategories.name'
             ])
+            ->where($conditions)
             ->order([$this->aliasField('recipient_id'), $this->aliasField('scholarship_id'), $this->aliasField('id')]);
     }
     
@@ -88,7 +112,7 @@ class RecipientPaymentStructuresTable extends AppTable  {
             'key' => 'Recipients.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' =>  ''
+            'label' =>  __('OpenEMIS ID')
         ];
         $newArray[] = [
             'key' => 'RecipientPaymentStructures.recipient_id',
@@ -101,6 +125,24 @@ class RecipientPaymentStructuresTable extends AppTable  {
             'field' => 'gender_name',
             'type' => 'string',
             'label' =>  ''
+        ];
+        $newArray[] = [
+            'key' => 'Recipients.nationality_id',
+            'field' => 'nationality_name',
+            'type' => 'string',
+            'label' => __('Nationality')
+        ];
+        $newArray[] = [
+            'key' => 'Recipients.identity_type_id',
+            'field' => 'identity_type_name',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+        $newArray[] = [
+            'key' => 'Recipients.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
         ];
         $newArray[] = [
             'key' => 'RecipientPaymentStructures.scholarship_id',

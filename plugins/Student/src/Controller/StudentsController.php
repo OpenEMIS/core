@@ -20,7 +20,6 @@ class StudentsController extends AppController
         'Guardians',
         'GuardianUser',
         'UserLanguages',
-        'SpecialNeeds',
         'Attachments',
         'Comments',
         // 'UserActivities',
@@ -47,6 +46,13 @@ class StudentsController extends AppController
         'Immunizations',
         'Medications',
         'Tests',
+
+        // special needs
+        'SpecialNeedsReferrals',
+        'SpecialNeedsAssessments',
+        'SpecialNeedsServices',
+        'SpecialNeedsDevices',
+        'SpecialNeedsPlans'
     ];
 
     public function initialize()
@@ -96,10 +102,6 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']);
     }
-    public function SpecialNeeds()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']);
-    }
     public function Contacts()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']);
@@ -132,14 +134,14 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']);
     }
-    public function StudentSurveys()
+    public function Demographic()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
     }
     public function StudentTransport()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentTransport']);
-    }    
+    }
     public function Outcomes()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
@@ -179,6 +181,40 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
     // End Health
+
+    // Special Needs
+    public function SpecialNeedsReferrals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsReferrals']);
+    }
+    public function SpecialNeedsAssessments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsAssessments']);
+    }
+    public function SpecialNeedsServices()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsServices']);
+    }
+    public function SpecialNeedsDevices()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDevices']);
+    }
+    public function SpecialNeedsPlans()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
+    }
+    // Special Needs - End
+
+    // Visits
+    public function StudentVisitRequests()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisitRequests']);
+    }
+    public function StudentVisits()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisits']);
+    }
+    // Visits - END
     // End
 
     // AngularJS
@@ -434,6 +470,90 @@ class StudentsController extends AppController
     {
         $session = $this->request->session();
         $tabElements = $session->read('Institution.Students.tabElements');
+
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    //Related getGuardianTabElements function in GuardiansController
+    public function getGuardianTabElements($options = [])
+    {
+        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
+            $session = $this->request->session();
+            $session->write('Guardian.Guardians.name', $options['entity']->user->name);
+            $session->write('Guardian.Guardians.id', $options['entity']->user->id);
+        }
+
+        $session = $this->request->session();
+        $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
+        $guardianId = $session->read('Guardian.Guardians.id');
+        if (!empty($guardianId)) {
+            $id = $guardianId;
+        }
+
+        $tabElements = [
+            'Guardians' => ['text' => __('Relation')],
+            'GuardianUser' => ['text' => __('Overview')],
+            'Accounts' => ['text' => __('Account')],
+            'Demographic' => ['text' => __('Demographic')],
+            'Identities' => ['text' => __('Identities')],
+            'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
+            'Contacts' => ['text' => __('Contacts')],
+            'Languages' => ['text' => __('Languages')],
+            'Attachments' => ['text' => __('Attachments')],
+            'Comments' => ['text' => __('Comments')]
+        ];
+
+        foreach ($tabElements as $key => $value) {
+            if ($key == 'Guardians') {
+                $tabElements[$key]['url'] = ['plugin' => 'Student',
+                    'controller' => 'Students',
+                    'action' => 'Guardians',
+                    'view',
+                    $this->paramsEncode(['id' => $StudentGuardianId])
+                    ];
+            } elseif ($key == 'GuardianUser') {
+                $tabElements[$key]['url'] = ['plugin' => 'Student',
+                    'controller' => 'Students',
+                    'action' => 'GuardianUser',
+                    'view',
+                    $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])
+                    ];
+            } elseif ($key == 'Accounts') {
+                $tabElements[$key]['url']['plugin'] = 'Guardian';
+                $tabElements[$key]['url']['controller'] = 'Guardians';
+                $tabElements[$key]['url']['action'] = 'Accounts';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+            } else if ($key == 'Comments') {
+                $url = [
+                        'plugin' => 'Guardian',
+                        'controller' => 'GuardianComments',
+                        'action' => 'index'
+                ];
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
+            } elseif ($key == 'UserNationalities') {
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString(
+                    [
+                        'plugin' => 'Guardian',
+                        'controller' => 'Guardians',
+                        'action' => 'Nationalities',
+                        'index'
+                    ],
+                    ['security_user_id' => $id]
+                );
+            } else {
+                $actionURL = $key;
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString(
+                    [
+                        'plugin' => 'Guardian',
+                        'controller' => 'Guardians',
+                        'action' => $actionURL,
+                        'index'
+                    ],
+                    ['security_user_id' => $id]
+                );
+            }
+        };
 
         return $this->TabPermission->checkTabPermission($tabElements);
     }

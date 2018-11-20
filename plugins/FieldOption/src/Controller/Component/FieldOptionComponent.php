@@ -42,9 +42,9 @@ class FieldOptionComponent extends Component
         'StudentTransferReasons' => ['className' => 'Student.StudentTransferReasons', 'parent' => 'Student'],
         'StudentWithdrawReasons' => ['className' => 'Student.StudentWithdrawReasons', 'parent' => 'Student'],
         'GuidanceTypes' => ['className' => 'Student.GuidanceTypes', 'parent' => 'Student'],
+        'VisitPurposeTypes' => ['className' => 'Student.StudentVisitPurposeTypes', 'parent' => 'Student'],
 
     // Staff
-        'StaffAbsenceReasons' => ['className' => 'Institution.StaffAbsenceReasons', 'parent' => 'Staff'],
         'StaffBehaviourCategories' => ['className' => 'Staff.StaffBehaviourCategories', 'parent' => 'Staff'],
         'StaffLeaveTypes' => ['className' => 'Staff.StaffLeaveTypes', 'parent' => 'Staff'],
         'StaffTypes' => ['className' => 'Staff.StaffTypes', 'parent' => 'Staff'],
@@ -98,12 +98,11 @@ class FieldOptionComponent extends Component
         'Languages' => ['className' => 'Languages', 'parent' => 'Others'],
         'LicenseTypes' => ['className' => 'FieldOption.LicenseTypes', 'parent' => 'Others'],
         'LicenseClassifications' => ['className' => 'FieldOption.LicenseClassifications', 'parent' => 'Others'],
-        'SpecialNeedTypes' => ['className' => 'FieldOption.SpecialNeedTypes', 'parent' => 'Others'],
-        'SpecialNeedDifficulties' => ['className' => 'FieldOption.SpecialNeedDifficulties', 'parent' => 'Others'],
         'Countries' => ['className' => 'FieldOption.Countries', 'parent' => 'Others'],
         'Nationalities' => ['className' => 'FieldOption.Nationalities', 'parent' => 'Others'],
         'CommentTypes' => ['className' => 'User.CommentTypes', 'parent' => 'Others'],
         'BehaviourClassifications' => ['className' => 'Student.BehaviourClassifications', 'parent' => 'Others'],
+        'DemographicWealthQuantileTypes' => ['className' => 'FieldOption.DemographicTypes', 'parent' => 'Others'],
 
     // Infrastructure
         'InfrastructureOwnerships' => ['className' => 'FieldOption.InfrastructureOwnerships', 'parent' => 'Infrastructure'],
@@ -160,6 +159,14 @@ class FieldOptionComponent extends Component
         'ScholarshipRecipientActivityStatuses' => ['className' => 'Scholarship.RecipientActivityStatuses', 'parent' => 'Scholarship'],
         'ScholarshipDisbursementCategories' => ['className' => 'Scholarship.DisbursementCategories', 'parent' => 'Scholarship'],
         'ScholarshipSemesters' => ['className' => 'Scholarship.Semesters', 'parent' => 'Scholarship'],
+        'ScholarshipInstitutionChoices' => ['className' => 'Scholarship.InstitutionChoiceTypes', 'parent' => 'Scholarship'],
+
+    // Special Needs
+        'SpecialNeedsTypes' => ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'parent' => 'Special Needs'],
+        'SpecialNeedsDifficulties' => ['className' => 'SpecialNeeds.SpecialNeedsDifficulties', 'parent' => 'Special Needs'],
+        'SpecialNeedsReferrerTypes' => ['className' => 'SpecialNeeds.SpecialNeedsReferrerTypes', 'parent' => 'Special Needs'],
+        'SpecialNeedsServiceTypes' => ['className' => 'SpecialNeeds.SpecialNeedsServiceTypes', 'parent' => 'Special Needs'],
+        'SpecialNeedsDeviceTypes' => ['className' => 'SpecialNeeds.SpecialNeedsDeviceTypes', 'parent' => 'Special Needs']
     ];
 
     public $components = ['AccessControl'];

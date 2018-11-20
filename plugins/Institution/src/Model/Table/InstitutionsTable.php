@@ -21,6 +21,7 @@ use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 
 class InstitutionsTable extends ControllerActionTable
 {
@@ -82,7 +83,6 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('Staff', ['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffBehaviours', ['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionStaffAbsences', ['className' => 'Institution.StaffAbsences', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferIn', ['className' => 'Institution.StaffTransferIn', 'foreignKey' => 'new_institution_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
@@ -141,7 +141,7 @@ class InstitutionsTable extends ControllerActionTable
             'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
             'recordKey' => 'institution_id',
             'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true]
+            'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
         $this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionActivities', 'key' => 'institution_id', 'session' => 'Institution.Institutions.id']);
@@ -193,12 +193,15 @@ class InstitutionsTable extends ControllerActionTable
         ];
 
         $this->setDeleteStrategy('restrict');
+
+        $this->addBehavior('Institution.LatLong');  
     }
 
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-
+        $validator = $this->LatLongValidation();
+     
         $validator
             ->add('date_opened', [
                     'ruleCompare' => [
@@ -217,17 +220,12 @@ class InstitutionsTable extends ControllerActionTable
                 'rule' => 'checkPendingWorkbench',
                 'last' => true
             ])
-
-            ->allowEmpty('longitude')
-            ->add('longitude', 'ruleLongitude', [
-                    'rule' => 'checkLongitude'
-                ])
-
-            ->allowEmpty('latitude')
-            ->add('latitude', 'ruleLatitude', [
-                    'rule' => 'checkLatitude'
-                ])
-
+            ->add('classification', [
+                'validClassification' => [
+                    'rule' => ['range', 1, 2],
+                ]
+            ])
+            
             // ->add('address', 'ruleMaximum255', [
             // 		'rule' => ['maxLength', 255],
             // 		'message' => 'Maximum allowable character is 255',
@@ -537,6 +535,14 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('logo_name', ['visible' => false]);
         if ($this->action != 'index') {
             $this->field('logo_content', ['type' => 'image']);
+        }
+
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $LatLongPermission = $ConfigItems->value("latitude_longitude");
+
+        if ($LatLongPermission == LatLongOptions::EXCLUDED) {
+            $this->field('longitude', ['visible' => false]);
+            $this->field('latitude', ['visible' => false]);
         }
     }
 

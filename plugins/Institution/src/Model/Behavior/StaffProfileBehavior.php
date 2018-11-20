@@ -39,15 +39,6 @@ class StaffProfileBehavior extends Behavior
                 ;
                 break;
 
-            case 'StaffAbsences':
-                $query->where([
-                    $model->aliasField('staff_id') => $staffId,
-                    $model->aliasField('institution_id') => $institutionId,
-                    $model->aliasField('start_date >=') => $originalStartDate,
-                    $model->aliasField('start_date <=') => $newStartDate
-                ]);
-                break;
-
             case 'StaffPositionProfiles':
                 $query->where([
                     $model->aliasField('staff_id') => $staffId,
