@@ -43,7 +43,6 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
-
             if ($data->offsetExists('positions_held')) {
                 $institutionStaffId = $data->offsetGet('positions_held');
                 $data->offsetSet('previous_institution_staff_id', $institutionStaffId);
@@ -59,7 +58,6 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         parent::beforeAction($event, $extra);
-
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
     }
 
@@ -189,7 +187,6 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
             $institutionStaffId = $this->request->data[$this->alias()]['positions_held'];
             $staffEntity = $this->PreviousInstitutionStaff->get($institutionStaffId, ['contain' => ['StaffTypes']]);
             if (!empty($staffEntity)) {
-                // pr($staffEntity); die;
                 $FTE = $this->fteOptions["$staffEntity->FTE"];
                 $valueOfFTE =  $staffEntity->FTE;
                 $staffTypeId = $staffEntity->staff_type_id;
@@ -277,7 +274,6 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
         }
         return $value;
     }
-
 
     public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
     {
@@ -369,18 +365,14 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
                 $Institutions = TableRegistry::get('Institution.Institutions');
 
                 //restrict staff release between same type
-                //TBC !!!!
                 $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_release_between_same_type');
                 if ($restrictStaffTransferByType) {
                     if ($entity->has('institution_id')) {
                         $institutionId = $entity->institution_id;
-
                         $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
-
                         $conditions['institution_type_id'] = $institutionTypeId;
                     }
                 }
-                // end: restrict staff release between same type
 
                 $options = $this->NewInstitutions->find('list', [
                         'keyField' => 'id',
@@ -502,7 +494,6 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
                     return $row;
                 });
             });
-
         return $query;
     }
 

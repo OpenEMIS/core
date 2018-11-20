@@ -235,7 +235,6 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->new_institution_id;
             $attr['attr']['value'] = $entity->new_institution->code_name;
-
             return $attr;
         }
     }

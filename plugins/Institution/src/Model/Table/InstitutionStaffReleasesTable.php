@@ -108,11 +108,10 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         }
         $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => 'AllowPositionType']);
 
-        //Update institution_staff table the staff record
+        // Update institution_staff table the staff record
         if ($StaffTable->save($newEntity)) {
             if (!empty($entity->previous_institution_staff_id)) {
                 $oldRecord = $StaffTable->get($entity->previous_institution_staff_id);
-
                 $oldRecord->end_date = $entity->previous_end_date;
                 $StaffTable->save($oldRecord);
             }
@@ -128,9 +127,9 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
         $isRestricted = $ConfigStaffReleaseTable->checkStaffReleaseRestrictedBetweenSameType($entity->previous_institution_id, $entity->new_institution_id);
 
-        if ($isRestricted) {
-            $this->Alert->warning('StaffTransfers.restrictStaffTransfer', ['reset' => true]);
-        } else {
+        if (!$isRestricted) {
+            // $this->Alert->warning('StaffTransfers.restrictStaffTransfer', ['reset' => true]);
+            //} else {
             if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
                 $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
             } else if ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id) {
@@ -169,7 +168,6 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         $searchableFields[] = 'staff_id';
     }
 
-    // for index
     public function onGetStatusId(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
@@ -184,7 +182,6 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         }
     }
 
-    // for view
     public function onGetWorkflowStatus(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');

@@ -2160,7 +2160,6 @@ class ValidationBehavior extends Behavior
             }
             return $url;
         }
-
         return true;
     }
 
