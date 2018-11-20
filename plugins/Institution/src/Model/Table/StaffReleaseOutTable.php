@@ -248,16 +248,6 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
         ]);
     }
 
-    // public function onGetStaffTypeId(Event $event, Entity $entity)
-    // {
-    //     $value = '';
-    //     if (!empty($entity->previous_institution_staff_id)) {
-    //         $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id, ['contain' => ['StaffTypes']]);
-    //         $value = $StaffEntity->staff_type->name;
-    //     }
-    //     return $value;
-    // }
-
     public function onGetInstitutionPositionId(Event $event, Entity $entity)
     {
         $value = '';
@@ -440,8 +430,6 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
 
     public function findWorkbench(Query $query, array $options)
     {
-        pr('heree');die;
-
         $controller = $options['_controller'];
         $session = $controller->request->session();
 

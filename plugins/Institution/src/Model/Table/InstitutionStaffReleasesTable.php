@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
-// This file serves as an abstract class for StaffTransferIn and StaffTransferOut
+// This file serves as an abstract class for StaffReleaseIn and StaffReleaseOut
 
 class InstitutionStaffReleasesTable extends ControllerActionTable
 {

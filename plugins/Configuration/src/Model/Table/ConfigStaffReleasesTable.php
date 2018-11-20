@@ -371,9 +371,8 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         ]);
     }
 
-    public function checkIfTransferEnabled($institutionId = 0)
+    public function checkIfReleaseEnabled($institutionId = 0)
     {
-
         $Institutions = TableRegistry::get('Institution.Institutions');
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 

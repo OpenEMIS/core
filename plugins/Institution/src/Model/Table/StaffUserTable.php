@@ -223,6 +223,7 @@ class StaffUserTable extends ControllerActionTable
     private function addReleaseButton(Entity $entity, ArrayObject $extra)
     {
         if($this->AccessControl->check([$this->controller->name, 'StaffReleaseOut', 'add'])) {
+
             $session = $this->request->session();
             $toolbarButtons = $extra['toolbarButtons'];
             $StaffTable = TableRegistry::get('Institution.Staff');
@@ -233,7 +234,7 @@ class StaffUserTable extends ControllerActionTable
             $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
             $userId = $entity->id;
 
-            $enableStaffRelease = $ConfigStaffReleaseTable->checkIfTransferEnabled($institutionId);
+            $enableStaffRelease = $ConfigStaffReleaseTable->checkIfReleaseEnabled($institutionId);
 
             $assignedStaffRecords = $StaffTable->find()
                 ->where([
