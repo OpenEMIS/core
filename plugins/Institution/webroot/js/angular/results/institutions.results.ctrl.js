@@ -15,6 +15,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
     $scope.enrolledStatus = null;
     $scope.academicTermOptions = [];
     $scope.selectedAcademicTerm = undefined;
+    $scope.editPermissionForSelectedSubject = false;
 
     angular.element(document).ready(function () {
         // init
@@ -140,7 +141,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
                         };
 
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
-                        .then(function(response) {
+                        .then(function(response) {                            
                             params.data.save_error[params.colDef.field] = false;
                             AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
                             // refreshCells function updated parameters
@@ -278,6 +279,8 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
 
     $scope.onChangeSubject = function(subject = undefined) {
         AlertSvc.reset($scope);
+        $scope.action = 'view';
+
         if ($scope.action == 'edit') {
             AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
         }
@@ -287,7 +290,6 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
         }
 
         $scope.education_subject_id = $scope.subject.id;
-
         if ($scope.gridOptions != null) {
             // update value in context
             $scope.gridOptions.context.education_subject_id = $scope.subject.id;
@@ -297,7 +299,13 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
 
         UtilsSvc.isAppendSpinner(true, 'institution-result-table');
         // getPeriods
-        InstitutionsResultsSvc.getPeriods($scope.assessment_id, $scope.selectedAcademicTerm)
+        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.id, $scope.class_id)
+        .then(function(hasPermission) {
+            $scope.editPermissionForSelectedSubject = hasPermission;
+            return InstitutionsResultsSvc.getPeriods($scope.assessment_id, $scope.selectedAcademicTerm)
+        }, function(error) {
+            console.log(error);
+        })
         .then(function(periods) {
             if (periods) {
                 $scope.periods = periods;
@@ -339,8 +347,18 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
     };
 
     $scope.onEditClick = function() {
-        $scope.action = 'edit';
-        AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
+        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.id, $scope.class_id)
+        .then(function(hasPermission) {
+            if(hasPermission) {
+                $scope.action = 'edit';
+                AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
+            } else {
+                $scope.action = 'view';
+                AlertSvc.warning($scope, 'You have no permission for this subject.');
+            }
+        }, function(error) {
+            console.log(error);
+        })
     };
 
     $scope.onBackClick = function() {
