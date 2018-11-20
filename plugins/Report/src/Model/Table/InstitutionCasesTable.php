@@ -117,8 +117,8 @@ class InstitutionCasesTable extends AppTable
             $reportEndDate = (new DateTime($endDate))->format('Y-m-d');
 
             $query->where([
-                $this->aliasField('created') . ' <= ' => $reportEndDate,
-                $this->aliasField('created') . ' >= ' => $reportStartDate
+                $this->aliasField('created') . ' <= ' => $reportEndDate. ' 23:59:59',
+                $this->aliasField('created') . ' >= ' => $reportStartDate.' 00:00:00'
             ]);
         }
     }

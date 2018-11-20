@@ -63,6 +63,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
+        $this->accessibilityOptions = $this->getSelectOptions('InstitutionAssets.accessibility');
+        $this->accessibilityTooltip = $this->getMessage('InstitutionInfrastructures.accessibilityOption');
         $this->setDeleteStrategy('restrict');
     }
 
@@ -175,6 +177,11 @@ class InstitutionBuildingsTable extends ControllerActionTable
         return $this->levelOptions[$this->buildingLevel];
     }
 
+    public function onGetAccessibility(Event $event, Entity $entity)
+    {
+        return $this->accessibilityOptions[$entity->accessibility];
+    }
+
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'institution_id') {
@@ -207,6 +214,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->fields['infrastructure_ownership_id']['visible'] = false;
         $this->fields['year_acquired']['visible'] = false;
         $this->fields['year_disposed']['visible'] = false;
+        $this->field('accessibility', ['visible' => false]);
         $this->field('institution_id');
         $this->field('infrastructure_level', ['after' => 'name']);
         $this->field('start_date', ['visible' => false]);
@@ -676,6 +684,15 @@ class InstitutionBuildingsTable extends ControllerActionTable
         return $attr;
     }
 
+    public function onUpdateFieldAccessibility(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit' || $action == 'add') {
+            $attr['options'] = $this->accessibilityOptions;
+            $attr['type'] = 'select';
+            return $attr;
+        }
+    }
+
     public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
@@ -801,6 +818,17 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->field('previous_institution_building_id', ['type' => 'hidden']);
         $this->field('new_building_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
         $this->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
+
+        $this->field('accessibility', [
+            'type' => 'select',
+            'attr' => [
+                'label' => [
+                    'text' => __('Accessibility') . ' <i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="bottom" uib-tooltip="' . __($this->accessibilityTooltip) . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
+                    'escape' => false,
+                    'class' => 'tooltip-desc'
+                ]
+            ]
+        ]);
     }
 
     public function onUpdateFieldInstitutionLandId(Event $event, array $attr, $action, Request $request)

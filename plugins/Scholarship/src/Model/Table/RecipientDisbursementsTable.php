@@ -27,6 +27,7 @@ class RecipientDisbursementsTable extends AppTable
             ->add('amount', 'validateDecimal', [
                 'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
                 'message' => __('Amount cannot be more than two decimal places')
-            ]);
+            ])
+            ->requirePresence('scholarship_semester_id');
     }
 }

@@ -23,6 +23,12 @@ class ExcelReportComponent extends Component
 		$className = $params['className'];
 		$model = TableRegistry::get($className);
 
+		if ($model->behaviors()->has('ExcelReport') && array_key_exists('format', $params)) {
+			$model->behaviors()->get('ExcelReport')->config([
+				'format' => $params['format']
+			]);
+		}
+
 		$extra = new ArrayObject($params);
 		$event = $model->dispatchEvent('ExcelTemplates.Model.onRenderExcelTemplate', [$extra], $this->controller);
 		if ($event->isStopped()) { return $event->result; }

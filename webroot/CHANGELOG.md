@@ -1,3 +1,73 @@
+### [3.41.0] - 2018-11-14
+- Implemented a feature to pre-populate Next Class
+- Re-developed Outcomes Import template
+- Re-developed Staff attendance feature
+- Implemented auto-assign to Scholarship Applicant at Open Status
+- Bug fix on institutions > Infrastructures
+- Bug fix on Institutions > Students > Promotions
+- Bug fix on Institutions > Students > Academic > Programmes
+
+### [3.40.0] - 2018-11-02
+- Redeveloped Student Attendance feature
+- Implemented single day attendance record for Student attendance
+- Bug fix on Search bar in Institution > Attendance > Students page
+
+### [3.38.0] - 2018-10-30
+- Developed feature to allow user to set Longitude and Latitude to mandatory in Administration > System Setup > System Config
+- Developed export feature for Institution > Performance > Outcome
+- Implemented OpenEMIS ID and User's default identity in Reports > Staff/Students > Contacts Report
+- Bug fix on report card generation process
+
+### [3.37.0] - 2018-10-19
+- Developed Demographics feature in Users > General > Demographics tab
+- Developed Scholarship Award Disbursement Alert in Administration > Communications > Alert Rules
+- Implmented ability to bulk update Student Pending Admission status in Institutions > Students > Pending Admission filter
+- Implemented ability to access Guardian's information from Institutions > Students > Guardian
+- Implemented comments field for Reassign action in all workflow-enabled feature
+- Implemented Inclusive Education Visits feature in Institutions > Students > Visits
+
+### [3.36.0] - 2018-09-28
+- Developed Inclusive Education (Special Needs) feature in Profiles/Institutions/Directory > Special Needs
+- Implemented a delete button to delete all Survey data in Institution > Survey
+- Implemented Report Queue in Institutions > Report Card > Status page
+- Bug fix on error 404 in Institutions > Staff > Export
+- Bug fix on missing data when saving tables in Institutions > Surveys
+
+### [3.35.0] - 2018-09-14
+- Developed Scholarship deadline alert feature in Administration > Notification > Alert page
+- Implemented Academic Period and Financial Assistance type filter in Reports > Scholarships > Recipient Payment Structures page
+- Bug fix on Identity type in Directory > General > Overview page
+
+### [3.34.0] - 2018-09-07
+- Developed User Default Identity Report in Reports > Directory 
+- Developed Staff Appraisal calculated fields in Administration > Appraisals > Scores
+- Implemented additional column called Nationality in Report > Institution > Staff (Assigned) report
+- Implemented default filters in Institutions > Cases
+- Bug fix on Institutions > Survey Rules during xform generation for OpenEMIS Survey
+- Bug fix on ability to save reords in Institutions > Performance > Outcomes 
+
+### [3.33.1] - 2018-09-07
+- Bug fix on ability to save records in Institution Survey table question type
+- Bug fix on 404 error when Institution Survey rules answer was changed
+- Bug fix on Institution Survey when Dependent question disappears 
+
+### [3.33.0] - 2018-09-03
+- Developed changes to Class Attendance Marked Report in Reports > Institution > Class Attendance Marked
+- Developed post event rule for Secondary Teacher and Principal in Administration > Workflow > Rules
+- Developed additional Financial Assistance type (Full scholarship, Partial scholarship, Grant, Distance Learning)
+- Developed option to configure Scholarship Institution Choice in Administration > Scholarship > Applications > Institution Choices
+- Developed feature to export Scholarships > Recipients > Payment Structures
+- Introduced Annual Award Amount to Scholarships > Recipients > Payment Structures
+
+### [3.32.3] - 2018-08-23
+- Developed a feature to email all students their report card in Institutions > Report Card > Status
+- Added Partial Scholarships and Grants to Scholarship module in Administration > Scholarships
+- Added Scholarships Disbursement (Detailed) and Scholarship Enrollment reports in Reports module
+- Developed a feature to retrieve Institution image through API
+
+### [3.32.2] - 2018-08-13
+- Bug fix on deleting rows and columns for table question type in Survey module
+
 ### [3.32.0] - 2018-08-03
 - Developed School Feeder feature in Institutions Module
 - Developed function to save class for next academic period in Institution > Students > Promotions page

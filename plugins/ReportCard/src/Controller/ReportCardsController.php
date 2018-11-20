@@ -17,6 +17,8 @@ class ReportCardsController extends AppController
 
     // CAv4
     public function Templates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ReportCard.ReportCards']); }
+
+    public function ReportCardEmail() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ReportCard.ReportCardEmail']); }
     // End
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
@@ -25,5 +27,23 @@ class ReportCardsController extends AppController
         $header .= ' - ' . $model->getHeader($model->alias);
         $this->Navigation->addCrumb('Report Cards', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
         $this->set('contentHeader', $header);
+    }
+
+    public function getReportCardTab($id)
+    {
+        $encodedParam = $this->request->params['pass'][1];
+
+        $tabElements = [
+            'ReportCards' => [
+                'text' => __('Overview'),
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Templates', 'view', $encodedParam]
+            ],
+            'ReportCardEmail' => [
+                'text' => __('Email'),
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ReportCardEmail', 'view', $encodedParam]
+            ]
+        ];
+
+        return $tabElements;
     }
 }

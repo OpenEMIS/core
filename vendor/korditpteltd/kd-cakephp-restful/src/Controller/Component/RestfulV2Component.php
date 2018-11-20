@@ -114,6 +114,11 @@ class RestfulV2Component extends Component implements RestfulInterface
         if ($action == 'translate') {
             return true;
         }
+
+        if ($action == 'image') {
+            return true;
+        }
+
         $request = $this->request;
         $extra = new ArrayObject(['request' => $request]);
 

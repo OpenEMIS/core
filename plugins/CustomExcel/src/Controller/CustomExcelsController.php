@@ -43,4 +43,8 @@ class CustomExcelsController extends AppController
 
     public function export($model) { $this->ExcelReport->renderExcel(['className' => "$this->plugin.$model"]); }
     public function viewVars($model) { $this->ExcelReport->viewVars(['className' => "$this->plugin.$model"]); }
+
+    public function exportPDF($model) { 
+        $this->ExcelReport->renderExcel(['className' => "$this->plugin.$model", 'format' => 'pdf']); 
+    }
 }

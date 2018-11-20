@@ -6,6 +6,9 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Datasource\ResultSetInterface;
+use Cake\Log\Log;
+use Cake\Utility\Hash;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -56,9 +59,305 @@ class StudentOutcomesTable extends ControllerActionTable
 
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportOutcomeResults']);
 
+        $this->addBehavior('Excel', [
+            'pages' => ['view'],
+            'autoFields' => false
+        ]);
+
+
         $this->toggle('add', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+    }
+
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
+        $academicPeriodId = $this->getQueryString('academic_period_id');
+        $outcomeTemplateId = $this->getQueryString('outcome_template_id');
+        $classId = $this->getQueryString('class_id');
+        $institutionId = $this->getQueryString('institution_id');
+        $educationGradeId = $this->getQueryString('education_grade_id');
+
+        if (!is_null($outcomeTemplateId) && !is_null($academicPeriodId) &&
+            !is_null($classId) && !is_null($institutionId) && !is_null($educationGradeId)) {
+            $OutcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+            $EducationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
+
+            $criteriaList = $OutcomeCriteriasTable
+                ->find()
+                ->select([
+                    'id' => $OutcomeCriteriasTable->aliasField('id'),
+                    'education_subject_id' => $OutcomeCriteriasTable->aliasField('education_subject_id'),
+                    'criteria_name' => $OutcomeCriteriasTable->aliasField('name'),
+                    'education_subject_name' => $EducationSubjectsTable->aliasField('name')
+                ])
+                ->contain([
+                    $EducationSubjectsTable->alias()
+                ])
+                ->where([
+                    $OutcomeCriteriasTable->aliasField('academic_period_id') => $academicPeriodId,
+                    $OutcomeCriteriasTable->aliasField('outcome_template_id') => $outcomeTemplateId
+                ])
+                ->order($OutcomeCriteriasTable->aliasField('education_subject_id'))
+                ->toArray();
+
+            $settings['criteria_list_entities'] = $criteriaList;
+            $settings['criteria_prefix'] = 'outcome_criteria_';
+            $settings['class_id'] = $classId;
+            $settings['institution_id'] = $institutionId;
+            $settings['academic_period_id'] = $academicPeriodId;
+            $settings['outcome_template_id'] = $outcomeTemplateId;
+            $settings['education_grade_id'] = $educationGradeId;
+
+        } else {
+            Log::write('error', 'Outcome excel: No outcome template id found.');
+        }
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    {
+        $classId = $settings['class_id'];
+        $institutionId = $settings['institution_id'];
+        $academicPeriodId = $settings['academic_period_id'];
+        $outcomeTemplateId = $settings['outcome_template_id'];
+        $educationGradeId = $settings['education_grade_id'];
+        $criteriaList =  $settings['criteria_list_entities'];
+
+        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $UsersTable = TableRegistry::get('User.Users');
+        $InstitutionOutcomeResultsTable = TableRegistry::get('Institution.InstitutionOutcomeResults');
+        $OutcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+        $OutcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
+        $OutcomePeriodsTable = TableRegistry::get('Outcome.OutcomePeriods');
+
+        // Class Student table - get all students in the class for the outcome
+        $studentList = $InstitutionClassStudentsTable
+            ->find()
+            ->select([
+                $InstitutionClassStudentsTable->aliasField('student_id'),
+                $UsersTable->aliasField('first_name'),
+                $UsersTable->aliasField('middle_name'),
+                $UsersTable->aliasField('third_name'),
+                $UsersTable->aliasField('last_name'),
+                $UsersTable->aliasField('preferred_name')
+            ])
+            ->contain($UsersTable->alias())
+            ->where([
+                $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId,
+                $InstitutionClassStudentsTable->aliasField('academic_period_id') => $academicPeriodId,
+                $InstitutionClassStudentsTable->aliasField('institution_class_id') => $classId
+            ])
+            ->toArray();
+
+        $studentIdList = Hash::extract($studentList, '{n}.student_id');
+
+        // Get all outcome periods
+        $periodList = $OutcomePeriodsTable
+            ->find()
+            ->where([
+                $OutcomePeriodsTable->aliasField('academic_period_id') => $academicPeriodId,
+                $OutcomePeriodsTable->aliasField('outcome_template_id') => $outcomeTemplateId
+            ])
+            ->extract('id')
+            ->toArray();
+
+        // Get all student outcome results for the students found in above query
+        $studentOutcomeResultList = $InstitutionOutcomeResultsTable
+            ->find()
+            ->select([
+                $InstitutionOutcomeResultsTable->aliasField('student_id'),
+                $OutcomeCriteriasTable->aliasField('id'),
+                $OutcomeGradingOptionsTable->aliasField('name'),
+                $OutcomeGradingOptionsTable->aliasField('code'),
+                $OutcomeCriteriasTable->aliasField('name'),
+                $OutcomePeriodsTable->aliasField('id'),
+                $OutcomePeriodsTable->aliasField('name')
+
+            ])
+            ->contain([
+                $OutcomeCriteriasTable->alias(),
+                $OutcomeGradingOptionsTable->alias(),
+                $OutcomePeriodsTable->alias()
+            ])
+            ->where([
+                $InstitutionOutcomeResultsTable->aliasField('student_id IN') => $studentIdList,
+                $InstitutionOutcomeResultsTable->aliasField('institution_id') => $institutionId,
+                $InstitutionOutcomeResultsTable->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->toArray();
+
+        // Massage data to the required format for formatResults()
+        $outcomeResults = [];
+        $prefix = $settings['criteria_prefix'];
+
+        foreach ($studentOutcomeResultList as $entity) {
+            $studentId = $entity->student_id;
+            if (!array_key_exists($studentId, $outcomeResults)) {
+                $outcomeResults[$studentId] = [];
+            }
+
+            $periodId = $entity->outcome_period->id;
+            if (!array_key_exists($periodId, $outcomeResults[$studentId])) {
+                $outcomeResults[$studentId][$periodId] = [];
+            }
+
+            $criteriaId = $entity->outcome_criteria->id;
+            $criteriaFieldId = $prefix . $criteriaId;
+            $gradingOptions = $entity->outcome_grading_option->code_name;
+            $outcomeResults[$studentId][$periodId][$criteriaFieldId] = $gradingOptions;
+        }
+
+        $allOutcomeResults = [];
+        $studentEntityList = [];
+
+        foreach ($studentList as $studentEntity) {
+            $studentId = $studentEntity->student_id;
+            $studentEntityList[$studentId] = $studentEntity->user;
+
+            if (!array_key_exists($studentId, $allOutcomeResults)) {
+                $allOutcomeResults[$studentId] = [];
+            }
+
+            foreach ($periodList as $outcomePeriodId) {
+                $outcomePeriodId = $outcomePeriodId;
+                if (!array_key_exists($outcomePeriodId, $allOutcomeResults)) {
+                    $allOutcomeResults[$studentId][$outcomePeriodId] = [];
+                }
+
+                foreach ($criteriaList as $criteriaEntity) {
+                    $criteriaId = $criteriaEntity->id;
+                    $criteriaFieldId = $prefix . $criteriaId;
+                    $extractField = $studentId . '.' . $outcomePeriodId . '.' . $criteriaFieldId;
+                    $result = Hash::get($outcomeResults, $extractField);
+                    if (!is_null($result)) {
+                        $allOutcomeResults[$studentId][$outcomePeriodId][$criteriaFieldId] = $result;
+                    } else {
+                        $allOutcomeResults[$studentId][$outcomePeriodId][$criteriaFieldId] = '';
+                    }
+                }
+            }
+        }
+
+        $query
+            ->select([
+                'class' => $this->aliasField('name'),
+                'student_id' => 'Students.id',
+                'openemis_no' => 'Students.openemis_no',
+                'outcome_period' => 'OutcomePeriods.name',
+                'outcome_period_id' => 'OutcomePeriods.id',
+                'institution_name' => 'Institutions.name',
+                'institution_code' => 'Institutions.code',
+                'education_grade_name' => 'EducationGrades.name'
+            ])
+            ->innerJoin(['InstitutionClassStudents' => 'institution_class_students'], [
+                $this->aliasField('id = ') . 'InstitutionClassStudents.institution_class_id'
+            ])
+            ->innerJoin(['Students' => 'security_users'], [
+                'InstitutionClassStudents.student_id = Students.id'
+            ])
+            ->innerJoin(['OutcomePeriods' => 'outcome_periods'], [
+                'OutcomePeriods.academic_period_id = ' . $academicPeriodId,
+                'OutcomePeriods.outcome_template_id = ' . $outcomeTemplateId
+            ])
+            ->innerJoin(['StudentStatuses' => 'student_statuses'],[
+                'InstitutionClassStudents.student_status_id = StudentStatuses.id'
+            ])
+            ->innerJoin(['Institutions' => 'institutions'],[
+                $this->aliasField('institution_id = ') . 'Institutions.id'
+            ])
+            ->innerJoin(['EducationGrades' => 'education_grades'],[
+                'InstitutionClassStudents.education_grade_id = EducationGrades.id'
+            ])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('id') => $classId,
+                'StudentStatuses.code' => 'CURRENT'
+            ])
+            ->formatResults(function(ResultSetInterface $results) use ($allOutcomeResults, $studentEntityList) {
+                return $results->map(function ($row) use ($allOutcomeResults, $studentEntityList) {
+
+                    $studentId = $row->student_id;
+                    $outcomePeriodId = $row->outcome_period_id;
+                    $outcomeResults = $allOutcomeResults[$studentId][$outcomePeriodId];
+                    $studentName = $studentEntityList[$studentId]->name;
+
+                    foreach ($outcomeResults as $field => $value) {
+                        $row->{$field} = $value;
+                    }
+
+                    $row->student = $studentName;
+
+                    return $row;
+                });
+            });
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $criteriaList =  $settings['criteria_list_entities'];
+        $prefix = $settings['criteria_prefix'];
+
+        $newFields = [];
+
+        $newFields[] = [
+            'key' => 'Institutions.name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution')
+        ];
+
+       $newFields[] = [
+            'key' => 'Institutions.institution_code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution') . " " . __('Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'EducationSubjects.name',
+            'field' => 'education_grade_name',
+            'type' => 'string',
+            'label' => __('Grade')
+        ];
+
+        $newFields[] = [
+            'key' => 'StudentOutcomes.class',
+            'field' => 'class',
+            'type' => 'string',
+        ];
+
+        $newFields[] = [
+            'key' => 'Student.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+
+        $newFields[] = [
+            'key' => 'StudentOutcomes.student',
+            'field' => 'student',
+            'type' => 'string',
+            'label' => __('Student Name')
+        ];
+
+        $newFields[] = [
+            'key' => 'Outcome.outcome_period',
+            'field' => 'outcome_period',
+            'type' => 'string'
+        ];
+
+        foreach ($criteriaList as $entity) {
+            $newFields[] = [
+                'key' =>   $entity->education_subject_name . 'OutcomeCriteria.id_' . $entity->id,
+                'field' => $prefix . $entity->id,
+                'type' => 'string',
+                'label' => $entity->criteria_name,
+                'group' => $entity->education_subject_name
+            ];
+        }
+
+        $fields->exchangeArray($newFields);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -162,6 +461,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $institutionId = $session->read('Institution.Institutions.id');
         $AccessControl = $this->AccessControl;
         $userId = $session->read('Auth.User.id');
+
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         if (!$AccessControl->isAdmin()) {
             if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
@@ -278,6 +578,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $this->academicPeriodId = $this->getQueryString('academic_period_id');
         $this->outcomeTemplateId = $this->getQueryString('outcome_template_id');
         $this->gradeId = $this->getQueryString('education_grade_id');
+
         // filters
         $this->outcomePeriodId = $this->getQueryString('outcome_period_id') ;
         $this->subjectId = $this->getQueryString('education_subject_id');
@@ -362,7 +663,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $params = $this->getQueryString();
         $session = $this->request->session();
         $AccessControl = $this->AccessControl;
-        
+
         $userId = $session->read('Auth.User.id');
         $gradeId = $this->gradeId;
         $academicPeriodId = $this->academicPeriodId;
@@ -428,7 +729,7 @@ class StudentOutcomesTable extends ControllerActionTable
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
-           
+
             $results = $ClassStudents->find()
                 ->select([
                     $ClassStudents->aliasField('student_id'),
@@ -591,7 +892,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $event->stopPropagation();
         return $event->subject()->renderElement('Institution.StudentOutcomes/outcome_criterias', ['attr' => $attr]);
     }
- 
+
     private function getOutcomeGradingTypes()
     {
         $OutcomeGradingTypes = TableRegistry::get('Outcome.OutcomeGradingTypes');
