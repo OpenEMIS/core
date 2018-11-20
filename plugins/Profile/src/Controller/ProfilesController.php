@@ -7,7 +7,8 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-
+use Cake\Utility\Inflector;
+use Cake\Routing\Router;
 use App\Controller\AppController;
 
 class ProfilesController extends AppController
@@ -27,7 +28,7 @@ class ProfilesController extends AppController
         'StaffSubjects',
         'StaffBehaviours',
         'Licenses',
-        'Appraisals',
+        'StaffAttendances',
     ];
 
     public function initialize()
@@ -59,7 +60,6 @@ class ProfilesController extends AppController
             'StaffSections'         => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
             'StaffClasses'          => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
             'StaffQualifications'   => ['className' => 'Staff.Qualifications'],
-            'StaffAbsences'         => ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
             'StaffExtracurriculars' => ['className' => 'Staff.Extracurriculars'],
             'TrainingResults'       => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 
@@ -90,7 +90,6 @@ class ProfilesController extends AppController
     public function StudentSubjects()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
     public function Nationalities()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
     public function Languages()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
-    public function SpecialNeeds()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
     public function StaffMemberships()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']); }
     public function StaffLicenses()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']); }
     public function Contacts()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
@@ -112,6 +111,7 @@ class ProfilesController extends AppController
     public function StaffBehaviours()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']); }
     public function StudentOutcomes()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']); }
     public function ScholarshipApplications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipApplications']); }
+    public function Demographic()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']); }
 
     // health
     public function Healths()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
@@ -124,7 +124,30 @@ class ProfilesController extends AppController
     public function HealthTests()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']); }
     // End Health
 
+    // Special Needs
+    public function SpecialNeedsReferrals()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsReferrals']); }
+    public function SpecialNeedsAssessments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsAssessments']); }
+    public function SpecialNeedsServices()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsServices']); }
+    public function SpecialNeedsDevices()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDevices']); }
+    public function SpecialNeedsPlans()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']); }
+    // Special Needs - End
+
     public function Employments()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']); }
+    // AngularJS
+    public function StaffAttendances()
+    {
+        $institutionId = null;
+        $staffId = $this->Auth->user('id');
+        $tabElements = $this->getCareerTabElements();
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+        $this->set('institution_id', $institutionId);
+        $this->set('staff_id', $staffId);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', 'Attendances');
+        $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
+    }
     // End
 
     public function implementedEvents()
@@ -189,6 +212,12 @@ class ProfilesController extends AppController
                     'alert.svc',
                     'student.examination_results.ctrl',
                     'student.examination_results.svc'
+                ]);
+                break;
+            case 'StaffAttendances':
+                $this->Angular->addModules([
+                    'staff.attendances.ctrl',
+                    'staff.attendances.svc'
                 ]);
                 break;
         }
@@ -364,11 +393,11 @@ class ProfilesController extends AppController
         $tabElements = [
             $this->name => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
+            'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
-            'SpecialNeeds' => ['text' => __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'History' => ['text' => __('History')]
@@ -473,8 +502,8 @@ class ProfilesController extends AppController
             'Positions' => ['text' => __('Positions')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Absences')],
             'Leave' => ['text' => __('Leave')],
+            'Attendances' => ['text' => __('Attendances')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
         ];

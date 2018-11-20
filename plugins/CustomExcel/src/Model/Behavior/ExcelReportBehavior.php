@@ -19,14 +19,14 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 
 class ExcelReportBehavior extends Behavior
 {
     protected $_defaultConfig = [
         'folder' => 'export',
         'subfolder' => 'customexcel',
-        // 'format' => 'xlsx',
-        'format' => 'pdf',
+        'format' => 'xlsx',
         'download' => true,
         'purge' => true,
         'wrapText' => false,
@@ -136,7 +136,6 @@ class ExcelReportBehavior extends Behavior
 
     public function renderExcelTemplate(ArrayObject $extra)
     {
-        // pr('renderExcelTemplate');die;
         $model = $this->_table;
         $format = $this->config('format');
 
@@ -284,10 +283,6 @@ class ExcelReportBehavior extends Behavior
         } else {
             $this->excelLastRowValueArr[$this->currentWorksheetIndex]  = $targetRowValue;
         }
-        // pr($this->excelLastRowValueArr);die;
-        // if ($targetRowValue > $this->excelLastRowValueArr[$this->currentWorksheetIndex]) {
-        //     $this->excelLastRowValueArr[$this->currentWorksheetIndex]  = $targetRowValue;
-        // }
     }
 
     private function generateRemovalRegex($prefixRegex, $postfixRegex, $startColumn, $endingColumnn = 255)
@@ -353,8 +348,6 @@ class ExcelReportBehavior extends Behavior
 
     private function processHtml($htmlFile, $sheetIndex = 0)
     {
-        // pr(htmlspecialchars($htmlFile));
-        // die;
         $processingHtml = $htmlFile;
         $searchHeadString = '<tbody>';
         $searchTailString = '</tbody>';
@@ -441,7 +434,6 @@ class ExcelReportBehavior extends Behavior
 
     private function removeColumnAndRow($processingString, $sheetIndex)
     {
-        // pr(htmlspecialchars($processingString));die;
         $processedHtmlRows = [];
         $targetRowValue = $this->excelLastRowValueArr[$sheetIndex+1];
 
@@ -472,7 +464,6 @@ class ExcelReportBehavior extends Behavior
             $replacement = '<img src="data:image/jpg;base64';
             $processedHtmlRow = preg_replace($searchFormat, $replacement, $targetRow);
 
-            // $processedHtmlRows[] = preg_replace($regexString, "", $modifiedRow);
             $processedHtmlColumn = preg_replace($regexString, "", $processedHtmlRow);
 
             // Clear up all the empty blank lines using regular expression
@@ -694,16 +685,8 @@ class ExcelReportBehavior extends Behavior
             $filesTotal = sizeof($filenames);
             $mpdf->SetImportUse();  
 
-
-            Log::write('debug', '----------------------filenames---------------------: ');
-            Log::write('debug', $filenames);
-            Log::write('debug', '----------------------filenames---------------------: ');
-            Log::write('debug', count($filenames));
-
             for ($i = 0; $i<count($filenames);$i++) {
                 $curFile = $filenames[$i];
-                Log::write('debug', '----------------------curFile---------------------: ');
-                Log::write('debug', $curFile);
                 if (file_exists($curFile)){
                     $pageCount = $mpdf->SetSourceFile($curFile);
                     for ($p = 1; $p <= $pageCount; $p++) {
@@ -725,15 +708,9 @@ class ExcelReportBehavior extends Behavior
                 }                    
             }                
         }
-        // pr($outFile.'final.pdf');die;
-        //Here should be the problem, investigation (take a look)
-        //Unable to download in chrome. Must see how to dl.
+        
         $finalPDF_file = $outFile.'final.pdf';
 
-        Log::write('debug', 'mergePDFFiles >>> output: '.$finalPDF_file);
-
-
-        // $mpdf->Output($outFile.'final.pdf', "F");
         $mpdf->Output($finalPDF_file, "D");
         unset($mpdf);
     }
@@ -798,31 +775,28 @@ class ExcelReportBehavior extends Behavior
 
             $this->mergePDFFiles($filePaths, $fileName, $fileName);
             // // Remove the temp file that is converted from excel object and its successfully converted to pdf
-            // if ($this->config('purge')) {
-            //     foreach ($filePaths as $filepath) {
-            //         // delete excel file after successfully converted to pdf
-            //         $this->deleteFile($filepath);
-            //     }
-            // }
+            if ($this->config('purge')) {
+                foreach ($filePaths as $filepath) {
+                    // delete excel file after successfully converted to pdf
+                    $this->deleteFile($filepath);
+                }
+            }
         } else {
-            // pr($filepath);die;
-
             // xlsx
             $objWriter->save($filepath);
 
         }
+
+        $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+        $objWriter->save($filepath);
+        $objSpreadsheet->disconnectWorksheets();
+        unset($objWriter, $objSpreadsheet);
+        gc_collect_cycles();
+
     }
 
     public function downloadFile($filecontent, $filename, $filesize)
     {
-        Log::write('debug', '----------------------downloadFile---------------------: ');
-        Log::write('debug', '----------------------filecontent---------------------: ');
-        Log::write('debug', $filecontent);
-        Log::write('debug', '----------------------filename---------------------: ');
-        Log::write('debug', $filename);
-        Log::write('debug', '----------------------filesize---------------------: ');
-        Log::write('debug', $filesize);
-
         header("Pragma: public", true);
         header("Expires: 0"); // set expiration time
         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");

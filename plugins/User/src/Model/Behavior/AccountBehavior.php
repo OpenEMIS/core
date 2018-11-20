@@ -70,7 +70,11 @@ class AccountBehavior extends Behavior
             }
         }
 
-        $tabElements = $this->_table->controller->getUserTabElements($options);
+        if ($this->_table->controller->name == 'Guardians') {
+            $tabElements = $this->_table->controller->getGuardianTabElements($options);
+        } else {
+            $tabElements = $this->_table->controller->getUserTabElements($options);
+        }
 
         $this->_table->controller->set('tabElements', $tabElements);
         $this->_table->controller->set('selectedAction', $this->_table->alias());

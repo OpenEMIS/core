@@ -20,7 +20,7 @@ class WorkflowTransitionsTable extends AppTable {
         return $events;
     }
 
-	public function trackChanges(Entity $workflowModelEntity, Entity $affectedEntity, $assigneeId=0){
+	public function trackChanges(Entity $workflowModelEntity, Entity $affectedEntity, $assigneeId=0, $requestDataComment = null){
 		$unassigned = '<'.__('Unassigned').'>';
 
 		if ($affectedEntity->has('assignee')) {
@@ -62,9 +62,13 @@ class WorkflowTransitionsTable extends AppTable {
 					->first();
 				$stepName = $stepEntity->name;
 			}
+			$comments =  __('From').' '.$origAssigneeName.' '.__('to').' '.$newAssigneeName;
+			if (!is_null($requestDataComment)){
+				$comments .=  "\n". $requestDataComment;
+			}
 
 			$data = [
-				'comment' => __('From').' '.$origAssigneeName.' '.__('to').' '.$newAssigneeName,
+				'comment' => $comments,
 				'prev_workflow_step_name' => $stepName,
 				'workflow_step_name' => $stepName,
 				'workflow_action_name' => 'Administration - Change Assignee',

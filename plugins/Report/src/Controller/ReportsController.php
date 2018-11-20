@@ -13,6 +13,7 @@ class ReportsController extends AppController
     {
         parent::initialize();
         $this->ControllerAction->models = [
+            'Directory'  => ['className' => 'Report.Directory', 'actions' => ['index', 'add']],
             'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
             'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
             'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
@@ -47,7 +48,11 @@ class ReportsController extends AppController
     public function getFeatureOptions($module)
     {
         $options = [];
-        if ($module == 'Institutions') {
+        if ($module == 'Directory') {
+            $options = [
+                'Report.Directory' => __('User Default Identity'),
+            ];
+        } elseif ($module == 'Institutions') {
             $options = [
                 'Report.Institutions' => __('Institutions'),
                 'Report.InstitutionPositions' => __('Positions'),
@@ -60,7 +65,7 @@ class ReportsController extends AppController
                 'Report.StudentAbsences' => __('Student Absence'),
                 'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
                 'Report.BodyMasses' => __('Student Body Masses'),
-                'Report.StaffAbsences' => __('Staff Absence'),
+                // 'Report.StaffAbsences' => __('Staff Absence'),
                 'Report.StaffLeave' => __('Staff Leave'),
                 'Report.StaffTransfers' => __('Staff Transfer'),
                 'Report.InstitutionCases' => __('Cases'),
@@ -104,7 +109,11 @@ class ReportsController extends AppController
                 'Report.Scholarships' => __('Scholarships'),
                 'Report.ScholarshipApplications' => __('Scholarship Applications'),
                 'Report.RecipientPaymentStructures' => __('Recipient Payment Structures'),
-                'Report.RecipientAcademicStandings' => __('Recipient Academic Standings')
+                'Report.RecipientAcademicStandings' => __('Recipient Academic Standings'),
+                'Report.ScholarshipRecipients' => __('Scholarship Recipients'),
+                'Report.ScholarshipDisbursements' => __('Scholarship Disbursements (Overview)'),
+                'Report.ScholarshipDisbursementsAmounts' => __('Scholarship Disbursements (Detailed)'),
+                'Report.ScholarshipEnrollments' => __('Scholarship Enrollments')
             ];
         } elseif ($module == 'Surveys') {
             $options = [

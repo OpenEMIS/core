@@ -90,8 +90,21 @@ class CustomReportsTable extends AppTable
                     unset($filters['academic_period_id']);
                 }
 
+                if (isset($this->request->data["submit"]) && $this->request->data["submit"] == "academic_period_id") {
+                    $toReset = true;
+                } else {
+                    $toReset = false;
+                }
+
                 // other filters
                 foreach ($filters as $field => $filterData) {
+                    if ($toReset) {
+                        unset($this->request->data[$this->alias()][$field]);
+                    }
+                    if (isset($this->request->data["submit"]) && $field == $this->request->data["submit"]) {
+                        $toReset = true;
+                    }
+
                     $fieldType = array_key_exists('fieldType', $filterData) ? $filterData['fieldType'] : 'select';
                     $fieldParams = [];
                     $fieldParams['type'] = $fieldType;
@@ -100,20 +113,32 @@ class CustomReportsTable extends AppTable
                         // get options
                         $queryParams = $this->request->data[$this->alias()];
                         $queryParams['user_id'] = $this->Auth->user('id');
-                        $queryParams['super_admin'] =$this->Auth->user('super_admin');
+                        $queryParams['super_admin'] = $this->Auth->user('super_admin');
                         $byaccess = false;
                         $toSql = false;
                         $options = $this->buildQuery($filterData, $queryParams, $byaccess, $toSql);
 
                         // add additional options
                         if (array_key_exists('options', $filterData)) {
-                            $options = $filterData['options'] + $options;
+                            if (array_key_exists('options_condition', $filterData)) {
+                                // only allow options if conditions met
+                                if ($this->checkOptionCondition($filterData["options_condition"], $queryParams)) {
+                                    foreach ($filterData['options'] as $value => $option) {
+                                        if ($value == -1) {
+                                            $value = "0 OR (0=0)";
+                                        }
+                                        $options = array($value => $option) + $options;
+                                    }
+                                }
+                            } else { // if no condition, allow options
+                                $options = $filterData['options'] + $options;
+                            }
                         }
 
                         // set field parameters
                         $fieldParams['options'] = $options;
                         $fieldParams['select'] = false;
-                        $fieldParams['onChangeReload'] = true;
+                        $fieldParams['onChangeReload'] = $field;
                         if ($fieldType == 'chosenSelect') {
                             $fieldParams['attr'] = ['multiple' => false];
                         }
@@ -139,12 +164,31 @@ class CustomReportsTable extends AppTable
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-        	$customReports = $this->find('list')->order('name')->toArray();
+            $queryParams = isset($this->request->data[$this->alias()]) ? $this->request->data[$this->alias()] : [];
+            $queryParams['user_id'] = $this->Auth->user('id');
+            $queryParams['super_admin'] = $this->Auth->user('super_admin');
+
+            $customReports = $this
+                ->find(
+                    'list', 
+                    ["valueField" => function ($row) {
+                            return $row;
+                    }]
+                )
+                ->order('name')
+                ->toArray();
 
             // for translation
             $reportOptions = [];
-            foreach ($customReports as $key => $name) {
-                $reportOptions[$key] = __($name);
+            foreach ($customReports as $key => $customReport) {
+                if (!$queryParams['super_admin'] // if super admin, allow option
+                    && $customReport->conditions  // only check condition if field exist
+                    && !$this->checkOptionCondition(json_decode($customReport->conditions, true), $queryParams)
+                ) {
+                    // skip option
+                    continue;
+                }
+                $reportOptions[$key] = __($customReport->name);
             }
 
             $attr['options'] = $reportOptions;
@@ -187,7 +231,7 @@ class CustomReportsTable extends AppTable
             $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = $AcademicPeriods->getCurrent();
 
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = "academic_period_id";
             $attr['options'] = $periodOptions;
             $attr['default'] = $selectedPeriod;
             $attr['type'] = 'select';

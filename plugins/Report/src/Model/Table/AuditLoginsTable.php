@@ -28,7 +28,6 @@ class AuditLoginsTable extends AppTable
 
         $this->hasMany('Identities', ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Nationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds',    'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Attachments', ['className' => 'User.Attachments',     'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('BankAccounts', ['className' => 'User.BankAccounts',    'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -38,6 +37,8 @@ class AuditLoginsTable extends AppTable
         $this->hasMany('Logins', ['className' => 'SSO.SecurityUserLogins', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Counsellings', ['className' => 'Counselling.Counsellings', 'foreignKey' => 'counselor_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('BodyMasses', ['className' => 'User.UserBodyMasses', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        
+        $this->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments',    'foreignKey' => 'security_user_id', 'dependent' => true]);
         
         $this->addBehavior('Excel', [
             'excludes' => ['username', 'address', 'postal_code',
@@ -56,8 +57,9 @@ class AuditLoginsTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d');
-        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d');
+
+        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d H:i:s');
+        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d H:i:s');
 
         $query
             ->select([

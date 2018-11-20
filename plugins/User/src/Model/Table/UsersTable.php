@@ -177,7 +177,7 @@ class UsersTable extends AppTable
         $model->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
         $model->hasMany('Identities', ['className' => 'User.Identities',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $model->hasMany('Nationalities', ['className' => 'User.UserNationalities',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds',    'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments',    'foreignKey' => 'security_user_id', 'dependent' => true]);
         $model->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $model->hasMany('Attachments', ['className' => 'User.Attachments',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $model->hasMany('BankAccounts', ['className' => 'User.BankAccounts',    'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -290,6 +290,7 @@ class UsersTable extends AppTable
                 $this->aliasField('last_name'),
                 $this->aliasField('preferred_name')
             ])
+            ->contain('SpecialNeeds')
             ->group([$this->aliasField('id')])
             ->order([$this->aliasField('first_name', 'last_name')]) // POCOR-2547 sort list of staff and student by name
             ->formatResults(function ($results) use ($institutionClassId, $institutionId) {
@@ -307,7 +308,8 @@ class UsersTable extends AppTable
                         'gender_id' => $result->gender_id,
                         'gender_name' => __($result->gender_name),
                         'institution_id' => $institutionId,
-                        'institution_class_id' => $institutionClassId
+                        'institution_class_id' => $institutionClassId,
+                        'has_special_needs' => $result->has_special_needs
                     ];
                 }
                 return $arrReturn;
@@ -587,6 +589,25 @@ class UsersTable extends AppTable
             ->allowEmpty('username', 'update')
             // password validation now in behavior
             ->allowEmpty('photo_content')
+            ->allowEmpty('identity_number', function ($context) {
+                if (!empty($context['data']['identity_type_id']) && empty($context['data']['identity_number'])) {
+                    return false;
+                }
+                return true;
+            })
+            ->add('account_type', 'custom', [
+                'rule' => function ($value, $context) {
+                    $accountTypes = ['is_student', 'is_staff', 'is_guardian', 'others'];
+                    return in_array($value, $accountTypes);
+                },
+                'message' => $this->getMessage('Import.value_not_in_list'),
+                'on' => function ($context) {  
+                    if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
+                        return true;
+                    }
+                    return false;
+                }
+            ])
             ;
         return $validator;
     }
@@ -1050,6 +1071,40 @@ class UsersTable extends AppTable
                 ],
                 ['id' => $entity->security_user_id]
             );
+        } else {
+            /* if its update, check if any user identities type ids matches the preferred nationality identityTypeId.
+             if none found update the identity_number to null */
+            if (!$entity->isNew()) {
+                $userPreferredNationality = $UserNationalityTable
+                    ->find()
+                    ->matching('NationalitiesLookUp')
+                    ->select(['identityTypeId' => 'NationalitiesLookUp.identity_type_id'])
+                    ->where([
+                        $UserNationalityTable->aliasField('security_user_id') => $entity->security_user_id,
+                        $UserNationalityTable->aliasField('preferred') => 1
+                    ])
+                    ->first();
+                if (!empty($userPreferredNationality)) {
+                    $preferredIdentityTypeId = $userPreferredNationality->identityTypeId;
+                    $UserIdentities = TableRegistry::get('User.Identities');
+                    $latestIdentity = $UserIdentities->find()
+                    ->where([
+                        $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
+                        $UserIdentities->aliasField('identity_type_id') => $preferredIdentityTypeId,
+                    ])
+                    ->order([$UserIdentities->aliasField('created') => 'desc'])
+                    ->first();
+
+                    if (empty($latestIdentity)) {
+                        $this->updateAll(
+                            [
+                                'identity_number' => null
+                            ],
+                            ['id' => $entity->security_user_id]
+                        );
+                    }
+                }
+            }
         }
     }
 

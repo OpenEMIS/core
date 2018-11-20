@@ -9,6 +9,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\Network\Request;
+
 
 class ScholarshipApplicationsTable extends ControllerActionTable
 {
@@ -190,8 +192,14 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             ]]);
             $entity->scholarship_id = $scholarshipId;
             $entity->scholarship = $scholarshipEntity;
-            $entity->applicant_id = $this->Auth->user('id');
         }
+
+        // POCOR-4836    
+        $entity->applicant_id = $this->Auth->user('id');
+
+        $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+        $applicantEntity = $this->Applicants->get($entity->applicant_id, ['contain' => ['Genders', 'MainIdentityTypes']]);
+        $entity->applicant = $applicantEntity;
 
         $this->setupFields($entity);
     }
@@ -268,6 +276,15 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'scholarship_id') {
+            return __('Scholarship Name');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     public function onGetAcademicPeriodId(Event $event, Entity $entity)
@@ -382,6 +399,21 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+            $displayValue = $entity->applicant->name_with_id;
+            $value = $entity->applicant_id;
+
+            $attr['value'] = $value;
+            $attr['attr']['value'] = $displayValue;
+            $attr['type'] = 'readonly';
+
+            return $attr;
+        }
+    }
+
     public function setupFields($entity)
     {
         $isLoan = false;
@@ -418,7 +450,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->field('maximum_award_amount', [
             'type' => 'disabled',
             'fieldName' => 'scholarship.maximum_award_amount',
-            'attr' => ['label' => $this->addCurrencySuffix('Maximum Award Amount')]
+            'attr' => ['label' => $this->addCurrencySuffix('Annual Award Amount')]
         ]);
         $this->field('bond', [
             'type' => 'disabled',

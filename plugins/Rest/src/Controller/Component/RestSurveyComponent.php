@@ -1401,14 +1401,15 @@ class RestSurveyComponent extends Component
             if (isset($attr['rules'][$questionId])) {
                 $rules = $attr['rules'][$questionId];
                 $relevancy = '';
+                $tmp = [];
                 foreach ($rules as $key => $options) {
                     $dependentQuestion = $attr['rules']['dependent_question_mapping'][$key];
                     $options = json_decode($options);
                     foreach ($options as $option) {
-                        $relevancy .= '../'.$dependentQuestion.' eq '. $option .' &#38;&#38; ';
+                        $tmp[] = '../'.$dependentQuestion.' eq '. $option;
                     }
                 }
-                $relevancy = rtrim($relevancy, ' &#38;&#38; ');
+                $relevancy = implode(' &#38;&#38; ', $tmp);
                 $bindNode->addAttribute("relevant", $relevancy);
             }
         }
@@ -1438,15 +1439,8 @@ class RestSurveyComponent extends Component
 
     private function twentyFourHourFormat($value)
     {
-        $values = explode(' ', $value);
-        if (strtolower($values[1])=='am') {
-            return $values[0] . ':00';
-        } else {
-            $time = explode(':', $values[0]);
-            $time[] = '00';
-            $time[0] = intval($time[0]) + 12;
-            return implode(':', $time);
-        }
+        $time = date("H:i:s", strtotime($value));
+        return $time;
     }
 
     private function deleteExpiredResponse()
