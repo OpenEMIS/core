@@ -268,8 +268,6 @@ class DirectoriesTable extends ControllerActionTable
         $options['auto_search'] = true;
 
         $this->dashboardQuery = clone $query;
-
-        //pr($query); die;
     }
 
     public function findStudentsInSchool(Query $query, array $options)
