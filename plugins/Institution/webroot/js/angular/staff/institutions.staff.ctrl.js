@@ -239,7 +239,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             } else if ($location.search().staff_transfer_added) {
                 AlertSvc.success($scope, 'Staff transfer request is added successfully.');
             } else if ($location.search().transfer_exists) {
-                console.log($location);
                 AlertSvc.warning($scope, 'There is an existing transfer record for this staff.');
             } else if ($location.search().release_exists) {
                 AlertSvc.warning($scope, 'There is an existing release record for this staff.');
@@ -1154,7 +1153,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
-        console.log('herere' , data);
         return;
         // The last complete step is now transfer staff, add transfer staff logic function call here
         StaffController.postTransferForm();

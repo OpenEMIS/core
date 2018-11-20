@@ -35,6 +35,61 @@ class POCOR4876 extends AbstractMigration
             'comment' => 'This table contains all the staff release requests'
         ]);
         $InstitutionStaffReleases
+            ->addColumn('previous_FTE', 'decimal', [
+                'default' => null,
+                'precision' => 5,
+                'scale' => 2,
+                'null' => true
+            ])
+            ->addColumn('previous_start_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('previous_end_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('new_FTE', 'decimal', [
+                'default' => null,
+                'precision' => 5,
+                'scale' => 2,
+                'null' => true
+            ])
+            ->addColumn('new_start_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('new_end_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('all_visible', 'integer', [
+                'default' => '0',
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
             ->addColumn('status_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -71,20 +126,6 @@ class POCOR4876 extends AbstractMigration
                 'null' => true,
                 'comment' => 'links to staff_types.id'
             ])
-            ->addColumn('previous_FTE', 'decimal', [
-                'default' => null,
-                'precision' => 5,
-                'scale' => 2,
-                'null' => true
-            ])
-            ->addColumn('previous_start_date', 'date', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('previous_end_date', 'date', [
-                'default' => null,
-                'null' => true
-            ])
             ->addColumn('new_institution_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -103,54 +144,6 @@ class POCOR4876 extends AbstractMigration
                 'null' => true,
                 'comment' => 'links to staff_types.id'
             ])
-            ->addColumn('new_FTE', 'decimal', [
-                'default' => null,
-                'precision' => 5,
-                'scale' => 2,
-                'null' => true
-            ])
-            ->addColumn('new_start_date', 'date', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('new_end_date', 'date', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('comment', 'text', [
-                'default' => null,
-                'null' => true
-            ])
-            //No Type to be reomve once all working
-            // ->addColumn('transfer_type', 'integer', [
-            //     'default' => '0',
-            //     'limit' => 1,
-            //     'null' => false,
-            //     'comment' => '1 -> Full Transfer, 2 -> Partial Transfer, 3 -> No Change'
-            // ])
-            ->addColumn('all_visible', 'integer', [
-                'default' => '0',
-                'limit' => 1,
-                'null' => false
-            ])
-            ->addColumn('modified_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true
-            ])
-            ->addColumn('modified', 'datetime', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('created_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('created', 'datetime', [
-                'default' => null,
-                'null' => false
-            ])
             ->addIndex('staff_id')
             ->addIndex('previous_institution_id')
             ->addIndex('status_id')
@@ -164,7 +157,7 @@ class POCOR4876 extends AbstractMigration
             ->addIndex('new_staff_type_id')
             ->save();
 
-        //Insert 3 rows into config item table for Staff Release.
+        // Insert 3 rows into config item table for Staff Release.
         $configData = [
             [
                 'id' => 1020,
@@ -212,56 +205,7 @@ class POCOR4876 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s'),
             ]
         ];
-
         $this->insert('config_items', $configData);
-
-        // $this->insert('config_items', [
-        //     'id' => 1020,
-        //     'name' => 'Enable Staff Release By Types',
-        //     'code' => 'staff_release_by_types',
-        //     'type' => 'Staff Releases',
-        //     'label' => 'Enable Staff Release By Types',
-        //     'value' => "",
-        //     'default_value' => '{"selection":"0"}',
-        //     'editable' => 1,
-        //     'visible' => 1,
-        //     'field_type' => "",
-        //     'option_type' => "",
-        //     'created_user_id' => 1,
-        //     'created' => date('Y-m-d H:i:s'),
-        // ]);
-
-        // $this->insert('config_items', [
-        //     'id' => 1021,
-        //     'name' => 'Enable Staff Release By Sectors',
-        //     'code' => 'staff_release_by_sectors',
-        //     'type' => 'Staff Releases',
-        //     'label' => 'Enable Staff Release By Sectors',
-        //     'value' => "",
-        //     'default_value' => '{"selection":"0"}',
-        //     'editable' => 1,
-        //     'visible' => 1,
-        //     'field_type' => "",
-        //     'option_type' => "",
-        //     'created_user_id' => 1,
-        //     'created' => date('Y-m-d H:i:s'),
-        // ]);
-
-        // $this->insert('config_items', [
-        //     'id' => 1022,
-        //     'name' => 'Restrict Staff Release Between Same Type',
-        //     'code' => 'restrict_staff_release_between_same_type',
-        //     'type' => 'Staff Releases',
-        //     'label' => 'Restrict Staff Release Between Same Type',
-        //     'value' => "",
-        //     'default_value' => "0",
-        //     'editable' => 1,
-        //     'visible' => 1,
-        //     'field_type' => "Dropdown",
-        //     'option_type' => "yes_no",
-        //     'created_user_id' => 1,
-        //     'created' => date('Y-m-d H:i:s'),
-        // ]);
 
         //Inserting into workflows,workflow_model,workflow_steps,workflow_actions tables
         $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
@@ -313,7 +257,7 @@ class POCOR4876 extends AbstractMigration
             ->extract('id')
             ->first();
 
-        //workflow_steps for outgoing staff release
+        // workflow_steps for outgoing staff release
         $workflowStepData = [
             [
                 'name' => 'Open',
@@ -378,7 +322,7 @@ class POCOR4876 extends AbstractMigration
         ];
         $this->insert('workflow_steps', $workflowStepData);
 
-        //Get the workflowSteps id for the created workflowsteps
+        // Get the workflowSteps id for the created workflowsteps for out
         $outOpenStatusId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $staffReleaseOutWorkflowId,
@@ -427,7 +371,7 @@ class POCOR4876 extends AbstractMigration
             ->extract('id')
             ->first();
 
-        //workflow_actions for out
+        // workflow_actions for out
         $workflowActionData = [
             [
                 'name' => 'Submit For Approval',
@@ -523,7 +467,7 @@ class POCOR4876 extends AbstractMigration
         ];
         $this->insert('workflow_actions', $workflowActionData);
 
-        //workflow_steps_params for out
+        // workflow_steps_params for out
         $institutionOwner = [
             [
                 'id' => Text::uuid(),
@@ -574,15 +518,13 @@ class POCOR4876 extends AbstractMigration
         ];
         $this->insert('workflow_steps_params', $validateApprove);
 
-        //end for workflow
-
-        //To Do Create Steps and Action for staff release IN
+        // workflow_model id for staff release in
         $staffReleaseInWorkflowId = $WorkflowsTable->find()
             ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->workflowModelStaffReleaseInId])
             ->extract('id')
             ->first();
 
-        // workflow_steps for incoming staff release
+        // workflow_steps for staff release in
         $workflowStepData = [
             [
                 'name' => 'Open',
@@ -647,7 +589,7 @@ class POCOR4876 extends AbstractMigration
         ];
         $this->insert('workflow_steps', $workflowStepData);
 
-        //Get the workflowSteps id for the created workflowsteps for in release
+        // Get the workflowSteps id for the created workflowsteps for in release
         $inOpenStatusId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $staffReleaseInWorkflowId,
@@ -696,7 +638,7 @@ class POCOR4876 extends AbstractMigration
             ->extract('id')
             ->first();
 
-        //workflow_actions for in
+        // workflow_actions for in
         $workflowActionData = [
             [
                 'name' => 'Submit For Approval',
@@ -842,7 +784,6 @@ class POCOR4876 extends AbstractMigration
             ]
         ];
         $this->insert('workflow_steps_params', $validateApprove);
-
 
         //labels to overwrite fields display
         $labels = [
@@ -1008,9 +949,7 @@ class POCOR4876 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ]
         ];
-
         $this->insert('security_functions', $seucrityFunctionsData);
-
     }
 
     public function down()
@@ -1035,20 +974,3 @@ class POCOR4876 extends AbstractMigration
         $this->table('z_4876_security_functions')->rename('security_functions');
     }
 }
-
-//Test SQL
-/*
-SELECT `workflows`.`name` as WorkflowsName,
-`workflow_models`.`name` as WorkflowModelName,
-`workflow_steps`.`id` as WorkflowStepsID, `workflow_steps`.`name` as WorkflowStepsName, `workflow_steps`.`category` as WorkflowCategory,
-`workflow_actions`.`name` as WorkflowActionsName, `workflow_actions`.`next_workflow_step_id` as WorkflowActionsNextStepID
-FROM `workflows`
-left join `workflow_models`
-on `workflows`.`workflow_model_id` = `workflow_models`.`id`
-left join `workflow_steps`
-on `workflows`.`id` = `workflow_steps`.`workflow_id`
-left join `workflow_actions`
-on `workflow_steps`.`id` = `workflow_actions`.`workflow_step_id`
-where `workflows`.`id` = 14
-or `workflows`.`id` = 13
-*/
