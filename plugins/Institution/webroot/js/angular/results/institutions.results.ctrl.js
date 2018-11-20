@@ -347,8 +347,18 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
     };
 
     $scope.onEditClick = function() {
-        $scope.action = 'edit';
-        AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
+        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.id, $scope.class_id)
+        .then(function(hasPermission) {
+            if(hasPermission) {
+                $scope.action = 'edit';
+                AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
+            } else {
+                $scope.action = 'view';
+                AlertSvc.warning($scope, 'You have no permission for this subject.');
+            }
+        }, function(error) {
+            console.log(error);
+        })
     };
 
     $scope.onBackClick = function() {
