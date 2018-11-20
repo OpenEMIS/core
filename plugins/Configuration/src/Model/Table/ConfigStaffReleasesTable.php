@@ -350,9 +350,9 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                         break;
                     default:
                         break;
-                }
             }
         }
+    }
         $attr['attr']['label'] = __('Value');
         return $attr;
     }
@@ -365,7 +365,6 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         $this->field('value', [
             'entity' => $entity
         ]);
-
         $this->setFieldOrder([
             'type', 'label', 'value_selection', 'value', 'default_value'
         ]);
@@ -376,7 +375,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         $Institutions = TableRegistry::get('Institution.Institutions');
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 
-        //StaffReleaseByTypes
+        // StaffReleaseByTypes
         $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
         $staffReleaseByTypesJsonString = $ConfigItems->value('staff_release_by_types');
         $staffReleaseByTypesJsonData = stripslashes(html_entity_decode($staffReleaseByTypesJsonString));
@@ -393,7 +392,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
             }
         }
 
-        //StaffReleaseBySector
+        // StaffReleaseBySector
         $institutionSectorId = $Institutions->get($institutionId)->institution_sector_id;
         $staffReleaseBySectorsJsonString = $ConfigItems->value('staff_release_by_sectors');
         $staffReleaseBySectorsJsonData = stripslashes(html_entity_decode($staffReleaseBySectorsJsonString));
@@ -417,9 +416,9 @@ class ConfigStaffReleasesTable extends ControllerActionTable
     {
         $isRestricted = false;
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $restrictStaffReleaseBetweenSameType = $ConfigItems->value('restrict_staff_release_between_same_type');
 
-        $restrictStaffTransferBetweenSameType = $ConfigItems->value('restrict_staff_release_between_same_type');
-        if ($restrictStaffTransferBetweenSameType) {
+        if ($restrictStaffReleaseBetweenSameType) {
             $sameType = $this->compareInstitutionType($institutionId, $compareInstitutionId);
 
             if (!$sameType) {

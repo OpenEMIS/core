@@ -38,7 +38,6 @@ class StaffTable extends ControllerActionTable
     const PENDING_RELEASEIN = -4;
     const PENDING_RELEASEOUT = -5;
 
-
     private $dashboardQuery = null;
 
     public function initialize(array $config)
@@ -572,19 +571,27 @@ class StaffTable extends ControllerActionTable
             ->find('InstitutionStaffTransferOut', ['institution_id' => $institutionId, 'pending_records' => true])
             ->count();
 
-        $InstitutionStaffReleasesTable = TableRegistry::get('Institution.InstitutionStaffReleases');
-        $staffTransferInRecord = $InstitutionStaffReleasesTable
-            ->find('InstitutionStaffReleaseIn', ['institution_id' => $institutionId, 'pending_records' => true])
-            ->count();
-        $staffReleaseOutRecord = $InstitutionStaffReleasesTable
-            ->find('InstitutionStaffReleaseOut', ['institution_id' => $institutionId, 'pending_records' => true])
-            ->count();
-
         $statusOptions[self::PENDING_PROFILE] = __('Pending Change in Assignment'). ' - '. $staffPositionProfilesRecordCount;
         $statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In'). ' - ' . $staffTransferInRecord;
         $statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out'). ' - ' . $staffTransferOutRecord;
-        $statusOptions[self::PENDING_RELEASEIN] = __('Pending Release In'). ' - ' . $staffTransferInRecord;
-        $statusOptions[self::PENDING_RELEASEOUT] = __('Pending Release Out'). '-' . $staffReleaseOutRecord;
+
+        // Display Staff Release if staff release is enabled
+        $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
+        $enableStaffRelease = $ConfigStaffReleaseTable->checkIfReleaseEnabled($institutionId);
+
+        if ($enableStaffRelease) {
+            $InstitutionStaffReleasesTable = TableRegistry::get('Institution.InstitutionStaffReleases');
+            $staffReleaseInRecord = $InstitutionStaffReleasesTable
+            ->find('InstitutionStaffReleaseIn', ['institution_id' => $institutionId, 'pending_records' => true])
+            ->count();
+
+            $staffReleaseOutRecord = $InstitutionStaffReleasesTable
+            ->find('InstitutionStaffReleaseOut', ['institution_id' => $institutionId, 'pending_records' => true])
+            ->count();
+
+            $statusOptions[self::PENDING_RELEASEIN] = __('Pending Release In'). ' - ' . $staffReleaseInRecord;
+            $statusOptions[self::PENDING_RELEASEOUT] = __('Pending Release Out'). '-' . $staffReleaseOutRecord;
+        }
 
         $selectedStatus = $this->queryString('staff_status_id', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
