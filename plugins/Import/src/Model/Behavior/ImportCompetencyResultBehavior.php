@@ -468,7 +468,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
    
     }
 
-    public function checkCorrectIdTemplate($col, $header, $sheet, $totalColumns, $row)
+    private function checkCorrectIdTemplate($col, $header, $sheet, $totalColumns, $row)
     {
         $cellsValue = [];
         $i = 0;
