@@ -140,7 +140,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
                     ];
                     $newEntity = $StaffTable->newEntity($newRecord, ['validate' => 'AllowPositionType']);
                     $StaffTable->save($newEntity);
-                 }
+                }
             }
         }
     }

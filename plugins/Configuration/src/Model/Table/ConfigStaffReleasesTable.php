@@ -249,7 +249,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                         $jsonData = stripslashes(html_entity_decode($entity->default_value));
                         $valuesData = json_decode($jsonData,true);
 
-                        //Assign default valut to be empty for display purpose if its selection disable
+                        // Assign default valut to be empty for display purpose if its selection disable
                         if (array_key_exists('selection', $valuesData)) {
                             if ($valuesData['selection'] == self::SELECTION_DISABLE) {
                                 $entity->default_value = " ";
@@ -408,7 +408,6 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                 }
             }
         }
-
         return false;
     }
 
