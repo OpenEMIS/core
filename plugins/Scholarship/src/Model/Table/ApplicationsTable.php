@@ -321,6 +321,21 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+            $displayValue = $entity->applicant->name_with_id;
+            $value = $entity->applicant_id;
+
+            $attr['value'] = $value;
+            $attr['attr']['value'] = $displayValue;
+            $attr['type'] = 'readonly';
+
+            return $attr;
+        }
+    }
+
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->isNew()) {
