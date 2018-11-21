@@ -21,7 +21,6 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-        // POCOR-4047 to get staff profile data
         $this->addBehavior('Institution.StaffProfile');
 
         if ($this->behaviors()->has('Workflow')) {
@@ -37,14 +36,12 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         return $validator
             ->add('new_start_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'previous_end_date', false],
-                // 'message' => __('Release to Position Start Date should not be earlier than Release From Position Start Date'),
                 'on' => function ($context) {
                     return array_key_exists('previous_end_date', $context['data']) && !empty($context['data']['previous_end_date']);
                 }
             ])
             ->add('new_end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'new_start_date', false],
-                // 'message' => __('Release to Position End Date should not be earlier Release to Position Start Date'),
                 'on' => function ($context) {
                     return array_key_exists('new_end_date', $context['data']) && !empty($context['data']['new_end_date']);
                 }
@@ -71,7 +68,6 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         parent::beforeAction($event, $extra);
 
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
-        //$this->field('previous_staff_type_id', ['type' => 'hidden']);
         $this->field('previous_FTE', ['type' => 'hidden']);
         $this->field('transfer_type', ['type' => 'hidden']);
     }
