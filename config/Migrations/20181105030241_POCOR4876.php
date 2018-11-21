@@ -915,10 +915,10 @@ class POCOR4876 extends AbstractMigration
         $updateOrder = 'UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` >= 94';
         $this->execute($updateOrder);
 
-        //insert into seucrity_functions for staff release
+        //insert into security_functions for staff release
         $seucrityFunctionsData = [
             [
-                'id' => 1089,
+                'id' => 1090,
                 'name' => 'Staff Release In',
                 'controller' => 'Institutions',
                 'module' => 'Institutions',
@@ -933,7 +933,7 @@ class POCOR4876 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => 1090,
+                'id' => 1091,
                 'name' => 'Staff Release Out',
                 'controller' => 'Institutions',
                 'module' => 'Institutions',
