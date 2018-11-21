@@ -61,9 +61,9 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
             .then(function (classStudents) {
                 Controller.studentOptions = classStudents;
                 if (Controller.studentOptions.length > 0) {
-                    Controller.selectedStudent = Controller.studentOptions[0].student_id;  
+                    Controller.selectedStudent = Controller.studentOptions[0].student_id;
                     Controller.selectedStudentStatusCode = Controller.studentOptions[0].student_status.code;
-                    Controller.selectedStudentStatus = Controller.studentOptions[0].student_status.name;   
+                    Controller.selectedStudentStatus = Controller.studentOptions[0].student_status.name;
                 } else {
                     AlertSvc.warning(Controller, "Please setup students for this class");
                 }
@@ -175,12 +175,12 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                                     row['grading_options'] = gradingOptions[value.competency_grading_type_id];
                                 }
 
-                                if (angular.isDefined(Controller.studentResults[value.id]) && 
+                                if (angular.isDefined(Controller.studentResults[value.id]) &&
                                     angular.isDefined(Controller.studentResults[value.id]['grading_option'])) {
                                     row['result'] = Controller.studentResults[value.id]['grading_option'];
                                 }
 
-                                if (angular.isDefined(Controller.studentResults[value.id]) && 
+                                if (angular.isDefined(Controller.studentResults[value.id]) &&
                                     angular.isDefined(Controller.studentResults[value.id]['comments'])) {
                                     row['comments'] = Controller.studentResults[value.id]['comments'];
                                 }
@@ -289,13 +289,13 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
     }
 
     function changeStudentOptions(studentChange) {
-        
+
         if (studentChange) {
             angular.forEach(Controller.studentOptions, function(value, key) {
                 if (value.student_id == Controller.selectedStudent) {
                     Controller.selectedStudentStatusCode = value.student_status.code;
                     Controller.selectedStudentStatus = value.student_status.name;
-                    
+
                 }
             });
         }
@@ -327,7 +327,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 columnDefs: [],
                 rowData: [],
                 headerHeight: 38,
-                rowHeight: 38,
+                rowHeight: 58,
                 minColWidth: 100,
                 enableColResize: true,
                 enableSorting: true,
@@ -368,7 +368,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 columnDefs: [],
                 rowData: [],
                 headerHeight: 38,
-                rowHeight: 38,
+                rowHeight: 58,
                 minColWidth: 100,
                 enableColResize: true,
                 enableSorting: true,
