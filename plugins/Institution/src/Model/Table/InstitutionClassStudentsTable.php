@@ -845,19 +845,17 @@ class InstitutionClassStudentsTable extends AppTable
                             $subjectTaken = 0;
 
                             foreach($subjectStudentsEntities->toArray() as $studentEntity) {
-
-                                // Plus one to the subject so that we can keep track how many subject does this student is taking.
-                                $subjectTaken++;
-
                                 // Getting all the subject marks based on report card start/end date
-                                $assessmentItemResultsEntities = $AssessmentItemResults->find()
+                                $AssessmentItemResultsQuery = $AssessmentItemResults->find();
+                                $assessmentItemResultsEntities = $AssessmentItemResultsQuery
                                     ->select([
                                         $AssessmentItemResults->aliasField('student_id'),
                                         $AssessmentItemResults->aliasField('marks'),
                                         $AssessmentItemResults->aliasField('education_subject_id'),
                                         $AssessmentItemResults->aliasField('education_grade_id'),
                                         $AssessmentItemResults->aliasField('academic_period_id'),
-                                        $AssessmentItemResults->aliasField('institution_id')
+                                        $AssessmentItemResults->aliasField('institution_id'),
+                                        'total_mark' => $AssessmentItemResultsQuery->func()->sum($AssessmentItemResults->aliasField('marks'))
                                     ])
                                     ->contain([
                                         'AssessmentPeriods'
@@ -865,16 +863,24 @@ class InstitutionClassStudentsTable extends AppTable
                                     ->where([
                                         $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
                                         $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
-                                        $AssessmentItemResults->AssessmentPeriods->aliasField('start_date') => $row->reportCardStartDate,
-                                        $AssessmentItemResults->AssessmentPeriods->aliasField('end_date') => $row->reportCardEndDate,
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
                                         $AssessmentItemResults->aliasField('marks IS NOT NULL')
-
+                                    ])
+                                    ->group([
+                                        $AssessmentItemResults->aliasField('student_id'),
+                                        $AssessmentItemResults->aliasField('education_subject_id'),
+                                        $AssessmentItemResults->aliasField('education_grade_id'),
+                                        $AssessmentItemResults->aliasField('academic_period_id'),
+                                        $AssessmentItemResults->aliasField('institution_id')
                                     ])
                                     ->all();
-
                                 if (!$assessmentItemResultsEntities->isEmpty()) {
-                                    $total_mark += $assessmentItemResultsEntities->first()['marks'];
+                                    // Plus one to the subject so that we can keep track how many subject does this student is taking.
+                                    $subjectTaken++;
+                                    $total_mark += $assessmentItemResultsEntities->first()['total_mark'];
                                 }
+
                             }
                         }
 
@@ -891,7 +897,6 @@ class InstitutionClassStudentsTable extends AppTable
                         }
 
                         $row->average_mark = number_format($total_mark / $subjectTaken, 2);
-
                         return $row;
                     });
                 });
@@ -947,19 +952,18 @@ class InstitutionClassStudentsTable extends AppTable
                             $subjectTaken = 0;
 
                             foreach($subjectStudentsEntities->toArray() as $studentEntity) {
-
-                                // Plus one to the subject so that we can keep track how many subject does this student is taking.
-                                $subjectTaken++;
-
                                 // Getting all the subject marks based on report card start/end date
-                                $assessmentItemResultsEntities = $AssessmentItemResults->find()
+                                $AssessmentItemResultsQuery = $AssessmentItemResults->find();
+                                $assessmentItemResultsEntities = $AssessmentItemResultsQuery
                                     ->select([
                                         $AssessmentItemResults->aliasField('student_id'),
                                         $AssessmentItemResults->aliasField('marks'),
                                         $AssessmentItemResults->aliasField('education_subject_id'),
                                         $AssessmentItemResults->aliasField('education_grade_id'),
                                         $AssessmentItemResults->aliasField('academic_period_id'),
-                                        $AssessmentItemResults->aliasField('institution_id')
+                                        $AssessmentItemResults->aliasField('institution_id'),
+                                        'total_mark' => $AssessmentItemResultsQuery->func()->sum($AssessmentItemResults->aliasField('marks'))
+
                                     ])
                                     ->contain([
                                         'AssessmentPeriods'
@@ -967,15 +971,23 @@ class InstitutionClassStudentsTable extends AppTable
                                     ->where([
                                         $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
                                         $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
-                                        $AssessmentItemResults->AssessmentPeriods->aliasField('start_date') => $row->reportCardStartDate,
-                                        $AssessmentItemResults->AssessmentPeriods->aliasField('end_date') => $row->reportCardEndDate,
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
                                         $AssessmentItemResults->aliasField('marks IS NOT NULL')
-
+                                    ])
+                                    ->group([
+                                        $AssessmentItemResults->aliasField('student_id'),
+                                        $AssessmentItemResults->aliasField('education_subject_id'),
+                                        $AssessmentItemResults->aliasField('education_grade_id'),
+                                        $AssessmentItemResults->aliasField('academic_period_id'),
+                                        $AssessmentItemResults->aliasField('institution_id')
                                     ])
                                     ->all();
 
                                 if (!$assessmentItemResultsEntities->isEmpty()) {
-                                    $total_mark += $assessmentItemResultsEntities->first()['marks'];
+                                    // Plus one to the subject so that we can keep track how many subject does this student is taking.
+                                    $subjectTaken++;
+                                    $total_mark += $assessmentItemResultsEntities->first()['total_mark'];
                                 }
                             }
                         }
@@ -1072,14 +1084,18 @@ class InstitutionClassStudentsTable extends AppTable
                             $studentEntity = $subjectStudentsEntities->first();
 
                             // Getting all the subject marks based on report card start/end date
-                            $assessmentItemResultsEntities = $AssessmentItemResults->find()
+                            $AssessmentItemResultsQuery = $AssessmentItemResults->find();
+
+                            $assessmentItemResultsEntities = $AssessmentItemResultsQuery
                                 ->select([
                                     $AssessmentItemResults->aliasField('student_id'),
                                     $AssessmentItemResults->aliasField('marks'),
                                     $AssessmentItemResults->aliasField('education_subject_id'),
                                     $AssessmentItemResults->aliasField('education_grade_id'),
                                     $AssessmentItemResults->aliasField('academic_period_id'),
-                                    $AssessmentItemResults->aliasField('institution_id')
+                                    $AssessmentItemResults->aliasField('institution_id'),
+                                    'total_mark' => $AssessmentItemResultsQuery->func()->sum($AssessmentItemResults->aliasField('marks'))
+
                                 ])
                                 ->contain([
                                     'AssessmentPeriods'
@@ -1087,16 +1103,23 @@ class InstitutionClassStudentsTable extends AppTable
                                 ->where([
                                     $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
                                     $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
-                                    $AssessmentItemResults->AssessmentPeriods->aliasField('start_date') => $row->reportCardStartDate,
-                                    $AssessmentItemResults->AssessmentPeriods->aliasField('end_date') => $row->reportCardEndDate,
+                                    $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                    $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
                                     $AssessmentItemResults->aliasField('marks IS NOT NULL'),
                                     $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id']
 
                                 ])
+                                ->group([
+                                        $AssessmentItemResults->aliasField('student_id'),
+                                        $AssessmentItemResults->aliasField('education_subject_id'),
+                                        $AssessmentItemResults->aliasField('education_grade_id'),
+                                        $AssessmentItemResults->aliasField('academic_period_id'),
+                                        $AssessmentItemResults->aliasField('institution_id')
+                                    ])
                                 ->all();
 
                             if (!$assessmentItemResultsEntities->isEmpty()) {
-                                    $row->total_mark = $assessmentItemResultsEntities->first()['marks'];
+                                    $row->total_mark = $assessmentItemResultsEntities->first()['total_mark'];
                             }
                         }
 
