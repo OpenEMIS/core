@@ -64,6 +64,10 @@ class ConfigurationsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigStaffTransfers']);
     }
+    public function StaffReleases()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigStaffReleases']);
+    }
 
     public function implementedEvents()
     {
