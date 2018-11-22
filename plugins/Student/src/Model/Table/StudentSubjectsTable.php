@@ -70,7 +70,7 @@ class StudentSubjectsTable extends ControllerActionTable
 
             if ($hasAllSubjectsPermission) {
                 return $this->controller->redirect($url);
-            } 
+            }
 
             if ($hasMySubjectsPermission) {
                 $userId = $this->Auth->user('id');
@@ -85,18 +85,11 @@ class StudentSubjectsTable extends ControllerActionTable
                     ])
                     ->toArray();
 
-                    if (!empty($subjectsTeaching)) {
-                        if (array_key_exists($this->request->query['institution_subject_id'],$subjectsTeaching)) {
-                             return $this->controller->redirect($url);
-                        } else {
-                            $this->Alert->error('security.noAccess');
-                        }
-                    } else {
-                        $this->Alert->error('security.noAccess');
-                    }
-            } else {
-                $this->Alert->error('security.noAccess');
-            }   
+                if (!empty($subjectsTeaching) && array_key_exists($this->request->query['institution_subject_id'],$subjectsTeaching)) {
+                    return $this->controller->redirect($url);
+                }
+            }
+            $this->Alert->error('security.noAccess');
         }
 
     }

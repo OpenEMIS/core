@@ -87,14 +87,11 @@ class StudentClassesTable extends ControllerActionTable
             if ($hasMyClassesPermission) {
                 $userId = $this->Auth->user('id');
                 if ($userId == $this->request->query['staff_id'] || $userId == $this->request->query['secondary_staff_id']) {
-
                     return $this->controller->redirect($url);
-                } else {
-                    $this->Alert->error('security.noAccess');
                 }
-            }else {
-                $this->Alert->error('security.noAccess');
             }
+            
+            $this->Alert->error('security.noAccess');
         }
 
     }
