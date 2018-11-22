@@ -34,6 +34,8 @@ class StudentClassesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+
+        $this->addBehavior('Restful.RestfulAccessControl');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -63,6 +65,35 @@ class StudentClassesTable extends ControllerActionTable
         $this->setFieldOrder('education_grade', $order++);
         $this->setFieldOrder('institution_class_id', $order++);
         $this->setFieldOrder('homeroom_teacher_name', $order++);
+        
+        if (!empty($this->request->query['institution_class_id'])) {
+            $action = 'view';
+            $hasAllClassesPermission = $this->AccessControl->check(['Institutions', 'AllClasses', $action]);
+            $hasMyClassesPermission = $this->AccessControl->check(['Institutions', 'Classes', $action]);
+            
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Classes',
+                'view',
+                $this->paramsEncode(['id' => $this->request->query['institution_class_id']]),
+                'institution_id' => $this->request->query['institution_id'],
+            ];
+
+            if ($hasAllClassesPermission) {
+                return $this->controller->redirect($url);
+            } 
+            
+            if ($hasMyClassesPermission) {
+                $userId = $this->Auth->user('id');
+                if ($userId == $this->request->query['staff_id'] || $userId == $this->request->query['secondary_staff_id']) {
+                    return $this->controller->redirect($url);
+                }
+            }
+            
+            $this->Alert->error('security.noAccess');
+        }
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -79,11 +110,14 @@ class StudentClassesTable extends ControllerActionTable
         if (array_key_exists('view', $buttons)) {
             $institutionId = $entity->institution_class->institution_id;
             $url = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'Classes',
-                'view',
-                $this->paramsEncode(['id' => $entity->institution_class->id]),
+                'plugin' => 'Directory',
+                'controller' => 'Directories',
+                'action' => 'StudentClasses',
+                'index',
+                'type' => 'student',
+                'staff_id' => $entity->institution_class->staff_id,
+                'secondary_staff_id' => $entity->institution_class->secondary_staff_id,
+                'institution_class_id' => $entity->institution_class->id,
                 'institution_id' => $institutionId,
             ];
             $buttons['view']['url'] = $url;
