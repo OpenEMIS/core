@@ -629,7 +629,7 @@ class DirectoriesTable extends ControllerActionTable
                 $this->field('date_of_birth', ['order' => 51]);
                 break;
         }
-
+        $this->fields['date_of_birth']['type'] = 'date';
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
