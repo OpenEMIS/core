@@ -31,6 +31,8 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+
+        $this->addBehavior('Restful.RestfulAccessControl');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -52,6 +54,51 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->field('total_mark', ['after' => 'institution_subject_id']);
 
         $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => [], 'options' => [], 'order' => 1];
+
+        if (!empty($this->request->query['institution_subject_id'])) {
+            $action = 'view';
+            $hasAllSubjectsPermission = $this->AccessControl->check(['Institutions', 'AllSubjects', $action]);
+            $hasMySubjectsPermission = $this->AccessControl->check(['Institutions', 'Subjects', $action]);
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Subjects',
+                'view',
+                $this->paramsEncode(['id' => $this->request->query['institution_subject_id']]),
+                'institution_id' => $this->request->query['institution_id'],
+            ];
+
+            if ($hasAllSubjectsPermission) {
+                return $this->controller->redirect($url);
+            } 
+
+            if ($hasMySubjectsPermission) {
+                $userId = $this->Auth->user('id');
+
+                $institutionSubjectStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
+                $subjectsTeaching = $institutionSubjectStaffTable->find()
+                    ->find('list', ['keyField' => 'subject', 'valueField' => 'subject'])
+                    ->select (['subject' => $institutionSubjectStaffTable->aliasField('institution_subject_id'),
+                                'id' => $institutionSubjectStaffTable->aliasField('id')])
+                    ->where([
+                        $institutionSubjectStaffTable->aliasField('staff_id') => $userId,
+                    ])
+                    ->toArray();
+
+                    if (!empty($subjectsTeaching)) {
+                        if (array_key_exists($this->request->query['institution_subject_id'],$subjectsTeaching)) {
+                             return $this->controller->redirect($url);
+                        } else {
+                            $this->Alert->error('security.noAccess');
+                        }
+                    } else {
+                        $this->Alert->error('security.noAccess');
+                    }
+            } else {
+                $this->Alert->error('security.noAccess');
+            }   
+        }
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -132,17 +179,18 @@ class StudentSubjectsTable extends ControllerActionTable
         if (array_key_exists('view', $buttons)) {
             $institutionId = $entity->institution_class->institution_id;
             $url = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'Subjects',
-                'view',
-                $this->paramsEncode(['id' => $entity->institution_subject->id]),
+                'plugin' => 'Directory',
+                'controller' => 'Directories',
+                'action' => 'StudentSubjects',
+                'index',
+                'type' => 'student',
+                'institution_subject_id' => $entity->institution_subject->id,
                 'institution_id' => $institutionId,
             ];
             $buttons['view']['url'] = $url;
         }
         return $buttons;
-    }
+    }    
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
