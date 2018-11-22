@@ -24,6 +24,12 @@ class PositionsTable extends ControllerActionTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
+		$this->addBehavior('Historial.Historial', [
+			'plugin' => 'Directory',
+			'controller' => 'Directories',
+			'action' => 'HistorialStaffPositions'
+		]);
+
 		$this->toggle('add', false);
 		$this->toggle('edit', false);
 		$this->toggle('remove', false);
