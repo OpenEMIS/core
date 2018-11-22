@@ -207,7 +207,8 @@ class InstitutionSubjectBehavior extends Behavior
                 $urlParams = $this->_table->ControllerAction->url('index');
                 $event->stopPropagation();
                 $this->_table->Alert->error('security.noAccess');
-                return $this->_table->controller->redirect($urlParams);
+                $url = ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'StudentSubjects', 'index', 'type' => 'student'];
+                return $this->_table->controller->redirect($url);
             }
         }
 
