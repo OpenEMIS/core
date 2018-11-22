@@ -13,12 +13,12 @@ class POCOR4894 extends AbstractMigration
         ]);
 
         $HistorialStaffPositions
-            ->addColumn('FTE', 'decimal', [
-                'precision' => 5,
-                'scale' => 2,
-                'null' => true,
-                'default' => null
-            ])
+            // ->addColumn('FTE', 'decimal', [
+            //     'precision' => 5,
+            //     'scale' => 2,
+            //     'null' => true,
+            //     'default' => null
+            // ])
             ->addColumn('start_date', 'date', [
                 'null' => false,
                 'default' => null
@@ -36,6 +36,20 @@ class POCOR4894 extends AbstractMigration
                 'limit' => 150,
                 'null' => false,
                 'default' => null
+            ])
+            ->addColumn('comments', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('file_name', 'string', [
+                'default' => null,
+                'limit' => 250,
+                'null' => true,
+            ])
+            ->addColumn('file_content', 'blob', [
+                'default' => null,
+                'limit' => 4294967295,
+                'null' => true,
             ])
             ->addColumn('staff_id', 'integer', [
                 'limit' => 11,
