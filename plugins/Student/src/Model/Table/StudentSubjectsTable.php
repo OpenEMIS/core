@@ -190,7 +190,7 @@ class StudentSubjectsTable extends ControllerActionTable
             $buttons['view']['url'] = $url;
         }
         return $buttons;
-    }    
+    }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
