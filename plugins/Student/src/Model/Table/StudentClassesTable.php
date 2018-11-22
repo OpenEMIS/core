@@ -149,5 +149,4 @@ class StudentClassesTable extends ControllerActionTable
                 ])
                 ->toArray();
     }
-  
 }
