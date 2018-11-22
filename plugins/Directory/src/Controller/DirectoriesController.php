@@ -248,6 +248,12 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
     }
+
+    // Historial Data - End
+    public function HistorialStaffPositions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historial.HistorialStaffPositions']);
+    }
     // End
 
     // AngularJS
