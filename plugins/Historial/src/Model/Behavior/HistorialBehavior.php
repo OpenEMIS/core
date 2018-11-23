@@ -23,7 +23,7 @@ class HistorialBehavior extends Behavior
             'action' => ''
         ],
         'model' => '',
-        'allowedController' => []
+        'allowedController' => ['Directories']
     ];
 
     public function initialize(array $config)
