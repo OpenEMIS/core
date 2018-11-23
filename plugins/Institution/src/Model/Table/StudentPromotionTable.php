@@ -412,8 +412,8 @@ class StudentPromotionTable extends AppTable
                     if ($selectedClass !== '-1') { //Not Student Without Class
                         $InstitutionClassesTable = TableRegistry::get('Institution.InstitutionClasses');
 
-                        //Get back classes base on status of promoted or repeated
-                        if (in_array($studentStatusId, [$statuses['PROMOTED']])) {
+                        //Get back classes base on status of promoted or graduated or repeated
+                        if (in_array($studentStatusId, [$statuses['PROMOTED'], $statuses['GRADUATED']])) {
                             if (!is_null($selectedNextGrade)) {
                                 $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $selectedNextGrade);
                             }
@@ -705,7 +705,8 @@ class StudentPromotionTable extends AppTable
                 $selectedClass = $entity->has('class') ? $entity->class : null;
 
                 if (!is_null($selectedStudentStatusId) && $selectedClass != -1) {
-                    $showNextClass = in_array($selectedStudentStatusId, [$studentStatuses['PROMOTED'], $studentStatuses['REPEATED']]);
+                    $showNextClass = in_array($selectedStudentStatusId, [$studentStatuses['PROMOTED'], $studentStatuses['REPEATED'], $studentStatuses['GRADUATED']]);
+
                     if ($selectedStudentStatusId == $studentStatuses['REPEATED']) {
                         $selectedNextGrade = $selectedGrade;
                     }
