@@ -47,7 +47,10 @@ class HistorialStaffPositionsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->allowEmpty('file_content');
+            ->allowEmpty('file_content')
+            ->add('end_date', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'start_date', false]
+            ]);
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
@@ -119,7 +122,7 @@ class HistorialStaffPositionsTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Positions');
 
-        $this->field('photo_content', ['type' => 'image']);
+        $this->field('photo', ['type' => 'image']);
         $this->field('openemis_no');
         $this->field('staff_type_id');
         $this->field('staff_status_id');
@@ -133,7 +136,7 @@ class HistorialStaffPositionsTable extends ControllerActionTable
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
 
-        $this->setFieldOrder(['photo_content','openemis_no','staff_type_id','staff_status_id','staff','institution_position_name','fte','start_date','end_date','institution_name','comments','file_name','file_content']);
+        $this->setFieldOrder(['photo', 'openemis_no', 'staff_type_id', 'staff_status_id', 'staff', 'institution_position_name', 'fte', 'start_date', 'end_date', 'institution_name', 'comments', 'file_name', 'file_content']);
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
@@ -149,6 +152,19 @@ class HistorialStaffPositionsTable extends ControllerActionTable
     public function onGetFte(Event $event, Entity $entity)
     {
         return '-';
+    }
+
+    public function onGetPhoto(Event $event, Entity $entity)
+    {
+        $fileContent = $entity->user->photo_content;
+
+        if (empty($fileContent) && is_null($fileContent)) {
+            // staff default pic
+            $value = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-staff'></i></div></div>";
+        } else {
+            $value = base64_encode(stream_get_contents($fileContent));
+        }
+        return $value;
     }
 
     private function updateBackButton(ArrayObject $extra)
