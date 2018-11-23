@@ -722,6 +722,13 @@ class DirectoriesTable extends ControllerActionTable
             $isSet = true;
         }
 
+        if ($isGuardian) {
+            $this->Session->write('Directory.Directories.is_guardian', true);
+            $this->Session->write('Guardian.Guardians.id', $entity->id);
+            $this->Session->write('Guardian.Guardians.name', $entity->name);
+            $isSet = true;
+        }
+
         return $isSet;
     }
 
