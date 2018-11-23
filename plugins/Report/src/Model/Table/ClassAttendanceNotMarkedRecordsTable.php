@@ -205,7 +205,10 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                                     $status = __('Not Marked');
                                     $unmark++;
                                 }
-                            }    
+                            } else {
+                                // no school closed and no attendances record found - default to NOT_MARKED
+                                $status = __('Not Marked');
+                            }
                         }
 
                         $row->total_mark = $mark;
