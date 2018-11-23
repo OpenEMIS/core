@@ -13,12 +13,6 @@ class POCOR4894 extends AbstractMigration
         ]);
 
         $HistorialStaffPositions
-            // ->addColumn('FTE', 'decimal', [
-            //     'precision' => 5,
-            //     'scale' => 2,
-            //     'null' => true,
-            //     'default' => null
-            // ])
             ->addColumn('start_date', 'date', [
                 'null' => false,
                 'default' => null
@@ -93,11 +87,45 @@ class POCOR4894 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
+    
+        // security_functions
+        $this->execute('CREATE TABLE `z_4894_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_4894_security_functions` SELECT * FROM `security_functions`');
+
+        /*
+            7072 - Historial Positions - Order 335
+            7073 - Historial Leaves
+         */
+        
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 335');
+        $securityData = [
+            'id' => 7072,
+            'name' => 'Attendances',
+            'controller' => 'Attendances',
+            'module' => 'Administration',
+            'category' => 'Attendances',
+            'parent_id' => 7000,
+            '_view' => 'HistorialStaffPositions.view',
+            '_edit' => 'HistorialStaffPositions.edit',
+            '_add' => 'HistorialStaffPositions.add',
+            '_delete' => 'HistorialStaffPositions.delete',
+            '_execute' => null,
+            'order' => 335,
+            'visible' => 1,
+            'description' => null,
+            'created_user_id' => 1,
+            'created' => date('Y-m-d H:i:s')
+        ];
+        $this->insert('security_functions', $securityData);
     }
 
     public function down()
     {
         // historial_staff_positions
         $this->execute('DROP TABLE IF EXISTS `historial_staff_positions`');
+
+        // security_functions
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('RENAME TABLE `z_4894_security_functions` TO `security_functions`');
     }
 }
