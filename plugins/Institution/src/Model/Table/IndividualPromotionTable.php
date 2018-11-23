@@ -493,11 +493,11 @@ class IndividualPromotionTable extends ControllerActionTable
         $process = function ($model, $entity) use ($event, $extra) {
             if (empty($entity->errors())) {
 
-                if($entity->has('institution_class_id')) {
+                if ($entity->has('institution_class_id')) {
                     $checkResult = $this->checkIsOverStudentClassCapacity($entity->institution_class_id);
                 }
 
-                if($checkResult){
+                if ($checkResult) {
                     $event->stopPropagation();
                     return $this->controller->redirect($this->url('add'));
                 } else {
