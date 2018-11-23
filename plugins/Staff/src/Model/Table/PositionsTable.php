@@ -31,7 +31,8 @@ class PositionsTable extends ControllerActionTable {
                 'controller' => 'Directories',
                 'action' => 'HistorialStaffPositions'
             ],
-            'model' => 'Historial.HistorialStaffPositions'
+            'model' => 'Historial.HistorialStaffPositions',
+            'allowedController' => ['Directories']
         ]);
 
         $this->toggle('add', false);
