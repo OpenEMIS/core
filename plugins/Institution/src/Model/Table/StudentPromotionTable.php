@@ -1055,11 +1055,6 @@ class StudentPromotionTable extends AppTable
         if ($this->Session->check($sessionKey)) {
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
-
-            // if($currentEntity->has('students')) {
-            //     $this->checkSelectStudentClassCapacity($currentEntity->students);
-            // }
-
         } else {
             $this->Alert->warning('general.notExists');
             return $this->controller->redirect($this->ControllerAction->url('add'));
