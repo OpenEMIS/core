@@ -3,14 +3,13 @@ namespace Historial\Model\Behavior;
 
 use ArrayObject;
 use Cake\Core\Exception\Exception;
+use Cake\Event\Event;
+use Cake\Log\Log;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Cake\Event\Event;
-use Cake\Log\Log;
-use Cake\Utility\Hash;
 
 class HistorialBehavior extends Behavior
 {
@@ -48,8 +47,9 @@ class HistorialBehavior extends Behavior
             $historialQuery = $HistorialModelTable->find();
 
             $selectList = new ArrayObject([]);
+            $defaultOrder = new ArrayObject([]);
 
-            $model->dispatchEvent('Behavior.Historial.index.beforeQuery', [$mainQuery, $historialQuery, $selectList, $extra], $model);
+            $model->dispatchEvent('Behavior.Historial.index.beforeQuery', [$mainQuery, $historialQuery, $selectList, $defaultOrder, $extra], $model);
 
             $mainQuery->union($historialQuery);
             $tempResult = $mainQuery
@@ -61,7 +61,7 @@ class HistorialBehavior extends Behavior
 
                 $this->_queryUnionResults[$historial][$entityId] = $entity;
             }
-            
+
             if (empty($selectList)) {
                 $selectedFields = [
                     $model->aliasField('id'),
@@ -77,9 +77,10 @@ class HistorialBehavior extends Behavior
                 ->where(['1 = 1'], [], true);
 
             $request = $this->_table->request;
-            if (is_null($request->query('sort'))) {
+            if (is_null($request->query('sort')) && !empty($defaultOrder)) {
                 // default display sort
-                $query->order(['start_date' => 'DESC']);
+                $order = $defaultOrder->getArrayCopy();
+                $query->order($order);
             }
         } catch (Exception $e) {
             Log::write('error', 'Union historial query failed');

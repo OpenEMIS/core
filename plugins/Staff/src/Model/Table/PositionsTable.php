@@ -63,7 +63,7 @@ class PositionsTable extends ControllerActionTable {
         ]);
     }
 
-    public function indexHistorialBeforeQuery(Event $event, Query $mainQuery, Query $historialQuery, ArrayObject $selectList, ArrayObject $extra)
+    public function indexHistorialBeforeQuery(Event $event, Query $mainQuery, Query $historialQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
         $session = $this->request->session();
 
@@ -78,6 +78,9 @@ class PositionsTable extends ControllerActionTable {
                 $this->aliasField('end_date')
             ];
             $selectList->exchangeArray($select);
+
+            $order = ['start_date' => 'ASC'];
+            $defaultOrder->exchangeArray($order);
 
             $mainQuery
                 ->select([
