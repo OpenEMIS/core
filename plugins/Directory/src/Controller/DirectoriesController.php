@@ -129,7 +129,7 @@ class DirectoriesController extends AppController
     public function Demographic()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
-    }    
+    }
     public function StudentAwards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']);
@@ -220,7 +220,7 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
     // End Health
-    
+
     // Special Needs
     public function SpecialNeedsReferrals()
     {
@@ -253,6 +253,10 @@ class DirectoriesController extends AppController
     public function HistorialStaffPositions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historial.HistorialStaffPositions']);
+    }
+    public function HistoricalStaffLeave()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.HistoricalStaffLeave']);
     }
     // End
 
@@ -444,7 +448,7 @@ class DirectoriesController extends AppController
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = $header . ' - ' . $model->getHeader($alias);
             }
-            
+
 
             $this->set('contentHeader', $header);
 
@@ -686,7 +690,7 @@ class DirectoriesController extends AppController
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);   
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
