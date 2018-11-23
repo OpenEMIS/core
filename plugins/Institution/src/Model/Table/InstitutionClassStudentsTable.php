@@ -751,6 +751,10 @@ class InstitutionClassStudentsTable extends AppTable
         $StudentStatuses = $this->StudentStatuses;
         $Users = $this->Users;
 
+        $AssessmentItem = TableRegistry::get('Assessment.AssessmentItem');
+        $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
+
         $query
             ->select([
                 $this->aliasField('student_id'),
@@ -760,7 +764,8 @@ class InstitutionClassStudentsTable extends AppTable
                 $Users->aliasField('third_name'),
                 $Users->aliasField('last_name'),
                 $Users->aliasField('preferred_name'),
-                $StudentStatuses->aliasField('name')
+                $StudentStatuses->aliasField('name'),
+                $StudentReportCards->aliasField('report_card_id')
             ])
             ->matching('Users')
             ->contain('StudentStatuses')
@@ -791,76 +796,224 @@ class InstitutionClassStudentsTable extends AppTable
         if ($type == 'PRINCIPAL') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('principal_comments')])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents) {
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents) {
-                        $studentId = $row->student_id;
-                        $query = $SubjectStudents->find();
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
 
-                        // get the subjects and the total marks by the students 
-                        $subjectOverallResult = $query
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+
+                        $studentId = $row->student_id;
+                        $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+
+                        // Get the report card start/end date
+                        $reportCardEntity = $ReportCards->find()
                             ->select([
-                                'average_mark' => $query->func()->avg('total_mark')
+                                $ReportCards->aliasField('start_date'),
+                                $ReportCards->aliasField('end_date')
+                            ])
+                            ->where([
+                                $ReportCards->aliasField('id') => $reportCardId
+                            ])
+                            ->all();
+
+                        if (!$reportCardEntity->isEmpty()) {
+                            $row->reportCardStartDate = NULL;
+                            $row->reportCardEndDate = NULL;
+                            $row->reportCardStartDate = $reportCardEntity->first()['start_date'];
+                            $row->reportCardEndDate = $reportCardEntity->first()['end_date'];
+                        }
+
+                        // Check if the student belongs to any subject
+                        $subjectStudentsEntities = $SubjectStudents->find()
+                            ->select([
+                                $SubjectStudents->aliasField('student_id'),
+                                $SubjectStudents->aliasField('education_subject_id')
                             ])
                             ->where([
                                 $SubjectStudents->aliasField('student_id') => $studentId,
                                 $SubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
                                 $SubjectStudents->aliasField('institution_id') => $institutionId,
-                                $SubjectStudents->aliasField('total_mark IS NOT NULL')
                             ])
                             ->group([
-                                $SubjectStudents->aliasField('student_id'),
-                                $SubjectStudents->aliasField('academic_period_id'),
-                                $SubjectStudents->aliasField('institution_id')
+                                'education_subject_id'
                             ])
-                            ->first();
+                            ->hydrate(false)
+                            ->all();
 
-                        $row->average_mark = NULL;
-                        if (isset($subjectOverallResult->average_mark) && !is_null($subjectOverallResult->average_mark)) {
-                            $row->average_mark = number_format($subjectOverallResult->average_mark, 2);
+                        // If subjectStudentsEntities is not empty mean the student have a subject
+                        if (!$subjectStudentsEntities->isEmpty()) {
+
+                            $total_mark = 0;
+                            $subjectTaken = 0;
+
+                            foreach($subjectStudentsEntities->toArray() as $studentEntity) {
+                                // Getting all the subject marks based on report card start/end date
+                                $AssessmentItemResultsQuery = $AssessmentItemResults->find();
+                                $assessmentItemResultsEntities = $AssessmentItemResultsQuery
+                                    ->select([
+                                        $AssessmentItemResults->aliasField('student_id'),
+                                        $AssessmentItemResults->aliasField('marks'),
+                                        $AssessmentItemResults->aliasField('education_subject_id'),
+                                        $AssessmentItemResults->aliasField('education_grade_id'),
+                                        $AssessmentItemResults->aliasField('academic_period_id'),
+                                        $AssessmentItemResults->aliasField('institution_id'),
+                                        'total_mark' => $AssessmentItemResultsQuery->func()->sum($AssessmentItemResults->aliasField('marks'))
+                                    ])
+                                    ->contain([
+                                        'AssessmentPeriods'
+                                    ])
+                                    ->where([
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ])
+                                    ->group([
+                                        $AssessmentItemResults->aliasField('student_id'),
+                                        $AssessmentItemResults->aliasField('education_subject_id'),
+                                        $AssessmentItemResults->aliasField('education_grade_id'),
+                                        $AssessmentItemResults->aliasField('academic_period_id'),
+                                        $AssessmentItemResults->aliasField('institution_id')
+                                    ])
+                                    ->all();
+                                if (!$assessmentItemResultsEntities->isEmpty()) {
+                                    // Plus one to the subject so that we can keep track how many subject does this student is taking.
+                                    $subjectTaken++;
+                                    $total_mark += $assessmentItemResultsEntities->first()['total_mark'];
+                                }
+
+                            }
                         }
 
+                        $row->subjectTaken = NULL;
+                        $row->total_mark = NULL;
+                        $row->average_mark = NULL;
+
+
+                        $row->subjectTaken = $subjectTaken;
+                        $row->total_mark = $total_mark;
+
+                        if ($subjectTaken == 0) {
+                            $subjectTaken = 1;
+                        }
+
+                        $row->average_mark = number_format($total_mark / $subjectTaken, 2);
                         return $row;
                     });
                 });
         } elseif ($type == 'HOMEROOM_TEACHER') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('homeroom_teacher_comments')])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents) {
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents) {
-                        $studentId = $row->student_id;
-                        $query = $SubjectStudents->find();
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
 
-                        // get the subjects and the total marks by the students 
-                        $subjectOverallResult = $query
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+
+                        $studentId = $row->student_id;
+                        $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+
+                        // Get the report card start/end date
+                        $reportCardEntity = $ReportCards->find()
                             ->select([
-                                'average_mark' => $query->func()->avg('total_mark')
+                                $ReportCards->aliasField('start_date'),
+                                $ReportCards->aliasField('end_date')
+                            ])
+                            ->where([
+                                $ReportCards->aliasField('id') => $reportCardId
+                            ])
+                            ->all();
+
+                        if (!$reportCardEntity->isEmpty()) {
+                            $row->reportCardStartDate = NULL;
+                            $row->reportCardEndDate = NULL;
+                            $row->reportCardStartDate = $reportCardEntity->first()['start_date'];
+                            $row->reportCardEndDate = $reportCardEntity->first()['end_date'];
+                        }
+
+                        // Check if the student belongs to any subject
+                        $subjectStudentsEntities = $SubjectStudents->find()
+                            ->select([
+                                $SubjectStudents->aliasField('student_id'),
+                                $SubjectStudents->aliasField('education_subject_id')
                             ])
                             ->where([
                                 $SubjectStudents->aliasField('student_id') => $studentId,
                                 $SubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
                                 $SubjectStudents->aliasField('institution_id') => $institutionId,
-                                $SubjectStudents->aliasField('total_mark IS NOT NULL') 
                             ])
                             ->group([
-                                $SubjectStudents->aliasField('student_id'),
-                                $SubjectStudents->aliasField('academic_period_id'),
-                                $SubjectStudents->aliasField('institution_id')
+                                'education_subject_id'
                             ])
-                            ->first();
+                            ->hydrate(false)
+                            ->all();
 
-                        $row->average_mark = NULL;
-                        if (isset($subjectOverallResult->average_mark) && !is_null($subjectOverallResult->average_mark)) {
-                            $row->average_mark = number_format($subjectOverallResult->average_mark, 2);
+                        // If subjectStudentsEntities is not empty mean the student have a subject
+                        if (!$subjectStudentsEntities->isEmpty()) {
+
+                            $total_mark = 0;
+                            $subjectTaken = 0;
+
+                            foreach($subjectStudentsEntities->toArray() as $studentEntity) {
+                                // Getting all the subject marks based on report card start/end date
+                                $AssessmentItemResultsQuery = $AssessmentItemResults->find();
+                                $assessmentItemResultsEntities = $AssessmentItemResultsQuery
+                                    ->select([
+                                        $AssessmentItemResults->aliasField('student_id'),
+                                        $AssessmentItemResults->aliasField('marks'),
+                                        $AssessmentItemResults->aliasField('education_subject_id'),
+                                        $AssessmentItemResults->aliasField('education_grade_id'),
+                                        $AssessmentItemResults->aliasField('academic_period_id'),
+                                        $AssessmentItemResults->aliasField('institution_id'),
+                                        'total_mark' => $AssessmentItemResultsQuery->func()->sum($AssessmentItemResults->aliasField('marks'))
+
+                                    ])
+                                    ->contain([
+                                        'AssessmentPeriods'
+                                    ])
+                                    ->where([
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ])
+                                    ->group([
+                                        $AssessmentItemResults->aliasField('student_id'),
+                                        $AssessmentItemResults->aliasField('education_subject_id'),
+                                        $AssessmentItemResults->aliasField('education_grade_id'),
+                                        $AssessmentItemResults->aliasField('academic_period_id'),
+                                        $AssessmentItemResults->aliasField('institution_id')
+                                    ])
+                                    ->all();
+
+                                if (!$assessmentItemResultsEntities->isEmpty()) {
+                                    // Plus one to the subject so that we can keep track how many subject does this student is taking.
+                                    $subjectTaken++;
+                                    $total_mark += $assessmentItemResultsEntities->first()['total_mark'];
+                                }
+                            }
                         }
+
+                        $row->subjectTaken = NULL;
+                        $row->total_mark = NULL;
+                        $row->average_mark = NULL;
+
+
+                        $row->subjectTaken = $subjectTaken;
+                        $row->total_mark = $total_mark;
+
+                        if ($subjectTaken == 0) {
+                            $subjectTaken = 1;
+                        }
+
+                        $row->average_mark = number_format($total_mark / $subjectTaken, 2);
 
                         return $row;
                     });
                 });
+
         } elseif ($type == 'TEACHER') {
             $ReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
             $Staff = $ReportCardsComments->Staff;
 
-            // only show students taking the subject
             $query
                 ->select([
                     'comments' => $ReportCardsComments->aliasField('comments'),
@@ -881,9 +1034,99 @@ class InstitutionClassStudentsTable extends AppTable
                 ->leftJoin([$Staff->alias() => $Staff->table()], [
                     $Staff->aliasField('id = ') . $ReportCardsComments->aliasField('staff_id')
                 ])
-                ->where([$SubjectStudents->aliasField('education_subject_id') => $educationSubjectId]);
-        }
+                ->where([$SubjectStudents->aliasField('education_subject_id') => $educationSubjectId])
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
 
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+
+                        $studentId = $row->student_id;
+                        $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+
+                        // Get the report card start/end date
+                        $reportCardEntity = $ReportCards->find()
+                            ->select([
+                                $ReportCards->aliasField('start_date'),
+                                $ReportCards->aliasField('end_date')
+                            ])
+                            ->where([
+                                $ReportCards->aliasField('id') => $reportCardId
+                            ])
+                            ->all();
+
+                        if (!$reportCardEntity->isEmpty()) {
+                            $row->reportCardStartDate = NULL;
+                            $row->reportCardEndDate = NULL;
+                            $row->reportCardStartDate = $reportCardEntity->first()['start_date'];
+                            $row->reportCardEndDate = $reportCardEntity->first()['end_date'];
+                        }
+
+                        // Check if the student belongs to any subject
+                        $subjectStudentsEntities = $SubjectStudents->find()
+                            ->select([
+                                $SubjectStudents->aliasField('student_id'),
+                                $SubjectStudents->aliasField('education_subject_id')
+                            ])
+                            ->where([
+                                $SubjectStudents->aliasField('student_id') => $studentId,
+                                $SubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
+                                $SubjectStudents->aliasField('institution_id') => $institutionId,
+                                $SubjectStudents->aliasField('education_subject_id') => $educationSubjectId
+                            ])
+                            ->group([
+                                'education_subject_id'
+                            ])
+                            ->hydrate(false)
+                            ->all();
+
+                        // If subjectStudentsEntities is not empty mean the student have a subject
+                        if (!$subjectStudentsEntities->isEmpty()) {
+
+                            $studentEntity = $subjectStudentsEntities->first();
+
+                            // Getting all the subject marks based on report card start/end date
+                            $AssessmentItemResultsQuery = $AssessmentItemResults->find();
+
+                            $assessmentItemResultsEntities = $AssessmentItemResultsQuery
+                                ->select([
+                                    $AssessmentItemResults->aliasField('student_id'),
+                                    $AssessmentItemResults->aliasField('marks'),
+                                    $AssessmentItemResults->aliasField('education_subject_id'),
+                                    $AssessmentItemResults->aliasField('education_grade_id'),
+                                    $AssessmentItemResults->aliasField('academic_period_id'),
+                                    $AssessmentItemResults->aliasField('institution_id'),
+                                    'total_mark' => $AssessmentItemResultsQuery->func()->sum($AssessmentItemResults->aliasField('marks'))
+
+                                ])
+                                ->contain([
+                                    'AssessmentPeriods'
+                                ])
+                                ->where([
+                                    $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                    $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                    $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                    $AssessmentItemResults->aliasField('marks IS NOT NULL'),
+                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id']
+
+                                ])
+                                ->group([
+                                        $AssessmentItemResults->aliasField('student_id'),
+                                        $AssessmentItemResults->aliasField('education_subject_id'),
+                                        $AssessmentItemResults->aliasField('education_grade_id'),
+                                        $AssessmentItemResults->aliasField('academic_period_id'),
+                                        $AssessmentItemResults->aliasField('institution_id')
+                                    ])
+                                ->all();
+
+                            if (!$assessmentItemResultsEntities->isEmpty()) {
+                                    $row->total_mark = $assessmentItemResultsEntities->first()['total_mark'];
+                            }
+                        }
+
+                        return $row;
+                    });
+                });
+        }
         return $query;
     }
 }
