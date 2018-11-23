@@ -492,7 +492,6 @@ class IndividualPromotionTable extends ControllerActionTable
         $checkResult = false;
         $process = function ($model, $entity) use ($event, $extra) {
             if (empty($entity->errors())) {
-
                 if ($entity->has('institution_class_id')) {
                     $checkResult = $this->checkIsOverStudentClassCapacity($entity->institution_class_id);
                 }
