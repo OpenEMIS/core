@@ -789,20 +789,6 @@ class ImportOutcomeResultBehavior extends Behavior
         $education_subject_id = $this->_table->request->query['education_subject'];
         $template = $this->_table->request->query['outcome_template'];
 
-        $gradeOptionArray = $outcomeGradingOptionsTable->find()
-            ->select(['name'])
-            ->where([$outcomeGradingOptionsTable->aliasField('outcome_grading_type_id') => $template])
-            ->toArray();
-
-        $dropDownList = '';
-        foreach ($gradeOptionArray as $singleGradeOptionArray) {
-            if ($singleGradeOptionArray->name == end($gradeOptionArray)->name) {
-                $dropDownList .= $singleGradeOptionArray->name;
-            } else {
-                $dropDownList .= $singleGradeOptionArray->name . ', ';
-            }
-        }
-
         $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
         $outcomeCriteriasArray = $outcomeCriteriasTable->find()
         ->where([
@@ -827,6 +813,31 @@ class ImportOutcomeResultBehavior extends Behavior
             ->toArray();
         //A is 0 in excel column, so 2 is C
         for ($column = 2; $column < count($outcomeCriteriasArray)+2; ++$column) {
+            $sheet = $objPHPExcel->getSheet(0);
+            $cell = $sheet->getCellByColumnAndRow($column, 1);
+            $outcomeId = $cell->getValue();
+            $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+            $outcomeGradingTypeId = $outcomeCriteriasTable->find()
+            ->where([
+                $outcomeCriteriasTable->aliasField('id') => $outcomeId,
+            ])
+            ->extract('outcome_grading_type_id')
+            ->first();
+
+            $gradeOptionArray = $outcomeGradingOptionsTable->find()
+                ->select(['name'])
+                ->where([$outcomeGradingOptionsTable->aliasField('outcome_grading_type_id') => $outcomeGradingTypeId])
+                ->toArray();
+
+            $dropDownList = '';
+            foreach ($gradeOptionArray as $singleGradeOptionArray) {
+                if ($singleGradeOptionArray->name == end($gradeOptionArray)->name) {
+                    $dropDownList .= $singleGradeOptionArray->name;
+                } else {
+                    $dropDownList .= $singleGradeOptionArray->name . ', ';
+                }
+            }
+
             $alpha = $this->getExcelColumnAlpha($column);
             for ($i = 4; $i < count($studentArray) + 4; $i++) {
                 $objPHPExcel->setActiveSheetIndex(0);
@@ -1055,6 +1066,14 @@ class ImportOutcomeResultBehavior extends Behavior
         $cell = $sheet->getCellByColumnAndRow($numberColumn, $row);
         $gradeValue = $cell->getValue();
 
+        $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+        $outcomeGradingTypeId = $outcomeCriteriasTable->find()
+        ->where([
+            $outcomeCriteriasTable->aliasField('id') => $outcomeIdValue,
+        ])
+        ->extract('outcome_grading_type_id')
+        ->first();
+
         $usersTable = TableRegistry::get('User.Users');
 
         $User = $usersTable->find()
@@ -1069,7 +1088,8 @@ class ImportOutcomeResultBehavior extends Behavior
         $Grading = $outcomeGradingOptionsTable->find()
             ->select(['id'])
             ->where([
-                $outcomeGradingOptionsTable->aliasField('name') => $gradeValue
+                $outcomeGradingOptionsTable->aliasField('name') => $gradeValue,
+                $outcomeGradingOptionsTable->aliasField('outcome_grading_type_id') => $outcomeGradingTypeId
             ])
             ->first();
 
