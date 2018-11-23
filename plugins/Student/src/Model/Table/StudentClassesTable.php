@@ -110,16 +110,27 @@ class StudentClassesTable extends ControllerActionTable
         if (array_key_exists('view', $buttons)) {
             $institutionId = $entity->institution_class->institution_id;
             $url = [
-                'plugin' => 'Directory',
-                'controller' => 'Directories',
-                'action' => 'StudentClasses',
-                'index',
-                'type' => 'student',
-                'staff_id' => $entity->institution_class->staff_id,
-                'secondary_staff_id' => $entity->institution_class->secondary_staff_id,
-                'institution_class_id' => $entity->institution_class->id,
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Classes',
+                'view',
+                $this->paramsEncode(['id' => $entity->institution_class->id]),
                 'institution_id' => $institutionId,
             ];
+
+            if ($this->controller->name == 'Directories') {
+                $url = [
+                    'plugin' => 'Directory',
+                    'controller' => 'Directories',
+                    'action' => 'StudentClasses',
+                    'index',
+                    'type' => 'student',
+                    'staff_id' => $entity->institution_class->staff_id,
+                    'secondary_staff_id' => $entity->institution_class->secondary_staff_id,
+                    'institution_class_id' => $entity->institution_class->id,
+                    'institution_id' => $institutionId,
+                ];
+            }
             $buttons['view']['url'] = $url;
         }
         return $buttons;
