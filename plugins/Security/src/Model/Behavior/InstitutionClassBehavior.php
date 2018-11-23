@@ -207,7 +207,7 @@ class InstitutionClassBehavior extends Behavior
                             $urlParams = $this->_table->ControllerAction->url('index');
                             $event->stopPropagation();
                             $this->_table->Alert->error('security.noAccess');
-                            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $urlParams['institutionId'], 'action' => 'Institutions'];
+                            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $urlParams['institution_id'], 'action' => 'Institutions'];
                             return $this->_table->controller->redirect($url);
                         }
                     }
