@@ -657,46 +657,6 @@ class StudentPromotionTable extends AppTable
         return $attr;
     }
 
-    public function checkSelectStudentClassCapacity($entity)
-    {
-        if (!empty($entity)) {
-            $nextClasses = [];
-
-            foreach ($entity as $student) {
-                if (!(array_key_exists($student['next_institution_class_id'], $nextClasses)))
-                {
-                    $nextClasses[$student['next_institution_class_id']] = 1;
-                } else {
-                    $nextClasses[$student['next_institution_class_id']] += 1;
-                }
-            }
-
-            $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
-
-            //Query to check if selected student and next class have capacity and return the classes that do not have
-            $results = $institutionClassTable->find('all', array('fields' => array('id', 'name'), 'contain' => array()));
-            $conditions['OR'] = [];
-            foreach ($nextClasses as $class => $value) {
-                $conditions['OR'][] = [
-                        $institutionClassTable->aliasField('capacity') . '-' . $institutionClassTable->aliasField('total_male_students') . '-' . $institutionClassTable->aliasField('total_female_students') . ' < :value' . $class,
-                        $institutionClassTable->aliasField('id =') => $class
-                ];
-                $results->bind(':value'. $class, $value, "integer");
-            }
-            $results->where($conditions);
-            $overCapacityClasses = $results->toArray();
-
-            if (!empty($overCapacityClasses)) {
-                $this->Alert->clear();
-                foreach ($overCapacityClasses as $class) {
-                    $this->Alert->show( $class->name . ' not enough capacity for students.','error');
-                }
-                // return $this->controller->redirect($this->ControllerAction->url('add'));
-            }
-        }
-        //pr($entity);die;
-    }
-
     public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request)
     {
         $institutionId = $this->institutionId;
@@ -716,41 +676,6 @@ class StudentPromotionTable extends AppTable
                 }
 
                 $attr['selectedStudents'] = ($currentData->has('students'))? $currentData->students: [];
-                // $nextClasses = [];
-
-                // foreach ($attr['selectedStudents'] as $student) {
-                //     if (!(array_key_exists($student['next_institution_class_id'], $nextClasses)))
-                //     {
-                //         $nextClasses[$student['next_institution_class_id']] = 1;
-                //     } else {
-                //         $nextClasses[$student['next_institution_class_id']] += 1;
-                //     }
-                // }
-
-                // $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
-
-                // //Query to check if selected student and next class have capacity and return the classes that do not have
-                // $results = $institutionClassTable->find('all', array('fields' => array('id', 'name'), 'contain' => array()));
-                // $conditions['OR'] = [];
-                // foreach ($nextClasses as $class => $value) {
-                //     $conditions['OR'][] = [
-                //             $institutionClassTable->aliasField('capacity') . '-' . $institutionClassTable->aliasField('total_male_students') . '-' . $institutionClassTable->aliasField('total_female_students') . ' < :value' . $class,
-                //             $institutionClassTable->aliasField('id =') => $class
-                //     ];
-                //     $results->bind(':value'. $class, $value, "integer");
-                // }
-                // $results->where($conditions);
-                // $overCapacityClasses = $results->toArray();
-
-                // if (!empty($overCapacityClasses)) {
-                //     // $this->Alert->warning('Class overload');
-                //     $this->Alert->clear();
-                //     foreach ($overCapacityClasses as $class) {
-                //          //pr($class->name);
-                //          $this->Alert->show( $class->name . ' not enough capacity for students','error');
-                //     }
-                // }
-
                 $selectedPeriod = $currentData['from_academic_period_id'];
                 $selectedStudentStatusId = $currentData['student_status_id'];
                 break;
@@ -758,7 +683,6 @@ class StudentPromotionTable extends AppTable
             case 'add':
                 $entity = $attr['entity'];
                 $requestData = $request->data;
-
                 $selectedPeriod = $entity->has('from_academic_period_id') ? $entity->from_academic_period_id : null;
                 $selectedStudentStatusId = $entity->has('student_status_id') ? $entity->student_status_id : null;
                 break;
@@ -965,6 +889,11 @@ class StudentPromotionTable extends AppTable
                     $educationGradeId = isset($data[$this->alias()]['education_grade_id']) ? $data[$this->alias()]['education_grade_id'] : 0;
 
                     if ($selectedStudent) {
+                        //check students next classes have capcity
+                        if ($this->checkIsOverStudentClassCapacity($entity->students)) {
+                            return false;
+                        }
+
                         // redirects to confirmation page
                         $url = $this->ControllerAction->url('reconfirm');
                         $this->currentEntity = $entity;
@@ -1060,10 +989,8 @@ class StudentPromotionTable extends AppTable
                                 $studentObj['start_date'] = $nextPeriod->start_date->format('Y-m-d');
                                 $studentObj['end_date'] = $nextPeriod->end_date->format('Y-m-d');
                             }
-                            // pr($entity);
+
                             $entity = $this->newEntity($studentObj, ['validate' => 'RemoveStudentPromotionValidation']);
-                            // do validation here ?
-                            // pr($entity);
 
                             $existingStudentEntity = $this->find()->where([
                                     $this->aliasField('institution_id') => $institutionId,
@@ -1129,9 +1056,9 @@ class StudentPromotionTable extends AppTable
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
 
-            if($currentEntity->has('students')) {
-                $this->checkSelectStudentClassCapacity($currentEntity->students);
-            }
+            // if($currentEntity->has('students')) {
+            //     $this->checkSelectStudentClassCapacity($currentEntity->students);
+            // }
 
         } else {
             $this->Alert->warning('general.notExists');
@@ -1246,5 +1173,45 @@ class StudentPromotionTable extends AppTable
         ->toArray();
 
         return $listOfInstitutionGrades;
+    }
+
+    private function checkIsOverStudentClassCapacity($entity)
+    {
+        if (!empty($entity)) {
+            $nextClasses = [];
+
+            foreach ($entity as $student) {
+                if (!(array_key_exists($student['next_institution_class_id'], $nextClasses)))
+                {
+                    $nextClasses[$student['next_institution_class_id']] = 1;
+                } else {
+                    $nextClasses[$student['next_institution_class_id']] += 1;
+                }
+            }
+
+            $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
+
+            //Query to check if selected student and next class have capacity and return the classes that do not have
+            $results = $institutionClassTable->find('all', array('fields' => array('id', 'name'), 'contain' => array()));
+            $conditions['OR'] = [];
+            foreach ($nextClasses as $class => $value) {
+                $conditions['OR'][] = [
+                        $institutionClassTable->aliasField('capacity') . '-' . $institutionClassTable->aliasField('total_male_students') . '-' . $institutionClassTable->aliasField('total_female_students') . ' < :value' . $class,
+                        $institutionClassTable->aliasField('id =') => $class
+                ];
+                $results->bind(':value'. $class, $value, "integer");
+            }
+            $results->where($conditions);
+            $overCapacityClasses = $results->toArray();
+
+            if (!empty($overCapacityClasses)) {
+                $this->Alert->clear();
+                foreach ($overCapacityClasses as $class) {
+                    $this->Alert->show( 'Next class ' . $class->name . ' does not have enough capacity for students.','error');
+                }
+                return true;
+            }
+        }
+        return false;
     }
 }
