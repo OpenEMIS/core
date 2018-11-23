@@ -2271,6 +2271,13 @@ trait MessagesTrait
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ]
+        ],
+        'Historial' => [
+            'HistorialStaffPositions' => [
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ]
+            ]
         ]
     ];
 
