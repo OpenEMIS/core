@@ -146,8 +146,11 @@ class CommentsController extends PageController
             ]);
             $session = $this->request->session();
             $guardianId = $session->read('Guardian.Guardians.id');
-            if (!empty($guardianId)) {
-                    $studentId = $session->read('Student.Students.id');
+            $studentId = $session->read('Student.Students.id');
+            $isStudent = $session->read('Directory.Directories.is_student');
+            $isGuardian = $session->read('Directory.Directories.is_guardian');            
+            if (!empty($guardianId) && !empty($isStudent)) {
+                    $studentId = $session->read('Directory.Directories.id');
                     $userName = $this->Users->get($studentId)->name;
                     $encodedUserId = $this->paramsEncode(['id' => $studentId]);
                     $page->addCrumb($userName, [
@@ -158,6 +161,18 @@ class CommentsController extends PageController
                     $encodedUserId
                 ]);
                 $page->addCrumb('Guardian Comments');
+            } elseif (!empty($studentId) && !empty($isGuardian)) {
+                    $guardianId = $session->read('Directory.Directories.id');
+                    $userName = $this->Users->get($guardianId)->name;
+                    $encodedUserId = $this->paramsEncode(['id' => $guardianId]);
+                    $page->addCrumb($userName, [
+                    'plugin' => 'Directory',
+                    'controller' => 'Directories',
+                    'action' => 'Directories',
+                    'view',
+                    $encodedUserId
+                ]);
+                $page->addCrumb('Student Comments');                
             } else {
                 $page->addCrumb($userName, [
                     'plugin' => 'Directory',
