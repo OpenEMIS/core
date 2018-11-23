@@ -23,6 +23,7 @@ class HistorialBehavior extends Behavior
             'action' => ''
         ],
         'model' => '',
+        'allowedController' => []
     ];
 
     public function initialize(array $config)
@@ -88,23 +89,27 @@ class HistorialBehavior extends Behavior
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $controller = $this->_table->controller->name;
 
-        $historialUrl = $this->config('historialUrl');
-        $historialUrl[] = 'add';
+        if (in_array($controller, $this->config('allowedController'))) {
+            $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-        $toolbarButtonsArray['historialAdd']['attr'] = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        $toolbarButtonsArray['historialAdd']['type'] = 'button';
-        $toolbarButtonsArray['historialAdd']['label'] = '<i class="fa kd-add"></i>';
-        $toolbarButtonsArray['historialAdd']['attr']['title'] = __('Historial Data Add');
-        $toolbarButtonsArray['historialAdd']['url'] = $historialUrl;
+            $historialUrl = $this->config('historialUrl');
+            $historialUrl[] = 'add';
 
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+            $toolbarButtonsArray['historialAdd']['attr'] = [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false
+            ];
+            $toolbarButtonsArray['historialAdd']['type'] = 'button';
+            $toolbarButtonsArray['historialAdd']['label'] = '<i class="fa kd-add"></i>';
+            $toolbarButtonsArray['historialAdd']['attr']['title'] = __('Historial Data Add');
+            $toolbarButtonsArray['historialAdd']['url'] = $historialUrl;
+
+            $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        }
     }
 
     public function getFieldEntity($historial, $entityId, $field)
