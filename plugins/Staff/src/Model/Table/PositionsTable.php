@@ -42,7 +42,7 @@ class PositionsTable extends ControllerActionTable {
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Historial.index.beforeQuery'] = 'indexHistorialBeforeQuery';
+        $events['Behavior.Historial.index.beforeQuery'] = 'indexHistorialBeforeQuery';
         return $events;
     }
 
@@ -62,50 +62,63 @@ class PositionsTable extends ControllerActionTable {
         ]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-        $query
-            ->select([
-                $this->aliasField('id'),
-                $this->aliasField('start_date'),
-                $this->aliasField('end_date'),
-                $this->Institutions->aliasField('id'),
-                $this->Institutions->aliasField('code'),
-                $this->Institutions->aliasField('name'),
-                $this->InstitutionPositions->aliasField('id'),
-                $this->InstitutionPositions->aliasField('position_no'),
-                $this->InstitutionPositions->aliasField('staff_position_title_id'),
-                $this->StaffTypes->aliasField('id'),
-                $this->StaffTypes->aliasField('name'),
-                $this->StaffStatuses->aliasField('id'),
-                $this->StaffStatuses->aliasField('name'),
-                'is_historial' => 0
-            ])
-            ->leftJoinWith($this->Institutions->alias())
-            ->leftJoinWith($this->InstitutionPositions->alias())
-            ->leftJoinWith($this->StaffTypes->alias())
-            ->leftJoinWith($this->Users->alias())
-            ->leftJoinWith($this->StaffStatuses->alias())
-        ;
-
-    }
-
-    public function indexHistorialBeforeQuery(Event $event, Query $historialQuery, $table)
+    public function indexHistorialBeforeQuery(Event $event, Query $mainQuery, Query $historialQuery, ArrayObject $selectList, ArrayObject $extra)
     {
         $session = $this->request->session();
 
         if ($session->check('Directory.Directories.id')) {
+            $extra['auto_contain'] = false;
             $userId = $session->read('Directory.Directories.id');
 
+            $select = [
+                $this->aliasField('id'),
+                $this->aliasField('is_historial'),
+                $this->aliasField('start_date'),
+                $this->aliasField('end_date')
+            ];
+            $selectList->exchangeArray($select);
+
+            $mainQuery
+                ->select([
+                    'id' => $this->aliasField('id'),
+                    'start_date' => $this->aliasField('start_date'),
+                    'end_date' => $this->aliasField('end_date'),
+                    $this->aliasField('institution_id'),
+                    $this->Institutions->aliasField('id'),
+                    $this->Institutions->aliasField('code'),
+                    $this->Institutions->aliasField('name'),
+                    $this->InstitutionPositions->aliasField('id'),
+                    $this->InstitutionPositions->aliasField('position_no'),
+                    $this->InstitutionPositions->aliasField('staff_position_title_id'),
+                    $this->StaffTypes->aliasField('id'),
+                    $this->StaffTypes->aliasField('name'),
+                    $this->StaffStatuses->aliasField('id'),
+                    $this->StaffStatuses->aliasField('name'),
+                    'is_historial' => 0
+                ], true)
+                ->contain([
+                    $this->Institutions->alias(),
+                    $this->InstitutionPositions->alias(),
+                    $this->StaffTypes->alias(),
+                    $this->Users->alias(),
+                    $this->StaffStatuses->alias()
+                ])
+                ->where([
+                    $this->aliasField('staff_id') => $userId
+                ]);
+
+            $HistorialTable = $historialQuery->repository();
             $historialQuery
                 ->select([
-                    'id' => $table->aliasField('id'),
-                    'start_date' => $table->aliasField('start_date'),
-                    'end_date' => $table->aliasField('end_date'),
+                    'id' => $HistorialTable->aliasField('id'),
+                    'start_date' => $HistorialTable->aliasField('start_date'),
+                    'end_date' => $HistorialTable->aliasField('end_date'),
+                    'position_institution_id' => '(null)',
                     'institution_id' => '(null)',
                     'institution_code' => '(null)',
-                    'institution_name' => $table->aliasField('institution_name'),
+                    'institution_name' => $HistorialTable->aliasField('institution_name'),
                     'position_id' => '(null)',
-                    'position_name' => $table->aliasField('institution_position_name'),
+                    'position_name' => $HistorialTable->aliasField('institution_position_name'),
                     'staff_position_title_id' => '(null)',
                     'staff_type_id' => 'StaffTypes.id',
                     'staff_type_name' => 'StaffTypes.name',
@@ -113,32 +126,45 @@ class PositionsTable extends ControllerActionTable {
                     'staff_status_name' => 'StaffStatuses.name',
                     'is_historial' => 1
                 ])
-                ->leftJoinWith('StaffTypes')
-                ->leftJoinWith('StaffStatuses')
-                ->where([
-                    $table->aliasField('staff_id') => $userId
+                ->contain([
+                    'StaffTypes',
+                    'StaffStatuses'
                 ])
-            ;
+                ->where([
+                    $HistorialTable->aliasField('staff_id') => $userId
+                ]);
         }
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-        pr($entity);
-        die;
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (array_key_exists('view', $buttons)) {
-            $institutionId = $entity->_matchingData['Institutions']->id;
-            // $institutionId = $entity->institution->id;
-            $url = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'Staff',
-                'view',
-                $this->paramsEncode(['id' => $entity->id]),
-                'institution_id' => $institutionId,
-            ];
+            if ($entity->is_historial) {
+                $rowEntityId = $this->getFieldEntity($entity->is_historial, $entity->id, 'id');
+                $url = [
+                    'plugin' => 'Directory',
+                    'controller' => 'Directories',
+                    'action' => 'HistorialStaffPositions',
+                    'view',
+                    $this->paramsEncode(['id' => $rowEntityId])
+                ];
+            } else {
+                $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'institution');
+                $institutionId = $rowEntity->id;
+                // $institutionId = $entity->institution->id
+                $url = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Staff',
+                    'view',
+                    $this->paramsEncode(['id' => $entity->id]),
+                    'institution_id' => $institutionId,
+                ];
+            }
+
             $buttons['view']['url'] = $url;
         }
+
         return $buttons;
     }
 
@@ -149,31 +175,37 @@ class PositionsTable extends ControllerActionTable {
         $this->controller->set('selectedAction', $this->alias());
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity) {
-        
+    public function onGetInstitutionId(Event $event, Entity $entity) 
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'institution');
+
         if ($entity->is_historial) {
-            return $entity->_matchingData['Institutions']->name;
+            return $rowEntity->name;
         } else {
-            return $entity->_matchingData['Institutions']->code_name;
+            return $rowEntity->code_name;
         }
     }
 
     public function onGetInstitutionPositionId(Event $event, Entity $entity)
     {
+        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'institution_position');
+
         if ($entity->is_historial) {
-            return $entity->_matchingData['InstitutionPositions']->position_no;
+            return $rowEntity->position_no;
         } else {
-            return $entity->_matchingData['InstitutionPositions']->name;
+            return $rowEntity->name;
         }
     }
 
     public function onGetStaffTypeId(Event $event, Entity $entity)
     {
-        return $entity->_matchingData['StaffTypes']->name;
+        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'staff_type');
+        return $rowEntity->name;
     }
 
     public function onGetStaffStatusId(Event $event, Entity $entity)
     {
-        return $entity->_matchingData['StaffStatuses']->name;
+        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'staff_status');
+        return $rowEntity->name;
     }
 }

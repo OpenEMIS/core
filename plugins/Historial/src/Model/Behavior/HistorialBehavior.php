@@ -10,9 +10,12 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Log\Log;
+use Cake\Utility\Hash;
 
 class HistorialBehavior extends Behavior
 {
+    private $_queryUnionResults = [];
+
     protected $_defaultConfig = [
         'historialUrl' => [
             'plugin' => '',
@@ -30,28 +33,57 @@ class HistorialBehavior extends Behavior
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
+        $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 50];
         return $events;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $model = $this->_table;
-        $HistorialModelTable = TableRegistry::get($this->config('model'));
-        $historialQuery = $HistorialModelTable->find();
-        $model->dispatchEvent('Historial.index.beforeQuery', [$historialQuery, $HistorialModelTable], $model);
-
         try {
+            $model = $this->_table;
+            $mainQuery = $model->find();
+            $HistorialModelTable = TableRegistry::get($this->config('model'));
+            $historialQuery = $HistorialModelTable->find();
+
+            $selectList = new ArrayObject([]);
+
+            $model->dispatchEvent('Behavior.Historial.index.beforeQuery', [$mainQuery, $historialQuery, $selectList, $extra], $model);
+
+            $mainQuery->union($historialQuery);
+            $tempResult = $mainQuery
+                ->toArray();
+
+            foreach ($tempResult as $entity) {
+                $historial = $entity->is_historial;
+                $entityId = $entity->id;
+
+                $this->_queryUnionResults[$historial][$entityId] = $entity;
+            }
+            
+            if (empty($selectList)) {
+                $selectedFields = [
+                    $model->aliasField('id'),
+                    $model->aliasField('is_historial')
+                ];
+            } else {
+                $selectedFields = $selectList->getArrayCopy();
+            }
+
             $query
-                ->union($historialQuery)
-                ->order(['start_date' => 'ASC']);
+                ->select($selectedFields, true)
+                ->from([$model->alias() => $mainQuery])
+                ->where(['1 = 1'], [], true);
+
+            $request = $this->_table->request;
+            if (is_null($request->query('sort'))) {
+                // default display sort
+                $query->order(['start_date' => 'DESC']);
+            }
         } catch (Exception $e) {
             Log::write('error', 'Union historial query failed');
             Log::write('error', $e);
         }
-
-        $extra['auto_contain'] = false;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -71,7 +103,12 @@ class HistorialBehavior extends Behavior
         $toolbarButtonsArray['historialAdd']['label'] = '<i class="fa kd-add"></i>';
         $toolbarButtonsArray['historialAdd']['attr']['title'] = __('Historial Data Add');
         $toolbarButtonsArray['historialAdd']['url'] = $historialUrl;
-        
+
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+    }
+
+    public function getFieldEntity($historial, $entityId, $field)
+    {
+        return $this->_queryUnionResults[$historial][$entityId]->$field;
     }
 }
