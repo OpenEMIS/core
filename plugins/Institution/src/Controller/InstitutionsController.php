@@ -408,7 +408,12 @@ class InstitutionsController extends AppController
     public function FeederIncomingInstitutions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.FeederIncomingInstitutions']);
-    }    
+    }
+
+    public function HistoricalStaffLeave()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.HistoricalStaffLeave']);
+    }
     // End
 
     // AngularJS
