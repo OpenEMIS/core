@@ -97,13 +97,15 @@ class POCOR4894 extends AbstractMigration
             7073 - Historial Leaves
          */
         
+        $this->execute('UPDATE `security_functions` SET `_view` = "StaffPositions.index|StaffPositions.view" WHERE `id` = 7021');
+        
         $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 335');
         $securityData = [
             'id' => 7072,
-            'name' => 'Attendances',
-            'controller' => 'Attendances',
-            'module' => 'Administration',
-            'category' => 'Attendances',
+            'name' => 'Historial Positions',
+            'controller' => 'Directories',
+            'module' => 'Directory',
+            'category' => 'Staff - Career',
             'parent_id' => 7000,
             '_view' => 'HistorialStaffPositions.view',
             '_edit' => 'HistorialStaffPositions.edit',

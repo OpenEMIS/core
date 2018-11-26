@@ -13,13 +13,6 @@ use App\Model\Table\ControllerActionTable;
 
 class HistorialStaffPositionsTable extends ControllerActionTable
 {
-    const ORIGIN = [
-        'plugin' => 'Directory',
-        'controller' => 'Directories',
-        'action' => 'StaffPositions',
-        'type' => 'staff'
-    ];
-
     public function initialize(array $config)
     {
         $this->table('historial_staff_positions');
@@ -39,6 +32,17 @@ class HistorialStaffPositionsTable extends ControllerActionTable
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
+        ]);
+
+        $this->addBehavior('Historial.Historial', [
+            'originUrl' => [
+                'plugin' => 'Directory',
+                'controller' => 'Directories',
+                'action' => 'StaffPositions',
+                'type' => 'staff'
+            ],
+            'model' => 'Historial.HistorialStaffPositions',
+            'allowedController' => ['Directories']
         ]);
     }
 
@@ -65,14 +69,6 @@ class HistorialStaffPositionsTable extends ControllerActionTable
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
-    }
-
-    public function addBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->updateBackButton($extra);
-
-        // For afterSave redirection
-        $extra['redirect'] = self::ORIGIN;
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -108,11 +104,6 @@ class HistorialStaffPositionsTable extends ControllerActionTable
                     ]
                 ]
             ]);
-    }
-
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->updateBackButton($extra);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -167,10 +158,5 @@ class HistorialStaffPositionsTable extends ControllerActionTable
         return $value;
     }
 
-    private function updateBackButton(ArrayObject $extra)
-    {
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarButtonsArray['back']['url'] = self::ORIGIN;
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-    }
+    
 }
