@@ -36,8 +36,6 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
 
         $this->addBehavior('Historical.Historical', [
             'originUrl' => [
-                'plugin' => 'Directory',
-                'controller' => 'Directories',
                 'action' => 'StaffPositions',
                 'type' => 'staff'
             ],
