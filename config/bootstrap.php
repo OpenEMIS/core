@@ -323,7 +323,7 @@ Plugin::load('Attendance', ['routes' => true, 'autoload' => true]);
 Plugin::load('Guardian', ['routes' => true, 'autoload' => true]);
 Plugin::load('Email', ['routes' => true, 'autoload' => true]);
 Plugin::load('SpecialNeeds', ['routes' => true, 'autoload' => true]);
-Plugin::load('Historial', ['autoload' => true]);
+Plugin::load('Historical', ['autoload' => true]);
 
 $pluginPath = Configure::read('plugins');
 foreach ($pluginPath as $key => $path) {

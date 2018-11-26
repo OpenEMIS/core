@@ -1,5 +1,5 @@
 <?php
-namespace Historial\Model\Behavior;
+namespace Historical\Model\Behavior;
 
 use ArrayObject;
 use Cake\Core\Exception\Exception;
@@ -12,29 +12,22 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 
-class HistorialBehavior extends Behavior
+class HistoricalBehavior extends Behavior
 {
     private $_queryUnionResults = [];
 
     protected $_defaultConfig = [
-        'historialUrl' => [
+        'historicalUrl' => [
             'plugin' => '',
             'controller' => '',
             'action' => ''
         ],
         'originUrl' => [
-            'plugin' => '',
-            'controller' => '',
             'action' => ''
         ],
         'model' => '',
         'allowedController' => ['Directories']
     ];
-
-    public function initialize(array $config)
-    {
-        parent::initialize($config);
-    }
 
     public function implementedEvents()
     {
@@ -53,18 +46,18 @@ class HistorialBehavior extends Behavior
         $this->updateBreadcrumbAndPageTitle();
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra) 
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->updateBackButton($extra);
-        $extra['redirect'] = $this->config('originUrl');
+        $extra['redirect'] = $this->getOriginUrl();
     }
 
     public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['redirect'] = $this->config('originUrl');
+        $extra['redirect'] = $this->getOriginUrl();
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra) 
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->updateBreadcrumbAndPageTitle();
         $this->updateBackButton($extra);
@@ -75,29 +68,29 @@ class HistorialBehavior extends Behavior
         try {
             $model = $this->_table;
             $mainQuery = $model->find();
-            $HistorialModelTable = TableRegistry::get($this->config('model'));
-            $historialQuery = $HistorialModelTable->find();
+            $HistoricalModelTable = TableRegistry::get($this->config('model'));
+            $historicalQuery = $HistoricalModelTable->find();
 
             $selectList = new ArrayObject([]);
             $defaultOrder = new ArrayObject([]);
 
-            $model->dispatchEvent('Behavior.Historial.index.beforeQuery', [$mainQuery, $historialQuery, $selectList, $defaultOrder, $extra], $model);
+            $model->dispatchEvent('Behavior.Historical.index.beforeQuery', [$mainQuery, $historicalQuery, $selectList, $defaultOrder, $extra], $model);
 
-            $mainQuery->union($historialQuery);
+            $mainQuery->union($historicalQuery);
             $tempResult = $mainQuery
                 ->toArray();
 
             foreach ($tempResult as $entity) {
-                $historial = $entity->is_historial;
+                $historical = $entity->is_historical;
                 $entityId = $entity->id;
 
-                $this->_queryUnionResults[$historial][$entityId] = $entity;
+                $this->_queryUnionResults[$historical][$entityId] = $entity;
             }
 
             if (empty($selectList)) {
                 $selectedFields = [
                     $model->aliasField('id'),
-                    $model->aliasField('is_historial')
+                    $model->aliasField('is_historical')
                 ];
             } else {
                 $selectedFields = $selectList->getArrayCopy();
@@ -115,7 +108,7 @@ class HistorialBehavior extends Behavior
                 $query->order($order);
             }
         } catch (Exception $e) {
-            Log::write('error', 'Union historial query failed');
+            Log::write('error', 'Union historical query failed');
             Log::write('error', $e);
         }
     }
@@ -127,27 +120,27 @@ class HistorialBehavior extends Behavior
         if (in_array($controller, $this->config('allowedController'))) {
             $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-            $historialUrl = $this->config('historialUrl');
-            $historialUrl[] = 'add';
+            $historicalUrl = $this->config('historicalUrl');
+            $historicalUrl[] = 'add';
 
-            $toolbarButtonsArray['historialAdd']['attr'] = [
+            $toolbarButtonsArray['HistoricalAdd']['attr'] = [
                 'class' => 'btn btn-xs btn-default',
                 'data-toggle' => 'tooltip',
                 'data-placement' => 'bottom',
                 'escape' => false
             ];
-            $toolbarButtonsArray['historialAdd']['type'] = 'button';
-            $toolbarButtonsArray['historialAdd']['label'] = '<i class="fa kd-add"></i>';
-            $toolbarButtonsArray['historialAdd']['attr']['title'] = __('Historial Data Add');
-            $toolbarButtonsArray['historialAdd']['url'] = $historialUrl;
+            $toolbarButtonsArray['HistoricalAdd']['type'] = 'button';
+            $toolbarButtonsArray['HistoricalAdd']['label'] = '<i class="fa kd-add"></i>';
+            $toolbarButtonsArray['HistoricalAdd']['attr']['title'] = __('Historical Data Add');
+            $toolbarButtonsArray['HistoricalAdd']['url'] = $historicalUrl;
 
             $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         }
     }
 
-    public function getFieldEntity($historial, $entityId, $field)
+    public function getFieldEntity($historical, $entityId, $field)
     {
-        return $this->_queryUnionResults[$historial][$entityId]->$field;
+        return $this->_queryUnionResults[$historical][$entityId]->$field;
     }
 
     private function updateBreadcrumbAndPageTitle()
@@ -157,13 +150,14 @@ class HistorialBehavior extends Behavior
         // breadcrumb update
         $NavigationComponent = $model->controller->Navigation;
         $currentCrumb = Inflector::humanize(Inflector::underscore($model->alias()));
-        $newCrumb = Inflector::humanize(Inflector::underscore(str_replace('Historial', '', $model->alias())));
+        $newCrumb = Inflector::humanize(Inflector::underscore(str_replace('Historical', '', $model->alias())));
         $NavigationComponent->substituteCrumb($currentCrumb, $newCrumb);
 
         // page title update
         $session = $model->request->session();
-        if ($session->check('Directory.Directories.name')) {
-            $userName = $session->read('Directory.Directories.name');
+        $userName = $this->getStaffName();
+
+        if (!is_null($userName)) {
             $model->controller->set('contentHeader', $userName . ' - ' . __($newCrumb));
         }
     }
@@ -171,7 +165,43 @@ class HistorialBehavior extends Behavior
     private function updateBackButton(ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarButtonsArray['back']['url'] = $this->config('originUrl');
+        $toolbarButtonsArray['back']['url'] = $this->getOriginUrl();
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+    }
+
+    private function getOriginUrl()
+    {
+        $originUrl = $this->config('originUrl');
+
+        $model = $this->_table;
+        if ($model->controller->name === 'Directories') {
+            $originUrl['plugin'] = 'Directory';
+            $originUrl['controller'] = $model->controller->name;
+        } elseif ($model->controller->name === 'Institutions') {
+            $originUrl['plugin'] = 'Institution';
+            $originUrl['controller'] = $model->controller->name;
+        } elseif ($model->controller->name === 'Profiles') {
+            // no logic
+        }
+        return $originUrl;
+    }
+
+    private function getStaffName()
+    {
+        $model = $this->_table;
+        $session = $model->request->session();
+
+        if ($model->controller->name === 'Directories') {
+            if ($session->check('Directory.Directories.name')) {
+                return $session->read('Directory.Directories.name');
+            }
+        } elseif ($model->controller->name === 'Institutions') {
+            if ($session->check('Staff.Staff.name')) {
+                return $session->read('Staff.Staff.name');
+            }
+        } elseif ($model->controller->name === 'Profiles') {
+            // no logic
+        }
+        return null;
     }
 }
