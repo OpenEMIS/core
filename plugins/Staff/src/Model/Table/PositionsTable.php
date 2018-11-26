@@ -79,7 +79,7 @@ class PositionsTable extends ControllerActionTable {
             ];
             $selectList->exchangeArray($select);
 
-            $order = ['start_date' => 'ASC'];
+            $order = ['start_date' => 'DESC'];
             $defaultOrder->exchangeArray($order);
 
             $mainQuery

@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
+use Cake\Utility\Inflector;
 
 class HistorialBehavior extends Behavior
 {
@@ -17,6 +18,11 @@ class HistorialBehavior extends Behavior
 
     protected $_defaultConfig = [
         'historialUrl' => [
+            'plugin' => '',
+            'controller' => '',
+            'action' => ''
+        ],
+        'originUrl' => [
             'plugin' => '',
             'controller' => '',
             'action' => ''
@@ -33,9 +39,35 @@ class HistorialBehavior extends Behavior
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
+        $events['ControllerAction.Model.delete.beforeAction'] = 'deleteBeforeAction';
+        $events['ControllerAction.Model.view.beforeAction'] = 'viewBeforeAction';
+        $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
+        $events['ControllerAction.Model.addEdit.beforeAction'] = 'addEditBeforeAction';
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 50];
         return $events;
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->updateBreadcrumbAndPageTitle();
+    }
+
+    public function addBeforeAction(Event $event, ArrayObject $extra) 
+    {
+        $this->updateBackButton($extra);
+        $extra['redirect'] = $this->config('originUrl');
+    }
+
+    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $extra['redirect'] = $this->config('originUrl');
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra) 
+    {
+        $this->updateBreadcrumbAndPageTitle();
+        $this->updateBackButton($extra);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -116,5 +148,30 @@ class HistorialBehavior extends Behavior
     public function getFieldEntity($historial, $entityId, $field)
     {
         return $this->_queryUnionResults[$historial][$entityId]->$field;
+    }
+
+    private function updateBreadcrumbAndPageTitle()
+    {
+        $model = $this->_table;
+
+        // breadcrumb update
+        $NavigationComponent = $model->controller->Navigation;
+        $currentCrumb = Inflector::humanize(Inflector::underscore($model->alias()));
+        $newCrumb = Inflector::humanize(Inflector::underscore(str_replace('Historial', '', $model->alias())));
+        $NavigationComponent->substituteCrumb($currentCrumb, $newCrumb);
+
+        // page title update
+        $session = $model->request->session();
+        if ($session->check('Directory.Directories.name')) {
+            $userName = $session->read('Directory.Directories.name');
+            $model->controller->set('contentHeader', $userName . ' - ' . __($newCrumb));
+        }
+    }
+
+    private function updateBackButton(ArrayObject $extra)
+    {
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarButtonsArray['back']['url'] = $this->config('originUrl');
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 }
