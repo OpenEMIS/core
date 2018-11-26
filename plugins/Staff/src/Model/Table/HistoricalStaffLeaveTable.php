@@ -30,6 +30,13 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true]
         );
+        $this->addBehavior('Historial.Historial', [
+            'originUrl' => [
+                'action' => 'StaffLeave'
+            ],
+            'model' => 'Historial.HistorialStaffLeave'
+        ]);
+
         $this->toggle('index', false);
     }
     public function validationDefault(Validator $validator)
@@ -61,15 +68,8 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         $this->setFieldOrder(['status','assignee','institution_name', 'staff_leave_type_id', 'date_from', 'date_to', 'start_time', 'end_time','full_day', 'number_of_days', 'comments', 'academic_period_id', 'file_name', 'file_content']);
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->updateBackButton($extra);
-    }
-
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->updateBackButton($extra);
-
         $this->field('staff_leave_type_id');
         $this->field('full_day');
         $this->field('start_time', ['entity' => $entity]);
@@ -122,11 +122,6 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
             }
         }
         $entity->number_of_days = $count;
-    }
-
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    {
-        $extra['redirect'] = ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'StaffLeave', 'index'];
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
@@ -204,17 +199,5 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
             break;
         }
         return $attr;
-    }
-
-    private function updateBackButton(ArrayObject $extra)
-    {
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarButtonsArray['back']['url'] = [
-            'plugin' => 'Directory',
-            'controller' => 'Directories',
-            'action' => 'StaffLeave',
-            'type' => 'staff'
-        ];
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 }

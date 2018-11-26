@@ -23,8 +23,6 @@ class HistorialBehavior extends Behavior
             'action' => ''
         ],
         'originUrl' => [
-            'plugin' => '',
-            'controller' => '',
             'action' => ''
         ],
         'model' => '',
@@ -53,18 +51,18 @@ class HistorialBehavior extends Behavior
         $this->updateBreadcrumbAndPageTitle();
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra) 
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->updateBackButton($extra);
-        $extra['redirect'] = $this->config('originUrl');
+        $extra['redirect'] = $this->getOriginUrl();
     }
 
     public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['redirect'] = $this->config('originUrl');
+        $extra['redirect'] = $this->getOriginUrl();
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra) 
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->updateBreadcrumbAndPageTitle();
         $this->updateBackButton($extra);
@@ -157,13 +155,14 @@ class HistorialBehavior extends Behavior
         // breadcrumb update
         $NavigationComponent = $model->controller->Navigation;
         $currentCrumb = Inflector::humanize(Inflector::underscore($model->alias()));
-        $newCrumb = Inflector::humanize(Inflector::underscore(str_replace('Historial', '', $model->alias())));
+        $newCrumb = Inflector::humanize(Inflector::underscore(str_replace('Historical', '', $model->alias())));
         $NavigationComponent->substituteCrumb($currentCrumb, $newCrumb);
 
         // page title update
         $session = $model->request->session();
-        if ($session->check('Directory.Directories.name')) {
-            $userName = $session->read('Directory.Directories.name');
+        $userName = $this->getStaffName();
+
+        if (!is_null($userName)) {
             $model->controller->set('contentHeader', $userName . ' - ' . __($newCrumb));
         }
     }
@@ -171,7 +170,43 @@ class HistorialBehavior extends Behavior
     private function updateBackButton(ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarButtonsArray['back']['url'] = $this->config('originUrl');
+        $toolbarButtonsArray['back']['url'] = $this->getOriginUrl();
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+    }
+
+    private function getOriginUrl()
+    {
+        $originUrl = $this->config('originUrl');
+
+        $model = $this->_table;
+        if ($model->controller->name === 'Directories') {
+            $originUrl['plugin'] = 'Directory';
+            $originUrl['controller'] = $model->controller->name;
+        } elseif ($model->controller->name === 'Institutions') {
+            $originUrl['plugin'] = 'Institution';
+            $originUrl['controller'] = $model->controller->name;
+        } elseif ($model->controller->name === 'Profiles') {
+            // no logic
+        }
+        return $originUrl;
+    }
+
+    private function getStaffName()
+    {
+        $model = $this->_table;
+        $session = $model->request->session();
+
+        if ($model->controller->name === 'Directories') {
+            if ($session->check('Directory.Directories.name')) {
+                return $session->read('Directory.Directories.name');
+            }
+        } elseif ($model->controller->name === 'Institutions') {
+            if ($session->check('Staff.Staff.name')) {
+                return $session->read('Staff.Staff.name');
+            }
+        } elseif ($model->controller->name === 'Profiles') {
+            // no logic
+        }
+        return null;
     }
 }
