@@ -250,9 +250,9 @@ class DirectoriesController extends AppController
     }
 
     // Historial Data - End
-    public function HistorialStaffPositions()
+    public function HistoricalStaffPositions()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historial.HistorialStaffPositions']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffPositions']);
     }
     // End
 
