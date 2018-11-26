@@ -22,6 +22,7 @@ class LeaveTable extends ControllerActionTable
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('AssigneeUsers', ['className' => 'Security.Users', 'foreignKey' => 'assignee_id']);
         $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -56,6 +57,31 @@ class LeaveTable extends ControllerActionTable
         return $events;
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['visible' => ['index' => false, 'view' => true]]);
+        $this->field('full_day', ['visible' => ['index' => false, 'view' => true]]);
+        $this->field('start_time', ['visible' => ['index' => false, 'view' => true]]);
+        $this->field('end_time', ['visible' => ['index' => false, 'view' => true]]);
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('time', ['after' => 'date_to']);
+        $this->setFieldOrder(['status_id','assignee_id','institution_id', 'staff_leave_type_id', 'date_from', 'date_to', 'time', 'full_day', 'number_of_days', 'comments', 'academic_period_id', 'file_name', 'file_content']);
+
+        $options = ['type' => 'staff'];
+        $tabElements = $this->controller->getCareerTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder(['status_id','assignee_id','institution_id', 'staff_leave_type_id', 'date_from', 'date_to', 'start_time', 'end_time','full_day', 'number_of_days', 'comments', 'academic_period_id', 'file_name', 'file_content']);
+    }
+
     public function indexHistorialBeforeQuery(Event $event, Query $mainQuery, Query $historialQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
         $session = $this->request->session();
@@ -68,7 +94,9 @@ class LeaveTable extends ControllerActionTable
                 $this->aliasField('id'),
                 $this->aliasField('is_historial'),
                 $this->aliasField('date_from'),
-                $this->aliasField('date_to')
+                $this->aliasField('date_to'),
+                $this->aliasField('comments'),
+                $this->aliasField('number_of_days')
             ];
             $selectList->exchangeArray($select);
 
@@ -84,9 +112,9 @@ class LeaveTable extends ControllerActionTable
                     'end_time' => $this->aliasField('end_time'),
                     'full_day' => $this->aliasField('full_day'),
                     'comments' => $this->aliasField('comments'),
-                    'staff_id' =>$this->aliasField('staff_id'),
-                    'staff_leave_type_id' =>$this->aliasField('staff_leave_type_id'),
-                    'assignee_id' =>$this->aliasField('assignee_id'),
+                    'staff_id' => $this->aliasField('staff_id'),
+                    'staff_leave_type_id' => $this->aliasField('staff_leave_type_id'),
+                    'assignee_id' => $this->aliasField('assignee_id'),
                     'academic_period_id' =>$this->aliasField('academic_period_id'),
                     'status_id' => $this->aliasField('status_id'),
                     'number_of_days' => $this->aliasField('number_of_days'),
@@ -99,6 +127,12 @@ class LeaveTable extends ControllerActionTable
                     $this->StaffLeaveTypes->aliasField('name'),
                     $this->Statuses->aliasField('id'),
                     $this->Statuses->aliasField('name'),
+                    $this->AssigneeUsers->aliasField('id'),
+                    $this->AssigneeUsers->aliasField('first_name'),
+                    $this->AssigneeUsers->aliasField('middle_name'),
+                    $this->AssigneeUsers->aliasField('third_name'),
+                    $this->AssigneeUsers->aliasField('last_name'),
+                    $this->AssigneeUsers->aliasField('preferred_name'),
                     'is_historial' => 0
                 ], true)
                 ->contain([
@@ -106,6 +140,7 @@ class LeaveTable extends ControllerActionTable
                     'AcademicPeriods',
                     'StaffLeaveTypes',
                     'Users',
+                    'AssigneeUsers',
                     'Statuses'
                 ])
                 ->where([
@@ -137,6 +172,12 @@ class LeaveTable extends ControllerActionTable
                     'leave_type_name' => 'StaffLeaveTypes.name',
                     'statuses_id' => '(null)',
                     'statuses_name' => '(null)',
+                    'assignee_user_id' => '(null)',
+                    'assignee_user_first_name' => '(null)',
+                    'assignee_user_middle_name' => '(null)',
+                    'assignee_user_third_name' => '(null)',
+                    'assignee_user_last_name' => '(null)',
+                    'assignee_user_preferred_name' => '(null)',
                     'is_historial' => 1
                 ])
                 ->contain([
@@ -149,83 +190,104 @@ class LeaveTable extends ControllerActionTable
         }
     }
 
+    public function onGetStatusId(Event $event, Entity $entity)
+    {
+
+        if ($this->action == 'view') {
+            $statusName = $entity->status->name;
+        } elseif ($this->action == 'index') {
+            if ($entity->is_historial){
+                $statusName = 'Historical';
+            } else {
+                $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'status');
+                $statusName = $rowEntity->name;
+            }
+        }
+        return '<span class="status highlight">' . $statusName . '</span>';
+    }
+
+    public function onGetAssigneeId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            return $entity->assignee->name;
+        } elseif ($this->action == 'index') {
+            $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'assignee_user');
+            return isset($rowEntity->name) ? $rowEntity->name : '-';
+        }
+    }
+
     public function onGetInstitutionId(Event $event, Entity $entity)
     {
-        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'institution');
-
-        if ($entity->is_historial) {
-            return $rowEntity->name;
-        } else {
-            return $rowEntity->code_name;
+        if ($this->action == 'view') {
+            return $entity->institution->code_name;
+        } elseif ($this->action == 'index') {
+            $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'institution');
+            if ($entity->is_historial) {
+                return $rowEntity->name;
+            } else {
+                return $rowEntity->code_name;
+            }
         }
     }
 
     public function onGetStaffLeaveTypeId(Event $event, Entity $entity)
     {
-        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'staff_leave_type');
-        return $rowEntity->name;
-    }
-
-    public function onGetDateTo(Event $event, Entity $entity)
-    {
-        return $entity->date_to;
-    }
-
-    public function onGetDateFrom(Event $event, Entity $entity)
-    {
-        return $entity->date_from;
-    }
-
-    public function onGetNumberOfDays(Event $event, Entity $entity)
-    {
-        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'number_of_days');
-        return $rowEntity;
-    }
-
-    public function onGetComments(Event $event, Entity $entity)
-    {
-        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'comments');
-        return $rowEntity;
+        if ($this->action == 'view') {
+            return $entity->staff_leave_type->name;
+        } elseif ($this->action == 'index') {
+            $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'staff_leave_type');
+            return isset($rowEntity->name) ? $rowEntity->name : '-';
+        }
     }
 
     public function onGetStartTime(Event $event, Entity $entity)
     {
-        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'start_time');
-        return $rowEntity;
+        if ($this->action == 'view') {
+            return $entity->end_time;
+        } elseif ($this->action == 'index') {
+            $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'start_time');
+            return $rowEntity;
+        }
     }
 
     public function onGetEndTime(Event $event, Entity $entity)
     {
-        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'end_time');
-        return $rowEntity;
+        if ($this->action == 'view') {
+            return $entity->end_time;
+        } elseif ($this->action == 'index') {
+            $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'end_time');
+            return $rowEntity;
+        }
     }
 
     public function onGetFullDay(Event $event, Entity $entity)
     {
-        $isFullDay = $this->getFieldEntity($entity->is_historial, $entity->id, 'full_day');
-        return $this->getSelectOptions('general.yesno')[$isFullDay];
+        return $this->getSelectOptions('general.yesno')[$entity->full_day];
     }
 
     public function onGetAcademicPeriodId(Event $event, Entity $entity)
     {
-        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'academic_period');
-        return isset($rowEntity->name) ? $rowEntity->name : null;
+        if ($this->action == 'view') {
+            return $entity->academic_period->name;
+        } elseif ($this->action == 'index') {
+            $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'academic_period');
+            return isset($rowEntity->name) ? $rowEntity->name : '-';
+        }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function onGetTime(Event $event, Entity $entity)
     {
-        $this->field('file_name', ['visible' => false]);
-        $this->field('file_content', [
-            'visible' => ['index' => false, 'view' => true]
-        ]);
-        $this->field('assignee_id', ['visible' => false]);
-        $this->field('status_id', ['visible' => false]);
-
-        $this->setFieldOrder(['institution_id', 'staff_leave_type_id', 'date_from', 'date_to', 'number_of_days', 'comments', 'file_name', 'file_content']);
+        $time = '-';
+        $isFullDay = $this->getFieldEntity($entity->is_historial, $entity->id, 'full_day');
+        if($entity->full_day == 0){
+            $startTime = $this->getFieldEntity($entity->is_historial, $entity->id, 'start_time');
+            $endTime = $this->getFieldEntity($entity->is_historial, $entity->id, 'end_time');
+            $time = $this->formatTime($startTime). ' - '. $this->formatTime($endTime);
+        }
+        return $time;
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-        Log::write('debug', $entity);
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (array_key_exists('view', $buttons)) {
             if ($entity->is_historial) {
@@ -240,7 +302,6 @@ class LeaveTable extends ControllerActionTable
             } else {
                 $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'institution');
                 $institutionId = $rowEntity->id;
-                // $institutionId = $entity->institution->id
                 $url = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
@@ -250,18 +311,8 @@ class LeaveTable extends ControllerActionTable
                     'institution_id' => $institutionId,
                 ];
             }
-
             $buttons['view']['url'] = $url;
         }
-
         return $buttons;
-    }
-
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
-    {
-        $options = ['type' => 'staff'];
-        $tabElements = $this->controller->getCareerTabElements($options);
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
     }
 }
