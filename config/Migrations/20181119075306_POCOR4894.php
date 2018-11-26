@@ -6,13 +6,13 @@ class POCOR4894 extends AbstractMigration
 {
     public function up()
     {
-        // historial_staff_positions
-        $HistorialStaffPositions = $this->table('historial_staff_positions', [
+        // historical_staff_positions
+        $HistoricalStaffPositions = $this->table('historical_staff_positions', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the historial positions for all the staff'
+            'comment' => 'This table contains all the Historical positions for all the staff'
         ]);
 
-        $HistorialStaffPositions
+        $HistoricalStaffPositions
             ->addColumn('start_date', 'date', [
                 'null' => false,
                 'default' => null
@@ -93,8 +93,8 @@ class POCOR4894 extends AbstractMigration
         $this->execute('INSERT INTO `z_4894_security_functions` SELECT * FROM `security_functions`');
 
         /*
-            7072 - Historial Positions - Order 335
-            7073 - Historial Leaves
+            7072 - Historical Positions - Order 335
+            7073 - Historical Leaves
          */
         
         $this->execute('UPDATE `security_functions` SET `_view` = "StaffPositions.index|StaffPositions.view" WHERE `id` = 7021');
@@ -102,15 +102,15 @@ class POCOR4894 extends AbstractMigration
         $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 335');
         $securityData = [
             'id' => 7072,
-            'name' => 'Historial Positions',
+            'name' => 'Historical Positions',
             'controller' => 'Directories',
             'module' => 'Directory',
             'category' => 'Staff - Career',
             'parent_id' => 7000,
-            '_view' => 'HistorialStaffPositions.view',
-            '_edit' => 'HistorialStaffPositions.edit',
-            '_add' => 'HistorialStaffPositions.add',
-            '_delete' => 'HistorialStaffPositions.delete',
+            '_view' => 'HistoricalStaffPositions.view',
+            '_edit' => 'HistoricalStaffPositions.edit',
+            '_add' => 'HistoricalStaffPositions.add',
+            '_delete' => 'HistoricalStaffPositions.delete',
             '_execute' => null,
             'order' => 335,
             'visible' => 1,
@@ -123,8 +123,8 @@ class POCOR4894 extends AbstractMigration
 
     public function down()
     {
-        // historial_staff_positions
-        $this->execute('DROP TABLE IF EXISTS `historial_staff_positions`');
+        // historical_staff_positions
+        $this->execute('DROP TABLE IF EXISTS `historical_staff_positions`');
 
         // security_functions
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
