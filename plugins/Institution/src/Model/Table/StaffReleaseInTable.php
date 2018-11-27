@@ -23,11 +23,15 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         ]);
         $this->addBehavior('Institution.StaffProfile');
 
+        //Uses only staff release out workflow
         if ($this->behaviors()->has('Workflow')) {
             $this->behaviors()->get('Workflow')->config([
-                'institution_key' => 'previous_institution_id'
+                'institution_key' => 'previous_institution_id',
+                'model' => 'Institution.StaffReleaseOut'
             ]);
         }
+
+        $this->toggle('add',false);
     }
 
     public function validationDefault(Validator $validator)
