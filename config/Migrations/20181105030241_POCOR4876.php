@@ -215,7 +215,7 @@ class POCOR4876 extends AbstractMigration
         $workflowModelData = [
             [
                 'id' => $this->workflowModelStaffReleaseOutId,
-                'name' => 'Institutions > Staff Release Out',
+                'name' => 'Institutions > Staff Release',
                 'model' => 'Institution.StaffReleaseOut',
                 'filter' => NULL,
                 'is_school_based' => '1',
