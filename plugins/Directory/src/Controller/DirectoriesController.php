@@ -256,7 +256,7 @@ class DirectoriesController extends AppController
     }
     public function HistoricalStaffLeave()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.HistoricalStaffLeave']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffLeave']);
     }
     // End
 
