@@ -709,8 +709,8 @@ class AssessmentResultsTable extends AppTable
     {
         if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-            $studentAbsenceResults = $InstitutionStudentAbsences->find()
-                ->find('academicPeriod', ['academic_period_id' => $params['academic_period_id']])
+            $studentAbsenceResults = $InstitutionStudentAbsences
+                ->find()
                 ->innerJoin(
                     [$this->alias() => $this->table()],
                     [
@@ -720,38 +720,27 @@ class AssessmentResultsTable extends AppTable
                     ]
                 )
                 ->where([
-                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id']
+                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id']
                 ])
-                ->formatResults(function (ResultSetInterface $results) {
-                    return $results->map(function ($row) {
-                        $startDate = $row['start_date'];
-                        $endDate = $row['end_date'];
-                        $interval = $endDate->diff($startDate);
-                        // plus 1 day because if absence for the same day, interval diff return zero
-                        $row['number_of_days'] = $interval->days + 1;
-
-                        return $row;
-                    });
-                })
                 ->hydrate(false)
                 ->all();
 
-            // sum all number_of_days a student absence in an academic period
             $results = [];
             foreach ($studentAbsenceResults as $key => $obj) {
                 $studentId = $obj['student_id'];
-                $institutionId = $obj['institution_id'];
-                $numberOfDays = $obj['number_of_days'];
-                if (isset($results[$studentId])) {
-                    $results[$studentId]['number_of_days'] += $numberOfDays;
-                } else {
-                    $results[$studentId]['student_id'] = $studentId;
-                    $results[$studentId]['institution_id'] = $institutionId;
-                    $results[$studentId]['number_of_days'] = $numberOfDays;
+                if (!array_key_exists($studentId, $results)) {
+                    $results[$studentId] = [
+                        'student_id' => $studentId,
+                        'institution_id' => $obj['institution_id'],
+                        'number_of_days' => 0
+                    ];
                 }
-            }
-            $results = array_values($results);
 
+                $results[$studentId]['number_of_days']++;
+            }
+
+            $results = array_values($results);
             return $results;
         }
     }

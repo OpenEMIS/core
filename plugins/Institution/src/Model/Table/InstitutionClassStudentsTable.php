@@ -855,7 +855,8 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('education_grade_id'),
                                         $AssessmentItemResults->aliasField('academic_period_id'),
                                         $AssessmentItemResults->aliasField('institution_id'),
-                                        'total_mark' => $AssessmentItemResultsQuery->func()->sum($AssessmentItemResults->aliasField('marks'))
+                                        'weightage' => $AssessmentItemResults->AssessmentPeriods->aliasField('weight')
+
                                     ])
                                     ->contain([
                                         'AssessmentPeriods'
@@ -867,18 +868,14 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
                                         $AssessmentItemResults->aliasField('marks IS NOT NULL')
                                     ])
-                                    ->group([
-                                        $AssessmentItemResults->aliasField('student_id'),
-                                        $AssessmentItemResults->aliasField('education_subject_id'),
-                                        $AssessmentItemResults->aliasField('education_grade_id'),
-                                        $AssessmentItemResults->aliasField('academic_period_id'),
-                                        $AssessmentItemResults->aliasField('institution_id')
-                                    ])
                                     ->all();
                                 if (!$assessmentItemResultsEntities->isEmpty()) {
+                                    foreach ($assessmentItemResultsEntities as $entity) {
+                                        $total_mark += $entity->marks * $entity->weightage;
+                                    }
+                                    
                                     // Plus one to the subject so that we can keep track how many subject does this student is taking.
                                     $subjectTaken++;
-                                    $total_mark += $assessmentItemResultsEntities->first()['total_mark'];
                                 }
 
                             }
@@ -962,7 +959,8 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('education_grade_id'),
                                         $AssessmentItemResults->aliasField('academic_period_id'),
                                         $AssessmentItemResults->aliasField('institution_id'),
-                                        'total_mark' => $AssessmentItemResultsQuery->func()->sum($AssessmentItemResults->aliasField('marks'))
+                                        'weightage' => $AssessmentItemResults->AssessmentPeriods->aliasField('weight')
+
 
                                     ])
                                     ->contain([
@@ -975,27 +973,22 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
                                         $AssessmentItemResults->aliasField('marks IS NOT NULL')
                                     ])
-                                    ->group([
-                                        $AssessmentItemResults->aliasField('student_id'),
-                                        $AssessmentItemResults->aliasField('education_subject_id'),
-                                        $AssessmentItemResults->aliasField('education_grade_id'),
-                                        $AssessmentItemResults->aliasField('academic_period_id'),
-                                        $AssessmentItemResults->aliasField('institution_id')
-                                    ])
                                     ->all();
 
                                 if (!$assessmentItemResultsEntities->isEmpty()) {
+                                    foreach ($assessmentItemResultsEntities as $entity) {
+                                        $total_mark += $entity->marks * $entity->weightage;
+                                    }
+
                                     // Plus one to the subject so that we can keep track how many subject does this student is taking.
                                     $subjectTaken++;
-                                    $total_mark += $assessmentItemResultsEntities->first()['total_mark'];
                                 }
-                            }
+                            }                            
                         }
 
                         $row->subjectTaken = NULL;
                         $row->total_mark = NULL;
                         $row->average_mark = NULL;
-
 
                         $row->subjectTaken = $subjectTaken;
                         $row->total_mark = $total_mark;
@@ -1094,7 +1087,7 @@ class InstitutionClassStudentsTable extends AppTable
                                     $AssessmentItemResults->aliasField('education_grade_id'),
                                     $AssessmentItemResults->aliasField('academic_period_id'),
                                     $AssessmentItemResults->aliasField('institution_id'),
-                                    'total_mark' => $AssessmentItemResultsQuery->func()->sum($AssessmentItemResults->aliasField('marks'))
+                                    'weightage' => $AssessmentItemResults->AssessmentPeriods->aliasField('weight')
 
                                 ])
                                 ->contain([
@@ -1109,20 +1102,18 @@ class InstitutionClassStudentsTable extends AppTable
                                     $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id']
 
                                 ])
-                                ->group([
-                                        $AssessmentItemResults->aliasField('student_id'),
-                                        $AssessmentItemResults->aliasField('education_subject_id'),
-                                        $AssessmentItemResults->aliasField('education_grade_id'),
-                                        $AssessmentItemResults->aliasField('academic_period_id'),
-                                        $AssessmentItemResults->aliasField('institution_id')
-                                    ])
                                 ->all();
 
                             if (!$assessmentItemResultsEntities->isEmpty()) {
-                                    $row->total_mark = $assessmentItemResultsEntities->first()['total_mark'];
+                                $total_mark = 0;
+                                foreach ($assessmentItemResultsEntities as $entity) {
+                                    $total_mark += $entity->marks * $entity->weightage;
+                                    // pr($entity);die;
+                                }
+
+                                $row->total_mark = $total_mark;
                             }
                         }
-
                         return $row;
                     });
                 });

@@ -221,20 +221,23 @@ class InstitutionSubjectStaffTable extends AppTable
         $subjectId = $options['subject_id'];
         $userId = $options['user']['id']; // current user
 
-        $query
-            ->find('bySecurityAccess')
-            ->matching('InstitutionSubjects', function ($q) use ($subjectId) {
-                return $q->where([
-                    'InstitutionSubjects.education_subject_id' => $subjectId
-                ]);
-            })
-            ->where([
-                $this->aliasField('staff_id') => $userId
-            ])
-            ->group([$this->aliasField('staff_id')]);
+        if ($options['user']['super_admin'] == 0) { // if he is not super admin
+            $query
+                ->find('bySecurityAccess')
+                ->matching('InstitutionSubjects', function ($q) use ($subjectId) {
+                    return $q->where([
+                        'InstitutionSubjects.education_subject_id' => $subjectId
+                    ]);
+                })
+                ->where([
+                    $this->aliasField('staff_id') => $userId
+                ])
+                ->group([$this->aliasField('staff_id')]);
 
-        $query
-            ->find('bySecurityRoleAccess');
+            $query
+                ->find('bySecurityRoleAccess');
+
+        }
     }
 
     public function findBySecurityAccess(Query $query, array $options)
