@@ -38,6 +38,7 @@ class HistoricalBehavior extends Behavior
         $events['ControllerAction.Model.addEdit.beforeAction'] = 'addEditBeforeAction';
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 50];
+        $events['Excel.Historical.beforeQuery'] = 'indexBeforeQuery';
         return $events;
     }
 
