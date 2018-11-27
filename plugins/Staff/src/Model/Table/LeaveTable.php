@@ -22,7 +22,6 @@ class LeaveTable extends ControllerActionTable
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('AssigneeUsers', ['className' => 'Security.Users', 'foreignKey' => 'assignee_id']);
         $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -49,6 +48,12 @@ class LeaveTable extends ControllerActionTable
                 'allowedController' => ['Directories']
             ]
         );
+        $this->addBehavior('Excel', [
+            'excludes' => ['file_name'],
+            'pages' => ['index'],
+            'auto_contain' => false,
+            'autoFields' => false,
+        ]);
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -63,6 +68,10 @@ class LeaveTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        if ($this->controller->name !== 'Directories') {
+            $this->removeBehavior('Excel');
+            unset($extra['toolbarButtons']['export']);
+        }
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => ['index' => false, 'view' => true]]);
         $this->field('full_day', ['visible' => ['index' => false, 'view' => true]]);
@@ -104,11 +113,14 @@ class LeaveTable extends ControllerActionTable
             $this->aliasField('date_from'),
             $this->aliasField('date_to'),
             $this->aliasField('comments'),
-            $this->aliasField('number_of_days')
+            $this->aliasField('number_of_days'),
+            $this->aliasField('start_time'),
+            $this->aliasField('end_time'),
+            $this->aliasField('full_day')
         ];
         $selectList->exchangeArray($select);
 
-        $order = ['date_from' => 'ASC'];
+        $order = ['date_from' => 'DESC'];
         $defaultOrder->exchangeArray($order);
 
         $mainQuery
@@ -135,12 +147,18 @@ class LeaveTable extends ControllerActionTable
                 $this->StaffLeaveTypes->aliasField('name'),
                 $this->Statuses->aliasField('id'),
                 $this->Statuses->aliasField('name'),
-                $this->AssigneeUsers->aliasField('id'),
-                $this->AssigneeUsers->aliasField('first_name'),
-                $this->AssigneeUsers->aliasField('middle_name'),
-                $this->AssigneeUsers->aliasField('third_name'),
-                $this->AssigneeUsers->aliasField('last_name'),
-                $this->AssigneeUsers->aliasField('preferred_name'),
+                $this->Users->aliasField('id'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name'),
+                $this->Assignees->aliasField('id'),
+                $this->Assignees->aliasField('first_name'),
+                $this->Assignees->aliasField('middle_name'),
+                $this->Assignees->aliasField('third_name'),
+                $this->Assignees->aliasField('last_name'),
+                $this->Assignees->aliasField('preferred_name'),
                 'is_historical' => 0
             ], true)
             ->contain([
@@ -148,7 +166,7 @@ class LeaveTable extends ControllerActionTable
                 'AcademicPeriods',
                 'StaffLeaveTypes',
                 'Users',
-                'AssigneeUsers',
+                'Assignees',
                 'Statuses'
             ])
             ->where([
@@ -180,6 +198,12 @@ class LeaveTable extends ControllerActionTable
                 'leave_type_name' => 'StaffLeaveTypes.name',
                 'statuses_id' => '(null)',
                 'statuses_name' => '(null)',
+                'user_id' => 'Users.id',
+                'user_first_name' => 'Users.first_name',
+                'user_middle_name' => 'Users.middle_name',
+                'user_third_name' => 'Users.third_name',
+                'user_last_name' => 'Users.last_name',
+                'user_preferred_name' => 'Users.preferred_name',
                 'assignee_user_id' => '(null)',
                 'assignee_user_first_name' => '(null)',
                 'assignee_user_middle_name' => '(null)',
@@ -195,6 +219,167 @@ class LeaveTable extends ControllerActionTable
             ->where([
                 $HistoricalTable->aliasField('staff_id') => $userId
             ]);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $this->dispatchEvent('Excel.Historical.beforeQuery', [$query, new ArrayObject([])], $this);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $newFields = [];
+        $newFields[] = [
+            'key' => 'Leave.name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.status_id',
+            'field' => 'status_id',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.assignee_id',
+            'field' => 'assignee_id',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.institution_id',
+            'field' => 'institution_id',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.staff_leave_type_id',
+            'field' => 'staff_leave_type_id',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.date_from',
+            'field' => 'date_from',
+            'type' => 'date',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.date_to',
+            'field' => 'date_to',
+            'type' => 'date',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.start_time',
+            'field' => 'start_time',
+
+            'type' => 'time',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.end_time',
+            'field' => 'end_time',
+            'type' => 'time',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.full_day',
+            'field' => 'full_day',
+            'type' => 'integer',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.comments',
+            'field' => 'comments',
+            'type' => 'text',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.academic_period_id',
+            'field' => 'academic_period_id',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Leave.number_of_days',
+            'field' => 'number_of_days',
+            'type' => 'decimal',
+            'label' => '',
+        ];
+
+        $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetName(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'user');
+        return $rowEntity->name;
+    }
+
+    public function onExcelGetStaffLeaveTypeId(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'staff_leave_type');
+        return isset($rowEntity->name) ? $rowEntity->name : '-';
+    }
+
+    public function onExcelGetFullDay(Event $event, Entity $entity)
+    {
+        return $this->getSelectOptions('general.yesno')[$entity->full_day];
+    }
+
+    public function onExcelRenderTime(Event $event, Entity $entity, $attr)
+    {
+        $searchKey = $attr['field'];
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, $searchKey);
+        $attr['value'] = $this->formatTime($rowEntity);
+        return $attr;
+    }
+
+    public function onExcelGetInstitutionId(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
+        if ($entity->is_historical) {
+            return $rowEntity->name;
+        } else {
+            return $rowEntity->code_name;
+        }
+    }
+
+    public function onExcelGetAssigneeId(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'assignee');
+        return isset($rowEntity->name) ? $rowEntity->name : '-';
+    }
+
+    public function onExcelGetAcademicPeriodId(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'academic_period');
+        return isset($rowEntity->name) ? $rowEntity->name : '-';
+    }
+
+    public function onExcelGetStatusId(Event $event, Entity $entity)
+    {
+        if ($entity->is_historical){
+            $statusName = 'Historical';
+        } else {
+            $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'status');
+            $statusName = $rowEntity->name;
+        }
+        return $statusName;
     }
 
     public function onGetStatusId(Event $event, Entity $entity)
@@ -218,7 +403,7 @@ class LeaveTable extends ControllerActionTable
         if ($this->action == 'view') {
             return $entity->assignee->name;
         } elseif ($this->action == 'index') {
-            $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'assignee_user');
+            $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'assignee');
             return isset($rowEntity->name) ? $rowEntity->name : '-';
         }
     }
