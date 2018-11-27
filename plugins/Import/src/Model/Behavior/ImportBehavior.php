@@ -403,6 +403,10 @@ class ImportBehavior extends Behavior
                 $extra['entityValidate'] = true;
                 $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
 
+                if ($rowPass !== NULL && !$rowPass) {
+                    $activeModel->setImportValidationFailed();
+                }
+
                 $tempRow = $tempRow->getArrayCopy();
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
                 if (!isset($tempRow['entity'])) {
