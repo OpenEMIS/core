@@ -32,6 +32,7 @@ class HistoricalBehavior extends Behavior
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
+        $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
         $events['ControllerAction.Model.delete.beforeAction'] = 'deleteBeforeAction';
         $events['ControllerAction.Model.view.beforeAction'] = 'viewBeforeAction';
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
@@ -39,6 +40,16 @@ class HistoricalBehavior extends Behavior
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 50];
         return $events;
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $controller = $this->_table->controller->name;
+
+        if (!in_array($controller, $this->config('allowedController')) && $this->_table->registryAlias() == $this->config('model')) {
+            $this->_table->toggle('edit', false);
+            $this->_table->toggle('remove', false);
+        }
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
@@ -181,7 +192,8 @@ class HistoricalBehavior extends Behavior
             $originUrl['plugin'] = 'Institution';
             $originUrl['controller'] = $model->controller->name;
         } elseif ($model->controller->name === 'Profiles') {
-            // no logic
+            $originUrl['plugin'] = 'Profile';
+            $originUrl['controller'] = $model->controller->name;
         }
         return $originUrl;
     }
@@ -200,7 +212,9 @@ class HistoricalBehavior extends Behavior
                 return $session->read('Staff.Staff.name');
             }
         } elseif ($model->controller->name === 'Profiles') {
-            // no logic
+            if ($session->check('Profiles.Profiles.name')) {
+                return $session->read('Profiles.Profiles.name');
+            }
         }
         return null;
     }
