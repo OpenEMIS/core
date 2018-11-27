@@ -201,9 +201,25 @@ class PositionsTable extends ControllerActionTable {
     {
         $session = $this->request->session();
 
-        if ($session->check('Directory.Directories.id')) {
+        switch ($this->controller->name) {
+            case 'Directories':
+                $sessionKey = 'Directory.Directories.id';
+                $userId = $session->read($sessionKey);
+                break;
+            case 'Staff':
+                $sessionKey = 'Staff.Staff.id';
+                $userId = $session->read($sessionKey);
+                break;
+            case 'Profiles':
+                $userId = $this->Auth->user('id');
+                break;
+            default:
+                $userId = null;
+                break;
+        }
+
+        if (!is_null($userId)) {
             $extra['auto_contain'] = false;
-            $userId = $session->read('Directory.Directories.id');
 
             $select = [
                 $this->aliasField('id'),
