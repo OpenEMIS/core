@@ -32,7 +32,7 @@ class HistoricalBehavior extends Behavior
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 1000];
+        $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
         $events['ControllerAction.Model.delete.beforeAction'] = 'deleteBeforeAction';
         $events['ControllerAction.Model.view.beforeAction'] = 'viewBeforeAction';
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';

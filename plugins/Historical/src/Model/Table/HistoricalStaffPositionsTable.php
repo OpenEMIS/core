@@ -43,6 +43,18 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         ]);
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        if ($this->controller->name === 'Staff') {
+            $this->behaviors()->get('Historical')->config([
+                'originUrl' => [
+                    'action' => 'Positions',
+                    'index'
+                ]
+            ]);
+        }
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
