@@ -1,5 +1,5 @@
 <?php
-namespace Historial\Model\Table;
+namespace Historical\Model\Table;
 
 use ArrayObject;
 use Cake\Event\Event;
@@ -11,11 +11,11 @@ use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
-class HistorialStaffPositionsTable extends ControllerActionTable
+class HistoricalStaffPositionsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('historial_staff_positions');
+        $this->table('historical_staff_positions');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -34,15 +34,12 @@ class HistorialStaffPositionsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-        $this->addBehavior('Historial.Historial', [
+        $this->addBehavior('Historical.Historical', [
             'originUrl' => [
-                'plugin' => 'Directory',
-                'controller' => 'Directories',
                 'action' => 'StaffPositions',
                 'type' => 'staff'
             ],
-            'model' => 'Historial.HistorialStaffPositions',
-            'allowedController' => ['Directories']
+            'model' => 'Historical.HistoricalStaffPositions'
         ]);
     }
 

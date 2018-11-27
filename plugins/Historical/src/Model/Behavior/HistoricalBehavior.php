@@ -1,5 +1,5 @@
 <?php
-namespace Historial\Model\Behavior;
+namespace Historical\Model\Behavior;
 
 use ArrayObject;
 use Cake\Core\Exception\Exception;
@@ -12,12 +12,12 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 
-class HistorialBehavior extends Behavior
+class HistoricalBehavior extends Behavior
 {
     private $_queryUnionResults = [];
 
     protected $_defaultConfig = [
-        'historialUrl' => [
+        'historicalUrl' => [
             'plugin' => '',
             'controller' => '',
             'action' => ''
@@ -28,11 +28,6 @@ class HistorialBehavior extends Behavior
         'model' => '',
         'allowedController' => ['Directories']
     ];
-
-    public function initialize(array $config)
-    {
-        parent::initialize($config);
-    }
 
     public function implementedEvents()
     {
@@ -73,29 +68,29 @@ class HistorialBehavior extends Behavior
         try {
             $model = $this->_table;
             $mainQuery = $model->find();
-            $HistorialModelTable = TableRegistry::get($this->config('model'));
-            $historialQuery = $HistorialModelTable->find();
+            $HistoricalModelTable = TableRegistry::get($this->config('model'));
+            $historicalQuery = $HistoricalModelTable->find();
 
             $selectList = new ArrayObject([]);
             $defaultOrder = new ArrayObject([]);
 
-            $model->dispatchEvent('Behavior.Historial.index.beforeQuery', [$mainQuery, $historialQuery, $selectList, $defaultOrder, $extra], $model);
+            $model->dispatchEvent('Behavior.Historical.index.beforeQuery', [$mainQuery, $historicalQuery, $selectList, $defaultOrder, $extra], $model);
 
-            $mainQuery->union($historialQuery);
+            $mainQuery->union($historicalQuery);
             $tempResult = $mainQuery
                 ->toArray();
 
             foreach ($tempResult as $entity) {
-                $historial = $entity->is_historial;
+                $historical = $entity->is_historical;
                 $entityId = $entity->id;
 
-                $this->_queryUnionResults[$historial][$entityId] = $entity;
+                $this->_queryUnionResults[$historical][$entityId] = $entity;
             }
 
             if (empty($selectList)) {
                 $selectedFields = [
                     $model->aliasField('id'),
-                    $model->aliasField('is_historial')
+                    $model->aliasField('is_historical')
                 ];
             } else {
                 $selectedFields = $selectList->getArrayCopy();
@@ -113,7 +108,7 @@ class HistorialBehavior extends Behavior
                 $query->order($order);
             }
         } catch (Exception $e) {
-            Log::write('error', 'Union historial query failed');
+            Log::write('error', 'Union historical query failed');
             Log::write('error', $e);
         }
     }
@@ -125,27 +120,27 @@ class HistorialBehavior extends Behavior
         if (in_array($controller, $this->config('allowedController'))) {
             $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-            $historialUrl = $this->config('historialUrl');
-            $historialUrl[] = 'add';
+            $historicalUrl = $this->config('historicalUrl');
+            $historicalUrl[] = 'add';
 
-            $toolbarButtonsArray['historialAdd']['attr'] = [
+            $toolbarButtonsArray['HistoricalAdd']['attr'] = [
                 'class' => 'btn btn-xs btn-default',
                 'data-toggle' => 'tooltip',
                 'data-placement' => 'bottom',
                 'escape' => false
             ];
-            $toolbarButtonsArray['historialAdd']['type'] = 'button';
-            $toolbarButtonsArray['historialAdd']['label'] = '<i class="fa kd-add"></i>';
-            $toolbarButtonsArray['historialAdd']['attr']['title'] = __('Historial Data Add');
-            $toolbarButtonsArray['historialAdd']['url'] = $historialUrl;
+            $toolbarButtonsArray['HistoricalAdd']['type'] = 'button';
+            $toolbarButtonsArray['HistoricalAdd']['label'] = '<i class="fa kd-add"></i>';
+            $toolbarButtonsArray['HistoricalAdd']['attr']['title'] = __('Historical Data Add');
+            $toolbarButtonsArray['HistoricalAdd']['url'] = $historicalUrl;
 
             $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         }
     }
 
-    public function getFieldEntity($historial, $entityId, $field)
+    public function getFieldEntity($historical, $entityId, $field)
     {
-        return $this->_queryUnionResults[$historial][$entityId]->$field;
+        return $this->_queryUnionResults[$historical][$entityId]->$field;
     }
 
     private function updateBreadcrumbAndPageTitle()
