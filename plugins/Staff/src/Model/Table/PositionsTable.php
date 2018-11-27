@@ -31,6 +31,10 @@ class PositionsTable extends ControllerActionTable {
                 'controller' => 'Directories',
                 'action' => 'HistoricalStaffPositions'
             ],
+            'originUrl' => [
+                'action' => 'StaffPosition',
+                'type' => 'staff'
+            ],
             'model' => 'Historical.HistoricalStaffPositions',
             'allowedController' => ['Directories']
         ]);
@@ -291,12 +295,28 @@ class PositionsTable extends ControllerActionTable {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
                 $url = [
-                    'plugin' => 'Directory',
-                    'controller' => 'Directories',
                     'action' => 'HistoricalStaffPositions',
                     'view',
                     $this->paramsEncode(['id' => $rowEntityId])
                 ];
+
+                switch ($this->controller->name) {
+                    case 'Directories':
+                        $url['plugin'] = 'Directory';
+                        $url['controller'] = 'Directories';
+                        break;
+                    case 'Staff':
+                        $url['plugin'] = 'Staff';
+                        $url['controller'] = 'Staff';
+                        break;
+                    case 'Profiles':
+                        $url['plugin'] = 'Profile';
+                        $url['controller'] = 'Profiles';
+                        break;
+                    default:
+                        break;
+                }
+
             } else {
                 $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
                 $institutionId = $rowEntity->id;
