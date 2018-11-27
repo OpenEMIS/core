@@ -133,6 +133,11 @@ class ProfilesController extends AppController
     // Special Needs - End
 
     public function Employments()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']); }
+
+    public function HistoricalStaffLeave()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.HistoricalStaffLeave']);
+    }
     // AngularJS
     public function StaffAttendances()
     {

@@ -34,7 +34,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
             'originUrl' => [
                 'action' => 'StaffLeave'
             ],
-            'model' => 'Historial.HistorialStaffLeave'
+            'model' => 'Staff.HistoricalStaffLeave'
         ]);
 
         $this->toggle('index', false);

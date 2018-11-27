@@ -227,9 +227,9 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $session = $this->request->session();
 
-        if ($session->check('Directory.Directories.id')) {
+        if ($session->check('Staff.Staff.id')) {
             $extra['auto_contain'] = false;
-            $userId = $session->read('Directory.Directories.id');
+            $userId = $session->read('Staff.Staff.id');
 
             $select = [
                 $this->aliasField('id'),
