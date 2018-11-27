@@ -25,14 +25,19 @@ class PositionsTable extends ControllerActionTable {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
-        $this->addBehavior('Historial.Historial', [
-            'historialUrl' => [
+        $this->addBehavior('Historical.Historical', [
+            'historicalUrl' => [
                 'plugin' => 'Directory',
                 'controller' => 'Directories',
-                'action' => 'HistorialStaffPositions'
+                'action' => 'HistoricalStaffPositions'
             ],
-            'model' => 'Historial.HistorialStaffPositions',
+            'model' => 'Historical.HistoricalStaffPositions',
             'allowedController' => ['Directories']
+        ]);
+
+        $this->addBehavior('Excel', [
+            'pages' => ['index'],
+            'autoFields' => false
         ]);
 
         $this->toggle('add', false);
@@ -43,7 +48,7 @@ class PositionsTable extends ControllerActionTable {
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Behavior.Historial.index.beforeQuery'] = 'indexHistorialBeforeQuery';
+        $events['Behavior.Historical.index.beforeQuery'] = 'indexHistoricalBeforeQuery';
         return $events;
     }
 
@@ -63,7 +68,7 @@ class PositionsTable extends ControllerActionTable {
         ]);
     }
 
-    public function indexHistorialBeforeQuery(Event $event, Query $mainQuery, Query $historialQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
+    public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
         $session = $this->request->session();
 
@@ -73,7 +78,7 @@ class PositionsTable extends ControllerActionTable {
 
             $select = [
                 $this->aliasField('id'),
-                $this->aliasField('is_historial'),
+                $this->aliasField('is_historical'),
                 $this->aliasField('start_date'),
                 $this->aliasField('end_date')
             ];
@@ -98,7 +103,7 @@ class PositionsTable extends ControllerActionTable {
                     $this->StaffTypes->aliasField('name'),
                     $this->StaffStatuses->aliasField('id'),
                     $this->StaffStatuses->aliasField('name'),
-                    'is_historial' => 0
+                    'is_historical' => 0
                 ], true)
                 ->contain([
                     $this->Institutions->alias(),
@@ -111,31 +116,31 @@ class PositionsTable extends ControllerActionTable {
                     $this->aliasField('staff_id') => $userId
                 ]);
 
-            $HistorialTable = $historialQuery->repository();
-            $historialQuery
+            $HistoricalTable = $historicalQuery->repository();
+            $historicalQuery
                 ->select([
-                    'id' => $HistorialTable->aliasField('id'),
-                    'start_date' => $HistorialTable->aliasField('start_date'),
-                    'end_date' => $HistorialTable->aliasField('end_date'),
+                    'id' => $HistoricalTable->aliasField('id'),
+                    'start_date' => $HistoricalTable->aliasField('start_date'),
+                    'end_date' => $HistoricalTable->aliasField('end_date'),
                     'position_institution_id' => '(null)',
                     'institution_id' => '(null)',
                     'institution_code' => '(null)',
-                    'institution_name' => $HistorialTable->aliasField('institution_name'),
+                    'institution_name' => $HistoricalTable->aliasField('institution_name'),
                     'position_id' => '(null)',
-                    'position_name' => $HistorialTable->aliasField('institution_position_name'),
+                    'position_name' => $HistoricalTable->aliasField('institution_position_name'),
                     'staff_position_title_id' => '(null)',
                     'staff_type_id' => 'StaffTypes.id',
                     'staff_type_name' => 'StaffTypes.name',
                     'staff_status_id' => 'StaffStatuses.id',
                     'staff_status_name' => 'StaffStatuses.name',
-                    'is_historial' => 1
+                    'is_historical' => 1
                 ])
                 ->contain([
                     'StaffTypes',
                     'StaffStatuses'
                 ])
                 ->where([
-                    $HistorialTable->aliasField('staff_id') => $userId
+                    $HistoricalTable->aliasField('staff_id') => $userId
                 ]);
         }
     }
@@ -143,17 +148,17 @@ class PositionsTable extends ControllerActionTable {
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (array_key_exists('view', $buttons)) {
-            if ($entity->is_historial) {
-                $rowEntityId = $this->getFieldEntity($entity->is_historial, $entity->id, 'id');
+            if ($entity->is_historical) {
+                $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
                 $url = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
-                    'action' => 'HistorialStaffPositions',
+                    'action' => 'HistoricalStaffPositions',
                     'view',
                     $this->paramsEncode(['id' => $rowEntityId])
                 ];
             } else {
-                $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'institution');
+                $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
                 $institutionId = $rowEntity->id;
                 // $institutionId = $entity->institution->id
                 $url = [
@@ -181,9 +186,9 @@ class PositionsTable extends ControllerActionTable {
 
     public function onGetInstitutionId(Event $event, Entity $entity) 
     {
-        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'institution');
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
 
-        if ($entity->is_historial) {
+        if ($entity->is_historical) {
             return $rowEntity->name;
         } else {
             return $rowEntity->code_name;
@@ -192,9 +197,9 @@ class PositionsTable extends ControllerActionTable {
 
     public function onGetInstitutionPositionId(Event $event, Entity $entity)
     {
-        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'institution_position');
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution_position');
 
-        if ($entity->is_historial) {
+        if ($entity->is_historical) {
             return $rowEntity->position_no;
         } else {
             return $rowEntity->name;
@@ -203,13 +208,13 @@ class PositionsTable extends ControllerActionTable {
 
     public function onGetStaffTypeId(Event $event, Entity $entity)
     {
-        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'staff_type');
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'staff_type');
         return $rowEntity->name;
     }
 
     public function onGetStaffStatusId(Event $event, Entity $entity)
     {
-        $rowEntity = $this->getFieldEntity($entity->is_historial, $entity->id, 'staff_status');
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'staff_status');
         return $rowEntity->name;
     }
 }
