@@ -39,12 +39,14 @@ class HistoricalBehavior extends Behavior
         $events['ControllerAction.Model.addEdit.beforeAction'] = 'addEditBeforeAction';
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 50];
+        $events['Excel.Historical.beforeQuery'] = 'indexBeforeQuery';
         return $events;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $controller = $this->_table->controller->name;
+        // To only show the historical edit/remove button if the current plugin is the allowedController
 
         if (!in_array($controller, $this->config('allowedController')) && $this->_table->registryAlias() == $this->config('model')) {
             $this->_table->toggle('edit', false);
@@ -190,6 +192,9 @@ class HistoricalBehavior extends Behavior
             $originUrl['controller'] = $model->controller->name;
         } elseif ($model->controller->name === 'Institutions') {
             $originUrl['plugin'] = 'Institution';
+            $originUrl['controller'] = $model->controller->name;
+        } elseif ($model->controller->name === 'Staff') {
+            $originUrl['plugin'] = 'Staff';
             $originUrl['controller'] = $model->controller->name;
         } elseif ($model->controller->name === 'Profiles') {
             $originUrl['plugin'] = 'Profile';

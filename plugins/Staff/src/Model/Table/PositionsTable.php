@@ -31,13 +31,18 @@ class PositionsTable extends ControllerActionTable {
                 'controller' => 'Directories',
                 'action' => 'HistoricalStaffPositions'
             ],
+            'originUrl' => [
+                'action' => 'StaffPosition',
+                'type' => 'staff'
+            ],
             'model' => 'Historical.HistoricalStaffPositions',
             'allowedController' => ['Directories']
         ]);
 
         $this->addBehavior('Excel', [
             'pages' => ['index'],
-            'autoFields' => false
+            'autoFields' => false,
+            'auto_contain' => false
         ]);
 
         $this->toggle('add', false);
@@ -52,7 +57,131 @@ class PositionsTable extends ControllerActionTable {
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        if ($this->controller->name !== 'Directories') {
+            $this->removeBehavior('Excel');
+
+            if (array_key_exists('export', $extra['toolbarButtons'])) {
+                unset($extra['toolbarButtons']['export']);
+            }
+        }
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $this->dispatchEvent('Excel.Historical.beforeQuery', [$query, $settings], $this);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $newFields = [];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaffPositions.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaffPositions.name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaffPositions.institution',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaffPositions.position',
+            'field' => 'position_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaffPositions.staff_type_id',
+            'field' => 'staff_type_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaffPositions.start_date',
+            'field' => 'start_date',
+            'type' => 'date',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaffPositions.end_date',
+            'field' => 'end_date',
+            'type' => 'date',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaffPositions.staff_status_id',
+            'field' => 'staff_status_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetName(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'user');
+        return $rowEntity->name;
+    }
+
+    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'user');
+        return $rowEntity->openemis_no;
+    }
+
+    public function onExcelGetInstitutionName(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
+        if ($entity->is_historical) {
+            return $rowEntity->name;
+        } else {
+            return $rowEntity->code_name;
+        }
+    }
+
+    public function onExcelGetPositionName(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution_position');
+        if ($entity->is_historical) {
+            return $rowEntity->position_no;
+        } else {
+            return $rowEntity->name;
+        }
+    }
+
+    public function onExcelGetStaffTypeId(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'staff_type');
+        return $rowEntity->name;
+    }
+
+    public function onExcelGetStaffStatusId(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'staff_status');
+        return $rowEntity->name;
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra) 
+    {
         $this->fields['start_year']['visible'] = false;
         $this->fields['end_year']['visible'] = false;
         $this->fields['FTE']['visible'] = false;
@@ -72,9 +201,25 @@ class PositionsTable extends ControllerActionTable {
     {
         $session = $this->request->session();
 
-        if ($session->check('Directory.Directories.id')) {
+        switch ($this->controller->name) {
+            case 'Directories':
+                $sessionKey = 'Directory.Directories.id';
+                $userId = $session->read($sessionKey);
+                break;
+            case 'Staff':
+                $sessionKey = 'Staff.Staff.id';
+                $userId = $session->read($sessionKey);
+                break;
+            case 'Profiles':
+                $userId = $this->Auth->user('id');
+                break;
+            default:
+                $userId = null;
+                break;
+        }
+
+        if (!is_null($userId)) {
             $extra['auto_contain'] = false;
-            $userId = $session->read('Directory.Directories.id');
 
             $select = [
                 $this->aliasField('id'),
@@ -103,6 +248,13 @@ class PositionsTable extends ControllerActionTable {
                     $this->StaffTypes->aliasField('name'),
                     $this->StaffStatuses->aliasField('id'),
                     $this->StaffStatuses->aliasField('name'),
+                    $this->Users->aliasField('id'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name'),
+                    $this->Users->aliasField('openemis_no'),
                     'is_historical' => 0
                 ], true)
                 ->contain([
@@ -133,11 +285,19 @@ class PositionsTable extends ControllerActionTable {
                     'staff_type_name' => 'StaffTypes.name',
                     'staff_status_id' => 'StaffStatuses.id',
                     'staff_status_name' => 'StaffStatuses.name',
+                    'user_id' => 'Users.id',
+                    'user_first_name' => 'Users.first_name',
+                    'user_middle_name' => 'Users.middle_name',
+                    'user_third_name' => 'Users.third_name',
+                    'user_last_name' => 'Users.last_name',
+                    'user_preferred_name' => 'Users.preferred_name',
+                    'user_openemis_no' => 'Users.openemis_no',
                     'is_historical' => 1
                 ])
                 ->contain([
                     'StaffTypes',
-                    'StaffStatuses'
+                    'StaffStatuses',
+                    'Users'
                 ])
                 ->where([
                     $HistoricalTable->aliasField('staff_id') => $userId
@@ -151,12 +311,28 @@ class PositionsTable extends ControllerActionTable {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
                 $url = [
-                    'plugin' => 'Directory',
-                    'controller' => 'Directories',
                     'action' => 'HistoricalStaffPositions',
                     'view',
                     $this->paramsEncode(['id' => $rowEntityId])
                 ];
+
+                switch ($this->controller->name) {
+                    case 'Directories':
+                        $url['plugin'] = 'Directory';
+                        $url['controller'] = 'Directories';
+                        break;
+                    case 'Staff':
+                        $url['plugin'] = 'Staff';
+                        $url['controller'] = 'Staff';
+                        break;
+                    case 'Profiles':
+                        $url['plugin'] = 'Profile';
+                        $url['controller'] = 'Profiles';
+                        break;
+                    default:
+                        break;
+                }
+
             } else {
                 $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
                 $institutionId = $rowEntity->id;
