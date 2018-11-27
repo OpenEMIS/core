@@ -45,7 +45,7 @@ class LeaveTable extends ControllerActionTable
                     'action' => 'StaffLeave',
                     'type' => 'staff'
                 ],
-                'model' => 'Staff.HistoricalStaffLeave',
+                'model' => 'Historical.HistoricalStaffLeave',
                 'allowedController' => ['Directories']
             ]
         );
