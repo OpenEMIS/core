@@ -32,6 +32,7 @@ class HistoricalBehavior extends Behavior
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
+        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 1000];
         $events['ControllerAction.Model.delete.beforeAction'] = 'deleteBeforeAction';
         $events['ControllerAction.Model.view.beforeAction'] = 'viewBeforeAction';
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
@@ -40,6 +41,19 @@ class HistoricalBehavior extends Behavior
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 50];
         $events['Excel.Historical.beforeQuery'] = 'indexBeforeQuery';
         return $events;
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $controller = $this->_table->controller->name;
+
+        // To only show the historical edit/remove button if the current plugin is the allowedController
+        if (!in_array($controller, $this->config('allowedController')) && $this->_table->registryAlias() == $this->config('model')) {
+            $this->_table->toggle('edit', false);
+            $this->_table->toggle('remove', false);
+        }
+
+        // pr($this->config('originUrl'));die;
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
@@ -181,8 +195,12 @@ class HistoricalBehavior extends Behavior
         } elseif ($model->controller->name === 'Institutions') {
             $originUrl['plugin'] = 'Institution';
             $originUrl['controller'] = $model->controller->name;
+        } elseif ($model->controller->name === 'Staff') {
+            $originUrl['plugin'] = 'Staff';
+            $originUrl['controller'] = $model->controller->name;
         } elseif ($model->controller->name === 'Profiles') {
-            // no logic
+            $originUrl['plugin'] = 'Profile';
+            $originUrl['controller'] = $model->controller->name;
         }
         return $originUrl;
     }
@@ -201,7 +219,9 @@ class HistoricalBehavior extends Behavior
                 return $session->read('Staff.Staff.name');
             }
         } elseif ($model->controller->name === 'Profiles') {
-            // no logic
+            if ($session->check('Profiles.Profiles.name')) {
+                return $session->read('Profiles.Profiles.name');
+            }
         }
         return null;
     }
