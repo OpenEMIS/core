@@ -2168,7 +2168,7 @@ trait MessagesTrait
                'position_grades' => [
                     'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
                 ]
-            ] 
+            ]
         ],
         'Configuration' => [
             'ConfigProductLists' => [
@@ -2272,8 +2272,8 @@ trait MessagesTrait
                 ]
             ]
         ],
-        'Historial' => [
-            'HistorialStaffPositions' => [
+        'Historical' => [
+            'HistoricalStaffPositions' => [
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ]
