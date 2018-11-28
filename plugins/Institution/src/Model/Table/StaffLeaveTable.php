@@ -241,7 +241,7 @@ class StaffLeaveTable extends ControllerActionTable
             ];
             $selectList->exchangeArray($select);
 
-            $order = ['date_from' => 'ASC'];
+            $order = ['date_from' => 'DESC'];
             $defaultOrder->exchangeArray($order);
 
             $mainQuery
