@@ -629,38 +629,23 @@ class POCOR4876 extends AbstractMigration
         $this->insert('labels', $labels);
 
         // update the security_table order
-        $updateOrder = 'UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` >= 94';
+        $updateOrder = 'UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 94';
         $this->execute($updateOrder);
 
         //insert into security_functions for staff release
         $seucrityFunctionsData = [
             [
                 'id' => 1090,
-                'name' => 'Staff Release In',
+                'name' => 'Staff Release',
                 'controller' => 'Institutions',
                 'module' => 'Institutions',
                 'category' => 'Staff',
                 'parent_id' => 8,
-                '_view' => 'StaffReleaseIn.index|StaffReleaseIn.view|StaffReleaseIn.approve',
-                '_edit' => 'StaffReleaseIn.edit',
-                '_delete' => 'StaffReleaseIn.remove',
-                'order' => 94,
-                'visible' => 1,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'id' => 1091,
-                'name' => 'Staff Release Out',
-                'controller' => 'Institutions',
-                'module' => 'Institutions',
-                'category' => 'Staff',
-                'parent_id' => 8,
-                '_view' => 'StaffReleaseOut.index|StaffReleaseOut.view|StaffReleaseOut.approve',
-                '_edit' => 'StaffReleaseOut.edit',
+                '_view' => 'StaffReleaseIn.index|StaffReleaseIn.view|StaffReleaseIn.approve|StaffReleaseOut.index|StaffReleaseOut.view|StaffReleaseOut.approve',
+                '_edit' => 'StaffReleaseIn.edit|StaffReleaseOut.edit',
                 '_add' => 'StaffReleaseOut.add',
-                '_delete' => 'StaffReleaseOut.remove',
-                'order' => 95,
+                '_delete' => 'StaffReleaseIn.remove|StaffReleaseOut.remove',
+                'order' => 94,
                 'visible' => 1,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
