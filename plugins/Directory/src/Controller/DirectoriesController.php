@@ -449,7 +449,6 @@ class DirectoriesController extends AppController
                 $header = $header . ' - ' . $model->getHeader($alias);
             }
 
-
             $this->set('contentHeader', $header);
 
             $guardianId = $session->read('Guardian.Guardians.id');
