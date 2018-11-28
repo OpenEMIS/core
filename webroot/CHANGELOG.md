@@ -1,3 +1,13 @@
+### [3.41.1] - 2018-11-23
+- Implemented feature to display Date of Birth and Institution fields to Directory search results
+- Implemented feature to calculate Overal Average & Total Marks based on Report Card Template Start/End Date
+- Implemented feature for users to access Student's Institution when navigating from Directory > Students > Academic pages
+- Implemented feature for users to access Guardians's Information when navigating from Institutions > Students > Guardian pages 
+- Bug fix on Institutions > Performance > Assessments > Report page
+- Bug fix on Administration > Security > Roles > Permissions page
+- Bug fix on Scholarship > Application page
+- Bug fix on Institutions > Performance > Outcomes > Import page
+
 ### [3.41.0] - 2018-11-14
 - Implemented a feature to pre-populate Next Class
 - Re-developed Outcomes Import template
@@ -21,7 +31,7 @@
 ### [3.37.0] - 2018-10-19
 - Developed Demographics feature in Users > General > Demographics tab
 - Developed Scholarship Award Disbursement Alert in Administration > Communications > Alert Rules
-- Implmented ability to bulk update Student Pending Admission status in Institutions > Students > Pending Admission filter
+- Implemented ability to bulk update Student Pending Admission status in Institutions > Students > Pending Admission filter
 - Implemented ability to access Guardian's information from Institutions > Students > Guardian
 - Implemented comments field for Reassign action in all workflow-enabled feature
 - Implemented Inclusive Education Visits feature in Institutions > Students > Visits
