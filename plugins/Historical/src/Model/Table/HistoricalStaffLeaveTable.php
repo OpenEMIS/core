@@ -84,10 +84,10 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
         $daysPerWeek = $ConfigItems->value('days_per_week');
 
-        $numericDaysArray = [];
+        $numericWorkingDaysArray = [];
         for ($i = 0; $i < $daysPerWeek; ++$i) {
             $day = ($firstDayOfWeek + $i) % 7;
-            $numericDaysArray[] = $day;
+            $numericWorkingDaysArray[] = $day;
         }
 
         $dateFrom = date_create($entity->date_from);
@@ -111,7 +111,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
 
         foreach ($datePeriod as $key => $date) {
             $numericDay = $date->format('N');
-            if (in_array($numericDay, $numericDaysArray)) {
+            if (in_array($numericDay, $numericWorkingDaysArray)) {
                 ++$dayCount;
             }
         }
