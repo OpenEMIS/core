@@ -409,10 +409,17 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.FeederIncomingInstitutions']);
     }
+
+    public function HistoricalStaffLeave()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffLeave']);
+    }
+
     public function StaffReleaseIn()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffReleaseIn']);
     }
+
     public function StaffReleaseOut()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffReleaseOut']);
@@ -896,7 +903,7 @@ class InstitutionsController extends AppController
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStaffAttendancesCtrl as $ctrl');
     }
-    
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
