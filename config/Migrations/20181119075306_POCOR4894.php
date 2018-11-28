@@ -9,7 +9,7 @@ class POCOR4894 extends AbstractMigration
         // historical_staff_positions
         $HistoricalStaffPositions = $this->table('historical_staff_positions', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the Historical positions for all the staff'
+            'comment' => 'This table contains all the historical positions for all the staff'
         ]);
 
         $HistoricalStaffPositions
@@ -114,7 +114,7 @@ class POCOR4894 extends AbstractMigration
             '_view' => null,
             '_edit' => 'HistoricalStaffPositions.edit',
             '_add' => 'HistoricalStaffPositions.add',
-            '_delete' => 'HistoricalStaffPositions.delete',
+            '_delete' => 'HistoricalStaffPositions.remove',
             '_execute' => null,
             'order' => $order + 1,
             'visible' => 1,
