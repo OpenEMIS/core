@@ -16,7 +16,9 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
         InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents',
         SecurityGroupUsersTable: 'Security.SecurityGroupUsers',
         StudentStatusesTable: 'Student.StudentStatuses',
-        InstitutionClassesTable: 'Institution.InstitutionClasses'
+        InstitutionClassesTable: 'Institution.InstitutionClasses',
+        // add subject staff table to link over there
+        InstitutionSubjectStaffTable: 'Institution.InstitutionSubjectStaff'
     };
 
     return {
@@ -50,6 +52,24 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             promises.push(KdSessionSvc.read('Institution.Institutions.id'));
 
             return $q.all(promises);
+        },
+
+        getSubjectEditPermission(subjectId, classId)
+        {
+            var success = function(response, deferred) {
+                if (angular.isDefined(response.data)) {
+                    deferred.resolve(response.data.total > 0);
+                } else {
+                    deferred.reject('There is an error retrieving the permission for the subject');
+                }
+            };
+
+            return InstitutionSubjectStaffTable  //Change to subject staff table
+                .find('SubjectEditPermission', {
+                    subject_id: subjectId,
+                    class_id: classId
+                })
+                .ajax({success: success, defer: true});
         },
 
         getSubjects: function(roles, assessmentId, classId)
