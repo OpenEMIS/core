@@ -2291,7 +2291,12 @@ trait MessagesTrait
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ]
-            ]
+            ],
+            'HistoricalStaffLeave' => [
+                'date_to' => [
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
+                ]
+            ],
         ]
     ];
 

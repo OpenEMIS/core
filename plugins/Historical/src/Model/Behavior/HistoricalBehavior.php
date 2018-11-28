@@ -46,14 +46,12 @@ class HistoricalBehavior extends Behavior
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $controller = $this->_table->controller->name;
-
         // To only show the historical edit/remove button if the current plugin is the allowedController
+
         if (!in_array($controller, $this->config('allowedController')) && $this->_table->registryAlias() == $this->config('model')) {
             $this->_table->toggle('edit', false);
             $this->_table->toggle('remove', false);
         }
-
-        // pr($this->config('originUrl'));die;
     }
 
     // logic should only trigger if the current model is historical behavior
@@ -237,6 +235,6 @@ class HistoricalBehavior extends Behavior
 
     private function isHistorialModel()
     {
-        return $this->_table->registryAlias() === $this->config('model');   
+        return $this->_table->registryAlias() === $this->config('model');
     }
 }
