@@ -101,10 +101,49 @@ class POCOR4895 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
+
+        // security_functions
+        $this->execute('CREATE TABLE `z_4895_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_4895_security_functions` SELECT * FROM `security_functions`');
+
+        /*
+            7072 - Historical Positions - Order 335
+            7073 - Historical Leaves
+         */
+
+        $this->execute('UPDATE `security_functions` SET `_view` = "StaffLeave.index|StaffLeave.view|HistoricalStaffLeave.view" WHERE `id` = 3016');
+
+        $this->execute('UPDATE `security_functions` SET `_view` = "StaffLeave.index|StaffLeave.view|HistoricalStaffLeave.view", `_execute` = "StaffLeave.excel" WHERE `id` = 7025');
+
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 7025');
+        $order = $row['order'];
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= ' . $order);
+
+        $securityData = [
+            'id' => 7073,
+            'name' => 'Historical Leave',
+            'controller' => 'Directories',
+            'module' => 'Directory',
+            'category' => 'Staff - Career',
+            'parent_id' => 7000,
+            '_edit' => 'HistoricalStaffLeave.edit',
+            '_add' => 'HistoricalStaffLeave.add',
+            '_delete' => 'HistoricalStaffLeave.remove',
+            '_execute' => null,
+            'order' => $order + 1,
+            'visible' => 1,
+            'description' => null,
+            'created_user_id' => 1,
+            'created' => date('Y-m-d H:i:s')
+        ];
+        $this->insert('security_functions', $securityData);
     }
 
     public function down()
     {
         $this->dropTable('historical_staff_leaves');
+        // security_functions
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('RENAME TABLE `z_4895_security_functions` TO `security_functions`');
     }
 }
