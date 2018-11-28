@@ -435,7 +435,7 @@ class LeaveTable extends ControllerActionTable
     public function onGetStartTime(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            return $entity->end_time;
+            return $entity->start_time;
         } elseif ($this->action == 'index') {
             $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'start_time');
             return $rowEntity;

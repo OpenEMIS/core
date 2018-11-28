@@ -6,7 +6,7 @@ class POCOR4895 extends AbstractMigration
     public function up()
     {
         $HistoricalStaffLeave = $this->table(
-            'historical_staff_leaves', [
+            'historical_staff_leave', [
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains the historical staff leave records'
             ]
@@ -117,7 +117,7 @@ class POCOR4895 extends AbstractMigration
 
         $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 7025');
         $order = $row['order'];
-        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= ' . $order);
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` > ' . $order);
 
         $securityData = [
             'id' => 7073,
