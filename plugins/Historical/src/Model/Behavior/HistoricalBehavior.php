@@ -54,26 +54,38 @@ class HistoricalBehavior extends Behavior
         }
     }
 
+    // logic should only trigger if the current model is historical behavior
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->updateBreadcrumbAndPageTitle();
+        if ($this->isHistorialModel()) {
+            $this->updateBreadcrumbAndPageTitle();
+        }
     }
 
+    // logic should only trigger if the current model is historical behavior
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->updateBackButton($extra);
-        $extra['redirect'] = $this->getOriginUrl();
+        if ($this->isHistorialModel()) {
+            $this->updateBackButton($extra);
+            $extra['redirect'] = $this->getOriginUrl();
+        }
     }
 
+    // logic should only trigger if the current model is historical behavior
     public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['redirect'] = $this->getOriginUrl();
+        if ($this->isHistorialModel()) {
+            $extra['redirect'] = $this->getOriginUrl();
+        }
     }
 
+    // logic should only trigger if the current model is historical behavior
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->updateBreadcrumbAndPageTitle();
-        $this->updateBackButton($extra);
+        if ($this->isHistorialModel()) {
+            $this->updateBreadcrumbAndPageTitle();
+            $this->updateBackButton($extra);
+        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -144,7 +156,7 @@ class HistoricalBehavior extends Behavior
             ];
             $toolbarButtonsArray['HistoricalAdd']['type'] = 'button';
             $toolbarButtonsArray['HistoricalAdd']['label'] = '<i class="fa kd-add"></i>';
-            $toolbarButtonsArray['HistoricalAdd']['attr']['title'] = __('Historical Data Add');
+            $toolbarButtonsArray['HistoricalAdd']['attr']['title'] = __('Add Historical Data');
             $toolbarButtonsArray['HistoricalAdd']['url'] = $historicalUrl;
 
             $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
@@ -167,7 +179,6 @@ class HistoricalBehavior extends Behavior
         $NavigationComponent->substituteCrumb($currentCrumb, $newCrumb);
 
         // page title update
-        $session = $model->request->session();
         $userName = $this->getStaffName();
 
         if (!is_null($userName)) {
@@ -217,10 +228,13 @@ class HistoricalBehavior extends Behavior
                 return $session->read('Staff.Staff.name');
             }
         } elseif ($model->controller->name === 'Profiles') {
-            if ($session->check('Profiles.Profiles.name')) {
-                return $session->read('Profiles.Profiles.name');
-            }
+            return $model->Auth->user('name');
         }
         return null;
+    }
+
+    private function isHistorialModel()
+    {
+        return $this->_table->registryAlias() === $this->config('model');
     }
 }
