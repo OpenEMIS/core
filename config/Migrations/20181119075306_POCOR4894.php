@@ -93,13 +93,17 @@ class POCOR4894 extends AbstractMigration
         $this->execute('INSERT INTO `z_4894_security_functions` SELECT * FROM `security_functions`');
 
         /*
-            7072 - Historical Positions - Order 335
+            7072 - Historical Positions
             7073 - Historical Leaves
          */
         
-        $this->execute('UPDATE `security_functions` SET `_view` = "StaffPositions.index|StaffPositions.view", `_execute` = "StaffPositions.excel" WHERE `id` = 7021');
+        $this->execute('UPDATE `security_functions` SET `_view` = "StaffPositions.index|StaffPositions.view|HistoricalStaffPositions.view", `_execute` = "StaffPositions.excel" WHERE `id` = 7021');
+        $this->execute('UPDATE `security_functions` SET `_view` = "Positions.index|Positions.view|HistoricalStaffPositions.view" WHERE `id` = 3012');
+
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 7021');
+        $order = $row['order'];
         
-        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 335');
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` > ' . $order);
         $securityData = [
             'id' => 7072,
             'name' => 'Historical Positions',
@@ -107,12 +111,12 @@ class POCOR4894 extends AbstractMigration
             'module' => 'Directory',
             'category' => 'Staff - Career',
             'parent_id' => 7000,
-            '_view' => 'HistoricalStaffPositions.view',
+            '_view' => null,
             '_edit' => 'HistoricalStaffPositions.edit',
             '_add' => 'HistoricalStaffPositions.add',
             '_delete' => 'HistoricalStaffPositions.delete',
             '_execute' => null,
-            'order' => 335,
+            'order' => $order + 1,
             'visible' => 1,
             'description' => null,
             'created_user_id' => 1,
