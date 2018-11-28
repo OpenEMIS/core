@@ -141,7 +141,9 @@ class POCOR4895 extends AbstractMigration
 
     public function down()
     {
-        $this->dropTable('historical_staff_leaves');
+        // historical_staff_leaves
+        $this->execute('DROP TABLE IF EXISTS `historical_staff_leaves`');
+
         // security_functions
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
         $this->execute('RENAME TABLE `z_4895_security_functions` TO `security_functions`');
