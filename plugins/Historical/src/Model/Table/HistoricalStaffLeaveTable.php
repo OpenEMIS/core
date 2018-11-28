@@ -83,19 +83,16 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
         $daysPerWeek = $ConfigItems->value('days_per_week');
-        $endDay = $firstDayOfWeek + $daysPerWeek - 1;
 
         $numericDaysArray = [];
-        for ($i = $firstDayOfWeek; $i <= $endDay; $i++) {
-            $numericDaysArray[] = $i;
+        for ($i = 0; $i < $daysPerWeek; ++$i) {
+            $day = ($firstDayOfWeek + $i) % 7;
+            $numericDaysArray[] = $day;
         }
 
         $dateFrom = date_create($entity->date_from);
         $dateTo = date_create($entity->date_to);
         $isFullDayLeave = $entity->full_day;
-        if (!$entity->isNew()) {
-            $entityId = $entity->id;
-        }
 
         if ($isFullDayLeave == 1) {
             $day = 1;
@@ -105,23 +102,21 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
             $day = 0.5;
         }
 
-        $entityStartTime = $entity->start_time;
-        $entityEndTime = $entity->end_time;
-
         $startDate = $dateFrom;
         $endDate = $dateTo;
         $endDate = $endDate->modify('+1 day');
         $interval = new DateInterval('P1D');
         $datePeriod = new DatePeriod($startDate, $interval, $endDate);
-        $count = 0;
+        $dayCount = 0;
 
         foreach ($datePeriod as $key => $date) {
             $numericDay = $date->format('N');
             if (in_array($numericDay, $numericDaysArray)) {
-                $count = $count + $day;
+                ++$dayCount;
             }
         }
-        $entity->number_of_days = $count;
+
+        $entity->number_of_days = $dayCount * $day;
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
