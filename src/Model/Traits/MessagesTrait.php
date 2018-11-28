@@ -2273,8 +2273,8 @@ trait MessagesTrait
                 ]
             ]
         ],
-        'Historial' => [
-            'HistorialStaffPositions' => [
+        'Historical' => [
+            'HistoricalStaffPositions' => [
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ]
