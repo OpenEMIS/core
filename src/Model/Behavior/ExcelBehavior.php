@@ -36,7 +36,8 @@ class ExcelBehavior extends Behavior
         'pages' => [],
         'autoFields' => true,
         'orientation' => 'landscape', // or portrait
-        'sheet_limit' =>  1000000 // 1 mil rows and header row
+        'sheet_limit' =>  1000000, // 1 mil rows and header row
+        'auto_contain' => true
     ];
 
     public function initialize(array $config)
@@ -212,7 +213,10 @@ class ExcelBehavior extends Behavior
                 }
             }
 
-            $this->contain($query, $fields, $table);
+            if ($this->config('auto_contain')) {
+                $this->contain($query, $fields, $table);
+            }
+
             // To auto include the default fields. Using select will turn off autoFields by default
             // This is set so that the containable data will still be in the array.
             $autoFields = $this->config('autoFields');
