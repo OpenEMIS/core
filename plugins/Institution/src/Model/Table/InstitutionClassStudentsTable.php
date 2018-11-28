@@ -1104,16 +1104,19 @@ class InstitutionClassStudentsTable extends AppTable
                                 ])
                                 ->all();
 
+                            $total_mark = 0;
                             if (!$assessmentItemResultsEntities->isEmpty()) {
-                                $total_mark = 0;
                                 foreach ($assessmentItemResultsEntities as $entity) {
                                     $total_mark += $entity->marks * $entity->weightage;
-                                    // pr($entity);die;
                                 }
 
                                 $row->total_mark = $total_mark;
+                            }else {
+                                $row->total_mark = '';
+
                             }
                         }
+
                         return $row;
                     });
                 });
