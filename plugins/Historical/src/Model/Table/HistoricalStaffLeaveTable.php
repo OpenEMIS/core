@@ -154,7 +154,6 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
-            $attr['onChangeReload'] = true;
         }
         return $attr;
     }
