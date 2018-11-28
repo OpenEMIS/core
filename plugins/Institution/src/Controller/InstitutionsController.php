@@ -404,7 +404,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.FeederOutgoingInstitutions']);
     }
-
     public function FeederIncomingInstitutions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.FeederIncomingInstitutions']);
@@ -413,6 +412,16 @@ class InstitutionsController extends AppController
     public function HistoricalStaffLeave()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffLeave']);
+    }
+
+    public function StaffReleaseIn()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffReleaseIn']);
+    }
+
+    public function StaffReleaseOut()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffReleaseOut']);
     }
     // End
 
@@ -424,7 +433,7 @@ class InstitutionsController extends AppController
         // $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
         $_excel = false;
         $_import = false;
-        
+
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
         } else {
@@ -893,7 +902,7 @@ class InstitutionsController extends AppController
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStaffAttendancesCtrl as $ctrl');
     }
-    
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
