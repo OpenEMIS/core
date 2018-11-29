@@ -378,7 +378,6 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
 
                 //restrict staff release between same type
                 $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_release_between_same_type');
-                // pr($restrictStaffTransferByType);die;
 
                 if ($restrictStaffTransferByType) {
                     if ($entity->has('institution_id')) {
