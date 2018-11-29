@@ -2289,14 +2289,26 @@ trait MessagesTrait
         'Historical' => [
             'HistoricalStaffPositions' => [
                 'end_date' => [
-                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'validDate' => 'Date should not be later than today'
+                ],
+                'start_date' => [
+                    'validDate' => 'Date should not be later than today'
                 ]
             ],
             'HistoricalStaffLeave' => [
+                'date_from' => [
+                    'ruleLessThanToday' => 'Date should not be later than today'
+                ],
                 'date_to' => [
-                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From',
+                    'ruleLessThanToday' => 'Date should not be later than today'
+                ],
+                'end_time' => [
+                    'ruleCompareDateReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
+            'addEdit' => 'This feature is for historical record use only. For current records, please refrain from adding record on this page.'
         ]
     ];
 
