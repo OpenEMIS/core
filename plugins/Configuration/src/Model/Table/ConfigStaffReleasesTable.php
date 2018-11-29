@@ -375,6 +375,8 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         $Institutions = TableRegistry::get('Institution.Institutions');
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 
+        $isEnable = false;
+
         // StaffReleaseByTypes
         $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
         $staffReleaseByTypesJsonString = $ConfigItems->value('staff_release_by_types');
@@ -386,7 +388,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                 if (array_key_exists('values', $staffReleaseByTypesValues)) {
                     $enableStaffReleasesByTypeIds = explode(",", $staffReleaseByTypesValues['values']);
                     if (in_array($institutionTypeId, $enableStaffReleasesByTypeIds)) {
-                        return true;
+                        $isEnable = true;
                     }
                 }
             }
@@ -403,12 +405,14 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                 if (array_key_exists('values', $staffReleaseBySectorsValues)) {
                     $enableStaffReleasesBySectorsIds = explode(",", $staffReleaseBySectorsValues['values']);
                     if (in_array($institutionSectorId, $enableStaffReleasesBySectorsIds)) {
-                        return true;
+                        $isEnable = true;
+                    } else {
+                        $isEnable = false;
                     }
                 }
             }
         }
-        return false;
+        return $isEnable;
     }
 
     public function checkStaffReleaseRestrictedBetweenSameType($institutionId = 0, $compareInstitutionId = 0)

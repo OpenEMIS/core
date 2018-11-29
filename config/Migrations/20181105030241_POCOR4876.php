@@ -216,7 +216,7 @@ class POCOR4876 extends AbstractMigration
             [
                 'id' => $this->workflowModelStaffReleaseOutId,
                 'name' => 'Institutions > Staff Release',
-                'model' => 'Institution.StaffReleaseOut',
+                'model' => 'Institution.StaffRelease',
                 'filter' => NULL,
                 'is_school_based' => '1',
                 'created_user_id' => '1',
@@ -506,7 +506,7 @@ class POCOR4876 extends AbstractMigration
         $labels = [
             [
                 'id' => Text::uuid(),
-                'module' => 'StaffReleaseOut',
+                'module' => 'StaffRelease',
                 'field' => 'previous_institution_id',
                 'module_name' => 'Institution -> Staff Release Out',
                 'field_name' => 'Current Institution',
@@ -516,7 +516,7 @@ class POCOR4876 extends AbstractMigration
             ],
             [
                 'id' => Text::uuid(),
-                'module' => 'StaffReleaseOut',
+                'module' => 'StaffRelease',
                 'field' => 'previous_end_date',
                 'module_name' => 'Institution -> Staff Release Out',
                 'field_name' => 'Position End Date',
@@ -526,7 +526,7 @@ class POCOR4876 extends AbstractMigration
             ],
             [
                 'id' => Text::uuid(),
-                'module' => 'StaffReleaseOut',
+                'module' => 'StaffRelease',
                 'field' => 'comment',
                 'module_name' => 'Institution -> Staff Release Out',
                 'field_name' => 'Release Comments',
@@ -641,10 +641,10 @@ class POCOR4876 extends AbstractMigration
                 'module' => 'Institutions',
                 'category' => 'Staff',
                 'parent_id' => 8,
-                '_view' => 'StaffReleaseIn.index|StaffReleaseIn.view|StaffReleaseIn.approve|StaffReleaseOut.index|StaffReleaseOut.view|StaffReleaseOut.approve',
-                '_edit' => 'StaffReleaseIn.edit|StaffReleaseOut.edit',
-                '_add' => 'StaffReleaseOut.add',
-                '_delete' => 'StaffReleaseIn.remove|StaffReleaseOut.remove',
+                '_view' => 'StaffReleaseIn.index|StaffReleaseIn.view|StaffReleaseIn.approve|StaffRelease.index|StaffRelease.view|StaffRelease.approve',
+                '_edit' => 'StaffReleaseIn.edit|StaffRelease.edit',
+                '_add' => 'StaffRelease.add',
+                '_delete' => 'StaffReleaseIn.remove|StaffRelease.remove',
                 'order' => 94,
                 'visible' => 1,
                 'created_user_id' => '1',
