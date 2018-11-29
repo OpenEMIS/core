@@ -21,6 +21,8 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
         $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
 
         $this->toggle('index', false);
 
@@ -63,15 +65,19 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
             ->allowEmpty('file_content')
             ->add('end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'start_date', false]
+            ])
+            ->add('end_date', 'validDate', [
+                'rule' => ['lessThanToday', false]
+            ])
+            ->add('start_date', 'validDate', [
+                'rule' => ['lessThanToday', false]
             ]);
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
-            case 'institution_name':
-                return __('Institution');
-            case 'institution_position_name':
+            case 'staff_position_title_id':
                 return __('Position');
             case 'fte': 
                 return __('FTE');
@@ -84,15 +90,16 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
     {
         $this->field('start_date');
         $this->field('end_date');
-        $this->field('institution_name');
-        $this->field('institution_position_name');
+        $this->field('institution_type_id');
+        $this->field('institution_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('staff_position_title_id', ['type' => 'select']);
         $this->field('staff_type_id', ['type' => 'select']);
         $this->field('comments');
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('staff_status_id', ['visible' => false]);
 
-        $this->setFieldOrder(['start_date', 'end_date', 'institution_name', 'institution_position_name', 'staff_type_id', 'comments', 'file_name', 'file_content']);
+        $this->setFieldOrder(['start_date', 'end_date', 'institution_type_id', 'institution_id', 'staff_position_title_id', 'staff_type_id', 'comments', 'file_name', 'file_content']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -115,6 +122,14 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
             ]);
     }
 
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query
+            ->contain([
+                'Institutions'
+            ]);
+    }
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $options = ['type' => 'staff'];
@@ -127,16 +142,16 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         $this->field('staff_type_id');
         $this->field('staff_status_id');
         $this->field('staff');
-        $this->field('institution_position_name');
+        $this->field('staff_position_title_id');
         $this->field('fte');
         $this->field('start_date');
         $this->field('end_date');
-        $this->field('institution_name');
+        $this->field('institution_id');
         $this->field('comments');
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
 
-        $this->setFieldOrder(['photo', 'openemis_no', 'staff_type_id', 'staff_status_id', 'staff', 'institution_position_name', 'fte', 'start_date', 'end_date', 'institution_name', 'comments', 'file_name', 'file_content']);
+        $this->setFieldOrder(['photo', 'openemis_no', 'staff_type_id', 'staff_status_id', 'staff', 'staff_position_title_id', 'fte', 'start_date', 'end_date', 'institution_id', 'comments', 'file_name', 'file_content']);
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
@@ -154,6 +169,11 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         return '-';
     }
 
+    public function onGetInstitutionId(Event $event, Entity $entity)
+    {
+        return $entity->institution->code_name;
+    }
+
     public function onGetPhoto(Event $event, Entity $entity)
     {
         $fileContent = $entity->user->photo_content;
@@ -167,5 +187,69 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         return $value;
     }
 
-    
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $TypesTable = TableRegistry::get('Institution.Types');
+            $typeOptions = $TypesTable
+                ->find('list')
+                ->find('visible')
+                ->find('order')
+                ->toArray();
+
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $typeOptions;
+            $attr['attr']['required'] = true;
+            return $attr;
+        } elseif ($action == 'edit') {
+            $attr['visible'] = false;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $institutionList = [];
+            if (isset($request->data[$this->alias()]) && array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
+                $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
+                $institutionList = $this->Institutions
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'code_name'
+                    ])
+                    ->where([
+                        $this->Institutions->aliasField('institution_type_id') => $institutionTypeId
+                    ])
+                    ->order([
+                        $this->Institutions->aliasField('code') => 'ASC',
+                        $this->Institutions->aliasField('name') => 'ASC'
+                    ])
+                    ->toArray();
+            }
+
+            if (empty($institutionList)) {
+                $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
+                $attr['type'] = 'select';
+                $attr['options'] = $institutionOptions;
+                $attr['attr']['required'] = true;
+            } else {
+                $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;
+                $attr['type'] = 'chosenSelect';
+                $attr['onChangeReload'] = true;
+                $attr['attr']['multiple'] = false;
+                $attr['options'] = $institutionOptions;
+                $attr['attr']['required'] = true;
+            }
+            return $attr;
+        } elseif ($action == 'edit') {
+            $entity = $attr['entity'];
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->institution_id;
+            $attr['attr']['value'] = $entity->institution->code_name;
+            return $attr;
+        }
+        
+    } 
 }

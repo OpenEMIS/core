@@ -79,6 +79,7 @@ class HistoricalBehavior extends Behavior
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->isHistorialModel()) {
+            $this->_table->controller->Alert->info('Historical.addEdit', ['reset' => true]);
             $this->updateBreadcrumbAndPageTitle();
         }
     }
@@ -219,7 +220,7 @@ class HistoricalBehavior extends Behavior
             if ($session->check('Directory.Directories.name')) {
                 return $session->read('Directory.Directories.name');
             }
-        } elseif ($model->controller->name === 'Institutions') {
+        } elseif ($model->controller->name === 'Institutions' || $model->controller->name === 'Staff') {
             if ($session->check('Staff.Staff.name')) {
                 return $session->read('Staff.Staff.name');
             }
