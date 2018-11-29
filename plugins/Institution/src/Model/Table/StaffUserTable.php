@@ -222,7 +222,7 @@ class StaffUserTable extends ControllerActionTable
 
     private function addReleaseButton(Entity $entity, ArrayObject $extra)
     {
-        if($this->AccessControl->check([$this->controller->name, 'StaffReleaseOut', 'add'])) {
+        if($this->AccessControl->check([$this->controller->name, 'StaffRelease', 'add'])) {
 
             $session = $this->request->session();
             $toolbarButtons = $extra['toolbarButtons'];
@@ -249,7 +249,7 @@ class StaffUserTable extends ControllerActionTable
                     'plugin' => $this->controller->plugin,
                     'controller' => $this->controller->name,
                     'institutionId' => $this->paramsEncode(['id' => $institutionId]),
-                    'action' => 'StaffReleaseOut',
+                    'action' => 'StaffRelease',
                     'add'
                 ];
 

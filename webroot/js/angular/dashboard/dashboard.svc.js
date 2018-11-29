@@ -60,9 +60,9 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StaffTransferOut'
         },
-        StaffReleaseOut: {
+        StaffRelease: {
             cols: workbenchItemTypes.SCHOOL_BASED,
-            model: 'Institution.StaffReleaseOut'
+            model: 'Institution.StaffRelease'
         },
         StaffReleaseIn: {
             cols: workbenchItemTypes.SCHOOL_BASED,
