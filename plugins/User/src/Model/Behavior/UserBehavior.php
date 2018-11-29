@@ -284,7 +284,7 @@ class UserBehavior extends Behavior
                     }
                     break;
                 default:
-                    $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $action, 'image'];
+                    $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'image'];
                     break;
             }
         } else if ($this->_table->ControllerAction->getTriggerFrom() == 'Controller') {
