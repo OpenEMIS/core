@@ -151,11 +151,7 @@ class PositionsTable extends ControllerActionTable {
     public function onExcelGetInstitutionName(Event $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
-        if ($entity->is_historical) {
-            return $rowEntity->name;
-        } else {
-            return $rowEntity->code_name;
-        }
+        return $rowEntity->code_name;
     }
 
     public function onExcelGetPositionName(Event $event, Entity $entity)
@@ -275,11 +271,11 @@ class PositionsTable extends ControllerActionTable {
                     'start_date' => $HistoricalTable->aliasField('start_date'),
                     'end_date' => $HistoricalTable->aliasField('end_date'),
                     'position_institution_id' => '(null)',
-                    'institution_id' => '(null)',
-                    'institution_code' => '(null)',
-                    'institution_name' => $HistoricalTable->aliasField('institution_name'),
+                    'institution_id' => 'Institutions.id',
+                    'institution_code' => 'Institutions.code',
+                    'institution_name' => 'Institutions.name',
                     'position_id' => '(null)',
-                    'position_name' => $HistoricalTable->aliasField('institution_position_name'),
+                    'position_name' => 'StaffPositionTitles.name',
                     'staff_position_title_id' => '(null)',
                     'staff_type_id' => 'StaffTypes.id',
                     'staff_type_name' => 'StaffTypes.name',
@@ -297,7 +293,9 @@ class PositionsTable extends ControllerActionTable {
                 ->contain([
                     'StaffTypes',
                     'StaffStatuses',
-                    'Users'
+                    'Users',
+                    'Institutions',
+                    'StaffPositionTitles'
                 ])
                 ->where([
                     $HistoricalTable->aliasField('staff_id') => $userId
@@ -363,18 +361,12 @@ class PositionsTable extends ControllerActionTable {
     public function onGetInstitutionId(Event $event, Entity $entity) 
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
-
-        if ($entity->is_historical) {
-            return $rowEntity->name;
-        } else {
-            return $rowEntity->code_name;
-        }
+        return $rowEntity->code_name;
     }
 
     public function onGetInstitutionPositionId(Event $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution_position');
-
         if ($entity->is_historical) {
             return $rowEntity->position_no;
         } else {
