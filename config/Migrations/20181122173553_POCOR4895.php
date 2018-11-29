@@ -143,8 +143,8 @@ class POCOR4895 extends AbstractMigration
 
     public function down()
     {
-        // historical_staff_leaves
-        $this->execute('DROP TABLE IF EXISTS `historical_staff_leaves`');
+        // historical_staff_leave
+        $this->execute('DROP TABLE IF EXISTS `historical_staff_leave`');
 
         // security_functions
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
