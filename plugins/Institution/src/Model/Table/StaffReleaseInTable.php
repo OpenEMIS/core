@@ -27,7 +27,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         if ($this->behaviors()->has('Workflow')) {
             $this->behaviors()->get('Workflow')->config([
                 'institution_key' => 'previous_institution_id',
-                'model' => 'Institution.StaffReleaseOut'
+                'model' => 'Institution.StaffRelease'
             ]);
         }
 
@@ -274,6 +274,23 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
                 $attr['value'] = $entity->previous_start_date->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($entity->previous_start_date);
             }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldNewStartDate(Event $event, array $attr, $action, Request $request) 
+    {
+        if (in_array($action, ['edit', 'approve'])) {
+            $attr['null'] = false;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldNewEndDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array($action, ['edit', 'approve'])) {
+            $entity = $attr['entity'];   
+            $attr['default_date'] = false;
             return $attr;
         }
     }
