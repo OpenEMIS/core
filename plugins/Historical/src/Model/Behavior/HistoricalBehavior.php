@@ -79,6 +79,7 @@ class HistoricalBehavior extends Behavior
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->isHistorialModel()) {
+            $this->_table->controller->Alert->info('Historical.addEdit', ['reset' => true]);
             $this->updateBreadcrumbAndPageTitle();
         }
     }
