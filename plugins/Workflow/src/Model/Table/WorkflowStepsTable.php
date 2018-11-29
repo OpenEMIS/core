@@ -39,6 +39,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionStaffReleases', ['className' => 'Institution.InstitutionStaffTransfers', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('WorkflowStatuses' , [
 			'className' => 'Workflow.WorkflowStatuses',
@@ -320,7 +321,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         unset($request->query['model']);
@@ -400,6 +401,7 @@ class WorkflowStepsTable extends AppTable {
 			$this->InstitutionPositions->registryAlias() => $this->InstitutionPositions->alias(),
 			$this->StaffPositionProfiles->registryAlias() => $this->StaffPositionProfiles->alias(),
 			$this->InstitutionStaffTransfers->registryAlias() => $this->InstitutionStaffTransfers->alias(),
+			$this->InstitutionStaffReleases->registryAlias() => $this->InstitutionStaffReleases->alias(),
 			$this->WorkflowStepsParams->registryAlias() => $this->WorkflowStepsParams->alias()
 		];
 
