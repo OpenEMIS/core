@@ -14,6 +14,8 @@ use Institution\Model\Table\InstitutionStaffReleasesTable;
 
 class StaffReleaseOutTable extends InstitutionStaffReleasesTable
 {
+    CONST INSTITUTION_ACTIVE = 1;
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -360,6 +362,7 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
                 // using institution_staff entity
                 $conditions = [];
                 $conditions[$this->NewInstitutions->aliasField('id <>')] = $entity->institution_id;
+                $conditions[$this->NewInstitutions->aliasField('institution_status_id')] = self::INSTITUTION_ACTIVE;
 
                 $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
                 $Institutions = TableRegistry::get('Institution.Institutions');
