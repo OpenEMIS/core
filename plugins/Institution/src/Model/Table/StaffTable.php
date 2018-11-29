@@ -73,7 +73,7 @@ class StaffTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StaffRoom' => ['index', 'add'],
+            'StaffRoom' => ['index', 'edit'],
             'Staff' => ['index', 'add'],
             'ClassStudents' => ['index'],
             'SubjectStudents' => ['index'],
