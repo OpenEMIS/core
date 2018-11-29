@@ -21,16 +21,6 @@ class POCOR4894 extends AbstractMigration
                 'null' => false,
                 'default' => null
             ])
-            ->addColumn('institution_name', 'string', [
-                'limit' => 150,
-                'null' => false,
-                'default' => null
-            ])
-            ->addColumn('institution_position_name', 'string', [
-                'limit' => 150,
-                'null' => false,
-                'default' => null
-            ])
             ->addColumn('comments', 'text', [
                 'default' => null,
                 'null' => true
@@ -44,6 +34,18 @@ class POCOR4894 extends AbstractMigration
                 'default' => null,
                 'limit' => 4294967295,
                 'null' => true,
+            ])
+            ->addColumn('institution_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'default' => null,
+                'comment' => 'links to institutions.id'
+            ])
+            ->addColumn('staff_position_title_id', 'string', [
+                'limit' => 11,
+                'null' => false,
+                'default' => null,
+                'comment' => 'links to staff_position_titles.id'
             ])
             ->addColumn('staff_id', 'integer', [
                 'limit' => 11,
@@ -81,6 +83,8 @@ class POCOR4894 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('institution_id')
+            ->addIndex('staff_position_title_id')
             ->addIndex('staff_id')
             ->addIndex('staff_type_id')
             ->addIndex('staff_status_id')
