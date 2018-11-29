@@ -48,10 +48,10 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
                 'rule' => ['compareDateReverse', 'date_from', true]
             ])
             ->add('date_to', 'ruleLessThanToday', [
-                'rule' => ['lessThanToday', true]
+                'rule' => ['lessThanToday', false]
             ])
             ->add('date_from', 'ruleLessThanToday', [
-                'rule' => ['lessThanToday', true]
+                'rule' => ['lessThanToday', false]
             ])
             ->add('end_time', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'start_time', true]
