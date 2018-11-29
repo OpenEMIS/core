@@ -230,7 +230,7 @@ class StaffLeaveTable extends ControllerActionTable
         if ($session->check('Staff.Staff.id')) {
             $extra['auto_contain'] = false;
             $userId = $session->read('Staff.Staff.id');
-
+            $institutionId = $session->read('Institution.Institutions.id');
             $select = [
                 $this->aliasField('id'),
                 $this->aliasField('is_historical'),
@@ -285,7 +285,8 @@ class StaffLeaveTable extends ControllerActionTable
                     'Statuses'
                 ])
                 ->where([
-                    $this->aliasField('staff_id') => $userId
+                    $this->aliasField('staff_id') => $userId,
+                    $this->aliasField('institution_id') => $institutionId
                 ]);
 
             $HistoricalTable = $historicalQuery->repository();
@@ -304,10 +305,10 @@ class StaffLeaveTable extends ControllerActionTable
                     'leave_academic_period_id' => '(null)',
                     'status_id' => '(null)',
                     'number_of_days' => $HistoricalTable->aliasField('number_of_days'),
-                    'leave_institution_id' => '(null)',
-                    'institution_id' => '(null)',
-                    'institution_code' => '(null)',
-                    'institution_name' => $HistoricalTable->aliasField('institution_name'),
+                    'leave_institution_id' => $HistoricalTable->aliasField('institution_id'),
+                    'institution_id' => 'Institutions.id',
+                    'institution_code' => 'Institutions.code',
+                    'institution_name' => 'Institutions.name',
                     'academic_period_id' =>  '(null)',
                     'leave_type_id' => 'StaffLeaveTypes.id',
                     'leave_type_name' => 'StaffLeaveTypes.name',
@@ -324,9 +325,11 @@ class StaffLeaveTable extends ControllerActionTable
                 ->contain([
                     'Users',
                     'StaffLeaveTypes',
+                    'Institutions'
                 ])
                 ->where([
-                    $HistoricalTable->aliasField('staff_id') => $userId
+                    $HistoricalTable->aliasField('staff_id') => $userId,
+                    $HistoricalTable->aliasField('institution_id') => $institutionId
                 ]);
         }
     }

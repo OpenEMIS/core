@@ -55,10 +55,11 @@ class POCOR4895 extends AbstractMigration
                 'limit' => 11,
                 'null' => false,
             ])
-            ->addColumn('institution_name', 'string', [
+            ->addColumn('institution_id', 'integer', [
                 'default' => null,
-                'limit' => 250,
+                'limit' => 11,
                 'null' => false,
+                'comment' => 'links to institutions.id'
             ])
             ->addColumn('number_of_days', 'decimal', [
                 'default' => null,
@@ -97,6 +98,7 @@ class POCOR4895 extends AbstractMigration
                 'null' => false,
             ])
             ->addIndex('staff_id')
+            ->addIndex('institution_id')
             ->addIndex('staff_leave_type_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
@@ -141,8 +143,8 @@ class POCOR4895 extends AbstractMigration
 
     public function down()
     {
-        // historical_staff_leaves
-        $this->execute('DROP TABLE IF EXISTS `historical_staff_leaves`');
+        // historical_staff_leave
+        $this->execute('DROP TABLE IF EXISTS `historical_staff_leave`');
 
         // security_functions
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
