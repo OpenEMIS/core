@@ -75,6 +75,10 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
                 'visible' => ['view' => true, 'edit' => false, 'add' => false]
             ]
         );
+        $this->field('staff_id', [
+                'visible' => false
+            ]
+        );
         $this->setFieldOrder(['status','assignee','institution_id', 'staff_leave_type_id', 'date_from', 'date_to', 'start_time', 'end_time','full_day', 'number_of_days', 'comments', 'academic_period_id', 'file_name', 'file_content']);
     }
 
@@ -137,15 +141,6 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         }
 
         $entity->number_of_days = $dayCount * $day;
-    }
-
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
-    {
-        if ($field == 'file_content') {
-            return __('Attachment');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
     }
 
     public function onGetStatus(Event $event, Entity $entity)
