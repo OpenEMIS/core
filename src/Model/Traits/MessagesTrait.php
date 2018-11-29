@@ -1304,7 +1304,7 @@ trait MessagesTrait
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ]
             ],
-            'StaffReleaseOut' => [
+            'StaffRelease' => [
                 'previous_end_date' => [
                     'ruleCompareDateReverse' => 'Position End Date should not be earlier than Position Start Date'
                 ]

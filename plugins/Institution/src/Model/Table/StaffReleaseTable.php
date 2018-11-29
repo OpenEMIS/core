@@ -12,8 +12,11 @@ use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Institution\Model\Table\InstitutionStaffReleasesTable;
 
-class StaffReleaseOutTable extends InstitutionStaffReleasesTable
+// This table is StaffReleaseOut table - Table name to match with workflow model alias in order to Display as Staff Release in email
+class StaffReleaseTable extends InstitutionStaffReleasesTable
 {
+    CONST INSTITUTION_ACTIVE = 1;
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -89,7 +92,7 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
         $session = $this->request->session();
         $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
 
-        $query->find('InstitutionStaffReleaseOut', ['institution_id' => $institutionId]);
+        $query->find('InstitutionStaffRelease', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'NewInstitutions' => ['code']];
 
         // sort
@@ -304,6 +307,14 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
         }
     }
 
+    public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array($action, ['add', 'edit', 'approve'])) {
+            $attr['null'] = false;
+            return $attr;
+        }
+    }
+
     public function onUpdateFieldPositionsHeld(Event $event, array $attr, $action, Request $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
@@ -360,12 +371,14 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
                 // using institution_staff entity
                 $conditions = [];
                 $conditions[$this->NewInstitutions->aliasField('id <>')] = $entity->institution_id;
+                $conditions[$this->NewInstitutions->aliasField('institution_status_id')] = self::INSTITUTION_ACTIVE;
 
                 $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
                 $Institutions = TableRegistry::get('Institution.Institutions');
 
                 //restrict staff release between same type
                 $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_release_between_same_type');
+
                 if ($restrictStaffTransferByType) {
                     if ($entity->has('institution_id')) {
                         $institutionId = $entity->institution_id;
@@ -374,7 +387,7 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
                     }
                 }
 
-                $options = $this->NewInstitutions->find('list', [
+        $options = $this->NewInstitutions->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'code_name'
                     ])
@@ -472,7 +485,7 @@ class StaffReleaseOutTable extends InstitutionStaffReleasesTable
                     $url = [
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
-                        'action' => 'StaffReleaseOut',
+                        'action' => 'StaffRelease',
                         'view',
                         $this->paramsEncode(['id' => $row->id]),
                         'institution_id' => $row->previous_institution_id

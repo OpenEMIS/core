@@ -337,7 +337,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $query;
     }
 
-    public function findInstitutionStaffReleaseOut(Query $query, array $options)
+    public function findInstitutionStaffRelease(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $outgoingInstitution = self::OUTGOING;
