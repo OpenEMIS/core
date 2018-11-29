@@ -26,7 +26,8 @@ class HistoricalBehavior extends Behavior
             'action' => ''
         ],
         'model' => '',
-        'allowedController' => ['Directories']
+        'allowedController' => ['Directories'],
+        'pages' => ['index']
     ];
 
     public function implementedEvents()
@@ -37,7 +38,6 @@ class HistoricalBehavior extends Behavior
         $events['ControllerAction.Model.view.beforeAction'] = 'viewBeforeAction';
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
         $events['ControllerAction.Model.addEdit.beforeAction'] = 'addEditBeforeAction';
-        $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 50];
         $events['Excel.Historical.beforeQuery'] = 'indexBeforeQuery';
         return $events;
@@ -46,6 +46,7 @@ class HistoricalBehavior extends Behavior
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $controller = $this->_table->controller->name;
+        $action = $this->_table->action;
 
         // To only show the historical edit/remove button if the current plugin is the allowedController
         if (!in_array($controller, $this->config('allowedController')) && $this->_table->registryAlias() == $this->config('model')) {
@@ -53,7 +54,25 @@ class HistoricalBehavior extends Behavior
             $this->_table->toggle('remove', false);
         }
 
-        // pr($this->config('originUrl'));die;
+        if (in_array($controller, $this->config('allowedController')) && in_array($action, $this->config('pages'))) {
+            $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+
+            $historicalUrl = $this->config('historicalUrl');
+            $historicalUrl[] = 'add';
+
+            $toolbarButtonsArray['HistoricalAdd']['attr'] = [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false
+            ];
+            $toolbarButtonsArray['HistoricalAdd']['type'] = 'button';
+            $toolbarButtonsArray['HistoricalAdd']['label'] = '<i class="fa kd-add"></i>';
+            $toolbarButtonsArray['HistoricalAdd']['attr']['title'] = __('Add Historical Data');
+            $toolbarButtonsArray['HistoricalAdd']['url'] = $historicalUrl;
+
+            $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        }
     }
 
     // logic should only trigger if the current model is historical behavior
@@ -137,31 +156,6 @@ class HistoricalBehavior extends Behavior
         } catch (Exception $e) {
             Log::write('error', 'Union historical query failed');
             Log::write('error', $e);
-        }
-    }
-
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $controller = $this->_table->controller->name;
-
-        if (in_array($controller, $this->config('allowedController'))) {
-            $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-
-            $historicalUrl = $this->config('historicalUrl');
-            $historicalUrl[] = 'add';
-
-            $toolbarButtonsArray['HistoricalAdd']['attr'] = [
-                'class' => 'btn btn-xs btn-default',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false
-            ];
-            $toolbarButtonsArray['HistoricalAdd']['type'] = 'button';
-            $toolbarButtonsArray['HistoricalAdd']['label'] = '<i class="fa kd-add"></i>';
-            $toolbarButtonsArray['HistoricalAdd']['attr']['title'] = __('Add Historical Data');
-            $toolbarButtonsArray['HistoricalAdd']['url'] = $historicalUrl;
-
-            $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         }
     }
 
