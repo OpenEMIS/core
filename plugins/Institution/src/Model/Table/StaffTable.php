@@ -58,7 +58,7 @@ class StaffTable extends ControllerActionTable
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StaffReleaseOut', ['className' => 'Institution.StaffReleaseOut', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffRelease', ['className' => 'Institution.StaffRelease', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -468,7 +468,7 @@ class StaffTable extends ControllerActionTable
                     'plugin' => 'Institution',
                     'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'controller' => 'Institutions',
-                    'action' => 'StaffReleaseOut'
+                    'action' => 'StaffRelease'
                 ]);
                 break;
         }
@@ -581,23 +581,21 @@ class StaffTable extends ControllerActionTable
         $statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In'). ' - ' . $staffTransferInRecord;
         $statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out'). ' - ' . $staffTransferOutRecord;
 
-        // Display Staff Release if staff release is enabled
+        // Display Staff Release if staff release records
         $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
-        $enableStaffRelease = $ConfigStaffReleaseTable->checkIfReleaseEnabled($institutionId);
 
-        if ($enableStaffRelease) {
             $InstitutionStaffReleasesTable = TableRegistry::get('Institution.InstitutionStaffReleases');
             $staffReleaseInRecord = $InstitutionStaffReleasesTable
             ->find('InstitutionStaffReleaseIn', ['institution_id' => $institutionId, 'pending_records' => true])
             ->count();
 
             $staffReleaseOutRecord = $InstitutionStaffReleasesTable
-            ->find('InstitutionStaffReleaseOut', ['institution_id' => $institutionId, 'pending_records' => true])
+            ->find('InstitutionStaffRelease', ['institution_id' => $institutionId, 'pending_records' => true])
             ->count();
 
             $statusOptions[self::PENDING_RELEASEIN] = __('Pending Release In'). ' - ' . $staffReleaseInRecord;
             $statusOptions[self::PENDING_RELEASEOUT] = __('Pending Release Out'). '-' . $staffReleaseOutRecord;
-        }
+
 
         $selectedStatus = $this->queryString('staff_status_id', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
@@ -1070,7 +1068,7 @@ class StaffTable extends ControllerActionTable
         $staff = $this->Users->get($entity->staff_id);
         $entity->showDeletedValueAs = $staff->name_with_id;
 
-        $extra['excludedModels'] = [$this->StaffPositionProfiles->alias(), $this->StaffTransferOut->alias(), $this->StaffReleaseOut->alias()];
+        $extra['excludedModels'] = [$this->StaffPositionProfiles->alias(), $this->StaffTransferOut->alias(), $this->StaffRelease->alias()];
 
         // staff transfer out
         $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
@@ -1100,7 +1098,7 @@ class StaffTable extends ControllerActionTable
                 $InstitutionStaffReleases->aliasField('previous_institution_id') => $entity->institution_id
             ])
             ->count();
-        $extra['associatedRecords'][] = ['model' => 'StaffReleaseOut', 'count' => $releaseOutRecordsCount];
+        $extra['associatedRecords'][] = ['model' => 'StaffRelease', 'count' => $releaseOutRecordsCount];
 
         $associationArray = [
             'Institution.StaffPositionProfiles' => 'StaffChangeInAssignment',
