@@ -70,7 +70,9 @@ class LeaveTable extends ControllerActionTable
     {
         if ($this->controller->name !== 'Directories') {
             $this->removeBehavior('Excel');
-            unset($extra['toolbarButtons']['export']);
+            if (isset($extra['toolbarButtons']['export'])) {
+                unset($extra['toolbarButtons']['export']);
+            }
         }
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => ['index' => false, 'view' => true]]);
