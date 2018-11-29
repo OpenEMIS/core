@@ -189,10 +189,10 @@ class LeaveTable extends ControllerActionTable
                 'leave_academic_period_id' => '(null)',
                 'status_id' => '(null)',
                 'number_of_days' => $HistoricalTable->aliasField('number_of_days'),
-                'leave_institution_id' => '(null)',
-                'institution_id' => '(null)',
-                'institution_code' => '(null)',
-                'institution_name' => $HistoricalTable->aliasField('institution_name'),
+                'leave_institution_id' => $HistoricalTable->aliasField('institution_id'),
+                'institution_id' => 'Institutions.id',
+                'institution_code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',
                 'academic_period_id' =>  '(null)',
                 'leave_type_id' => 'StaffLeaveTypes.id',
                 'leave_type_name' => 'StaffLeaveTypes.name',
@@ -215,6 +215,7 @@ class LeaveTable extends ControllerActionTable
             ->contain([
                 'Users',
                 'StaffLeaveTypes',
+                'Institutions'
             ])
             ->where([
                 $HistoricalTable->aliasField('staff_id') => $userId
@@ -352,11 +353,7 @@ class LeaveTable extends ControllerActionTable
     public function onExcelGetInstitutionId(Event $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
-        if ($entity->is_historical) {
-            return $rowEntity->name;
-        } else {
-            return $rowEntity->code_name;
-        }
+        return $rowEntity->code_name;
     }
 
     public function onExcelGetAssigneeId(Event $event, Entity $entity)
@@ -414,11 +411,7 @@ class LeaveTable extends ControllerActionTable
             return $entity->institution->code_name;
         } elseif ($this->action == 'index') {
             $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
-            if ($entity->is_historical) {
-                return $rowEntity->name;
-            } else {
-                return $rowEntity->code_name;
-            }
+            return $rowEntity->code_name;
         }
     }
 

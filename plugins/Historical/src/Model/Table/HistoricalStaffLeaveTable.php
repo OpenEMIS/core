@@ -19,10 +19,11 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
     use OptionsTrait;
     public function initialize(array $config)
     {
-        $this->table('historical_staff_leaves');
+        $this->table('historical_staff_leave');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->addBehavior(
             'ControllerAction.FileUpload', [
             'size' => '10MB',
@@ -74,17 +75,27 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
                 'visible' => ['view' => true, 'edit' => false, 'add' => false]
             ]
         );
-        $this->setFieldOrder(['status','assignee','institution_name', 'staff_leave_type_id', 'date_from', 'date_to', 'start_time', 'end_time','full_day', 'number_of_days', 'comments', 'academic_period_id', 'file_name', 'file_content']);
+        $this->setFieldOrder(['status','assignee','institution_id', 'staff_leave_type_id', 'date_from', 'date_to', 'start_time', 'end_time','full_day', 'number_of_days', 'comments', 'academic_period_id', 'file_name', 'file_content']);
+    }
+
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query
+            ->contain([
+                'Institutions'
+            ]);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('staff_leave_type_id');
         $this->field('full_day');
+        $this->field('institution_id', ['entity' => $entity]);
+        $this->field('institution_type_id');
+        $this->field('staff_leave_type_id');
         $this->field('start_time', ['entity' => $entity]);
         $this->field('end_time', ['entity' => $entity]);
 
-        $this->setFieldOrder(['staff_leave_type_id', 'institution_name', 'date_from', 'date_to', 'full_day', 'start_time', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
+        $this->setFieldOrder(['staff_leave_type_id', 'institution_type_id', 'institution_id', 'date_from', 'date_to', 'full_day', 'start_time', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -130,9 +141,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'institution_name') {
-            return __('Institution');
-        } else if ($field == 'file_content') {
+        if ($field == 'file_content') {
             return __('Attachment');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -152,6 +161,79 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
     public function onGetFullDay(Event $event, Entity $entity)
     {
         return $this->getSelectOptions('general.yesno')[$entity->full_day];
+    }
+
+    public function onGetInstitutionId(Event $event, Entity $entity)
+    {
+        return $entity->institution->code_name;
+    }
+
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit'){
+            $attr['visible'] = false;
+        } elseif ($action == 'add') {
+            $TypesTable = TableRegistry::get('Institution.Types');
+            $typeOptions = $TypesTable
+                ->find('list')
+                ->find('visible')
+                ->find('order')
+                ->toArray();
+
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $typeOptions;
+            $attr['attr']['required'] = true;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit'){
+            $entity = $attr['entity'];
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->institution_id;
+            $attr['attr']['value'] = $entity->institution->code_name;
+        } elseif ($action == 'add') {
+            $institutionList = [];
+            if (isset($request->data[$this->alias()])) {
+                if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
+                    $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
+
+                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->where([
+                            $InstitutionsTable->aliasField('institution_type_id') => $institutionTypeId
+                        ])
+                        ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+                    $institutionList = $institutionQuery->toArray();
+                }
+            }
+
+            if (empty($institutionList)) {
+                $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
+
+                $attr['type'] = 'select';
+                $attr['options'] = $institutionOptions;
+                $attr['attr']['required'] = true;
+            } else {
+                $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;
+                $attr['type'] = 'chosenSelect';
+                $attr['onChangeReload'] = true;
+                $attr['attr']['multiple'] = false;
+                $attr['options'] = $institutionOptions;
+                $attr['attr']['required'] = true;
+            }
+        }
+        return $attr;
     }
 
     public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
