@@ -46,6 +46,15 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
             ->add('date_to', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_from', true]
             ])
+            ->add('date_to', 'ruleLessThanToday', [
+                'rule' => ['lessThanToday', true]
+            ])
+            ->add('date_from', 'ruleLessThanToday', [
+                'rule' => ['lessThanToday', true]
+            ])
+            ->add('end_time', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'start_time', true]
+            ])
             ->allowEmpty('file_content');
         return $validator;
     }

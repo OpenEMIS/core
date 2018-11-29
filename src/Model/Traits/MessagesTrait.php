@@ -2293,8 +2293,15 @@ trait MessagesTrait
                 ]
             ],
             'HistoricalStaffLeave' => [
+                'date_from' => [
+                    'ruleLessThanToday' => 'Date should not be later than today'
+                ],
                 'date_to' => [
-                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From',
+                    'ruleLessThanToday' => 'Date should not be later than today'
+                ],
+                'end_time' => [
+                    'ruleCompareDateReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
         ]
