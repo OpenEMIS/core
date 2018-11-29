@@ -21,6 +21,8 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
         $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
 
         $this->toggle('index', false);
 
@@ -63,15 +65,19 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
             ->allowEmpty('file_content')
             ->add('end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'start_date', false]
+            ])
+            ->add('end_date', 'validDate', [
+                'rule' => ['lessThanToday', true]
+            ])
+            ->add('start_date', 'validDate', [
+                'rule' => ['lessThanToday', true]
             ]);
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
-            case 'institution_name':
-                return __('Institution');
-            case 'institution_position_name':
+            case 'staff_position_title_id':
                 return __('Position');
             case 'fte': 
                 return __('FTE');
@@ -84,15 +90,15 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
     {
         $this->field('start_date');
         $this->field('end_date');
-        $this->field('institution_name');
-        $this->field('institution_position_name');
+        $this->field('institution_id', ['type' => 'select']);
+        $this->field('staff_position_title_id', ['type' => 'select']);
         $this->field('staff_type_id', ['type' => 'select']);
         $this->field('comments');
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('staff_status_id', ['visible' => false]);
 
-        $this->setFieldOrder(['start_date', 'end_date', 'institution_name', 'institution_position_name', 'staff_type_id', 'comments', 'file_name', 'file_content']);
+        $this->setFieldOrder(['start_date', 'end_date', 'institution_id', 'staff_position_title_id', 'staff_type_id', 'comments', 'file_name', 'file_content']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
