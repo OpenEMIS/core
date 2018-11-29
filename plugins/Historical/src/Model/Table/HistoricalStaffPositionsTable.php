@@ -67,10 +67,10 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
                 'rule' => ['compareDateReverse', 'start_date', false]
             ])
             ->add('end_date', 'validDate', [
-                'rule' => ['lessThanToday', true]
+                'rule' => ['lessThanToday', false]
             ])
             ->add('start_date', 'validDate', [
-                'rule' => ['lessThanToday', true]
+                'rule' => ['lessThanToday', false]
             ]);
     }
 
