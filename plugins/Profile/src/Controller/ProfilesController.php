@@ -135,6 +135,11 @@ class ProfilesController extends AppController
     // Special Needs - End
 
     public function Employments()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']); }
+
+    public function HistoricalStaffLeave()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffLeave']);
+    }
     // AngularJS
     public function StaffAttendances()
     {
@@ -345,6 +350,10 @@ class ProfilesController extends AppController
                 $idKey[$model->aliasField('student_id')] = $userId;
                 $exists = $model->exists($idKey);
 
+               if (in_array($model->alias(), ['Students'])) {
+                    $params[$model->aliasField('guardian_id')] = $userId;
+                    $exists = $model->exists($params);
+                }
                 /**
                  * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
                  */
