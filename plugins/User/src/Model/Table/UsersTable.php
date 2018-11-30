@@ -601,14 +601,14 @@ class UsersTable extends AppTable
                     return in_array($value, $accountTypes);
                 },
                 'message' => $this->getMessage('Import.value_not_in_list'),
-                'on' => function ($context) {  
+                'on' => function ($context) {
                     if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
                         return true;
                     }
                     return false;
                 }
-            ])
-            ;
+            ]);
+
         return $validator;
     }
 
@@ -955,6 +955,14 @@ class UsersTable extends AppTable
         ]);
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        //Stop import if contact/contact type has validation error
+        if ($entity->has('contact_error')) {
+            return false;
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // This logic is meant for Import
@@ -975,6 +983,45 @@ class UsersTable extends AppTable
                             $userIdentitiesTable->save($userIdentityData);
                         }
                         break;
+                }
+            }
+        }
+
+        // This is for import contact from Import User excel
+        if ($entity->has('action_type') && $entity->action_type == 'imported') {
+            if (!$entity->has('contact_error')) {
+                //Save into user_contacts table if dont have errors
+                $userContactTypesTable = TableRegistry::get('User.ContactTypes');
+                $userContactsTable = TableRegistry::get('User.Contacts');
+                $preferred = true;
+
+                $contactOptionId = $userContactTypesTable->find()
+                        ->select([$userContactTypesTable->aliasField('contact_option_id')])
+                        ->where([$userContactTypesTable->aliasField('id') => $entity->contact_type])
+                        ->first();
+
+                if ($contactOptionId && $contactOptionId->has('contact_option_id')) {
+                    $conditions = [
+                        $userContactsTable->aliasField('security_user_id') => $entity->id
+                    ];
+
+                    //Check if there is any existing records
+                    if ($userContactsTable->exists($conditions)) {
+                        $preferred = false;
+                    }
+
+                    $userContactsData = $userContactsTable->newEntity([
+                            'contact_type_id' => $entity->contact_type,
+                            'value' => $entity->contact,
+                            'security_user_id' => $entity->id,
+                            'contact_option_id' => $contactOptionId->contact_option_id,
+                            'preferred' => $preferred
+                    ]);
+
+                    // Save into user_contacts if no errors
+                    if (!$userContactsData->errors()) {
+                        $userContactsTable->save($userContactsData);
+                    }
                 }
             }
         }
