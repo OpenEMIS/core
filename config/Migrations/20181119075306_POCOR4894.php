@@ -119,7 +119,7 @@ class POCOR4894 extends AbstractMigration
             '_edit' => 'HistoricalStaffPositions.edit',
             '_add' => 'HistoricalStaffPositions.add',
             '_delete' => 'HistoricalStaffPositions.remove',
-            '_execute' => null,
+            '_execute' => 'HistoricalStaffPositions.download',
             'order' => $order + 1,
             'visible' => 1,
             'description' => null,
