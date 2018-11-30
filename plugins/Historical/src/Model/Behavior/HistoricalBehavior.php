@@ -49,7 +49,7 @@ class HistoricalBehavior extends Behavior
     {
         $controller = $this->_table->controller->name;
         $action = $this->_table->action;
-        
+
         // To only show the historical edit/remove button if the current plugin is the allowedController
         if (!in_array($controller, $this->config('allowedController')) && $this->_table->registryAlias() == $this->config('model')) {
             $this->_table->toggle('edit', false);
@@ -114,7 +114,8 @@ class HistoricalBehavior extends Behavior
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        if ($this->checkHasAccess('remove')) {
+        $controller = $this->_table->controller->name;
+        if ($this->checkHasAccess('remove') && in_array($controller, $this->config('allowedController'))) {
             $model = $this->_table;
             $removeUrl = $this->config('historicalUrl');
             $removeUrl[] = 'remove';
@@ -179,7 +180,7 @@ class HistoricalBehavior extends Behavior
 
     public function getHistoricalActionButtons(array $buttons, $id)
     {
-        $model = $this->_table; 
+        $model = $this->_table;
         $controller = $model->controller->name;
         $baseUrl = $this->config('historicalUrl');
         $encodedId = $model->paramsEncode(['id' => $id]);
@@ -235,7 +236,7 @@ class HistoricalBehavior extends Behavior
                 $buttons['remove'] = $remove;
             }
         }
-        
+
         return $buttons;
     }
 
