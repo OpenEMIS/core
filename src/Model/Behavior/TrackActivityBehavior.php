@@ -20,7 +20,8 @@ class TrackActivityBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'target' => '',
 		'key' => '',
-		'session' => ''
+		'session' => '',
+		'keyField' => 'id'
 	];
 	private $_exclude = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 	private $_excludeType = ['binary'];
@@ -49,7 +50,7 @@ class TrackActivityBehavior extends Behavior {
 		    $obj = [
 		    	'model' => $model->alias(),
 		    	'model_reference' => $entity->id,
-		    	$this->config('key') => !empty($session) ? $session : $entity->id
+		    	$this->config('key') => !empty($session) ? $session : $entity->{$this->config('keyField')}
 		    ];
 
 			foreach ($entity->extractOriginalChanged($entity->visibleProperties()) as $field=>$value) {
@@ -146,16 +147,17 @@ class TrackActivityBehavior extends Behavior {
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		if (!empty($entity->id) && $this->_table->trackActivity) { 
+		if (!empty($entity->id) && $this->_table->trackActivity) {
 			$alias = $this->_table->alias();
 			$id = $entity->id;
+			$keyField = $entity->{$this->config('keyField')};
 			$activity['model'] = $alias;
 			$activity['model_reference'] = $id;
 			$activity['field'] = '';
 			$activity['field_type'] = '';
 			$activity['old_value'] = '';
 			$activity['new_value'] = '';
-			$activity[$this->config('key')] = $id;
+			$activity[$this->config('key')] = $keyField;
 			$activity['operation'] = 'delete';
 
 			$ActivityModel = TableRegistry::get($this->config('target'));
