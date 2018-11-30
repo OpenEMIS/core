@@ -31,13 +31,13 @@ $this->start('toolbar');
     ?>
     <?php if ($_edit) : ?>
         <!-- Show buttons when action is view: -->
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="onEditClick()">
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && editPermissionForSelectedSubject" ng-click="onEditClick()">
             <i class="fa kd-edit"></i>
         </button>
         <!-- End -->
 
         <!-- Show buttons when action is edit: -->
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit'" ng-click="onBackClick()">
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit' && editPermissionForSelectedSubject" ng-click="onBackClick()">
             <i class="fa kd-back"></i>
         </button>
         <!-- End -->
@@ -47,6 +47,7 @@ $this->start('toolbar');
             <a href="<?=$customExcel ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Report') ?>" ><i class="fa kd-table"></i></button></a>
             <a href="<?=$exportPDF ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('PDF') ?>" ><i class="fa fa-file-pdf-o"></i></button></a>
         <?php endif;?>
+        
         <a href="<?=$excelUrl ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" ><i class="fa kd-export"></i></button></a>
     <?php endif; ?>
 <?php
