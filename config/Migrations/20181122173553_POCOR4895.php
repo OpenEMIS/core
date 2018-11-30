@@ -131,7 +131,7 @@ class POCOR4895 extends AbstractMigration
             '_edit' => 'HistoricalStaffLeave.edit',
             '_add' => 'HistoricalStaffLeave.add',
             '_delete' => 'HistoricalStaffLeave.remove',
-            '_execute' => null,
+            '_execute' => 'HistoricalStaffLeave.download',
             'order' => $order + 1,
             'visible' => 1,
             'description' => null,
