@@ -238,7 +238,7 @@ class LeaveTable extends ControllerActionTable
             'key' => 'Leave.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => 'OpenEMIS ID'
+            'label' => __('OpenEMIS ID')
         ];
         $newFields[] = [
             'key' => 'Leave.name',
