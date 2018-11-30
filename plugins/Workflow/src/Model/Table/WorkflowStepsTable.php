@@ -224,6 +224,91 @@ class WorkflowStepsTable extends AppTable {
 
 		return $attr;
 	}
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (isset($data['submit']) && $data['submit'] == 'save') {
+            $workflowStepId = $data['id'];
+            
+
+            // to only add validations on edit operations for the first workflow steps for any workflows with post event rules
+            if (!is_null($workflowStepId) && $workflowStepId !== '') { 
+                $WorkflowRuleEventsTable = TableRegistry::get('Workflow.WorkflowRuleEvents');
+                $WorkflowRulesTable = TableRegistry::get('Workflow.WorkflowRules');
+                $workflowId = $data['workflow_id'];
+
+                $firstStepEntity = $WorkflowRulesTable->getWorkflowFirstStep($workflowId);
+
+                // validations to be done only if the editing steps is the first step
+                if (!is_null($firstStepEntity) && $firstStepEntity['id'] == $workflowStepId) {
+                    $availableRuleResults = $WorkflowRulesTable
+                        ->find('list', [
+                            'keyField' => 'feature',
+                            'valueField' => 'event_key'
+                        ])
+                        ->select([
+                            'feature' => $WorkflowRulesTable->aliasField('feature'),
+                            'event_key' => $WorkflowRuleEventsTable->aliasField('event_key')
+                        ])
+                        ->innerJoin([$WorkflowRuleEventsTable->alias() => $WorkflowRuleEventsTable->table()], [
+                            $WorkflowRulesTable->aliasField('id = ') . $WorkflowRuleEventsTable->aliasField('workflow_rule_id')
+                        ])
+                        ->where([
+                            $WorkflowRulesTable->aliasField('workflow_id') => $workflowId
+                        ])
+                        ->group(['feature', 'event_key'])
+                        ->all();
+
+                    // validations will only add if the first steps has any rules associated to it
+                    if (!$availableRuleResults->isEmpty()) {
+                        $ruleFeatures = $availableRuleResults->toArray();
+
+                        $securityRoleCodes = [];
+                        foreach ($ruleFeatures as $feature => $eventKey) {
+                            $eventOptions = $WorkflowRulesTable->getEvents($feature, false);
+                            
+                            if (array_key_exists($eventKey, $eventOptions)) {
+                                $roleCode = $eventOptions[$eventKey]['roleCode'];
+
+                                if (!in_array($roleCode, $securityRoleCodes)) {
+                                    $securityRoleCodes[] = $roleCode;
+                                }
+                            }
+                        }
+
+                        // validations will only add if the first steps has nay security roles associated to it
+                        if (!empty($securityRoleCodes)) {
+                            $SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+                            $roleIds = $SecurityRolesTable
+                                ->find('list', [
+                                    'keyField' => 'id',
+                                    'valueField' => 'code'
+                                ])
+                                ->where([$SecurityRolesTable->aliasField('code IN ') => $securityRoleCodes])
+                                ->toArray();
+
+                            $validator = $this->validator();
+                            $validator->add('security_roles', 'ruleWorkflowRuleRoles', [
+                                'rule' => function ($value, $globalData) use ($roleIds) {
+
+                                    if (array_key_exists('_ids', $value)) {
+                                        $selectedRoleList = $value['_ids'];
+
+                                        foreach ($roleIds as $id => $code) {
+                                            if (!in_array($id, $selectedRoleList)) {
+                                                return false;
+                                            }
+                                        }
+                                    }
+                                    return true;
+                                },
+                                'message' => __('Some of the roles setup in workflow rules does not exist.')
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 	public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
