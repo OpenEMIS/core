@@ -15,6 +15,7 @@ use Cake\Utility\Inflector;
 class HistoricalBehavior extends Behavior
 {
     private $_queryUnionResults = [];
+    private $_deleteModalName = 'historical-delete-modal';
 
     protected $_defaultConfig = [
         'historicalUrl' => [
@@ -39,6 +40,7 @@ class HistoricalBehavior extends Behavior
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
         $events['ControllerAction.Model.addEdit.beforeAction'] = 'addEditBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 50];
+        $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['Excel.Historical.beforeQuery'] = 'indexBeforeQuery';
         return $events;
     }
@@ -110,6 +112,16 @@ class HistoricalBehavior extends Behavior
         }
     }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        if ($this->checkHasAccess('remove')) {
+            $model = $this->_table;
+            $removeUrl = $this->config('historicalUrl');
+            $removeUrl[] = 'remove';
+            $this->setupRemoveModal($removeUrl);
+        }
+    }
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         try {
@@ -163,6 +175,68 @@ class HistoricalBehavior extends Behavior
     public function getFieldEntity($historical, $entityId, $field)
     {
         return $this->_queryUnionResults[$historical][$entityId]->$field;
+    }
+
+    public function getHistoricalActionButtons(array $buttons, $id)
+    {
+        $model = $this->_table; 
+        $controller = $model->controller->name;
+        $baseUrl = $this->config('historicalUrl');
+        $encodedId = $model->paramsEncode(['id' => $id]);
+
+        // view
+        if (array_key_exists('view', $buttons)) {
+            $viewUrl = $baseUrl;
+            $viewUrl[] = 'view';
+            $viewUrl[] = $encodedId;
+            $buttons['view']['url'] = $viewUrl;
+        }
+
+        // edit and remove
+        if (in_array($controller, $this->config('allowedController'))) {
+            if ($this->checkHasAccess('edit')) {
+                $editUrl = $baseUrl;
+                $editUrl[] = 'edit';
+                $editUrl[] = $encodedId;
+
+                $edit = [
+                    'label' => '<i class="fa fa-pencil"></i>' . __('Edit'),
+                    'url' => $editUrl,
+                    'attr' => [
+                        'role' => 'menuitem',
+                        'tabindex' => -1,
+                        'escape' => false
+                    ]
+                ];
+
+                $buttons['edit'] = $edit;
+            }
+
+            if ($this->checkHasAccess('remove')) {
+                $removeUrl = $baseUrl;
+                $removeUrl[] = 'remove';
+                $removeUrl[] = $encodedId;
+
+                $remove = [
+                    'label' => '<i class="fa fa-trash"></i>' . __('Delete'),
+                    'url' => $removeUrl,
+                    'attr' => [
+                        'role' => 'menuitem',
+                        'tabindex' => -1,
+                        'escape' => false,
+                        'data-toggle' => 'modal',
+                        'data-target' => '#' . $this->_deleteModalName,
+                        'field-target' => '#recordId',
+                        'field-value' => $encodedId,
+                        'onclick' => 'ControllerAction.fieldMapping(this)'
+                    ]
+                ];
+
+                $buttons['remove'] = $remove;
+            }
+        }
+        
+        return $buttons;
     }
 
     private function updateBreadcrumbAndPageTitle()
@@ -233,5 +307,38 @@ class HistoricalBehavior extends Behavior
     private function isHistorialModel()
     {
         return $this->_table->registryAlias() === $this->config('model');
+    }
+
+    private function setupRemoveModal($removeUrl)
+    {
+        $model = $this->_table;
+
+        $modal = [];
+        $modal['title'] = $model->getHeader($model->alias());
+        $modal['buttons'] = ['<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'];
+        $modal['cancelButton'] = true;
+        $modal['form'] = [
+            'model' => $model,
+            'formOptions' => ['type' => 'delete', 'url' => $removeUrl],
+            'fields' => ['primaryKey' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
+        ];
+        $modal['content'] = __('All associated information related to this record will also be removed.') . '<br><br>' . __('Are you sure you want to delete this record?');
+
+        $modals = [$this->_deleteModalName => $modal];
+        $controller = $model->controller;
+        $controller->set('modals', $modals);
+    }
+
+    private function checkHasAccess($action)
+    {
+        $model = $this->_table;
+        if ($model->AccessControl->isAdmin()) {
+            return true;
+        }
+
+        $historicalUrl = $this->config('historicalUrl');
+        $historicalController = $historicalUrl['controller'];
+        $historicalTable = $historicalUrl['action'];
+        return $model->AccessControl->check([$historicalController, $historicalTable, $action]);
     }
 }

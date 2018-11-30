@@ -237,7 +237,6 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
             } else {
                 $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;
                 $attr['type'] = 'chosenSelect';
-                $attr['onChangeReload'] = true;
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $institutionOptions;
                 $attr['attr']['required'] = true;
