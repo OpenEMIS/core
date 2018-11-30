@@ -81,7 +81,7 @@ class PositionsTable extends ControllerActionTable {
             'key' => 'InstitutionStaffPositions.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => ''
+            'label' => __('OpenEMIS ID')
         ];
 
         $newFields[] = [
@@ -308,29 +308,7 @@ class PositionsTable extends ControllerActionTable {
         if (array_key_exists('view', $buttons)) {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
-                $url = [
-                    'action' => 'HistoricalStaffPositions',
-                    'view',
-                    $this->paramsEncode(['id' => $rowEntityId])
-                ];
-
-                switch ($this->controller->name) {
-                    case 'Directories':
-                        $url['plugin'] = 'Directory';
-                        $url['controller'] = 'Directories';
-                        break;
-                    case 'Staff':
-                        $url['plugin'] = 'Staff';
-                        $url['controller'] = 'Staff';
-                        break;
-                    case 'Profiles':
-                        $url['plugin'] = 'Profile';
-                        $url['controller'] = 'Profiles';
-                        break;
-                    default:
-                        break;
-                }
-
+                $buttons = $this->getHistoricalActionButtons($buttons, $rowEntityId);
             } else {
                 $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
                 $institutionId = $rowEntity->id;
@@ -343,9 +321,8 @@ class PositionsTable extends ControllerActionTable {
                     $this->paramsEncode(['id' => $entity->id]),
                     'institution_id' => $institutionId,
                 ];
+                $buttons['view']['url'] = $url;
             }
-
-            $buttons['view']['url'] = $url;
         }
 
         return $buttons;

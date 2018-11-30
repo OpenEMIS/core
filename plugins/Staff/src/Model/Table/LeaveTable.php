@@ -150,6 +150,7 @@ class LeaveTable extends ControllerActionTable
                 $this->Statuses->aliasField('id'),
                 $this->Statuses->aliasField('name'),
                 $this->Users->aliasField('id'),
+                $this->Users->aliasField('openemis_no'),
                 $this->Users->aliasField('first_name'),
                 $this->Users->aliasField('middle_name'),
                 $this->Users->aliasField('third_name'),
@@ -201,6 +202,7 @@ class LeaveTable extends ControllerActionTable
                 'statuses_id' => '(null)',
                 'statuses_name' => '(null)',
                 'user_id' => 'Users.id',
+                'user_openemis_no' => 'Users.openemis_no',
                 'user_first_name' => 'Users.first_name',
                 'user_middle_name' => 'Users.middle_name',
                 'user_third_name' => 'Users.third_name',
@@ -232,6 +234,12 @@ class LeaveTable extends ControllerActionTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
+        $newFields[] = [
+            'key' => 'Leave.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
         $newFields[] = [
             'key' => 'Leave.name',
             'field' => 'name',
@@ -325,6 +333,11 @@ class LeaveTable extends ControllerActionTable
         ];
 
         $fields->exchangeArray($newFields);
+    }
+    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    {
+        $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'user');
+        return $rowEntity->openemis_no;
     }
 
     public function onExcelGetName(Event $event, Entity $entity)
@@ -479,6 +492,8 @@ class LeaveTable extends ControllerActionTable
         if (array_key_exists('view', $buttons)) {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
+                $buttons = $this->getHistoricalActionButtons($buttons, $rowEntityId);
+
                 if ($this->controller->name === 'Directories') {
                      $url = [
                         'plugin' => 'Directory',
@@ -496,6 +511,7 @@ class LeaveTable extends ControllerActionTable
                         $this->paramsEncode(['id' => $rowEntityId])
                     ];
                 }
+                $buttons['view']['url'] = $url;
             } else {
                 $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
                 $institutionId = $rowEntity->id;
@@ -518,8 +534,8 @@ class LeaveTable extends ControllerActionTable
                         'institution_id' => $institutionId,
                     ];
                 }
+                $buttons['view']['url'] = $url;
             }
-            $buttons['view']['url'] = $url;
         }
         return $buttons;
     }
