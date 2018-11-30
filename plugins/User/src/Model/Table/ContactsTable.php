@@ -179,9 +179,45 @@ class ContactsTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        // pr('validationDefault');
-        // var_dump($validator->hasField('value'));
         $validator->remove('value', 'notBlank');
+
+        $validator = $this->buildBaseValidator($validator);
+        $validator
+            //validate at least one preferred on each contact type
+            ->add('preferred', 'ruleValidatePreferred', [
+                'rule' => ['validateContact'],
+            ])
+            //validate unique contact value per contact type
+            ->add('value', 'ruleUniqueContactValue', [
+                    'rule' => ['validateContact']
+            ]);
+
+        // validation code must always be set because this is also being used by prefererences 'usercontacts'
+        $this->setValidationCode('value.ruleNotBlank', 'User.Contacts');
+        $this->setValidationCode('value.ruleValidateNumeric', 'User.Contacts');
+        $this->setValidationCode('value.ruleValidateEmail', 'User.Contacts');
+        $this->setValidationCode('value.ruleValidateEmergency', 'User.Contacts');
+        $this->setValidationCode('preferred.ruleValidatePreferred', 'User.Contacts');
+        $this->setValidationCode('value.ruleUniqueContactValue', 'User.Contacts');
+
+        return $validator;
+    }
+
+    public function validationImportType(Validator $validator)
+    {
+        $validator = $this->buildBaseValidator($validator);
+        $this->setValidationCode('value.ruleNotBlank', 'User.Contacts');
+        $this->setValidationCode('value.ruleValidateNumeric', 'User.Contacts');
+        $this->setValidationCode('value.ruleValidateEmail', 'User.Contacts');
+        $this->setValidationCode('value.ruleValidateEmergency', 'User.Contacts');
+        $this->setValidationCode('preferred.ruleValidatePreferred', 'User.Contacts');
+        $this->setValidationCode('value.ruleUniqueContactValue', 'User.Contacts');
+
+        return $validator;
+    }
+
+    private function buildBaseValidator(Validator $validator)
+    {
         $validator
             ->requirePresence('contact_option_id')
             ->add('value', 'ruleContactValuePattern', [
@@ -189,7 +225,7 @@ class ContactsTable extends ControllerActionTable
                 'provider' => 'table',
                 'last' => true,
                 'on' => function ($context) {
- //only trigger validation when contact_type_id has value
+                    //only trigger validation when contact_type_id has value
                     $contactTypeId = '';
                     if (array_key_exists('contact_type_id', $context['data'])) {
                         $contactTypeId = $context['data']['contact_type_id'];
@@ -272,23 +308,8 @@ class ContactsTable extends ControllerActionTable
                     }
                     return ($contactOptionId == $this->contactOptionsArray['EMERGENCY']);
                 },
-            ])
-            //validate at least one preferred on each contact type
-            ->add('preferred', 'ruleValidatePreferred', [
-                'rule' => ['validateContact'],
-            ])
-            //validate unique contact value per contact type
-            ->add('value', 'ruleUniqueContactValue', [
-                    'rule' => ['validateContact']
             ]);
 
-        // validation code must always be set because this is also being used by prefererences 'usercontacts'
-        $this->setValidationCode('value.ruleNotBlank', 'User.Contacts');
-        $this->setValidationCode('value.ruleValidateNumeric', 'User.Contacts');
-        $this->setValidationCode('value.ruleValidateEmail', 'User.Contacts');
-        $this->setValidationCode('value.ruleValidateEmergency', 'User.Contacts');
-        $this->setValidationCode('preferred.ruleValidatePreferred', 'User.Contacts');
-        $this->setValidationCode('value.ruleUniqueContactValue', 'User.Contacts');
         return $validator;
     }
 

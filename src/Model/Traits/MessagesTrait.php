@@ -624,8 +624,8 @@ trait MessagesTrait
             'identity_type_required' => 'Identity Type cant be empty if Identity Number is specified.',
             'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
             'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.',
-            'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type'
-
+            'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type',
+            'contact_required' => 'Contact is required'
         ],
         'ImportInstitutionSurveys' => [
             'restrictImport' => 'Import operation is not allowed as the record is already Done'
@@ -1373,9 +1373,9 @@ trait MessagesTrait
                     'ruleChangePassword' => 'Please confirm your new password',
                     'ruleCompare' => 'Both passwords do not match'
                 ],
-                 'photo_content' => [
+                'photo_content' => [
                     'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
-                 ],
+                ]
             ],
             'Accounts' => [
                 'username' => [
@@ -2180,7 +2180,7 @@ trait MessagesTrait
                'position_grades' => [
                     'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
                 ]
-            ] 
+            ]
         ],
         'Configuration' => [
             'ConfigProductLists' => [
