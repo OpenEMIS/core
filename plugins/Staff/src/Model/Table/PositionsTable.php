@@ -81,7 +81,7 @@ class PositionsTable extends ControllerActionTable {
             'key' => 'InstitutionStaffPositions.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => ''
+            'label' => __('OpenEMIS ID')
         ];
 
         $newFields[] = [
