@@ -848,7 +848,7 @@ class StaffTable extends ControllerActionTable
             'userRole' => 'Staff',
             'action' => $this->action,
             'id' => $entity->id,
-            'userId' => $entity->staff_id
+            'user_id' => $entity->staff_id
         ];
         $tabElements = $this->controller->getCareerTabElements($options);
 
