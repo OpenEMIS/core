@@ -15,7 +15,7 @@ class POCOR4873 extends AbstractMigration
         //insert for import excel column for contact options and contact
         $this->execute('
             INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`)
-            VALUES ("User.Users", "contact_type", NULL, 17, 0, 2, "User", "ContactOptions", "id")
+            VALUES ("User.Users", "contact_type", NULL, 17, 0, 2, "User", "ContactTypes", "id")
         ');
 
         $this->execute('
