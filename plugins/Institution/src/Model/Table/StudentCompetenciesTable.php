@@ -59,6 +59,8 @@ class StudentCompetenciesTable extends ControllerActionTable
             'targetForeignKey' => 'institution_subject_id'
         ]);
 
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportCompetencyResults']);
+
         $this->toggle('add', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);

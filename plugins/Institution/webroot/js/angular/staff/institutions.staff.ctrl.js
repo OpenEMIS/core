@@ -141,7 +141,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController.onChangeAcademicPeriod();
             }
             promises.push(InstitutionsStaffSvc.getAddNewStaffConfig());
-         
+
             promises.push(InstitutionsStaffSvc.getStaffTypes());
             promises.push(InstitutionsStaffSvc.getInstitution(StaffController.institutionId));
             promises.push(InstitutionsStaffSvc.getStaffTransfersByTypeConfig());
@@ -240,6 +240,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 AlertSvc.success($scope, 'Staff transfer request is added successfully.');
             } else if ($location.search().transfer_exists) {
                 AlertSvc.warning($scope, 'There is an existing transfer record for this staff.');
+            } else if ($location.search().release_exists) {
+                AlertSvc.warning($scope, 'There is an existing release record for this staff.');
             }
         });
     });
@@ -717,9 +719,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             angular.forEach(postResponse.data.error , function(value) {
                 counter++;
             }, log);
+
             if (counter == 0) {
                 AlertSvc.success($scope, 'The staff is added successfully.');
                 $window.location.href = 'add?staff_added=true';
+                deferred.resolve(StaffController.postResponse);
+            }
+            else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleReleaseRequestExists')) {
+                AlertSvc.warning($scope, 'There is an existing release record for this staff.');
+                $window.location.href = postResponse.data.error.staff_assignment.ruleReleaseRequestExists;
                 deferred.resolve(StaffController.postResponse);
             }
             else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleTransferRequestExists')) {
@@ -1145,6 +1153,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
+        return;
         // The last complete step is now transfer staff, add transfer staff logic function call here
         StaffController.postTransferForm();
     });
