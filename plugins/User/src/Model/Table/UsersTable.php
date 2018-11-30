@@ -189,8 +189,8 @@ class UsersTable extends AppTable
         $model->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $model->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
-            'foreignKey' => 'security_role_id',
-            'targetForeignKey' => 'security_user_id',
+            'foreignKey' => 'security_user_id',
+            'targetForeignKey' => 'security_role_id',
             'through' => 'Security.SecurityGroupUsers',
             'dependent' => true
         ]);
