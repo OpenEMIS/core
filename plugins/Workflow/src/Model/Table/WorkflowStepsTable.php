@@ -242,8 +242,8 @@ class WorkflowStepsTable extends AppTable {
                 if (!is_null($firstStepEntity) && $firstStepEntity['id'] == $workflowStepId) {
                     $availableRuleResults = $WorkflowRulesTable
                         ->find('list', [
-                            'keyField' => 'feature',
-                            'valueField' => 'event_key'
+                            'keyField' => 'event_key',
+                            'valueField' => 'feature'
                         ])
                         ->select([
                             'feature' => $WorkflowRulesTable->aliasField('feature'),
@@ -255,7 +255,7 @@ class WorkflowStepsTable extends AppTable {
                         ->where([
                             $WorkflowRulesTable->aliasField('workflow_id') => $workflowId
                         ])
-                        ->group(['feature', 'event_key'])
+                        ->group(['event_key', 'feature'])
                         ->all();
 
                     // validations will only add if the first steps has any rules associated to it
@@ -263,7 +263,7 @@ class WorkflowStepsTable extends AppTable {
                         $ruleFeatures = $availableRuleResults->toArray();
 
                         $securityRoleCodes = [];
-                        foreach ($ruleFeatures as $feature => $eventKey) {
+                        foreach ($ruleFeatures as $eventKey => $feature) {
                             $eventOptions = $WorkflowRulesTable->getEvents($feature, false);
                             
                             if (array_key_exists($eventKey, $eventOptions)) {
@@ -292,6 +292,10 @@ class WorkflowStepsTable extends AppTable {
 
                                     if (array_key_exists('_ids', $value)) {
                                         $selectedRoleList = $value['_ids'];
+
+                                        if ((is_null($selectedRoleList) || $selectedRoleList === '') && !empty($roleIds)) {
+                                            return false;
+                                        }
 
                                         foreach ($roleIds as $id => $code) {
                                             if (!in_array($id, $selectedRoleList)) {
