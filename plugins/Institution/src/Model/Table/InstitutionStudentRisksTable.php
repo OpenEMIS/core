@@ -637,8 +637,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, every model also have different date
         switch ($criteriaTable->alias()) {
             case 'InstitutionStudentAbsences': // have start date and end date
-                $startDate = $afterSaveOrDeleteEntity->start_date;
-                $endDate = $afterSaveOrDeleteEntity->end_date;
+                $startDate = $afterSaveOrDeleteEntity->date;
+                $endDate = $afterSaveOrDeleteEntity->date;
                 $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodId($startDate, $endDate);
                 break;
 

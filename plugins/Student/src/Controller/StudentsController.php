@@ -134,10 +134,6 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']);
     }
-    public function StudentSurveys()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']);
-    }
     public function Demographic()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
@@ -185,7 +181,7 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
     // End Health
-    
+
     // Special Needs
     public function SpecialNeedsReferrals()
     {
@@ -208,7 +204,7 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
     }
     // Special Needs - End
-    
+
     // Visits
     public function StudentVisitRequests()
     {
@@ -496,7 +492,7 @@ class StudentsController extends AppController
 
         $tabElements = [
             'Guardians' => ['text' => __('Relation')],
-            'GuardianUser' => ['text' => __('Overview')],            
+            'GuardianUser' => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
             'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
@@ -514,7 +510,7 @@ class StudentsController extends AppController
                     'action' => 'Guardians',
                     'view',
                     $this->paramsEncode(['id' => $StudentGuardianId])
-                    ];                
+                    ];
             } elseif ($key == 'GuardianUser') {
                 $tabElements[$key]['url'] = ['plugin' => 'Student',
                     'controller' => 'Students',
@@ -544,7 +540,7 @@ class StudentsController extends AppController
                         'index'
                     ],
                     ['security_user_id' => $id]
-                );                
+                );
             } else {
                 $actionURL = $key;
                 $tabElements[$key]['url'] = $this->ControllerAction->setQueryString(
@@ -560,7 +556,7 @@ class StudentsController extends AppController
         };
 
         return $this->TabPermission->checkTabPermission($tabElements);
-    }    
+    }
 
     public function getAcademicTabElements($options = [])
     {

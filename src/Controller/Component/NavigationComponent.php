@@ -294,6 +294,7 @@ class NavigationComponent extends Component
             $session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
+            $isGuardian = $session->read('Directory.Directories.is_guardian');
 
             if ($isStaff) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
@@ -304,12 +305,18 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
+
+            if ($isGuardian) {
+                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
+                $session->write('Directory.Directories.reload', true);
+            }
         } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
             $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
 
             $session = $this->request->session();
             $isStudent = $session->read('Auth.User.is_student');
             $isStaff = $session->read('Auth.User.is_staff');
+            $isGuardian = $session->read('Auth.User.is_guardian');
 
             if ($isStaff) {
                 $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileStaffNavigation());
@@ -320,6 +327,11 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileStudentNavigation());
                 $session->write('Profile.Profiles.reload', true);
             }
+
+            if ($isGuardian) {
+                $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileGuardianNavigation());
+                $session->write('Profile.Profiles.reload', true);
+            }            
         }
 
         $navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
@@ -543,10 +555,10 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution']
                 ],
 
-                'Institutions.StaffAttendances.index' => [
+                'Institutions.InstitutionStaffAttendances.index' => [
                     'title' => 'Staff',
                     'parent' => 'Institution.Attendance',
-                    'selected' => ['Institutions.StaffAttendances', 'Institutions.StaffAbsences', 'Institutions.ImportStaffAttendances'],
+                    'selected' => ['Institutions.InstitutionStaffAttendances', 'Institutions.ImportStaffAttendances'],
                     'params' => ['plugin' => 'Institution']
                 ],
 
@@ -889,7 +901,6 @@ class NavigationComponent extends Component
                         'Students.History',
                         'Students.GuardianUser',
                         'Institutions.StudentUser.pull',
-                        'Students.StudentSurveys',
                         'StudentComments.index',
                         'StudentComments.view',
                         'StudentComments.add',
@@ -916,7 +927,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
-                    'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentRisks', 'Students.Outcomes']
+                    'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentRisks', 'Students.Outcomes', 'Institutions.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit']
             ],
             'Students.Employments' => [
                 'title' => 'Professional',
@@ -981,8 +992,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences',
-                    'Institutions.StaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave'],
+                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',
@@ -1091,8 +1101,9 @@ class NavigationComponent extends Component
         ];
 
         $session = $this->request->session();
-        $guardianID = $session->read('Guardian.Guardians.id');
-        if (!empty($guardianID)) {
+        $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
+        $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
+        if (!empty($studentToGuardian) || !empty($guardianToStudent)) {
             $navigation['Directories.Directories.view']['selected'] = ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull','Directories.History'];
         }
 
@@ -1111,7 +1122,7 @@ class NavigationComponent extends Component
                     'title' => 'Career',
                     'parent' => 'Profiles.Staff',
                     'params' => ['plugin' => 'Profile'],
-                    'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffAbsences', 'Profiles.StaffLeave', 'Profiles.StaffBehaviours', 'Profiles.StaffAppraisals']
+                    'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffLeave', 'Profiles.StaffAttendances','Profiles.StaffBehaviours', 'Profiles.StaffAppraisals']
                 ],
                 'Profiles.StaffBankAccounts' => [
                     'title' => 'Finance',
@@ -1160,6 +1171,24 @@ class NavigationComponent extends Component
         return $navigation;
     }
 
+    public function getProfileGuardianNavigation()
+    {
+        $navigation = [
+            'Profiles.Guardian' => [
+                'title' => 'Guardian',
+                'parent' => 'Profiles.Profiles',
+                'link' => false,
+            ],
+                'Profiles.ProfileStudents.index' => [
+                    'title' => 'Students',
+                    'parent' => 'Profiles.Guardian',
+                    'params' => ['plugin' => 'Profile'],
+                    'selected' => ['Profiles.ProfileStudents', 'Profiles.ProfileStudentUser']
+                ],
+        ];
+        return $navigation;
+    }    
+
     public function getDirectoryStaffNavigation()
     {
         $session = $this->request->session();
@@ -1175,7 +1204,7 @@ class NavigationComponent extends Component
                     'title' => 'Career',
                     'parent' => 'Directories.Staff',
                     'params' => ['plugin' => 'Directory'],
-                    'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffAbsences', 'Directories.StaffLeave', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals']
+                    'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffLeave', 'Directories.StaffAttendances', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals']
                 ],
                 'Directories.StaffBankAccounts' => [
                     'title' => 'Finance',
@@ -1226,12 +1255,37 @@ class NavigationComponent extends Component
         ];
 
         $session = $this->request->session();
-        $guardianID = $session->read('Guardian.Guardians.id');
-        if (!empty($guardianID)) {
+        $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
+        if (!empty($studentToGuardian)) {
             $navigation['Directories.StudentGuardians']['selected'] = ['Directories.StudentGuardians', 'Directories.StudentGuardianUser', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments', 'Directories.Contacts', 'Directories.Demographic'];
         }
         return $navigation;
     }
+
+    public function getDirectoryGuardianNavigation()
+    {
+        $navigation = [
+            'Directories.Guardian' => [
+                'title' => 'Guardian',
+                'parent' => 'Directories.Directories.index',
+                'link' => false,
+            ],
+                'Directories.GuardianStudents' => [
+                    'title' => 'Students',
+                    'parent' => 'Directories.Guardian',
+                    'params' => ['plugin' => 'Directory'],
+                    'selected' => ['Directories.GuardianStudents']
+                ],
+        ];
+        $session = $this->request->session();
+        $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
+        if (!empty($guardianToStudent)) {
+            $navigation['Directories.GuardianStudents']['selected'] = ['Directories.GuardianStudents', 'Directories.GuardianStudentUser', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments', 'Directories.Contacts', 'Directories.Demographic'];
+        }
+
+        return $navigation;
+    }
+
 
     public function getReportNavigation()
     {
@@ -1342,6 +1396,12 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Education'],
                     'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Stages', 'Educations.Subjects', 'Educations.GradeSubjects', 'Educations.Certifications',
                             'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
+                ],
+                'Attendances.StudentMarkTypes' => [
+                    'title' => 'Attendances',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Attendance'],
+                    'selected' => ['Attendance.StudentMarkTypes']
                 ],
                 'FieldOptions.index' => [
                     'title' => 'Field Options',
