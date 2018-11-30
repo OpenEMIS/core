@@ -75,10 +75,6 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
                 'visible' => ['view' => true, 'edit' => false, 'add' => false]
             ]
         );
-        $this->field('staff_id', [
-                'visible' => false
-            ]
-        );
         $this->setFieldOrder(['status','assignee','institution_id', 'staff_leave_type_id', 'date_from', 'date_to', 'start_time', 'end_time','full_day', 'number_of_days', 'comments', 'academic_period_id', 'file_name', 'file_content']);
     }
 
