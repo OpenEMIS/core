@@ -492,6 +492,8 @@ class LeaveTable extends ControllerActionTable
         if (array_key_exists('view', $buttons)) {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
+                $buttons = $this->getHistoricalActionButtons($buttons, $rowEntityId);
+
                 if ($this->controller->name === 'Directories') {
                      $url = [
                         'plugin' => 'Directory',
@@ -509,6 +511,7 @@ class LeaveTable extends ControllerActionTable
                         $this->paramsEncode(['id' => $rowEntityId])
                     ];
                 }
+                $buttons['view']['url'] = $url;
             } else {
                 $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
                 $institutionId = $rowEntity->id;
@@ -531,8 +534,8 @@ class LeaveTable extends ControllerActionTable
                         'institution_id' => $institutionId,
                     ];
                 }
+                $buttons['view']['url'] = $url;
             }
-            $buttons['view']['url'] = $url;
         }
         return $buttons;
     }
