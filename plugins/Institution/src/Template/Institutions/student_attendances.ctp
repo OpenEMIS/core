@@ -6,8 +6,18 @@
 $this->start('toolbar');
 ?>
 
+<?php if ($_edit) : ?>
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onEditClick()">
+        <i class="fa kd-edit"></i>
+    </button>
+
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
+        <i class="fa kd-back"></i>
+    </button>
+<?php endif; ?>
+
 <?php if ($_excel) : ?>
-    <a href="<?=$excelUrl ?>" ng-show="$ctrl.action == 'view'">
+    <a ng-show="$ctrl.action == 'view'" ng-click="$ctrl.onExcelClick()">
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" >
             <i class="fa kd-export" ></i>
         </button>
@@ -21,16 +31,6 @@ $this->start('toolbar');
         </button>
     </a>
 </button>
-<?php endif; ?>
-
-<?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onEditClick()">
-        <i class="fa kd-edit"></i>
-    </button>
-
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
-        <i class="fa kd-back"></i>
-    </button>
 <?php endif; ?>
 
 <?php
@@ -176,7 +176,10 @@ $panelHeader = $this->fetch('panelHeader');
 
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;" float-btn="false">
+        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="
+            $ctrl.institutionId=<?= $institution_id;?>; 
+            $ctrl.excelUrl='<?= $excelUrl;?>';
+        " float-btn="false">
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">
                     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}

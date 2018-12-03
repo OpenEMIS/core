@@ -7,6 +7,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     var vm = this;
 
     vm.action = 'view';
+    vm.excelUrl = '';
+
     vm.institutionId;
     vm.schoolClosed = true;
 
@@ -526,4 +528,14 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             UtilsSvc.isAppendLoader(false);
         });
     };
+
+    vm.onExcelClick = function() {
+        var excelUrlWithQuery = vm.excelUrl + '?' + 
+            'institution_id=' + vm.institutionId + '&' + 
+            'academic_period_id=' + vm.selectedAcademicPeriod + '&' + 
+            'class_id=' + vm.selectedClass;
+            
+        window.location.href = excelUrlWithQuery;
+        return;
+    }
 }
