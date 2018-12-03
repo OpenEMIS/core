@@ -8,9 +8,9 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
-// This file serves as an abstract class for StaffTransferIn and StaffTransferOut
+// This file serves as an abstract class for StaffReleaseIn and StaffReleaseOut
 
-class InstitutionStaffTransfersTable extends ControllerActionTable
+class InstitutionStaffReleasesTable extends ControllerActionTable
 {
     // Workflow Steps - category
     const TO_DO = 1;
@@ -21,17 +21,12 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     const INCOMING = 1;
     const OUTGOING = 2;
 
-    // Transfer Type
-    const FULL_TRANSFER = 1;
-    const PARTIAL_TRANSFER = 2;
-    const NO_CHANGE = 3;
-
     // fte options
     public $fteOptions = [];
 
     public function initialize(array $config)
     {
-        $this->table('institution_staff_transfers');
+        $this->table('institution_staff_releases');
         parent::initialize($config);
 
         // Mandatory data
@@ -57,10 +52,10 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
 
     private $workflowEvents = [
         [
-            'value' => 'Workflow.onTransferStaff',
-            'text' => 'Transfer Staff',
-            'description' => 'Performing this action will transfer the staff to the selected institution.',
-            'method' => 'onTransferStaff',
+            'value' => 'Workflow.onReleaseStaff',
+            'text' => 'Release Staff',
+            'description' => 'Performing this action will release the staff to the selected institution.',
+            'method' => 'onReleaseStaff',
             'unique' => true
         ]
     ];
@@ -90,7 +85,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         }
     }
 
-    public function onTransferStaff(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onReleaseStaff(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $StaffTable = TableRegistry::get('Institution.Staff');
         $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
@@ -113,34 +108,12 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         }
         $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => 'AllowPositionType']);
 
+        // Update institution_staff table the staff record
         if ($StaffTable->save($newEntity)) {
             if (!empty($entity->previous_institution_staff_id)) {
-                $transferType = $entity->transfer_type;
                 $oldRecord = $StaffTable->get($entity->previous_institution_staff_id);
-
-                if ($transferType == self::FULL_TRANSFER) {
-                     // end previous institution staff record
-                     $oldRecord->end_date = $entity->previous_end_date;
-                     $StaffTable->save($oldRecord);
-                } else if ($transferType == self::PARTIAL_TRANSFER) {
-                    // end previous institution staff record
-                    $oldRecord->end_date = $entity->previous_end_date;
-                    $StaffTable->save($oldRecord);
-
-                    // add new institution staff record in previous institution
-                    $newRecord = [
-                        'FTE' => $entity->previous_FTE,
-                        'start_date' => $entity->previous_effective_date,
-                        'start_year' => $entity->previous_effective_date->year,
-                        'staff_id' => $entity->staff_id,
-                        'staff_type_id' => $entity->previous_staff_type_id,
-                        'staff_status_id' => $StaffStatusesTable->getIdByCode('ASSIGNED'),
-                        'institution_id' => $oldRecord->institution_id,
-                        'institution_position_id' => $oldRecord->institution_position_id
-                    ];
-                    $newEntity = $StaffTable->newEntity($newRecord, ['validate' => 'AllowPositionType']);
-                    $StaffTable->save($newEntity);
-                }
+                $oldRecord->end_date = $entity->previous_end_date;
+                $StaffTable->save($oldRecord);
             }
         }
     }
@@ -151,19 +124,16 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-        $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
-        $isRestricted = $ConfigStaffTransfersTable->checkStaffTransferRestricted($entity->previous_institution_id, $entity->new_institution_id);
+        $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
+        $isRestricted = $ConfigStaffReleaseTable->checkStaffReleaseRestrictedBetweenSameType($entity->previous_institution_id, $entity->new_institution_id);
 
-        if ($isRestricted) {
-            $this->Alert->warning('StaffTransfers.restrictStaffTransfer', ['reset' => true]);
-        } else {
+        if (!$isRestricted) {
             if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
                 $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
             } else if ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id) {
                 $canAddButtons = $this->PreviousInstitutions->isActive($entity->previous_institution_id);
             }
         }
-
         return $canAddButtons;
     }
 
@@ -196,7 +166,6 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $searchableFields[] = 'staff_id';
     }
 
-    // for index
     public function onGetStatusId(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
@@ -211,7 +180,6 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         }
     }
 
-    // for view
     public function onGetWorkflowStatus(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
@@ -224,16 +192,6 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         } else {
             return '<span class="status past">' . $entity->workflow_status . '</span>';
         }
-    }
-
-    public function onGetNewFTE(Event $event, Entity $entity)
-    {
-        $value = '';
-        if ($entity->has('new_FTE')) {
-            $fte = $entity->new_FTE;
-            $value = $this->fteOptions["$fte"];
-        }
-        return $value;
     }
 
     public function onGetPreviousFTE(Event $event, Entity $entity)
@@ -255,6 +213,16 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $value;
     }
 
+    public function onGetNewFTE(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('new_FTE')) {
+            $fte = $entity->new_FTE;
+            $value = $this->fteOptions["$fte"];
+        }
+        return $value;
+    }
+
     public function onGetNewInstitutionId(Event $event, Entity $entity)
     {
         $value = '';
@@ -263,6 +231,73 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         }
         return $value;
     }
+
+    public function onGetStaffId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->name_with_id;
+        }
+        return $value;
+    }
+
+    public function onGetStaffTypeId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if (!empty($entity->previous_institution_staff_id)) {
+            $StaffEntity = $this->PreviousInstitutionStaff->get($entity->previous_institution_staff_id, ['contain' => ['StaffTypes']]);
+            $value = $StaffEntity->staff_type->name;
+        }
+        return $value;
+    }
+
+    public function onGetPositionsHeld(Event $event, Entity $entity)
+    {
+        $value = $this->getPositionsHeld($entity);
+        return $value;
+    }
+
+    public function getPositionsHeld(Entity $entity)
+    {
+        $value = '';
+        if (!empty($entity->previous_institution_staff_id)) {
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+
+            if ($entity->has('previous_institution')) {
+                $institutionId = $entity->previous_institution->id;
+            }
+
+            if ($entity->has('user')) {
+                $staffId = $entity->user->id;
+            }
+
+            $staffEntity = $this->PreviousInstitutionStaff->find()
+                ->select([
+                    $this->PreviousInstitutionStaff->aliasField('id'),
+                    'Positions.position_no',
+                    'Positions.staff_position_title_id'
+                ])
+                ->matching('Positions')
+                ->where([
+                    $this->PreviousInstitutionStaff->aliasField('institution_id') => $institutionId,
+                    $this->PreviousInstitutionStaff->aliasField('staff_id') => $staffId,
+                    $this->PreviousInstitutionStaff->aliasField('staff_status_id') => $StaffStatuses->getIdByCode('ASSIGNED')
+                ])
+                ->order([$this->PreviousInstitutionStaff->aliasField('created') => 'DESC'])
+                ->toArray();
+
+            $positions = [];
+            foreach ($staffEntity as $staff) {
+                $positions[$staff->id] = $staff->_matchingData['Positions']->name;
+            }
+
+            if (!empty($positions)) {
+                $value = implode(",",$positions);
+            }
+        }
+        return $value;
+    }
+
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -278,7 +313,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         }
     }
 
-    public function findInstitutionStaffTransferIn(Query $query, array $options)
+    public function findInstitutionStaffReleaseIn(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $incomingInstitution = self::INCOMING;
@@ -302,7 +337,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $query;
     }
 
-    public function findInstitutionStaffTransferOut(Query $query, array $options)
+    public function findInstitutionStaffRelease(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $outgoingInstitution = self::OUTGOING;

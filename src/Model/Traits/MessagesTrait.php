@@ -1296,6 +1296,19 @@ trait MessagesTrait
                     'ruleCompareTimeReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
+            'StaffReleaseIn' => [
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'Start Date should not be earlier than Current Institution End Date'
+                ],
+                'new_end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ]
+            ],
+            'StaffRelease' => [
+                'previous_end_date' => [
+                    'ruleCompareDateReverse' => 'Position End Date should not be earlier than Position Start Date'
+                ]
+            ]
         ],
         'User' => [
             'Users' => [
@@ -2170,7 +2183,7 @@ trait MessagesTrait
                'position_grades' => [
                     'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
                 ]
-            ] 
+            ]
         ],
         'Configuration' => [
             'ConfigProductLists' => [
@@ -2273,6 +2286,30 @@ trait MessagesTrait
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ]
+        ],
+        'Historical' => [
+            'HistoricalStaffPositions' => [
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'validDate' => 'Date should not be later than today'
+                ],
+                'start_date' => [
+                    'validDate' => 'Date should not be later than today'
+                ]
+            ],
+            'HistoricalStaffLeave' => [
+                'date_from' => [
+                    'ruleLessThanToday' => 'Date should not be later than today'
+                ],
+                'date_to' => [
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From',
+                    'ruleLessThanToday' => 'Date should not be later than today'
+                ],
+                'end_time' => [
+                    'ruleCompareDateReverse' => 'End Time should not be earlier than Start Time'
+                ]
+            ],
+            'addEdit' => 'This feature is for historical record use only. For current records, please refrain from adding record on this page.'
         ]
     ];
 

@@ -276,6 +276,13 @@ class UserBehavior extends Behavior
                         $imageUrl =  ['plugin' => 'Profile', 'controller' => $name, 'action' => 'ProfileGuardians', 'image'];
                     }
                     break;
+                case 'Students':
+                    $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => 'GuardianStudents', 'image'];
+
+                    if ($name == 'Profiles') {
+                        $imageUrl =  ['plugin' => 'Profile', 'controller' => $name, 'action' => 'ProfileStudents', 'image'];
+                    }
+                    break;
                 default:
                     $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'image'];
                     break;

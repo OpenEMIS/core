@@ -10,9 +10,11 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
+use Cake\Utility\Hash;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 
 class WorkflowRulesTable extends ControllerActionTable
 {
@@ -284,6 +286,7 @@ class WorkflowRulesTable extends ControllerActionTable
             $workflowOptions = $this->getWorkflowOptions($selectedFeature);
 
             $attr['options'] = $workflowOptions;
+            $attr['onChangeReload'] = true;
         } else if ($action == 'edit') {
             $entity = $attr['entity'];
             $selectedFeature = $entity->feature;
@@ -334,10 +337,11 @@ class WorkflowRulesTable extends ControllerActionTable
             $attr['attr']['tableHeaders'] = $tableHeaders;
             $attr['attr']['tableCells'] = $tableCells;
         } else if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['attr']['entity'];
             if ($action == 'add') {
                 $feature = $request->query('feature');
             } else if ($action == 'edit') {
-                $feature = $attr['attr']['entity']->feature;
+                $feature = $entity->feature;
             }
 
             $eventOptions = $this->getEvents($feature, false);
@@ -347,7 +351,6 @@ class WorkflowRulesTable extends ControllerActionTable
             $selectedEventKeys = [];
             if ($request->is(['get'])) {
                 if ($action == 'edit') {
-                    $entity = $attr['attr']['entity'];
                     $selectedEventKeys = $this->convertEventKeysToEvents($entity);
                 }
             } else if ($request->is(['post', 'put'])) {
@@ -365,6 +368,10 @@ class WorkflowRulesTable extends ControllerActionTable
             foreach ($selectedEventKeys as $key => $value) {
                 unset($eventSelectOptions[$value]);
             }
+
+            $workflowId = $entity->workflow_id;
+            $eventOptionsBySecurityRoles = $this->getAvailableEventOptionsBySecurityRoles($eventOptions, $workflowId);
+            $eventSelectOptions = array_intersect_key($eventSelectOptions, $eventOptionsBySecurityRoles);
 
             $attr['attr']['eventSelectOptions'] = $eventSelectOptions;
         }
@@ -527,7 +534,7 @@ class WorkflowRulesTable extends ControllerActionTable
             }
 
             $events = $eventsObject;
-            if (empty($events)) {
+            if (!sizeof($events)) {
                 return $emptyOptions;
             } else {
                 $eventOptions = [];
@@ -554,5 +561,67 @@ class WorkflowRulesTable extends ControllerActionTable
                 return $eventOptions;
             }
         }
+    }
+
+    private function getAvailableEventOptionsBySecurityRoles($eventOptions, $workflowId = null)
+    {
+        $availableOptions = [];
+        if (array_key_exists(0, $eventOptions)) {
+            $availableOptions[0] = $eventOptions[0];
+        }
+
+        $securityRoleList = $this->getFirstStepSecurityRoleCode($workflowId);
+
+        if (!empty($securityRoleList)) {
+            foreach ($eventOptions as $key => $eventObj) {
+                if ($key === 0) {
+                    continue;
+                } 
+                
+                if (array_key_exists('roleCode', $eventObj)) {
+                    $roleCode = $eventObj['roleCode'];
+
+                    if (in_array($roleCode, $securityRoleList)) {
+                        $availableOptions[$eventObj['value']] = $eventObj['text'];
+                    }
+                }
+            }
+        }
+        
+        return $availableOptions;
+    }
+
+    private function getFirstStepSecurityRoleCode($workflowId = null)
+    {
+        $securityRoleCode = [];
+
+        if (!is_null($workflowId)) {
+            $workflowStepObj = $this->getWorkflowFirstStep($workflowId);
+
+            if (!is_null($workflowStepObj)) {
+                $securityRoleList = $workflowStepObj['security_roles'];
+                $securityRoleCode = Hash::extract($securityRoleList, '{n}.code');
+            }
+        }
+
+        return $securityRoleCode;
+    }
+
+    public function getWorkflowFirstStep($workflowId, $hydrate = false)
+    {
+        $WorkflowStepsTable = $this->Workflows->WorkflowSteps;
+        $workflowFirstStep = $WorkflowStepsTable
+            ->find()
+            ->matching('Workflows', function ($q) use ($workflowId) {
+                return $q->where(['Workflows.id' => $workflowId]);
+            })
+            ->contain(['SecurityRoles'])
+            ->where([
+                $WorkflowStepsTable->aliasField('category') => WorkflowSteps::TO_DO
+            ])
+            ->hydrate($hydrate)
+            ->first();
+
+        return $workflowFirstStep;
     }
 }
