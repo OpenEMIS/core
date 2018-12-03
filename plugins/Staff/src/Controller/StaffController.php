@@ -6,7 +6,9 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 use App\Controller\AppController;
+use Cake\Routing\Router;
 
 class StaffController extends AppController
 {
@@ -49,6 +51,9 @@ class StaffController extends AppController
         'Medications',
         'Tests',
 
+        // staff attendances
+        'StaffAttendances',
+
         // special needs
         'SpecialNeedsReferrals',
         'SpecialNeedsAssessments',
@@ -70,7 +75,6 @@ class StaffController extends AppController
             'Sections'          => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
             'Classes'           => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
             'Qualifications'    => ['className' => 'Staff.Qualifications'],
-            'Absences'          => ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
             'Extracurriculars'  => ['className' => 'Staff.Extracurriculars'],
             'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
             'ImportStaff'       => ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
@@ -84,6 +88,8 @@ class StaffController extends AppController
         $this->loadComponent('Institution.InstitutionAccessControl');
 
         $this->set('contentHeader', 'Staff');
+
+        $this->attachAngularModules();
     }
 
     // CAv4
@@ -203,6 +209,63 @@ class StaffController extends AppController
     }
     // End Health
     
+    // Historical
+    public function HistoricalStaffPositions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffPositions']);
+    }
+    // End Historical
+
+    public function InstitutionStaffAttendanceActivities()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendanceActivities']);
+    }
+
+    // AngularJS
+    public function StaffAttendances()
+    {
+        $_edit = $this->AccessControl->check(['Staff', 'StaffAttendances', 'edit']);
+        $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $staffId = $session->read('Staff.Staff.id');
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        $tabElements = $this->getCareerTabElements();
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+
+        $historyUrl = $this->ControllerAction->url('index');
+        $historyUrl['plugin'] = 'Staff';
+        $historyUrl['controller'] = 'Staff';
+        $historyUrl['action'] = 'InstitutionStaffAttendanceActivities';
+
+        $this->set('historyUrl', Router::url($historyUrl));
+        $this->set('_edit', $_edit);
+        $this->set('_history', $_history);
+        $this->set('institution_id', $institutionId);
+        $this->set('staff_id', $staffId);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', 'StaffAttendances');
+        $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
+    }
+
+    private function attachAngularModules()
+    {
+        $action = $this->request->action;
+        switch ($action) {
+            case 'StaffAttendances':
+                $this->Angular->addModules([
+                    'staff.attendances.ctrl',
+                    'staff.attendances.svc'
+                ]);
+                break;
+        }
+    }
+    
     // Special Needs
     public function SpecialNeedsReferrals()
     {
@@ -264,15 +327,22 @@ class StaffController extends AppController
         /**
          * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
+        $userId = null;
         $session = $this->request->session();
-        if ($session->check('Staff.Staff.id')) {
-            $header = '';
+        if (isset($this->request->query['user_id']) && $this->request->query['user_id']) {
+            $userId = $this->request->query['user_id'];
+        }else if ($session->check('Staff.Staff.id')) {
             $userId = $session->read('Staff.Staff.id');
+        }
+        if ($userId) {
+            $header = '';
+            // $userId = $session->read('Staff.Staff.id');
 
-            if ($session->check('Staff.Staff.name')) {
-                $header = $session->read('Staff.Staff.name');
-            }
-
+            // if ($session->check('Staff.Staff.name')) {
+            //     $header = $session->read('Staff.Staff.name');
+            // }
+            $entity = $this->Staff->get($userId);
+            $header = $entity->name;
             $primaryKey = $model->primaryKey();
 
             $alias = $model->alias;
@@ -346,19 +416,39 @@ class StaffController extends AppController
         $session = $this->request->session();
 
         if ($model->alias() != 'Staff') {
-            if ($session->check('Staff.Staff.id')) {
+            if ($this->request->query('user_id') !== null) {
+                $userId = $this->request->query('user_id');
+            } else if ($session->check('Staff.Staff.id')) {
                 $userId = $session->read('Staff.Staff.id');
-                if ($model->hasField('security_user_id')) {
-                    $query->where([$model->aliasField('security_user_id') => $userId]);
-                } else if ($model->hasField('staff_id')) {
-                    $query->where([$model->aliasField('staff_id') => $userId]);
-                }
             } else {
                 $this->Alert->warning('general.noData');
                 $event->stopPropagation();
                 return $this->redirect(['action' => 'index']);
             }
+            if ($userId) {
+                if ($model->hasField('security_user_id')) {
+                    $query->where([$model->aliasField('security_user_id') => $userId]);
+                } else if ($model->hasField('staff_id')) {
+                    $query->where([$model->aliasField('staff_id') => $userId]);
+                }
+            }
         }
+
+
+        // if ($model->alias() != 'Staff') {
+        //     if ($session->check('Staff.Staff.id')) {
+        //         $userId = $session->read('Staff.Staff.id');
+        //         if ($model->hasField('security_user_id')) {
+        //             $query->where([$model->aliasField('security_user_id') => $userId]);
+        //         } else if ($model->hasField('staff_id')) {
+        //             $query->where([$model->aliasField('staff_id') => $userId]);
+        //         }
+        //     } else {
+        //         $this->Alert->warning('general.noData');
+        //         $event->stopPropagation();
+        //         return $this->redirect(['action' => 'index']);
+        //     }
+        // }
     }
 
     public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)

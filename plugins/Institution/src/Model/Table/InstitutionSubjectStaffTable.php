@@ -21,6 +21,10 @@ class InstitutionSubjectStaffTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index']
+        ]);
     }
 
     public function implementedEvents()
@@ -210,5 +214,185 @@ class InstitutionSubjectStaffTable extends AppTable
                 );
             }
         // }
+    }
+
+    public function findSubjectEditPermission(Query $query, array $options)
+    {
+        $subjectId = $options['subject_id'];
+        $userId = $options['user']['id']; // current user
+
+        if ($options['user']['super_admin'] == 0) { // if he is not super admin
+            $query
+                ->find('bySecurityAccess')
+                ->matching('InstitutionSubjects', function ($q) use ($subjectId) {
+                    return $q->where([
+                        'InstitutionSubjects.education_subject_id' => $subjectId
+                    ]);
+                })
+                ->where([
+                    $this->aliasField('staff_id') => $userId
+                ])
+                ->group([$this->aliasField('staff_id')]);
+
+            $query
+                ->find('bySecurityRoleAccess');
+
+        }
+    }
+
+    public function findBySecurityAccess(Query $query, array $options)
+    {
+        if (array_key_exists('id', $options['user'])) {
+            $userId = $options['user']['id'];
+
+            $Institutions = TableRegistry::get('Institution.Institutions');
+
+            $institutionQuery = $Institutions->find()
+                ->select([
+                    'institution_id' => $Institutions->aliasField('id'),
+                    'security_group_id' => 'SecurityGroupUsers.security_group_id',
+                    'security_role_id' => 'SecurityGroupUsers.security_role_id'
+                ])
+                ->innerJoin(['SecurityGroupInstitutions' => 'security_group_institutions'], [
+                    ['SecurityGroupInstitutions.institution_id = ' . $Institutions->aliasField('id')]
+                ])
+                ->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
+                    [
+                        'SecurityGroupUsers.security_group_id = SecurityGroupInstitutions.security_group_id',
+                        'SecurityGroupUsers.security_user_id = ' . $userId
+                    ]
+                ])
+                ->group([$Institutions->aliasField('id'), 'SecurityGroupUsers.security_group_id', 'SecurityGroupUsers.security_role_id']);
+
+            /* Generated SQL: */
+
+            // SELECT institutions.id AS institution_id, security_group_users.security_group_id, security_group_users.security_role_id
+            // FROM institutions
+            // INNER JOIN security_group_institutions ON security_group_institutions.institution_id = institutions.id
+            // INNER JOIN security_group_users
+            //     ON security_group_users.security_group_id = security_group_institutions.security_group_id
+            //     AND security_group_users.security_user_id = 4
+            // GROUP BY institutions.id, security_group_users.security_group_id, security_group_users.security_role_id
+
+
+            $areaQuery = $Institutions->find()
+                ->select([
+                    'institution_id' => $Institutions->aliasField('id'),
+                    'security_group_id' => 'SecurityGroupUsers.security_group_id',
+                    'security_role_id' => 'SecurityGroupUsers.security_role_id'
+                ])
+                ->innerJoin(['Areas' => 'areas'], ['Areas.id = ' . $Institutions->aliasField('area_id')])
+                ->innerJoin(['AreasAll' => 'areas'], [
+                    'AreasAll.lft <= Areas.lft',
+                    'AreasAll.rght >= Areas.rght'
+                ])
+                ->innerJoin(['SecurityGroupAreas' => 'security_group_areas'], [
+                    'SecurityGroupAreas.area_id = AreasAll.id'
+                ])
+                ->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
+                    [
+                        'SecurityGroupUsers.security_group_id = SecurityGroupAreas.security_group_id',
+                        'SecurityGroupUsers.security_user_id = ' . $userId
+                    ]
+                ])
+                ->group([$Institutions->aliasField('id'), 'SecurityGroupUsers.security_group_id', 'SecurityGroupUsers.security_role_id']);
+
+            /* Generated SQL: */
+
+            // SELECT institutions.id AS institution_id, security_group_users.security_group_id, security_group_users.security_role_id
+            // FROM institutions
+            // INNER JOIN areas ON areas.id = institutions.area_id
+            // INNER JOIN areas AS AreaAll
+            //     ON AreaAll.lft <= areas.lft
+            //     AND AreaAll.rght >= areas.rght
+            // INNER JOIN security_group_areas ON security_group_areas.area_id = AreaAll.id
+            // INNER JOIN security_group_users
+            //     ON security_group_users.security_group_id = security_group_areas.security_group_id
+            //     AND security_group_users.security_user_id = 4
+            // GROUP BY institutions.id, security_group_users.security_group_id, security_group_users.security_role_id
+
+            $query->join([
+                'table' => '((' . $institutionQuery->sql() . ' ) UNION ( ' . $areaQuery->sql() . '))', // inner join subquery
+                'alias' => 'SecurityAccess',
+                'type' => 'inner',
+                'conditions' => ['SecurityAccess.institution_id = ' . $this->aliasField('institution_id')]
+            ]);
+        }
+
+        return $query;
+    }
+
+    public function findBySecurityRoleAccess(Query $query, array $options)
+    {
+        // This logic is dependent on SecurityAccessBehavior because it relies on SecurityAccess join table
+        // This logic will only be triggered when the table is accessed by RestfulController
+
+        if (array_key_exists('user', $options) && is_array($options['user'])) { // the user object is set by RestfulComponent
+            $user = $options['user'];
+            if ($user['super_admin'] == 0) { // if he is not super admin
+                $userId = $user['id'];
+                $today = Date::now();
+
+                $query->innerJoin(['SecurityRoleFunctions' => 'security_role_functions'], [
+                    'SecurityRoleFunctions.security_role_id = SecurityAccess.security_role_id',
+                    'SecurityRoleFunctions.`_view` = 1' // check if the role have view access
+                ])                
+                ->innerJoin(['SecurityFunctions' => 'security_functions'], [
+                    'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    "SecurityFunctions.controller = 'Institutions'" // only restricted to permissions of Institutions
+                ])
+                ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                    'InstitutionClassSubjects.institution_subject_id = InstitutionSubjectStaff.institution_subject_id'
+                ])
+                ->where([
+                    // basically if AllSubjects permission is granted, the user should see all subjects of that classes
+                    // if MySubjects permission is granted, the user must be a teacher of that subject
+                    'OR' => [
+                        [
+                            'OR' => [ // AllSubjects permissions
+                                "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
+                                "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
+                            ]
+                        ], [
+                            'AND' => [
+                                [
+                                    'OR' => [ // MySubjects permissions
+                                        "SecurityFunctions.`_view` LIKE '%Subjects.index%'",
+                                        "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
+                                    ]
+                                ],
+                                // 'InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id',
+                                'InstitutionSubjectStaff.institution_subject_id = InstitutionSubjectStaff.institution_subject_id',
+                                'InstitutionSubjectStaff.staff_id' => $userId,
+                                'OR' => [
+                                    'InstitutionSubjectStaff.end_date IS NULL',
+                                    'InstitutionSubjectStaff.end_date >= ' => $today->format('Y-m-d')
+                                ]
+                            ]
+                        ], [
+                            'AND' => [
+                                [
+                                    'OR' => [
+                                        "SecurityFunctions.`_view` LIKE '%Classes.index%'",
+                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'"
+                                    ]
+                                ], [
+                                    'EXISTS (
+                                        SELECT 1
+                                        FROM institution_class_subjects
+                                        JOIN institution_classes
+                                        ON institution_classes.id = institution_class_subjects.institution_class_id
+                                        AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes.secondary_staff_id = ' . $userId . ')
+                                        WHERE institution_class_subjects.institution_subject_id = InstitutionSubjectStaff.institution_subject_id
+                                        LIMIT 1
+                                    )'
+                                ]
+                            ]
+                        ]
+                    ]
+                ])
+                ->group([$this->aliasField('id')]); // so it doesn't show duplicate subjects
+            }
+        }
     }
 }
