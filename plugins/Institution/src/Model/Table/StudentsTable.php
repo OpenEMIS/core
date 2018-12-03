@@ -568,11 +568,20 @@ class StudentsTable extends ControllerActionTable
         // permission checking for import button
         $hasImportAdmissionPermission = $this->AccessControl->check(['Institutions', 'ImportStudentAdmission', 'add']);
         $hasImportBodyMassPermission = $this->AccessControl->check(['Institutions', 'ImportStudentBodyMasses', 'add']);
+        $hasImportGuardianPermission = $this->AccessControl->check(['Institutions', 'ImportStudentGuardians', 'add']);
 
         if (!$hasImportAdmissionPermission && $hasImportBodyMassPermission) {
             if ($this->behaviors()->has('ImportLink')) {
                 $this->behaviors()->get('ImportLink')->config([
                    'import_model' => 'ImportStudentBodyMasses'
+                ]);
+            }
+        }
+
+        if (!$hasImportAdmissionPermission && !$hasImportBodyMassPermission) {
+            if ($this->behaviors()->has('ImportLink')) {
+                $this->behaviors()->get('ImportLink')->config([
+                   'import_model' => 'ImportStudentGuardians'
                 ]);
             }
         }
