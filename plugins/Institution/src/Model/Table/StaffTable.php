@@ -40,6 +40,8 @@ class StaffTable extends ControllerActionTable
     const PENDING_PROFILE = -1;
     const PENDING_TRANSFERIN = -2;
     const PENDING_TRANSFEROUT = -3;
+    const PENDING_RELEASEIN = -4;
+    const PENDING_RELEASEOUT = -5;
 
     private $dashboardQuery = null;
 
@@ -56,6 +58,7 @@ class StaffTable extends ControllerActionTable
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffRelease', ['className' => 'Institution.StaffRelease', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -73,7 +76,7 @@ class StaffTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StaffRoom' => ['index', 'add'],
+            'StaffRoom' => ['index', 'edit'],
             'Staff' => ['index', 'add'],
             'ClassStudents' => ['index'],
             'SubjectStudents' => ['index'],
@@ -184,6 +187,10 @@ class StaffTable extends ControllerActionTable
             ])
             ->add('staff_assignment', 'ruleTransferRequestExists', [
                 'rule' => ['checkPendingStaffTransfer'],
+                'on' => 'create'
+            ])
+            ->add('staff_assignment', 'ruleReleaseRequestExists', [
+                'rule' => ['checkPendingStaffRelease'],
                 'on' => 'create'
             ])
             ->add('staff_assignment', 'ruleCheckStaffAssignment', [
@@ -422,6 +429,7 @@ class StaffTable extends ControllerActionTable
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
 
         $selectedStatus = $this->request->query('staff_status_id');
+
         switch ($selectedStatus) {
             case self::PENDING_PROFILE:
                 $event->stopPropagation();
@@ -443,6 +451,24 @@ class StaffTable extends ControllerActionTable
                     'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'controller' => 'Institutions',
                     'action' => 'StaffTransferOut'
+                ]);
+                break;
+            case self::PENDING_RELEASEIN:
+                $event->stopPropagation();
+                return $this->controller->redirect([
+                    'plugin'=>'Institution',
+                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StaffReleaseIn'
+                ]);
+                break;
+            case self::PENDING_RELEASEOUT:
+                $event->stopPropagation();
+                return $this->controller->redirect([
+                    'plugin' => 'Institution',
+                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StaffRelease'
                 ]);
                 break;
         }
@@ -554,6 +580,22 @@ class StaffTable extends ControllerActionTable
         $statusOptions[self::PENDING_PROFILE] = __('Pending Change in Assignment'). ' - '. $staffPositionProfilesRecordCount;
         $statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In'). ' - ' . $staffTransferInRecord;
         $statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out'). ' - ' . $staffTransferOutRecord;
+
+        // Display Staff Release if staff release records
+        $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
+
+            $InstitutionStaffReleasesTable = TableRegistry::get('Institution.InstitutionStaffReleases');
+            $staffReleaseInRecord = $InstitutionStaffReleasesTable
+            ->find('InstitutionStaffReleaseIn', ['institution_id' => $institutionId, 'pending_records' => true])
+            ->count();
+
+            $staffReleaseOutRecord = $InstitutionStaffReleasesTable
+            ->find('InstitutionStaffRelease', ['institution_id' => $institutionId, 'pending_records' => true])
+            ->count();
+
+            $statusOptions[self::PENDING_RELEASEIN] = __('Pending Release In'). ' - ' . $staffReleaseInRecord;
+            $statusOptions[self::PENDING_RELEASEOUT] = __('Pending Release Out'). '-' . $staffReleaseOutRecord;
+
 
         $selectedStatus = $this->queryString('staff_status_id', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
@@ -804,7 +846,7 @@ class StaffTable extends ControllerActionTable
             'userRole' => 'Staff',
             'action' => $this->action,
             'id' => $entity->id,
-            'userId' => $entity->staff_id
+            'user_id' => $entity->staff_id
         ];
         $tabElements = $this->controller->getCareerTabElements($options);
 
@@ -1026,7 +1068,7 @@ class StaffTable extends ControllerActionTable
         $staff = $this->Users->get($entity->staff_id);
         $entity->showDeletedValueAs = $staff->name_with_id;
 
-        $extra['excludedModels'] = [$this->StaffPositionProfiles->alias(), $this->StaffTransferOut->alias()];
+        $extra['excludedModels'] = [$this->StaffPositionProfiles->alias(), $this->StaffTransferOut->alias(), $this->StaffRelease->alias()];
 
         // staff transfer out
         $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
@@ -1042,6 +1084,21 @@ class StaffTable extends ControllerActionTable
             ])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];
+
+        // staff release out
+        $InstitutionStaffReleases = TableRegistry::get('Institution.InstitutionStaffReleases');
+        $releaseDoneStatus = $InstitutionStaffReleases::DONE;
+
+        $releaseOutRecordsCount = $InstitutionStaffReleases->find()
+            ->matching('Statuses', function ($q) use ($releaseDoneStatus) {
+                return $q->where(['category <>' => $releaseDoneStatus]);
+            })
+            ->where([
+                $InstitutionStaffReleases->aliasField('staff_id') => $entity->staff_id,
+                $InstitutionStaffReleases->aliasField('previous_institution_id') => $entity->institution_id
+            ])
+            ->count();
+        $extra['associatedRecords'][] = ['model' => 'StaffRelease', 'count' => $releaseOutRecordsCount];
 
         $associationArray = [
             'Institution.StaffPositionProfiles' => 'StaffChangeInAssignment',

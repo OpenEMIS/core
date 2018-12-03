@@ -66,7 +66,7 @@ class UsersTable extends AppTable
         $this->addBehavior('Area.Areapicker');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StaffRoom' => ['index', 'add'],
+            'StaffRoom' => ['index', 'edit'],
             'ClassStudents' => ['index'],
             'OpenEMIS_Classroom' => ['view', 'edit']
         ]);
@@ -189,8 +189,8 @@ class UsersTable extends AppTable
         $model->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $model->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
-            'foreignKey' => 'security_role_id',
-            'targetForeignKey' => 'security_user_id',
+            'foreignKey' => 'security_user_id',
+            'targetForeignKey' => 'security_role_id',
             'through' => 'Security.SecurityGroupUsers',
             'dependent' => true
         ]);
@@ -601,7 +601,7 @@ class UsersTable extends AppTable
                     return in_array($value, $accountTypes);
                 },
                 'message' => $this->getMessage('Import.value_not_in_list'),
-                'on' => function ($context) {  
+                'on' => function ($context) {
                     if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
                         return true;
                     }
