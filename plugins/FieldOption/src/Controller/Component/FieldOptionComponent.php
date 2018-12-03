@@ -45,7 +45,6 @@ class FieldOptionComponent extends Component
         'VisitPurposeTypes' => ['className' => 'Student.StudentVisitPurposeTypes', 'parent' => 'Student'],
 
     // Staff
-        'StaffAbsenceReasons' => ['className' => 'Institution.StaffAbsenceReasons', 'parent' => 'Staff'],
         'StaffBehaviourCategories' => ['className' => 'Staff.StaffBehaviourCategories', 'parent' => 'Staff'],
         'StaffLeaveTypes' => ['className' => 'Staff.StaffLeaveTypes', 'parent' => 'Staff'],
         'StaffTypes' => ['className' => 'Staff.StaffTypes', 'parent' => 'Staff'],

@@ -28,6 +28,8 @@ class ProgrammesTable extends ControllerActionTable
 		$this->toggle('remove', false);
 		$this->toggle('add', false);
 		$this->toggle('search', false);
+
+        $this->addBehavior('User.User');
 	}
 
 	public function onGetEducationGradeId(Event $event, Entity $entity)
@@ -50,6 +52,8 @@ class ProgrammesTable extends ControllerActionTable
 		$this->fields['student_id']['visible'] = 'false';
 		$this->fields['start_year']['visible'] = 'false';
 		$this->fields['end_year']['visible'] = 'false';
+		$this->fields['photo_content']['visible'] = 'false';
+		$this->fields['openemis_no']['visible'] = 'false';
 		$this->fields['institution_id']['type'] = 'integer';
 
 		$this->setFieldOrder([
@@ -73,18 +77,26 @@ class ProgrammesTable extends ControllerActionTable
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {    	
+        $this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
+        $this->field('openemis_no',['before' => 'student_id']);
+        $this->field('student_status_id',['after' => 'student_id']);
+        $this->field('start_year', ['visible' => 'false']);
+        $this->field('end_year', ['visible' => 'false']);
+        $this->setupTabElements();
+    }
+
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
 	{
-		parent::onUpdateActionButtons($event, $entity, $buttons);
-
 		if (array_key_exists('view', $buttons)) {
 			$url = [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
-				'action' => 'Students',
+				'action' => 'StudentProgrammes',
 				'view',
 				$this->paramsEncode(['id' => $entity->id]),
-				'institution_id' => $entity->institution->id,
+				'institution_id' => $entity->institution->id
 			];
 			$buttons['view']['url'] = $url;
 		}
@@ -96,10 +108,10 @@ class ProgrammesTable extends ControllerActionTable
 			$url = [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
-				'action' => 'Students',
+				'action' => 'StudentProgrammes',
 				'edit',
 				$this->paramsEncode(['id' => $entity->id]),
-				'institution_id' => $entity->institution->id,
+				'institution_id' => $entity->institution->id
 			];
 			$buttons['edit']['url'] = $url;
 		} else {
@@ -107,9 +119,17 @@ class ProgrammesTable extends ControllerActionTable
 				unset($buttons['edit']);
 			}
 		}
-
-		return $buttons;
+		return parent::onUpdateActionButtons($event, $entity, $buttons);
 	}
+	
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->openemis_no;
+        }
+        return $value;
+    }
 
 	private function setupTabElements()
 	{
@@ -123,4 +143,47 @@ class ProgrammesTable extends ControllerActionTable
 	{
 		$this->setupTabElements();
 	}
+
+    public function editBeforeQuery(Event $event, Query $query)
+    {
+        $query->contain(['Users', 'EducationGrades', 'AcademicPeriods', 'StudentStatuses']);
+    }
+
+    public function editAfterAction(Event $event, Entity $entity)
+    {
+        $this->field('start_year', ['visible' => 'false']);
+        $this->field('end_year', ['visible' => 'false']);
+
+        // Start PHPOE-1897
+        $statuses = $this->StudentStatuses->findCodeList();
+        if ($entity->student_status_id != $statuses['CURRENT']) {
+            $event->stopPropagation();
+            $urlParams = $this->url('view');
+            return $this->controller->redirect($urlParams);
+        // End PHPOE-1897
+        } else {
+            $this->field('student_id', [
+                'type' => 'readonly',
+                'order' => 10,
+                'attr' => ['value' => $entity->user->name_with_id]
+            ]);
+
+            $this->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $entity->education_grade->programme_grade_name]]);
+            $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $entity->academic_period->name]]);
+            $this->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
+
+            $period = $entity->academic_period;
+            $dateOptions = [
+                'startDate' => $period->start_date->format('d-m-Y'),
+                'endDate' => $period->end_date->format('d-m-Y')
+            ];
+
+            $this->fields['start_date']['date_options'] = $dateOptions;
+            $this->fields['end_date']['date_options'] = $dateOptions;
+
+            $this->Session->write('Student.Students.id', $entity->student_id);
+            $this->Session->write('Student.Students.name', $entity->user->name);
+            $this->setupTabElements($entity);
+        }
+    }	
 }
