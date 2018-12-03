@@ -11,9 +11,20 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         Staff: 'Institution.Staff'
     };
 
+    var translateText = {
+        'original': {
+            'Date': 'Date',
+            'TimeIn': 'Time In',
+            'TimeOut': 'Time Out'
+        },
+        'translated': {
+        }
+    };
+
     var service = {
         init: init,
         translate: translate,
+        getTranslatedText: getTranslatedText,
         getAcademicPeriodOptions: getAcademicPeriodOptions,
         getWeekListOptions: getWeekListOptions,
         getStaffAttendances: getStaffAttendances,
@@ -34,6 +45,23 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
             deferred.resolve(translated);
         };
         return translation.translate(data, {success: success, defer: true});
+    }
+
+    // data service
+    function getTranslatedText() {
+        var success = function(response, deferred) {
+            var translatedObj = response.data;
+            if (angular.isDefined(translatedObj)) {
+                translateText = translatedObj;
+            }
+            deferred.resolve(angular.isDefined(translatedObj));
+        };
+
+        KdDataSvc.init({translation: 'translate'});
+        return translation.translate(translateText.original, {
+            success: success,
+            defer: true
+        });
     }
 
     function getAcademicPeriodOptions(institutionId) {
@@ -108,14 +136,14 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         }
 
         columnDefs.push({
-            headerName: "Date",
+            headerName: translateText.translated.Date,
             field: "date",
             filter: "text",
             menuTabs: []
         });
 
         columnDefs.push({
-            headerName: "Time in",
+            headerName: translateText.translated.TimeIn,
             field: "time_in",
             menuTabs: [],
             cellRenderer: function(params) {
@@ -126,7 +154,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         });
 
         columnDefs.push({
-            headerName: "Time out",
+            headerName: translateText.translated.TimeOut,
             field: "time_out",
             menuTabs: [],
             cellRenderer: function(params) {
