@@ -22,10 +22,15 @@ class InstallerController extends AppController
             ]
         ]);
 
+        $theme = 'core';
+        if (Configure::read('installerSchool')) {
+            $theme = 'school';
+        }
+
         $this->loadComponent('RequestHandler');
         $this->loadComponent('OpenEmis.OpenEmis', [
             'productName' => Configure::read('productName'),
-            'theme' => 'school'
+            'theme' => $theme
         ]);
 
         $this->set('SystemVersion', '1.0.0');
