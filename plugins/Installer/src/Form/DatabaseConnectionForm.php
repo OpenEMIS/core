@@ -40,7 +40,7 @@ return [
 ];
 ";
 
-    const APP_EXTRA_TEMPLATE = "<?php
+    private $app_extra_template = "<?php
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 
@@ -102,11 +102,12 @@ return [
             //'charset' => 'utf-8',
             //'headerCharset' => 'utf-8',
         ],
-    ],
-
-    'schoolMode' => true
-];
+    ]
 ";
+
+    private $app_extra_school_mode = ",'schoolMode' => true";
+
+    private $app_extra_template_end = "];";
 
     /**
      * Builds the schema for the modelless form
@@ -164,8 +165,8 @@ return [
         $root = $data['database_admin_user'];
         $rootPass = $data['database_admin_password'];
 
-        $db = isset($data['datasource_db']) ? $data['datasource_db'] : 'oe_school';
-        $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : 'oe_school_user';
+        $db = isset($data['datasource_db']) ? $data['datasource_db'] : Configure::read('installerSchool') ? 'oe_school' : 'oe_core';
+        $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : Configure::read('installerSchool') ? 'oe_school_user' : 'oe_core_user';
         $dbPassword = isset($data['datasource_password']) ? $data['datasource_password'] : bin2hex(random_bytes(4));
 
         $connectionString = sprintf('mysql:host=%s;port=%d', $host, $port);
@@ -186,7 +187,12 @@ return [
             $pubKey = openssl_pkey_get_details($res);
             fwrite($publicKeyHandle, $pubKey['key']);
             fclose($publicKeyHandle);
-            fwrite($appExtraHandle, self::APP_EXTRA_TEMPLATE);
+            $app_extra_text = $this->app_extra_template;
+            if (Configure::read('installerSchool')) {
+                $app_extra_text .= $this->app_extra_school_mode;
+            }
+            $app_extra_text .= $this->app_extra_template_end;
+            fwrite($appExtraHandle, $app_extra_text);
             $this->createDb($pdo, $db);
             $this->createDbUser($pdo, $dbUserHostPermission, $dbUser, $dbPassword, $db);
             $template = str_replace('{database}', "'$db'", $template);
