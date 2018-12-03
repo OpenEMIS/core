@@ -208,6 +208,13 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
     // End Health
+    
+    // Historical
+    public function HistoricalStaffPositions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffPositions']);
+    }
+    // End Historical
 
     public function InstitutionStaffAttendanceActivities()
     {
