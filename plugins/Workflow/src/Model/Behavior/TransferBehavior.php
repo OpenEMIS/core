@@ -23,7 +23,9 @@ class TransferBehavior extends Behavior
             'Institution.StaffTransferIn',
             'Institution.StaffTransferOut',
             'Institution.StudentTransferIn',
-            'Institution.StudentTransferOut'
+            'Institution.StudentTransferOut',
+            'Institution.StaffReleaseIn',
+            'Institution.StaffRelease'
         ];
 
         $this->transferWorkflowIds = $this->_table->Workflows->find()

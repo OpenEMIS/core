@@ -119,9 +119,9 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
                 $oldRecord = $StaffTable->get($entity->previous_institution_staff_id);
 
                 if ($transferType == self::FULL_TRANSFER) {
-                    // end previous institution staff record
-                    $oldRecord->end_date = $entity->previous_end_date;
-                    $StaffTable->save($oldRecord);
+                     // end previous institution staff record
+                     $oldRecord->end_date = $entity->previous_end_date;
+                     $StaffTable->save($oldRecord);
                 } else if ($transferType == self::PARTIAL_TRANSFER) {
                     // end previous institution staff record
                     $oldRecord->end_date = $entity->previous_end_date;

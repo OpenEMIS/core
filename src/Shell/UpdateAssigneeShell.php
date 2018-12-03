@@ -82,8 +82,8 @@ class UpdateAssigneeShell extends Shell
 
 			$unassignedRecords = $model
 				->find()
-				->contain(['Assignees'])
-				->matching('Statuses', function ($q) {
+				->contain(['Assignees', 'Statuses.SecurityRoles'])
+				->innerJoinWith('Statuses', function ($q) {
 					return $q->where(['Statuses.category <> ' => self::DONE]);
 				})
 				->where($where)
@@ -93,7 +93,7 @@ class UpdateAssigneeShell extends Shell
 
 			foreach ($unassignedRecords as $key => $unassignedEntity) {
 				$stepId = $unassignedEntity->status_id;
-				$category = $unassignedEntity->_matchingData['Statuses']->category;
+				$category = $unassignedEntity->status->category;
 				$createdUserId = $unassignedEntity->created_user_id;
 
 				$params = [
@@ -112,24 +112,72 @@ class UpdateAssigneeShell extends Shell
 					$params = $event->result;
 				}
 
-				$assigneeId = $this->SecurityGroupUsers->getFirstAssignee($params);
+				// POCOR-4666: Only reassign if the current assignee does not have any of the configured security roles for the workflow step
+				$toReassign = true;
+				if ($unassignedEntity->has('assignee_id') && !empty($unassignedEntity->assignee_id)) {
+					$currentAssigneeRoles = [];
+					$workflowStepRoles = Hash::extract($unassignedEntity->status, 'security_roles.{n}.id');
 
-				if (!empty($assigneeId)) {
-					$this->out($workflowModelEntity->name.' : Affected Record Id: '.$unassignedEntity->id.'; Assignee Id: '.$assigneeId);
-				} else {
-					$this->out($workflowModelEntity->name.' : Affected Record Id: '.$unassignedEntity->id.'; Set to unassigned.');
+					if (!empty($workflowStepRoles)) {
+						$roleQuery = $this->SecurityGroupUsers->find()
+							->where([
+								$this->SecurityGroupUsers->aliasField('security_user_id') => $unassignedEntity->assignee_id,
+								$this->SecurityGroupUsers->aliasField('security_role_id IN ') => $workflowStepRoles
+							]);
+
+						if ($isSchoolBased) {
+							if (array_key_exists('institution_id', $params) && !empty($params['institution_id'])) {
+								$institutionObj = $this->Institutions->find()
+									->contain(['Areas'])
+									->where([$this->Institutions->aliasField('id') => $params['institution_id']])
+									->first();
+								$securityGroupId = $institutionObj->security_group_id;
+								$areaObj = $institutionObj->area;
+
+								$schoolBasedRoleQuery = clone $roleQuery;
+								$schoolBasedRoles = $schoolBasedRoleQuery
+									->where([$this->SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId])
+									->toArray();
+
+								$regionBasedRoleQuery = clone $roleQuery;
+								$regionBasedRoles = $regionBasedRoleQuery
+									->matching('SecurityGroups.Areas', function ($q) use ($areaObj) {
+										return $q->where([
+										    'Areas.lft <= ' => $areaObj->lft,
+										    'Areas.rght >= ' => $areaObj->lft
+										]);
+									})
+									->toArray();
+
+								$currentAssigneeRoles = $schoolBasedRoles + $regionBasedRoles;
+							}
+						} else {
+							$currentAssigneeRoles = $roleQuery->toArray();
+						}
+					}
+					$toReassign = empty($currentAssigneeRoles);
 				}
 
-				/* POCOR-3726 - Adding alert to workflow
-				- This logic will add the update assignee commment to the workflow transition.
-				- Put before the saving so the aftersave will be able to get the latest update assignee comment.
-				*/
-				$this->WorkflowTransitions->trackChanges($workflowModelEntity, $unassignedEntity, $assigneeId);
+				if ($toReassign) {
+					$assigneeId = $this->SecurityGroupUsers->getFirstAssignee($params);
 
-				// using save instead of updateAll to trigger aftersave.
-				$unassignedEntity->assignee_id = $assigneeId;
-                $model->save($unassignedEntity);
-                // end of POCOR-3726
+					if (!empty($assigneeId)) {
+						$this->out($workflowModelEntity->name.' : Affected Record Id: '.$unassignedEntity->id.'; Assignee Id: '.$assigneeId);
+					} else {
+						$this->out($workflowModelEntity->name.' : Affected Record Id: '.$unassignedEntity->id.'; Set to unassigned.');
+					}
+
+					/* POCOR-3726 - Adding alert to workflow
+					- This logic will add the update assignee commment to the workflow transition.
+					- Put before the saving so the aftersave will be able to get the latest update assignee comment.
+					*/
+					$this->WorkflowTransitions->trackChanges($workflowModelEntity, $unassignedEntity, $assigneeId);
+
+					// using save instead of updateAll to trigger aftersave.
+					$unassignedEntity->assignee_id = $assigneeId;
+					$model->save($unassignedEntity);
+					// end of POCOR-3726
+				}
 			}
 
 			$this->out("End Processing Update Assignee Shell of ".$workflowModelEntity->name);
