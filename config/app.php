@@ -338,5 +338,8 @@ return [
      */
     'Session' => [
         'defaults' => 'php',
-    ]
+    ],
+    'productName' => "OpenEMIS",
+    'productLongName' => "Open Education Management Information System",
+    'installerSchool' => false
 ];
