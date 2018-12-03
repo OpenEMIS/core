@@ -35,6 +35,7 @@ class ImportStudentGuardiansTable extends AppTable
         $events = array_merge($events, $newEvent);
         return $events;
     }
+
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $plugin = $toolbarButtons['back']['url']['plugin'];
