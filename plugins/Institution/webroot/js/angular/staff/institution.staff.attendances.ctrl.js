@@ -73,7 +73,10 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         vm.gridOptions.context.action = vm.action;
         vm.gridOptions.context.history = vm.history;
         UtilsSvc.isAppendLoader(true);
-        InstitutionStaffAttendancesSvc.getAcademicPeriodOptions()
+        InstitutionStaffAttendancesSvc.getTranslatedText().
+        then(function(isTranslated) {
+            return InstitutionStaffAttendancesSvc.getAcademicPeriodOptions();
+        }, vm.error)
         .then(function(academicPeriods) {
             vm.setAcademicPeriodList(academicPeriods);
             return InstitutionStaffAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod);
