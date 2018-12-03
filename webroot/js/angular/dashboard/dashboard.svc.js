@@ -60,6 +60,14 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StaffTransferOut'
         },
+        StaffRelease: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StaffRelease'
+        },
+        StaffReleaseIn: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StaffReleaseIn'
+        },
         StudentAdmissionTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StudentAdmission'

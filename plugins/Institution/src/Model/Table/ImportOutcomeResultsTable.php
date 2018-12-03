@@ -18,7 +18,7 @@ class ImportOutcomeResultsTable extends AppTable
         $this->table('import_mapping');
         parent::initialize($config);
 
-        $this->addBehavior('Import.Import', [
+        $this->addBehavior('Import.ImportOutcomeResult', [
             'plugin' => 'Institution',
             'model' => 'InstitutionOutcomeResults',
             'backUrl' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentOutcomes']
@@ -40,9 +40,6 @@ class ImportOutcomeResultsTable extends AppTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.import.onImportPopulateOutcomeCriteriasData'] = 'onImportPopulateOutcomeCriteriasData';
-        $events['Model.import.onImportPopulateUsersData'] = 'onImportPopulateUsersData';
-        $events['Model.import.onImportPopulateOutcomeGradingOptionsData'] = 'onImportPopulateOutcomeGradingOptionsData';
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
         return $events;
     }
@@ -51,13 +48,13 @@ class ImportOutcomeResultsTable extends AppTable
     {
         $validator = parent::validationDefault($validator);
         return $validator
-            ->notEmpty(['academic_period', 'outcome_template', 'outcome_period', 'select_file']);
+            ->notEmpty(['academic_period','class' ,'education_subject', 'outcome_template', 'outcome_period', 'select_file']);
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         $request = $this->request;
-        if (empty($request->query('template')) || empty($request->query('outcome_period'))) {
+        if (empty($request->query('education_subject'))) {
             unset($buttons[0]);
             unset($buttons[1]);
         }
@@ -68,18 +65,100 @@ class ImportOutcomeResultsTable extends AppTable
         $request = $this->request;
         unset($request->query['period']);
         unset($request->query['class']);
-        unset($request->query['template']);
+        unset($request->query['education_subject']);
+        unset($request->query['outcome_template']);
         unset($request->query['outcome_period']);
     }
 
     public function addAfterAction(Event $event, Entity $entity)
     {
+        $this->dependency = [];
+        $this->dependency["academic_period"] = ["class"];
+        $this->dependency["class"] = ["outcome_template"];
+        $this->dependency["outcome_template"] = ["outcome_period"];
+        $this->dependency["outcome_period"] = ["education_subject"];
+        $this->dependency["education_subject"] = ["select_file"];
+
         $this->ControllerAction->field('academic_period', ['type' => 'select']);
         $this->ControllerAction->field('class', ['type' => 'select']);
-        $this->ControllerAction->field('outcome_template', ['type' => 'select']);
-        $this->ControllerAction->field('outcome_period', ['type' => 'select']);
+        $this->ControllerAction->field('outcome_template', ['type' => 'select', 'visible' => false]);
+        $this->ControllerAction->field('outcome_period', ['type' => 'select', 'visible' => false]);
+        $this->ControllerAction->field('education_subject', ['type' => 'select', 'visible' => false]);
         $this->ControllerAction->field('select_file', ['visible' => false]);
-        $this->ControllerAction->setFieldOrder(['academic_period', 'class', 'outcome_template', 'outcome_period', 'select_file']);
+        $this->ControllerAction->setFieldOrder(['academic_period', 'class', 'outcome_template', 'outcome_period', 'education_subject', 'select_file']);
+
+        //Assumptiopn - onChangeReload must be named in this format: change<field_name>. E.g changeClass
+        $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
+
+        if (isset($this->request->data[$this->alias()])) {
+            $unsetFlag = false;
+            $aryRequestData = $this->request->data[$this->alias()];
+            foreach ($aryRequestData as $requestData => $value) {
+                if ($unsetFlag) {
+                    unset($this->request->query[$requestData]);
+                    $this->request->data[$this->alias()][$requestData] = 0;
+                }
+
+                if ($currentFieldName == str_replace("_", "", $requestData)) {
+                    $unsetFlag = true;
+                }
+            }
+            $aryRequestData = $this->request->data[$this->alias()];
+            foreach ($aryRequestData as $requestData => $value) {
+                if (isset($this->dependency[$requestData]) && $value) {
+                    $aryDependencies = $this->dependency[$requestData];
+                    foreach ($aryDependencies as $dependency) {
+                        $this->request->query = $this->request->data[$this->alias()];
+                        $this->ControllerAction->field($dependency, ['visible' => true]);
+                    }
+                }
+            }
+        }
+    }
+
+    public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            
+            $conditions = [];
+            if (!empty($request->data[$this->alias()]['academic_period']) && !empty($request->data[$this->alias()]['outcome_template'])) {
+                $conditions[] = [
+                    $this->OutcomeCriterias->aliasField('academic_period_id') => $request->data[$this->alias()]['academic_period'],
+                    $this->OutcomeCriterias->aliasField('outcome_template_id') => $request->data[$this->alias()]['outcome_template']
+                ];
+            }
+
+            $userId = $this->Auth->user('id');
+            $AccessControl = $this->AccessControl;
+            $classId = $this->request->query('class');
+            $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $allowedEducationSubjectList = $InstitutionSubjects
+             ->find('list', [
+                    'keyField' => 'education_subject_id',
+                    'valueField' => 'educationSubjects'
+                ])
+                ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller])
+                ->select(['educationSubjects' => 'EducationSubjects.name', 'education_subject_id' => 'EducationSubjects.id'])
+                ->contain(['EducationSubjects'])
+                ->matching('ClassSubjects', function ($q) use ($classId) {
+                    return $q->where(['ClassSubjects.institution_class_id' => $classId]);
+                })
+                ->innerJoin([$OutcomeCriterias->alias() => $OutcomeCriterias->table()], [
+                             $OutcomeCriterias->aliasField('education_grade_id = ') . $InstitutionSubjects->aliasField('education_grade_id'),
+                             $OutcomeCriterias->aliasField('education_subject_id = ') . $InstitutionSubjects->aliasField('education_subject_id')
+                            ])
+                ->where($conditions)
+                ->group([
+                    'EducationSubjects.id',
+                ])
+                ->toArray();
+
+                $attr['options'] = $allowedEducationSubjectList;
+                // useing onChangeReload to do visible
+                $attr['onChangeReload'] = 'changeEducationGrade';
+        }
+        return $attr;
     }
 
     public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, Request $request)
@@ -88,35 +167,10 @@ class ImportOutcomeResultsTable extends AppTable
             $attr['select'] = false;
             $attr['options'] = $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $attr['default'] = $this->AcademicPeriods->getCurrent();
+            // useing onChangeReload to do visible
             $attr['onChangeReload'] = 'changeAcademicPeriod';
         }
         return $attr;
-    }
-
-    public function addOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        $request = $this->request;
-        unset($request->query['period']);
-        unset($request->query['class']);
-        unset($request->query['template']);
-        unset($request->query['outcome_period']);
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period'];
-                }
-                if (array_key_exists('class', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['class']);
-                }
-                if (array_key_exists('outcome_template', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_template']);
-                }
-                if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_period']);
-                }
-            }
-        }
     }
 
     public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
@@ -125,92 +179,71 @@ class ImportOutcomeResultsTable extends AppTable
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
             $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-        $userId = $this->Auth->user('id');
-        $AccessControl = $this->AccessControl;
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $roles = $Institutions->getInstitutionRoles($userId, $institutionId);
-        $query = $InstitutionClasses->find();
-        if (!$AccessControl->isAdmin()) {
-            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
-                $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
-                $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
-                if (!$classPermission && !$subjectPermission) {
-                    $query->where(['1 = 0'], [], true);
-                } else {
-                    // If only class permission is available but no subject permission available
-                    if ($classPermission && !$subjectPermission) {
-                        $query->where([
-                                'OR' => [
-                                    ['InstitutionClasses.staff_id' => $userId],
-                                    ['InstitutionClasses.secondary_staff_id' => $userId]
-                                ]
-                            ]);
+            $userId = $this->Auth->user('id');
+            $AccessControl = $this->AccessControl;
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $roles = $Institutions->getInstitutionRoles($userId, $institutionId);
+            $query = $InstitutionClasses->find();
+            if (!$AccessControl->isAdmin()) {
+                if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
+                    $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+                    $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
+                    if (!$classPermission && !$subjectPermission) {
+                        $query->where(['1 = 0'], [], true);
                     } else {
-                        $query
-                            ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
-                                'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
-                                'InstitutionClassSubjects.status = 1'
-                            ])
-                            ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-                                'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
-                            ]);
-
-                        // If both class and subject permission is available
-                        if ($classPermission && $subjectPermission) {
+                        // If only class permission is available but no subject permission available
+                        if ($classPermission && !$subjectPermission) {
                             $query->where([
-                                'OR' => [
-                                    ['InstitutionClasses.staff_id' => $userId],
-                                    ['InstitutionClasses.secondary_staff_id' => $userId],
-                                    ['InstitutionSubjectStaff.staff_id' => $userId]
-                                ]
-                            ]);
-                        }
-                        // If only subject permission is available
-                        else {
-                            $query->where(['InstitutionSubjectStaff.staff_id' => $userId]);
+                                    'OR' => [
+                                        ['InstitutionClasses.staff_id' => $userId],
+                                        ['InstitutionClasses.secondary_staff_id' => $userId]
+                                    ]
+                                ]);
+                        } else {
+                            $query
+                                ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                                    'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
+                                    'InstitutionClassSubjects.status = 1'
+                                ])
+                                ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+                                    'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+                                ]);
+
+                            // If both class and subject permission is available
+                            if ($classPermission && $subjectPermission) {
+                                $query->where([
+                                    'OR' => [
+                                        ['InstitutionClasses.staff_id' => $userId],
+                                        ['InstitutionClasses.secondary_staff_id' => $userId],
+                                        ['InstitutionSubjectStaff.staff_id' => $userId]
+                                    ]
+                                ]);
+                            }
+                            // If only subject permission is available
+                            else {
+                                $query->where(['InstitutionSubjectStaff.staff_id' => $userId]);
+                            }
                         }
                     }
                 }
             }
-        }
 
-        $classOptions = $query
-            ->find('list')
-            ->where([
-                $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
-                $InstitutionClasses->aliasField('institution_id') => $institutionId])
-            ->group([
-                $InstitutionClasses->aliasField('id')
-            ])
-            ->toArray();
+            $classOptions = $query
+                ->find('list')
+                ->where([
+                    $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
+                    $InstitutionClasses->aliasField('institution_id') => $institutionId])
+                ->group([
+                    $InstitutionClasses->aliasField('id')
+                ])
+                ->toArray();
 
-            $attr['options'] = $classOptions;
-            $attr['onChangeReload'] = 'changeClass';
+                $attr['options'] = $classOptions;
+                // useing onChangeReload to do visible
+                $attr['onChangeReload'] = 'changeClass';
         }
         return $attr;
-    }
-
-    public function addOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        $request = $this->request;
-        unset($request->query['class']);
-        unset($request->query['template']);
-        unset($request->query['outcome_period']);
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('class', $request->data[$this->alias()])) {
-                    $request->query['class'] = $request->data[$this->alias()]['class'];
-                }
-                if (array_key_exists('outcome_template', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_template']);
-                }
-                if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_period']);
-                }
-            }
-        }
     }
 
     public function onUpdateFieldOutcomeTemplate(Event $event, array $attr, $action, Request $request)
@@ -219,7 +252,6 @@ class ImportOutcomeResultsTable extends AppTable
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
             $classId = $request->query('class');
             $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
-
             // if class id is not null, then filter Outcome Template by class_grades of the class else by institution_grades of the school
             if (!is_null($classId) && !empty($classId)) {
                 $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
@@ -248,217 +280,34 @@ class ImportOutcomeResultsTable extends AppTable
             }
 
             $attr['options'] = $templateOptions;
+            // useing onChangeReload to do visible
             $attr['onChangeReload'] = 'changeOutcomeTemplate';
         }
         return $attr;
     }
 
-    public function addOnChangeOutcomeTemplate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        $request = $this->request;
-        unset($request->query['template']);
-        unset($request->query['outcome_period']);
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('outcome_template', $request->data[$this->alias()])) {
-                    $request->query['template'] = $request->data[$this->alias()]['outcome_template'];
-                }
-                if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_period']);
-                }
-            }
-        }
-    }
-
     public function onUpdateFieldOutcomePeriod(Event $event, array $attr, $action, Request $request)
     {
+
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
 
             $outcomePeriodOptions = [];
-            if (!is_null($request->query('template'))) {
+            if (!is_null($request->query('outcome_template'))) {
                 $outcomePeriodOptions = $this->OutcomePeriods
                     ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                     ->where([
                         $this->OutcomePeriods->aliasField('academic_period_id') => $academicPeriodId,
-                        $this->OutcomePeriods->aliasField('outcome_template_id ') => $request->query('template')
+                        $this->OutcomePeriods->aliasField('outcome_template_id ') => $request->query('outcome_template')
                     ])
                     ->toArray();
             }
 
             $attr['options'] = $outcomePeriodOptions;
+            // useing onChangeReload to do visible
             $attr['onChangeReload'] = 'changeOutcomePeriod';
         }
         return $attr;
-    }
-
-    public function addOnChangeOutcomePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        $request = $this->request;
-        unset($request->query['outcome_period']);
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
-                    $request->query['outcome_period'] = $request->data[$this->alias()]['outcome_period'];
-                }
-            }
-        }
-    }
-
-    public function onUpdateFieldSelectFile(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-            if (!empty($request->query('template')) && !empty($request->query('outcome_period'))) {
-                $attr['visible'] = true;
-            } else {
-                $attr['visible'] = false;
-            }
-        }
-        return $attr;
-    }
-
-    public function onImportPopulateOutcomeCriteriasData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $userId = $this->Auth->user('id');
-        $AccessControl = $this->AccessControl;
-        $classId = $this->request->query('class');
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $allowedEducationSubjectList = $InstitutionSubjects
-            ->find('list', [
-                'keyField' => 'education_subject_id',
-                'valueField' => 'education_subject_id'
-            ])
-            ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller])
-            ->matching('ClassSubjects', function ($q) use ($classId) {
-                return $q->where(['ClassSubjects.institution_class_id' => $classId]);
-            })
-            ->toArray();
-
-        $templateId = $this->request->query('template');
-        $academicPeriodId = !is_null($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
-
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $modelData = $lookedUpTable->find()
-            ->select([
-                $this->EducationSubjects->aliasField('name'),
-                $this->EducationSubjects->aliasField('code'),
-                $this->OutcomeGradingTypes->aliasField('name'),
-                $lookedUpTable->aliasField('name'),
-                $lookedUpTable->aliasField('code'),
-                $lookedUpTable->aliasField($lookupColumn)
-            ])
-            ->matching($this->EducationSubjects->alias())
-            ->matching($this->OutcomeGradingTypes->alias())
-            ->where([
-                $lookedUpTable->aliasField('outcome_template_id') => $templateId,
-                $lookedUpTable->aliasField('academic_period_id') => $academicPeriodId,
-                $this->EducationSubjects->aliasField('id IN') => $allowedEducationSubjectList,
-            ])
-            ->order([
-                $this->EducationSubjects->aliasField('name'),
-                $lookedUpTable->aliasField('name')
-            ]);
-
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 6;
-        $data[$columnOrder]['data'][] = [__('Education Subject Name'), __('Education Subject Code'),  __('Grading Type'), $translatedReadableCol, __('Code'), $translatedCol];
-        if (!empty($modelData)) {
-            foreach($modelData->toArray() as $row) {
-                $data[$columnOrder]['data'][] = [
-                    $row->_matchingData[$this->EducationSubjects->alias()]->name,
-                    $row->_matchingData[$this->EducationSubjects->alias()]->code,
-                    $row->_matchingData[$this->OutcomeGradingTypes->alias()]->name,
-                    $row->name,
-                    $row->code,
-                    $row->{$lookupColumn}
-                ];
-            }
-        }
-    }
-
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $classId = $this->request->query('class');
-
-        if (is_null($classId)) {
-            unset($data[$columnOrder]);
-        } else {
-            $StudentStatuses = $this->StudentStatuses;
-            $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-            $modelData = $this->InstitutionClassStudents->find('all')
-                ->select([
-                    $lookedUpTable->aliasField($lookupColumn),
-                    $lookedUpTable->aliasField('first_name'),
-                    $lookedUpTable->aliasField('middle_name'),
-                    $lookedUpTable->aliasField('third_name'),
-                    $lookedUpTable->aliasField('last_name'),
-                    $lookedUpTable->aliasField('preferred_name'),
-                    $lookedUpTable->aliasField('identity_number'),
-                    $this->InstitutionClasses->aliasField('name'),
-                    $this->EducationGrades->aliasField('name')
-                ])
-                ->matching($lookedUpTable->alias())
-                ->matching($this->InstitutionClasses->alias())
-                ->matching($this->EducationGrades->alias())
-                ->matching($StudentStatuses->alias(), function ($q) use ($StudentStatuses) {
-                    return $q->where([$StudentStatuses->aliasField('code') => 'CURRENT']);
-                })
-                ->where([
-                    $this->InstitutionClassStudents->aliasField('institution_class_id') => $classId
-                ])
-                ->order([
-                    $lookedUpTable->aliasField('first_name'),
-                    $lookedUpTable->aliasField('last_name')
-                ]);
-
-            $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-            $data[$columnOrder]['lookupColumn'] = 1;
-            $data[$columnOrder]['data'][] = [$translatedCol, $translatedReadableCol, __('Identity Number'), __('Class Name'), __('Education Grade')];
-            if (!empty($modelData)) {
-                foreach($modelData->toArray() as $row) {
-                    $data[$columnOrder]['data'][] = [
-                        $row->_matchingData[$lookedUpTable->alias()]->{$lookupColumn},
-                        $row->_matchingData[$lookedUpTable->alias()]->name,
-                        $row->_matchingData[$lookedUpTable->alias()]->identity_number,
-                        $row->_matchingData[$this->InstitutionClasses->alias()]->name,
-                        $row->_matchingData[$this->EducationGrades->alias()]->name
-                    ];
-                }
-            }
-        }
-    }
-
-    public function onImportPopulateOutcomeGradingOptionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $modelData = $lookedUpTable->find('all')
-            ->select([
-                $lookedUpTable->aliasField('name'),
-                $lookedUpTable->aliasField('code'),
-                $lookedUpTable->aliasField($lookupColumn),
-                $this->OutcomeGradingTypes->aliasField('name')
-            ])
-            ->matching($this->OutcomeGradingTypes->alias())
-            ->order([
-                $this->OutcomeGradingTypes->aliasField('name'),
-                $lookedUpTable->aliasField('name')
-            ]);
-
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 3;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, __('Code'), $translatedCol, __('Grading Type')];
-        if (!empty($modelData)) {
-            foreach($modelData->toArray() as $row) {
-                $data[$columnOrder]['data'][] = [
-                    $row->name,
-                    $row->code,
-                    $row->{$lookupColumn},
-                    $row->_matchingData[$this->OutcomeGradingTypes->alias()]->name
-                ];
-            }
-        }
     }
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
@@ -470,97 +319,18 @@ class ImportOutcomeResultsTable extends AppTable
         $tempRow['institution_class_id'] = $requestData['class'];
         $tempRow['institution_id'] = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-        if ($tempRow->offsetExists('outcome_criteria_id') && $tempRow->offsetExists('student_id')) {
-            if (!empty($tempRow['outcome_criteria_id']) && !empty($tempRow['student_id'])) {
-                $outcomeCriteriaEntity = $this->OutcomeCriterias->find()
-                    ->matching('Templates')
-                    ->contain('OutcomeGradingTypes.GradingOptions')
-                    ->where([
-                        $this->OutcomeCriterias->aliasField('id') => $tempRow['outcome_criteria_id'],
-                        $this->OutcomeCriterias->aliasField('outcome_template_id') => $tempRow['outcome_template_id'],
-                        $this->OutcomeCriterias->aliasField('academic_period_id') => $tempRow['academic_period_id']
-                    ])
-                    ->first();
+        $outcomeCriteriaEntity = $this->OutcomeCriterias->find()
+            ->matching('Templates')
+            ->contain('OutcomeGradingTypes.GradingOptions')
+            ->where([
+                $this->OutcomeCriterias->aliasField('id') => $tempRow['outcome_criteria_id'],
+                $this->OutcomeCriterias->aliasField('outcome_template_id') => $tempRow['outcome_template_id'],
+                $this->OutcomeCriterias->aliasField('academic_period_id') => $tempRow['academic_period_id']
+            ])
+            ->first();
 
-                if (empty($outcomeCriteriaEntity)) {
-                    // criteria is not added to the template
-                    $rowInvalidCodeCols['outcome_criteria_id'] = __('Outcome Criteria does not belong to this Outcome Template');
-                    return false;
-
-                } else {
-                    $tempRow['education_subject_id'] = $outcomeCriteriaEntity->education_subject_id;
-                    $tempRow['education_grade_id'] = $outcomeCriteriaEntity->_matchingData['Templates']->education_grade_id;
-
-                    $Students = TableRegistry::get('Institution.Students');
-                    $studentEntity = $Students->find()
-                        ->where([
-                            $Students->aliasField('student_id') => $tempRow['student_id'],
-                            $Students->aliasField('academic_period_id') => $tempRow['academic_period_id'],
-                            $Students->aliasField('education_grade_id') => $tempRow['education_grade_id'],
-                            $Students->aliasField('institution_id') => $tempRow['institution_id'],
-                            $Students->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
-                        ]);
-
-                    if (!empty($tempRow['institution_class_id'])) {
-                        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-                        
-                        $studentEntity
-                            ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
-                                 $ClassStudents->aliasField('student_id = ') . $Students->aliasField('student_id'),
-                                 $ClassStudents->aliasField('academic_period_id = ') . $Students->aliasField('academic_period_id'),
-                                 $ClassStudents->aliasField('education_grade_id = ') . $Students->aliasField('education_grade_id'),
-                                 $ClassStudents->aliasField('institution_id = ') . $Students->aliasField('institution_id'),
-                                 $ClassStudents->aliasField('student_status_id = ') . $Students->aliasField('student_status_id'),
-                                 $ClassStudents->aliasField('institution_class_id') => $tempRow['institution_class_id']
-                            ]);
-                    }
-
-                    if (empty($studentEntity->first())) {
-                        // student is not in the education grade
-                        $rowInvalidCodeCols['student_id'] = __('Student does not belong to this Education Grade/Class in this Institution');
-                        return false;
-                    }
-
-                    if ($outcomeCriteriaEntity->has('outcome_grading_type')) {
-                        $gradingOptions = $outcomeCriteriaEntity->outcome_grading_type->grading_options;
-
-                        if (empty($gradingOptions)) {
-                            // no grading options added
-                            $rowInvalidCodeCols['outcome_criteria_id'] = __('Outcome Grading Options are not configured for ' . $outcomeCriteriaEntity->outcome_grading_type->code_name . ' Grading Type');
-                            return false;
-
-                        } else {
-                            if ($tempRow->offsetExists('outcome_grading_option_id')) {
-                                $selectedGradingOption = $tempRow['outcome_grading_option_id'];
-
-                                if (strlen($selectedGradingOption) == 0) {
-                                    // not allow empty for grading option
-                                    $rowInvalidCodeCols['outcome_grading_option_id'] = __('This field cannot be left empty');
-                                    return false;
-
-                                } else {
-                                    $valid = false;
-                                    foreach ($gradingOptions as $key => $option) {
-                                        if ($selectedGradingOption == $option->id) {
-                                            $valid = true;
-                                        }
-                                    }
-
-                                    if (!$valid) {
-                                        $rowInvalidCodeCols['outcome_grading_option_id'] = __('Selected value is not a Grading Option of this Outcome Criteria');
-                                        return false;
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        // will never come to here unless orphan record
-                        $rowInvalidCodeCols['outcome_criteria_id'] = __('Outcome Grading Type is not configured');
-                        return false;
-                    }
-                }
-            }
-        }
+            $tempRow['education_subject_id'] = $outcomeCriteriaEntity->education_subject_id;
+            $tempRow['education_grade_id'] = $outcomeCriteriaEntity->_matchingData['Templates']->education_grade_id;
 
         return true;
     }

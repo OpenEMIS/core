@@ -39,6 +39,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionStaffReleases', ['className' => 'Institution.InstitutionStaffTransfers', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('WorkflowStatuses' , [
 			'className' => 'Workflow.WorkflowStatuses',
@@ -223,6 +224,95 @@ class WorkflowStepsTable extends AppTable {
 
 		return $attr;
 	}
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (isset($data['submit']) && $data['submit'] == 'save') {
+            $workflowStepId = $data['id'];
+            
+
+            // to only add validations on edit operations for the first workflow steps for any workflows with post event rules
+            if (!is_null($workflowStepId) && $workflowStepId !== '') { 
+                $WorkflowRuleEventsTable = TableRegistry::get('Workflow.WorkflowRuleEvents');
+                $WorkflowRulesTable = TableRegistry::get('Workflow.WorkflowRules');
+                $workflowId = $data['workflow_id'];
+
+                $firstStepEntity = $WorkflowRulesTable->getWorkflowFirstStep($workflowId);
+
+                // validations to be done only if the editing steps is the first step
+                if (!is_null($firstStepEntity) && $firstStepEntity['id'] == $workflowStepId) {
+                    $availableRuleResults = $WorkflowRulesTable
+                        ->find('list', [
+                            'keyField' => 'event_key',
+                            'valueField' => 'feature'
+                        ])
+                        ->select([
+                            'feature' => $WorkflowRulesTable->aliasField('feature'),
+                            'event_key' => $WorkflowRuleEventsTable->aliasField('event_key')
+                        ])
+                        ->innerJoin([$WorkflowRuleEventsTable->alias() => $WorkflowRuleEventsTable->table()], [
+                            $WorkflowRulesTable->aliasField('id = ') . $WorkflowRuleEventsTable->aliasField('workflow_rule_id')
+                        ])
+                        ->where([
+                            $WorkflowRulesTable->aliasField('workflow_id') => $workflowId
+                        ])
+                        ->group(['event_key', 'feature'])
+                        ->all();
+
+                    // validations will only add if the first steps has any rules associated to it
+                    if (!$availableRuleResults->isEmpty()) {
+                        $ruleFeatures = $availableRuleResults->toArray();
+
+                        $securityRoleCodes = [];
+                        foreach ($ruleFeatures as $eventKey => $feature) {
+                            $eventOptions = $WorkflowRulesTable->getEvents($feature, false);
+                            
+                            if (array_key_exists($eventKey, $eventOptions)) {
+                                $roleCode = $eventOptions[$eventKey]['roleCode'];
+
+                                if (!in_array($roleCode, $securityRoleCodes)) {
+                                    $securityRoleCodes[] = $roleCode;
+                                }
+                            }
+                        }
+
+                        // validations will only add if the first steps has nay security roles associated to it
+                        if (!empty($securityRoleCodes)) {
+                            $SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+                            $roleIds = $SecurityRolesTable
+                                ->find('list', [
+                                    'keyField' => 'id',
+                                    'valueField' => 'code'
+                                ])
+                                ->where([$SecurityRolesTable->aliasField('code IN ') => $securityRoleCodes])
+                                ->toArray();
+
+                            $validator = $this->validator();
+                            $validator->add('security_roles', 'ruleWorkflowRuleRoles', [
+                                'rule' => function ($value, $globalData) use ($roleIds) {
+
+                                    if (array_key_exists('_ids', $value)) {
+                                        $selectedRoleList = $value['_ids'];
+
+                                        if ((is_null($selectedRoleList) || $selectedRoleList === '') && !empty($roleIds)) {
+                                            return false;
+                                        }
+
+                                        foreach ($roleIds as $id => $code) {
+                                            if (!in_array($id, $selectedRoleList)) {
+                                                return false;
+                                            }
+                                        }
+                                    }
+                                    return true;
+                                },
+                                'message' => __('Some of the roles setup in workflow rules does not exist.')
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 	public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
@@ -320,7 +410,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         unset($request->query['model']);
@@ -400,6 +490,7 @@ class WorkflowStepsTable extends AppTable {
 			$this->InstitutionPositions->registryAlias() => $this->InstitutionPositions->alias(),
 			$this->StaffPositionProfiles->registryAlias() => $this->StaffPositionProfiles->alias(),
 			$this->InstitutionStaffTransfers->registryAlias() => $this->InstitutionStaffTransfers->alias(),
+			$this->InstitutionStaffReleases->registryAlias() => $this->InstitutionStaffReleases->alias(),
 			$this->WorkflowStepsParams->registryAlias() => $this->WorkflowStepsParams->alias()
 		];
 

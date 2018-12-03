@@ -309,10 +309,6 @@ trait MessagesTrait
             'amount' => 'Amount',
             'noStudentFees' => 'No Student Fees',
         ],
-        // 'InstitutionStaffAbsences' => [
-        //  'first_date_absent' => 'First Day Of Absence',
-        //  'last_date_absent' => 'Last Day Of Absence'
-        // ],
         'InstitutionAssessments' => [
             'noAssessments' => 'No Assessments',
             'noClasses' => 'No Classes'
@@ -408,10 +404,6 @@ trait MessagesTrait
             'noReasons' => 'You need to configure Staff Absence Reasons first.',
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
-        'StaffAbsences' => [
-            'noStaff' => 'No Available Staff',
-            'noShift' => 'There are no shifts configured for the selected academic period, will be using system configuration timing.'
-        ],
         'StaffBehaviours' => [
             'date_of_behaviour' => 'Date',
             'time_of_behaviour' => 'Time'
@@ -480,7 +472,8 @@ trait MessagesTrait
         ],
         'WorkflowActions' => [
             'add_event' => 'Add Event',
-            'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
+            'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.',
+            'no_two_post_event' => 'Only one post event for each action is allowed.'
         ],
         'WorkflowRules' => [
             'process' => [
@@ -789,7 +782,8 @@ trait MessagesTrait
                 'value' => 'Days within %d to %d'
             ],
             'StaffLeave' => [
-                'value' => 'Days within %d to %d'
+                'value' => 'Days within %d to %d',
+                'leavePeriodOverlap' => 'Leave period applied overlaps existing records.'
             ],
             'StaffType' => [
                 'value' => 'Days within %d to %d'
@@ -919,11 +913,6 @@ trait MessagesTrait
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'timeRangeHint' => 'Time should be between %s and %s'
-            ],
-            'StaffAbsences' => [
-                'end_time' => [
-                    'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
-                ]
             ],
             'StaffLeave' => [
                 'date_to' => [
@@ -1307,6 +1296,19 @@ trait MessagesTrait
                     'ruleCompareTimeReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
+            'StaffReleaseIn' => [
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'Start Date should not be earlier than Current Institution End Date'
+                ],
+                'new_end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ]
+            ],
+            'StaffRelease' => [
+                'previous_end_date' => [
+                    'ruleCompareDateReverse' => 'Position End Date should not be earlier than Position Start Date'
+                ]
+            ]
         ],
         'User' => [
             'Users' => [
@@ -2180,7 +2182,7 @@ trait MessagesTrait
                'position_grades' => [
                     'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
                 ]
-            ] 
+            ]
         ],
         'Configuration' => [
             'ConfigProductLists' => [
@@ -2283,6 +2285,30 @@ trait MessagesTrait
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ]
+        ],
+        'Historical' => [
+            'HistoricalStaffPositions' => [
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'validDate' => 'Date should not be later than today'
+                ],
+                'start_date' => [
+                    'validDate' => 'Date should not be later than today'
+                ]
+            ],
+            'HistoricalStaffLeave' => [
+                'date_from' => [
+                    'ruleLessThanToday' => 'Date should not be later than today'
+                ],
+                'date_to' => [
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From',
+                    'ruleLessThanToday' => 'Date should not be later than today'
+                ],
+                'end_time' => [
+                    'ruleCompareDateReverse' => 'End Time should not be earlier than Start Time'
+                ]
+            ],
+            'addEdit' => 'This feature is for historical record use only. For current records, please refrain from adding record on this page.'
         ]
     ];
 
