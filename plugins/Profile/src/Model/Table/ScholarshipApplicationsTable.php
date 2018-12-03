@@ -9,6 +9,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\Network\Request;
+
 
 class ScholarshipApplicationsTable extends ControllerActionTable
 {
@@ -190,8 +192,14 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             ]]);
             $entity->scholarship_id = $scholarshipId;
             $entity->scholarship = $scholarshipEntity;
-            $entity->applicant_id = $this->Auth->user('id');
         }
+
+        // POCOR-4836    
+        $entity->applicant_id = $this->Auth->user('id');
+
+        $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+        $applicantEntity = $this->Applicants->get($entity->applicant_id, ['contain' => ['Genders', 'MainIdentityTypes']]);
+        $entity->applicant = $applicantEntity;
 
         $this->setupFields($entity);
     }
@@ -389,6 +397,21 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             $attr['attr']['value'] = $value;
         }
         return $attr;
+    }
+
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+            $displayValue = $entity->applicant->name_with_id;
+            $value = $entity->applicant_id;
+
+            $attr['value'] = $value;
+            $attr['attr']['value'] = $displayValue;
+            $attr['type'] = 'readonly';
+
+            return $attr;
+        }
     }
 
     public function setupFields($entity)

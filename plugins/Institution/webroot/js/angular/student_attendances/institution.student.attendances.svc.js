@@ -219,7 +219,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             .find('daysForPeriodWeek', {
                 academic_period_id: academicPeriodId,
                 week_id: weekId,
-                institution_id: institutionId
+                institution_id: institutionId,
+                school_closed_required: true
             })
             .ajax({success: success, defer: true});
     }
@@ -245,7 +246,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 academic_period_id: academicPeriodId
             })
             .ajax({success: success, defer: true});
-        
+
         return [];
     }
 
@@ -357,7 +358,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
 
         return StudentAbsencesPeriodDetails.save(studentAbsenceData);
-    } 
+    }
 
     function savePeriodMarked(params, scope) {
         var extra = {
@@ -430,7 +431,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                         }
                     });
                 });
-                
+
                 var dayText = dayObj.name;
 
                 var colDef = {
@@ -486,7 +487,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
                     if (mode == 'view') {
                         return getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed);
-                    } 
+                    }
                     else if (mode == 'edit') {
                         var api = params.api;
                         return getEditAttendanceElement(data, absenceTypeList, api, context);
@@ -526,7 +527,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                                     html += getViewAbsenceReasonElement(data, studentAbsenceReasonList);
                                     html += getViewCommentsElement(data);
                                     return html;
-                            }   
+                            }
                         } else if (mode == 'edit') {
                             var api = params.api;
                             switch (absenceTypeObj.code) {
@@ -588,7 +589,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         eSelect.addEventListener('change', function () {
             var oldValue = data.institution_student_absences[dataKey];
             var newValue = eSelect.value;
-            
+
             var absenceTypeObj = absenceTypeList.find(obj => obj.id == newValue);
             // data.institution_student_absences.absence_type_id = newValue;
 
@@ -625,7 +626,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 oldValue = newValue;
                 data.institution_student_absences.absence_type_id = newValue;
                 data.institution_student_absences.absence_type_code = absenceTypeObj.code;
-                
+
                 var refreshParams = {
                     columns: ['institution_student_absences.student_absence_reason_id'],
                     force: true
@@ -743,7 +744,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         if (data.institution_student_absences[dataKey] == null) {
             data.institution_student_absences[dataKey] = studentAbsenceReasonList[0].id;
         }
-        
+
         angular.forEach(studentAbsenceReasonList, function(obj, key) {
             var eOption = document.createElement("option");
             var labelText = obj.name;
@@ -751,7 +752,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             eOption.innerHTML = labelText;
             eSelect.appendChild(eOption);
         });
-            
+
         eSelect.value = data.institution_student_absences[dataKey];
         eSelect.addEventListener('change', function () {
             var oldValue = data.institution_student_absences[dataKey];

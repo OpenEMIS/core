@@ -308,10 +308,27 @@ class WorkflowActionsTable extends AppTable
                 }
             } else if ($request->is(['post', 'put'])) {
                 $requestData = $request->data;
+
                 if (array_key_exists($this->alias(), $requestData)) {
                     if (array_key_exists('post_events', $requestData[$this->alias()])) {
-                        foreach ($requestData[$this->alias()]['post_events'] as $key => $event) {
-                            $selectedEventKeys[] = $event['event_key'];
+                        $postEvents = $requestData[$this->alias()]['post_events'];
+                        if (count($postEvents) > 1) {
+                            $this->Alert->clear();
+                            $this->Alert->error('WorkflowActions.no_two_post_event');
+
+                            // Getting the first selected post event that is selected
+                            $postEventSelectedElementValue = $postEvents[0]['event_key'];
+
+                            // Remove the selected post event that is selected only
+                            unset($eventSelectOptions[$postEventSelectedElementValue]);
+
+                            // Remove away from the main entity
+                            unset($attr['attr']['entity']['post_events'][count($attr['attr']['entity']['post_events']) - 1]);
+
+                        } else {
+                            foreach ($requestData[$this->alias()]['post_events'] as $key => $event) {
+                                $selectedEventKeys[] = $event['event_key'];
+                            }
                         }
                     }
                 }
