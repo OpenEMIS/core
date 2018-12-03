@@ -427,48 +427,53 @@ class InstitutionsController extends AppController
     // End
 
     // AngularJS
-    public function StudentAttendances()
+    public function StudentAttendances($subaction = 'index')
     {
-        $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
-        // $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
-        // $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
-        $_excel = false;
-        $_import = false;
+        if ($subaction === 'index') {
+            $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
+            $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
+            // $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
+            
+            // tmp allow permission
+            $_excel = true;
+            $_import = false;
+            
+            if (!empty($this->request->param('institutionId'))) {
+                $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            } else {
+                $session = $this->request->session();
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
 
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            $excelUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentAttendances',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+                'excel'
+            ];
+
+            $importUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'ImportStudentAttendances',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+                'add'
+            ];
+
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $this->Navigation->addCrumb($crumbTitle);
+
+            $this->set('_edit', $_edit);
+            $this->set('_excel', $_excel);
+            $this->set('_import', $_import);
+            $this->set('excelUrl', Router::url($excelUrl));
+            $this->set('importUrl', Router::url($importUrl));
+            $this->set('institution_id', $institutionId);
+            $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
         } else {
-            $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
         }
-
-        // issue
-        $excelUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'StudentAttendances',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'excel'
-        ];
-
-        $importUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'ImportStudentAttendances',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'add'
-        ];
-
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-        $this->Navigation->addCrumb($crumbTitle);
-
-        $this->set('_edit', $_edit);
-        $this->set('_excel', $_excel);
-        $this->set('_import', $_import);
-        $this->set('excelUrl', Router::url($excelUrl));
-        $this->set('importUrl', Router::url($importUrl));
-        $this->set('institution_id', $institutionId);
-        $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
     }
 
     public function Results()
