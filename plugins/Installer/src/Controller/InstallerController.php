@@ -4,6 +4,8 @@ namespace Installer\Controller;
 use Exception;
 use Installer\Form\DatabaseConnectionForm;
 use PDOException;
+use Cake\Core\Configure;
+use Cake\Log\Log;
 
 class InstallerController extends AppController
 {
@@ -21,13 +23,14 @@ class InstallerController extends AppController
         ]);
 
         $this->loadComponent('RequestHandler');
-
         $this->loadComponent('OpenEmis.OpenEmis', [
-            'productName' => 'OpenSMIS',
+            'productName' => Configure::read('productName'),
             'theme' => 'school'
         ]);
 
         $this->set('SystemVersion', '1.0.0');
+        $this->set('productName', Configure::read('productName'));
+        $this->set('productLongName', Configure::read('productLongName'));
         $this->loadComponent('ControllerAction.Alert');
         $this->viewBuilder()->layout('Installer.default');
     }
@@ -85,6 +88,17 @@ class InstallerController extends AppController
                 $this->set('message', 'PDOException');
                 $this->response->statusCode(500);
             } catch (Exception $e) {
+                if (file_exists(CONFIG . 'datasource.php')) {
+                    if ($this->request->param('_ext') != 'json') {
+                        return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+                    } else {
+                        $this->set('code', 422);
+                        $this->set('message', 'Datasource has already been created');
+                        $this->response->statusCode(422);
+                        $this->set('_serialize', ['message', 'code']);
+                        return null;
+                    }
+                }
                 $this->Alert->error($e->getMessage(), ['type' => 'text']);
                 $this->set('code', 500);
                 $this->set('message', 'An unknown exception occur');
