@@ -8,68 +8,6 @@ class POCOR4815 extends AbstractMigration
 {
     public function up()
     {
-        $NationalitiesLookUp = TableRegistry::get('FieldOption.Nationalities');
-        $Identities = TableRegistry::get('User.Identities');
-        $UserIdentities = $Identities
-            ->find()
-            ->select([
-                $NationalitiesLookUp->aliasField('id'),
-                $Identities->aliasField('id'),
-                $Identities->aliasField('identity_type_id'),
-                $Identities->aliasField('number'),
-                $Identities->aliasField('issue_date'),
-                $Identities->aliasField('expiry_date'),
-                $Identities->aliasField('issue_location'),
-                $Identities->aliasField('comments'),
-                $Identities->aliasField('security_user_id'),
-                $Identities->aliasField('modified_user_id'),
-                $Identities->aliasField('modified'),
-                $Identities->aliasField('created_user_id'),
-                $Identities->aliasField('created'),
-            ])
-            ->leftJoin(
-                [$NationalitiesLookUp->alias() => $NationalitiesLookUp->table()],
-                [$NationalitiesLookUp->aliasField('identity_type_id = ') . $Identities->aliasField('identity_type_id')]
-            )
-            ->toArray();
-
-        $data = [];
-        foreach ($UserIdentities as $key => $value) {
-            if ($value->modified) {
-                $modified = date('Y-m-d H:i:s', strtotime($value->modified));
-            } else {
-                $modified = null;
-            }
-
-            if ($value->issue_date) {
-                $issueDate = date('Y-m-d', strtotime($value->issue_date));
-            } else {
-                $issueDate = null;
-            }
-
-            if ($value->expiry_date) {
-                $expiryDate = date('Y-m-d', strtotime($value->expiry_date));
-            } else {
-                $expiryDate = null;
-            }
-
-            $data[] = [
-                'identity_type_id' => $value->identity_type_id,
-                'number' => $value->number,
-                'issue_date' => $issueDate,
-                'expiry_date' => $expiryDate,
-                'issue_location' => $value->issue_location,
-                'nationality_id' => $value->Nationalities['id'],
-                'comments' => $value->comments,
-                'security_user_id' => $value->security_user_id,
-                'modified_user_id' => $value->modified_user_id,
-                'modified' => $modified,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s', strtotime($value->created))
-            ];
-
-        }
-
         // backup existing user_identities and create new user_identities
         $this->execute('RENAME TABLE `user_identities` TO `z_4815_user_identities`');
         $table = $this->table('user_identities', [
@@ -138,8 +76,35 @@ class POCOR4815 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        if (!empty($data)) {
-            $this->insert('user_identities', $data);
+
+        $countData = $this->fetchAll('SELECT count(*) AS `COUNT` FROM `z_4815_user_identities` LEFT JOIN `nationalities` on `z_4815_user_identities`.`identity_type_id` = `nationalities`.`identity_type_id`');
+        $count = $countData[0]['COUNT'];
+        $MAX_PER_LOOP = 10000;
+        $iteration = ceil($count / $MAX_PER_LOOP);
+
+        for ($i = 0; $i < $iteration; $i++) {
+            $UserIdentities = $this->fetchAll('SELECT `nationalities`.`id` AS `nationalities_id`, `z_4815_user_identities`.`id` AS `user_identities_id`, `z_4815_user_identities`.`identity_type_id`, `z_4815_user_identities`.`number`, `z_4815_user_identities`.`issue_date`, `z_4815_user_identities`.`expiry_date`, `z_4815_user_identities`.`issue_location`, `z_4815_user_identities`.`comments`, `z_4815_user_identities`.`security_user_id`, `z_4815_user_identities`.`modified_user_id`, `z_4815_user_identities`.`modified`, `z_4815_user_identities`.`created_user_id`, `z_4815_user_identities`.`created` FROM `z_4815_user_identities` LEFT JOIN `nationalities` on `z_4815_user_identities`.`identity_type_id` = `nationalities`.`identity_type_id` LIMIT '.$MAX_PER_LOOP.' OFFSET '. ($i * $MAX_PER_LOOP));
+
+            $data = [];
+            foreach ($UserIdentities as $key => $value) {
+                $data[] = [
+                    'identity_type_id' => $value['identity_type_id'],
+                    'number' => $value['number'],
+                    'issue_date' => $value['issue_date'],
+                    'expiry_date' => $value['expiry_date'],
+                    'issue_location' => $value['issue_location'],
+                    'nationality_id' => $value['nationalities_id'],
+                    'comments' => $value['comments'],
+                    'security_user_id' => $value['security_user_id'],
+                    'modified_user_id' => $value['modified_user_id'],
+                    'modified' => $value['modified'],
+                    'created_user_id' => $value['created_user_id'],
+                    'created' => $value['created']
+                ];
+            }
+            if (!empty($data)) {
+                $this->insert('user_identities', $data);
+            }
         }
     }
 
