@@ -81,7 +81,7 @@ class StudentsTable extends ControllerActionTable
                 '_function' => 'getNumberOfStudentsByGradeByInstitution'
             ]
         ]);
-        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStudentAdmission']);       
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStudentAdmission']);
 
         /**
          * Advance Search Types.
@@ -169,7 +169,7 @@ class StudentsTable extends ControllerActionTable
             ->allowEmpty('class')
             ->add('class', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit'],
-                'on' => function ($context) {  
+                'on' => function ($context) {
                     return (!empty($context['data']['class']) && $context['newRecord']);
                 }
             ])
@@ -250,7 +250,7 @@ class StudentsTable extends ControllerActionTable
                     $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ]
             );
-            
+
         if ($periodId > 0) {
             $query->where([$this->aliasField('academic_period_id') => $periodId]);
         }
@@ -402,7 +402,7 @@ class StudentsTable extends ControllerActionTable
         ($entity->student_middle_name) ? $studentName[] = $entity->student_middle_name : '';
         ($entity->student_third_name) ? $studentName[] = $entity->student_third_name : '';
         ($entity->student_last_name) ? $studentName[] = $entity->student_last_name : '';
-        
+
         return implode(' ', $studentName);
     }
 
@@ -805,7 +805,10 @@ class StudentsTable extends ControllerActionTable
             $this->setFieldOrder([
                 'photo_content', 'openemis_no', 'student_id', 'student_status_id', 'reason', 'comment'
             ]);
-        } elseif ($code != 'CURRENT') { // only enrolled students can be edited or removed
+
+        }
+
+        if ($code != 'CURRENT') { // only enrolled students can be edited or removed
             $this->toggle('remove', false);
             $this->toggle('edit', false);
         }

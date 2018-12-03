@@ -89,7 +89,7 @@ class ImportBehavior extends Behavior
         'custom_text' => ''
     ];
     protected $rootFolder = 'import';
-    private $_fileTypesMap = [
+    protected $_fileTypesMap = [
         // 'csv'    => 'text/plain',
         // 'csv'    => 'text/csv',
         'xls'   => ['application/vnd.ms-excel', 'application/vnd.ms-office'],
@@ -812,7 +812,7 @@ class ImportBehavior extends Behavior
      * @param  string $systemDateFormat System Date Format which varies across deployed environments.
      * @return Array                    The columns value that will be written to a downloadable excel file.
      */
-    private function _getReorderedEntityArray(Entity $entity, array $columns, ArrayObject $originalRow, $systemDateFormat)
+    protected function _getReorderedEntityArray(Entity $entity, array $columns, ArrayObject $originalRow, $systemDateFormat)
     {
         $array = [];
         foreach ($columns as $col => $property) {
@@ -1453,7 +1453,7 @@ class ImportBehavior extends Behavior
         return $period->toArray();
     }
 
-    private function eventKey($key)
+    protected function eventKey($key)
     {
         return 'Model.import.' . $key;
     }

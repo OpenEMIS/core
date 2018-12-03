@@ -41,4 +41,10 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 $this->aliasField('period') => $period
             ]);
     }
+
+    public function afterSaveCommit(Event $event, Entity $entity)
+    {
+        $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+        $ClassAttendanceRecords->dispatchEvent('Model.StudentAttendances.afterSaveCommit', [$entity], $ClassAttendanceRecords);
+    }
 }

@@ -84,7 +84,7 @@ class StaffUserTable extends ControllerActionTable
         $model->hasMany('Awards', ['className' => 'User.Awards',          'foreignKey' => 'security_user_id', 'dependent' => true]);
 
         $model->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        
+
         $model->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
             'foreignKey' => 'security_role_id',
@@ -217,6 +217,52 @@ class StaffUserTable extends ControllerActionTable
         $this->setupTabElements($entity);
 
         $this->addTransferButton($entity, $extra);
+        $this->addReleaseButton($entity, $extra);
+    }
+
+    private function addReleaseButton(Entity $entity, ArrayObject $extra)
+    {
+        if($this->AccessControl->check([$this->controller->name, 'StaffRelease', 'add'])) {
+
+            $session = $this->request->session();
+            $toolbarButtons = $extra['toolbarButtons'];
+            $StaffTable = TableRegistry::get('Institution.Staff');
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
+
+            $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+            $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+            $userId = $entity->id;
+
+            $enableStaffRelease = $ConfigStaffReleaseTable->checkIfReleaseEnabled($institutionId);
+
+            $assignedStaffRecords = $StaffTable->find()
+                ->where([
+                    $StaffTable->aliasField('staff_id') => $userId,
+                    $StaffTable->aliasField('institution_id') => $institutionId,
+                    $StaffTable->aliasField('staff_status_id') => $assignedStatus
+                ])
+                ->count();
+
+            if ($enableStaffRelease && $assignedStaffRecords > 0) {
+                $url = [
+                    'plugin' => $this->controller->plugin,
+                    'controller' => $this->controller->name,
+                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'action' => 'StaffRelease',
+                    'add'
+                ];
+
+                $releaseButton = $toolbarButtons['back'];
+                $releaseButton['type'] = 'button';
+                $releaseButton['label'] = '<i class="fa kd-release"></i>';
+                $releaseButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+                $releaseButton['attr']['title'] = __('Release');
+                $releaseButton['url'] = $this->setQueryString($url, ['user_id' => $userId]);
+
+                $toolbarButtons['release'] = $releaseButton;
+            }
+        }
     }
 
     private function addTransferButton(Entity $entity, ArrayObject $extra)
