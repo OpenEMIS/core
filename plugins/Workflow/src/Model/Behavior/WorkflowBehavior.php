@@ -1034,7 +1034,7 @@ class WorkflowBehavior extends Behavior
 
     //Function to return ids of related workflow_models
     public function getWorkflowModelIds($workflowModelId) {
-        $modelNames = ['%StaffTransfer%']; //Add in model names here for future releated workflow_models
+        $modelNames = ['%StaffTransfer%','%StudentTransfer%']; //Add in model names here for future releated workflow_models
 
         $WorkFlowModelTable = $this->WorkflowModels;
 
