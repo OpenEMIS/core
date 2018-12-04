@@ -556,17 +556,22 @@ class WorkflowBehavior extends Behavior
                 $tableHeaders[] = __('Last Execution Date') . '<i class="fa fa-calendar fa-lg"></i>';
 
                 $tableCells = [];
+
+                //Get workflow model ids for those related workflow.Eg. StaffTransferIn and StaffTransferOut
+                $workflowModelIds = $this->getWorkflowModelIds($workflow->workflow_model_id);
+
                 $transitionResults = $this->WorkflowTransitions
                     ->find()
                     ->contain(['CreatedUser'])
                     ->where([
-                        $this->WorkflowTransitions->aliasField('workflow_model_id') => $workflow->workflow_model_id,
+                        $this->WorkflowTransitions->aliasField('workflow_model_id in') => $workflowModelIds,
                         $this->WorkflowTransitions->aliasField('model_reference') => $entity->id
                     ])
                     ->order([
                         $this->WorkflowTransitions->aliasField('created ASC')
                     ])
                     ->all();
+
                 if (!$transitionResults->isEmpty()) {
                     $transitions = $transitionResults->toArray();
                     foreach ($transitions as $key => $transition) {
@@ -914,7 +919,7 @@ class WorkflowBehavior extends Behavior
                 $assigneeName = '<'.__('Unassigned').'>';
                 $assigneeId = 0;
             }
-            
+
             $attr['type'] = 'readonly';
             $attr['value'] = $assigneeId;
             $attr['attr']['value'] = $assigneeName;
@@ -1025,6 +1030,29 @@ class WorkflowBehavior extends Behavior
         } else {
             $this->_table->ControllerAction->setFieldOrder($fieldOrder);
         }
+    }
+
+    //Function to return ids of related workflow_models
+    public function getWorkflowModelIds($workflowModelId) {
+        $modelNames = ['%StaffTransfer%']; //Add in model names here for future releated workflow_models
+
+        $WorkFlowModelTable = $this->WorkflowModels;
+
+        foreach ($modelNames as $modelCondition) {
+            $workflowIds = $WorkFlowModelTable
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'id'
+               ])
+               ->where([$WorkFlowModelTable->aliasField('model LIKE') => $modelCondition])
+               ->toArray();
+
+            if (in_array($workflowModelId, $workflowIds)) {
+                return $workflowIds;
+            }
+        }
+
+        return [$workflowModelId];
     }
 
     public function getWorkflowSetup($registryAlias)
