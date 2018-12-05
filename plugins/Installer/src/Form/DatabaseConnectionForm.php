@@ -165,8 +165,11 @@ return [
         $root = $data['database_admin_user'];
         $rootPass = $data['database_admin_password'];
 
-        $db = isset($data['datasource_db']) ? $data['datasource_db'] : Configure::read('installerSchool') ? 'oe_school' : 'oe_core';
-        $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : Configure::read('installerSchool') ? 'oe_school_user' : 'oe_core_user';
+        $default_db_name = Configure::read('installerSchool') ? 'oe_school' : 'oe_core';
+        $default_db_user = Configure::read('installerSchool') ? 'oe_school_user' : 'oe_core_user';
+
+        $db = isset($data['datasource_db']) ? $data['datasource_db'] : $default_db_name;
+        $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : $default_db_user;
         $dbPassword = isset($data['datasource_password']) ? $data['datasource_password'] : bin2hex(random_bytes(4));
 
         $connectionString = sprintf('mysql:host=%s;port=%d', $host, $port);
