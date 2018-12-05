@@ -83,16 +83,27 @@ class NavigationComponent extends Component
             $url['plugin'] = $params['plugin'];
             unset($params['plugin']);
         }
+
         $link = explode('.', $controllerActionModelLink);
-        if (isset($link[0])) {
+
+        if (isset($params['controller'])) {
+            $url['controller'] = $params['controller'];
+            unset($params['controller']);
+        } else if (isset($link[0])) {
             $url['controller'] = $link[0];
         }
-        if (isset($link[1])) {
+
+        if (isset($params['action'])) {
+            $url['action'] = $params['action'];
+            unset($params['action']);
+        } else if (isset($link[1])) {
             $url['action'] = $link[1];
         }
+
         if (isset($link[2])) {
             $url['0'] = $link[2];
         }
+
         if (!empty($params)) {
             $url = array_merge($url, $params);
         }
@@ -1707,6 +1718,17 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'selected' => ['Calendars.index', 'Calendars.view', 'Calendars.add', 'Calendars.edit', 'Calendars.delete']
             ],
+            'Administration.MoodleApi' => [
+                'title' => 'MoodleApi',
+                'parent' => 'Administration',
+                'link' => false,
+            ],
+                'MoodleApi.log' => [
+                    'title' => 'Log',
+                    'parent' => 'Administration.MoodleApi',
+                    'selected' => ['MoodleApiLog.index'],
+                    'params' => ['plugin' => 'MoodleApi', 'controller' => 'MoodleApiLog', 'action' => 'index']
+                ]
         ];
         return $navigation;
     }
