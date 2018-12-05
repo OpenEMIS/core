@@ -22,13 +22,13 @@ class UpdateWithdrawalStudentShell extends Shell
     {
         if (!empty($this->args[0])) {
             $exit = false;
+            $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
             $this->out('Initializing Update of Student Withdrawal Status ('.Time::now().')');
 
             $systemProcessId = $this->SystemProcesses->addProcess('UpdateWithdrawalStudent', getmypid(), $this->args[0]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
 
             while (!$exit) {
-                $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
                 $recordToProcess = $StudentStatusUpdates->getStudentWithdrawalRecords(true);
                 $this->out($recordToProcess);
                 if (!empty($recordToProcess)) {
@@ -41,7 +41,7 @@ class UpdateWithdrawalStudentShell extends Shell
                 }
             }
             $this->out('End Update for Student Withdrawal Status ('.Time::now().')');
-            $event = $this->StudentWithdraw->dispatchEvent('Shell.StudentWithdraw.writeLastExecutedDateToFile');
+            $event = $StudentStatusUpdates->dispatchEvent('Shell.StudentWithdraw.writeLastExecutedDateToFile');
             $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
         }
     }
