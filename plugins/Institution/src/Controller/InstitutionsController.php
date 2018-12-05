@@ -424,6 +424,15 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffRelease']);
     }
+
+    // Timetable
+    public function ScheduleTerms()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Schedule.ScheduleTerms']);
+    }
+
+    // Timetable - END
+    
     // End
 
     // AngularJS
