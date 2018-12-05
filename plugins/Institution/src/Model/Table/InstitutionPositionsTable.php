@@ -529,11 +529,11 @@ class InstitutionPositionsTable extends ControllerActionTable
         if (empty($currentStaff[0])) {
             $value = 'No Current Staff';
         } else {
-            foreach ($currentStaff as $singlecurrentStaff) {
-                if ($singlecurrentStaff->Users->id == end($currentStaff)->Users->id) {
-                    $value .= $singlecurrentStaff->Users->name;
+            foreach ($currentStaff as $singleCurrentStaff) {
+                if ($singleCurrentStaff->Users->id == end($currentStaff)->Users->id) {
+                    $value .= $singleCurrentStaff->Users->name;
                 } else {
-                    $value .= $singlecurrentStaff->Users->name .', ';
+                    $value .= $singleCurrentStaff->Users->name .', ';
                 }
             }
         }
