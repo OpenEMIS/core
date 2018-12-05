@@ -2309,6 +2309,21 @@ trait MessagesTrait
                 ]
             ],
             'addEdit' => 'This feature is for historical record use only. For current records, please refrain from adding record on this page.'
+        ],
+        'Schedule' => [
+            'ScheduleTerms' => [
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
+                    'overlapDates' => 'Date range selected overlap with existing data.'
+                ],
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ]
+            ]
         ]
     ];
 
