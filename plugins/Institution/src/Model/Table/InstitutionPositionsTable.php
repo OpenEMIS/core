@@ -505,7 +505,6 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->find()
             ->select([
                 'Users.id',
-                'Users.openemis_no',
                 'Users.first_name',
                 'Users.middle_name',
                 'Users.third_name',
