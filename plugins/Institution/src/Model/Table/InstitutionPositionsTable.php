@@ -468,11 +468,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('is_homeroom');
-
-        $this->field('created', [
-            'visible' => true,
-            'after' => 'is_homeroom'
-        ]);
+        $this->field('current_staff');
 
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
@@ -496,6 +492,54 @@ class InstitutionPositionsTable extends ControllerActionTable
             $this->request->query['sort'] = 'created';
             $this->request->query['direction'] = 'desc';
         }
+    }
+
+    public function onGetCurrentStaff(Event $event, Entity $entity)
+    {
+        $value = '';
+        $session = $this->Session;
+        $id = $entity->id;
+
+        $Staff = $this->Institutions->Staff;
+        $currentStaff = $Staff
+            ->find()
+            ->select([
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name'
+            ])
+            ->contain(['Users'])
+            ->where([
+                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                $Staff->aliasField('institution_position_id') => $id,
+                'OR' => [
+                    $Staff->aliasField('end_date').' IS NULL',
+                    'AND' => [
+                        $Staff->aliasField('end_date').' IS NOT NULL',
+                        $Staff->aliasField('end_date').' >= DATE(NOW())'
+                    ]
+                ]
+            ])
+            ->order([$Staff->aliasField('start_date')])
+            ->toArray();
+
+        if (empty($currentStaff[0])) {
+            $value = 'No Current Staff';
+        } else {
+            foreach ($currentStaff as $singlecurrentStaff) {
+                if ($singlecurrentStaff->Users->id == end($currentStaff)->Users->id) {
+                    $value .= $singlecurrentStaff->Users->name;
+                } else {
+                    $value .= $singlecurrentStaff->Users->name .', ';
+                }
+            }
+        }
+
+        return $value;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
