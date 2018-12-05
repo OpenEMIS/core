@@ -323,6 +323,7 @@ Plugin::load('Attendance', ['routes' => true, 'autoload' => true]);
 Plugin::load('Guardian', ['routes' => true, 'autoload' => true]);
 Plugin::load('Email', ['routes' => true, 'autoload' => true]);
 Plugin::load('SpecialNeeds', ['routes' => true, 'autoload' => true]);
+Plugin::load('MoodleApi', ['routes' => true, 'autoload' => true]);
 Plugin::load('Historical', ['autoload' => true]);
 
 $pluginPath = Configure::read('plugins');
