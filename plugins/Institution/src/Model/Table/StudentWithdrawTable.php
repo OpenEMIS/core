@@ -13,8 +13,6 @@ use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
 use Cake\I18n\Time;
-use Cake\Filesystem\Folder;
-use Cake\Filesystem\File;
 
 class StudentWithdrawTable extends ControllerActionTable
 {
@@ -65,7 +63,6 @@ class StudentWithdrawTable extends ControllerActionTable
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
         $events['Shell.StudentWithdraw.updateStudentStatusId'] = 'updateStudentStatusId';
-        $events['Shell.StudentWithdraw.writeLastExecutedDateToFile'] = 'writeLastExecutedDateToFile';
 
         foreach ($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
@@ -366,19 +363,5 @@ class StudentWithdrawTable extends ControllerActionTable
             });
 
         return $query;
-    }
-
-    public function writeLastExecutedDateToFile(Event $event)
-    {
-        $today = date('Y-m-d');
-        $passArray = [];
-        $passArray = ['Last executed in '.$this->registryAlias(), $today];
-        $message = json_encode($passArray);
-
-        Log::write('debug', 'Writing last exceuted date ' .$today.' into tmp/UpdateWithdrawalStudent');
-        $dir = new Folder(ROOT . DS . 'tmp');
-        $file = new File($dir->path.'/UpdateWithdrawalStudent', true);
-        $file->write($message);
-        $file->close();
     }
 }

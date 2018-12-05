@@ -18,8 +18,6 @@ use Cake\Network\Session;
 use Cake\Log\Log;
 use Cake\Routing\Router;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Filesystem\Folder;
-use Cake\Filesystem\File;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -657,20 +655,8 @@ class InstitutionsTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $today = date('Y-m-d');
-        $dir = new Folder(ROOT . DS . 'tmp');
-        $file = new File($dir->path.'/UpdateWithdrawalStudent', true);
-        $updateWithdrawalStudent = json_decode($file->read());
-        $lastExectuedDate = $updateWithdrawalStudent[1];
         $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
-        if (is_null($lastExectuedDate) || $today > $lastExectuedDate) {
-            $recordsToUpdate = count($StudentStatusUpdates->getStudentWithdrawalRecords());
-            if ($recordsToUpdate > 0) {
-                $StudentStatusUpdates->triggerUpdateWithdrawalStudentShell();
-            }
-        } else {
-            Log::write('debug', 'UpdateWithdrawalStudentShell last executed on '.$lastExectuedDate);
-        }
+        $StudentStatusUpdates->checkRequireUpdate();
 
         $this->Session->delete('Institutions.id');
 

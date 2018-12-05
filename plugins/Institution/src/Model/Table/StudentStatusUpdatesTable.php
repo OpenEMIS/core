@@ -3,6 +3,9 @@ namespace Institution\Model\Table;
 
 use Cake\Log\Log;
 use Cake\I18n\Time;
+use Cake\Event\Event;
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
@@ -14,6 +17,13 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $this->table('student_status_updates');
         parent::initialize($config);
 	}
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Shell.StudentWithdraw.writeLastExecutedDateToFile'] = 'writeLastExecutedDateToFile';
+        return $events;
+    }
 
     public function afterSave()
     {
@@ -82,5 +92,38 @@ class StudentStatusUpdatesTable extends ControllerActionTable
                 $this->out('error : ' . __METHOD__ . ' exception when triggering UpdateWithdrawalStudentShell: '. $e);
             }
         }
+    }
+
+    public function checkRequireUpdate()
+    {
+        $today = date('Y-m-d');
+        $dir = new Folder(ROOT . DS . 'tmp');
+        $file = new File($dir->path.'/UpdateWithdrawalStudent', true);
+        $updateWithdrawalStudent = json_decode($file->read());
+        $lastExectuedDate = $updateWithdrawalStudent[1];
+        if (is_null($lastExectuedDate) || $today > $lastExectuedDate) {
+            $recordsToUpdate = count($this->getStudentWithdrawalRecords());
+            if ($recordsToUpdate > 0) {
+                $this->triggerUpdateWithdrawalStudentShell();
+            } else {
+                Log::write('debug', 'No records to update');
+            }
+        } else {
+            Log::write('debug', 'UpdateWithdrawalStudentShell last executed on '.$lastExectuedDate);
+        }
+    }
+
+    public function writeLastExecutedDateToFile(Event $event)
+    {
+        $today = date('Y-m-d');
+        $passArray = [];
+        $passArray = ['Last executed in '.$this->registryAlias(), $today];
+        $message = json_encode($passArray);
+
+        Log::write('debug', 'Writing last exceuted date ' .$today.' into tmp/UpdateWithdrawalStudent');
+        $dir = new Folder(ROOT . DS . 'tmp');
+        $file = new File($dir->path.'/UpdateWithdrawalStudent', true);
+        $file->write($message);
+        $file->close();
     }
 }
