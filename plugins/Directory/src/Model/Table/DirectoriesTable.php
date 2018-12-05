@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use Cake\Log\Log;
 
 class DirectoriesTable extends ControllerActionTable
 {
@@ -54,6 +55,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedContactNumberSearch');
         $this->addBehavior('User.AdvancedPositionSearch');
         $this->addBehavior('User.AdvancedSpecificNameTypeSearch');
+        $this->addBehavior('User.MoodleCreateUser');
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [

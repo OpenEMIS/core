@@ -115,7 +115,7 @@ class DirectoryTable extends AppTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraFields[] = [
             'key' => 'Directory.openemis_no',
