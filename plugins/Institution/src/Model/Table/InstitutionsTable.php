@@ -663,9 +663,11 @@ class InstitutionsTable extends ControllerActionTable
         $updateWithdrawalStudent = json_decode($file->read());
         $lastExectuedDate = $updateWithdrawalStudent[1];
         $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
-        $recordsToUpdate = count($StudentStatusUpdates->getStudentWithdrawalRecords());
-        if (is_null($lastExectuedDate) || $today > $lastExectuedDate || $recordsToUpdate > 0) {
-            $StudentStatusUpdates->triggerUpdateWithdrawalStudentShell();
+        if (is_null($lastExectuedDate) || $today > $lastExectuedDate) {
+            $recordsToUpdate = count($StudentStatusUpdates->getStudentWithdrawalRecords());
+            if ($recordsToUpdate > 0) {
+                $StudentStatusUpdates->triggerUpdateWithdrawalStudentShell();
+            }
         } else {
             Log::write('debug', 'UpdateWithdrawalStudentShell last executed on '.$lastExectuedDate);
         }
