@@ -104,6 +104,7 @@ class AlertLogsTable extends ControllerActionTable
                 $lastExecutorName = $Users->get($lastExecutorId)->name;
 
                 $vars = $query->hydrate(false)->first();
+
                 $vars['feature'] = $feature;
                 $vars['last_executor_id'] = $lastExecutorId;
                 $vars['last_executor_name'] = $lastExecutorName;
@@ -115,7 +116,7 @@ class AlertLogsTable extends ControllerActionTable
                     $recipient = $assigneeName . ' <' . $assigneeEmail . '>';
 
                     $defaultSubject = __('[${feature}] (${status.name}) ${created_user.first_name} ${created_user.last_name}');
-                    $subject = $this->replaceMessage($modelAlias, $defaultSubject, $vars);
+                    $subject = $this->replaceMessage($modelAlias, $defaultSubject, $vars, true);
 
                     $defaultMessage = __('Your action is required for [${feature} Workflow].');
                     $defaultMessage .= "\n"; // line break
@@ -126,9 +127,9 @@ class AlertLogsTable extends ControllerActionTable
                     $message = $this->getWorkflowEmailMessage($recordEntity);
 
                     if (is_null($message)) {
-                        $message = $this->replaceMessage($modelAlias, $defaultMessage, $vars);
+                        $message = $this->replaceMessage($modelAlias, $defaultMessage, $vars, true);
                     } else {
-                        $message = $this->replaceMessage($modelAlias, $message, $vars);
+                        $message = $this->replaceMessage($modelAlias, $message, $vars, true);
                     }
 
                     // insert to the alertLog and send the email
@@ -174,7 +175,7 @@ class AlertLogsTable extends ControllerActionTable
         }
     }
 
-    public function replaceMessage($feature, $message, $vars)
+    public function replaceMessage($feature, $message, $vars, $workflow = false)
     {
         $AlertRules = TableRegistry::get('Alert.AlertRules');
         $alertFeatures = $AlertRules->getFeatureOptions();
@@ -187,7 +188,6 @@ class AlertLogsTable extends ControllerActionTable
         if (array_key_exists($feature, $alertFeatures)) {
             // for feature from alert Rule to get the availablePlaceholder
             $alertTypeDetails = $AlertRules->getAlertTypeDetailsByFeature($feature);
-
             $availablePlaceholder = $alertTypeDetails[$feature]['placeholder'];
         }
 
@@ -198,7 +198,7 @@ class AlertLogsTable extends ControllerActionTable
                 $placeholder = substr($str, 0, $pos);
                 $replace = sprintf($format, $placeholder);
 
-                if (empty($availablePlaceholder)) {
+                if (empty($availablePlaceholder) || $workflow) {
                     // for workflow alert
                     $value = Hash::get($vars, $placeholder);
                     if ($value instanceof Date || $value instanceof \Cake\I18n\Date) {
