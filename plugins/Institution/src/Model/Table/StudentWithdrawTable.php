@@ -132,14 +132,11 @@ class StudentWithdrawTable extends ControllerActionTable
 
         if ($existingStudentEntity) {
             $existingStudentEntity->student_status_id = $statuses['WITHDRAWN'];
-            if ($Students->save($existingStudentEntity)) {
-                Log::write('debug', 'Deleting From Student Status Updates: '.$entity->security_user_id);
-                $StudentStatusUpdates->delete($entity);
-            }
-        } else {
-            // this use case need to discuss again
-            $StudentStatusUpdates->delete($entity);
+            $Students->save($existingStudentEntity)
         }
+
+        Log::write('debug', 'Deleting From Student Status Updates: '.$entity->security_user_id);
+        $StudentStatusUpdates->delete($entity);
     }
 
     public function onApproval(Event $event, $id, Entity $workflowTransitionEntity)
