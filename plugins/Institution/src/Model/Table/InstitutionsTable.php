@@ -18,6 +18,8 @@ use Cake\Network\Session;
 use Cake\Log\Log;
 use Cake\Routing\Router;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -655,6 +657,8 @@ class InstitutionsTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $StudentStatusUpdates = TableRegistry::get('StudentStatusUpdates');
+        $StudentStatusUpdates->triggerUpdateWithdrawalStudentShell();
         $this->Session->delete('Institutions.id');
 
         $plugin = $this->controller->plugin;
