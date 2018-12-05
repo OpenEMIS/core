@@ -498,6 +498,18 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.Subjects'],
                     'params' => ['plugin' => 'Institution']
                 ],
+                
+                'Institution.Schedules' => [
+                    'title' => 'Schedules',
+                    'parent' => 'Institution.Academic',
+                    'link' => false
+                ],
+                'Institutions.ScheduleTerms' => [
+                    'title' => 'Terms',
+                    'parent' => 'Institution.Schedules',
+                    'selected' => ['Institutions.ScheduleTerms'],
+                    'params' => ['plugin' => 'Institution']
+                ],
 
                 'Institutions.Textbooks' => [
                     'title' => 'Textbooks',
@@ -525,6 +537,17 @@ class NavigationComponent extends Component
                         'selected' => ['Institutions.FeederIncomingInstitutions'],
                         'params' => ['plugin' => 'Institution']
                     ],
+                // 'Institution.Schedules' => [
+                //     'title' => 'Schedules',
+                //     'parent' => 'Institution.Feeders',
+                //     'link' => false
+                // ],
+                // 'Institutions.ScheduleTerms' => [
+                //     'title' => 'Terms',
+                //     'parent' => 'Institution.Academic',
+                //     'selected' => ['Institutions.ScheduleTerms'],
+                //     'params' => ['plugin' => 'Institution']
+                // ],
 
             'Institutions.Students.index' => [
                 'title' => 'Students',
