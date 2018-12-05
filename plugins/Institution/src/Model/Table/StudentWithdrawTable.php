@@ -13,6 +13,8 @@ use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
 use Cake\I18n\Time;
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
 
 class StudentWithdrawTable extends ControllerActionTable
 {
@@ -63,6 +65,7 @@ class StudentWithdrawTable extends ControllerActionTable
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
         $events['Shell.StudentWithdraw.updateStudentStatusId'] = 'updateStudentStatusId';
+        $events['Shell.StudentWithdraw.writeLastExecutedDateToFile'] = 'writeLastExecutedDateToFile';
 
         foreach ($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
@@ -109,6 +112,7 @@ class StudentWithdrawTable extends ControllerActionTable
 
     public function updateStudentStatusId(Event $event, Entity $entity)
     {
+        Log::write('debug', 'Event successfully dispatched to updateStudentStatusId.');
         $Students = TableRegistry::get('Institution.Students');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $StudentStatusUpdates = TableRegistry::get('StudentStatusUpdates');
@@ -123,20 +127,27 @@ class StudentWithdrawTable extends ControllerActionTable
         ])
         ->first();
 
+        Log::write('debug', 'Updating Student StatusId >>>>>>>>>>>>>>>>>>>>>> ');
+        Log::write('debug', $existingStudentEntity);
+
         if ($existingStudentEntity) {
             $existingStudentEntity->student_status_id = $statuses['WITHDRAWN'];
             if ($Students->save($existingStudentEntity)) {
+                Log::write('debug', 'Deleting From Student Status Updates: '.$entity->security_user_id);
                 $StudentStatusUpdates->delete($entity);
             }
+        } else {
+            // this use case need to discuss again
+            $StudentStatusUpdates->delete($entity);
         }
     }
 
     public function onApproval(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->get($id);
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $StudentStatusUpdates = TableRegistry::get('StudentStatusUpdates');
-        $statuses = $StudentStatuses->findCodeList();
+        Log::write('debug', 'initializing insert newEntity to student_status_updates queue: id >>>> '. $entity->student_id.' student_id >>>> '.$entity->student_id);
+
         $newEntity = $StudentStatusUpdates->newEntity([
             'model' => $this->alias(),
             'model_reference' => $entity->id,
@@ -145,18 +156,10 @@ class StudentWithdrawTable extends ControllerActionTable
             'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id,
             'education_grade_id' => $entity->education_grade_id,
-            'status_id' => $statuses['WITHDRAWN'],
+            'status_id' => $entity->status_id,
         ]);
         $StudentStatusUpdates->save($newEntity);
-
-        $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateWithdrawalStudent';
-        $logs = ROOT . DS . 'logs' . DS . 'UpdateWithdrawalStudent.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-        try {
-            $pid = exec($shellCmd);
-        } catch(\Exception $e) {
-            $this->out('error : ' . __METHOD__ . ' exception when triggering UpdateWithdrawalStudentShell: '. $e);
-        }
+        Log::write('debug', 'newEntity record inserted into student_status_updates queue: id >>>> '. $newEntity->id.' student_id >>>> '.$newEntity->security_user_id);
     }
 
     public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
@@ -368,5 +371,19 @@ class StudentWithdrawTable extends ControllerActionTable
             });
 
         return $query;
+    }
+
+    public function writeLastExecutedDateToFile(Event $event)
+    {
+        $today = date('Y-m-d');
+        $passArray = [];
+        $passArray = ['Last executed in '.$this->registryAlias(), $today];
+        $message = json_encode($passArray);
+
+        Log::write('debug', 'Writing last exceuted date ' .$today.' into tmp/UpdateWithdrawalStudent');
+        $dir = new Folder(ROOT . DS . 'tmp');
+        $file = new File($dir->path.'/UpdateWithdrawalStudent', true);
+        $file->write($message);
+        $file->close();
     }
 }
