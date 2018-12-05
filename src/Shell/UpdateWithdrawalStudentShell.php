@@ -24,11 +24,12 @@ class UpdateWithdrawalStudentShell extends Shell
             $exit = false;
             $this->out('Initializing Update of Student Withdrawal Status ('.Time::now().')');
 
-            $systemProcessId = $this->SystemProcesses->addProcess('UpdateWithdrawalStudent', getmypid(), $this->args[0], '', $this->args[1]);
+            $systemProcessId = $this->SystemProcesses->addProcess('UpdateWithdrawalStudent', getmypid(), $this->args[0]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
 
             while (!$exit) {
-                $recordToProcess = $this->getStudentWithdrawRecords();
+                $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
+                $recordToProcess = $StudentStatusUpdates->getStudentWithdrawalRecords(true);
                 $this->out($recordToProcess);
                 if (!empty($recordToProcess)) {
                     $this->out('Dispatching event to update student withdrawal records for '.$recordToProcess[' security_user_id']);
@@ -43,22 +44,5 @@ class UpdateWithdrawalStudentShell extends Shell
             $event = $this->StudentWithdraw->dispatchEvent('Shell.StudentWithdraw.writeLastExecutedDateToFile');
             $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
         }
-    }
-
-    private function getStudentWithdrawRecords()
-    {
-        $model = $this->StudentWithdraw->alias();
-        $StudentStatusUpdates = TableRegistry::get('StudentStatusUpdates');
-        $today = Time::now();
-
-        $studentWithdrawRecords = $StudentStatusUpdates
-            ->find()
-            ->where([
-                $StudentStatusUpdates->aliasField('effective_date <= ') => $today,
-                $StudentStatusUpdates->aliasField('model') => $model,
-            ])
-            ->order(['created' => 'asc'])
-            ->first();
-        return $studentWithdrawRecords;
     }
 }

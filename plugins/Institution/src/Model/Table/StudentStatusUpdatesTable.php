@@ -20,6 +20,24 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $this->triggerUpdateWithdrawalStudentShell();
     }
 
+    public function getStudentWithdrawalRecords($first = false)
+    {
+        $today = Time::now();
+        $query = $this
+            ->find()
+            ->where([
+                $this->aliasField('effective_date <= ') => $today,
+                $this->aliasField('model') => $this->alias(),
+            ])
+            ->order(['created' => 'asc']);
+        if ($first) {
+            $studentWithdrawRecords = $query->first();
+        } else {
+            $studentWithdrawRecords = $query->toArray();
+        }
+        return $studentWithdrawRecords;
+    }
+
     public function triggerUpdateWithdrawalStudentShell()
     {
         // model - StudentStatusUpdates
@@ -45,13 +63,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         }
         // should only have 1 process running
         if (count($runningProcess) < self::MAX_PROCESSES) {
-            $processModel = $model;
-            $passArray = [
-                'institution_id' => $entity->institution_id
-            ];
-            $params = json_encode($passArray);
-
-            $args = $processModel . " " . $params;
+            $args = $model;
             $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateWithdrawalStudent '.$args;
             $logs = ROOT . DS . 'logs' . DS . 'UpdateWithdrawalStudent.log & echo $!';
             Log::write('debug', '$args');

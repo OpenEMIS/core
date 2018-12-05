@@ -115,7 +115,7 @@ class StudentWithdrawTable extends ControllerActionTable
         Log::write('debug', 'Event successfully dispatched to updateStudentStatusId.');
         $Students = TableRegistry::get('Institution.Students');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $StudentStatusUpdates = TableRegistry::get('StudentStatusUpdates');
+        $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
         $statuses = $StudentStatuses->findCodeList();
         $statusId = $entity->status_id;
         $existingStudentEntity = $Students->find()->where([
@@ -145,18 +145,17 @@ class StudentWithdrawTable extends ControllerActionTable
     public function onApproval(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->get($id);
-        $StudentStatusUpdates = TableRegistry::get('StudentStatusUpdates');
+        $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
         Log::write('debug', 'initializing insert newEntity to student_status_updates queue: id >>>> '. $entity->student_id.' student_id >>>> '.$entity->student_id);
-
         $newEntity = $StudentStatusUpdates->newEntity([
-            'model' => $this->alias(),
+            'model' => $StudentStatusUpdates->alias(),
             'model_reference' => $entity->id,
             'effective_date' => $entity->effective_date,
             'security_user_id' => $entity->student_id,
             'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id,
             'education_grade_id' => $entity->education_grade_id,
-            'status_id' => $entity->status_id,
+            'status_id' => $entity->status_id
         ]);
         $StudentStatusUpdates->save($newEntity);
         Log::write('debug', 'newEntity record inserted into student_status_updates queue: id >>>> '. $newEntity->id.' student_id >>>> '.$newEntity->security_user_id);
