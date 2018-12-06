@@ -356,6 +356,20 @@ class POCOR4356 extends AbstractMigration
 
         // $this->insert('security_functions', $securityData);
         // security_functions - END
+    
+        // locale_contents
+        // $this->execute('CREATE TABLE `z_4365_locale_contents` LIKE `locale_contents`');
+        // $this->execute('INSERT INTO `z_4365_locale_contents` SELECT * FROM `locale_contents`');
+        // 
+        /* 
+            Terms
+            Schedules
+            Intervals
+            All Shifts
+            Add Interval
+        */
+        // 
+        // locale_contents - END
     }
 
     public function down()
