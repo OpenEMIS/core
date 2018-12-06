@@ -7,6 +7,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     var vm = this;
 
     vm.action = 'view';
+    vm.excelUrl = '';
     vm.staffId;
     vm.institutionId;
     vm.history = false;
@@ -292,5 +293,10 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         vm.gridOptions.context.action = vm.action;
         vm.setColumnDef();
         AlertSvc.reset($scope);
+    };
+
+    vm.onExcelClick = function() {
+        vm.excelUrl = vm.excelUrl + '?academic_period_id=' + vm.selectedAcademicPeriod;
+        $window.location.href = vm.excelUrl;
     };
 }
