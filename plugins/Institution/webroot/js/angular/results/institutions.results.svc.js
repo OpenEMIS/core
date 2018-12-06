@@ -54,7 +54,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return $q.all(promises);
         },
 
-        getSubjectEditPermission(subjectId, classId)
+        getSubjectEditPermission(subjectId, classId, academicPeriodId)
         {
             var success = function(response, deferred) {
                 if (angular.isDefined(response.data)) {
@@ -67,7 +67,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return InstitutionSubjectStaffTable  //Change to subject staff table
                 .find('SubjectEditPermission', {
                     subject_id: subjectId,
-                    class_id: classId
+                    class_id: classId,
+                    academic_period_id: academicPeriodId
                 })
                 .ajax({success: success, defer: true});
         },
