@@ -14,6 +14,7 @@ class ScheduleTimeslotsTable extends ControllerActionTable
     public function initialize(array $config)
     {
         $this->table('institution_schedule_timeslots');
+        $this->entityClass('Schedule.ScheduleTimeslots');
         parent::initialize($config);
     }
 

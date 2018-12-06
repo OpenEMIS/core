@@ -515,6 +515,12 @@ class NavigationComponent extends Component
                     'parent' => 'Institution.Academic',
                     'link' => false
                 ],
+                'Institutions.ScheduleIntervals' => [
+                    'title' => 'Intervals',
+                    'parent' => 'Institution.Schedules',
+                    'selected' => ['Institutions.ScheduleIntervals'],
+                    'params' => ['plugin' => 'Institution']
+                ],
                 'Institutions.ScheduleTerms' => [
                     'title' => 'Terms',
                     'parent' => 'Institution.Schedules',
