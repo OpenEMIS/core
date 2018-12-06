@@ -796,12 +796,14 @@ class InstitutionClassStudentsTable extends AppTable
         if ($type == 'PRINCIPAL') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('principal_comments')])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
                         $studentId = $row->student_id;
-                        $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
+                            $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        }
 
                         // Get the report card start/end date
                         $reportCardEntity = $ReportCards->find()
@@ -916,12 +918,14 @@ class InstitutionClassStudentsTable extends AppTable
         } elseif ($type == 'HOMEROOM_TEACHER') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('homeroom_teacher_comments')])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
                         $studentId = $row->student_id;
-                        $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
+                            $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        }
 
                         // Get the report card start/end date
                         $reportCardEntity = $ReportCards->find()
@@ -1057,12 +1061,14 @@ class InstitutionClassStudentsTable extends AppTable
                     $Staff->aliasField('id = ') . $ReportCardsComments->aliasField('staff_id')
                 ])
                 ->where([$SubjectStudents->aliasField('education_subject_id') => $educationSubjectId])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
                         $studentId = $row->student_id;
-                        $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
+                            $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        }
 
                         // Get the report card start/end date
                         $reportCardEntity = $ReportCards->find()
