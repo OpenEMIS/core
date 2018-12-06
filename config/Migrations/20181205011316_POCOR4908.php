@@ -14,17 +14,22 @@ class POCOR4908 extends AbstractMigration
         //Delete
         $this->execute('DELETE FROM import_mapping WHERE `id` = 57');
         $this->execute('UPDATE `import_mapping` SET `column_name` = "date" WHERE `id` = 56');
+        $this->execute('UPDATE `import_mapping` SET `model` = "Institution.StudentAbsencesPeriodDetails" WHERE `id` = 56');
+        $this->execute('UPDATE `import_mapping` SET `model` = "Institution.StudentAbsencesPeriodDetails" WHERE `id` = 58');
+        $this->execute('UPDATE `import_mapping` SET `model` = "Institution.StudentAbsencesPeriodDetails" WHERE `id` = 59');
+        $this->execute('UPDATE `import_mapping` SET `model` = "Institution.StudentAbsencesPeriodDetails" WHERE `id` = 60');
+        $this->execute('UPDATE `import_mapping` SET `model` = "Institution.StudentAbsencesPeriodDetails" WHERE `id` = 88');
 
         $excelRowData = [
             'id' => 57,
             'column_name' => 'period',
-            'model' => 'Institution.InstitutionStudentAbsences',
+            'model' => 'Institution.StudentAbsencesPeriodDetails', // Change to Institution.StudentAbsencesPeriodDetailsTable
             'description' => '',
             'order' => 2,
             'is_optional' => 0,
             'foreign_key' => 3,
             'lookup_plugin' => NULL,
-            'lookup_model' => 'StudentAttendanceMarkTypes',
+            'lookup_model' => 'Period',
             'lookup_column' => 'attendance_per_day'
         ];
 
