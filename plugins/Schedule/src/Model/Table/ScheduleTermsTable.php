@@ -16,7 +16,6 @@ class ScheduleTermsTable extends ControllerActionTable
     public function initialize(array $config)
     {
         $this->table('institution_schedule_terms');
-
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -81,23 +80,43 @@ class ScheduleTermsTable extends ControllerActionTable
             ]);
 
         return $validator;
-    }
-
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        return $events;
-    }
+    } 
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query
-            ->order([$this->aliasField('start_date') => 'ASC']);
+        $query->order([$this->aliasField('start_date') => 'ASC']);
+
+        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+            $query->where([
+                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']  
+            ]);
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setupField();
+
+        // filter options
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+
+        $requestQuery = $this->request->query;
+        if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
+            $selectedPeriodId = $requestQuery['period'];
+        } else {
+            $selectedPeriodId = $this->AcademicPeriods->getCurrent();
+        }
+
+        $extra['selectedAcademicPeriodOptions'] = $selectedPeriodId;
+        $extra['elements']['control'] = [
+            'name' => 'Schedule.Terms/controls',
+            'data' => [
+                'periodOptions'=> $academicPeriodOptions,
+                'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions']
+            ],
+            'order' => 3
+        ];
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
