@@ -284,29 +284,51 @@ class ImportUsersTable extends AppTable
                 return false;
             } else {
                 //use contact_type_id to get contact_options id to save.
-                $userContactTypesTable = TableRegistry::get('User.ContactTypes');
-                $userContactsTable = TableRegistry::get('User.Contacts');
+                $ContactTypesTable = TableRegistry::get('User.ContactTypes');
+                $ContactTable = TableRegistry::get('User.Contacts');
 
-                $contactOptionId = $userContactTypesTable->find()
-                        ->select([$userContactTypesTable->aliasField('contact_option_id')])
-                        ->where([$userContactTypesTable->aliasField('id') => $tempRow['contact_type']])
+                $contactOptionId = $ContactTypesTable->find()
+                        ->select([$ContactTypesTable->aliasField('contact_option_id')])
+                        ->where([$ContactTypesTable->aliasField('id') => $tempRow['contact_type']])
                         ->first();
 
                 if ($contactOptionId) {
-                    $ContactTypeTable = TableRegistry::get('User.Contacts');
-                    $data = [
-                        'contact_type_id' => $tempRow['contact_type'],
-                        'value' => $tempRow['contact'],
-                        'contact_option_id' => $contactOptionId['contact_option_id']
-                    ];
+                    $contactEntity;
 
-                    $contactEntity = $ContactTypeTable->newEntity($data, ['validate' => 'importType']);
+                    //if is existing user validation will be different
+                    if (!empty($tempRow['openemis_no'])) {
+                        $securityUserId = $this->Users->find()
+                                                    ->select([$this->Users->aliasField('id')])
+                                                    ->where([$this->Users->aliasField('openemis_no') => $tempRow['openemis_no']])
+                                                    ->first();
 
+                        $data = [
+                            'contact_type_id' => $tempRow['contact_type'],
+                            'value' => $tempRow['contact'],
+                            'contact_option_id' => $contactOptionId['contact_option_id'],
+                        ];
+
+                        if ($securityUserId) {
+                            $data['security_user_id'] = $securityUserId->id;
+                            $data['preferred'] = 0;
+                            $contactEntity = $ContactTable->newEntity($data);
+                        } else {
+                            $contactEntity = $ContactTable->newEntity($data, ['validate' => 'importType']);
+                        }
+                    }
+
+                    //Display all the error msgs
                     if ($contactEntity->errors()) {
-                        $errorMsg = $contactEntity->errors();
-                        $errorMessages = array_values($errorMsg['value']);
-                        $errorMessageToShow = implode(",",$errorMessages);
+                        $errorMsgArray = $contactEntity->errors();
+                        $errorMessages = [];
 
+                        foreach ($errorMsgArray as $key => $value) {
+                            foreach ($errorMsgArray[$key] as $errorMsg) {
+                                $errorMessages[] = $errorMsg;
+                            }
+                        }
+
+                        $errorMessageToShow = implode(",",$errorMessages);
                         $rowInvalidCodeCols['contact'] = $errorMessageToShow;
                         $tempRow['contact_error'] = true;
                         return false;
