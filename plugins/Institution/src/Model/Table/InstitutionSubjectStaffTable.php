@@ -219,14 +219,15 @@ class InstitutionSubjectStaffTable extends AppTable
     public function findSubjectEditPermission(Query $query, array $options)
     {
         $subjectId = $options['subject_id'];
+        $academicPeriodId = $options['academic_period_id'];
         $userId = $options['user']['id']; // current user
-
         if ($options['user']['super_admin'] == 0) { // if he is not super admin
             $query
                 ->find('bySecurityAccess')
-                ->matching('InstitutionSubjects', function ($q) use ($subjectId) {
+                ->matching('InstitutionSubjects', function ($q) use ($subjectId, $academicPeriodId) {
                     return $q->where([
-                        'InstitutionSubjects.education_subject_id' => $subjectId
+                        'InstitutionSubjects.education_subject_id' => $subjectId,
+                        'InstitutionSubjects.academic_period_id' => $academicPeriodId
                     ]);
                 })
                 ->where([
@@ -236,7 +237,6 @@ class InstitutionSubjectStaffTable extends AppTable
 
             $query
                 ->find('bySecurityRoleAccess');
-
         }
     }
 
