@@ -796,12 +796,14 @@ class InstitutionClassStudentsTable extends AppTable
         if ($type == 'PRINCIPAL') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('principal_comments')])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
                         $studentId = $row->student_id;
-                        $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
+                            $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        }
 
                         // Get the report card start/end date
                         $reportCardEntity = $ReportCards->find()
@@ -820,6 +822,18 @@ class InstitutionClassStudentsTable extends AppTable
                             $row->reportCardStartDate = $reportCardEntity->first()['start_date'];
                             $row->reportCardEndDate = $reportCardEntity->first()['end_date'];
                         }
+
+                        // To get the report card template subjects
+                        $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
+                        $reportCardSubjectsEntity = $ReportCardSubjects->find()
+                            ->select([
+                                'education_subject_id'
+                            ])
+                            ->where([
+                                $ReportCardSubjects->aliasField('report_card_id') => $reportCardId
+                            ])
+                            ->hydrate(false)
+                            ->all();
 
                         // Check if the student belongs to any subject
                         $subjectStudentsEntities = $SubjectStudents->find()
@@ -869,15 +883,19 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('marks IS NOT NULL')
                                     ])
                                     ->all();
-                                if (!$assessmentItemResultsEntities->isEmpty()) {
-                                    foreach ($assessmentItemResultsEntities as $entity) {
-                                        $total_mark += $entity->marks * $entity->weightage;
-                                    }
-                                    
-                                    // Plus one to the subject so that we can keep track how many subject does this student is taking.
-                                    $subjectTaken++;
-                                }
 
+                                    if (!$assessmentItemResultsEntities->isEmpty()) {
+                                    foreach ($assessmentItemResultsEntities as $entity) {
+                                        foreach ($reportCardSubjectsEntity as $reportCardSubjectEntity) {
+                                            if($entity['education_subject_id'] === $reportCardSubjectEntity['education_subject_id']) {
+                                                $total_mark += $entity->marks * $entity->weightage;
+                                                // Plus one to the subject so that we can keep track how many subject does this student is taking within the report card template.
+                                                $subjectTaken++;
+                                            }
+                                        }
+
+                                    }
+                                }
                             }
                         }
 
@@ -900,12 +918,14 @@ class InstitutionClassStudentsTable extends AppTable
         } elseif ($type == 'HOMEROOM_TEACHER') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('homeroom_teacher_comments')])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
                         $studentId = $row->student_id;
-                        $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
+                            $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        }
 
                         // Get the report card start/end date
                         $reportCardEntity = $ReportCards->find()
@@ -924,6 +944,18 @@ class InstitutionClassStudentsTable extends AppTable
                             $row->reportCardStartDate = $reportCardEntity->first()['start_date'];
                             $row->reportCardEndDate = $reportCardEntity->first()['end_date'];
                         }
+
+                        // To get the report card template subjects
+                        $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
+                        $reportCardSubjectsEntity = $ReportCardSubjects->find()
+                            ->select([
+                                'education_subject_id'
+                            ])
+                            ->where([
+                                $ReportCardSubjects->aliasField('report_card_id') => $reportCardId
+                            ])
+                            ->hydrate(false)
+                            ->all();
 
                         // Check if the student belongs to any subject
                         $subjectStudentsEntities = $SubjectStudents->find()
@@ -960,8 +992,6 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('academic_period_id'),
                                         $AssessmentItemResults->aliasField('institution_id'),
                                         'weightage' => $AssessmentItemResults->AssessmentPeriods->aliasField('weight')
-
-
                                     ])
                                     ->contain([
                                         'AssessmentPeriods'
@@ -977,11 +1007,15 @@ class InstitutionClassStudentsTable extends AppTable
 
                                 if (!$assessmentItemResultsEntities->isEmpty()) {
                                     foreach ($assessmentItemResultsEntities as $entity) {
-                                        $total_mark += $entity->marks * $entity->weightage;
-                                    }
+                                        foreach ($reportCardSubjectsEntity as $reportCardSubjectEntity) {
+                                            if($entity['education_subject_id'] === $reportCardSubjectEntity['education_subject_id']) {
+                                                $total_mark += $entity->marks * $entity->weightage;
+                                                // Plus one to the subject so that we can keep track how many subject does this student is taking within the report card template.
+                                                $subjectTaken++;
+                                            }
+                                        }
 
-                                    // Plus one to the subject so that we can keep track how many subject does this student is taking.
-                                    $subjectTaken++;
+                                    }
                                 }
                             }                            
                         }
@@ -998,7 +1032,6 @@ class InstitutionClassStudentsTable extends AppTable
                         }
 
                         $row->average_mark = number_format($total_mark / $subjectTaken, 2);
-
                         return $row;
                     });
                 });
@@ -1028,12 +1061,14 @@ class InstitutionClassStudentsTable extends AppTable
                     $Staff->aliasField('id = ') . $ReportCardsComments->aliasField('staff_id')
                 ])
                 ->where([$SubjectStudents->aliasField('education_subject_id') => $educationSubjectId])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards) {
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
 
                         $studentId = $row->student_id;
-                        $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
+                            $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+                        }
 
                         // Get the report card start/end date
                         $reportCardEntity = $ReportCards->find()
@@ -1104,16 +1139,19 @@ class InstitutionClassStudentsTable extends AppTable
                                 ])
                                 ->all();
 
+                            $total_mark = 0;
                             if (!$assessmentItemResultsEntities->isEmpty()) {
-                                $total_mark = 0;
                                 foreach ($assessmentItemResultsEntities as $entity) {
                                     $total_mark += $entity->marks * $entity->weightage;
-                                    // pr($entity);die;
                                 }
 
                                 $row->total_mark = $total_mark;
+                            }else {
+                                $row->total_mark = '';
+
                             }
                         }
+
                         return $row;
                     });
                 });
