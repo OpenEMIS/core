@@ -46,6 +46,7 @@ class ReportCardsTable extends AppTable
                 'DeputyPrincipal',
                 'InstitutionClasses',
                 'InstitutionSubjectStudents',
+                'InstitutionSubjectStudentsWithName',
                 'StudentBehaviours',
                 'InstitutionStudentAbsences',
                 'CompetencyTemplates',
@@ -92,6 +93,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseDeputyPrincipal'] = 'onExcelTemplateInitialiseDeputyPrincipal';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudents'] = 'onExcelTemplateInitialiseInstitutionSubjectStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudentsWithName'] = 'onExcelTemplateInitialiseInstitutionSubjectStudentsWithName';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentAbsences'] = 'onExcelTemplateInitialiseInstitutionStudentAbsences';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyTemplates'] = 'onExcelTemplateInitialiseCompetencyTemplates';
@@ -684,6 +686,27 @@ class ReportCardsTable extends AppTable
         }
     }
 
+    public function onExcelTemplateInitialiseInstitutionSubjectStudentsWithName(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $entity = $SubjectStudents->find()
+                ->where([
+                    $SubjectStudents->aliasField('student_id') => $params['student_id'],
+                    $SubjectStudents->aliasField('institution_class_id') => $params['institution_class_id'],
+                    $SubjectStudents->aliasField('institution_id') => $params['institution_id'],
+                    $SubjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
+                ])
+                ->contain([
+                    'EducationSubjects'
+                ])
+                ->hydrate(false)
+                ->toArray();
+            return $entity;
+        }
+    }
+
     public function onExcelTemplateInitialiseStudentBehaviours(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
@@ -1063,6 +1086,7 @@ class ReportCardsTable extends AppTable
             // To get the student subject based on the template selected subject
             $StudentSubjects = TableRegistry::get('Student.StudentSubjects');
             $studentRegisteredSubjectAndInsideTemplate = [];
+
             foreach ($entity as $value) {
                 $studentSubjectsQuery = $StudentSubjects->find();
                 $studentSubjectsEntity = $studentSubjectsQuery
@@ -1084,6 +1108,8 @@ class ReportCardsTable extends AppTable
                     array_push($studentRegisteredSubjectAndInsideTemplate, $studentSubjectsEntity->first());
                 }
             }
+
+
             return $studentRegisteredSubjectAndInsideTemplate;
         }
     }
