@@ -1086,7 +1086,6 @@ class ReportCardsTable extends AppTable
             // To get the student subject based on the template selected subject
             $StudentSubjects = TableRegistry::get('Student.StudentSubjects');
             $studentRegisteredSubjectAndInsideTemplate = [];
-
             foreach ($entity as $value) {
                 $studentSubjectsQuery = $StudentSubjects->find();
                 $studentSubjectsEntity = $studentSubjectsQuery
@@ -1108,8 +1107,6 @@ class ReportCardsTable extends AppTable
                     array_push($studentRegisteredSubjectAndInsideTemplate, $studentSubjectsEntity->first());
                 }
             }
-
-
             return $studentRegisteredSubjectAndInsideTemplate;
         }
     }
