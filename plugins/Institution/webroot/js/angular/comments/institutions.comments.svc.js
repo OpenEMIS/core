@@ -266,7 +266,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                         var value = params.data[params.colDef.field];
                         if (!isNaN(parseFloat(value))) {
                             marks =  $filter('number')(params.data[params.colDef.field], 2);
-                        } 
+                        }
                     } 
                     return marks;
                 }
