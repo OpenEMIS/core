@@ -11,9 +11,23 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         Staff: 'Institution.Staff'
     };
 
+    var translateText = {
+        'original': {
+            'Name': 'Name',
+            'Attendance': 'Attendance',
+            'TimeIn': 'Time In',
+            'TimeOut': 'Time Out',
+            'Leave': 'Leave',
+            'Comments': 'Comments',
+        },
+        'translated': {
+        }
+    };
+
     var service = {
         init: init,
         translate: translate,
+        getTranslatedText: getTranslatedText,
         getAcademicPeriodOptions: getAcademicPeriodOptions,
         getWeekListOptions: getWeekListOptions,
         getDayListOptions:getDayListOptions,
@@ -36,6 +50,23 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             deferred.resolve(translated);
         };
         return translation.translate(data, {success: success, defer: true});
+    }
+
+    // data service
+    function getTranslatedText() {
+        var success = function(response, deferred) {
+            var translatedObj = response.data;
+            if (angular.isDefined(translatedObj)) {
+                translateText = translatedObj;
+            }
+            deferred.resolve(angular.isDefined(translatedObj));
+        };
+
+        KdDataSvc.init({translation: 'translate'});
+        return translation.translate(translateText.original, {
+            success: success,
+            defer: true
+        });
     }
 
     function getAcademicPeriodOptions(institutionId) {
@@ -132,7 +163,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
 
         columnDefs.push({
-            headerName: "Name",
+            headerName: translateText.translated.Name,
             field: "_matchingData.Users.name_with_id",
             filter: "text",
             filterParams: filterParams,
@@ -141,7 +172,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         columnDefs.push({
-            headerName: "Time in - Time Out",
+            headerName: translateText.translated.TimeIn + " - " + translateText.translated.TimeOut,
             field: "attendance." + selectedDayDate,
             menuTabs: [],
             suppressSorting: true,
@@ -153,7 +184,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         columnDefs.push({
-            headerName: "Leaves",
+            headerName: translateText.translated.Leave,
             field: "attendance." + selectedDayDate,
             menuTabs: [],
             suppressSorting: true,
@@ -165,7 +196,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         columnDefs.push({
-            headerName: "Comments",
+            headerName: translateText.translated.Comments,
             field: "attendance." + selectedDayDate + ".comment",
             menuTabs: [],
             suppressSorting: true,
@@ -194,7 +225,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
 
         columnDefs.push({
-            headerName: "Name",
+            headerName: translateText.translated.Name,
             field: "_matchingData.Users.name_with_id",
             filterParams: filterParams,
             pinned: direction,
