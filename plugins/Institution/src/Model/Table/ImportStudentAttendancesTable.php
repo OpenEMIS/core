@@ -47,7 +47,6 @@ class ImportStudentAttendancesTable extends AppTable {
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
             'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
             'Model.import.onImportPopulateAbsenceTypesData' => 'onImportPopulateAbsenceTypesData',
-            // 'Model.import.onImportPopulateStudentAttendanceMarkTypesData' => 'onImportPopulateStudentAttendanceMarkTypesData',
             'Model.import.onImportPopulatePeriodData' => 'onImportPopulatePeriodData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.import.onImportGetPeriodId' => 'onImportGetPeriodId',
@@ -120,11 +119,7 @@ class ImportStudentAttendancesTable extends AppTable {
     }
 
     public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
-    //     // $tempRow['entity'] = $this->StudentAbsences->newEntity();
             $tempRow['entity'] = $this->StudentAbsencesPeriodDetails->newEntity();
-    //     // $tempRow['full_day'] = 1;
-    //     // $tempRow['institution_id'] = false;
-    //     // $tempRow['academic_period_id'] = false;
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
@@ -306,20 +301,6 @@ class ImportStudentAttendancesTable extends AppTable {
         $tempRow['academic_period_id'] = $currentPeriodId;
         $classId = $this->request->query('class');
         $tempRow['institution_class_id'] = $classId;
-
-        // if (!$currentPeriodId) {
-        //     $array = $this->AcademicPeriods->getAvailableAcademicPeriods();
-        //     reset($array);
-        //     $currentPeriodId = key($array);
-        // }
-        // $isEditable = $this->AcademicPeriods->getAvailableAcademicPeriods($currentPeriodId);
-        // if (!$isEditable) {
-        //     $rowInvalidCodeCols['academic_period_id'] = __('No data changes can be made for the current academic period');
-        //     $tempRow['academic_period_id'] = false;
-        //     return false;
-        // }
-
-        // pr($tempRow);die;
 
         if (empty($tempRow['date'])) {
             $rowInvalidCodeCols['date'] = __('This field cannot be left empty');
