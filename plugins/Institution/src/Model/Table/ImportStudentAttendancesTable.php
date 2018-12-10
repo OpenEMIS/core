@@ -89,19 +89,6 @@ class ImportStudentAttendancesTable extends AppTable {
             $aryRequestData = $this->request->data[$this->alias()];
 
             foreach ($aryRequestData as $requestData => $value) {
-                if ($unsetFlag) {
-                    unset($this->request->query[$requestData]);
-                    $this->request->data[$this->alias()][$requestData] = 0;
-                }
-
-                if ($currentFieldName == str_replace("_", "", $requestData)) {
-                    $unsetFlag = true;
-                }
-            }
-
-            $aryRequestData = $this->request->data[$this->alias()];
-
-            foreach ($aryRequestData as $requestData => $value) {
                 if (isset($this->dependency[$requestData]) && $value) {
                     $aryDependencies = $this->dependency[$requestData];
                     foreach ($aryDependencies as $dependency) {
@@ -162,7 +149,6 @@ class ImportStudentAttendancesTable extends AppTable {
                                  'InstitutionClasseStudents' => [
                                      'table' => 'institution_class_students',
                                      'alias' => 'InstitutionClassStudents',
-                                     // 'type' => 'LEFT',
                                      'conditions' => 'InstitutionClassStudents.student_id = '.$this->Students->aliasField('student_id'),
                                  ],
                                 ])
@@ -262,7 +248,6 @@ class ImportStudentAttendancesTable extends AppTable {
     public function onImportPopulatePeriodData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 
         $classId = !empty($this->request->query('class')) ? $this->request->query('class') : '';
-        // $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
 
         //Get the attendance per day that class needs to mark
@@ -284,7 +269,6 @@ class ImportStudentAttendancesTable extends AppTable {
 
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-
         if (empty($tempRow['student_id'])) {
             $rowInvalidCodeCols['student_id'] = __('OpenEMIS ID was not defined');
             return false;
