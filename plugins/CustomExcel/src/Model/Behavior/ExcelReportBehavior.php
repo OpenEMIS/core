@@ -23,6 +23,8 @@ use PhpOffice\PhpSpreadsheet\Cell\DataType;
 
 class ExcelReportBehavior extends Behavior
 {
+    use PdfReportTrait;
+
     protected $_defaultConfig = [
         'folder' => 'export',
         'subfolder' => 'customexcel',
@@ -46,10 +48,14 @@ class ExcelReportBehavior extends Behavior
         'image' => 'image'
     ];
 
+    private $libraryTypes = [
+        'xlsx' => 'Xlsx',
+        'pdf' => 'Mpdf'
+    ];
+
     public function initialize(array $config)
     {
         parent::initialize($config);
-
         $model = $this->_table;
         $folder = WWW_ROOT . $this->config('folder');
         $subfolder = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder');
@@ -94,6 +100,7 @@ class ExcelReportBehavior extends Behavior
     public function renderExcelTemplate(ArrayObject $extra)
     {
         $model = $this->_table;
+        $format = $this->config('format');
 
         if (array_key_exists('requestQuery', $extra)) {
             $params = $extra['requestQuery'];
@@ -106,18 +113,21 @@ class ExcelReportBehavior extends Behavior
 
         $extra['vars'] = $this->getVars($params, $extra);
 
-        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('format');
+
+        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
 
         $temppath = tempnam($extra['path'], $this->config('filename') . '_');
         $extra['file_path'] = $temppath;
 
+
         $objSpreadsheet = $this->loadExcelTemplate($extra);
         $this->generateExcel($objSpreadsheet, $extra);
 
-        if ($this->config('format') == 'xlsx') {
-            $this->saveExcel($objSpreadsheet, $temppath);
-        }
+        Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
+
+
+        $this->saveFile($objSpreadsheet, $temppath, $format);
 
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
@@ -140,7 +150,7 @@ class ExcelReportBehavior extends Behavior
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
             $tempfile->close();
-            
+
             $this->downloadFile($tempcontent, $extra['file'], $tempinfo['filesize']);
         }
 
@@ -192,7 +202,6 @@ class ExcelReportBehavior extends Behavior
                 }
             }
         }
-
         return $objSpreadsheet;
     }
 
@@ -220,6 +229,12 @@ class ExcelReportBehavior extends Behavior
 
         $targetCell = $objWorksheet->getCell($cellCoordinate);
         $targetColumnValue = $targetCell->getColumn();
+        $targetRowValue = $targetCell->getRow();
+
+
+        //To identify Last Col and Row
+        $this->checkLastColumn($targetColumnValue);
+        $this->checkLastRow($targetRowValue);
 
         switch($type) {
             case 'number':
@@ -347,13 +362,24 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    public function saveExcel($objSpreadsheet, $filepath)
+    public function saveFile($objSpreadsheet, $filepath, $format)
     {
+        Log::write('debug', 'ExcelReportBehavior >>> saveFile: '.$format);
+        $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
+
+        if ($format == 'pdf') {
+            $this->savePDF($objSpreadsheet, $filepath);
+        } else {
+            // xlsx
+            $objWriter->save($filepath);
+        }
+
         $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
         $objWriter->save($filepath);
         $objSpreadsheet->disconnectWorksheets();
         unset($objWriter, $objSpreadsheet);
         gc_collect_cycles();
+
     }
 
     public function downloadFile($filecontent, $filename, $filesize)
@@ -413,10 +439,10 @@ class ExcelReportBehavior extends Behavior
 
     private function getFile($phpResourceFile)
     {
-        $file = ''; 
+        $file = '';
         while (!feof($phpResourceFile)) {
-            $file .= fread($phpResourceFile, 8192); 
-        } 
+            $file .= fread($phpResourceFile, 8192);
+        }
         fclose($phpResourceFile);
 
         return $file;
@@ -578,6 +604,11 @@ class ExcelReportBehavior extends Behavior
 
     private function processWorksheet($objSpreadsheet, $objWorksheet, $extra)
     {
+        if ($this->currentWorksheet !== $objWorksheet) {
+            $this->currentWorksheetIndex++;
+            $this->currentWorksheet = $objWorksheet;
+        }
+
         $extra['placeholders'] = [];
         $this->processBasicPlaceholder($objSpreadsheet, $objWorksheet, $extra);
 
@@ -593,7 +624,6 @@ class ExcelReportBehavior extends Behavior
 
         foreach ($cells as $cellCoordinate) {
             $objCell = $objWorksheet->getCell($cellCoordinate);
-
             if (is_object($objCell->getValue())) {
                 $cellValue = $objCell->getValue()->getPlainText();
             } else {
@@ -601,6 +631,8 @@ class ExcelReportBehavior extends Behavior
             }
 
             if (strlen($cellValue) > 0) {
+                $this->checkLastRow($objCell->getRow());
+
                 $pos = strpos($cellValue, '${');
 
                 if ($pos !== false) {
@@ -617,6 +649,7 @@ class ExcelReportBehavior extends Behavior
                 }
             }
         }
+
     }
 
     private function processAdvancedPlaceholder($objSpreadsheet, $objWorksheet, $extra)
@@ -636,7 +669,6 @@ class ExcelReportBehavior extends Behavior
 
             foreach ($this->advancedTypes as $function => $keyword) {
                 $value = $this->getAdvancedTypeKeyword($keyword);
-
                 $pos = strpos($cellValue, $value);
                 if ($pos !== false) {
                     if (method_exists($this, $function)) {
