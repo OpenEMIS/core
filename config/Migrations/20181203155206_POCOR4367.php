@@ -50,8 +50,14 @@ class POCOR4367 extends AbstractMigration
                 'null' => false,
             ])
             ->addColumn('status_id', 'integer', [
-                'comment' => 'links to workflow_steps.id',
+                'comment' => 'links to student_statuses.id',
                 'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('execution_status', 'integer', [
+                'comment' => '1 -> Executed , 2 -> Not Executed',
+                'default' => 1,
                 'limit' => 11,
                 'null' => false
             ])
