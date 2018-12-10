@@ -56,7 +56,7 @@ class POCOR4367 extends AbstractMigration
                 'null' => false
             ])
             ->addColumn('execution_status', 'integer', [
-                'comment' => '1 -> Executed , 2 -> Not Executed',
+                'comment' => '1 -> Not Executed , 2 -> Executed',
                 'default' => 1,
                 'limit' => 11,
                 'null' => false
