@@ -295,26 +295,24 @@ class ImportUsersTable extends AppTable
                 if ($contactOptionId) {
                     $contactEntity;
 
-                    //if is existing user validation will be different
-                    if (!empty($tempRow['openemis_no'])) {
-                        $securityUserId = $this->Users->find()
-                                                    ->select([$this->Users->aliasField('id')])
-                                                    ->where([$this->Users->aliasField('openemis_no') => $tempRow['openemis_no']])
-                                                    ->first();
+                    $securityUserId = $this->Users->find()
+                                                ->select([$this->Users->aliasField('id')])
+                                                ->where([$this->Users->aliasField('openemis_no') => $tempRow['openemis_no']])
+                                                ->first();
 
-                        $data = [
-                            'contact_type_id' => $tempRow['contact_type'],
-                            'value' => $tempRow['contact'],
-                            'contact_option_id' => $contactOptionId['contact_option_id'],
-                        ];
+                    $data = [
+                        'contact_type_id' => $tempRow['contact_type'],
+                        'value' => $tempRow['contact'],
+                        'contact_option_id' => $contactOptionId['contact_option_id'],
+                    ];
 
-                        if ($securityUserId) {
-                            $data['security_user_id'] = $securityUserId->id;
-                            $data['preferred'] = 0;
-                            $contactEntity = $ContactTable->newEntity($data);
-                        } else {
-                            $contactEntity = $ContactTable->newEntity($data, ['validate' => 'importType']);
-                        }
+                    if ($securityUserId) {  //if is existing user validation will be different
+
+                        $data['security_user_id'] = $securityUserId->id;
+                        $data['preferred'] = 0;
+                        $contactEntity = $ContactTable->newEntity($data);
+                    } else {
+                        $contactEntity = $ContactTable->newEntity($data, ['validate' => 'importType']);
                     }
 
                     //Display all the error msgs
