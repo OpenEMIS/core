@@ -462,14 +462,49 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
+    private function checkIsOverStudentClassCapacity($classId)
+    {
+        if (!empty($classId)) {
+            $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
+
+            //Query to check if selected student and next class have capacity and return the classes that do not have
+            $results = $institutionClassTable->find('all', array('fields' => array('id', 'name'), 'contain' => array()));
+            $conditions['OR'] = [];
+            $conditions['OR'][] = [
+                        $institutionClassTable->aliasField('capacity') . '-' . $institutionClassTable->aliasField('total_male_students') . '-' . $institutionClassTable->aliasField('total_female_students') . ' < :value',
+                        $institutionClassTable->aliasField('id =') => $classId
+            ];
+            $results->bind(':value', 1, "integer");
+            $results->where($conditions);
+            $overCapacityClass = $results->first();
+
+            if (!empty($overCapacityClass)) {
+                $this->Alert->clear();
+                $this->Alert->show( 'Next class ' . $overCapacityClass['name'] . ' does not have enough capacity for students.','error',['reset' => true]);
+                return true;
+            }
+        }
+        return false;
+    }
+
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
+        $checkResult = false;
         $process = function ($model, $entity) use ($event, $extra) {
             if (empty($entity->errors())) {
-                // write data to session
-                $this->Session->write($this->registryAlias().'.confirm', $entity);
-                $event->stopPropagation();
-                return $this->controller->redirect($this->url('reconfirm'));
+                if ($entity->has('institution_class_id')) {
+                    $checkResult = $this->checkIsOverStudentClassCapacity($entity->institution_class_id);
+                }
+
+                if ($checkResult) {
+                    $event->stopPropagation();
+                    return $this->controller->redirect($this->url('add'));
+                } else {
+                    // write data to session
+                    $this->Session->write($this->registryAlias().'.confirm', $entity);
+                    $event->stopPropagation();
+                    return $this->controller->redirect($this->url('reconfirm'));
+                }
             }
         };
 
