@@ -11,7 +11,8 @@ use App\Model\Table\AppTable;
 
 class ReportCardsTable extends AppTable
 {
-    private $fileType = 'xlsx';
+    // private $fileType = 'xlsx';
+    private $fileType = 'pdf';
 
     public function initialize(array $config)
     {

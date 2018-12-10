@@ -514,10 +514,16 @@ class InstitutionsController extends AppController
             $customUrl['action'] = 'export';
             $customUrl[0] = 'AssessmentResults';
             $this->set('customExcel', Router::url($customUrl));
+
+            $exportPDF_Url = $this->ControllerAction->url('index');
+            $exportPDF_Url['plugin'] = 'CustomExcel';
+            $exportPDF_Url['controller'] = 'CustomExcels';
+            $exportPDF_Url['action'] = 'exportPDF';
+            $exportPDF_Url[0] = 'AssessmentResults';
+            $this->set('exportPDF', Router::url($exportPDF_Url));
         }
 
         $this->set('excelUrl', Router::url($url));
-
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
 
