@@ -497,43 +497,18 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function onGetCurrentStaff(Event $event, Entity $entity)
     {
         $value = '';
-        $session = $this->Session;
         $id = $entity->id;
 
-        $Staff = $this->Institutions->Staff;
-        $currentStaff = $Staff
-            ->find()
-            ->select([
-                'Users.id',
-                'Users.first_name',
-                'Users.middle_name',
-                'Users.third_name',
-                'Users.last_name',
-                'Users.preferred_name'
-            ])
-            ->contain(['Users'])
-            ->where([
-                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
-                $Staff->aliasField('institution_position_id') => $id,
-                'OR' => [
-                    $Staff->aliasField('end_date').' IS NULL',
-                    'AND' => [
-                        $Staff->aliasField('end_date').' IS NOT NULL',
-                        $Staff->aliasField('end_date').' >= DATE(NOW())'
-                    ]
-                ]
-            ])
-            ->order([$Staff->aliasField('start_date')])
-            ->toArray();
+        $currentStaff = $this->getCurrentStaff($id)->toArray();
 
         if (empty($currentStaff[0])) {
             $value = '-';
         } else {
             foreach ($currentStaff as $singleCurrentStaff) {
-                if ($singleCurrentStaff->Users->id == end($currentStaff)->Users->id) {
-                    $value .= $singleCurrentStaff->Users->name;
+                if ($singleCurrentStaff->user->id == end($currentStaff)->user->id) {
+                    $value .= $singleCurrentStaff->user->name;
                 } else {
-                    $value .= $singleCurrentStaff->Users->name .', ';
+                    $value .= $singleCurrentStaff->user->name .', ';
                 }
             }
         }
@@ -658,32 +633,8 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
         // start Current Staff List field
         $Staff = $this->Institutions->Staff;
-        $currentStaff = $Staff
-            ->find()
-            ->select([
-                $Staff->aliasField('FTE'),
-                $Staff->aliasField('start_date'),
-                'Users.id',
-                'Users.openemis_no',
-                'Users.first_name',
-                'Users.middle_name',
-                'Users.third_name',
-                'Users.last_name',
-                'Users.preferred_name'
-            ])
-            ->contain(['Users'])
-            ->where([
-                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
-                $Staff->aliasField('institution_position_id') => $id,
-                'OR' => [
-                    $Staff->aliasField('end_date').' IS NULL',
-                    'AND' => [
-                        $Staff->aliasField('end_date').' IS NOT NULL',
-                        $Staff->aliasField('end_date').' >= DATE(NOW())'
-                    ]
-                ]
-            ])
-            ->order([$Staff->aliasField('start_date')]);
+        $currentStaff = $this->getCurrentStaff($id);        
+
         $this->fields['current_staff_list']['data'] = $currentStaff;
         $totalCurrentFTE = '0.00';
         if (count($currentStaff) > 0) {
@@ -982,5 +933,40 @@ class InstitutionPositionsTable extends ControllerActionTable
         if (!empty($entity->staff_id)) {
             return $UsersTable->get($entity->staff_id)->name;
         }
+    }
+
+    private function getCurrentStaff($id)
+    {
+        $session = $this->Session;
+
+        $Staff = $this->Institutions->Staff;
+        $currentStaff = $Staff
+            ->find()
+            ->select([
+                $Staff->aliasField('FTE'),
+                $Staff->aliasField('start_date'),
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name'
+            ])
+            ->contain(['Users'])
+            ->where([
+                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                $Staff->aliasField('institution_position_id') => $id,
+                'OR' => [
+                    $Staff->aliasField('end_date').' IS NULL',
+                    'AND' => [
+                        $Staff->aliasField('end_date').' IS NOT NULL',
+                        $Staff->aliasField('end_date').' >= DATE(NOW())'
+                    ]
+                ]
+            ])
+            ->order([$Staff->aliasField('start_date')]);
+
+        return $currentStaff;
     }
 }
