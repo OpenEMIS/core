@@ -527,7 +527,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->toArray();
 
         if (empty($currentStaff[0])) {
-            $value = 'No Current Staff';
+            $value = '-';
         } else {
             foreach ($currentStaff as $singleCurrentStaff) {
                 if ($singleCurrentStaff->Users->id == end($currentStaff)->Users->id) {
