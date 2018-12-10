@@ -633,7 +633,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
         // start Current Staff List field
         $Staff = $this->Institutions->Staff;
-        $currentStaff = $this->getCurrentStaff($id);        
+        $currentStaff = $this->getCurrentStaff($id);
 
         $this->fields['current_staff_list']['data'] = $currentStaff;
         $totalCurrentFTE = '0.00';
