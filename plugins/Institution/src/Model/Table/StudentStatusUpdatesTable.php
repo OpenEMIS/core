@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use Cake\ORM\Entity;
 use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\Event\Event;
@@ -12,32 +13,73 @@ use App\Model\Table\ControllerActionTable;
 class StudentStatusUpdatesTable extends ControllerActionTable
 {
     const MAX_PROCESSES = 1;
+    const EXECUTED = 1;
+    const NOT_EXECUTED = 2;
 	public function initialize(array $config)
     {
         $this->table('student_status_updates');
         parent::initialize($config);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses', 'foreignKey' => 'status_id']);
+
+        // only allow index and edit
+        $this->toggle('add', false);
+        $this->toggle('edit', false);
+        $this->toggle('remove', false);
 	}
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
+        $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
         $events['Shell.StudentWithdraw.writeLastExecutedDateToFile'] = 'writeLastExecutedDateToFile';
         return $events;
     }
 
+    public function studentsAfterDelete(Event $event, Entity $student)
+    {
+        $this->removePendingWithdraw($student);
+    }
+
+    protected function removePendingWithdraw($student)
+    {
+        $conditions = [
+            'security_user_id' => $student->student_id,
+            'institution_id' => $student->institution_id,
+            'education_grade_id' => $student->education_grade_id,
+            'academic_period_id' => $student->academic_period_id,
+        ];
+
+        $entity = $this
+                ->find()
+                ->where(
+                    $conditions
+                )
+                ->first();
+
+        if (!empty($entity)) {
+            $this->delete($entity);
+        }
+    }
+
     public function afterSave()
     {
+        Log::write('debug', 'in afterSave');
         $this->triggerUpdateWithdrawalStudentShell();
     }
 
     public function getStudentWithdrawalRecords($first = false)
     {
+        $StudentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
         $today = Time::now();
         $query = $this
             ->find()
             ->where([
                 $this->aliasField('effective_date <= ') => $today,
-                $this->aliasField('model') => $this->alias(),
+                $this->aliasField('model') => $StudentWithdraw->alias(),
+                $this->aliasField('execution_status') => 1
             ])
             ->order(['created' => 'asc']);
         if ($first) {
