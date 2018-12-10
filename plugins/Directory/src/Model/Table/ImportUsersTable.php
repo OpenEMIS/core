@@ -307,7 +307,6 @@ class ImportUsersTable extends AppTable
                     ];
 
                     if ($securityUserId) {  //if is existing user validation will be different
-
                         $data['security_user_id'] = $securityUserId->id;
                         $data['preferred'] = 0;
                         $contactEntity = $ContactTable->newEntity($data);
