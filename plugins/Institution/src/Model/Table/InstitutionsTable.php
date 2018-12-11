@@ -655,9 +655,6 @@ class InstitutionsTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
-        $StudentStatusUpdates->checkRequireUpdate();
-
         $this->Session->delete('Institutions.id');
 
         $plugin = $this->controller->plugin;
