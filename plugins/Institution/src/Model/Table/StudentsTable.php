@@ -24,6 +24,7 @@ class StudentsTable extends ControllerActionTable
     const PENDING_TRANSFEROUT = -2;
     const PENDING_ADMISSION = -3;
     const PENDING_WITHDRAW = -4;
+    const IN_QUEUE = -10;
 
     private $dashboardQuery = null;
 
@@ -599,7 +600,8 @@ class StudentsTable extends ControllerActionTable
             self::PENDING_ADMISSION => 'StudentAdmission',
             self::PENDING_TRANSFERIN => 'StudentTransferIn',
             self::PENDING_TRANSFEROUT => 'StudentTransferOut',
-            self::PENDING_WITHDRAW => 'StudentWithdraw'
+            self::PENDING_WITHDRAW => 'StudentWithdraw',
+            self::IN_QUEUE => 'StudentStatusUpdates',
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
@@ -670,6 +672,7 @@ class StudentsTable extends ControllerActionTable
             self::PENDING_TRANSFEROUT => __('Pending Transfer Out'),
             self::PENDING_ADMISSION => __('Pending Admission'),
             self::PENDING_WITHDRAW => __('Pending Withdraw'),
+            self::IN_QUEUE => __('In Queue'),
         ];
 
         $statusOptions = $statusOptions + $pendingStatus;

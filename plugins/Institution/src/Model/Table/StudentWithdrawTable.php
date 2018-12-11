@@ -178,9 +178,22 @@ class StudentWithdrawTable extends ControllerActionTable
         ])
         ->first();
 
+        $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
+        $studentStatusUpdates = $StudentStatusUpdates->find()->where([
+            $StudentStatusUpdates->aliasField('institution_id') => $institutionId,
+            $StudentStatusUpdates->aliasField('security_user_id') => $studentId,
+            $StudentStatusUpdates->aliasField('academic_period_id') => $periodId,
+            $StudentStatusUpdates->aliasField('education_grade_id') => $gradeId
+        ])
+        ->first();
+
         if ($existingStudentEntity) {
             $existingStudentEntity->student_status_id = $statuses['CURRENT'];
             $Students->save($existingStudentEntity);
+        }
+
+        if ($studentStatusUpdates) {
+            $StudentStatusUpdates->delete($studentStatusUpdates);
         }
     }
 
