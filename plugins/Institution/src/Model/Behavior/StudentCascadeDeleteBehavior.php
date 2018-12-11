@@ -42,7 +42,8 @@ class StudentCascadeDeleteBehavior extends Behavior
 
         $listeners = [
             TableRegistry::get('Institution.StudentAdmission'),
-            TableRegistry::get('Institution.StudentWithdraw')
+            TableRegistry::get('Institution.StudentWithdraw'),
+            TableRegistry::get('Institution.StudentStatusUpdates')
         ];
         $this->_table->dispatchEventToModels('Model.Students.afterDelete', [$entity], $this->_table, $listeners);
     }
