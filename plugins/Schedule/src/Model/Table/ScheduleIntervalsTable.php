@@ -21,7 +21,13 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Shifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'institution_shift_id']);
-        $this->hasMany('Timeslots', ['className' => 'Schedule.ScheduleTimeslots', 'foreignKey' => 'institution_schedule_interval_id']);
+
+        $this->hasMany('Timeslots', [
+            'className' => 'Schedule.ScheduleTimeslots', 
+            'foreignKey' => 'institution_schedule_interval_id', 
+            'dependent' => true, 
+            'cascadeCallbacks' => true
+        ]);
 
         $this->addBehavior('Schedule.Schedule');
     }
@@ -29,6 +35,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
+
+        $validator
+            ->requirePresence('timeslots', 'create');
 
         return $validator;
     }
@@ -51,6 +60,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $query
+            ->contain(['Shifts.ShiftOptions']);
+
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
                 $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']  
@@ -109,18 +121,65 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('name');
         $this->field('institution_shift_id', ['type' => 'select']);
-        $this->field('intevals', [
+        $this->field('intervals', [
             'type' => 'element',
             'element' => 'Schedule.Intervals/interval_timeslots'
         ]);
-        $this->setFieldOrder(['academic_period_id', 'name', 'institution_shift_id']);
+        $this->setFieldOrder(['academic_period_id', 'name', 'institution_shift_id', 'intervals']);
+    }
+
+    // public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, $patchOptions, $extra)
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query
+            ->contain([
+                'Shifts.ShiftOptions',
+                'Timeslots'
+            ]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('academic_period_id', ['entity' => $entity]);
+        $this->field('name');
+        $this->field('institution_shift_id');
+        $this->field('intervals', [
+            'type' => 'element',
+            'element' => 'Schedule.Intervals/interval_timeslots'
+        ]);
+
+        $this->setFieldOrder(['academic_period_id', 'name', 'institution_shift_id', 'intervals']);
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        pr('beforeMarshal');
-        pr($data);
-        die;
+        if (array_key_exists('submit', $data) && ($data['submit'] == 'changeInterval')) {
+            $institutionShiftId = $data['institution_shift_id'];
+            $startTime = $this->Shifts->get($institutionShiftId)->start_time;
+
+            // requires further checking
+            // -> start time can come out even without interval
+            foreach ($data['timeslots'] as $i => $timeslot) {
+                if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                    $timeslotInterval = $timeslot['interval'];
+                    $data['timeslots'][$i]['start_time_add'] = $this->formatTime($startTime);
+                    $modifyString = '+' . $timeslotInterval . ' minutes';
+                    $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
+                }
+            }
+        }
+
+
+        if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+            foreach ($data['timeslots'] as $i => $timeslot) {
+                $data['timeslots'][$i]['order'] = $i + 1;
+            }
+        }
+
+        $options['associated'] = [
+            'Timeslots' => ['validate' => false]
+        ];
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -130,7 +189,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
             $attr['select'] = false;
             $attr['options'] = $this->AcademicPeriods->getYearList();
             $attr['default'] = $this->AcademicPeriods->getCurrent();
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = 'changeAcademicPeriod';
         } elseif ($action == 'edit') {
             $attr['type'] = 'readonly';
         }
@@ -149,7 +208,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
             $attr['type'] = 'select';
             $attr['options'] = $this->getShiftOptions($selectedPeriodId);
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = 'changeShiftId';
             return $attr;
         } elseif ($action == 'edit') {
             $attr['type'] = 'readonly';
@@ -167,13 +226,23 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         if ($data->offsetExists($this->alias())) {
             $data[$this->alias()][$fieldKey][] = [
-                'inteval' => '',
+                'intervals' => '',
             ];
         }
 
         $options['associated'] = [
             'Timeslots' => ['validate' => false]
         ];
+    }
+
+    public function addOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $data['institution_shift_id'] = '';
+    }
+
+    public function onGetInstitutionShiftId(Event $event, Entity $entity)
+    {
+        return $entity->shift->shift_option->name;
     }
 
     private function getShiftOptions($academicPeriodId, $allShiftOption = false)

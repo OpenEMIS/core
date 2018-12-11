@@ -3,10 +3,9 @@
     $fieldKey = 'timeslots';
     $action = $ControllerAction['action'];
 
-    if ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') {
-        // $this->Form->unlockField('Examinations.examination_items');
-    }
-
+    // if ($ControllerAction['action'] == 'add') {
+    //     $this->Form->unlockField($alias . '.' . $fieldKey);
+    // }
     // pr($data);
     // die;
 ?>
@@ -15,34 +14,18 @@
     <div class="table-in-view">
         <table class="table">
             <thead>
-                <th><?= __('Code') ?></th>
-                <th><?= __('Name') ?></th>
-                <th><?= __('Weight') ?></th>
-                <th><?= __('Education Subject') ?></th>
-                <th><?= __('Grading Type') ?></th>
-                <th><?= __('Date') ?></th>
                 <th><?= __('Start Time') ?></th>
                 <th><?= __('End Time') ?></th>
+                <th><?= __('Interval') . ' (' . __('mins') . ')' ?></th>
             </thead>
 
-            <?php if (isset($data['examination_items'])) : ?>
+            <?php if ($data->has('timeslots') && !empty($data->timeslots)) : ?>
                 <tbody>
-                    <?php foreach ($data['examination_items'] as $i => $item) : ?>
+                    <?php foreach ($data->timeslots as $i => $timeslot) : ?>
                         <tr>
-                            <td><?= $item->code ?></td>
-                            <td><?= $item->name ?></td>
-                            <td><?= $item->weight ?></td>
-                            <td>
-                                <?php
-                                    if ($item->has('education_subject') && $item->education_subject->has('name')) {
-                                        echo $item->education_subject->name;
-                                    }
-                                ?>
-                            </td>
-                            <td><?= $item->examination_grading_type->name ?></td>
-                            <td><?= !is_null($item->examination_date) ? $item->examination_date->format('d-m-Y') : '' ?></td>
-                            <td><?= !is_null($item->start_time) ? $item->start_time->format('H:i A') : '' ?></td>
-                            <td><?= !is_null($item->end_time) ? $item->end_time->format('H:i A') : '' ?></td>
+                            <td><?= $timeslot->start_time ?></td>
+                            <td><?= $timeslot->end_time ?></td>
+                            <td><?= $timeslot->interval ?></td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
@@ -52,15 +35,19 @@
 
 <?php elseif ($ControllerAction['action'] == 'add') : ?>
     <?php
-        if ($ControllerAction['action'] == 'add') {
-            echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add').'</span>', [
-                'label' => __('Add Interval'),
-                'type' => 'button',
-                'class' => 'btn btn-default',
-                'aria-expanded' => 'true',
-                'onclick' => "$('#reload').val('addTimeslot').click();"
-            ]);
+        $addButtonAttr = [
+            'label' => __('Add Interval'),
+            'type' => 'button',
+            'class' => 'btn btn-default',
+            'aria-expanded' => 'true',
+            'onclick' => "$('#reload').val('addTimeslot').click();"
+        ];
+
+        if (!$data->has('institution_shift_id') || $ControllerAction['action'] == 'edit') {
+            $addButtonAttr['disabled'] = 'disabled';
         }
+
+        echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add').'</span>', $addButtonAttr);
     ?>
     <div class="input clearfix required">
         <label><?= __($attr['label']) ?></label>
@@ -71,7 +58,7 @@
                         <thead>
                             <th><?= __('Start Time') ?></th>
                             <th><?= __('End Time') ?></th>
-                            <th><?= __('Interval') ?></th>
+                            <th><?= __('Interval') . ' (' . __('mins') . ')' ?></th>
                             <th class="cell-delete"></th>
                         </thead>
                         <?php if (isset($data[$fieldKey])) : ?>
@@ -94,23 +81,73 @@
                                         </td>
                                         <td>
                                             <?php
-                                                echo $this->Form->input("$fieldPrefix.inteval", [
-                                                    'type' => 'string',
-                                                    'label' => false
+                                                echo $this->Form->input("$fieldPrefix.institution_shift_id", [
+                                                    'type' => 'hidden',
+                                                    'value' => $data['institution_shift_id']
+                                                ]);
+                                                echo $this->Form->input("$fieldPrefix.interval", [
+                                                    'type' => 'integer',
+                                                    'label' => false,
+                                                    'onblur' => "$('#reload').val('changeInterval').click();"
                                                 ]);
                                             ?>
                                         </td>
                                         <td>
                                             <?php
-                                                if (empty($item->student_results)) {
-                                                    echo "<button onclick='jsTable.doRemove(this);' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa fa-trash'></i>&nbsp;<span>Delete</span></button>";
-                                                } else {
-                                                    $message = __('There are results for this examination item');
-                                                    echo '<i class="fa fa-info-circle fa-lg icon-blue" data-toggle="tooltip" data-container="body" data-placement="top" data-animation="false" title="" data-html="true" data-original-title="' . $message . '"></i>';
+                                                if ($i == (count($data[$fieldKey]) - 1)) {
+                                                    echo "
+                                                        <button onclick='jsTable.doRemove(this);' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'>
+                                                            <i class='fa fa-trash'></i>&nbsp;<span>Delete</span>
+                                                        </button>
+                                                    ";
                                                 }
                                             ?>
                                         </td>
+                                    </tr>
+                                <?php endforeach ?>
+                            </tbody>
+                        <?php endif ?>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
+<?php elseif ($ControllerAction['action'] == 'edit') : ?>
+    <div class="input clearfix required">
+        <label><?= __($attr['label']) ?></label>
+        <div class="input-form-wrapper">
+            <div class="table-wrapper">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <th><?= __('Start Time') ?></th>
+                            <th><?= __('End Time') ?></th>
+                            <th><?= __('Interval') . ' (' . __('mins') . ')' ?></th>
+                        </thead>
+                        <?php if (isset($data[$fieldKey])) : ?>
+                            <tbody>
+                                <?php foreach ($data[$fieldKey] as $i => $slot) : ?>
+                                    <?php
+                                        $fieldPrefix = "$alias.$fieldKey.$i";
+                                        $joinDataPrefix = $fieldPrefix . '._joinData';
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <?php
+                                                echo $slot->start_time;
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                                echo $slot->end_time;
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                                echo $slot->interval;
+                                            ?>
+                                        </td>
                                     </tr>
                                 <?php endforeach ?>
                             </tbody>
