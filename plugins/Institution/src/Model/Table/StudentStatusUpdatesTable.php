@@ -1,20 +1,21 @@
 <?php
 namespace Institution\Model\Table;
 
-use Cake\ORM\Entity;
+use ArrayObject;
 use Cake\Log\Log;
 use Cake\I18n\Time;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
+use Cake\Filesystem\Folder;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
 class StudentStatusUpdatesTable extends ControllerActionTable
 {
     const MAX_PROCESSES = 1;
-    const EXECUTED = 1;
-    const NOT_EXECUTED = 2;
+    const NOT_EXECUTED = 1;
+    const EXECUTED = 2;
 	public function initialize(array $config)
     {
         $this->table('student_status_updates');
@@ -36,6 +37,11 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
         $events['Shell.StudentWithdraw.writeLastExecutedDateToFile'] = 'writeLastExecutedDateToFile';
         return $events;
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra) {
+        $this->field('model_reference', ['visible' => false]);
+        $this->field('execution_status', ['before' => 'model']);
     }
 
     public function studentsAfterDelete(Event $event, Entity $student)
@@ -68,6 +74,16 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     {
         Log::write('debug', 'in afterSave');
         $this->triggerUpdateWithdrawalStudentShell();
+    }
+
+    public function onGetExecutionStatus(Event $event, Entity $entity)
+    {
+        if ($entity->execution_status == self::NOT_EXECUTED) {
+            $status = __('Not Executed');
+        } elseif ($entity->execution_status == self::EXECUTED) {
+            $status = __('Executed');
+        }
+        return '<span class="status highlight">'.$status.'</span>';
     }
 
     public function getStudentWithdrawalRecords($first = false)
