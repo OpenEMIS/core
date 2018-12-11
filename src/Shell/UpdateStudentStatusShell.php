@@ -32,9 +32,15 @@ class UpdateStudentStatusShell extends Shell
                 $recordToProcess = $StudentStatusUpdates->getStudentWithdrawalRecords(true);
                 $this->out($recordToProcess);
                 if (!empty($recordToProcess)) {
-                    $this->out('Dispatching event to update student withdrawal records for '.$recordToProcess[' security_user_id']);
-                    $event = $this->StudentWithdraw->dispatchEvent('Shell.StudentWithdraw.updateStudentStatusId', [$recordToProcess]);
-                    $this->out('End Update for Student Withdrawal Status '.$recordToProcess['security_user_id'].' ('. Time::now() .')');
+                    try {
+                        $this->out('Dispatching event to update student withdrawal records for '.$recordToProcess[' security_user_id']);
+                        $event = $this->StudentWithdraw->dispatchEvent('Shell.StudentWithdraw.updateStudentStatusId', [$recordToProcess]);
+                        $this->out('End Update for Student Withdrawal Status '.$recordToProcess['security_user_id'].' ('. Time::now() .')');
+                    } catch (\Exception $e) {
+                        $this->out('Error Update Student Status ' . $recordToProcess['security_user_id']);
+                        $this->out($e->getMessage());
+                        $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
+                    }
                 } else {
                     $this->out('No records to update ('.Time::now().')');
                     $exit = true;
