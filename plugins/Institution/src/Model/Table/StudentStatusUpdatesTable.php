@@ -153,10 +153,13 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     public function checkRequireUpdate()
     {
         $today = date('Y-m-d');
+        $lastExectuedDate = null;
         $dir = new Folder(ROOT . DS . 'tmp');
-        $file = new File($dir->path.'/UpdateStudentStatus', true);
+        $file = new File($dir->path. DS .'UpdateStudentStatus', true);
         $updateStudentStatus = json_decode($file->read());
-        $lastExectuedDate = $updateStudentStatus[1];
+        if (isset($updateStudentStatus[1])) {
+            $lastExectuedDate = $updateStudentStatus[1];
+        }
         if (is_null($lastExectuedDate) || $today > $lastExectuedDate) {
             $recordsToUpdate = count($this->getStudentWithdrawalRecords());
             if ($recordsToUpdate > 0) {
