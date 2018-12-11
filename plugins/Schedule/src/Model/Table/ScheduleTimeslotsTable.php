@@ -16,6 +16,10 @@ class ScheduleTimeslotsTable extends ControllerActionTable
         $this->table('institution_schedule_timeslots');
         $this->entityClass('Schedule.ScheduleTimeslots');
         parent::initialize($config);
+
+        $this->belongsTo('ScheduleIntervals', ['className' => 'Schedule.ScheduleIntervals', 'foreignKey' => 'institution_schedule_interval_id']);
+
+        $this->toggle('reorder', false);
     }
 
     public function validationDefault(Validator $validator)
