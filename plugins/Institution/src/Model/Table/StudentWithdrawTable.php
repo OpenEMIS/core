@@ -144,7 +144,7 @@ class StudentWithdrawTable extends ControllerActionTable
         $statuses = $StudentStatuses->findCodeList();
         Log::write('debug', 'initializing insert newEntity to student_status_updates queue: id >>>> '. $entity->student_id.' student_id >>>> '.$entity->student_id);
         $newEntity = $StudentStatusUpdates->newEntity([
-            'model' => $this->alias(),
+            'model' => $this->registryAlias(),
             'model_reference' => $entity->id,
             'effective_date' => $entity->effective_date,
             'security_user_id' => $entity->student_id,

@@ -8,7 +8,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 
-class UpdateWithdrawalStudentShell extends Shell
+class UpdateStudentStatusShell extends Shell
 {
     public function initialize()
     {
@@ -25,7 +25,7 @@ class UpdateWithdrawalStudentShell extends Shell
             $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
             $this->out('Initializing Update of Student Withdrawal Status ('.Time::now().')');
 
-            $systemProcessId = $this->SystemProcesses->addProcess('UpdateWithdrawalStudent', getmypid(), $this->args[0]);
+            $systemProcessId = $this->SystemProcesses->addProcess('UpdateStudentStatus', getmypid(), $this->args[0]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
 
             while (!$exit) {
