@@ -425,6 +425,11 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffRelease']);
     }
+
+    public function StudentStatusUpdates()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentStatusUpdates']);
+    }
     // End
 
     // AngularJS
