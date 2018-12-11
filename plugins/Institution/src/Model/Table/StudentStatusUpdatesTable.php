@@ -16,7 +16,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     const MAX_PROCESSES = 1;
     const NOT_EXECUTED = 1;
     const EXECUTED = 2;
-	public function initialize(array $config)
+    public function initialize(array $config)
     {
         $this->table('student_status_updates');
         parent::initialize($config);
@@ -25,11 +25,11 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses', 'foreignKey' => 'status_id']);
 
-        // only allow index and edit
+        // only allow index and view
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-	}
+    }
 
     public function implementedEvents()
     {
@@ -56,6 +56,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
             'institution_id' => $student->institution_id,
             'education_grade_id' => $student->education_grade_id,
             'academic_period_id' => $student->academic_period_id,
+            'execution_status' => self::NOT_EXECUTED,
         ];
 
         $entity = $this
@@ -72,8 +73,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 
     public function afterSave()
     {
-        Log::write('debug', 'in afterSave');
-        $this->triggerUpdateWithdrawalStudentShell();
+        $this->triggerUpdateStudentStatusShell();
     }
 
     public function onGetExecutionStatus(Event $event, Entity $entity)
@@ -88,14 +88,12 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 
     public function getStudentWithdrawalRecords($first = false)
     {
-        $StudentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
         $today = Time::now();
         $query = $this
             ->find()
             ->where([
                 $this->aliasField('effective_date <= ') => $today,
-                $this->aliasField('model') => $StudentWithdraw->alias(),
-                $this->aliasField('execution_status') => 1
+                $this->aliasField('execution_status') => self::NOT_EXECUTED
             ])
             ->order(['created' => 'asc']);
         if ($first) {
@@ -106,7 +104,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         return $studentWithdrawRecords;
     }
 
-    public function triggerUpdateWithdrawalStudentShell()
+    public function triggerUpdateStudentStatusShell()
     {
         // model - StudentStatusUpdates
         $model = $this->registryAlias();
@@ -132,8 +130,8 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         // should only have 1 process running
         if (count($runningProcess) < self::MAX_PROCESSES) {
             $args = $model;
-            $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateWithdrawalStudent '.$args;
-            $logs = ROOT . DS . 'logs' . DS . 'UpdateWithdrawalStudent.log & echo $!';
+            $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateStudentStatus '.$args;
+            $logs = ROOT . DS . 'logs' . DS . 'UpdateStudentStatus.log & echo $!';
             Log::write('debug', '$args');
             Log::write('debug', $args);
             Log::write('debug', '$cmd');
@@ -147,7 +145,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
                 $pid = exec($shellCmd);
                 Log::write('debug', $pid);
             } catch(\Exception $e) {
-                $this->out('error : ' . __METHOD__ . ' exception when triggering UpdateWithdrawalStudentShell: '. $e);
+                $this->out('error : ' . __METHOD__ . ' exception when triggering UpdateStudentStatusShell: '. $e);
             }
         }
     }
@@ -156,18 +154,18 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     {
         $today = date('Y-m-d');
         $dir = new Folder(ROOT . DS . 'tmp');
-        $file = new File($dir->path.'/UpdateWithdrawalStudent', true);
-        $updateWithdrawalStudent = json_decode($file->read());
-        $lastExectuedDate = $updateWithdrawalStudent[1];
+        $file = new File($dir->path.'/UpdateStudentStatus', true);
+        $updateStudentStatus = json_decode($file->read());
+        $lastExectuedDate = $updateStudentStatus[1];
         if (is_null($lastExectuedDate) || $today > $lastExectuedDate) {
             $recordsToUpdate = count($this->getStudentWithdrawalRecords());
             if ($recordsToUpdate > 0) {
-                $this->triggerUpdateWithdrawalStudentShell();
+                $this->triggerUpdateStudentStatusShell();
             } else {
                 Log::write('debug', 'No records to update');
             }
         } else {
-            Log::write('debug', 'UpdateWithdrawalStudentShell last executed on '.$lastExectuedDate);
+            Log::write('debug', 'UpdateStudentStatusShell last executed on '.$lastExectuedDate);
         }
     }
 
@@ -178,9 +176,9 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $passArray = ['Last executed in '.$this->registryAlias(), $today];
         $message = json_encode($passArray);
 
-        Log::write('debug', 'Writing last exceuted date ' .$today.' into tmp/UpdateWithdrawalStudent');
+        Log::write('debug', 'Writing last exceuted date ' .$today.' into tmp/UpdateStudentStatus');
         $dir = new Folder(ROOT . DS . 'tmp');
-        $file = new File($dir->path.'/UpdateWithdrawalStudent', true);
+        $file = new File($dir->path.'/UpdateStudentStatus', true);
         $file->write($message);
         $file->close();
     }
