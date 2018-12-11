@@ -431,6 +431,7 @@ class StudentUserTable extends ControllerActionTable
 
             // Check if the student is enrolled
             if ($studentEntity->student_status_id == $enrolledStatus) {
+                $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
                 $WithdrawRequests = TableRegistry::get('Institution.WithdrawRequests');
                 $session->write($WithdrawRequests->registryAlias().'.id', $institutionStudentId);
                 $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
@@ -450,6 +451,16 @@ class StudentUserTable extends ControllerActionTable
                             $WithdrawRequests->aliasField('status_id').' NOT IN' => $status
                         ])
                         ->first();
+                    $studentStatusUpdates = $StudentStatusUpdates->find()
+                        ->where([
+                            $StudentStatusUpdates->aliasField('security_user_id') => $studentEntity->student_id,
+                            $StudentStatusUpdates->aliasField('institution_id') => $studentEntity->institution_id,
+                            $StudentStatusUpdates->aliasField('education_grade_id') => $studentEntity->education_grade_id,
+                            $StudentStatusUpdates->aliasField('academic_period_id') => $studentEntity->academic_period_id,
+                            $StudentStatusUpdates->aliasField('execution_status') => 1
+                        ])
+                        ->first();
+
                 } catch (DatabaseException $e) {
                     $withdrawRequest = false;
                     $this->Alert->error('WithdrawRequests.configureWorkflowStatus');
@@ -467,7 +478,12 @@ class StudentUserTable extends ControllerActionTable
                     $withdrawButton['url'][0] = 'view';
                     $withdrawButton['url'][1] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
                     $toolbarButtons['withdraw'] = $withdrawButton;
-                } elseif ($withdrawRequest !== false) {
+                } elseif (!empty($studentStatusUpdates)) {
+                    $withdrawButton['url']['action'] = 'StudentStatusUpdates';
+                    $withdrawButton['url'][0] = 'view';
+                    $withdrawButton['url'][1] = $this->paramsEncode(['id' => $studentStatusUpdates->id]);
+                    $toolbarButtons['withdraw'] = $withdrawButton;
+                } else {
                     $withdrawButton['url']['action'] = 'WithdrawRequests';
                     $toolbarButtons['withdraw'] = $withdrawButton;
                 }
