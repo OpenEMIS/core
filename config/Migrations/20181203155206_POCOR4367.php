@@ -25,6 +25,12 @@ class POCOR4367 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addColumn('execution_status', 'integer', [
+                'comment' => '1 -> Not Executed , 2 -> Executed',
+                'default' => 1,
+                'limit' => 11,
+                'null' => false
+            ])
             ->addColumn('security_user_id', 'integer', [
                 'comment' => 'links to security_users.id',
                 'default' => null,
@@ -55,12 +61,6 @@ class POCOR4367 extends AbstractMigration
                 'limit' => 11,
                 'null' => false
             ])
-            ->addColumn('execution_status', 'integer', [
-                'comment' => '1 -> Not Executed , 2 -> Executed',
-                'default' => 1,
-                'limit' => 11,
-                'null' => false
-            ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -86,7 +86,7 @@ class POCOR4367 extends AbstractMigration
             ->addIndex('status_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
-            ->create();
+            ->save();
     }
 
     public function down()
