@@ -17,6 +17,7 @@ class ScholarshipsDirectoryTable extends BaseTable
                 return $q->where(['Applications.applicant_id' => $applicantId]);
             });
         }
+        $query->where(['ScholarshipsDirectory.application_close_date >= NOW()']);
         return $query;
     }
 
