@@ -11,8 +11,8 @@ use App\Model\Table\AppTable;
 
 class ReportCardsTable extends AppTable
 {
-    // private $fileType = 'xlsx';
-    private $fileType = 'pdf';
+    private $fileType = 'xlsx';
+    // private $fileType = 'pdf';
 
     public function initialize(array $config)
     {
@@ -1276,7 +1276,7 @@ class ReportCardsTable extends AppTable
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
             $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
             $mergeEntity = [];
-          
+
             $entity = $EducationSubjects
                 ->find()
                 ->find('visible')
@@ -1316,7 +1316,7 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('academic_period_id', $params) && array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids'])) {
             $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
-            
+
             $entity = $OutcomeCriterias->find()
                 ->where([
                     $OutcomeCriterias->aliasField('academic_period_id') => $params['academic_period_id'],
@@ -1334,10 +1334,10 @@ class ReportCardsTable extends AppTable
                 ->autoFields(true);
 
             return $entity->toArray();
-       
+
         }
     }
- 
+
 
     public function onExcelTemplateInitialiseStudentOutcomeSubjectComments(Event $event, array $params, ArrayObject $extra)
     {
@@ -1372,10 +1372,10 @@ class ReportCardsTable extends AppTable
                     $StudentOutcomeResults->aliasField('academic_period_id') => $params['academic_period_id'],
                 ]);
 
-            return $entity->toArray();  
+            return $entity->toArray();
         }
     }
-    
+
     public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
@@ -1555,7 +1555,7 @@ class ReportCardsTable extends AppTable
                     $AssessmentItemResults->aliasField('education_subject_id')
                 ])
                 ->formatResults(function (ResultSetInterface $results) {
-                    return $results->map(function ($row) { 
+                    return $results->map(function ($row) {
                         $row['marks_formatted'] = number_format($row['marks'], 2);
                         return $row;
                     });
