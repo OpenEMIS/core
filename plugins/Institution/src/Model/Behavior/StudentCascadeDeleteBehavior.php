@@ -163,28 +163,9 @@ class StudentCascadeDeleteBehavior extends Behavior
         /* delete all attendance records (institution_site_student_absences) with dates that fall between the start and end date found in institution_students */
         $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $overlapDateCondition = [];
-        $overlapDateCondition['OR'] = [
-            'OR' => [
-                [
-                    $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
-                    $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $startDate,
-                    $InstitutionStudentAbsences->aliasField('end_date') . ' >=' => $startDate
-                ],
-                [
-                    $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
-                    $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $endDate,
-                    $InstitutionStudentAbsences->aliasField('end_date') . ' >=' => $endDate
-                ],
-                [
-                    $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
-                    $InstitutionStudentAbsences->aliasField('start_date') . ' >=' => $startDate,
-                    $InstitutionStudentAbsences->aliasField('end_date') . ' <=' => $endDate
-                ]
-            ],
-            [
-                $InstitutionStudentAbsences->aliasField('end_date') . ' IS NULL',
-                $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $endDate
-            ]
+        $overlapDateCondition = [
+            $InstitutionStudentAbsences->aliasField('date') . ' >= ' => $startDate,
+            $InstitutionStudentAbsences->aliasField('date') . ' <= ' => $endDate
         ];
 
         $studentAbsenceData = $InstitutionStudentAbsences->find()
@@ -195,6 +176,22 @@ class StudentCascadeDeleteBehavior extends Behavior
 
         foreach ($studentAbsenceData as $key => $value) {
             $InstitutionStudentAbsences->delete($value);
+        }
+
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $overlapDateCondition = [
+            $StudentAbsencesPeriodDetails->aliasField('date') . ' >= ' => $startDate,
+            $StudentAbsencesPeriodDetails->aliasField('date') . ' <= ' => $endDate
+        ];
+
+        $studentAbsenceDetailData = $StudentAbsencesPeriodDetails->find()
+            ->where($overlapDateCondition)
+            ->where([$StudentAbsencesPeriodDetails->aliasField('student_id') => $entity->student_id])
+            ->where([$StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id])
+            ;   
+
+        foreach ($studentAbsenceDetailData as $key => $value) {
+            $StudentAbsencesPeriodDetails->delete($value);
         }
     }
 

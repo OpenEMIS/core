@@ -46,6 +46,7 @@ class ReportCardsTable extends AppTable
                 'DeputyPrincipal',
                 'InstitutionClasses',
                 'InstitutionSubjectStudents',
+                'InstitutionSubjectStudentsWithName',
                 'StudentBehaviours',
                 'InstitutionStudentAbsences',
                 'CompetencyTemplates',
@@ -59,6 +60,7 @@ class ReportCardsTable extends AppTable
                 'Assessments',
                 'AssessmentPeriods',
                 'AssessmentItems',
+                'AssessmentItemsStudentSubjects',
                 'AssessmentItemsWithResults',
                 'AssessmentItemResults',
                 'OutcomeTemplates',
@@ -91,6 +93,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseDeputyPrincipal'] = 'onExcelTemplateInitialiseDeputyPrincipal';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudents'] = 'onExcelTemplateInitialiseInstitutionSubjectStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudentsWithName'] = 'onExcelTemplateInitialiseInstitutionSubjectStudentsWithName';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentAbsences'] = 'onExcelTemplateInitialiseInstitutionStudentAbsences';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyTemplates'] = 'onExcelTemplateInitialiseCompetencyTemplates';
@@ -104,6 +107,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItems'] = 'onExcelTemplateInitialiseAssessmentItems';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemsStudentSubjects'] = 'onExcelTemplateInitialiseAssessmentItemsStudentSubjects';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemsWithResults'] = 'onExcelTemplateInitialiseAssessmentItemsWithResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItemResults'] = 'onExcelTemplateInitialiseGroupAssessmentItemResults';
@@ -682,6 +686,27 @@ class ReportCardsTable extends AppTable
         }
     }
 
+    public function onExcelTemplateInitialiseInstitutionSubjectStudentsWithName(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $entity = $SubjectStudents->find()
+                ->where([
+                    $SubjectStudents->aliasField('student_id') => $params['student_id'],
+                    $SubjectStudents->aliasField('institution_class_id') => $params['institution_class_id'],
+                    $SubjectStudents->aliasField('institution_id') => $params['institution_id'],
+                    $SubjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
+                ])
+                ->contain([
+                    'EducationSubjects'
+                ])
+                ->hydrate(false)
+                ->toArray();
+            return $entity;
+        }
+    }
+
     public function onExcelTemplateInitialiseStudentBehaviours(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
@@ -999,6 +1024,90 @@ class ReportCardsTable extends AppTable
                 ])
                 ->toArray();
             return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseAssessmentItemsStudentSubjects(Event $event, array $params, ArrayObject $extra)
+    {
+        if(array_key_exists('institution_class_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params)) {
+
+            // To get the Assessment Item that template selected subject
+            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            $query = $AssessmentItemResults->find();
+
+            $selectedColumns = [
+                $AssessmentItemResults->aliasField('education_subject_id'),
+                'academic_term_value' => '(
+                    CASE
+                    WHEN AssessmentPeriods.academic_term <> \'\' THEN AssessmentPeriods.academic_term
+                        ELSE AssessmentPeriods.name
+                        END
+                    )',
+            ];
+
+            $subjectList = $AssessmentItems
+                ->find('list', [
+                    'keyField' => 'education_subject_id',
+                    'valueField' => 'education_subject_id'
+                ])
+                ->find('assessmentItemsInClass', [
+                    'assessment_id' => $extra['assessment_id'],
+                    'class_id' => $params['institution_class_id']
+                ])
+                ->toArray();
+
+            // to only process the query if the class has subjects
+            $conditions = [];
+            if (!empty($subjectList)) {
+                $conditions = [
+                    $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
+                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
+                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
+                    $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
+                    $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                    $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
+                ];
+            } else {
+                $conditions = ['1 = 0'];
+            }
+
+            $entity = $query
+                ->select($selectedColumns)
+                ->contain(['AssessmentPeriods', 'EducationSubjects'])
+                ->where($conditions)
+                ->group([
+                    $AssessmentItemResults->aliasField('education_subject_id')
+                ])
+                ->hydrate(false)
+                ->toArray();
+
+            // To get the student subject based on the template selected subject
+            $StudentSubjects = TableRegistry::get('Student.StudentSubjects');
+            $studentRegisteredSubjectAndInsideTemplate = [];
+            foreach ($entity as $value) {
+                $studentSubjectsQuery = $StudentSubjects->find();
+                $studentSubjectsEntity = $studentSubjectsQuery
+                    ->where([
+                        $StudentSubjects->aliasField('institution_class_id') => $params['institution_class_id'],
+                        $StudentSubjects->aliasField('student_id') => $params['student_id'],
+                        $StudentSubjects->aliasField('institution_id') => $params['institution_id'],
+                        $StudentSubjects->aliasField('education_grade_id') => $params['education_grade_id'],
+                        $StudentSubjects->aliasField('education_subject_id') => $value['education_subject_id'],
+                        $StudentSubjects->aliasField('academic_period_id') => $params['academic_period_id']
+                    ])
+                    ->contain([
+                        'InstitutionSubjects'
+                    ])
+                    ->hydrate(false)
+                    ->all();
+
+                if(!$studentSubjectsEntity->isEmpty()) {
+                    array_push($studentRegisteredSubjectAndInsideTemplate, $studentSubjectsEntity->first());
+                }
+            }
+            return $studentRegisteredSubjectAndInsideTemplate;
         }
     }
 
