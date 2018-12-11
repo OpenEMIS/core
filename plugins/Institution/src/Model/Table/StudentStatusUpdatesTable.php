@@ -178,7 +178,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 
         Log::write('debug', 'Writing last exceuted date ' .$today.' into tmp/UpdateStudentStatus');
         $dir = new Folder(ROOT . DS . 'tmp');
-        $file = new File($dir->path.'/UpdateStudentStatus', true);
+        $file = new File($dir->path . DS . 'UpdateStudentStatus', true);
         $file->write($message);
         $file->close();
     }
