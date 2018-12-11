@@ -127,6 +127,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
                 $SystemProcesses->killProcess($pId);
             }
         }
+        $runningProcess = $SystemProcesses->getRunningProcesses($model);
         // should only have 1 process running
         if (count($runningProcess) < self::MAX_PROCESSES) {
             $args = $model;
