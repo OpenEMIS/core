@@ -427,7 +427,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
         var scope = params.context.scope;
         var isDisabled = (data.attendance[data.date].leave &&
-            data.attendance[data.date].leave.length > 0);
+            data.attendance[data.date].leave.length > 0 &&
+            data.attendance[data.date].leave[0].isFullDay === 1);
 
         // div element
         var timeInputDivElement = document.createElement('div');
