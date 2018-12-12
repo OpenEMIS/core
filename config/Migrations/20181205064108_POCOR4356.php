@@ -363,10 +363,16 @@ class POCOR4356 extends AbstractMigration
         // 
         /* 
             Terms
+            Term
             Schedules
+            Interval
             Intervals
             All Shifts
             Add Interval
+            Draft
+            Published
+            -- Select Status --
+            Value entered exceed the end time of the shift selected.
         */
         // 
         // locale_contents - END
