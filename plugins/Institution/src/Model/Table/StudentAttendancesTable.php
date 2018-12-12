@@ -160,22 +160,35 @@ class StudentAttendancesTable extends ControllerActionTable
         $studentId = $entity->student_id;
         $date = $attr['date'];
         $period = $attr['period'];
-
+        $classId = $this->request->query('class_id');
+        $attendance = '';
+      
         if (isset($absenceData[$studentId][$date][$period])) {
-            return 'got data!';
+            $attendance = 'Absences('.$absenceData[$studentId][$date][$period]['absence_reason'] . ')';
+            return $attendance;
         }
 
-        return '<No Data>';
+        $studentAttendanceMarkedRecordsTable = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+        $studentAttendanceMarkedRecords = $studentAttendanceMarkedRecordsTable
+        ->find()
+        ->where([
+            $studentAttendanceMarkedRecordsTable->aliasField('institution_class_id') => $classId,
+            $studentAttendanceMarkedRecordsTable->aliasField('date') => $date,
+            $studentAttendanceMarkedRecordsTable->aliasField('period') => $period,
+        ])        
+        ->toArray();
+        if (!empty($studentAttendanceMarkedRecords)) {
+            $attendance = 'Present';
+            return $attendance;
+        }
+
+        return $attendance;
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $classId = $sheetData['classId'];
-        $year = $sheetData['year'];
-        $month = $sheetData['month'];
-        $startDate = $sheetData['startDate'];
-        $endDate = $sheetData['endDate'];
         
         $query->where([
             $this->aliasField('institution_class_id') => $classId
@@ -188,7 +201,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
         $absenceData = $StudentAbsencesPeriodDetails
             ->find('all')
-            ->contain(['AbsenceTypes'])
+            ->contain(['AbsenceTypes', 'StudentAbsenceReasons'])
             ->where([
                 $StudentAbsencesPeriodDetails->aliasField('institution_id') => $institutionId,
                 $StudentAbsencesPeriodDetails->aliasField('date').' >= ' => $monthStartDay,
@@ -207,6 +220,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     'absence_type_id' => $StudentAbsencesPeriodDetails->aliasField('absence_type_id'),
                     'period' => $StudentAbsencesPeriodDetails->aliasField('period'),
                     'absence_type_name' => 'AbsenceTypes.name',
+                    'absence_reason' => 'StudentAbsenceReasons.name',
                 ])
             ->hydrate(false)
             ->toArray();
