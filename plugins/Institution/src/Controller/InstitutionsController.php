@@ -432,11 +432,8 @@ class InstitutionsController extends AppController
         if ($subaction === 'index') {
             $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
             $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
-            // $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
-            
-            // tmp allow permission
-            $_excel = true;
-            $_import = false;
+            $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
+
             
             if (!empty($this->request->param('institutionId'))) {
                 $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
