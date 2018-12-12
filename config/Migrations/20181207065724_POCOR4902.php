@@ -35,7 +35,6 @@ class POCOR4902 extends AbstractMigration
 
         $this->insert('config_item_options', $institutionConfigOptionData);
 
-
          // Insert for School Landing Page configuration under Institution in config_items table
         $institutionConfigData = [
             'id' => 1023,
