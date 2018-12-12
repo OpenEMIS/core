@@ -16,7 +16,7 @@ $this->start('toolbar');
 
 <?php if ($_import) : ?>
     <a href="<?=$importUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="{{test()}}" data-placement="bottom" data-container="body" title="<?= __('Import') ?>" >
+        <button class="btn btn-xs btn-default" data-toggle="{{test()}}" data-placement="bottom" data-container="body" title="<?= __('Import Absences') ?>" >
             <i class="fa kd-import"></i>
         </button>
     </a>
@@ -97,7 +97,7 @@ $panelHeader = $this->fetch('panelHeader');
     #institution-student-attendances-table .ag-cell #absence_type_id select.error {
         border-color: #CC5C5C !important;
     }
-    
+
     #institution-student-attendances-table .ag-cell textarea#comment:focus {
         outline: none;
     }
@@ -141,7 +141,7 @@ $panelHeader = $this->fetch('panelHeader');
     #institution-student-attendances-table .ag-cell .absence-reason + .absences-comment  {
         margin-top: 15px;
     }
-    
+
     #institution-student-attendances-table .sg-theme .ag-header-cell.children-period .ag-header-cell-label {
         display: flex;
         justify-content: center;
@@ -193,38 +193,38 @@ $panelHeader = $this->fetch('panelHeader');
                     </div>
                     <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Students Present') ?></h4>   
+                            <h4><?= __('No. of Students Present') ?></h4>
                             <h1 class="data-header">{{$ctrl.presentCount}}</h1>
                         </div>
                     </div>
                     <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Students Absent') ?></h4>    
+                            <h4><?= __('No. of Students Absent') ?></h4>
                             <h1 class="data-header">{{$ctrl.absenceCount}}</h1>
                         </div>
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <i class="fa fa-address-book-o"></i>
                         <div class="data-field">
-                            <h4><?= __('Total Attendance') ?></h4>    
+                            <h4><?= __('Total Attendance') ?></h4>
                             <h1 class="data-header">{{$ctrl.allAttendances}}</h1>
                         </div>
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Present') ?></h4>    
+                            <h4><?= __('No. of Present') ?></h4>
                             <h1 class="data-header">{{$ctrl.allPresentCount}}</h1>
                         </div>
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Late') ?></h4>    
+                            <h4><?= __('No. of Late') ?></h4>
                             <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
                         </div>
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Absence') ?></h4>    
+                            <h4><?= __('No. of Absence') ?></h4>
                             <h1 class="data-header">{{$ctrl.allAbsenceCount}}</h1>
                         </div>
                     </div>
@@ -270,7 +270,7 @@ $panelHeader = $this->fetch('panelHeader');
                                 <input ng-disabled="$ctrl.action=='edit' || $ctrl.selectedDay==-1" kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
                             </div>
                         </div>
-                    </div>  
+                    </div>
                 </div>
             </bg-pane>
         </bg-splitter>
