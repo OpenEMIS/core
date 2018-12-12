@@ -82,7 +82,7 @@
                                         <td>
                                             <?php
                                                 echo $this->Form->input("$fieldPrefix.interval", [
-                                                    'type' => 'integer',
+                                                    'type' => 'number',
                                                     'label' => false,
                                                     'onblur' => "$('#reload').val('changeInterval').click();"
                                                 ]);
