@@ -371,8 +371,27 @@ class InstitutionsTable extends ControllerActionTable
     public function onGetName(Event $event, Entity $entity)
     {
         $name = $entity->name;
+        $redirectToOverview = false;
+
+        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $schoolLandingConfig = $ConfigItem->find()
+                        ->select([
+                            $ConfigItem->aliasField('value'),
+                            $ConfigItem->aliasField('default_value')
+                        ])
+                        ->where([
+                            $ConfigItem->aliasField('code') => 'default_school_landing_page'
+                        ])
+                        ->first();
+        $redirectToOverview = empty($schoolLandingConfig->value) ? $schoolLandingConfig->default_value : $schoolLandingConfig->value;
 
         if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
+            // Redirect to overview page based on School Landing
+            if ($redirectToOverview) {
+                $this->action == 'view';
+                return $name;
+            }
+
             $name = $event->subject()->HtmlField->link($entity->name, [
                 'plugin' => $this->controller->plugin,
                 'controller' => $this->controller->name,
