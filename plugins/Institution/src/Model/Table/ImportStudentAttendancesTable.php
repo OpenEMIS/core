@@ -337,6 +337,14 @@ class ImportStudentAttendancesTable extends AppTable {
             }
         }
 
+        //If type is not EXCUSED and no absence reason was selected set to null
+        if($tempRow['absence_type_id'] !=  1 && empty($tempRow['student_absence_reason_id'])) {
+            $tempRow['student_absence_reason_id'] = NULL;
+        }
+
+        //add identifier that later will be used on StudentAbsencesPeriodDetails
+        $tempRow['record_source'] = 'import_student_attendances';
+
         return true;
     }
 

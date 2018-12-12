@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\I18n\Time;
 
 use Cake\Log\Log;
 
@@ -51,6 +52,27 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
     public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
+        //For Import StudentAbsenceExcel only. Insert into student_attendace_mark_records once import sucessfully as attendance is counted as marked
+        if($entity->has('record_source') && $entity->record_source == 'import_student_attendances')
+        {
+            $StudentAttendanceMarkedRecords = TableRegistry::get('StudentAttendanceMarkedRecords');
+
+            $date = $entity->date->i18nFormat('YYY-MM-dd');
+
+            $markRecordsData = [
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'institution_class_id' => $entity->institution_class_id,
+                'date' => $date,
+                'period' => $entity->period
+            ];
+
+            $markRecord = $StudentAttendanceMarkedRecords->newEntity($markRecordsData);
+            if (!$markRecord->errors()) {
+                $StudentAttendanceMarkedRecords->save($markRecord);
+            }
+        }
+
         if ($entity->absence_type_id == 0) {
             $this->delete($entity);
         }
@@ -60,7 +82,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         }
     }
 
-    public function updateStudentAbsencesRecord($entity = null) 
+    public function updateStudentAbsencesRecord($entity = null)
     {
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
