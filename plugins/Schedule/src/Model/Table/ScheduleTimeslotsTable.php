@@ -25,7 +25,8 @@ class ScheduleTimeslotsTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-
+        $validator
+            ->requirePresence('interval', 'create');
         return $validator;
     }
 

@@ -3,9 +3,9 @@
     $fieldKey = 'timeslots';
     $action = $ControllerAction['action'];
 
-    // if ($ControllerAction['action'] == 'add') {
-    //     $this->Form->unlockField($alias . '.' . $fieldKey);
-    // }
+    if ($ControllerAction['action'] == 'add') {
+        $this->Form->unlockField($alias . '.' . $fieldKey);
+    }
     // pr($data);
     // die;
 ?>
@@ -81,10 +81,6 @@
                                         </td>
                                         <td>
                                             <?php
-                                                echo $this->Form->input("$fieldPrefix.institution_shift_id", [
-                                                    'type' => 'hidden',
-                                                    'value' => $data['institution_shift_id']
-                                                ]);
                                                 echo $this->Form->input("$fieldPrefix.interval", [
                                                     'type' => 'integer',
                                                     'label' => false,
@@ -95,11 +91,7 @@
                                         <td>
                                             <?php
                                                 if ($i == (count($data[$fieldKey]) - 1)) {
-                                                    echo "
-                                                        <button onclick='jsTable.doRemove(this);' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'>
-                                                            <i class='fa fa-trash'></i>&nbsp;<span>Delete</span>
-                                                        </button>
-                                                    ";
+                                                    echo '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
                                                 }
                                             ?>
                                         </td>
