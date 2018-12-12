@@ -16,9 +16,9 @@ class POCOR4367 extends AbstractMigration
                 'limit' => 200,
                 'null' => false,
             ])
-            ->addColumn('model_reference', 'integer', [
+            ->addColumn('model_reference', 'string', [
                 'default' => null,
-                'limit' => 11,
+                'limit' => 64,
                 'null' => false,
             ])
             ->addColumn('effective_date', 'date', [
@@ -87,10 +87,37 @@ class POCOR4367 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
+
+        // security_functions
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 1091');
+        $order = $row['order']; //90
+
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` > ' . $order);
+
+        $table = $this->table('security_functions');
+        $data = [
+            'id' => 1092,
+            'name' => 'Student Status Updates',
+            'controller' => 'Institutions',
+            'module' => 'Institutions',
+            'category' => 'Students',
+            'parent_id' => 1000,
+            '_view' => 'StudentStatusUpdates.index|StudentStatusUpdates.view',
+            'order' => $order + 1,
+            'visible' => 1,
+            'created_user_id' => '1',
+            'created' => date('Y-m-d H:i:s')
+        ];
+        $table->insert($data);
+        $table->saveData();
     }
 
     public function down()
     {
         $this->execute('DROP TABLE student_status_updates');
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 1091');
+        $order = $row['order'];
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > ' . $order);
+        $this->execute('DELETE FROM security_functions WHERE `id` = 1092');
     }
 }
