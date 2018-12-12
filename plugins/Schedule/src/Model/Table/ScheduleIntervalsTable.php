@@ -52,12 +52,6 @@ class ScheduleIntervalsTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        return $events;
-    }
-
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
@@ -225,7 +219,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
                         return true;
                     },
                     'on' => 'create',
-                    'message' => 'Interval kena'
+                    'message' => __('Value entered exceed the end time of the shift selected.')
                 ])
                 ->requirePresence('institution_schedule_interval_id', false);
 
