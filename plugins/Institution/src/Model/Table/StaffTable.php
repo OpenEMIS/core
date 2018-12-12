@@ -1992,8 +1992,8 @@ class StaffTable extends ControllerActionTable
                     $i = 1;
                     $found = false;
                     $workingDay = $date->format('Y-m-d');
-                    $isAddResult = false;
                     foreach ($results as $result) {
+                        $isAddResult = false;
                         $cloneResult = clone $result;
                         $InstitutionStaffAttendanceDate = $cloneResult->InstitutionStaffAttendances['date'];
                         if ($InstitutionStaffAttendanceDate == $workingDay){
