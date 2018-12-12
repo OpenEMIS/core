@@ -426,9 +426,12 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             time = convert12Timeformat(params.value[timeKey]);
         }
         var scope = params.context.scope;
-        var isDisabled = (data.attendance[data.date].leave &&
-            data.attendance[data.date].leave.length > 0 &&
-            data.attendance[data.date].leave[0].isFullDay === 1);
+        var leave = data.attendance[data.date].leave;
+        var isDisabled = (leave && leave.length > 0 &&
+            (leave[0].isFullDay === 1 ||
+                (leave[0].isFullDay === 0 && leave.length > 1)
+            )
+        );
 
         // div element
         var timeInputDivElement = document.createElement('div');
