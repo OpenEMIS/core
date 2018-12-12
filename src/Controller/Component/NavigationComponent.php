@@ -504,6 +504,13 @@ class NavigationComponent extends Component
                     'parent' => 'Institution.Academic',
                     'link' => false
                 ],
+                
+                'Institutions.ScheduleTimetables' => [
+                    'title' => 'Timetables',
+                    'parent' => 'Institution.Schedules',
+                    'selected' => ['Institutions.ScheduleTimetables'],
+                    'params' => ['plugin' => 'Institution']
+                ],
                 'Institutions.ScheduleIntervals' => [
                     'title' => 'Intervals',
                     'parent' => 'Institution.Schedules',

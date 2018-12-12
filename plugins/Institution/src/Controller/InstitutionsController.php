@@ -426,6 +426,10 @@ class InstitutionsController extends AppController
     }
 
     // Timetable
+    public function ScheduleTimetables() 
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Schedule.ScheduleTimetables']);
+    }
     public function ScheduleIntervals() 
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Schedule.ScheduleIntervals']);
