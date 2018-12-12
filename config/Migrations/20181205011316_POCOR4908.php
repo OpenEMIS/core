@@ -20,6 +20,10 @@ class POCOR4908 extends AbstractMigration
         $this->execute('UPDATE `import_mapping` SET `model` = "Institution.StudentAbsencesPeriodDetails" WHERE `id` = 60');
         $this->execute('UPDATE `import_mapping` SET `model` = "Institution.StudentAbsencesPeriodDetails" WHERE `id` = 88');
 
+        $this->execute('UPDATE `import_mapping` SET `order` = `order` - 1 WHERE `order` >= 4 AND `model` = "Institution.StudentAbsencesPeriodDetails"');
+        $this->execute('UPDATE `import_mapping` SET `order` = 6 WHERE `id` = 58');
+        $this->execute('UPDATE `import_mapping` SET `is_optional` = 1 WHERE `id` = 60');
+
         $excelRowData = [
             'id' => 57,
             'column_name' => 'period',
