@@ -23,7 +23,7 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         $this->addBehavior('TrackActivity', ['target' => 'User.InstitutionStaffAttendanceActivities', 'key' => 'security_user_id', 'keyField' => 'staff_id']);
     }
 
-   public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
 
@@ -33,5 +33,15 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
                 'rule' => ['compareDateReverse', 'time_in', false],
                 'message' => __('Time Out cannot be earlier than Time In')
             ]);
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // delete record if user removes the time in and comment
+        $time_in = $entity->time_in;
+        $comment = $entity->comment;
+        if (is_null($time_in) && is_null($comment)) {
+            $this->delete($entity);
+        }
     }
 }
