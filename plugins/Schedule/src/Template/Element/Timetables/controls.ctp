@@ -23,9 +23,19 @@
             'label' => false,
             'options' => $termOptions,
             'url' => $baseUrl,
-            'data-named-group' => 'period,status',
+            'data-named-group' => 'period,grade,status',
             'data-named-key' => 'term',
             'default' => $selectedTermOptions,
+        ));
+
+        echo $this->Form->input('grade', array(
+            'class' => 'form-control',
+            'label' => false,
+            'options' => $educationGradeOptions,
+            'url' => $baseUrl,
+            'data-named-group' => 'period,term,status',
+            'data-named-key' => 'grade',
+            'default' => $selectedGradeOptions,
         ));
 
         echo $this->Form->input('status', array(
@@ -33,7 +43,7 @@
             'label' => false,
             'options' => $statusOptions,
             'url' => $baseUrl,
-            'data-named-group' => 'period',
+            'data-named-group' => 'period,term,grade',
             'data-named-key' => 'status',
             'default' => $selectedStatusOption,
         ));
