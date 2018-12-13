@@ -24,6 +24,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
     };
 
+    var errorElmIds = []; // diff implementation from staff.attendance.svc as createTimeElement is called for every changes
+
     var service = {
         init: init,
         translate: translate,
@@ -437,7 +439,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var timeIconElement = document.createElement('i');
         timeIconElement.setAttribute('class', 'glyphicon glyphicon-time');
 
-        if (hasError(data, timeKey)) {
+        if (hasError(data, timeKey, timepickerId)) {
             timeInputElement.setAttribute("class", "form-control form-error");
         }
         setTimeout(function(event) {
@@ -471,13 +473,12 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                             AlertSvc.success(scope, 'Time record successfully saved.');
                             params.value.isNew = false;
                             params.value[timeKey] = time24Hour;
-                            setError(data, timeKey, false);
+                            setError(data, timeKey, false, timepickerId);
                         }
                     },
                     function(error) {
-                        console.log('error', error);
                         clearError(data, timeKey);
-                        setError(data, timeKey, true);
+                        setError(data, timeKey, true, timepickerId);
                         AlertSvc.error(scope, 'There was an error when saving record');
                     }
                 )
@@ -554,6 +555,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             time_out: params.data.attendance[dateString].time_out,
             comment: params.data.attendance[dateString].comment
         };
+
         staffAttendanceData[dataKey] = dataValue;
         if(!params.data.attendance[dateString].isNew) {
             return InstitutionStaffAttendances.edit(staffAttendanceData);
@@ -562,16 +564,23 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
     }
 
-    function setError(data, dataKey, error) {
+    function setError(data, dataKey, error, errorElmId) {
         if (angular.isUndefined(data.save_error)) {
             data.save_error = {};
         }
 
         data.save_error[dataKey] = error;
+        var index = errorElmIds.indexOf(errorElmId);
+        if (error) {
+            if (index === -1) errorElmIds.push(errorElmId);
+        } else {
+            if (index > -1) errorElmIds.splice(index, 1);
+        }
     }
 
-    function hasError(data, key) {
-        return (angular.isDefined(data.save_error) && angular.isDefined(data.save_error[key]) && data.save_error[key]);
+    function hasError(data, key, id) {
+        return errorElmIds.indexOf(id) > -1;
+        // return (angular.isDefined(data.save_error) && angular.isDefined(data.save_error[key]) && data.save_error[key]);
     }
 
     function clearError(data, skipKey) {
@@ -583,6 +592,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             if (key != skipKey) {
                 data.save_error[key] = false;
             }
-        })
+        });
+        errorElmIds = [];
     }
 };
