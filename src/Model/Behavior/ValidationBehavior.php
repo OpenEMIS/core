@@ -2088,6 +2088,34 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    public static function checkStaffAttendance($field, array $globalData)
+    {
+        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
+        $data = $globalData['data'];
+        $staffId = $data['staff_id'];
+        $institutionId = $data['institution_id'];
+        $academicPeriodId = $data['academic_period_id'];
+
+        $weekStartDate = $data['date_from'];
+        $weekEndDate = $data['date_to'];
+
+        $staffAttendances = $InstitutionStaffAttendances
+            ->find()
+            ->where([
+                $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                $InstitutionStaffAttendances->aliasField('staff_id') => $staffId,
+                $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
+                $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'"
+            ])
+            ->first();
+        // Check if staff already exist in the school
+        if ($staffAttendances) {
+            return false;
+        }
+        return true;
+    }
+
     public static function checkStaffAssignment($field, array $globalData)
     {
         $data = $globalData['data'];

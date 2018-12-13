@@ -926,7 +926,9 @@ trait MessagesTrait
                     'ruleInAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ],
                 'date_from' => [
-                    'ruleInAcademicPeriod' => 'Please select a date within the chosen Academic Period'
+                    'ruleInAcademicPeriod' => 'Please select a date within the chosen Academic Period',
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From',
+                    'leavePeriodOverlap' => 'Leave period applied overlaps attendace records.'
                 ]
             ],
             'InstitutionStudentAbsences' => [
