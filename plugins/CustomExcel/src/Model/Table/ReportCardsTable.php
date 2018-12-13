@@ -71,7 +71,8 @@ class ReportCardsTable extends AppTable
                 'StudentOutcomeResults',
                 'GroupAssessmentPeriods',
                 'GroupAssessmentItemResults',
-                'AssessmentTermResults'
+                'AssessmentTermResults',
+                'NextClassStudents'
             ]
         ]);
     }
@@ -120,6 +121,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeCriterias'] = 'onExcelTemplateInitialiseOutcomeCriterias';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentOutcomeResults'] = 'onExcelTemplateInitialiseStudentOutcomeResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentTermResults'] = 'onExcelTemplateInitialiseAssessmentTermResults';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseNextClassStudents'] = 'onExcelTemplateInitialiseNextClassStudents';
 
         return $events;
     }
@@ -1589,6 +1591,45 @@ class ReportCardsTable extends AppTable
             }
 
             return $result;
+        }
+    }
+
+    public function onExcelTemplateInitialiseNextClassStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
+            $nextAcademicPeriodId = $AcademicPeriods->getNextAcademicPeriodId($params['academic_period_id']);
+            $studentId = $params['student_id'];
+            $institutionId = $params['institution_id'];
+
+            $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+
+            $institutionSubjectStudentsEntities = $InstitutionSubjectStudents->find()
+                ->select([
+                    $InstitutionSubjectStudents->InstitutionSubjects->aliasField('name')
+                ])
+                ->where([
+                    $InstitutionSubjectStudents->aliasField('student_id') => $studentId,
+                    $InstitutionSubjectStudents->aliasField('academic_period_id') => $nextAcademicPeriodId,
+                    $InstitutionSubjectStudents->aliasField('institution_id') => $institutionId,
+                ])
+                ->contain('InstitutionSubjects')
+                ->hydrate(false)
+                ->all();
+
+            if (!$institutionSubjectStudentsEntities->isEmpty()) {
+                    foreach ($institutionSubjectStudentsEntities->toArray() as $key => $value) {
+                        $result[$key] = [
+                            'name' => $value['InstitutionSubjects']['name']
+                        ];
+                    }
+
+                    return $result;
+                }
+
+                return null;
         }
     }
 }
