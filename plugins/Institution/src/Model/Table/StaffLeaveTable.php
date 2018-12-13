@@ -72,7 +72,10 @@ class StaffLeaveTable extends ControllerActionTable
             ->add('date_to', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_from', true]
             ])
-            ->allowEmpty('file_content');
+            ->allowEmpty('file_content')
+            ->add('date_from', 'leavePeriodOverlap', [
+                'rule' => ['checkStaffAttendance']
+            ]);
     }
 
     public function implementedEvents()
