@@ -37,11 +37,13 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        // delete record if user removes the time in and comment
-        $time_in = $entity->time_in;
-        $comment = $entity->comment;
-        if (is_null($time_in) && is_null($comment)) {
-            $this->delete($entity);
+        if (!$entity->isNew()) {
+            // delete record if user removes the time in and comment
+            $time_in = $entity->time_in;
+            $comment = $entity->comment;
+            if (is_null($time_in) && is_null($comment)) {
+                $this->delete($entity);
+            }
         }
     }
 }
