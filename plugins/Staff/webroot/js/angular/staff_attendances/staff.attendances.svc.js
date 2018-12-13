@@ -219,6 +219,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         if (data.InstitutionStaffAttendances[timeKey] != null && data.InstitutionStaffAttendances[timeKey] != "") {
             time = convert12Timeformat(data.InstitutionStaffAttendances[timeKey]);
         }
+
         // div element
         var timeInputDivElement = document.createElement('div');
         timeInputDivElement.setAttribute('id', timepickerId);
@@ -240,20 +241,32 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
                 if (data.InstitutionStaffAttendances[timeKey] == null) {
                     data.isNew = true;
                 }
-                var time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
+                var time24Hour = null;
+                if (timeInputElement.value.length > 0) {
+                    time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
+                }
                 saveStaffAttendance(data, timeKey, time24Hour, academicPeriodId)
                 .then(
                     function(response) {
                         clearError(data, timeKey);
-                        if(response.data.error.length == 0){
+                        if((Array.isArray(response.data.error) && response.data.error.length > 0) ||
+                            typeof response.data.error === 'string' ||
+                            Object.keys(response.data.error).length > 0
+                        ){
+                            setError(data, timeKey, true);
+                            console.log(response.data.error);
+                            var errorMsg = 'There was an error when saving record';
+                            if (typeof response.data.error === 'string') {
+                                errorMsg = response.data.error;
+                            } else if (response.data.error.time_out.ruleCompareTimeReverse) {
+                                errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
+                            }
+                            AlertSvc.error(scope, errorMsg);
+                        } else {
                             AlertSvc.success(scope, 'Time record successfully saved.');
                             data.isNew = false;
                             data.InstitutionStaffAttendances[timeKey] = time24Hour;
                             setError(data, timeKey, false);
-                        }else{
-                            setError(data, timeKey, true);
-                            console.log(response.data.error);
-                            AlertSvc.error(scope, response.data.error.time_out.ruleCompareTimeReverse);
                         }
                     },
                     function(error) {
