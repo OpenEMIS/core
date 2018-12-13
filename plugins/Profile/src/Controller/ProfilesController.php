@@ -265,7 +265,7 @@ class ProfilesController extends AppController
             }
 
             $alias = $model->alias();
-            $excludedModel = ['ScholarshipApplications'];
+            $excludedModel = ['ScholarshipApplications', 'Leave'];
 
             if (!in_array($alias, $excludedModel)) {
                 $model->toggle('add', false);
