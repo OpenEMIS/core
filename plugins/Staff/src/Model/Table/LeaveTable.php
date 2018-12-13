@@ -12,6 +12,7 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Log\Log;
+use Cake\Validation\Validator;
 
 class LeaveTable extends ControllerActionTable
 {
@@ -68,6 +69,34 @@ class LeaveTable extends ControllerActionTable
         return $events;
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('date_to', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'date_from', true]
+            ])
+            ->add('date_to', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
+            ])
+            ->add('date_from', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
+            ])
+            ->allowEmpty('file_content');
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $StaffLeave = TableRegistry::get('Institution.StaffLeave');
+        $entity = $StaffLeave->getNumberOfDays($entity);
+        if (!$entity) {
+            // Error message to tell that leave period applied has overlapped exisiting leave records.
+            $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
+            return false;
+        }
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->controller->name !== 'Directories') {
@@ -104,7 +133,7 @@ class LeaveTable extends ControllerActionTable
             $this->field('staff_leave_type_id');
             $this->field('start_time', ['entity' => $entity]);
             $this->field('end_time', ['entity' => $entity]);
-            $this->field('institution_id', ['visible' => false]);
+            $this->field('institution_id', ['type' => 'hidden']);
             $this->field('academic_period_id', [
                 'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
                 'entity' => $entity
