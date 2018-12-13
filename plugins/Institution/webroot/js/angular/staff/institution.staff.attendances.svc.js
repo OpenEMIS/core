@@ -447,20 +447,31 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 if (params.value[timeKey] == null) {
                     params.value.isNew = true;
                 }
-                var time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
+                var time24Hour = null;
+                if (timeInputElement.value.length > 0) {
+                    time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
+                }
                 saveStaffAttendance(params, timeKey, time24Hour, academicPeriodId)
                 .then(
                     function(response) {
                         clearError(data, timeKey);
-                        if(response.data.error.length == 0){
+                        if((Array.isArray(response.data.error) && response.data.error.length > 0) ||
+                            typeof response.data.error === 'string' ||
+                            Object.keys(response.data.error).length > 0
+                        ){
+                            setError(data, timeKey, true, timepickerId);
+                            var errorMsg = 'There was an error when saving record';
+                            if (typeof response.data.error === 'string') {
+                                errorMsg = response.data.error;
+                            } else if (response.data.error.time_out.ruleCompareTimeReverse) {
+                                errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
+                            }
+                            AlertSvc.error(scope, errorMsg);
+                        } else {
                             AlertSvc.success(scope, 'Time record successfully saved.');
                             params.value.isNew = false;
                             params.value[timeKey] = time24Hour;
                             setError(data, timeKey, false);
-                        }else{
-                            setError(data, timeKey, true);
-                            console.log(response.data.error);
-                            AlertSvc.error(scope, response.data.error.time_out.ruleCompareTimeReverse);
                         }
                     },
                     function(error) {
