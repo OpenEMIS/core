@@ -70,6 +70,12 @@ class LeaveTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        if ($this->controller->name !== 'Directories') {
+             $this->removeBehavior('Excel');
+             if (isset($extra['toolbarButtons']['export'])) {
+                 unset($extra['toolbarButtons']['export']);
+             }
+        }
         if ($this->controller->name !== 'Profiles') {
             $this->removeBehavior('Workflow');
             $this->toggle('edit', false);
