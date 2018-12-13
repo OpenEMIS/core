@@ -101,7 +101,6 @@ class LeaveTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // if ($this->controller->name === 'Profiles') {
             $this->field('staff_leave_type_id');
             $this->field('start_time', ['entity' => $entity]);
             $this->field('end_time', ['entity' => $entity]);
@@ -110,11 +109,8 @@ class LeaveTable extends ControllerActionTable
                 'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
                 'entity' => $entity
             ]);
-            // $this->field('assignee_id', ['entity' => $entity]); //send entity information
 
-            // after $this->field(), field ordering will mess up, so need to reset the field order
             $this->setFieldOrder(['staff_leave_type_id', 'academic_period_id','date_from', 'date_to', 'full_day', 'start_time', 'end_time','number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
-        // }
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
