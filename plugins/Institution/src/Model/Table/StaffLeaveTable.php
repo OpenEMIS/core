@@ -43,12 +43,17 @@ class StaffLeaveTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->addBehavior('Historical.Historical', [
-                'originUrl' => [
-                    'plugin' => 'Institution',
-                    'controller' => 'Institutions',
-                    'action' => 'StaffLeave',
+                'historicalUrl' => [
+                    'plugin' => 'Directory',
+                    'controller' => 'Directories',
+                    'action' => 'HistoricalStaffLeave',
                 ],
-                'model' => 'Historical.HistoricalStaffLeave'
+                'originUrl' => [
+                    'action' => 'StaffLeave',
+                    'type' => 'staff'
+                ],
+                'model' => 'Historical.HistoricalStaffLeave',
+                'allowedController' => ['Directories']
             ]
         );
 
