@@ -917,6 +917,9 @@ trait MessagesTrait
             'StaffLeave' => [
                 'date_to' => [
                     'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
+                ],
+                'date_from' => [
+                    'leavePeriodOverlap' => 'Leave period applied overlaps attendace records.'
                 ]
             ],
             'InstitutionStudentAbsences' => [
