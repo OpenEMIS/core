@@ -916,7 +916,11 @@ trait MessagesTrait
             ],
             'StaffLeave' => [
                 'date_to' => [
-                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From',
+                    'ruleInAcademicPeriod' => 'Please select a date within the chosen Academic Period'
+                ],
+                'date_from' => [
+                    'ruleInAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
             'InstitutionStudentAbsences' => [
@@ -1595,6 +1599,15 @@ trait MessagesTrait
             'transferExists' => 'There is an existing transfer request for that staff.',
             'date_of_birth' => 'Date Of Birth',
             'photo_content' => 'Profile Image',
+            'Leave' => [
+                'date_to' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'date_from' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+            ],
             'Qualifications' => [
                 'qualification_title' => [
                     'required' => 'Please enter a valid Qualification Title'
