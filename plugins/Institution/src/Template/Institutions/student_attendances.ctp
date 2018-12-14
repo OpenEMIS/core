@@ -16,7 +16,7 @@ $this->start('toolbar');
 
 <?php if ($_import) : ?>
     <a href="<?=$importUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="{{test()}}" data-placement="bottom" data-container="body" title="<?= __('Import Absences') ?>" >
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Import Absences') ?>" >
             <i class="fa kd-import"></i>
         </button>
     </a>
