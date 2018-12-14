@@ -1924,6 +1924,7 @@ class StaffTable extends ControllerActionTable
                 $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
                 $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
                 $StaffLeaveTable->aliasField('staff_id') => $staffId,
+                $StaffLeaveTable->aliasField('full_day') => 1,
                 [
                     'OR' => [
                         [
@@ -1989,12 +1990,15 @@ class StaffTable extends ControllerActionTable
                 $results = $results->toArray();
                 $resultsCount = count($results);
                 $formatResultDates = [];
+                $isAllWeekLeave = count($workingDaysArr) == count($staffLeaves);
                 foreach ($workingDaysArr as $date) {
                     $i = 1;
                     $found = false;
                     $workingDay = $date->format('Y-m-d');
                     foreach ($results as $result) {
+                        // to flag so that we only add to result when there is attendance records
                         $isAddResult = false;
+
                         $cloneResult = clone $result;
                         $InstitutionStaffAttendanceDate = $cloneResult->InstitutionStaffAttendances['date'];
                         if ($InstitutionStaffAttendanceDate == $workingDay){
@@ -2015,16 +2019,20 @@ class StaffTable extends ControllerActionTable
                             // $formatResultDates[] = $cloneResult;
                         }
                         if ($isAddResult) {
-                            $leaveRecords = [];
-                            for ($j = 0; $j < count($staffLeaves); $j++) {
-                                $staffLeaveRecord = $staffLeaves[$j];
-                                $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
-                                $leaveRecord['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
-                                $leaveRecord['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
-                                $leaveRecord['staffLeaveTypeName'] = $staffLeaveRecord['_matchingData']['StaffLeaveTypes']['name'];
-                               $leaveRecords[] = $leaveRecord;
+                            $isOverlap = false;
+                            if ($isAllWeekLeave) {
+                                $isOverlap = true;
+                            } else {
+                                $currDate = strtotime($workingDay);
+                                foreach ($staffLeaves as $staffLeaveRecord) {
+                                    if (strtotime($staffLeaveRecord['date_from']) <= $currDate &&
+                                        $currDate <= strtotime($staffLeaveRecord['date_to'])
+                                    ) {
+                                        $isOverlap = true;
+                                    }
+                                }
                             }
-                            $cloneResult->leave = $leaveRecords;
+                            $cloneResult->isOverlapLeave = $isOverlap;
                             $formatResultDates[] = $cloneResult;
                         }
                         $i++;
