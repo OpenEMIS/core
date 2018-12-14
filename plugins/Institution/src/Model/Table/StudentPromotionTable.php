@@ -1175,12 +1175,14 @@ class StudentPromotionTable extends AppTable
         if (!empty($entity)) {
             $nextClasses = [];
 
+            //For each select student , store and count their next class for promotion to check
             foreach ($entity as $student) {
-                if (!(array_key_exists($student['next_institution_class_id'], $nextClasses)))
-                {
-                    $nextClasses[$student['next_institution_class_id']] = 1;
-                } else {
-                    $nextClasses[$student['next_institution_class_id']] += 1;
+                if ($student['selected']) {
+                    if (!(array_key_exists($student['next_institution_class_id'], $nextClasses))) {
+                        $nextClasses[$student['next_institution_class_id']] = 1;
+                    } else {
+                        $nextClasses[$student['next_institution_class_id']] += 1;
+                    }
                 }
             }
 
