@@ -169,6 +169,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
+            valueGetter: function(params) {
+                return params.data._matchingData.Users.name + ' - ' + params.data._matchingData.Users.openemis_no;
+            }
         });
 
         columnDefs.push({
