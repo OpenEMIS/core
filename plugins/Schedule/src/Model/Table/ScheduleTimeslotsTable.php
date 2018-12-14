@@ -19,6 +19,13 @@ class ScheduleTimeslotsTable extends ControllerActionTable
 
         $this->belongsTo('ScheduleIntervals', ['className' => 'Schedule.ScheduleIntervals', 'foreignKey' => 'institution_schedule_interval_id']);
 
+        $this->hasMany('Lessons', [
+            'className' => 'Schedule.ScheduleLessons',
+            'foreignKey' => 'institution_schedule_timeslot_id',
+            'dependent' => true, 
+            'cascadeCallbacks' => true
+        ]);
+
         $this->toggle('reorder', false);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
