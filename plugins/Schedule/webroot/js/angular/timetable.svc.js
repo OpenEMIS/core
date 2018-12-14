@@ -7,9 +7,13 @@ TimetableSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc', 'Util
 function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     var controllerScope;
 
+    const CURRICULUM_LESSON = 1;
+    const NON_CURRICULUM_LESSON = 2;
+
     var models = {
-        ScheduleTimetableTable: 'Schedule.ScheduleTimetableOverview',
+        ScheduleTimetableTable: 'Schedule.ScheduleTimetables',
         ScheduleTimeslotsTable: 'Schedule.ScheduleTimeslots',
+        ScheduleLessonsTable: 'Schedule.ScheduleLessons',
         AcademicPeriodTable: 'AcademicPeriod.AcademicPeriods'
     };
 
@@ -18,7 +22,10 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
 
         getTimetable: getTimetable,
         getTimeslots: getTimeslots,
-        getWorkingDayOfWeek: getWorkingDayOfWeek
+        getWorkingDayOfWeek: getWorkingDayOfWeek,
+        getLessonType: getLessonType,
+
+        getEmptyLessonObject: getEmptyLessonObject 
     };
 
     return service;
@@ -49,7 +56,6 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         console.log(scheduleIntervalId);
 
         var success = function(response, deferred) {
-            console.log('response', response);
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -77,4 +83,38 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             .ajax({success: success, defer: true});
     }
 
+    function getLessonType() {
+        var success = function(response, deferred) {
+            if (angular.isDefined(response.data.data)) {
+                deferred.resolve(response.data.data);
+            } else {
+                deferred.reject('There was an error when retrieving the data');
+            }
+        };
+
+        return ScheduleLessonsTable
+            .find('lessonType')
+            .ajax({success: success, defer: true});
+    }
+
+    function getEmptyLessonObject(lessonType) {
+        var lessonObject = {};
+
+        if (lessonType == NON_CURRICULUM_LESSON) {
+            lessonObject = {
+                type: NON_CURRICULUM_LESSON,
+                name: '',
+                institution_room_id: -1
+            };
+        } else { // CURRICULUM_LESSON
+            lessonObject = {
+                type: CURRICULUM_LESSON,
+                institution_subject_id: -1,
+                code_only: false,
+                institution_room_id: -1
+            };
+        }
+
+        return lessonObject;
+    }
 };

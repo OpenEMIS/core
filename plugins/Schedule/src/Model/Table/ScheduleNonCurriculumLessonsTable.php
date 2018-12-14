@@ -15,6 +15,8 @@ class ScheduleNonCurriculumLessonsTable extends ControllerActionTable
     {
         $this->table('institution_schedule_non_curriculum_lessons');
         parent::initialize($config);
+        
+        $this->belongsTo('Lessons', ['className' => 'Schedule.ScheduleLessons', 'foreignKey' => 'institution_schedule_lesson_id']);
     }
 
     public function validationDefault(Validator $validator)

@@ -19,10 +19,15 @@ class ScheduleBehavior extends Behavior
         $model = $this->_table;
         $controller = $this->_table->controller;
         $controllerName = $controller->name;
+        $modelAlias = $model->alias();
+
+        if ($modelAlias == 'ScheduleTimetables') {
+            $modelAlias = 'ScheduleTimetableOverview';
+        }
 
         // Breadcrumbs
         $navigation = $model->Navigation;
-        $oldTitle = $model->getHeader($model->alias());
+        $oldTitle = $model->getHeader($modelAlias);
         $newTitle = $model->getHeader(str_replace('Schedule ', '', $oldTitle));
         $newTitle = $model->getHeader(str_replace(' Overview', '', $newTitle)); // For timetable page only
         $navigation->substituteCrumb($oldTitle, $newTitle);
