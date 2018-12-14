@@ -2062,8 +2062,12 @@ class ValidationBehavior extends Behavior
 
     public static function checkStaffAttendance($field, array $globalData)
     {
-        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $data = $globalData['data'];
+        // only validate full day leave
+        if (!$data['full_day']) {
+            return true;
+        }
+        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $staffId = $data['staff_id'];
         $institutionId = $data['institution_id'];
         $academicPeriodId = $data['academic_period_id'];
@@ -2081,7 +2085,7 @@ class ValidationBehavior extends Behavior
                 $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'"
             ])
             ->first();
-        // Check if staff already exist in the school
+        // Check if staff aattendance exists
         if ($staffAttendances) {
             return false;
         }
