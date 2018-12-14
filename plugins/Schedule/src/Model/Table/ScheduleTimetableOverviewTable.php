@@ -10,7 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
-class ScheduleTimetablesTable extends ControllerActionTable
+class ScheduleTimetableOverviewTable extends ControllerActionTable
 {
     const DRAFT = 1;
     const PUBLISHED = 2;
@@ -38,6 +38,11 @@ class ScheduleTimetablesTable extends ControllerActionTable
         // ]);
 
         $this->addBehavior('Schedule.Schedule');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ScheduleTimetable' => ['index', 'view']
+        ]);
+
+        // $this->toggle('edit', false);
 
         $this->_status = [
             self::DRAFT => __('Draft'),
@@ -55,7 +60,29 @@ class ScheduleTimetablesTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
+        $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
         return $events;
+    }
+
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    {
+        if ($this->action == 'add') {
+            $originalButtons = $buttons->getArrayCopy();
+            $startSchedulingButton = [
+                [
+                    'name' => '<i class="fa kd-header-row"></i>' . __('Start Scheduling'),
+                    'attr' => [
+                        'class' => 'btn btn-default',
+                        'name' => 'submit',
+                        'value' => 'saveSchedule',
+                        'div' => false
+                    ]
+                ]
+            ];
+
+            array_splice($originalButtons, 1, 0, $startSchedulingButton);
+            $buttons->exchangeArray($originalButtons);
+        }
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
@@ -206,23 +233,112 @@ class ScheduleTimetablesTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'institution_schedule_term_id', 'name', 'education_grade_id', 'institution_class_id', 'shift', 'institution_schedule_interval_id', 'status']);
     }
 
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query
+            ->contain([
+                'ScheduleIntervals.Shifts.ShiftOptions',
+                'ScheduleIntervals.Timeslots',
+                'InstitutionClasses.ClassGrades.EducationGrades'
+            ]);
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('academic_period_id', ['type' => 'select']);
+        $this->field('institution_schedule_term_id', ['type' => 'select']);
+        $this->field('status');
+        $this->field('name');
+        $this->field('grade');
+        $this->field('institution_class_id');
+        $this->field('shift');
+        $this->field('time_slots', [
+            'type' => 'element',
+            'element' => 'Schedule.Intervals/interval_timeslots'
+        ]);
+        $this->field('institution_schedule_interval_id', ['visible' => false]);
+        $this->setFieldOrder(['academic_period_id', 'institution_schedule_term_id', 'status', 'name', 'grade', 'institution_class_id', 'shift', 'time_slots']);
+
+        $tabElements = [
+            'ScheduleTimetableOverview' => [
+                'url' => [
+                    'plugin' => $this->controller->plugin,
+                    'controller' => $this->controller->name,
+                    'action' => $this->alias()
+                ],
+                'text' => __('Overview')
+            ],
+            'ScheduleTimetable' => [
+                'url' => [
+                    'plugin' => $this->controller->plugin,
+                    'controller' => $this->controller->name,
+                    'action' => 'ScheduleTimetable',
+                    'view'
+                ],
+                'text' => __('Timetable')
+            ]
+        ];
+
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if (array_key_exists('edit', $extra['toolbarButtons'])) {
+            $timetableId = $entity->id;
+            $institutionId = $entity->institution_id;
+
+            $timetableEditUrl = [
+                'plugin' => $this->controller->plugin,
+                'controller' => $this->controller->name,
+                'action' => 'ScheduleTimetable',
+                'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                'edit',
+                'timetableId' => $this->paramsEncode(['id' => $timetableId])
+            ];
+
+            $extra['toolbarButtons']['edit']['url'] = $timetableEditUrl;
+        }
+    }
+
     // OnGet Events
     public function onGetStatus(Event $event, Entity $entity)
     {
-        $status = $this->_status[$entity->status];;
-
         if ($entity->status == self::DRAFT) {
             $color = '#DDDDDD';
         } else { // self::PUBLISHED
             $color = '#77B576';
         }
+        $status = $this->_status[$entity->status];;
 
-        return '<span class="status" style="border:none; background-color: ' . $color . ';">' . $status . '</span>';
+        if ($this->action == 'index') {
+            return '<span class="status" style="border:none; background-color: ' . $color . ';">' . $status . '</span>';
+
+        } 
+        return $status;
     }
 
     public function onGetShift(Event $event, Entity $entity)
     {
         return $entity->schedule_interval->shift->shift_option->name;
+    }
+
+    public function onGetGrade(Event $event, Entity $entity)
+    {
+        $classGrades = $entity->institution_class->class_grades;
+        $educationGradeList = [];
+
+        foreach ($classGrades as $classGradeEntity) {
+            $educationGradeList[] = $classGradeEntity->education_grade->name;
+        }
+
+        if (empty($educationGradeList)) {
+            return '-';
+        }
+
+        return implode(', ', $educationGradeList);
     }
 
     // OnUpdate Events
@@ -234,8 +350,6 @@ class ScheduleTimetablesTable extends ControllerActionTable
             $attr['options'] = $this->AcademicPeriods->getYearList();
             $attr['default'] = $this->AcademicPeriods->getCurrent();
             $attr['onChangeReload'] = 'changeAcademicPeriod';
-        } elseif ($action == 'edit') {
-            $attr['type'] = 'readonly';
         }
         return $attr;
     }
@@ -319,6 +433,29 @@ class ScheduleTimetablesTable extends ControllerActionTable
         unset($data[$this->alias()]['institution_schedule_interval_id']);
         unset($data[$this->alias()]['shift']);
         unset($data[$this->alias()]['education_grade_id']);
+    }
+
+    public function addOnSaveSchedule(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $patchOptions['validate'] = true;
+        $entity = $this->patchEntity($entity, $data->getArrayCopy(), $patchOptions->getArrayCopy());
+        $result = $this->save($entity);
+
+        if ($result) {
+            $timetableId = $result->id;
+            $institutionId = $result->institution_id;
+            $timetableEditUrl = [
+                'plugin' => $this->controller->plugin,
+                'controller' => $this->controller->name,
+                'action' => 'ScheduleTimetable',
+                'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                'edit',
+                'timetableId' => $this->paramsEncode(['id' => $timetableId])
+            ];
+            return $this->controller->redirect($timetableEditUrl);   
+        } else {
+            $this->controller->Alert->error('general.add.failed');
+        }
     }
 
     // Get Options

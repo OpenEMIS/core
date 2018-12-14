@@ -24,6 +24,7 @@ class ScheduleBehavior extends Behavior
         $navigation = $model->Navigation;
         $oldTitle = $model->getHeader($model->alias());
         $newTitle = $model->getHeader(str_replace('Schedule ', '', $oldTitle));
+        $newTitle = $model->getHeader(str_replace(' Overview', '', $newTitle)); // For timetable page only
         $navigation->substituteCrumb($oldTitle, $newTitle);
 
         // Header
