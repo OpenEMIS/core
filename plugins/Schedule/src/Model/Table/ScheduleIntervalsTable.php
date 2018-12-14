@@ -29,6 +29,13 @@ class ScheduleIntervalsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+        $this->hasMany('Timetables', [
+            'className' => 'Schedule.ScheduleTimetables', 
+            'foreignKey' => 'institution_schedule_interval_id', 
+            'dependent' => true, 
+            'cascadeCallbacks' => true
+        ]);
+
         $this->addBehavior('Schedule.Schedule');
     }
 
@@ -231,6 +238,13 @@ class ScheduleIntervalsTable extends ControllerActionTable
         }
     }
 
+    // OnGet Events
+    public function onGetInstitutionShiftId(Event $event, Entity $entity)
+    {
+        return $entity->shift->shift_option->name;
+    }
+
+    // OnUpdate Events
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -265,6 +279,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         return $attr;
     }
 
+    // Change Events
     public function addOnAddTimeslot(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $fieldKey = 'timeslots';
@@ -290,11 +305,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         unset($data[$this->alias()]['timeslots']);
     }
 
-    public function onGetInstitutionShiftId(Event $event, Entity $entity)
-    {
-        return $entity->shift->shift_option->name;
-    }
-
+    // Get Options
     private function getShiftOptions($academicPeriodId, $allShiftOption = false)
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
