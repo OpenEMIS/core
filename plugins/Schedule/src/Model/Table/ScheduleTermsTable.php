@@ -21,6 +21,13 @@ class ScheduleTermsTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
+        $this->hasMany('Timetables', [
+            'className' => 'Schedule.ScheduleTimetables', 
+            'foreignKey' => 'institution_schedule_term_id', 
+            'dependent' => true, 
+            'cascadeCallbacks' => true
+        ]);
+
         $this->addBehavior('Schedule.Schedule');
     }
 
@@ -129,6 +136,7 @@ class ScheduleTermsTable extends ControllerActionTable
         $this->setupField();
     }
 
+    // OnUpdate Events
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -155,6 +163,7 @@ class ScheduleTermsTable extends ControllerActionTable
         }
     }
 
+    // Misc
     private function updateDateRangeField($key, $attr, Request $request)
     {
         $requestData = $request->data;
