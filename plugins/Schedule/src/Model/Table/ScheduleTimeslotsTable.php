@@ -20,6 +20,10 @@ class ScheduleTimeslotsTable extends ControllerActionTable
         $this->belongsTo('ScheduleIntervals', ['className' => 'Schedule.ScheduleIntervals', 'foreignKey' => 'institution_schedule_interval_id']);
 
         $this->toggle('reorder', false);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ScheduleTimetable' => ['index']
+        ]);
     }
 
     public function validationDefault(Validator $validator)
@@ -28,11 +32,5 @@ class ScheduleTimeslotsTable extends ControllerActionTable
         $validator
             ->requirePresence('interval', 'create');
         return $validator;
-    }
-
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        return $events;
     }
 }

@@ -8,6 +8,14 @@
     }
     // pr($data);
     // die;
+
+    if ($ControllerAction['action'] == 'view') {
+        if ($data->has('schedule_interval')) {
+            $viewRenderData = $data->schedule_interval;
+        } else {
+            $viewRenderData = $data;
+        }
+    }
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>
@@ -19,9 +27,9 @@
                 <th><?= __('Interval') . ' (' . __('mins') . ')' ?></th>
             </thead>
 
-            <?php if ($data->has('timeslots') && !empty($data->timeslots)) : ?>
+            <?php if ($viewRenderData->has('timeslots') && !empty($viewRenderData->timeslots)) : ?>
                 <tbody>
-                    <?php foreach ($data->timeslots as $i => $timeslot) : ?>
+                    <?php foreach ($viewRenderData->timeslots as $i => $timeslot) : ?>
                         <tr>
                             <td><?= $timeslot->start_time ?></td>
                             <td><?= $timeslot->end_time ?></td>

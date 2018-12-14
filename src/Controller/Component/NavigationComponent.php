@@ -516,10 +516,10 @@ class NavigationComponent extends Component
                     'link' => false
                 ],
                 
-                'Institutions.ScheduleTimetables' => [
+                'Institutions.ScheduleTimetableOverview' => [
                     'title' => 'Timetables',
                     'parent' => 'Institution.Schedules',
-                    'selected' => ['Institutions.ScheduleTimetables'],
+                    'selected' => ['Institutions.ScheduleTimetableOverview', 'Institutions.ScheduleTimetable'],
                     'params' => ['plugin' => 'Institution']
                 ],
                 'Institutions.ScheduleIntervals' => [
