@@ -10,7 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
-class ScheduleTimetableOverviewTable extends ControllerActionTable
+class ScheduleTimetablesTable extends ControllerActionTable
 {
     const DRAFT = 1;
     const PUBLISHED = 2;
@@ -30,12 +30,12 @@ class ScheduleTimetableOverviewTable extends ControllerActionTable
         $this->belongsTo('ScheduleIntervals', ['className' => 'Schedule.ScheduleIntervals', 'foreignKey' => 'institution_schedule_interval_id']);
         $this->belongsTo('ScheduleTerms', ['className' => 'Schedule.ScheduleTerms', 'foreignKey' => 'institution_schedule_term_id']);
 
-        // $this->hasMany('Lessons', [
-        //     'className' => 'Schedule.ScheduleLessons', 
-        //     'foreignKey' => 'institution_schedule_timetable_id', 
-        //     'dependent' => true, 
-        //     'cascadeCallbacks' => true
-        // ]);
+        $this->hasMany('Lessons', [
+            'className' => 'Schedule.ScheduleLessons', 
+            'foreignKey' => 'institution_schedule_timetable_id', 
+            'dependent' => true, 
+            'cascadeCallbacks' => true
+        ]);
 
         $this->addBehavior('Schedule.Schedule');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -264,7 +264,7 @@ class ScheduleTimetableOverviewTable extends ControllerActionTable
                 'url' => [
                     'plugin' => $this->controller->plugin,
                     'controller' => $this->controller->name,
-                    'action' => $this->alias()
+                    'action' => 'ScheduleTimetableOverview'
                 ],
                 'text' => __('Overview')
             ],
@@ -280,7 +280,7 @@ class ScheduleTimetableOverviewTable extends ControllerActionTable
         ];
 
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', 'ScheduleTimetableOverview');
 
     }
 
