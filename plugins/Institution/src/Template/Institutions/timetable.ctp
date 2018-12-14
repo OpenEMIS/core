@@ -95,8 +95,7 @@ $panelHeader = $this->fetch('panelHeader');
                             <td class="timetable-timeslot">
                                 <h5>{{timeslot.start_time}} - {{timeslot.end_time}}</h5>
                             </td>
-                            <td ng-repeat="(key, day) in $ctrl.dayOfWeekList" ng-click="$ctrl.onTimeslotCellClicked(timeslot, day)" class="timetable-lesson">
-                                
+                            <td class="timetable-lesson {{$ctrl.getClassName(timeslot, day)}}" ng-repeat="(key, day) in $ctrl.dayOfWeekList" ng-click="$ctrl.onTimeslotCellClicked(timeslot, day)" class="">
                             </td>
                         </tr>
                     </tbody>
@@ -109,7 +108,38 @@ $panelHeader = $this->fetch('panelHeader');
                         <button href="#" class="btn btn-outline" ng-click="$ctrl.onSplitterClose()">
                             <i class="fa fa-close fa-lg"></i>
                         </button>
-                    </div>  
+                    </div>
+
+                    <div ng-if="$ctrl.splitterContent == 'Lessons'" class="timetable-sub-lessons">
+                        <div>This is the lesson splitter content</div>
+                        <div class="lesson-type">
+                            <h5><?= __('Type') ?>: </h5>
+                            <div style="display: inline-block; width: 100%;">
+                                <div class="input-select-wrapper" style="width: 90%;">
+                                    <select name="lesson_type" ng-options="lesson.id as lesson.name for lesson in $ctrl.lessonType" ng-model="$ctrl.selectedLessonType">
+                                    </select>
+                                </div>
+                                <div style="display: inline-block; margin:0 5px;" ng-click="$ctrl.onAddLessonType()">
+                                    <i class="fa fa-plus"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="lesson-list">
+                            <div ng-repeat="(key, lesson) in $ctrl.currentLessonList">
+                                <div class="lesson-form-header">
+                                    Header
+                                </div>
+                                <div>
+                                    Body
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div ng-if="$ctrl.splitterContent == 'Overview'" class="timetable-sub-overview">
+                        <div>This is the overview splitter content</div>
+                    </div>
                 </div>
             </bg-pane>
         </bg-splitter>

@@ -6,6 +6,9 @@ TimetableController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', '
 function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, TimetableSvc) {
     var vm = this;
 
+    const CURRICULUM_LESSON = 1;
+    const NON_CURRICULUM_LESSON = 2;
+
     vm.action = 'view';
     vm.hideSplitter = 'true';
     vm.splitterContent = 'Overview'; // Overview/Lessons
@@ -18,17 +21,41 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     vm.scheduleIntervalData = {};
     vm.scheduleTermData = {};
     vm.scheduleTimeslots = [];
-
     vm.dayOfWeekList = [];
+
+    vm.currentSelectedCell = {
+        day_of_week: {},
+        timeslot: {},
+        class: ''
+    };
+
+    vm.lessonType = [];
+    vm.selectedLessonType = 0;
+
+    /*
+        Non-Curriculum Lesson structure
+        {
+            type: NON_CURRICULUM_LESSON
+            name: '',
+            institution_room_id: 
+        }
+    
+        Curriculum Lesson structure
+        {
+            type: CURRICULUM_LESSON
+            institution_subject_id: ,
+            code_only: bool,
+            institution_room_id: 
+        }
+     */
+    vm.currentLessonList = [];
 
     // ready
     angular.element(document).ready(function () {
-        // AlertSvc.info($scope, 'Timetable will be automatically saved.');
         console.log('action', vm.action);
         console.log('timetableId', vm.timetableId);
 
         TimetableSvc.init(angular.baseUrl, $scope);
-
         UtilsSvc.isAppendLoader(true);
         if (vm.timetableId != null) {
             TimetableSvc.getTimetable(vm.timetableId)
@@ -51,9 +78,16 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                 console.log('getWorkingDayOfWeek', workingDayOfWeek);
                 vm.dayOfWeekList = workingDayOfWeek;
                 vm.tableReady = true;
+
+                return TimetableSvc.getLessonType();
             }, vm.error)
+            .then(function (lessonType) {
+                console.log('getLessonType', lessonType);
+                vm.lessonType = lessonType;
+            })
             .finally(function() {
                 UtilsSvc.isAppendLoader(false);
+                AlertSvc.info($scope, 'Timetable will be automatically saved.');
             })
         }
 
@@ -73,12 +107,39 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
 
     vm.onTimeslotCellClicked = function(timeslot, day) {
         vm.splitterContent = 'Lessons';
-        vm.hideSplitter = 'false';
+        var selectedClass = vm.getClassName(timeslot, day);
 
-        console.log('cell clicked!', timeslot, day);
+        if (vm.currentSelectedCell.class != selectedClass) {
+            vm.onHideSplitter(false, timeslot, day, selectedClass);
+            vm.currentLessonList = [];
+        }
+    }
+
+    vm.onAddLessonType = function() {
+        if (vm.selectedLessonType != 0) {
+            vm.currentLessonList.push(TimetableSvc.getEmptyLessonObject(vm.selectedLessonType));
+        }
+
+        console.log(vm.currentLessonList);
+
+        vm.selectedLessonType = 0;
     }
 
     vm.onSplitterClose = function() {
-        vm.hideSplitter = 'true';
+        vm.onHideSplitter(true);
+    }
+
+    vm.onHideSplitter = function(toggle = false, timeslot = {}, day = {}, selectedClass = '') {
+        vm.hideSplitter = toggle.toString();
+        vm.currentSelectedCell = {
+            day_of_week: day,
+            timeslot: timeslot,
+            class: selectedClass
+        };
+    }
+
+    // misc function
+    vm.getClassName = function(timeslot, day) {
+        return 'lesson-' + timeslot.id + '-' + day.day_of_week;
     }
 }
