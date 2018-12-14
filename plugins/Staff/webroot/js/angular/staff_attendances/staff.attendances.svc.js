@@ -219,12 +219,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         if (data.InstitutionStaffAttendances[timeKey] != null && data.InstitutionStaffAttendances[timeKey] != "") {
             time = convert12Timeformat(data.InstitutionStaffAttendances[timeKey]);
         }
-        var leave = data.leave;
-        var isDisabled = (leave && leave.length > 0 &&
-            (leave[0].isFullDay === 1 ||
-                (leave[0].isFullDay === 0 && leave.length > 1)
-            )
-        );
+        var isDisabled = data.isOverlapLeave;
         // div element
         var timeInputDivElement = document.createElement('div');
         if (!isDisabled) timeInputDivElement.setAttribute('id', timepickerId); // for pop up
