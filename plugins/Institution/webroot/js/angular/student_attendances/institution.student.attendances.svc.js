@@ -43,6 +43,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     var translateText = {
         'original': {
+            'openemis_no': 'OpenEMIS ID',
             'Name': 'Name',
             'Attendance': 'Attendance',
             'ReasonComment': 'Reason / Comment',
@@ -402,8 +403,15 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         }
 
         columnDefs.push({
+            headerName: translateText.translated.openemis_no,
+            field: "user.openemis_no",
+            pinned: direction,
+            menuTabs: [],
+        });
+
+        columnDefs.push({
             headerName: translateText.translated.Name,
-            field: "user.name_with_id",
+            field: "user.name",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -463,8 +471,15 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         }
 
         columnDefs.push({
+            headerName: translateText.translated.openemis_no,
+            field: "user.openemis_no",
+            pinned: direction,
+            menuTabs: [],
+        });
+
+        columnDefs.push({
             headerName: translateText.translated.Name,
-            field: "user.name_with_id",
+            field: "user.name",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
