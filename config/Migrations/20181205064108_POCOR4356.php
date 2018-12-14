@@ -373,6 +373,7 @@ class POCOR4356 extends AbstractMigration
             Published
             -- Select Status --
             Value entered exceed the end time of the shift selected.
+            Start Scheduling
         */
         // 
         // locale_contents - END
