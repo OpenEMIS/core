@@ -606,7 +606,7 @@ class LeaveTable extends ControllerActionTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
             // at the point of doing, only Profiles can add staff leave
             if ($this->controller->name === 'Profiles') {
                 $staffId = $this->Auth->user('id');
@@ -624,13 +624,13 @@ class LeaveTable extends ControllerActionTable
                     $StaffTable->aliasField('staff_status_id') => 1
                 ])
                 ->toArray();
-
             $attr['type'] = 'select';
             $attr['options'] = $institutionOptions;
-        }
-
-        if ($action == 'edit') {
+        } elseif ($action == 'edit') {
+            $entity = $attr['entity'];
+            $institutionId = $entity->institution_id;
             $attr['type'] = 'disabled';
+            $attr['attr']['value'] = $this->Institutions->get($institutionId)->name;
         }
         return $attr;
     }
