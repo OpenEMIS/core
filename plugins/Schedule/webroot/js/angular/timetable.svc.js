@@ -27,6 +27,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         getLessonType: getLessonType,
         getTimetableStatus: getTimetableStatus,
         getEducationGrade: getEducationGrade,
+        getTimetableLessons: getTimetableLessons,
 
         getEmptyLessonObject: getEmptyLessonObject,
 
@@ -71,6 +72,23 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         return ScheduleTimeslotsTable
             .where({institution_schedule_interval_id: scheduleIntervalId})
             .order(['order'])
+            .ajax({success: success, defer: true});
+    }
+
+    function getTimetableLessons(timetableId) {
+        var success = function(response, deferred) {
+            console.log('response', response);
+            if (angular.isDefined(response.data.data)) {
+                deferred.resolve(response.data.data);
+            } else {
+                deferred.reject('There was an error when retrieving the data');
+            }
+        };
+
+        return ScheduleLessonsTable
+            .find('allLessons', {
+                institution_schedule_timetable_id: timetableId
+            })
             .ajax({success: success, defer: true});
     }
 
