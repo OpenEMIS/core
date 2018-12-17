@@ -322,6 +322,11 @@ class POCOR4356 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to institution_schedule_lessons.id'
             ])
+            ->addColumn('institution_room_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_rooms.id'
+            ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -341,6 +346,7 @@ class POCOR4356 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('institution_schedule_lesson_id')
+            ->addIndex('institution_room_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
@@ -374,6 +380,8 @@ class POCOR4356 extends AbstractMigration
             -- Select Status --
             Value entered exceed the end time of the shift selected.
             Start Scheduling
+            Non Curriculum Lesson
+            Curriculum Lesson
         */
         // 
         // locale_contents - END
