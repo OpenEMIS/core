@@ -61,7 +61,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
                     return !$TimetableTable->exists([
                         'institution_class_id' => $context['data']['institution_class_id'],
                         'academic_period_id' => $context['data']['academic_period_id'],
-                        'institution_schedule_term_id' => $context['data']['institution_schedule_term_id']
+                        'institution_schedule_term_id' => $context['data']['institution_schedule_term_id'],
                         'status' => $TimetableTable::PUBLISHED
                     ]);
                 },

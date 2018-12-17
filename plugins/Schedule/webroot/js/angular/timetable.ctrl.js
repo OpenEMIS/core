@@ -35,6 +35,9 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         class: ''
     };
 
+    // for lessons data - display and saving
+    vm.lessonList = [];
+
     vm.lessonType = [];
     vm.selectedLessonType = 0;
 
@@ -85,6 +88,11 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             .then(function(workingDayOfWeek) {
                 console.log('getWorkingDayOfWeek', workingDayOfWeek);
                 vm.dayOfWeekList = workingDayOfWeek;
+
+                return TimetableSvc.getTimetableLessons(vm.timetableData.id);
+            }, vm.error)
+            .then(function(allLessons) {
+                console.log('getTimetableLessons', allLessons);
 
                 return TimetableSvc.getEducationGrade(vm.timetableData.institution_class_id);
             }, vm.error)
