@@ -65,19 +65,37 @@ $panelHeader = $this->fetch('panelHeader');
         background-color: #fff;
     }
 
+    .splitter-filter .timetable-sub-overview input {
+        width: 100%;
+        height: 30px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        margin-bottom: 15px;
+        padding: 5px 10px;
+    }
+
+    .splitter-filter .timetable-sub-overview > div {
+        position: relative;
+    }
+
+    .splitter-filter .timetable-sub-overview > div > i {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
 </style>
  
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.timetableId=<?= $timetable_id; ?>; $ctrl.action='<?= $_action; ?>';" float-btn="false" collapse="{{$ctrl.hideSplitter}}">
+        <bg-splitter orientation="horizontal" class="content-splitter timetable" elements="getSplitterElements" ng-init="$ctrl.timetableId=<?= $timetable_id; ?>; $ctrl.action='<?= $_action; ?>';" float-btn="false" collapse="{{$ctrl.hideSplitter}}">
             <bg-pane class="main-content">
                 <table ng-if="$ctrl.tableReady" class="timetable-table">
                     <thead>
                         <tr class="timetable-header title">
                             <th colspan="{{1 + $ctrl.dayOfWeekList.length}}">
                                 <div>
-                                    <h2>{{$ctrl.timetableData.name}}</h2>
-                                    <h6>Grade: | Class: {{$ctrl.institutionClassData.name}}</h6>
+                                    <h2>{{$ctrl.overviewData.name}}</h2>
+                                    <h6>Grade: {{$ctrl.overviewData.education_grade_name}} | Class: {{$ctrl.institutionClassData.name}}</h6>
                                 </div>
                             </th>
                         </tr>
@@ -111,7 +129,6 @@ $panelHeader = $this->fetch('panelHeader');
                     </div>
 
                     <div ng-if="$ctrl.splitterContent == 'Lessons'" class="timetable-sub-lessons">
-                        <div>This is the lesson splitter content</div>
                         <div class="lesson-type">
                             <h5><?= __('Type') ?>: </h5>
                             <div style="display: inline-block; width: 100%;">
@@ -138,7 +155,51 @@ $panelHeader = $this->fetch('panelHeader');
                     </div>
 
                     <div ng-if="$ctrl.splitterContent == 'Overview'" class="timetable-sub-overview">
-                        <div>This is the overview splitter content</div>
+                        <div class="academic-period">
+                            <h5><?= __('Academic Period') ?>: </h5>
+                            <div class="input text required">
+                                <input type="text" disabled="disabled" value="{{$ctrl.overviewData.academic_period_name}}"/>
+                            </div>
+                        </div>
+                        <div class="term">
+                            <h5><?= __('Term') ?>: </h5>
+                            <div class="input text required">
+                                <input type="text" disabled="disabled" value="{{$ctrl.overviewData.term_name}}"/>
+                            </div>
+                        </div>
+                        <div class="timetable-status">
+                            <h5><?= __('Status') ?>: </h5>
+                            <i ng-if="$ctrl.overviewError.status" class="fa fa-exclamation-circle fa-lg icon-red" tooltip-placement="bottom" uib-tooltip="{{$ctrl.overviewError.status}}" tooltip-append-to-body="true" tooltip-class="tooltip-red"></i>
+                            <div class="input-select-wrapper">
+                                <select name="lesson_type" ng-options="status.id as status.name for status in $ctrl.timetableStatus" ng-model="$ctrl.overviewData.status" ng-change="$ctrl.onUpdateOverviewData('status')">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="name">
+                            <h5><?= __('Name') ?>: </h5>
+                            <i ng-if="$ctrl.overviewError.name" class="fa fa-exclamation-circle fa-lg icon-red" tooltip-placement="bottom" uib-tooltip="{{$ctrl.overviewError.name}}" tooltip-append-to-body="true" tooltip-class="tooltip-red"></i>
+                            <div class="input text required">
+                                <input type="text" ng-model="$ctrl.overviewData.name" ng-blur="$ctrl.onUpdateOverviewData('name')"/>
+                            </div>
+                        </div>
+                        <div class="education-grade">
+                            <h5><?= __('Grade') ?>: </h5>
+                            <div class="input text required">
+                                <input type="text" disabled="disabled" value="{{$ctrl.overviewData.education_grade_name}}"/>
+                            </div>
+                        </div>
+                        <div class="institution-class">
+                            <h5><?= __('Class') ?>: </h5>
+                            <div class="input text required">
+                                <input type="text" disabled="disabled" value="{{$ctrl.overviewData.class_name}}"/>
+                            </div>
+                        </div>
+                        <div class="schedule-interval">
+                            <h5><?= __('Interval') ?>: </h5>
+                            <div class="input text required">
+                                <input type="text" disabled="disabled" value="{{$ctrl.overviewData.interval_name}}"/>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </bg-pane>
