@@ -65,11 +65,13 @@ class ScheduleLessonsTable extends ControllerActionTable
             ],
             [
                 'id' => self::NON_CURRICULUM_LESSON,
-                'name' => __('Non Curriculum Lesson')
+                'name' => __('Non Curriculum Lesson'),
+                'title' => __('Non Curriculum')
             ],
             [
                 'id' => self::CURRICULUM_LESSON,
-                'name' => __('Curriculum Lesson')
+                'name' => __('Curriculum Lesson'),
+                'title' => __('Curriculum')
             ]
         ];
 
