@@ -22,6 +22,12 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     vm.scheduleTermData = {};
     vm.scheduleTimeslots = [];
     vm.dayOfWeekList = [];
+    vm.timetableStatus = [];
+    vm.educationGradeList = [];
+
+    // for overview data - display and saving
+    vm.overviewData = {};
+    vm.overviewError = {};
 
     vm.currentSelectedCell = {
         day_of_week: {},
@@ -66,6 +72,8 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                 vm.scheduleIntervalData = timetableData.schedule_interval;
                 vm.scheduleTermData = timetableData.schedule_term;
 
+                vm.resetOverviewData();
+
                 return TimetableSvc.getTimeslots(vm.timetableData.institution_schedule_interval_id);
             }, vm.error)
             .then(function(timeslotsData) {
@@ -77,14 +85,35 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             .then(function(workingDayOfWeek) {
                 console.log('getWorkingDayOfWeek', workingDayOfWeek);
                 vm.dayOfWeekList = workingDayOfWeek;
-                vm.tableReady = true;
 
-                return TimetableSvc.getLessonType();
+                return TimetableSvc.getEducationGrade(vm.timetableData.institution_class_id);
             }, vm.error)
-            .then(function (lessonType) {
+            .then(function(educationGrades) {
+                console.log('getEducationGrade', educationGrades);
+                vm.educationGradeList = educationGrades;
+                vm.overviewData.education_grade_name = '';
+
+                for (var i = 0; i < educationGrades.length; i++) {
+                    vm.overviewData.education_grade_name += educationGrades[i].grade_name;
+                    if (i != educationGrades.length - 1) {
+                        vm.overviewData.education_grade_name += ', ';
+                    }
+                }
+
+                vm.tableReady = true;
+                return TimetableSvc.getLessonType();
+            })
+            .then(function(lessonType) {
                 console.log('getLessonType', lessonType);
                 vm.lessonType = lessonType;
-            })
+
+                return TimetableSvc.getTimetableStatus();
+            }, vm.error)
+            .then(function(timetableStatus) {
+                console.log('getTimetableStatus', timetableStatus);
+                vm.timetableStatus = timetableStatus;
+
+            }, vm.error)
             .finally(function() {
                 UtilsSvc.isAppendLoader(false);
                 AlertSvc.info($scope, 'Timetable will be automatically saved.');
@@ -96,16 +125,54 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     // error
     vm.error = function (error) {
         AlertSvc.error($scope, error);
+        console.log('error', error);
         return $q.reject(error);
     }
 
-    // button events
+    // save events
+    vm.saveOverviewData = function(field) {
+        UtilsSvc.isAppendLoader(true);
+        vm.resetOverviewError();
+        TimetableSvc.saveOverviewData(vm.overviewData)
+        .then(function(response) {
+            // check if has error
+            // console.log('response after save', response);
+            var data = response.data;
+
+            if (angular.isObject(data.error) && Object.keys(data.error).length > 0) {
+                // console.log('in?');
+                for (var fieldKey in data.error) {
+                    var errorField = data.error[fieldKey];
+
+                    var tempError = [];
+                    for (var errorRule in errorField) {
+                        tempError.push(errorField[errorRule]);
+                    }
+                    vm.overviewError[fieldKey] = tempError.join(', ');
+                }
+            } else {
+                // console.log('else');
+                vm.updateTimetableData(field, data.data[field]);
+            }
+        }, vm.error)
+        .finally(function() {
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    // button/change events
+    vm.onUpdateOverviewData = function(field) {
+        console.log('onUpdateOverviewData', vm.overviewData);
+        vm.saveOverviewData(field);
+    };
+
     vm.onInfoClicked = function() {
         vm.splitterContent = 'Overview';
         vm.hideSplitter = 'false';
     }
 
     vm.onTimeslotCellClicked = function(timeslot, day) {
+        vm.resetOverviewError(true);
         vm.splitterContent = 'Lessons';
         var selectedClass = vm.getClassName(timeslot, day);
 
@@ -127,8 +194,10 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
 
     vm.onSplitterClose = function() {
         vm.onHideSplitter(true);
+        vm.resetOverviewError(true);
     }
 
+    // misc function
     vm.onHideSplitter = function(toggle = false, timeslot = {}, day = {}, selectedClass = '') {
         vm.hideSplitter = toggle.toString();
         vm.currentSelectedCell = {
@@ -138,8 +207,43 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         };
     }
 
-    // misc function
+    vm.resetOverviewError = function(resetData = false) {
+        if (resetData) {
+            for (var field in vm.overviewError) {
+                vm.resetOverviewData(field);
+            }
+        }
+        vm.overviewError = {};
+    }
+
     vm.getClassName = function(timeslot, day) {
         return 'lesson-' + timeslot.id + '-' + day.day_of_week;
+    }
+
+    vm.resetOverviewData = function(field = null) {
+        if (field == null) {
+            // for saving usage
+            vm.overviewData.id = vm.timetableData.id;
+            vm.overviewData.name = vm.timetableData.name;
+            vm.overviewData.status = vm.timetableData.status;
+            vm.overviewData.academic_period_id = vm.timetableData.academic_period_id;
+            vm.overviewData.institution_class_id = vm.timetableData.institution_class_id;
+            vm.overviewData.institution_id = vm.timetableData.institution_id,
+            vm.overviewData.institution_schedule_interval_id = vm.timetableData.institution_schedule_interval_id;
+            vm.overviewData.institution_schedule_term_id = vm.timetableData.institution_schedule_term_id;
+
+            // for display usage
+            vm.overviewData.academic_period_name = vm.timetableData.academic_period.name;
+            vm.overviewData.term_name = vm.timetableData.schedule_term.name;
+            vm.overviewData.class_name = vm.timetableData.institution_class.name;
+            vm.overviewData.interval_name = vm.timetableData.schedule_interval.name;
+
+        } else {
+            vm.overviewData[field] = vm.timetableData[field];
+        }
+    }
+
+    vm.updateTimetableData = function(field, value) {
+        vm.timetableData[field] = value;
     }
 }

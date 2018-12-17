@@ -56,6 +56,7 @@ class ScheduleLessonsTable extends ControllerActionTable
         return $events;
     }
 
+    // Finder
     public function findLessonType(Query $query, array $options)
     {
         $lessonType = [
