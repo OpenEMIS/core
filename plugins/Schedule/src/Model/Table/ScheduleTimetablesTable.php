@@ -3,6 +3,7 @@ namespace Schedule\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
@@ -39,7 +40,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
 
         $this->addBehavior('Schedule.Schedule');
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'ScheduleTimetable' => ['index', 'view']
+            'ScheduleTimetable' => ['index', 'view', 'edit']
         ]);
 
         // $this->toggle('edit', false);
@@ -53,7 +54,24 @@ class ScheduleTimetablesTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-
+        $validator
+            ->add('status', 'checkExistPublish', [
+                'rule' => function ($value, $context) {
+                    $TimetableTable = $context['providers']['table'];
+                    return !$TimetableTable->exists([
+                        'institution_class_id' => $context['data']['institution_class_id'],
+                        'academic_period_id' => $context['data']['academic_period_id'],
+                        'institution_schedule_term_id' => $context['data']['institution_schedule_term_id']
+                        'status' => $TimetableTable::PUBLISHED
+                    ]);
+                },
+                'on' => function($context) {
+                    $TimetableTable = $context['providers']['table'];
+                    $status = $context['data']['status'];
+                    return $status == $TimetableTable::PUBLISHED;
+                },
+                'message' => __('There is existing published timetable for the class.')
+            ]);
         return $validator;
     }
 
@@ -569,6 +587,24 @@ class ScheduleTimetablesTable extends ControllerActionTable
             ->toArray();
 
         return $shiftOptions;
+    }
+
+    // Finder
+    public function findTimetableStatus(Query $query, array $options)
+    {
+        $tempStatus = $this->_status;
+        $status = [];
+
+        foreach ($tempStatus as $id => $name) {
+            $status[] = [
+                'id' => $id,
+                'name' => $name
+            ];
+        }
+
+        return $query->formatResults(function (ResultSetInterface $results) use ($status) {
+            return $status;
+        });
     }
 
     // Misc 

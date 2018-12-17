@@ -14,7 +14,8 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         ScheduleTimetableTable: 'Schedule.ScheduleTimetables',
         ScheduleTimeslotsTable: 'Schedule.ScheduleTimeslots',
         ScheduleLessonsTable: 'Schedule.ScheduleLessons',
-        AcademicPeriodTable: 'AcademicPeriod.AcademicPeriods'
+        AcademicPeriodTable: 'AcademicPeriod.AcademicPeriods',
+        InstitutionClassGradesTable: 'Institution.InstitutionClassGrades'
     };
 
     var service = {
@@ -24,8 +25,12 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         getTimeslots: getTimeslots,
         getWorkingDayOfWeek: getWorkingDayOfWeek,
         getLessonType: getLessonType,
+        getTimetableStatus: getTimetableStatus,
+        getEducationGrade: getEducationGrade,
 
-        getEmptyLessonObject: getEmptyLessonObject 
+        getEmptyLessonObject: getEmptyLessonObject,
+
+        saveOverviewData: saveOverviewData 
     };
 
     return service;
@@ -48,7 +53,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
 
         return ScheduleTimetableTable
             .get(timetableId)
-            .contain(['ScheduleIntervals', 'ScheduleTerms', 'InstitutionClasses'])
+            .contain(['AcademicPeriods', 'ScheduleIntervals', 'ScheduleTerms', 'InstitutionClasses'])
             .ajax({success: success, defer: true});
     }
 
@@ -97,6 +102,34 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             .ajax({success: success, defer: true});
     }
 
+    function getTimetableStatus() {
+        var success = function(response, deferred) {
+            if (angular.isDefined(response.data.data)) {
+                deferred.resolve(response.data.data);
+            } else {
+                deferred.reject('There was an error when retrieving the data');
+            }
+        };
+
+        return ScheduleTimetableTable
+            .find('timetableStatus')
+            .ajax({success: success, defer: true});
+    }
+
+    function getEducationGrade(institutionClassId) {
+        var success = function(response, deferred) {
+            if (angular.isDefined(response.data.data)) {
+                deferred.resolve(response.data.data);
+            } else {
+                deferred.reject('There was an error when retrieving the data');
+            }
+        };
+
+        return InstitutionClassGradesTable
+            .where({institution_class_id: institutionClassId})
+            .ajax({success: success, defer: true});
+    }
+
     function getEmptyLessonObject(lessonType) {
         var lessonObject = {};
 
@@ -116,5 +149,21 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         }
 
         return lessonObject;
+    }
+
+    function saveOverviewData(timetableData) {
+        console.log('timetableData', timetableData);
+        var saveData = {
+            id: timetableData.id,
+            name: timetableData.name,
+            status: timetableData.status,
+            academic_period_id: timetableData.academic_period_id,
+            institution_class_id: timetableData.institution_class_id,
+            institution_id: timetableData.institution_id,
+            institution_schedule_interval_id: timetableData.institution_schedule_interval_id,
+            institution_schedule_term_id: timetableData.institution_schedule_term_id
+        };
+
+        return ScheduleTimetableTable.edit(saveData);
     }
 };
