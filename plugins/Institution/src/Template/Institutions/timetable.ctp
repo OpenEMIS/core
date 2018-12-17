@@ -84,6 +84,36 @@ $panelHeader = $this->fetch('panelHeader');
         top: 0;
         right: 0;
     }
+
+    .splitter-filter .lesson-form  {
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        margin-bottom: 15px;
+    }
+
+    .splitter-filter .lesson-form .lesson-form-header h5 {
+        margin: 0px;
+        padding: 10px;
+        border-bottom: 1px solid #DDD;
+        background-color: #EEE;
+    }
+
+    .splitter-filter .lesson-form .lesson-form-body {
+        margin: 10px 0;
+    }
+
+    .splitter-filter .lesson-form .lesson-form-body .lesson-wrapper h6,
+    .splitter-filter .lesson-form .lesson-form-body .lesson-wrapper .input {
+        padding: 0 10px;
+    }
+
+    .splitter-filter .lesson-form .lesson-form-body .lesson-wrapper .input input {
+        width: 100%;
+        border-radius: 3px;
+        border: 1px solid #ddd;
+        height: 25px;
+    }
+    
 </style>
  
 <div class="panel">
@@ -144,12 +174,39 @@ $panelHeader = $this->fetch('panelHeader');
                         </div>
                         <hr>
                         <div class="lesson-list">
-                            <div ng-repeat="(key, lesson) in $ctrl.currentLessonList">
+                            <div ng-repeat="(key, lesson) in $ctrl.currentLessonList" class="lesson-form">
                                 <div class="lesson-form-header">
-                                    Header
+                                    <h5>{{$ctrl.getLessonTitle(lesson.type)}}</h5>
                                 </div>
-                                <div>
-                                    Body
+                                <!-- Non Curriculum Lessons -->
+                                <div ng-if="lesson.type == 2" class="lesson-form-body">
+                                    <div class="lesson-wrapper non-curriculum lesson-name">
+                                        <h6><?= __('Name') ?> </h6>
+                                        <div class="input text required">
+                                            <input type="text"/>
+                                        </div>
+                                    </div>
+                                    <div class="lesson-wrapper non-curriculum institution-room">
+                                        <h6><?= __('Room') ?> </h6>
+                                        <div class="input text required">
+                                            <input type="text"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Curriculum Lessons -->
+                                <div ng-if="lesson.type == 1" class="lesson-form-body">
+                                    <div class="lesson-wrapper curriculum lesson-name">
+                                        <h6><?= __('Name1') ?> </h6>
+                                        <div class="input text required">
+                                            <input type="text"/>
+                                        </div>
+                                    </div>
+                                    <div class="lesson-wrapper curriculum institution-room">
+                                        <h6><?= __('Room1') ?> </h6>
+                                        <div class="input text required">
+                                            <input type="text"/>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
