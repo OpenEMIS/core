@@ -31,15 +31,14 @@ class ScheduleLessonsTable extends ControllerActionTable
         ]);
 
         $this->hasMany('NonCurriculumLessons', [
-            'className' => 'Schedule.NonScheduleCurriculumLessons',
+            'className' => 'Schedule.ScheduleNonCurriculumLessons',
             'foreignKey' => 'institution_schedule_lesson_id',
             'dependent' => true, 
             'cascadeCallbacks' => true
         ]);
 
-
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'ScheduleTimetable' => ['index', 'view']
+            'ScheduleTimetable' => ['index', 'view', 'add']
         ]);
     }
 
@@ -77,5 +76,22 @@ class ScheduleLessonsTable extends ControllerActionTable
         return $query->formatResults(function (ResultSetInterface $results) use ($lessonType) {
             return $lessonType;
         });
+    }
+
+    public function findAllLessons(Query $query, array $options)
+    {
+        $timetableId = $options['institution_schedule_timetable_id'];
+
+        $query
+            ->contain([
+                'Timeslots',
+                'CurriculumLessons',
+                'NonCurriculumLessons'
+            ])
+            ->where([
+                $this->aliasField('institution_schedule_timetable_id') => $timetableId
+            ]);
+
+        return $query;
     }
 }
