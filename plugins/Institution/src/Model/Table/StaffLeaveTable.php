@@ -658,7 +658,6 @@ class StaffLeaveTable extends ControllerActionTable
 
         $existingConditions = [
             $this->aliasField('staff_id') => $staffId,
-            $this->aliasField('institution_id') => $institutionId,
             $this->aliasField('academic_period_id') => $academicPeriodId,
         ];
 
