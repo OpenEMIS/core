@@ -57,7 +57,6 @@ class LeaveTable extends ControllerActionTable
             'autoFields' => false,
         ]);
         $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffLeave']);
-        $this->toggle('remove', false);
         $this->fullDayOptions = $this->getSelectOptions('general.yesno');
     }
 
@@ -108,6 +107,7 @@ class LeaveTable extends ControllerActionTable
             $this->removeBehavior('Workflow');
             $this->toggle('add', false);
             $this->toggle('edit', false);
+            $this->toggle('remove', false);
         }
         // $this->field('institution_id', ['visible' => ['index' => false, 'add' => true, 'view' => true, 'edit' => false]]);
         $this->field('number_of_days', ['visible' => ['index' => true, 'view' => true, 'edit' => false]]);
