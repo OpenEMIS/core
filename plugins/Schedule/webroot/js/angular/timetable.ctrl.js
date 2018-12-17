@@ -228,6 +228,15 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         return 'lesson-' + timeslot.id + '-' + day.day_of_week;
     }
 
+    vm.getLessonTitle = function(lessonTypeId) {
+        for (var lesson in vm.lessonType) {
+            if (vm.lessonType[lesson].id == lessonTypeId) {
+                return vm.lessonType[lesson].title;
+            }
+        }
+        return '';
+    }
+
     vm.resetOverviewData = function(field = null) {
         if (field == null) {
             // for saving usage
