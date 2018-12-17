@@ -61,7 +61,8 @@ $panelHeader = $this->fetch('panelHeader');
         background-color: #EEE;
     }
 
-    .timetable-table .timetable-lesson:hover {
+    .timetable-table .timetable-lesson:hover,
+    .timetable-table .lesson-selected {
         background-color: #fff;
     }
 
@@ -113,7 +114,7 @@ $panelHeader = $this->fetch('panelHeader');
                             <td class="timetable-timeslot">
                                 <h5>{{timeslot.start_time}} - {{timeslot.end_time}}</h5>
                             </td>
-                            <td class="timetable-lesson {{$ctrl.getClassName(timeslot, day)}}" ng-repeat="(key, day) in $ctrl.dayOfWeekList" ng-click="$ctrl.onTimeslotCellClicked(timeslot, day)" class="">
+                            <td class="timetable-lesson {{$ctrl.getClassName(timeslot, day)}} {{($ctrl.getClassName(timeslot, day) == $ctrl.currentSelectedCell.class) ? 'lesson-selected' : ''}}" ng-repeat="(key, day) in $ctrl.dayOfWeekList" ng-click="$ctrl.onTimeslotCellClicked(timeslot, day)" class="">
                             </td>
                         </tr>
                     </tbody>
