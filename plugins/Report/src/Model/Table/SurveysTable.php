@@ -89,8 +89,7 @@ class SurveysTable extends AppTable
                         $this->aliasField('survey_form_id').' = '.$surveyFormId,
                         $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id')
                     ])
-                    .')',
-                    $InstitutionsTable->aliasField('institution_type_id').' IN ('.$institutionType.')'
+                    .')'
                 ])
                 ->innerJoinWith('Areas')
                 ->leftJoinWith('AreaAdministratives')
@@ -100,6 +99,11 @@ class SurveysTable extends AppTable
                     'area' => 'Areas.name',
                     'area_administrative' => 'AreaAdministratives.name'
                 ]);
+            if ($institutionType->cleanCopy()->first()->institution_type_id) {
+                $missingRecords->where([
+                    $InstitutionsTable->aliasField('institution_type_id').' IN ('.$institutionType.')'
+                ]);
+            }
 
             if (!$superAdmin) {
                 $missingRecords->find('ByAccess', ['userId' => $userId]);
