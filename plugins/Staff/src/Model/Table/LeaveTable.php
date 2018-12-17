@@ -133,8 +133,6 @@ class LeaveTable extends ControllerActionTable
         $this->field('start_time', ['entity' => $entity]);
         $this->field('end_time', ['entity' => $entity]);
         $this->field('institution_id', ['entity' => $entity]);
-        // $this->field('institution_id', ['type' => 'hidden']);
-        // $this->field('institution_id', ['visible' => ['index' => false, 'add' => true, 'view' => true, 'edit' => false]]);
         $this->field('academic_period_id', [
             'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
             'entity' => $entity
@@ -629,6 +627,10 @@ class LeaveTable extends ControllerActionTable
 
             $attr['type'] = 'select';
             $attr['options'] = $institutionOptions;
+        }
+
+        if ($action == 'edit') {
+            $attr['type'] = 'disabled';
         }
         return $attr;
     }
