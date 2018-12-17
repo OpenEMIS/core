@@ -72,16 +72,26 @@ class SurveysTable extends AppTable
             $academicPeriodName = $this->AcademicPeriods->get($academicPeriodId)->name;
             $userId = $requestData->user_id;
             $superAdmin = $requestData->super_admin;
-            $InstitutionsTable = $this->Institutions;
 
+            $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+            $institutionType = $SurveyFormsFilters->find()
+                ->where([
+                    $SurveyFormsFilters->aliasField('survey_form_id').' = '.$surveyFormId,
+                ])
+                ->select([ 'institution_type_id' => $SurveyFormsFilters->aliasField('survey_filter_id') ]);
+
+            $InstitutionsTable = $this->Institutions;
             $missingRecords = $InstitutionsTable->find()
-                ->where(['NOT EXISTS ('.
+                ->where([
+                    'NOT EXISTS ('.
                     $this->find()->where([
                         $this->aliasField('academic_period_id').' = '.$academicPeriodId,
                         $this->aliasField('survey_form_id').' = '.$surveyFormId,
                         $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id')
                     ])
-                .')'])
+                    .')',
+                    $InstitutionsTable->aliasField('institution_type_id').' IN ('.$institutionType.')'
+                ])
                 ->innerJoinWith('Areas')
                 ->leftJoinWith('AreaAdministratives')
                 ->select([
