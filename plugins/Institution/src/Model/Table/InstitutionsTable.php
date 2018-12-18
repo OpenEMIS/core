@@ -387,6 +387,15 @@ class InstitutionsTable extends ControllerActionTable
                     '0' => $this->paramsEncode(['id' => $entity->id])
                 ]);
             }
+            else {
+                $name = $event->subject()->HtmlField->link($entity->name, [
+                        'plugin' => $this->controller->plugin,
+                        'controller' => $this->controller->name,
+                        'action' => 'Institutions',
+                        '0' => "view",
+                        '1' => $this->paramsEncode(['id' => $entity->id])
+                    ]);
+            }
         }
 
         return $name;
