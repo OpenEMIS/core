@@ -579,7 +579,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     function hasError(data, key, id) {
         return angular.isDefined(errorElms[id]);
-        // return (angular.isDefined(data.save_error) && angular.isDefined(data.save_error[key]) && data.save_error[key]);
     }
 
     function clearError(data, skipKey) {
