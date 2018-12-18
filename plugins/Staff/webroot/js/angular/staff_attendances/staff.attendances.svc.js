@@ -355,7 +355,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
     }
 
     function hasError(data, key, id) {
-        return (angular.isDefined(data.save_error) && angular.isDefined(data.save_error[key]) && data.save_error[key]);
+        return angular.isDefined(errorElms[id]);
     }
 
     function clearError(data, skipKey) {
