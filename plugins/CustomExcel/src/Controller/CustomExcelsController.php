@@ -36,7 +36,7 @@ class CustomExcelsController extends AppController
 
     public function isActionIgnored(Event $event, $action)
     {
-        if (in_array($action, ['export', 'viewVars'])) {
+        if (in_array($action, ['export', 'viewVars', 'exportPDF'])) {
             return true;
         }
     }
