@@ -21,7 +21,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         }
     };
 
-    var errorElms = {}; // diff implementation from institution.staff.attendance.svc as createTimeElement is only called one here
+    var errorElms = {};
 
     var service = {
         init: init,
@@ -251,12 +251,8 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
                 .then(
                     function(response) {
                         clearError(data, timeKey);
-                        if((Array.isArray(response.data.error) && response.data.error.length > 0) ||
-                            typeof response.data.error === 'string' ||
-                            Object.keys(response.data.error).length > 0
-                        ){
+                        if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
                             setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
-                            console.log(response.data.error);
                             var errorMsg = 'There was an error when saving record';
                             if (typeof response.data.error === 'string') {
                                 errorMsg = response.data.error;
@@ -272,7 +268,6 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
                         }
                     },
                     function(error) {
-                        console.log('error', error);
                         clearError(data, timeKey);
                         setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
                         AlertSvc.error(scope, 'There was an error when saving record');
@@ -280,7 +275,6 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
                 )
                 .finally(function() {
                     UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
-                    console.log('attendance.' + data.date);
                     var refreshParams = {
                         columns: [
                             'attendance.' + data.date,
