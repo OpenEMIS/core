@@ -626,7 +626,8 @@ class LeaveTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
             $institutionId = $entity->institution_id;
-            $attr['type'] = 'disabled';
+            $attr['type'] = 'readonly';
+            $attr['value'] = $institutionId;
             $attr['attr']['value'] = $this->Institutions->get($institutionId)->name;
         }
         return $attr;
