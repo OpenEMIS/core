@@ -24,7 +24,7 @@ class StaffAttendancesTable extends ControllerActionTable
         $config['Modified'] = false;
         $config['Created'] = false;
         parent::initialize($config);
-        // die;
+
         $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
         $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
         $this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
@@ -62,20 +62,8 @@ class StaffAttendancesTable extends ControllerActionTable
         return $events;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    {
-        $academicPeriodId = $this->request->query['academic_period_id'];
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $query
-            ->where([$this->aliasField('institution_id') => $institutionId])
-            ->distinct([$this->aliasField('staff_id')])
-            // ->find('academicPeriod', ['academic_period_id' => $academicPeriodId])
-            ;
-    }
-
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        // pr($this->request->query['academic_period_id']);die;
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $startDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->start_date->format('Y-m-d');
         $endDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->end_date->format('Y-m-d');
@@ -86,7 +74,6 @@ class StaffAttendancesTable extends ControllerActionTable
             $sheetName = $month['month']['inString'].' '.$year;
             $monthInNumber = $month['month']['inNumber'];
             $days = $AcademicPeriodTable->generateDaysOfMonth($year, $monthInNumber, $startDate, $endDate);
-            // pr($days);
             $dates = [];
             foreach ($days as $item) {
                 $dates[] = $item['date'];
@@ -110,6 +97,17 @@ class StaffAttendancesTable extends ControllerActionTable
                 'orientation' => 'landscape'
             ];
         }
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $academicPeriodId = $this->request->query['academic_period_id'];
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $query
+            ->where([$this->aliasField('institution_id') => $institutionId])
+            ->distinct([$this->aliasField('staff_id')])
+            // ->find('academicPeriod', ['academic_period_id' => $academicPeriodId])
+            ;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
