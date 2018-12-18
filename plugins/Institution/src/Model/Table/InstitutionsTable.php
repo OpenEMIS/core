@@ -374,16 +374,7 @@ class InstitutionsTable extends ControllerActionTable
         $redirectToOverview = false;
 
         $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
-        $schoolLandingConfig = $ConfigItem->find()
-                        ->select([
-                            $ConfigItem->aliasField('value'),
-                            $ConfigItem->aliasField('default_value')
-                        ])
-                        ->where([
-                            $ConfigItem->aliasField('code') => 'default_school_landing_page'
-                        ])
-                        ->first();
-        $redirectToOverview = empty($schoolLandingConfig->value) ? $schoolLandingConfig->default_value : $schoolLandingConfig->value;
+        $redirectToOverview = $ConfigItem->value('default_school_landing_page');
 
         if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
             // Redirect to overview page based on School Landing
