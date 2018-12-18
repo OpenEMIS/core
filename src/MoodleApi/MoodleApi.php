@@ -180,7 +180,8 @@ class MoodleApi
             }
         } else {
             Log::write('debug', "MoodleApi Exception - response error");
-            Log::write('debug', "MoodleApi Exception response - " . $response);
+            Log::write('debug', "MoodleApi Exception response - ");
+            Log::write('debug', $response);
             $response->error["http_exception"] = $response->code;
         }
         return $response;
