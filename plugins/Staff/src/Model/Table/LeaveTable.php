@@ -105,9 +105,6 @@ class LeaveTable extends ControllerActionTable
         }
         if ($this->controller->name !== 'Profiles') {
             $this->removeBehavior('Workflow');
-            $this->toggle('add', false);
-            $this->toggle('edit', false);
-            $this->toggle('remove', false);
         }
         // $this->field('institution_id', ['visible' => ['index' => false, 'add' => true, 'view' => true, 'edit' => false]]);
         $this->field('number_of_days', ['visible' => ['index' => true, 'view' => true, 'edit' => false]]);
@@ -629,7 +626,8 @@ class LeaveTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
             $institutionId = $entity->institution_id;
-            $attr['type'] = 'disabled';
+            $attr['type'] = 'readonly';
+            $attr['value'] = $institutionId;
             $attr['attr']['value'] = $this->Institutions->get($institutionId)->name;
         }
         return $attr;

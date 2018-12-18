@@ -440,6 +440,17 @@ class DirectoriesController extends AppController
             $model->editButtonAction('StudentGuardianUser');
         }
 
+        if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
+            $alias = $model->alias();
+            $includedModel = ['Leave'];
+
+            if (in_array($alias, $includedModel)) {
+                $model->toggle('add', false);
+                $model->toggle('edit', false);
+                $model->toggle('remove', false);
+            }
+        }
+
         /**
          * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
