@@ -15,6 +15,18 @@ class MoodleApiLogController extends PageController
         $this->Page->loadElementsFromTable($this->MoodleApiLog);
     }
 
+    public function beforeFilter(Event $event)
+    {
+        parent::beforeFilter($event);
+        $page = $this->Page;
+
+        // set Breadcrumb
+        $page->addCrumb('Moodle Api Log', ['plugin' => 'MoodleApi', 'controller' => 'MoodleApiLog', 'log']);
+
+        $header = $page->getHeader();
+        $page->setHeader($header);
+    }
+
     public function index()
     {
         $page = $this->Page;
