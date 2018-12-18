@@ -140,112 +140,115 @@ class StaffLeaveTable extends ControllerActionTable
     public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
         $session = $this->request->session();
-
+        $institutionId = $session->read('Institution.Institutions.id');
         if ($session->check('Staff.Staff.id')) {
-            $extra['auto_contain'] = false;
             $userId = $session->read('Staff.Staff.id');
-            $institutionId = $session->read('Institution.Institutions.id');
-            $select = [
-                $this->aliasField('id'),
-                $this->aliasField('is_historical'),
-                $this->aliasField('date_from'),
-                $this->aliasField('date_to'),
-                $this->aliasField('comments'),
-                $this->aliasField('number_of_days')
-            ];
-            $selectList->exchangeArray($select);
-
-            $order = ['date_from' => 'DESC'];
-            $defaultOrder->exchangeArray($order);
-
-            $mainQuery
-                ->select([
-                    'id' => $this->aliasField('id'),
-                    'date_from' => $this->aliasField('date_from'),
-                    'date_to' => $this->aliasField('date_to'),
-                    'start_time' => $this->aliasField('start_time'),
-                    'end_time' => $this->aliasField('end_time'),
-                    'full_day' => $this->aliasField('full_day'),
-                    'comments' => $this->aliasField('comments'),
-                    'staff_id' => $this->aliasField('staff_id'),
-                    'staff_leave_type_id' => $this->aliasField('staff_leave_type_id'),
-                    'assignee_id' => $this->aliasField('assignee_id'),
-                    'academic_period_id' =>$this->aliasField('academic_period_id'),
-                    'status_id' => $this->aliasField('status_id'),
-                    'number_of_days' => $this->aliasField('number_of_days'),
-                    'institution_id' => $this->aliasField('institution_id'),
-                    $this->Institutions->aliasField('id'),
-                    $this->Institutions->aliasField('code'),
-                    $this->Institutions->aliasField('name'),
-                    $this->AcademicPeriods->aliasField('name'),
-                    $this->StaffLeaveTypes->aliasField('id'),
-                    $this->StaffLeaveTypes->aliasField('name'),
-                    $this->Statuses->aliasField('id'),
-                    $this->Statuses->aliasField('name'),
-                    $this->Assignees->aliasField('id'),
-                    $this->Assignees->aliasField('first_name'),
-                    $this->Assignees->aliasField('middle_name'),
-                    $this->Assignees->aliasField('third_name'),
-                    $this->Assignees->aliasField('last_name'),
-                    $this->Assignees->aliasField('preferred_name'),
-                    'is_historical' => 0
-                ], true)
-                ->contain([
-                    'Institutions',
-                    'AcademicPeriods',
-                    'StaffLeaveTypes',
-                    'Users',
-                    'Assignees',
-                    'Statuses'
-                ])
-                ->where([
-                    $this->aliasField('staff_id') => $userId,
-                    $this->aliasField('institution_id') => $institutionId
-                ]);
-
-            $HistoricalTable = $historicalQuery->repository();
-            $historicalQuery
-                ->select([
-                    'id' => $HistoricalTable->aliasField('id'),
-                    'date_from' => $HistoricalTable->aliasField('date_from'),
-                    'date_to' => $HistoricalTable->aliasField('date_to'),
-                    'start_time' => $HistoricalTable->aliasField('start_time'),
-                    'end_time' => $HistoricalTable->aliasField('end_time'),
-                    'full_day' => $HistoricalTable->aliasField('full_day'),
-                    'comments' => $HistoricalTable->aliasField('comments'),
-                    'staff_id' => $HistoricalTable->aliasField('staff_id'),
-                    'staff_leave_type_id' => $HistoricalTable->aliasField('staff_leave_type_id'),
-                    'assignee_id' => '(null)',
-                    'leave_academic_period_id' => '(null)',
-                    'status_id' => '(null)',
-                    'number_of_days' => $HistoricalTable->aliasField('number_of_days'),
-                    'leave_institution_id' => $HistoricalTable->aliasField('institution_id'),
-                    'institution_id' => 'Institutions.id',
-                    'institution_code' => 'Institutions.code',
-                    'institution_name' => 'Institutions.name',
-                    'academic_period_id' =>  '(null)',
-                    'leave_type_id' => 'StaffLeaveTypes.id',
-                    'leave_type_name' => 'StaffLeaveTypes.name',
-                    'statuses_id' => '(null)',
-                    'statuses_name' => '(null)',
-                    'assignee_user_id' => '(null)',
-                    'assignee_user_first_name' => '(null)',
-                    'assignee_user_middle_name' => '(null)',
-                    'assignee_user_third_name' => '(null)',
-                    'assignee_user_last_name' => '(null)',
-                    'assignee_user_preferred_name' => '(null)',
-                    'is_historical' => 1
-                ])
-                ->contain([
-                    'Users',
-                    'StaffLeaveTypes',
-                    'Institutions'
-                ])
-                ->where([
-                    $HistoricalTable->aliasField('staff_id') => $userId,
-                    $HistoricalTable->aliasField('institution_id') => $institutionId
-                ]);
+        } elseif (isset($this->request->query['user_id'])) {
+            $userId = $this->request->query['user_id'];
         }
+
+        $extra['auto_contain'] = false;
+
+        $select = [
+            $this->aliasField('id'),
+            $this->aliasField('is_historical'),
+            $this->aliasField('date_from'),
+            $this->aliasField('date_to'),
+            $this->aliasField('comments'),
+            $this->aliasField('number_of_days')
+        ];
+        $selectList->exchangeArray($select);
+
+        $order = ['date_from' => 'DESC'];
+        $defaultOrder->exchangeArray($order);
+
+        $mainQuery
+            ->select([
+                'id' => $this->aliasField('id'),
+                'date_from' => $this->aliasField('date_from'),
+                'date_to' => $this->aliasField('date_to'),
+                'start_time' => $this->aliasField('start_time'),
+                'end_time' => $this->aliasField('end_time'),
+                'full_day' => $this->aliasField('full_day'),
+                'comments' => $this->aliasField('comments'),
+                'staff_id' => $this->aliasField('staff_id'),
+                'staff_leave_type_id' => $this->aliasField('staff_leave_type_id'),
+                'assignee_id' => $this->aliasField('assignee_id'),
+                'academic_period_id' =>$this->aliasField('academic_period_id'),
+                'status_id' => $this->aliasField('status_id'),
+                'number_of_days' => $this->aliasField('number_of_days'),
+                'institution_id' => $this->aliasField('institution_id'),
+                $this->Institutions->aliasField('id'),
+                $this->Institutions->aliasField('code'),
+                $this->Institutions->aliasField('name'),
+                $this->AcademicPeriods->aliasField('name'),
+                $this->StaffLeaveTypes->aliasField('id'),
+                $this->StaffLeaveTypes->aliasField('name'),
+                $this->Statuses->aliasField('id'),
+                $this->Statuses->aliasField('name'),
+                $this->Assignees->aliasField('id'),
+                $this->Assignees->aliasField('first_name'),
+                $this->Assignees->aliasField('middle_name'),
+                $this->Assignees->aliasField('third_name'),
+                $this->Assignees->aliasField('last_name'),
+                $this->Assignees->aliasField('preferred_name'),
+                'is_historical' => 0
+            ], true)
+            ->contain([
+                'Institutions',
+                'AcademicPeriods',
+                'StaffLeaveTypes',
+                'Users',
+                'Assignees',
+                'Statuses'
+            ])
+            ->where([
+                $this->aliasField('staff_id') => $userId,
+                $this->aliasField('institution_id') => $institutionId
+            ]);
+
+        $HistoricalTable = $historicalQuery->repository();
+        $historicalQuery
+            ->select([
+                'id' => $HistoricalTable->aliasField('id'),
+                'date_from' => $HistoricalTable->aliasField('date_from'),
+                'date_to' => $HistoricalTable->aliasField('date_to'),
+                'start_time' => $HistoricalTable->aliasField('start_time'),
+                'end_time' => $HistoricalTable->aliasField('end_time'),
+                'full_day' => $HistoricalTable->aliasField('full_day'),
+                'comments' => $HistoricalTable->aliasField('comments'),
+                'staff_id' => $HistoricalTable->aliasField('staff_id'),
+                'staff_leave_type_id' => $HistoricalTable->aliasField('staff_leave_type_id'),
+                'assignee_id' => '(null)',
+                'leave_academic_period_id' => '(null)',
+                'status_id' => '(null)',
+                'number_of_days' => $HistoricalTable->aliasField('number_of_days'),
+                'leave_institution_id' => $HistoricalTable->aliasField('institution_id'),
+                'institution_id' => 'Institutions.id',
+                'institution_code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',
+                'academic_period_id' =>  '(null)',
+                'leave_type_id' => 'StaffLeaveTypes.id',
+                'leave_type_name' => 'StaffLeaveTypes.name',
+                'statuses_id' => '(null)',
+                'statuses_name' => '(null)',
+                'assignee_user_id' => '(null)',
+                'assignee_user_first_name' => '(null)',
+                'assignee_user_middle_name' => '(null)',
+                'assignee_user_third_name' => '(null)',
+                'assignee_user_last_name' => '(null)',
+                'assignee_user_preferred_name' => '(null)',
+                'is_historical' => 1
+            ])
+            ->contain([
+                'Users',
+                'StaffLeaveTypes',
+                'Institutions'
+            ])
+            ->where([
+                $HistoricalTable->aliasField('staff_id') => $userId,
+                $HistoricalTable->aliasField('institution_id') => $institutionId
+            ]);
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
