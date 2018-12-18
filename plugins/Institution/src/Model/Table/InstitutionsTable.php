@@ -378,18 +378,15 @@ class InstitutionsTable extends ControllerActionTable
 
         if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
             // Redirect to overview page based on School Landing
-            if ($redirectToOverview) {
-                $this->action == 'view';
-                return $name;
+            if (!$redirectToOverview) {
+                $name = $event->subject()->HtmlField->link($entity->name, [
+                    'plugin' => $this->controller->plugin,
+                    'controller' => $this->controller->name,
+                    'action' => 'dashboard',
+                    'institutionId' => $this->paramsEncode(['id' => $entity->id]),
+                    '0' => $this->paramsEncode(['id' => $entity->id])
+                ]);
             }
-
-            $name = $event->subject()->HtmlField->link($entity->name, [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
-                'action' => 'dashboard',
-                'institutionId' => $this->paramsEncode(['id' => $entity->id]),
-                '0' => $this->paramsEncode(['id' => $entity->id])
-            ]);
         }
 
         return $name;
