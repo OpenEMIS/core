@@ -72,7 +72,7 @@ class ReportCardsTable extends AppTable
                 'GroupAssessmentPeriods',
                 'GroupAssessmentItemResults',
                 'AssessmentTermResults',
-                'NextClassStudents'
+                'NextClassSubjects'
             ]
         ]);
     }
@@ -121,7 +121,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeCriterias'] = 'onExcelTemplateInitialiseOutcomeCriterias';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentOutcomeResults'] = 'onExcelTemplateInitialiseStudentOutcomeResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentTermResults'] = 'onExcelTemplateInitialiseAssessmentTermResults';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseNextClassStudents'] = 'onExcelTemplateInitialiseNextClassStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseNextClassSubjects'] = 'onExcelTemplateInitialiseNextClassSubjects';
 
         return $events;
     }
@@ -1594,7 +1594,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseNextClassStudents(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseNextClassSubjects(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
 
