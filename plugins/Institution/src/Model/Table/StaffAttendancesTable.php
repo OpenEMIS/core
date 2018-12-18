@@ -2,6 +2,8 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use DateInterval;
+use DatePeriod;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -10,9 +12,6 @@ use Cake\Network\Request;
 use Cake\I18n\Time;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
-use Cake\Utility\Hash;
-use DateInterval;
-use DatePeriod;
 
 class StaffAttendancesTable extends ControllerActionTable
 {
