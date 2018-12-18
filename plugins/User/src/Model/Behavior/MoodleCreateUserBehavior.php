@@ -22,8 +22,10 @@ class MoodleCreateUserBehavior extends Behavior
     {
         if ($entity instanceof \Institution\Model\Entity\Student) {
             $entity = $this->convertStudentToUser($entity);
-        } else if ($entity instanceof \Institution\Model\Entity\Staff) {
+        } elseif ($entity instanceof \Institution\Model\Entity\Staff) {
             $entity = $this->convertStaffToUser($entity);
+        } elseif (!$entity instanceof \User\Model\Entity\User) {
+            return;
         }
 
         if ($entity->isNew()) { //For Add action only
