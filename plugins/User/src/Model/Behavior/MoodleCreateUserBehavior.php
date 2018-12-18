@@ -32,6 +32,9 @@ class MoodleCreateUserBehavior extends Behavior
             $moodleApi = new MoodleApi();
             if ($moodleApi->enableUserCreation()) {
                 $response = $moodleApi->createUser($entity);
+                if ($response->code != 200) {
+                    throw new Exception("Network Error");
+                }
             }
         }
     }
