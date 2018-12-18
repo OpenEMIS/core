@@ -24,7 +24,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
     };
 
-    var errorElmIds = []; // diff implementation from staff.attendance.svc as createTimeElement is called for every changes
+    var errorElms = {};
 
     var service = {
         init: init,
@@ -457,11 +457,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 .then(
                     function(response) {
                         clearError(data, timeKey);
-                        if((Array.isArray(response.data.error) && response.data.error.length > 0) ||
-                            typeof response.data.error === 'string' ||
-                            Object.keys(response.data.error).length > 0
-                        ){
-                            setError(data, timeKey, true, timepickerId);
+                        if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
+                            setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
                             var errorMsg = 'There was an error when saving record';
                             if (typeof response.data.error === 'string') {
                                 errorMsg = response.data.error;
@@ -473,12 +470,12 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                             AlertSvc.success(scope, 'Time record successfully saved.');
                             params.value.isNew = false;
                             params.value[timeKey] = time24Hour;
-                            setError(data, timeKey, false, timepickerId);
+                            setError(data, timeKey, false, { id: timepickerId, elm: timeInputElement });
                         }
                     },
                     function(error) {
                         clearError(data, timeKey);
-                        setError(data, timeKey, true, timepickerId);
+                        setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
                         AlertSvc.error(scope, 'There was an error when saving record');
                     }
                 )
@@ -564,22 +561,24 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
     }
 
-    function setError(data, dataKey, error, errorElmId) {
+    function setError(data, dataKey, error, input) {
         if (angular.isUndefined(data.save_error)) {
             data.save_error = {};
         }
 
-        data.save_error[dataKey] = error;
-        var index = errorElmIds.indexOf(errorElmId);
+        var index = Object.keys(errorElms).indexOf(input.id);
         if (error) {
-            if (index === -1) errorElmIds.push(errorElmId);
+            input.elm.className += ' form-error';
+            input.elm.value = '';
+            if (index === -1) errorElms[input.id] = input.elm;
         } else {
-            if (index > -1) errorElmIds.splice(index, 1);
+            input.elm.className = input.elm.className.replace(/ form-error/gi, '');
+            if (index > -1) delete errorElms[input.id];
         }
     }
 
     function hasError(data, key, id) {
-        return errorElmIds.indexOf(id) > -1;
+        return angular.isDefined(errorElms[id]);
         // return (angular.isDefined(data.save_error) && angular.isDefined(data.save_error[key]) && data.save_error[key]);
     }
 
@@ -587,12 +586,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         if (angular.isUndefined(data.save_error)) {
             data.save_error = {};
         }
-
-        angular.forEach(data.save_error, function(error, key) {
-            if (key != skipKey) {
-                data.save_error[key] = false;
-            }
+        angular.forEach(errorElms, function(elm, id) {
+            elm.className = elm.className.replace(/ form-error/gi, '');
         });
-        errorElmIds = [];
+        errorElms = {};
     }
 };
