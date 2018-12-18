@@ -11,7 +11,7 @@ class POCOR4930 extends AbstractMigration
 
     public function down()
     {
-      // $this->execute('ALTER TABLE `user_healths` MODIFY COLUMN `doctor_name` varchar(150) NULL');
-      // $this->execute('ALTER TABLE `user_healths` MODIFY COLUMN `doctor_name` varchar(150) NULL');
+      $this->execute('ALTER TABLE `institution_staff_attendance_activities` MODIFY COLUMN `field` varchar(200) NOT NULL');
+      $this->execute('ALTER TABLE `institution_staff_attendance_activities` MODIFY COLUMN `field_type` varchar(200) NOT NULL');
     }
 }
