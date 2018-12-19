@@ -1916,7 +1916,7 @@ class StaffTable extends ControllerActionTable
         }
 
         $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
-        $staffLeaves = $StaffLeaveTable
+        $staffLeavesByWeekStartAndEnd = $StaffLeaveTable
             ->find()
             ->matching('StaffLeaveTypes')
             ->where([
@@ -1985,25 +1985,24 @@ class StaffTable extends ControllerActionTable
                 $InstitutionStaffAttendances->aliasField('date')
             ])
             // ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr) {
-            ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr, $staffLeaves) {
+            ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr, $staffLeavesByWeekStartAndEnd) {
                 $results = $results->toArray();
                 $resultsCount = count($results);
                 $formatResultDates = [];
-                $isAllWeekLeave = count($workingDaysArr) == count($staffLeaves);
                 foreach ($workingDaysArr as $date) {
                     $i = 1;
                     $found = false;
                     $workingDay = $date->format('Y-m-d');
                     foreach ($results as $result) {
                         // to flag so that we only add to result when there is attendance records
-                        $isAddResult = false;
+                        $isHaveAttendance = false;
 
                         $cloneResult = clone $result;
                         $InstitutionStaffAttendanceDate = $cloneResult->InstitutionStaffAttendances['date'];
                         if ($InstitutionStaffAttendanceDate == $workingDay){
                             $cloneResult['isNew'] = false;
                             $cloneResult['date'] = date("l, d F Y", strtotime($InstitutionStaffAttendanceDate));
-                            $isAddResult = true;
+                            $isHaveAttendance = true;
                             // $formatResultDates[] = $cloneResult;
                             $found = true;
                         }
@@ -2014,16 +2013,14 @@ class StaffTable extends ControllerActionTable
                             $cloneResult->InstitutionStaffAttendances['time_in'] = null;
                             $cloneResult->InstitutionStaffAttendances['time_out'] = null;
                             $cloneResult->InstitutionStaffAttendances['date'] = $workingDay;
-                            $isAddResult = true;
+                            $isHaveAttendance = true;
                             // $formatResultDates[] = $cloneResult;
                         }
-                        if ($isAddResult) {
+                        if ($isHaveAttendance) {
                             $isOverlap = false;
-                            if ($isAllWeekLeave) {
-                                $isOverlap = true;
-                            } else {
+                            if (count($staffLeavesByWeekStartAndEnd) > 0) {
                                 $currDate = strtotime($workingDay);
-                                foreach ($staffLeaves as $staffLeaveRecord) {
+                                foreach ($staffLeavesByWeekStartAndEnd as $staffLeaveRecord) {
                                     if (strtotime($staffLeaveRecord['date_from']) <= $currDate &&
                                         $currDate <= strtotime($staffLeaveRecord['date_to'])
                                     ) {
