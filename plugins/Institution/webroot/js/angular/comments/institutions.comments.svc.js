@@ -206,7 +206,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         return deferred.promise;
     };
 
-    function getColumnDefs(action, tab, currentUserName, _comments, commentCodeOptions) {
+    function getColumnDefs(action, tab, currentUserName, _comments, commentCodeOptions, _commentTextEditor) {
         var deferred = $q.defer();
 
         var menuTabs = [ "filterMenuTab" ];
@@ -222,7 +222,12 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
-            suppressMenu: true
+            suppressMenu: true,
+            cellStyle: {
+                whiteSpace: 'normal !important',
+                lineHeight: '55px'
+            },
+            maxWidth: 125
         });
         columnDefs.push({
             headerName: "Name",
@@ -231,7 +236,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
-            suppressMenu: true
+            suppressMenu: true,
+            cellStyle: {
+                whiteSpace: 'normal !important',
+                lineHeight: '55px'
+            },
+            minWidth: 100,
+            maxWidth: 300
         });
         columnDefs.push({
             headerName: "Status",
@@ -239,13 +250,22 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
-            suppressMenu: true
+            suppressMenu: true,
+            cellStyle: {
+                whiteSpace: 'normal !important',
+                lineHeight: '55px'
+            },
+            maxWidth: 100
         });
         columnDefs.push({
             headerName: "student id",
             field: "student_id",
             hide: true,
-            filterParams: filterParams
+            filterParams: filterParams,
+            cellStyle: {
+                whiteSpace: 'normal !important',
+                lineHeight: '55px'
+            },
         });
 
         var allowEdit = action == 'edit';
@@ -269,9 +289,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                         }
                     } 
                     return marks;
-                }
+                },
+                cellStyle: {
+                    whiteSpace: 'normal !important',
+                    lineHeight: '55px'
+                },
+                maxWidth: 140
             };
-
             columnDefs.push(columnDef);
         }
 
@@ -299,7 +323,12 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 filterParams: filterParams,
                 filter: 'text',
                 menuTabs: menuTabs,
-                suppressMenu: true
+                suppressMenu: true,
+                cellStyle: {
+                    whiteSpace: 'normal !important',
+                    lineHeight: '55px'
+                },
+                maxWidth: 140
             };
             columnDef = this.renderSelect(allowEdit, columnDef, extra, _comments);
             columnDefs.push(columnDef);
@@ -320,7 +349,12 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                         } 
                     } 
                     return marks;
-                }
+                },
+                cellStyle: {
+                    whiteSpace: 'normal !important',
+                    lineHeight: '55px'
+                },
+                maxWidth: 140
             };
             columnDefs.push(columnDef);
         }
@@ -333,7 +367,18 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
-            suppressMenu: true
+            suppressMenu: true,
+            cellStyle: {
+                whiteSpace: 'normal !important',
+                overflowY: 'auto'
+            },
+            autoHeight: true,
+            cellEditor: _commentTextEditor,
+            cellEditorParams: {
+                maxLength: '300',   // override the editor defaults
+                cols: '100',
+                rows: '3'
+            }
         };
         columnDef = this.renderText(allowEdit, columnDef, extra, _comments);
         columnDefs.push(columnDef);
@@ -346,7 +391,11 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 filterParams: filterParams,
                 filter: 'text',
                 menuTabs: menuTabs,
-                suppressMenu: true
+                suppressMenu: true,
+                cellStyle: {
+                    whiteSpace: 'normal !important',
+                    lineHeight: '55px'
+                },
             });
         }
 
@@ -365,11 +414,12 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         cols = angular.merge(cols, {
             filter: 'text'
         });
+        console.log(cols);
 
         if (allowEdit && editPermission) {
             cols = angular.merge(cols, {
                 editable: true,
-                cellClass: 'oe-cell-highlight'
+                cellClass: 'oe-cell-highlight',
             });
         }
 
