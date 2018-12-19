@@ -113,7 +113,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             columnDefs: [],
             rowData: [],
             headerHeight: 38,
-            rowHeight: 70,
+            rowHeight: 60,
             enableColResize: false,
             enableSorting: false,
             unSortIcon: true,
