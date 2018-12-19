@@ -2,6 +2,7 @@
 namespace User\Model\Behavior;
 
 use ArrayObject;
+use Exception;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
