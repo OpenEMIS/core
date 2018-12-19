@@ -74,7 +74,7 @@ class StaffLeaveTable extends ControllerActionTable
             ])
             ->allowEmpty('file_content')
             ->add('date_from', 'leavePeriodOverlap', [
-                'rule' => ['checkStaffAttendance']
+                'rule' => ['noOverlappingStaffAttendance']
             ]);
     }
 
