@@ -896,6 +896,12 @@ a,
 /* End of fix for radio */ 
 
 /* Temp fix for dropdown editing cell*/
+.oe-cell-editable.oe-select-wrapper {
+    height: 100%;
+}
+.oe-cell-editable.oe-select-wrapper select {
+    height: 100%;
+}
 .rtl .sg-theme .oe-cell-editable.oe-select-wrapper:after {
     right: auto;
     left: 0;
