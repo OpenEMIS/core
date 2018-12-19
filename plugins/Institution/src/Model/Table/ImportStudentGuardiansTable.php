@@ -12,11 +12,11 @@ use DateTimeInterface;
 use DateTime;
 use PHPExcel_Worksheet;
 
-class ImportStudentGuardiansTable extends AppTable 
+class ImportStudentGuardiansTable extends AppTable
 {
     private $institutionId;
 
-    public function initialize(array $config) 
+    public function initialize(array $config)
     {
         $this->table('import_mapping');
         parent::initialize($config);
@@ -24,7 +24,7 @@ class ImportStudentGuardiansTable extends AppTable
         $this->addBehavior('Institution.ImportStudent');
     }
 
-    public function implementedEvents() 
+    public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -44,20 +44,20 @@ class ImportStudentGuardiansTable extends AppTable
         }
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) 
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
         $crumbTitle = $this->getHeader($this->alias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
+    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         if (!empty($data[$columnOrder])) {
-            unset($data[$columnOrder]);            
+            unset($data[$columnOrder]);
         }
-    } 
+    }
 
-    public function onImportPopulateGuardianRelationsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
+    public function onImportPopulateGuardianRelationsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 
@@ -67,7 +67,10 @@ class ImportStudentGuardiansTable extends AppTable
         $data[$columnOrder]['data'][] = ['Relation', $translatedCol];
 
         $modelData = $lookedUpTable->find('all')
-                                ->select(['name', 'id']);
+            ->select([
+                'name',
+                'id'
+            ]);
 
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
@@ -81,18 +84,20 @@ class ImportStudentGuardiansTable extends AppTable
 
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) 
+    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
         $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
         $tempRow['institution_id'] = $institutionId;
-        $student = $InstitutionStudentsTable->find()->where([
-            'institution_id' => $institutionId,
-            'student_id' => $tempRow['student_id'],
-        ])->first();
+
+        $student = $InstitutionStudentsTable->find()
+            ->where([
+                'institution_id' => $institutionId,
+                'student_id' => $tempRow['student_id'],
+            ])->first();
 
         if (empty($student)) {
-            $rowInvalidCodeCols['student_id'] = __('No such student in the institution');
+            $rowInvalidCodeCols['student_id'] = __('Student does not exist in institution');
             return false;
         }
 
@@ -102,14 +107,16 @@ class ImportStudentGuardiansTable extends AppTable
         }
 
         $studentGuardiansTable = TableRegistry::get('Student.StudentGuardians');
-        $exitsRecord = $studentGuardiansTable->find()->where([
-            'guardian_id' => $tempRow['guardian_id'],
-            'student_id' => $tempRow['student_id']
-        ])->first();
+
+        $exitsRecord = $studentGuardiansTable->find()
+            ->where([
+                'guardian_id' => $tempRow['guardian_id'],
+                'student_id' => $tempRow['student_id']
+            ])->first();
 
         if (!empty($exitsRecord)) {
             $rowInvalidCodeCols['guardian_id'] = __('This student and guardian has already been added.');
             return false;
-        }      
+        }
     }
 }
