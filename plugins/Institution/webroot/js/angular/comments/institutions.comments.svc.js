@@ -240,7 +240,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 lineHeight: '55px'
             },
             minWidth: 100,
-            maxWidth: 300
+            maxWidth: 250
         });
         columnDefs.push({
             headerName: "Status",
@@ -320,9 +320,11 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 menuTabs: menuTabs,
                 suppressMenu: true,
                 cellStyle: {
+                    whiteSpace: 'normal !important',
+                    overflowY: 'auto',
                     lineHeight: '55px'
                 },
-                maxWidth: 140
+                maxWidth: 350
             };
             columnDef = this.renderSelect(allowEdit, columnDef, extra, _comments);
             columnDefs.push(columnDef);
@@ -383,6 +385,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 cellStyle: {
                     lineHeight: '55px'
                 },
+                minWidth: 100,
+                maxWidth: 250
             });
         }
 
