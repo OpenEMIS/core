@@ -2088,7 +2088,7 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
-    public static function checkStaffAttendance($field, array $globalData)
+    public static function noOverlappingStaffAttendance($field, array $globalData)
     {
         $data = $globalData['data'];
         // only validate full day leave
