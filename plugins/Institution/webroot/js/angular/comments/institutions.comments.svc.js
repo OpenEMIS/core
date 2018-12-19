@@ -224,7 +224,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             menuTabs: menuTabs,
             suppressMenu: true,
             cellStyle: {
-                lineHeight: '55px'
+                lineHeight: '45px'
             },
             maxWidth: 125
         });
@@ -237,7 +237,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             menuTabs: menuTabs,
             suppressMenu: true,
             cellStyle: {
-                lineHeight: '55px'
+                lineHeight: '45px'
             },
             minWidth: 100,
             maxWidth: 250
@@ -250,7 +250,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             menuTabs: menuTabs,
             suppressMenu: true,
             cellStyle: {
-                lineHeight: '55px'
+                lineHeight: '45px'
             },
             maxWidth: 100
         });
@@ -260,7 +260,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             hide: true,
             filterParams: filterParams,
             cellStyle: {
-                lineHeight: '55px'
+                lineHeight: '45px'
             },
         });
 
@@ -287,7 +287,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     return marks;
                 },
                 cellStyle: {
-                    lineHeight: '55px'
+                    lineHeight: '45px'
                 },
                 maxWidth: 140
             };
@@ -322,7 +322,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 cellStyle: {
                     whiteSpace: 'normal !important',
                     overflowY: 'auto',
-                    lineHeight: '55px'
+                    lineHeight: '45px'
                 },
                 maxWidth: 350
             };
@@ -347,7 +347,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     return marks;
                 },
                 cellStyle: {
-                    lineHeight: '55px'
+                    lineHeight: '45px'
                 },
                 maxWidth: 140
             };
@@ -383,7 +383,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 menuTabs: menuTabs,
                 suppressMenu: true,
                 cellStyle: {
-                    lineHeight: '55px'
+                    lineHeight: '45px'
                 },
                 minWidth: 100,
                 maxWidth: 250
