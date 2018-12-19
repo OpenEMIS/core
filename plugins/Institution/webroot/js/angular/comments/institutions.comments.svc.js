@@ -224,7 +224,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             menuTabs: menuTabs,
             suppressMenu: true,
             cellStyle: {
-                whiteSpace: 'normal !important',
                 lineHeight: '55px'
             },
             maxWidth: 125
@@ -238,7 +237,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             menuTabs: menuTabs,
             suppressMenu: true,
             cellStyle: {
-                whiteSpace: 'normal !important',
                 lineHeight: '55px'
             },
             minWidth: 100,
@@ -252,7 +250,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             menuTabs: menuTabs,
             suppressMenu: true,
             cellStyle: {
-                whiteSpace: 'normal !important',
                 lineHeight: '55px'
             },
             maxWidth: 100
@@ -263,7 +260,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             hide: true,
             filterParams: filterParams,
             cellStyle: {
-                whiteSpace: 'normal !important',
                 lineHeight: '55px'
             },
         });
@@ -291,7 +287,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     return marks;
                 },
                 cellStyle: {
-                    whiteSpace: 'normal !important',
                     lineHeight: '55px'
                 },
                 maxWidth: 140
@@ -325,7 +320,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 menuTabs: menuTabs,
                 suppressMenu: true,
                 cellStyle: {
-                    whiteSpace: 'normal !important',
                     lineHeight: '55px'
                 },
                 maxWidth: 140
@@ -351,7 +345,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     return marks;
                 },
                 cellStyle: {
-                    whiteSpace: 'normal !important',
                     lineHeight: '55px'
                 },
                 maxWidth: 140
@@ -373,12 +366,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 overflowY: 'auto'
             },
             autoHeight: true,
-            cellEditor: _commentTextEditor,
-            cellEditorParams: {
-                maxLength: '300',   // override the editor defaults
-                cols: '100',
-                rows: '3'
-            }
+            cellEditor: _commentTextEditor
         };
         columnDef = this.renderText(allowEdit, columnDef, extra, _comments);
         columnDefs.push(columnDef);
@@ -393,7 +381,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 menuTabs: menuTabs,
                 suppressMenu: true,
                 cellStyle: {
-                    whiteSpace: 'normal !important',
                     lineHeight: '55px'
                 },
             });
@@ -414,7 +401,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         cols = angular.merge(cols, {
             filter: 'text'
         });
-        console.log(cols);
 
         if (allowEdit && editPermission) {
             cols = angular.merge(cols, {
