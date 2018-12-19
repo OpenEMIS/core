@@ -59,6 +59,9 @@ $institutionId = $paramsQuery['institution_id'];
     </div>
 
     <style>
+        .ag-cell.ag-cell-inline-editing {
+            padding: 0 !important;
+        }
         .ag-cell textarea#comment.error,
         .ag-cell #student_absence_reason_id select.error,
         .ag-cell #absence_type_id select.error {
@@ -71,11 +74,11 @@ $institutionId = $paramsQuery['institution_id'];
 
         .ag-cell textarea#comment {
             display: block;
-            padding: 3px 10px;
+            padding: 9px 8px;
             -webkit-border-radius: 3px;
             border-radius: 3px;
             font-size: 12px;
-            height: 50px;
+            height: 100%;
             width: 100%;
             border: 1px solid #CCC;
         }
