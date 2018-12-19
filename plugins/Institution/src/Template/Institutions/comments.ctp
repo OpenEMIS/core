@@ -78,7 +78,7 @@ $institutionId = $paramsQuery['institution_id'];
             -webkit-border-radius: 3px;
             border-radius: 3px;
             font-size: 12px;
-            height: 100%;
+            height: 98%;
             width: 100%;
             border: 1px solid #CCC;
         }
