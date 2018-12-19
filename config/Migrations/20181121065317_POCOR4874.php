@@ -35,7 +35,7 @@ class POCOR4874 extends AbstractMigration
             [
                 'model' => 'Student.StudentGuardians',
                 'column_name' => 'student_id',
-                'description' => 'OpenEMIS ID (Student Id)' ,
+                'description' => 'Student OpenEMIS ID',
                 'order' => 1,
                 'is_optional' => 0,
                 'foreign_key' => 2,
@@ -46,7 +46,7 @@ class POCOR4874 extends AbstractMigration
             [
                 'model' => 'Student.StudentGuardians',
                 'column_name' => 'guardian_relation_id',
-                'description' => 'Relation',
+                'description' => 'Code',
                 'order' => 2,
                 'is_optional' => 0,
                 'foreign_key' => 2,
@@ -57,7 +57,7 @@ class POCOR4874 extends AbstractMigration
             [
                 'model' => 'Student.StudentGuardians',
                 'column_name' => 'guardian_id',
-                'description' => 'OpenEMIS ID (Guardian Id)' ,
+                'description' => 'Guardian OpenEMIS ID',
                 'order' => 3,
                 'is_optional' => 0,
                 'foreign_key' => 2,
@@ -70,10 +70,10 @@ class POCOR4874 extends AbstractMigration
     }
 
     public function down()
-    { 
+    {
         $this->execute('DROP TABLE import_mapping');
         $this->table('z_4874_import_mapping')->rename('import_mapping');
         $this->execute('DROP TABLE security_functions');
-        $this->table('z_4874_security_functions')->rename('security_functions');        
+        $this->table('z_4874_security_functions')->rename('security_functions');
     }
 }
