@@ -21,6 +21,8 @@ class MoodleCreateUserBehavior extends Behavior
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        $isNew = $entity->isNew();
+
         if ($entity instanceof \Institution\Model\Entity\Student) {
             $entity = $this->convertStudentToUser($entity);
         } elseif ($entity instanceof \Institution\Model\Entity\Staff) {
@@ -29,7 +31,7 @@ class MoodleCreateUserBehavior extends Behavior
             return;
         }
 
-        if ($entity->isNew()) { //For Add action only
+        if ($isNew) { //For Add action only
             $moodleApi = new MoodleApi();
             if ($moodleApi->enableUserCreation()) {
                 $response = $moodleApi->createUser($entity);
