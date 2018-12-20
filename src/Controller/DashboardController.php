@@ -66,6 +66,8 @@ class DashboardController extends AppController
 
     public function index()
     {
+        $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
+        $StudentStatusUpdates->checkRequireUpdate();
         $this->set('ngController', 'DashboardCtrl as DashboardController');
         $this->set('noBreadcrumb', true);
     }

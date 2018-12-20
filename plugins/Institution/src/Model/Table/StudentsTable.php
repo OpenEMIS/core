@@ -24,6 +24,7 @@ class StudentsTable extends ControllerActionTable
     const PENDING_TRANSFEROUT = -2;
     const PENDING_ADMISSION = -3;
     const PENDING_WITHDRAW = -4;
+    const IN_QUEUE = -10;
 
     private $dashboardQuery = null;
 
@@ -47,6 +48,7 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Institution.StudentCascadeDelete'); // for cascade delete on student related tables from an institution
         $this->addBehavior('AcademicPeriod.AcademicPeriod'); // to make sure it is compatible with v4
+        $this->addBehavior('User.MoodleCreateUser');
 
         $this->addBehavior('Excel', [
             'excludes' => ['start_year', 'end_year', 'previous_institution_student_id'],
@@ -568,11 +570,20 @@ class StudentsTable extends ControllerActionTable
         // permission checking for import button
         $hasImportAdmissionPermission = $this->AccessControl->check(['Institutions', 'ImportStudentAdmission', 'add']);
         $hasImportBodyMassPermission = $this->AccessControl->check(['Institutions', 'ImportStudentBodyMasses', 'add']);
+        $hasImportGuardianPermission = $this->AccessControl->check(['Institutions', 'ImportStudentGuardians', 'add']);
 
         if (!$hasImportAdmissionPermission && $hasImportBodyMassPermission) {
             if ($this->behaviors()->has('ImportLink')) {
                 $this->behaviors()->get('ImportLink')->config([
                    'import_model' => 'ImportStudentBodyMasses'
+                ]);
+            }
+        }
+
+        if (!$hasImportAdmissionPermission && !$hasImportBodyMassPermission) {
+            if ($this->behaviors()->has('ImportLink')) {
+                $this->behaviors()->get('ImportLink')->config([
+                   'import_model' => 'ImportStudentGuardians'
                 ]);
             }
         }
@@ -599,7 +610,8 @@ class StudentsTable extends ControllerActionTable
             self::PENDING_ADMISSION => 'StudentAdmission',
             self::PENDING_TRANSFERIN => 'StudentTransferIn',
             self::PENDING_TRANSFEROUT => 'StudentTransferOut',
-            self::PENDING_WITHDRAW => 'StudentWithdraw'
+            self::PENDING_WITHDRAW => 'StudentWithdraw',
+            self::IN_QUEUE => 'StudentStatusUpdates',
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
@@ -670,6 +682,7 @@ class StudentsTable extends ControllerActionTable
             self::PENDING_TRANSFEROUT => __('Pending Transfer Out'),
             self::PENDING_ADMISSION => __('Pending Admission'),
             self::PENDING_WITHDRAW => __('Pending Withdraw'),
+            self::IN_QUEUE => __('In Queue'),
         ];
 
         $statusOptions = $statusOptions + $pendingStatus;

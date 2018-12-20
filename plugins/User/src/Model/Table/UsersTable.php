@@ -607,8 +607,8 @@ class UsersTable extends AppTable
                     }
                     return false;
                 }
-            ])
-            ;
+            ]);
+
         return $validator;
     }
 
@@ -955,6 +955,14 @@ class UsersTable extends AppTable
         ]);
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        //Stop import if contact/contact type has validation error
+        if ($entity->has('contact_error')) {
+            return false;
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // This logic is meant for Import
@@ -975,6 +983,48 @@ class UsersTable extends AppTable
                             $userIdentitiesTable->save($userIdentityData);
                         }
                         break;
+                }
+            }
+        }
+
+        // This is for import contact from Import User excel
+        if ($entity->has('action_type') && $entity->action_type == 'imported') {
+            if (!$entity->has('contact_error')) {
+
+                //Save into user_contacts table if dont have errors
+                $ContactTypesTable = TableRegistry::get('User.ContactTypes');
+                $ContactsTable = TableRegistry::get('User.Contacts');
+                $preferred = 1;
+
+                $contactOptionId = $ContactTypesTable->find()
+                        ->select([$ContactTypesTable->aliasField('contact_option_id')])
+                        ->where([$ContactTypesTable->aliasField('id') => $entity->contact_type])
+                        ->first();
+
+                if ($contactOptionId && $contactOptionId->has('contact_option_id')) {
+                    $conditions = [
+                        $ContactsTable->aliasField('security_user_id') => $entity->id
+                    ];
+
+                    //Check if there is any existing records
+                    if ($ContactsTable->exists($conditions)) {
+                        $preferred = 0;
+                    }
+
+                    $userContactsData = [
+                        'contact_type_id' => $entity->contact_type,
+                        'value' => $entity->contact,
+                        'security_user_id' => $entity->id,
+                        'contact_option_id' => $contactOptionId->contact_option_id,
+                        'preferred' => $preferred
+                    ];
+
+                    $contactEntity = $ContactsTable->newEntity($userContactsData);
+
+                    // Save into user_contacts if no errors
+                    if (!$contactEntity->errors()) {
+                        $ContactsTable->save($contactEntity);
+                    }
                 }
             }
         }
@@ -1010,6 +1060,7 @@ class UsersTable extends AppTable
         ->where([
             $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
             $UserIdentities->aliasField('identity_type_id') => $nationality->identity_type_id,
+            $UserIdentities->aliasField('nationality_id') => $nationality->id,
         ])
         ->order([$UserIdentities->aliasField('created') => 'desc'])
         ->first();
@@ -1033,26 +1084,26 @@ class UsersTable extends AppTable
     public function onChangeUserIdentities(Event $event, Entity $entity)
     {
         $UserNationalityTable = TableRegistry::get('User.UserNationalities');
-
         //check whether identity number / type is tied to preferred nationality.
-        $isPreferredNationality = $UserNationalityTable
-                                ->find()
-                                ->matching('NationalitiesLookUp')
-                                ->select(['nationality_id', 'identityTypeId' => 'NationalitiesLookUp.identity_type_id'])
-                                ->where([
-                                    'NationalitiesLookUp.identity_type_id' => $entity->identity_type_id,
-                                    $UserNationalityTable->aliasField('security_user_id') => $entity->security_user_id,
-                                    $UserNationalityTable->aliasField('preferred') => 1
-                                ]);
+        $preferredNationality = $UserNationalityTable
+            ->find()
+            ->matching('NationalitiesLookUp')
+            ->select(['nationality_id', 'identityTypeId' => 'NationalitiesLookUp.identity_type_id'])
+            ->where([
+                'NationalitiesLookUp.identity_type_id' => $entity->identity_type_id,
+                $UserNationalityTable->aliasField('security_user_id') => $entity->security_user_id,
+                $UserNationalityTable->aliasField('preferred') => 1
+            ])
+            ->first();
 
-        if ($isPreferredNationality->count()) {
-            $preferredNationality = $isPreferredNationality->first();
+        if (!empty($preferredNationality)) {
             // to get the identity record for the user based on the default identity type linked to this nationality
             $UserIdentities = TableRegistry::get('User.Identities');
             $latestIdentity = $UserIdentities->find()
             ->where([
                 $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
                 $UserIdentities->aliasField('identity_type_id') => $preferredNationality->identityTypeId,
+                $UserIdentities->aliasField('nationality_id') => $preferredNationality->nationality_id,
             ])
             ->order([$UserIdentities->aliasField('created') => 'desc'])
             ->first();
@@ -1071,40 +1122,6 @@ class UsersTable extends AppTable
                 ],
                 ['id' => $entity->security_user_id]
             );
-        } else {
-            /* if its update, check if any user identities type ids matches the preferred nationality identityTypeId.
-             if none found update the identity_number to null */
-            if (!$entity->isNew()) {
-                $userPreferredNationality = $UserNationalityTable
-                    ->find()
-                    ->matching('NationalitiesLookUp')
-                    ->select(['identityTypeId' => 'NationalitiesLookUp.identity_type_id'])
-                    ->where([
-                        $UserNationalityTable->aliasField('security_user_id') => $entity->security_user_id,
-                        $UserNationalityTable->aliasField('preferred') => 1
-                    ])
-                    ->first();
-                if (!empty($userPreferredNationality)) {
-                    $preferredIdentityTypeId = $userPreferredNationality->identityTypeId;
-                    $UserIdentities = TableRegistry::get('User.Identities');
-                    $latestIdentity = $UserIdentities->find()
-                    ->where([
-                        $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
-                        $UserIdentities->aliasField('identity_type_id') => $preferredIdentityTypeId,
-                    ])
-                    ->order([$UserIdentities->aliasField('created') => 'desc'])
-                    ->first();
-
-                    if (empty($latestIdentity)) {
-                        $this->updateAll(
-                            [
-                                'identity_number' => null
-                            ],
-                            ['id' => $entity->security_user_id]
-                        );
-                    }
-                }
-            }
         }
     }
 

@@ -43,12 +43,17 @@ class StaffLeaveTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->addBehavior('Historical.Historical', [
-                'originUrl' => [
-                    'plugin' => 'Institution',
-                    'controller' => 'Institutions',
-                    'action' => 'StaffLeave',
+                'historicalUrl' => [
+                    'plugin' => 'Directory',
+                    'controller' => 'Directories',
+                    'action' => 'HistoricalStaffLeave',
                 ],
-                'model' => 'Historical.HistoricalStaffLeave'
+                'originUrl' => [
+                    'action' => 'StaffLeave',
+                    'type' => 'staff'
+                ],
+                'model' => 'Historical.HistoricalStaffLeave',
+                'allowedController' => ['Directories']
             ]
         );
 
@@ -72,6 +77,12 @@ class StaffLeaveTable extends ControllerActionTable
             ->add('date_to', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_from', true]
             ])
+            ->add('date_to', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
+            ])
+            ->add('date_from', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
+            ])
             ->allowEmpty('file_content');
     }
 
@@ -85,108 +96,11 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $dateFrom = date_create($entity->date_from);
-        $dateTo = date_create($entity->date_to);
-        $staffId = $entity->staff_id;
-        $institutionId = $entity->institution_id;
-        $academicPeriodId = $entity->academic_period_id;
-        $isFullDayLeave = $entity->full_day;
-        $entityId = $entity->id;
-        /*
-            Non full day leave is always assume to be 0.5 since staff can only apply 2 non full day leave
-            Set start_time and end_time to null, in the case when user first choose Full Day = No and then Full Day = Yes. If start_time and end_time is not set to null, the start_time and end_time will be saved which shouldn't be the case.
-        */
-        if ($isFullDayLeave == 1) {
-            $day = 1;
-            $entity->start_time = null;
-            $entity->end_time = null;
-        } else {
-            $day = 0.5;
-        }
-        $entityStartTime = $entity->start_time;
-        $entityEndTime = $entity->end_time;
-
-        $exisitingLeaveRecords = $this
-            ->find()
-            ->select([
-                $this->aliasField('id'),
-                $this->aliasField('date_from'),
-                $this->aliasField('date_to'),
-                $this->aliasField('full_day'),
-                $this->aliasField('start_time'),
-                $this->aliasField('end_time'),
-            ])
-            ->where([
-                $this->aliasField('staff_id') => $staffId,
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('academic_period_id') => $academicPeriodId,
-            ])
-            ->toArray();
-
-        $workingDaysOfWeek = $this->AcademicPeriods->getWorkingDaysOfWeek();
-
-        $startDate = $dateFrom;
-        $endDate = $dateTo;
-        $endDate = $endDate->modify('+1 day');
-        $interval = new DateInterval('P1D');
-        $datePeriod = new DatePeriod($startDate, $interval, $endDate);
-
-        $count = 0;
-        $overlap = false;
-        foreach ($datePeriod as $key => $date) {
-            $dayText = $date->format('l');
-            if (in_array($dayText, $workingDaysOfWeek)) {
-                $count = $count + $day;
-                foreach ($exisitingLeaveRecords as $key => $value) {
-                    $comparisonId = $value->id;
-                    $dateFromStr = $value->date_from->format("Y-m-d");
-                    $dateToStr = $value->date_to->format("Y-m-d");
-                    $comparisonDateStr = $date->format("Y-m-d");
-                    $comparisonStartTime = $this->formatTime($value->start_time);
-                    $comparisonEndTime = $this->formatTime($value->end_time);
-                    $comparisonFullDay = $value->full_day;
-                    $isDateInRange = $this->checkDateInRange($dateFromStr, $dateToStr, $comparisonDateStr);
-
-                    if ($isDateInRange && $entity->isNew()) {
-                        //If leave date applied overlaps existing records and both are non full day leave, check for overlapping in time.
-                        if($comparisonFullDay == 0 && $isFullDayLeave == 0){
-                            $overlapHalfDayLeaveRecords = $this
-                            ->find()
-                            ->where([
-                                $this->aliasField('staff_id') => $staffId,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('academic_period_id') => $academicPeriodId,
-                                $this->aliasField('date_from >=') => $comparisonDateStr,
-                                $this->aliasField('date_to <=') => $comparisonDateStr,
-                                $this->aliasField('id !=') => $entityId,
-                            ])
-                            ->count();
-                            if ($overlapHalfDayLeaveRecords >= 2) {
-                                $overlap = true;
-                                break;
-                            } else if (($comparisonStartTime <= $entityEndTime) && ($comparisonEndTime >= $entityStartTime)) {
-                               // Overlapping in time found
-                               $overlap = true;
-                               break;
-                            }
-                        } else {
-                            $overlap = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            if ($overlap) {
-                break;
-            }
-        }
-        if ($overlap) {
+        $entity = $this->getNumberOfDays($entity);
+        if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
             return false;
-        } else {
-            //The number of leave days calculation only includes working day
-            $entity->number_of_days = $count;
         }
     }
 
@@ -226,112 +140,115 @@ class StaffLeaveTable extends ControllerActionTable
     public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
         $session = $this->request->session();
-
+        $institutionId = $session->read('Institution.Institutions.id');
         if ($session->check('Staff.Staff.id')) {
-            $extra['auto_contain'] = false;
             $userId = $session->read('Staff.Staff.id');
-            $institutionId = $session->read('Institution.Institutions.id');
-            $select = [
-                $this->aliasField('id'),
-                $this->aliasField('is_historical'),
-                $this->aliasField('date_from'),
-                $this->aliasField('date_to'),
-                $this->aliasField('comments'),
-                $this->aliasField('number_of_days')
-            ];
-            $selectList->exchangeArray($select);
-
-            $order = ['date_from' => 'DESC'];
-            $defaultOrder->exchangeArray($order);
-
-            $mainQuery
-                ->select([
-                    'id' => $this->aliasField('id'),
-                    'date_from' => $this->aliasField('date_from'),
-                    'date_to' => $this->aliasField('date_to'),
-                    'start_time' => $this->aliasField('start_time'),
-                    'end_time' => $this->aliasField('end_time'),
-                    'full_day' => $this->aliasField('full_day'),
-                    'comments' => $this->aliasField('comments'),
-                    'staff_id' => $this->aliasField('staff_id'),
-                    'staff_leave_type_id' => $this->aliasField('staff_leave_type_id'),
-                    'assignee_id' => $this->aliasField('assignee_id'),
-                    'academic_period_id' =>$this->aliasField('academic_period_id'),
-                    'status_id' => $this->aliasField('status_id'),
-                    'number_of_days' => $this->aliasField('number_of_days'),
-                    'institution_id' => $this->aliasField('institution_id'),
-                    $this->Institutions->aliasField('id'),
-                    $this->Institutions->aliasField('code'),
-                    $this->Institutions->aliasField('name'),
-                    $this->AcademicPeriods->aliasField('name'),
-                    $this->StaffLeaveTypes->aliasField('id'),
-                    $this->StaffLeaveTypes->aliasField('name'),
-                    $this->Statuses->aliasField('id'),
-                    $this->Statuses->aliasField('name'),
-                    $this->Assignees->aliasField('id'),
-                    $this->Assignees->aliasField('first_name'),
-                    $this->Assignees->aliasField('middle_name'),
-                    $this->Assignees->aliasField('third_name'),
-                    $this->Assignees->aliasField('last_name'),
-                    $this->Assignees->aliasField('preferred_name'),
-                    'is_historical' => 0
-                ], true)
-                ->contain([
-                    'Institutions',
-                    'AcademicPeriods',
-                    'StaffLeaveTypes',
-                    'Users',
-                    'Assignees',
-                    'Statuses'
-                ])
-                ->where([
-                    $this->aliasField('staff_id') => $userId,
-                    $this->aliasField('institution_id') => $institutionId
-                ]);
-
-            $HistoricalTable = $historicalQuery->repository();
-            $historicalQuery
-                ->select([
-                    'id' => $HistoricalTable->aliasField('id'),
-                    'date_from' => $HistoricalTable->aliasField('date_from'),
-                    'date_to' => $HistoricalTable->aliasField('date_to'),
-                    'start_time' => $HistoricalTable->aliasField('start_time'),
-                    'end_time' => $HistoricalTable->aliasField('end_time'),
-                    'full_day' => $HistoricalTable->aliasField('full_day'),
-                    'comments' => $HistoricalTable->aliasField('comments'),
-                    'staff_id' => $HistoricalTable->aliasField('staff_id'),
-                    'staff_leave_type_id' => $HistoricalTable->aliasField('staff_leave_type_id'),
-                    'assignee_id' => '(null)',
-                    'leave_academic_period_id' => '(null)',
-                    'status_id' => '(null)',
-                    'number_of_days' => $HistoricalTable->aliasField('number_of_days'),
-                    'leave_institution_id' => $HistoricalTable->aliasField('institution_id'),
-                    'institution_id' => 'Institutions.id',
-                    'institution_code' => 'Institutions.code',
-                    'institution_name' => 'Institutions.name',
-                    'academic_period_id' =>  '(null)',
-                    'leave_type_id' => 'StaffLeaveTypes.id',
-                    'leave_type_name' => 'StaffLeaveTypes.name',
-                    'statuses_id' => '(null)',
-                    'statuses_name' => '(null)',
-                    'assignee_user_id' => '(null)',
-                    'assignee_user_first_name' => '(null)',
-                    'assignee_user_middle_name' => '(null)',
-                    'assignee_user_third_name' => '(null)',
-                    'assignee_user_last_name' => '(null)',
-                    'assignee_user_preferred_name' => '(null)',
-                    'is_historical' => 1
-                ])
-                ->contain([
-                    'Users',
-                    'StaffLeaveTypes',
-                    'Institutions'
-                ])
-                ->where([
-                    $HistoricalTable->aliasField('staff_id') => $userId,
-                    $HistoricalTable->aliasField('institution_id') => $institutionId
-                ]);
+        } elseif (isset($this->request->query['user_id'])) {
+            $userId = $this->request->query['user_id'];
         }
+
+        $extra['auto_contain'] = false;
+
+        $select = [
+            $this->aliasField('id'),
+            $this->aliasField('is_historical'),
+            $this->aliasField('date_from'),
+            $this->aliasField('date_to'),
+            $this->aliasField('comments'),
+            $this->aliasField('number_of_days')
+        ];
+        $selectList->exchangeArray($select);
+
+        $order = ['date_from' => 'DESC'];
+        $defaultOrder->exchangeArray($order);
+
+        $mainQuery
+            ->select([
+                'id' => $this->aliasField('id'),
+                'date_from' => $this->aliasField('date_from'),
+                'date_to' => $this->aliasField('date_to'),
+                'start_time' => $this->aliasField('start_time'),
+                'end_time' => $this->aliasField('end_time'),
+                'full_day' => $this->aliasField('full_day'),
+                'comments' => $this->aliasField('comments'),
+                'staff_id' => $this->aliasField('staff_id'),
+                'staff_leave_type_id' => $this->aliasField('staff_leave_type_id'),
+                'assignee_id' => $this->aliasField('assignee_id'),
+                'academic_period_id' =>$this->aliasField('academic_period_id'),
+                'status_id' => $this->aliasField('status_id'),
+                'number_of_days' => $this->aliasField('number_of_days'),
+                'institution_id' => $this->aliasField('institution_id'),
+                $this->Institutions->aliasField('id'),
+                $this->Institutions->aliasField('code'),
+                $this->Institutions->aliasField('name'),
+                $this->AcademicPeriods->aliasField('name'),
+                $this->StaffLeaveTypes->aliasField('id'),
+                $this->StaffLeaveTypes->aliasField('name'),
+                $this->Statuses->aliasField('id'),
+                $this->Statuses->aliasField('name'),
+                $this->Assignees->aliasField('id'),
+                $this->Assignees->aliasField('first_name'),
+                $this->Assignees->aliasField('middle_name'),
+                $this->Assignees->aliasField('third_name'),
+                $this->Assignees->aliasField('last_name'),
+                $this->Assignees->aliasField('preferred_name'),
+                'is_historical' => 0
+            ], true)
+            ->contain([
+                'Institutions',
+                'AcademicPeriods',
+                'StaffLeaveTypes',
+                'Users',
+                'Assignees',
+                'Statuses'
+            ])
+            ->where([
+                $this->aliasField('staff_id') => $userId,
+                $this->aliasField('institution_id') => $institutionId
+            ]);
+
+        $HistoricalTable = $historicalQuery->repository();
+        $historicalQuery
+            ->select([
+                'id' => $HistoricalTable->aliasField('id'),
+                'date_from' => $HistoricalTable->aliasField('date_from'),
+                'date_to' => $HistoricalTable->aliasField('date_to'),
+                'start_time' => $HistoricalTable->aliasField('start_time'),
+                'end_time' => $HistoricalTable->aliasField('end_time'),
+                'full_day' => $HistoricalTable->aliasField('full_day'),
+                'comments' => $HistoricalTable->aliasField('comments'),
+                'staff_id' => $HistoricalTable->aliasField('staff_id'),
+                'staff_leave_type_id' => $HistoricalTable->aliasField('staff_leave_type_id'),
+                'assignee_id' => '(null)',
+                'leave_academic_period_id' => '(null)',
+                'status_id' => '(null)',
+                'number_of_days' => $HistoricalTable->aliasField('number_of_days'),
+                'leave_institution_id' => $HistoricalTable->aliasField('institution_id'),
+                'institution_id' => 'Institutions.id',
+                'institution_code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',
+                'academic_period_id' =>  '(null)',
+                'leave_type_id' => 'StaffLeaveTypes.id',
+                'leave_type_name' => 'StaffLeaveTypes.name',
+                'statuses_id' => '(null)',
+                'statuses_name' => '(null)',
+                'assignee_user_id' => '(null)',
+                'assignee_user_first_name' => '(null)',
+                'assignee_user_middle_name' => '(null)',
+                'assignee_user_third_name' => '(null)',
+                'assignee_user_last_name' => '(null)',
+                'assignee_user_preferred_name' => '(null)',
+                'is_historical' => 1
+            ])
+            ->contain([
+                'Users',
+                'StaffLeaveTypes',
+                'Institutions'
+            ])
+            ->where([
+                $HistoricalTable->aliasField('staff_id') => $userId,
+                $HistoricalTable->aliasField('institution_id') => $institutionId
+            ]);
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -718,5 +635,110 @@ class StaffLeaveTable extends ControllerActionTable
             }
         }
         return $buttons;
+    }
+
+    public function getNumberOfDays(Entity $entity)
+    {
+        $dateFrom = date_create($entity->date_from);
+        $dateTo = date_create($entity->date_to);
+        $staffId = $entity->staff_id;
+        $institutionId = $entity->institution_id;
+        $academicPeriodId = $entity->academic_period_id;
+        $isFullDayLeave = $entity->full_day;
+        /*
+            Non full day leave is always assume to be 0.5 since staff can only apply 2 non full day leave
+            Set start_time and end_time to null, in the case when user first choose Full Day = No and then Full Day = Yes. If start_time and end_time is not set to null, the start_time and end_time will be saved which shouldn't be the case.
+        */
+        if ($isFullDayLeave == 1) {
+            $day = 1;
+            $entity->start_time = null;
+            $entity->end_time = null;
+        } else {
+            $day = 0.5;
+        }
+        $entityStartTime = $entity->start_time;
+        $entityEndTime = $entity->end_time;
+
+        $existingConditions = [
+            $this->aliasField('staff_id') => $staffId,
+            $this->aliasField('academic_period_id') => $academicPeriodId,
+        ];
+
+        if (!$entity->isNew()) {
+            $existingConditions[$this->aliasField('id !=')] = $entity->id;
+        }
+
+        $exisitingLeaveRecords = $this
+            ->find()
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('date_from'),
+                $this->aliasField('date_to'),
+                $this->aliasField('full_day'),
+                $this->aliasField('start_time'),
+                $this->aliasField('end_time'),
+            ])
+            ->where($existingConditions)
+            ->toArray();
+
+        $workingDaysOfWeek = $this->AcademicPeriods->getWorkingDaysOfWeek();
+
+        $startDate = $dateFrom;
+        $endDate = $dateTo;
+        $endDate = $endDate->modify('+1 day');
+        $interval = new DateInterval('P1D');
+        $datePeriod = new DatePeriod($startDate, $interval, $endDate);
+
+        $count = 0;
+        $overlap = false;
+        foreach ($datePeriod as $key => $date) {
+            $dayText = $date->format('l');
+            if (in_array($dayText, $workingDaysOfWeek)) {
+                $count = $count + $day;
+                foreach ($exisitingLeaveRecords as $key => $value) {
+                    $comparisonId = $value->id;
+                    $dateFromStr = $value->date_from->format("Y-m-d");
+                    $dateToStr = $value->date_to->format("Y-m-d");
+                    $comparisonDateStr = $date->format("Y-m-d");
+                    $comparisonStartTime = $this->formatTime($value->start_time);
+                    $comparisonEndTime = $this->formatTime($value->end_time);
+                    $comparisonFullDay = $value->full_day;
+                    $isDateInRange = $this->checkDateInRange($dateFromStr, $dateToStr, $comparisonDateStr);
+
+                    if ($isDateInRange) {
+                        //If leave date applied overlaps existing records and both are non full day leave, check for overlapping in time.
+                        if($comparisonFullDay == 0 && $isFullDayLeave == 0){
+                            $existingConditions[$this->aliasField('date_from >=')] = $comparisonDateStr;
+                            $existingConditions[$this->aliasField('date_to <=')] = $comparisonDateStr;
+                            $overlapHalfDayLeaveRecords = $this
+                            ->find()
+                            ->where([$existingConditions])
+                            ->count();
+                            if ($overlapHalfDayLeaveRecords >= 2) {
+                                $overlap = true;
+                                break;
+                            } else if (($comparisonStartTime <= $entityEndTime) && ($comparisonEndTime >= $entityStartTime)) {
+                               // Overlapping in time found
+                               $overlap = true;
+                               break;
+                            }
+                        } else {
+                            $overlap = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if ($overlap) {
+                break;
+            }
+        }
+        if ($overlap) {
+            return false;
+        } else {
+            //The number of leave days calculation only includes working day
+            $entity->number_of_days = $count;
+            return $entity;
+        }
     }
 }

@@ -7,10 +7,12 @@ use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Log\Log;
+use Cake\Validation\Validator;
 
 class LeaveTable extends ControllerActionTable
 {
@@ -54,9 +56,8 @@ class LeaveTable extends ControllerActionTable
             'auto_contain' => false,
             'autoFields' => false,
         ]);
-        $this->toggle('add', false);
-        $this->toggle('edit', false);
-        $this->toggle('remove', false);
+        $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffLeave']);
+        $this->fullDayOptions = $this->getSelectOptions('general.yesno');
     }
 
     public function implementedEvents()
@@ -66,19 +67,50 @@ class LeaveTable extends ControllerActionTable
         return $events;
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('date_to', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'date_from', true]
+            ])
+            ->add('date_to', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
+            ])
+            ->add('date_from', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
+            ])
+            ->allowEmpty('file_content');
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $StaffLeave = TableRegistry::get('Institution.StaffLeave');
+        $entity = $StaffLeave->getNumberOfDays($entity);
+        if (!$entity) {
+            // Error message to tell that leave period applied has overlapped exisiting leave records.
+            $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
+            return false;
+        }
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->controller->name !== 'Directories') {
-            $this->removeBehavior('Excel');
-            if (isset($extra['toolbarButtons']['export'])) {
-                unset($extra['toolbarButtons']['export']);
-            }
+             $this->removeBehavior('Excel');
+             if (isset($extra['toolbarButtons']['export'])) {
+                 unset($extra['toolbarButtons']['export']);
+             }
         }
+        if ($this->controller->name !== 'Profiles') {
+            $this->removeBehavior('Workflow');
+        }
+        // $this->field('institution_id', ['visible' => ['index' => false, 'add' => true, 'view' => true, 'edit' => false]]);
+        $this->field('number_of_days', ['visible' => ['index' => true, 'view' => true, 'edit' => false]]);
         $this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['visible' => ['index' => false, 'view' => true]]);
-        $this->field('full_day', ['visible' => ['index' => false, 'view' => true]]);
-        $this->field('start_time', ['visible' => ['index' => false, 'view' => true]]);
-        $this->field('end_time', ['visible' => ['index' => false, 'view' => true]]);
+        $this->field('file_content', ['visible' => ['index' => false, 'view' => true,  'edit' => true]]);
+        $this->field('full_day', ['visible' => ['index' => false, 'view' => true, 'edit' => true]]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -90,6 +122,20 @@ class LeaveTable extends ControllerActionTable
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('staff_leave_type_id');
+        $this->field('start_time', ['entity' => $entity]);
+        $this->field('end_time', ['entity' => $entity]);
+        $this->field('institution_id', ['entity' => $entity]);
+        $this->field('academic_period_id', [
+            'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
+            'entity' => $entity
+        ]);
+
+        $this->setFieldOrder(['institution_id', 'staff_leave_type_id', 'academic_period_id','date_from', 'date_to', 'full_day', 'start_time', 'end_time','number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -485,6 +531,106 @@ class LeaveTable extends ControllerActionTable
             $time = $this->formatTime($startTime). ' - '. $this->formatTime($endTime);
         }
         return $time;
+    }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+            $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+            $attr['type'] = 'select';
+            $attr['options'] = $periodOptions;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldFullDay(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['select'] = false;
+            $attr['options'] = $this->fullDayOptions;
+            $attr['onChangeReload'] = true;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' ) {
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            if (isset($request->data[$this->alias()]['full_day'])) {
+                if ($request->data[$this->alias()]['full_day']) {
+                    $attr['type'] = 'hidden';
+                }
+            } else {
+                $attr['type'] = 'hidden';
+            }
+        } else if ($action == 'edit') {
+            $fullDay = $attr['entity']->full_day;
+            if ($fullDay) {
+                $attr['type'] = 'hidden';
+            }
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            if (isset($request->data[$this->alias()]['full_day'])) {
+                if ($request->data[$this->alias()]['full_day']) {
+                    $attr['type'] = 'hidden';
+                }
+            } else {
+                $attr['type'] = 'hidden';
+            }
+        } else if ($action == 'edit') {
+            $fullDay = $attr['entity']->full_day;
+            if ($fullDay) {
+                $attr['type'] = 'hidden';
+            }
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            // at the point of doing, only Profiles can add staff leave
+            if ($this->controller->name === 'Profiles') {
+                $staffId = $this->Auth->user('id');
+            }
+            $StaffTable = TableRegistry::get('Institution.Staff');
+            $institutionOptions = $StaffTable
+                ->find('list', ['keyField' => 'Institutions.id', 'valueField' => 'Institutions.name'])
+                ->select([
+                    $this->Institutions->aliasField('id'),
+                    $this->Institutions->aliasField('name')
+                ])
+                ->contain('Institutions')
+                ->where([
+                    $StaffTable->aliasField('staff_id') => $staffId,
+                    $StaffTable->aliasField('staff_status_id') => 1
+                ])
+                ->toArray();
+            $attr['type'] = 'select';
+            $attr['options'] = $institutionOptions;
+        } elseif ($action == 'edit') {
+            $entity = $attr['entity'];
+            $institutionId = $entity->institution_id;
+            $attr['type'] = 'readonly';
+            $attr['value'] = $institutionId;
+            $attr['attr']['value'] = $this->Institutions->get($institutionId)->name;
+        }
+        return $attr;
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {

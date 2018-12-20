@@ -1,3 +1,12 @@
+### [3.43.0] - 2018-12-20
+- Developed Configuuration option for default school landing page in Administration > System configuration > Institutions
+- Developed Import template to link Guardian to Students in Institution > Student > Import
+- Developed feature to integrate user creation in Moodle in Administration module
+- Developed feature to generate student report in PDF in Institution > Performance > Assessments
+- Implemented Contacts column in Import template in Directory > Import
+- Implemented placeholder to display subjects students will be taking in the next Academic period in Report Card module
+- Bug fix on Student's effective withdrawal date
+
 ### [3.41.1] - 2018-11-23
 - Implemented feature to display Date of Birth and Institution fields to Directory search results
 - Implemented feature to calculate Overal Average & Total Marks based on Report Card Template Start/End Date
