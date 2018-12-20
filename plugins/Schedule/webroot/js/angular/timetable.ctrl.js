@@ -6,15 +6,21 @@ TimetableController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', '
 function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, TimetableSvc) {
     var vm = this;
 
-    const CURRICULUM_LESSON = 1;
-    const NON_CURRICULUM_LESSON = 2;
+    // const
+    vm.CURRICULUM_LESSON = 1;
+    vm.NON_CURRICULUM_LESSON = 2;
+    vm.DELETE_LESSON = -1;
 
+    vm.SPLITTER_OVERVIEW = 'Overview';
+    vm.SPLITTER_LESSONS = 'Lessons';
+
+    // config
     vm.action = 'view';
     vm.hideSplitter = 'true';
-    vm.splitterContent = 'Overview'; // Overview/Lessons
-
+    vm.splitterContent = vm.SPLITTER_OVERVIEW; // Overview/Lessons
     vm.tableReady = false;
 
+    // options and data
     vm.timetableId = '';
     vm.timetableData = {};
     vm.institutionClassData = {};
@@ -36,7 +42,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     };
 
     // for lessons data - display and saving
-    vm.lessonList = [];
+    vm.lessonList = {};
 
     vm.lessonType = [];
     vm.selectedLessonType = 0;
@@ -144,11 +150,9 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         TimetableSvc.saveOverviewData(vm.overviewData)
         .then(function(response) {
             // check if has error
-            // console.log('response after save', response);
             var data = response.data;
 
             if (angular.isObject(data.error) && Object.keys(data.error).length > 0) {
-                // console.log('in?');
                 for (var fieldKey in data.error) {
                     var errorField = data.error[fieldKey];
 
@@ -159,7 +163,6 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                     vm.overviewError[fieldKey] = tempError.join(', ');
                 }
             } else {
-                // console.log('else');
                 vm.updateTimetableData(field, data.data[field]);
             }
         }, vm.error)
@@ -168,31 +171,86 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         });
     }
 
+    vm.saveLessonDetails = function(lessonDetail, lessonType) {
+        console.log('lessonDetail', vm.lessonDetail);
+
+        var responseData;
+        
+        UtilsSvc.isAppendLoader(true);
+        if (lessonType == vm.NON_CURRICULUM_LESSON) {
+            TimetableSvc.saveLessonDetailNonCurriculumData(lessonDetail)
+            .then(function(response) {
+                console.log('non lesson', response);
+            })
+            .finally(function() {
+                UtilsSvc.isAppendLoader(false);
+            });
+        } else { // vm.CURRICULUM_LESSON
+            TimetableSvc.saveLessonDetailCurriculumData(lessonDetail)
+            .then(function(response) {
+                console.log('lesson', response);
+            })
+            .finally(function() {
+                UtilsSvc.isAppendLoader(false);
+            });
+        }
+    }
+
+    vm.saveLessonSlot = function() {
+        console.log('saveLessonSlot', vm.currentSelectedCell);
+
+        var lessonData = {
+            day_of_week: vm.currentSelectedCell.day_of_week.day_of_week,
+            institution_schedule_timetable_id: vm.timetableId,
+            institution_schedule_timeslot_id: vm.currentSelectedCell.timeslot.id
+        };
+
+        UtilsSvc.isAppendLoader(true);
+        TimetableSvc.saveLessonData(lessonData)
+        .then(function(response) {
+            var data = response.data;
+        })
+        .finally(function() {
+            UtilsSvc.isAppendLoader(false);
+        })
+    }   
+
     // button/change events
     vm.onUpdateOverviewData = function(field) {
         console.log('onUpdateOverviewData', vm.overviewData);
         vm.saveOverviewData(field);
-    };
+    }
+
+    vm.onUpdateLessonData = function(key, lessonType) {
+        console.log('saveLessonDetails', vm.currentLessonList[key]);
+        vm.saveLessonDetails(vm.currentLessonList[key], lessonType);
+    }
+
+    vm.onDeleteLessonData = function(key) {
+        console.log('onDeleteLessonData', vm.currentLessonList[key]);
+        
+    }
 
     vm.onInfoClicked = function() {
-        vm.splitterContent = 'Overview';
+        vm.splitterContent = vm.SPLITTER_OVERVIEW;
         vm.hideSplitter = 'false';
     }
 
     vm.onTimeslotCellClicked = function(timeslot, day) {
-        vm.resetOverviewError(true);
-        vm.splitterContent = 'Lessons';
+        vm.splitterContent = vm.SPLITTER_LESSONS;
         var selectedClass = vm.getClassName(timeslot, day);
 
         if (vm.currentSelectedCell.class != selectedClass) {
-            vm.onHideSplitter(false, timeslot, day, selectedClass);
+            vm.resetOverviewError(true);
+            vm.toggleSplitter(false, timeslot, day, selectedClass);
+            vm.saveLessonSlot();
             vm.currentLessonList = [];
         }
     }
 
     vm.onAddLessonType = function() {
         if (vm.selectedLessonType != 0) {
-            vm.currentLessonList.push(TimetableSvc.getEmptyLessonObject(vm.selectedLessonType));
+            vm.currentLessonList.push(vm.getEmptyLessonDetailObject(vm.selectedLessonType));
         }
 
         console.log(vm.currentLessonList);
@@ -201,12 +259,15 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     }
 
     vm.onSplitterClose = function() {
-        vm.onHideSplitter(true);
-        vm.resetOverviewError(true);
+        vm.toggleSplitter(true);
+
+        if (vm.splitterContent == vm.SPLITTER_OVERVIEW) {
+            vm.resetOverviewError(true);
+        }
     }
 
     // misc function
-    vm.onHideSplitter = function(toggle = false, timeslot = {}, day = {}, selectedClass = '') {
+    vm.toggleSplitter = function(toggle = false, timeslot = {}, day = {}, selectedClass = '') {
         vm.hideSplitter = toggle.toString();
         vm.currentSelectedCell = {
             day_of_week: day,
@@ -262,5 +323,50 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
 
     vm.updateTimetableData = function(field, value) {
         vm.timetableData[field] = value;
+    }
+
+    vm.getEmptyLessonDetailObject = function(lessonType) {
+        var lessonDetailObject = {
+            lesson_type: lessonType,
+            day_of_week: vm.currentSelectedCell.day_of_week.day_of_week,
+            institution_schedule_timetable_id: vm.timetableData.id,
+            institution_schedule_timeslot_id: vm.currentSelectedCell.timeslot.id,
+
+            schedule_lesson_rooms: {
+                _ids: []
+            }
+        };
+
+        if (lessonType == vm.NON_CURRICULUM_LESSON) {
+            lessonDetailObject['schedule_non_curriculum_lesson'] = {
+                name: ''
+            };
+        } else { // vm.CURRICULUM_LESSON
+            lessonDetailObject['schedule_curriculum_lesson'] = {
+                code_only: false,
+                institution_subject_id: null
+            };
+        }
+
+        console.log('lessonDetailObject', lessonDetailObject);
+
+
+        // if (lessonType == NON_CURRICULUM_LESSON) {
+        //     lessonObject = {
+        //         lesson_type: NON_CURRICULUM_LESSON,
+        //         name: '',
+        //         institution_room_id: []
+        //     };
+        // } else { // CURRICULUM_LESSON
+        //     lessonObject = {
+        //         type: CURRICULUM_LESSON,
+        //         institution_subject_id: -1,
+        //         code_only: false,
+        //         institution_room_id: []
+        //     };
+        // }
+
+
+        return lessonDetailObject;
     }
 }
