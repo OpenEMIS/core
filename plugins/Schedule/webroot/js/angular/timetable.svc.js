@@ -14,6 +14,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         ScheduleTimetableTable: 'Schedule.ScheduleTimetables',
         ScheduleTimeslotsTable: 'Schedule.ScheduleTimeslots',
         ScheduleLessonsTable: 'Schedule.ScheduleLessons',
+        ScheduleLessonDetailsTable: 'Schedule.ScheduleLessonDetails',
         AcademicPeriodTable: 'AcademicPeriod.AcademicPeriods',
         InstitutionClassGradesTable: 'Institution.InstitutionClassGrades'
     };
@@ -29,9 +30,10 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         getEducationGrade: getEducationGrade,
         getTimetableLessons: getTimetableLessons,
 
-        getEmptyLessonObject: getEmptyLessonObject,
-
-        saveOverviewData: saveOverviewData 
+        saveOverviewData: saveOverviewData,
+        saveLessonData: saveLessonData,
+        saveLessonDetailCurriculumData: saveLessonDetailCurriculumData,
+        saveLessonDetailNonCurriculumData: saveLessonDetailNonCurriculumData
     };
 
     return service;
@@ -148,27 +150,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             .ajax({success: success, defer: true});
     }
 
-    function getEmptyLessonObject(lessonType) {
-        var lessonObject = {};
-
-        if (lessonType == NON_CURRICULUM_LESSON) {
-            lessonObject = {
-                type: NON_CURRICULUM_LESSON,
-                name: '',
-                institution_room_id: -1
-            };
-        } else { // CURRICULUM_LESSON
-            lessonObject = {
-                type: CURRICULUM_LESSON,
-                institution_subject_id: -1,
-                code_only: false,
-                institution_room_id: -1
-            };
-        }
-
-        return lessonObject;
-    }
-
+    // save events
     function saveOverviewData(timetableData) {
         console.log('timetableData', timetableData);
         var saveData = {
@@ -183,5 +165,40 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         };
 
         return ScheduleTimetableTable.edit(saveData);
+    }
+
+    function saveLessonData(lessonData) {
+        console.log('lessonData', lessonData);
+        var saveData = {
+            day_of_week: lessonData.day_of_week,
+            institution_schedule_timetable_id: lessonData.institution_schedule_timetable_id,
+            institution_schedule_timeslot_id: lessonData.institution_schedule_timeslot_id
+        };
+
+        return ScheduleLessonsTable.save(saveData);
+    }
+
+    function saveLessonDetailCurriculumData(lessonDetailData) {
+        console.log('saveLessonDetailCurriculumData', lessonDetailData);
+    }
+
+    function saveLessonDetailNonCurriculumData(lessonDetailData) {
+        // console.log('saveLessonDetailNonCurriculumData', lessonDetailData);
+        var saveData = {
+            day_of_week: lessonDetailData.day_of_week,
+            institution_schedule_timeslot_id: lessonDetailData.institution_schedule_timeslot_id,
+            institution_schedule_timetable_id: lessonDetailData.institution_schedule_timetable_id,
+            lesson_type: lessonDetailData.lesson_type,
+            schedule_lesson_rooms: lessonDetailData.schedule_lesson_rooms,
+            schedule_non_curriculum_lesson: {
+                name: lessonDetailData.schedule_non_curriculum_lesson.name
+            }
+        };
+
+        if (angular.isDefined(lessonDetailData.id)) {
+            saveData.id = lessonDetailData.id;
+        }
+
+        return ScheduleLessonDetailsTable.save(saveData);
     }
 };

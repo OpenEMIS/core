@@ -25,11 +25,28 @@ class ScheduleTimetablesTable extends ControllerActionTable
         $this->table('institution_schedule_timetables');
         parent::initialize($config);
 
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
-        $this->belongsTo('ScheduleIntervals', ['className' => 'Schedule.ScheduleIntervals', 'foreignKey' => 'institution_schedule_interval_id']);
-        $this->belongsTo('ScheduleTerms', ['className' => 'Schedule.ScheduleTerms', 'foreignKey' => 'institution_schedule_term_id']);
+        $this->belongsTo('Institutions', [
+            'className' => 'Institution.Institutions'
+        ]);
+
+        $this->belongsTo('AcademicPeriods', [
+            'className' => 'AcademicPeriod.AcademicPeriods'
+        ]);
+
+        $this->belongsTo('InstitutionClasses', [
+            'className' => 'Institution.InstitutionClasses', 
+            'foreignKey' => 'institution_class_id'
+        ]);
+
+        $this->belongsTo('ScheduleIntervals', [
+            'className' => 'Schedule.ScheduleIntervals', 
+            'foreignKey' => 'institution_schedule_interval_id'
+        ]);
+
+        $this->belongsTo('ScheduleTerms', [
+            'className' => 'Schedule.ScheduleTerms', 
+            'foreignKey' => 'institution_schedule_term_id'
+        ]);
 
         $this->hasMany('Lessons', [
             'className' => 'Schedule.ScheduleLessons', 

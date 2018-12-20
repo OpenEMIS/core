@@ -9,7 +9,7 @@ class POCOR4356 extends AbstractMigration
         // institution_schedule_terms
         $InstitutionScheduleTerms = $this->table('institution_schedule_terms', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the all the schedule terms for all institutions'
+            'comment' => 'This table contains all the schedule terms for all institutions'
         ]);
 
         $InstitutionScheduleTerms
@@ -64,7 +64,7 @@ class POCOR4356 extends AbstractMigration
         // institution_schedule_intervals
         $InstitutionScheduleIntervals = $this->table('institution_schedule_intervals', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the all the schedule intervals for all institutions'
+            'comment' => 'This table contains all the schedule intervals for all institutions'
         ]);
 
         $InstitutionScheduleIntervals
@@ -116,7 +116,7 @@ class POCOR4356 extends AbstractMigration
         // institution_schedule_timeslots
         $InstitutionScheduleTimeslots = $this->table('institution_schedule_timeslots', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the all the timeslots for all the schedule intervals'
+            'comment' => 'This table contains all the timeslots for all the schedule intervals'
         ]);
 
         $InstitutionScheduleTimeslots
@@ -140,7 +140,7 @@ class POCOR4356 extends AbstractMigration
         // institution_schedule_timetables
         $InstitutionScheduleTimetables = $this->table('institution_schedule_timetables', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the all the timetable for all institutions'
+            'comment' => 'This table contains all the timetable for all institutions'
         ]);
 
         $InstitutionScheduleTimetables
@@ -210,10 +210,16 @@ class POCOR4356 extends AbstractMigration
         // institution_schedule_lessons
         $InstitutionScheduleLessons = $this->table('institution_schedule_lessons', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the all the lessons for all the timetables for all institutions'
+            'id' => false,
+            'primary_key' => ['day_of_week', 'institution_schedule_timeslot_id', 'institution_schedule_timetable_id'],
+            'comment' => 'This table contains all the lessons for all the timetables for all institutions'
         ]);
 
         $InstitutionScheduleLessons
+            ->addColumn('id', 'string', [
+                'limit' => 64,
+                'null' => false
+            ])
             ->addColumn('day_of_week', 'integer', [
                 'limit' => 1,
                 'null' => false
@@ -246,17 +252,70 @@ class POCOR4356 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('day_of_week')
             ->addIndex('institution_schedule_timetable_id')
             ->addIndex('institution_schedule_timeslot_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
         // institution_schedule_lessons - END
+        
+        // institution_schedule_lesson_details
+        $InstitutionScheduleLessonDetails = $this->table('institution_schedule_lesson_details', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains all the lesson details for all the lessons for all the timetable'
+        ]);
+
+        $InstitutionScheduleLessonDetails
+            ->addColumn('lesson_type', 'integer', [
+                'limit' => 1,
+                'null' => false,
+                'comment' => '1 -> Curriculum, 2 -> Non-Curriculum'
+            ])
+            ->addColumn('day_of_week', 'integer', [
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('institution_schedule_timeslot_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_schedule_timeslots.id'
+            ])
+            ->addColumn('institution_schedule_timetable_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_schedule_timetables.id'
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('day_of_week')
+            ->addIndex('institution_schedule_timeslot_id')
+            ->addIndex('institution_schedule_timetable_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+        // institution_schedule_lesson_details - END
 
         // institution_schedule_curriculum_lessons
         $InstitutionScheduleCurriculumLessons = $this->table('institution_schedule_curriculum_lessons', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the all the curriculum lessons for all the lessons'
+            'comment' => 'This table contains all the curriculum lessons for all the lessons'
         ]);
 
         $InstitutionScheduleCurriculumLessons
@@ -265,12 +324,7 @@ class POCOR4356 extends AbstractMigration
                 'default' => 0,
                 'null' => true
             ])
-            ->addColumn('institution_room_id', 'integer', [
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to institution_rooms.id'
-            ])
-            ->addColumn('institution_schedule_lesson_id', 'integer', [
+            ->addColumn('institution_schedule_lesson_detail_id', 'integer', [
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to institution_schedule_lessons.id'
@@ -280,36 +334,16 @@ class POCOR4356 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to institution_subjects.id'
             ])
-            ->addColumn('modified_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true
-            ])
-            ->addColumn('modified', 'datetime', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('created_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('created', 'datetime', [
-                'default' => null,
-                'null' => false
-            ])
-            ->addIndex('institution_schedule_lesson_id')
+
+            ->addIndex('institution_schedule_lesson_detail_id')
             ->addIndex('institution_subject_id')
-            ->addIndex('institution_room_id')
-            ->addIndex('modified_user_id')
-            ->addIndex('created_user_id')
             ->save();
         // institution_schedule_curriculum_lessons - END
 
         // institution_schedule_non_curriculum_lessons
         $InstitutionScheduleNonCurriculumLessons = $this->table('institution_schedule_non_curriculum_lessons', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the all the non curriculum lessons for all the lessons'
+            'comment' => 'This table contains all the non curriculum lessons for all the lessons'
         ]);
 
         $InstitutionScheduleNonCurriculumLessons
@@ -317,40 +351,36 @@ class POCOR4356 extends AbstractMigration
                 'null' => false,
                 'limit' => 250
             ])
-            ->addColumn('institution_schedule_lesson_id', 'integer', [
+            ->addColumn('institution_schedule_lesson_detail_id', 'integer', [
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to institution_schedule_lessons.id'
+            ])
+            ->addIndex('institution_schedule_lesson_detail_id')
+            ->save();
+        // institution_schedule_non_curriculum_lessons - END
+        
+        // institution_schedule_lesson_rooms
+        $InstitutionScheduleLessonRooms = $this->table('institution_schedule_lesson_rooms', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains all rooms for all the lessons'
+        ]);
+
+        $InstitutionScheduleLessonRooms
+            ->addColumn('institution_schedule_lesson_detail_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_schedule_lesson_details.id'
             ])
             ->addColumn('institution_room_id', 'integer', [
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to institution_rooms.id'
             ])
-            ->addColumn('modified_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true
-            ])
-            ->addColumn('modified', 'datetime', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('created_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('created', 'datetime', [
-                'default' => null,
-                'null' => false
-            ])
-            ->addIndex('institution_schedule_lesson_id')
+            ->addIndex('institution_schedule_lesson_detail_id')
             ->addIndex('institution_room_id')
-            ->addIndex('modified_user_id')
-            ->addIndex('created_user_id')
             ->save();
-        // institution_schedule_non_curriculum_lessons - END
+        // institution_schedule_lesson_rooms - END 
         
         // institution_schedule_timetable_styles (?)
         
@@ -404,12 +434,18 @@ class POCOR4356 extends AbstractMigration
         // institution_schedule_lessons
         $this->execute('DROP TABLE IF EXISTS `institution_schedule_lessons`');
 
+        // institution_schedule_lesson_details
+        $this->execute('DROP TABLE IF EXISTS `institution_schedule_lesson_details`');
+
         // institution_schedule_curriculum_lessons
         $this->execute('DROP TABLE IF EXISTS `institution_schedule_curriculum_lessons`');
 
         // institution_schedule_non_curriculum_lessons
         $this->execute('DROP TABLE IF EXISTS `institution_schedule_non_curriculum_lessons`');
      
+        // institution_schedule_lesson_rooms
+        $this->execute('DROP TABLE IF EXISTS `institution_schedule_lesson_rooms`');
+
         // security_functions
         // $this->execute('DROP TABLE IF EXISTS `security_functions`');
         // $this->execute('RENAME TABLE `z_4365_security_functions` TO `security_functions`');
