@@ -29,7 +29,7 @@ class ImportUsersTable extends AppTable
         $prefix = explode(",", $prefix);
         $prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
 
-        //when add the accountTypes, please add in User.UsersTable validationDefault function 
+        //when add the accountTypes, please add in User.UsersTable validationDefault function
         $this->accountTypes = [
             'is_student' => [
                 'id' => 'is_student',
@@ -71,10 +71,12 @@ class ImportUsersTable extends AppTable
             'Model.import.onImportPopulateAreaAdministrativesData' => 'onImportPopulateAreaAdministrativesData',
             'Model.import.onImportPopulateGendersData' => 'onImportPopulateGendersData',
             'Model.import.onImportPopulateAccountTypesData' => 'onImportPopulateAccountTypesData',
+            'Model.import.onImportPopulateContactTypesData' => 'onImportPopulateContactTypesData',
             'Model.import.onImportGetAccountTypesId' => 'onImportGetAccountTypesId',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.import.onImportCustomHeader' => 'onImportCustomHeader',
             'Model.import.onImportCheckIdentityConfig' => 'onImportCheckIdentityConfig',
+            'Model.import.onImportGetContact' => 'onImportGetContact'
         ];
         $events = array_merge($events, $newEvent);
         return $events;
@@ -159,6 +161,29 @@ class ImportUsersTable extends AppTable
         }
     }
 
+    public function onImportPopulateContactTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        //Join contact type and contact options for displaying the name of contact type and its contact option name at excel for user to see
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $modelData = $lookedUpTable->find('all', [
+                                 'contain' => ['ContactOptions']
+                                ])
+                                ->select(['ContactOptions.name', 'name', $lookupColumn])
+                                ->order($lookupModel.'.order');
+
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+        if (!empty($modelData)) {
+            foreach ($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->contact_option->name . ' - ' . $row->name,
+                    $row->{$lookupColumn}
+                ];
+            }
+        }
+    }
+
     public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
@@ -226,6 +251,7 @@ class ImportUsersTable extends AppTable
                             $this->UserIdentities->aliasField('identity_type_id') => $tempRow['identity_type_id']
                         ])
                         ->first();
+
                 if (!empty($query)) {
                     $identityTypeName = $query->identity_type->name;
                     $rowInvalidCodeCols['identity_number'] = $this->getMessage('Import.identity_number_exist', ['sprintf' => [$identityTypeName]]);
@@ -248,6 +274,70 @@ class ImportUsersTable extends AppTable
                 }
             }
         }
+
+        //Validation of contact_type and contact
+        if($tempRow->offsetExists('contact_type') && !empty($tempRow['contact_type'])) {
+
+            if (!$tempRow->offsetExists('contact') || empty($tempRow['contact'])) {
+                $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'contact_required');
+                $tempRow['contact_error'] = true;
+                return false;
+            } else {
+                //use contact_type_id to get contact_options id to save.
+                $ContactTypesTable = TableRegistry::get('User.ContactTypes');
+                $ContactTable = TableRegistry::get('User.Contacts');
+
+                $contactOptionId = $ContactTypesTable->find()
+                        ->select([$ContactTypesTable->aliasField('contact_option_id')])
+                        ->where([$ContactTypesTable->aliasField('id') => $tempRow['contact_type']])
+                        ->first();
+
+                if ($contactOptionId) {
+                    $contactEntity;
+
+                    $securityUserId = $this->Users->find()
+                                                ->select([$this->Users->aliasField('id')])
+                                                ->where([$this->Users->aliasField('openemis_no') => $tempRow['openemis_no']])
+                                                ->first();
+
+                    $data = [
+                        'contact_type_id' => $tempRow['contact_type'],
+                        'value' => $tempRow['contact'],
+                        'contact_option_id' => $contactOptionId['contact_option_id'],
+                    ];
+
+                    if ($securityUserId) {  //if is existing user validation will be different
+                        $data['security_user_id'] = $securityUserId->id;
+                        $data['preferred'] = 0;
+                        $contactEntity = $ContactTable->newEntity($data);
+                    } else {
+                        $contactEntity = $ContactTable->newEntity($data, ['validate' => 'importType']);
+                    }
+
+                    //Display all the error msgs
+                    if ($contactEntity->errors()) {
+                        $errorMsgArray = $contactEntity->errors();
+                        $errorMessages = [];
+
+                        foreach ($errorMsgArray as $key => $value) {
+                            foreach ($errorMsgArray[$key] as $errorMsg) {
+                                $errorMessages[] = $errorMsg;
+                            }
+                        }
+
+                        $errorMessageToShow = implode(",",$errorMessages);
+                        $rowInvalidCodeCols['contact'] = $errorMessageToShow;
+                        $tempRow['contact_error'] = true;
+                        return false;
+                    }
+                } else {
+                    $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'value_not_in_list');
+                    $tempRow['contact_error'] = true;
+                    return false;
+                }
+            }
+        }
+
         //add identifier that later will be used on User afterSave
         $tempRow['record_source'] = 'import_user';
 

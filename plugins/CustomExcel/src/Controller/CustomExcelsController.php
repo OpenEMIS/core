@@ -36,11 +36,15 @@ class CustomExcelsController extends AppController
 
     public function isActionIgnored(Event $event, $action)
     {
-        if (in_array($action, ['export', 'viewVars'])) {
+        if (in_array($action, ['export', 'viewVars', 'exportPDF'])) {
             return true;
         }
     }
 
     public function export($model) { $this->ExcelReport->renderExcel(['className' => "$this->plugin.$model"]); }
     public function viewVars($model) { $this->ExcelReport->viewVars(['className' => "$this->plugin.$model"]); }
+
+    public function exportPDF($model) { 
+        $this->ExcelReport->renderExcel(['className' => "$this->plugin.$model", 'format' => 'pdf']); 
+    }
 }

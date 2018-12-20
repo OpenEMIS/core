@@ -412,8 +412,8 @@ class StudentPromotionTable extends AppTable
                     if ($selectedClass !== '-1') { //Not Student Without Class
                         $InstitutionClassesTable = TableRegistry::get('Institution.InstitutionClasses');
 
-                        //Get back classes base on status of promoted or repeated
-                        if (in_array($studentStatusId, [$statuses['PROMOTED']])) {
+                        //Get back classes base on status of promoted or graduated or repeated
+                        if (in_array($studentStatusId, [$statuses['PROMOTED'], $statuses['GRADUATED']])) {
                             if (!is_null($selectedNextGrade)) {
                                 $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $selectedNextGrade);
                             }
@@ -486,6 +486,7 @@ class StudentPromotionTable extends AppTable
                             'ClassGrades.education_grade_id' => $educationGradeId
                         ])
                         ->toArray();
+
                     $options = $options + $classes;
                     $selectedClass = $entity->has('class') ? $entity->class : null;
                     if (empty($selectedClass)) {
@@ -675,7 +676,6 @@ class StudentPromotionTable extends AppTable
                 }
 
                 $attr['selectedStudents'] = ($currentData->has('students'))? $currentData->students: [];
-
                 $selectedPeriod = $currentData['from_academic_period_id'];
                 $selectedStudentStatusId = $currentData['student_status_id'];
                 break;
@@ -683,7 +683,6 @@ class StudentPromotionTable extends AppTable
             case 'add':
                 $entity = $attr['entity'];
                 $requestData = $request->data;
-
                 $selectedPeriod = $entity->has('from_academic_period_id') ? $entity->from_academic_period_id : null;
                 $selectedStudentStatusId = $entity->has('student_status_id') ? $entity->student_status_id : null;
                 break;
@@ -705,7 +704,8 @@ class StudentPromotionTable extends AppTable
                 $selectedClass = $entity->has('class') ? $entity->class : null;
 
                 if (!is_null($selectedStudentStatusId) && $selectedClass != -1) {
-                    $showNextClass = in_array($selectedStudentStatusId, [$studentStatuses['PROMOTED'], $studentStatuses['REPEATED']]);
+                    $showNextClass = in_array($selectedStudentStatusId, [$studentStatuses['PROMOTED'], $studentStatuses['REPEATED'], $studentStatuses['GRADUATED']]);
+
                     if ($selectedStudentStatusId == $studentStatuses['REPEATED']) {
                         $selectedNextGrade = $selectedGrade;
                     }
@@ -890,6 +890,11 @@ class StudentPromotionTable extends AppTable
                     $educationGradeId = isset($data[$this->alias()]['education_grade_id']) ? $data[$this->alias()]['education_grade_id'] : 0;
 
                     if ($selectedStudent) {
+                        //check students next classes have capcity
+                        if ($this->checkIsOverStudentClassCapacity($entity->students)) {
+                            return false;
+                        }
+
                         // redirects to confirmation page
                         $url = $this->ControllerAction->url('reconfirm');
                         $this->currentEntity = $entity;
@@ -985,6 +990,7 @@ class StudentPromotionTable extends AppTable
                                 $studentObj['start_date'] = $nextPeriod->start_date->format('Y-m-d');
                                 $studentObj['end_date'] = $nextPeriod->end_date->format('Y-m-d');
                             }
+
                             $entity = $this->newEntity($studentObj, ['validate' => 'RemoveStudentPromotionValidation']);
 
                             $existingStudentEntity = $this->find()->where([
@@ -1162,5 +1168,47 @@ class StudentPromotionTable extends AppTable
         ->toArray();
 
         return $listOfInstitutionGrades;
+    }
+
+    private function checkIsOverStudentClassCapacity($entity)
+    {
+        if (!empty($entity)) {
+            $nextClasses = [];
+
+            //For each select student , store and count their next class for promotion to check
+            foreach ($entity as $student) {
+                if ($student['selected']) {
+                    if (!(array_key_exists($student['next_institution_class_id'], $nextClasses))) {
+                        $nextClasses[$student['next_institution_class_id']] = 1;
+                    } else {
+                        $nextClasses[$student['next_institution_class_id']] += 1;
+                    }
+                }
+            }
+
+            $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
+
+            //Query to check if selected student and next class have capacity and return the classes that do not have
+            $results = $institutionClassTable->find('all', array('fields' => array('id', 'name'), 'contain' => array()));
+            $conditions['OR'] = [];
+            foreach ($nextClasses as $class => $value) {
+                $conditions['OR'][] = [
+                        $institutionClassTable->aliasField('capacity') . '-' . $institutionClassTable->aliasField('total_male_students') . '-' . $institutionClassTable->aliasField('total_female_students') . ' < :value' . $class,
+                        $institutionClassTable->aliasField('id =') => $class
+                ];
+                $results->bind(':value'. $class, $value, "integer");
+            }
+            $results->where($conditions);
+            $overCapacityClasses = $results->toArray();
+
+            if (!empty($overCapacityClasses)) {
+                $this->Alert->clear();
+                foreach ($overCapacityClasses as $class) {
+                    $this->Alert->show( 'Next class ' . $class->name . ' does not have enough capacity for students.','error');
+                }
+                return true;
+            }
+        }
+        return false;
     }
 }
