@@ -171,7 +171,8 @@ class InstitutionsController extends AppController
             'ImportCompetencyResults'   => ['className' => 'Institution.ImportCompetencyResults', 'actions' => ['add']],
             'ImportStaffLeave'          => ['className' => 'Institution.ImportStaffLeave', 'actions' => ['add']],
             'ImportInstitutionPositions'=> ['className' => 'Institution.ImportInstitutionPositions', 'actions' => ['add']],
-            'ImportStudentBodyMasses'   => ['className' => 'Institution.ImportStudentBodyMasses', 'actions' => ['add']]
+            'ImportStudentBodyMasses'   => ['className' => 'Institution.ImportStudentBodyMasses', 'actions' => ['add']],
+            'ImportStudentGuardians'   => ['className' => 'Institution.ImportStudentGuardians', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -424,16 +425,21 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffRelease']);
     }
+
+    public function StudentStatusUpdates()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentStatusUpdates']);
+    }
     // End
 
     // AngularJS
     public function StudentAttendances()
     {
         $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
-        // $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
-        // $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
+        $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
+        $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
+
         $_excel = false;
-        $_import = false;
 
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
@@ -513,10 +519,16 @@ class InstitutionsController extends AppController
             $customUrl['action'] = 'export';
             $customUrl[0] = 'AssessmentResults';
             $this->set('customExcel', Router::url($customUrl));
+
+            $exportPDF_Url = $this->ControllerAction->url('index');
+            $exportPDF_Url['plugin'] = 'CustomExcel';
+            $exportPDF_Url['controller'] = 'CustomExcels';
+            $exportPDF_Url['action'] = 'exportPDF';
+            $exportPDF_Url[0] = 'AssessmentResults';
+            $this->set('exportPDF', Router::url($exportPDF_Url));
         }
 
         $this->set('excelUrl', Router::url($url));
-
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
 

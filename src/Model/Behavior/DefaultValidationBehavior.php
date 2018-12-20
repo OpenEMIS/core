@@ -12,11 +12,23 @@ use Cake\Network\Session;
 use App\Model\Traits\MessagesTrait;
 
 class DefaultValidationBehavior extends Behavior {
+	private $importValidationFailed = NULL;
 
 	public function buildValidator(Event $event, Validator $validator, $name) {
 
 		$this->_attachDefaultValidation($validator);
+	}
 
+	public function beforeSave()
+	{
+		if ($this->importValidationFailed) {
+			return false;
+		}
+	}
+
+	public function setImportValidationFailed()
+	{
+		$this->importValidationFailed = true;
 	}
 
 	private function _attachDefaultValidation($validator) {

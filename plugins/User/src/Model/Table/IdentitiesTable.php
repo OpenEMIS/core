@@ -23,6 +23,7 @@ class IdentitiesTable extends ControllerActionTable
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
+		$this->belongsTo('Nationalities', ['className' => 'FieldOption.Nationalities']);
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Students' => ['index', 'add'],
         	'Staff' => ['index', 'add']
@@ -56,7 +57,24 @@ class IdentitiesTable extends ControllerActionTable
 
 	public function beforeAction($event, ArrayObject $extra)
 	{
+        $UserNationalityTable = TableRegistry::get('User.UserNationalities');
+        $userId = null;
+        $queryString = $this->getQueryString();
+        if (isset($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        }
+        $NationalityOptions = $UserNationalityTable
+            ->find('list',
+                ['keyField' => '_matchingData.NationalitiesLookUp.id',
+                'valueField' => '_matchingData.NationalitiesLookUp.name'
+            ])
+            ->matching('NationalitiesLookUp')
+            ->where([$UserNationalityTable->aliasField('security_user_id') => $userId])
+            ->toArray();
 		$this->fields['identity_type_id']['type'] = 'select';
+		$this->fields['nationality_id']['type'] = 'select';
+        $this->fields['nationality_id']['options'] = $NationalityOptions;
+		$this->setFieldOrder(['identity_type_id', 'nationality_id', 'number', 'issue_date', 'expiry_date', 'issue_location', 'comments']);
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -85,7 +103,9 @@ class IdentitiesTable extends ControllerActionTable
 			])
 			->add('expiry_date',  [
             ])
-            ->add('identity_type_id',  [
+            ->add('identity_type_id', 'ruleCustomIdentityType', [
+                'rule' => ['validateCustomIdentityType'],
+                'provider' => 'table',
             ])
             ->add('number', 'ruleCustomIdentityNumber', [
 				'rule' => ['validateCustomIdentityNumber'],

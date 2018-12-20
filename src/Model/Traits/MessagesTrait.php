@@ -617,8 +617,8 @@ trait MessagesTrait
             'identity_type_required' => 'Identity Type cant be empty if Identity Number is specified.',
             'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
             'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.',
-            'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type'
-
+            'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type',
+            'contact_required' => 'Contact is required'
         ],
         'ImportInstitutionSurveys' => [
             'restrictImport' => 'Import operation is not allowed as the record is already Done'
@@ -916,7 +916,11 @@ trait MessagesTrait
             ],
             'StaffLeave' => [
                 'date_to' => [
-                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From',
+                    'ruleInAcademicPeriod' => 'Please select a date within the chosen Academic Period'
+                ],
+                'date_from' => [
+                    'ruleInAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
             'InstitutionStudentAbsences' => [
@@ -1375,9 +1379,9 @@ trait MessagesTrait
                     'ruleChangePassword' => 'Please confirm your new password',
                     'ruleCompare' => 'Both passwords do not match'
                 ],
-                 'photo_content' => [
+                'photo_content' => [
                     'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
-                 ],
+                ]
             ],
             'Accounts' => [
                 'username' => [
@@ -1424,7 +1428,8 @@ trait MessagesTrait
             ],
             'Identities' => [
                 'identity_type_id' => [
-                    'ruleNotBlank' => 'Please select a Type'
+                    'ruleNotBlank' => 'Please select a Type',
+                    'custom_validation' => 'Identity Type exists for this Nationality'
                 ],
                 'issue_location' => [
                     'ruleNotBlank' => 'Please enter a valid Issue Location'
@@ -1594,6 +1599,15 @@ trait MessagesTrait
             'transferExists' => 'There is an existing transfer request for that staff.',
             'date_of_birth' => 'Date Of Birth',
             'photo_content' => 'Profile Image',
+            'Leave' => [
+                'date_to' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'date_from' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+            ],
             'Qualifications' => [
                 'qualification_title' => [
                     'required' => 'Please enter a valid Qualification Title'
