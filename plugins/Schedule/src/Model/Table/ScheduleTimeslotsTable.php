@@ -17,7 +17,10 @@ class ScheduleTimeslotsTable extends ControllerActionTable
         $this->entityClass('Schedule.ScheduleTimeslots');
         parent::initialize($config);
 
-        $this->belongsTo('ScheduleIntervals', ['className' => 'Schedule.ScheduleIntervals', 'foreignKey' => 'institution_schedule_interval_id']);
+        $this->belongsTo('ScheduleIntervals', [
+            'className' => 'Schedule.ScheduleIntervals', 
+            'foreignKey' => 'institution_schedule_interval_id'
+        ]);
 
         $this->hasMany('Lessons', [
             'className' => 'Schedule.ScheduleLessons',

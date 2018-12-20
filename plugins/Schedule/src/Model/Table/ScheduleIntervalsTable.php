@@ -18,9 +18,18 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $this->table('institution_schedule_intervals');
         parent::initialize($config);
 
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Shifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'institution_shift_id']);
+        $this->belongsTo('Institutions', [
+            'className' => 'Institution.Institutions'
+        ]);
+
+        $this->belongsTo('AcademicPeriods', [
+            'className' => 'AcademicPeriod.AcademicPeriods'
+        ]);
+
+        $this->belongsTo('Shifts', [
+            'className' => 'Institution.InstitutionShifts',
+            'foreignKey' => 'institution_shift_id'
+        ]);
 
         $this->hasMany('Timeslots', [
             'className' => 'Schedule.ScheduleTimeslots', 
