@@ -16,12 +16,24 @@ class ScheduleCurriculumLessonsTable extends ControllerActionTable
         $this->table('institution_schedule_curriculum_lessons');
         parent::initialize($config);
 
-        $this->belongsTo('Lessons', ['className' => 'Schedule.ScheduleLessons', 'foreignKey' => 'institution_schedule_lesson_id']);
+        $this->belongsTo('LessonDetails', [
+            'className' => 'Schedule.ScheduleLessonDetails', 
+            'foreignKey' => 'institution_schedule_lesson_detail_id'
+        ]);
+
+        // $this->belongsTo('InstitutionSubject', ['className' => '']);
     }
 
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
+
+        return $validator;
+    }
+
+    public function validationAddCurriculumLesson(Validator $validator)
+    {
+        
 
         return $validator;
     }

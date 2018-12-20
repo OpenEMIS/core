@@ -18,8 +18,13 @@ class ScheduleTermsTable extends ControllerActionTable
         $this->table('institution_schedule_terms');
         parent::initialize($config);
 
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Institutions', [
+            'className' => 'Institution.Institutions'
+        ]);
+
+        $this->belongsTo('AcademicPeriods', [
+            'className' => 'AcademicPeriod.AcademicPeriods'
+        ]);
 
         $this->hasMany('Timetables', [
             'className' => 'Schedule.ScheduleTimetables', 
