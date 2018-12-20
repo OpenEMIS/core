@@ -91,20 +91,33 @@ $panelHeader = $this->fetch('panelHeader');
         margin-bottom: 15px;
     }
 
-    .splitter-filter .lesson-form .lesson-form-header h5 {
-        margin: 0px;
+    .splitter-filter .lesson-form .lesson-form-header {
         padding: 10px;
         border-bottom: 1px solid #DDD;
         background-color: #EEE;
+        position: relative;
     }
 
-    .splitter-filter .lesson-form .lesson-form-body {
-        margin: 10px 0;
+    .splitter-filter .lesson-form .lesson-form-header h5 {
+        margin: 0px;
+    }
+
+    .splitter-filter .lesson-form .lesson-form-header h5 {
+        margin: 0px;
+        display: inline-block;
+    }
+
+    .splitter-filter .lesson-form .lesson-form-header i {
+        position: absolute;
+        right: 0;
+        padding: 0 10px;
+        font-size: 14px;
     }
 
     .splitter-filter .lesson-form .lesson-form-body .lesson-wrapper h6,
     .splitter-filter .lesson-form .lesson-form-body .lesson-wrapper .input {
         padding: 0 10px;
+        margin-bottom: 15px;
     }
 
     .splitter-filter .lesson-form .lesson-form-body .lesson-wrapper .input input {
@@ -112,6 +125,7 @@ $panelHeader = $this->fetch('panelHeader');
         border-radius: 3px;
         border: 1px solid #ddd;
         height: 25px;
+        padding: 5px 10px;
     }
     
 </style>
@@ -159,7 +173,7 @@ $panelHeader = $this->fetch('panelHeader');
                         </button>
                     </div>
 
-                    <div ng-if="$ctrl.splitterContent == 'Lessons'" class="timetable-sub-lessons">
+                    <div ng-if="$ctrl.splitterContent == $ctrl.SPLITTER_LESSONS" class="timetable-sub-lessons">
                         <div class="lesson-type">
                             <h5><?= __('Type') ?>: </h5>
                             <div style="display: inline-block; width: 100%;">
@@ -176,14 +190,15 @@ $panelHeader = $this->fetch('panelHeader');
                         <div class="lesson-list">
                             <div ng-repeat="(key, lesson) in $ctrl.currentLessonList" class="lesson-form">
                                 <div class="lesson-form-header">
-                                    <h5>{{$ctrl.getLessonTitle(lesson.type)}}</h5>
+                                    <h5>{{$ctrl.getLessonTitle(lesson.lesson_type)}}</h5>
+                                    <i class="fa fa-trash" ng-click="$ctrl.onDeleteLessonData(key)"></i>
                                 </div>
                                 <!-- Non Curriculum Lessons -->
-                                <div ng-if="lesson.type == 2" class="lesson-form-body">
+                                <div ng-if="lesson.lesson_type == $ctrl.NON_CURRICULUM_LESSON" class="lesson-form-body">
                                     <div class="lesson-wrapper non-curriculum lesson-name">
                                         <h6><?= __('Name') ?> </h6>
                                         <div class="input text required">
-                                            <input type="text"/>
+                                            <input type="text" ng-model="lesson.schedule_non_curriculum_lesson.name" ng-blur="$ctrl.onUpdateLessonData(key, $ctrl.NON_CURRICULUM_LESSON)"/>
                                         </div>
                                     </div>
                                     <div class="lesson-wrapper non-curriculum institution-room">
@@ -194,13 +209,18 @@ $panelHeader = $this->fetch('panelHeader');
                                     </div>
                                 </div>
                                 <!-- Curriculum Lessons -->
-                                <div ng-if="lesson.type == 1" class="lesson-form-body">
-                                    <div class="lesson-wrapper curriculum lesson-name">
-                                        <h6><?= __('Name1') ?> </h6>
+                                <div ng-if="lesson.lesson_type == $ctrl.CURRICULUM_LESSON" class="lesson-form-body">
+                                    <div class="lesson-wrapper curriculum lesson-subject">
+                                        <h6><?= __('Subject') ?> </h6>
                                         <div class="input text required">
                                             <input type="text"/>
                                         </div>
                                     </div>
+                                    <div class="lesson-wrapper curriculum lesson-code">
+                                        <h6><?= __('Display') ?> </h6>
+                                        <input type="checkbox"/>Code Only
+                                    </div>
+                                    <hr>
                                     <div class="lesson-wrapper curriculum institution-room">
                                         <h6><?= __('Room1') ?> </h6>
                                         <div class="input text required">
@@ -212,7 +232,7 @@ $panelHeader = $this->fetch('panelHeader');
                         </div>
                     </div>
 
-                    <div ng-if="$ctrl.splitterContent == 'Overview'" class="timetable-sub-overview">
+                    <div ng-if="$ctrl.splitterContent == $ctrl.SPLITTER_OVERVIEW" class="timetable-sub-overview">
                         <div class="academic-period">
                             <h5><?= __('Academic Period') ?>: </h5>
                             <div class="input text required">
