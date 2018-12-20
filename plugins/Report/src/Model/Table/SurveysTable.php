@@ -147,7 +147,7 @@ class SurveysTable extends AppTable
 
         if (!empty($academicPeriodId)) {
             $surveyStatuses = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusesCode('Institution.InstitutionSurveys');
-            if ($surveyStatuses[$status] == 'NOT_COMPLETED') {
+            if (!$status || $surveyStatuses[$status] == 'NOT_COMPLETED') {
                 $settings['renderNotComplete'] = true;
             } else {
                 $settings['renderNotComplete'] = false;
@@ -160,6 +160,8 @@ class SurveysTable extends AppTable
         $condition = [
             $this->aliasField('academic_period_id') => $academicPeriodId
         ];
+
+        if (!$status) $status = array_keys($surveyStatuses);
 
         $surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 
