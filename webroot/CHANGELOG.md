@@ -1,3 +1,6 @@
+### [3.43.1] - 2019-04-01
+- Bug fix on Institution > Students > Export
+
 ### [3.43.0] - 2018-12-20
 - Developed Configuuration option for default school landing page in Administration > System configuration > Institutions
 - Developed Import template to link Guardian to Students in Institution > Student > Import
