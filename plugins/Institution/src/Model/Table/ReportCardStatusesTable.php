@@ -20,12 +20,11 @@ class ReportCardStatusesTable extends ControllerActionTable
     private $reportProcessList = [];
 
     // for status
-    CONST NEW_REPORT = 1;
-    CONST IN_PROGRESS = 2;
-    CONST GENERATED = 3;
-    CONST PUBLISHED = 4;
-
-    CONST MAX_PROCESSES = 2;
+    CONST NEW_REPORT = 4; // default 1
+    CONST IN_PROGRESS = 8; // default 2
+    CONST GENERATED = 12;   // default 3
+    CONST PUBLISHED = 16; // default 4
+    CONST MAX_PROCESSES = 7;  //  default 2
 
     public function initialize(array $config)
     {
