@@ -46,12 +46,14 @@ class GenerateReportCardsByInstitutionShell extends Shell
             if (!empty($recordToProcesses)) {
                 foreach ($recordToProcesses as $key => $recordToProcess) {
                     if ($key === 0) {
+                        
                         $this->out('Generating report card for Student ' . $recordToProcess['student_id'] . ' (' . Time::now() . ')');
                         $institutionId = $recordToProcess['institution_id'];
                         if (!empty($institutionId)) {
                             $this->generateCardById($institutionId);
+                             $this->out('Generated all report card for institutions ' . $institutionId . ' (' . Time::now() . ')');
                         } else {
-                            $this->out('Cannot generating report card for Student ' . $recordToProcess['student_id'] . ' (' . Time::now() . ')');
+                            $this->out('Cannot generating report card for institutions ' . $institutionId . ' (' . Time::now() . ')');
                         }
                 }
             }
