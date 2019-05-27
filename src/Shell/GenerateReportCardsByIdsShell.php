@@ -36,8 +36,7 @@ class GenerateReportCardsByIdsShell extends Shell
             $this->ReportCardProcesses->aliasField('academic_period_id')
             ])
             ->where([
-            $this->ReportCardProcesses->aliasField('status') => $this->ReportCardProcesses::NEW_PROCESS,
-            $this->ReportCardProcesses->aliasField('academic_period_id') => self::ACADEMIC_PERIOD_ID
+            $this->ReportCardProcesses->aliasField('status') => $this->ReportCardProcesses::NEW_PROCESS
             ])
             ->order([
                         $this->ReportCardProcesses->aliasField('created'),
