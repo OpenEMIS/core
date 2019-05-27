@@ -10,7 +10,7 @@ use Cake\Console\Shell;
 
 class GenerateReportCardsByIdsShell extends Shell
 {
-    private $sleepTime = 5;
+    CONST SLEEP_TIME = 10;
 
     public function initialize()
     {
@@ -51,6 +51,7 @@ class GenerateReportCardsByIdsShell extends Shell
                     $institutionId = $recordToProcess['institution_id'];
                     if (!empty($institutionId)) {
                         $this->generateCardById($institutionId);
+                        sleep(self::SLEEP_TIME);
                     } else {
                         $this->out('Cannot generating report card for Student ' . $recordToProcess['student_id'] . ' (' . Time::now() . ')');
                     }
