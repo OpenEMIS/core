@@ -11,6 +11,7 @@ use Cake\Console\Shell;
 class GenerateReportCardsByInstitutionShell extends Shell
 {
     CONST SLEEP_TIME = 10;
+    CONST ACADEMIC_PERIOD_ID = 18;
 
     public function initialize()
     {
@@ -34,7 +35,8 @@ class GenerateReportCardsByInstitutionShell extends Shell
             $this->ReportCardProcesses->aliasField('academic_period_id')
             ])
             ->where([
-            $this->ReportCardProcesses->aliasField('status') => $this->ReportCardProcesses::NEW_PROCESS
+            $this->ReportCardProcesses->aliasField('status') => $this->ReportCardProcesses::NEW_PROCESS,
+            $this->ReportCardProcesses->aliasField('academic_period_id') => self::ACADEMIC_PERIOD_ID
             ])
             ->order([
                         $this->ReportCardProcesses->aliasField('created'),
