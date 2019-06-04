@@ -641,8 +641,20 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $requestData['fax'] = $institutionRecord->fax;
                         $requestData['email'] = $institutionRecord->email;
                         $requestData['website'] = $institutionRecord->website;
-
-                        $newEntities[] = $model->newEntity($requestData->getArrayCopy());
+                        $newEntity = $model->newEntity($requestData->getArrayCopy());
+                        
+                        if ($newEntity->errors('telephone') && $newEntity->errors('fax')) {
+                            $this->Alert->error('general.contactInstitution.both', ['reset' => 'override']);
+                            return false;
+                        } else if ($newEntity->errors('telephone')) {
+                            $this->Alert->error('general.contactInstitution.telephone', ['reset' => 'override']);
+                            return false;
+                        } else if ($newEntity->errors('fax')) {
+                            $this->Alert->error('general.contactInstitution.fax', ['reset' => 'override']);
+                            return false;
+                        }
+                        
+                        $newEntities[] = $newEntity;
                     }
                 }
                 return $model->saveMany($newEntities);
