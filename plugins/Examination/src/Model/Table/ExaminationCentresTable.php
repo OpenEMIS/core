@@ -254,20 +254,24 @@ class ExaminationCentresTable extends ControllerActionTable {
 
         $specialNeedIds = array_column($data[$this->alias()][$specialNeedsFieldKey], 'special_need_type_id');
         $originalSpecialNeeds = $entity->extractOriginal([$specialNeedsFieldKey])[$specialNeedsFieldKey];
-        $examination_centre_id = $entity->institution_id;
         
         // Get unique ids which are not present for remove POCOR-4231
         $RemoveSpecialNeedIds = array_diff($allSpecialNeedsData, $specialNeedIds);
-        if (count($RemoveSpecialNeedIds) > 0 && $examination_centre_id > 0) {
+        if (count($RemoveSpecialNeedIds) > 0 && $entity->institution_id > 0) {
             foreach ($RemoveSpecialNeedIds as $removeSNI) {
-                $this->ExaminationCentreSpecialNeeds->deleteAll(['special_need_type_id' => $removeSNI, 'examination_centre_id' => $examination_centre_id]);
+                $this->ExaminationCentreSpecialNeeds->deleteAll(
+                       [  'special_need_type_id' => $removeSNI, 
+                          'examination_centre_id' => $entity->institution_id
+                        ]);
             }
         }
         
         // Get unique ids for new special need type ids and save in table  POCOR-4231
-        $examination_centre_id = $entity->institution_id;
         $associatedSpecialNeedsTemp = [];
-        $associatedSpecialNeeds = $this->ExaminationCentreSpecialNeeds->find('all')->where(['examination_centre_id' => $examination_centre_id])->toArray();
+        $associatedSpecialNeeds = $this->ExaminationCentreSpecialNeeds
+            ->find('all')
+            ->where(['examination_centre_id' => $entity->institution_id])
+            ->toArray();
         foreach ($associatedSpecialNeeds as $associatedSpecialNeed) {
             $associatedSpecialNeedsTemp[] = $associatedSpecialNeed->special_need_type_id;
         }
@@ -441,9 +445,8 @@ class ExaminationCentresTable extends ControllerActionTable {
         $fieldKey = 'examination_centre_special_needs';
 
         if ($action == 'view') {
-            $examination_centre_id = $entity->institution_id;
             $associatedSpecialNeedsTemp = [];
-            $associatedSpecialNeeds = $this->ExaminationCentreSpecialNeeds->find('all')->where(['examination_centre_id' => $examination_centre_id])->toArray();
+            $associatedSpecialNeeds = $this->ExaminationCentreSpecialNeeds->find('all')->where(['examination_centre_id' => $entity->institution_id])->toArray();
             $associated = $entity->extractOriginal([$fieldKey]);
             foreach ($associatedSpecialNeeds as $associatedSpecialNeed) {
                 $associatedSpecialNeedsTemp[] = $associatedSpecialNeed->special_need_type_id;
@@ -469,9 +472,8 @@ class ExaminationCentresTable extends ControllerActionTable {
 
             $selectedSpecialNeeds = [];
             if ($this->request->is(['get'])) {
-                $examination_centre_id = $entity->institution_id;
                 $associatedSpecialNeedsTemp = [];
-                $associatedSpecialNeeds = $this->ExaminationCentreSpecialNeeds->find('all')->where(['examination_centre_id' => $examination_centre_id])->toArray();
+                $associatedSpecialNeeds = $this->ExaminationCentreSpecialNeeds->find('all')->where(['examination_centre_id' => $entity->institution_id])->toArray();
 
                 foreach ($associatedSpecialNeeds as $associatedSpecialNeed) {
                     $associatedSpecialNeedsTemp[] = $associatedSpecialNeed->special_need_type_id;
