@@ -489,10 +489,10 @@ class UserBehavior extends Behavior
         $prefix = explode(",", $prefix);
         $prefix = ($prefix[1] > 0)? $prefix[0]: '';
 
-        list($usec, $sec) = explode(' ', microtime());
-        $srand = $sec + $usec * 1000000;
-	    $currentStamp = time();
-	    $newStamp = $currentStamp + str_pad(mt_rand(0, $srand), 9, '0', STR_PAD_LEFT);
+        list($microSecond, $second) = explode(' ', microtime());
+        $random = $second + $microSecond * 1000000;
+        $currentTimeStamp = time();
+        $newStamp = $currentTimeStamp + str_pad(mt_rand(0, $random), 9, '0', STR_PAD_LEFT);
         return $prefix.$newStamp;
     }
 
