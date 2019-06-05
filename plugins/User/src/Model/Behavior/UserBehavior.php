@@ -491,8 +491,8 @@ class UserBehavior extends Behavior
 
         list($usec, $sec) = explode(' ', microtime());
         $srand = $sec + $usec * 1000000;
-	$currentStamp = time();
-	$newStamp = $currentStamp + str_pad(mt_rand(0, $srand), 9, '0', STR_PAD_LEFT);
+	    $currentStamp = time();
+	    $newStamp = $currentStamp + str_pad(mt_rand(0, $srand), 9, '0', STR_PAD_LEFT);
         return $prefix.$newStamp;
     }
 
