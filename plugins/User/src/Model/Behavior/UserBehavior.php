@@ -489,26 +489,10 @@ class UserBehavior extends Behavior
         $prefix = explode(",", $prefix);
         $prefix = ($prefix[1] > 0)? $prefix[0]: '';
 
-        $latest = $this->_table->find()
-            ->order($this->_table->aliasField('id').' DESC')
-            ->first();
-
-
-        $latestOpenemisNo = $latest->openemis_no;
-        $latestOpenemisNo = 0;
-        if (empty($prefix)) {
-            $latestDbStamp = $latestOpenemisNo;
-        } else {
-            $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
-        }
-
-        $currentStamp = time();
-        if ($latestDbStamp >= $currentStamp) {
-            $newStamp = $latestDbStamp + 1;
-        } else {
-            $newStamp = $currentStamp;
-        }
-
+        list($usec, $sec) = explode(' ', microtime());
+        $srand = $sec + $usec * 1000000;
+	$currentStamp = time();
+	$newStamp = $currentStamp + str_pad(mt_rand(0, $srand), 9, '0', STR_PAD_LEFT);
         return $prefix.$newStamp;
     }
 
