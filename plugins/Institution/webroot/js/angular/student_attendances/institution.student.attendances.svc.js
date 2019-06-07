@@ -43,6 +43,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     var translateText = {
         'original': {
+            'OpenEmisId': 'OpenEmisId',
             'Name': 'Name',
             'Attendance': 'Attendance',
             'ReasonComment': 'Reason / Comment',
@@ -400,10 +401,17 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         } else if (isRtl) {
             direction = 'right';
         }
-
+        columnDefs.push({
+            headerName: translateText.translated.OpenEmisId,
+            field: "user.id",
+            filterParams: filterParams,
+            pinned: direction,
+            menuTabs: menuTabs,
+            filter: "text"
+        });
         columnDefs.push({
             headerName: translateText.translated.Name,
-            field: "user.name_with_id",
+            field: "user.name",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -463,8 +471,16 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         }
 
         columnDefs.push({
+            headerName: translateText.translated.OpenEmisId,
+            field: "user.id",
+            filterParams: filterParams,
+            pinned: direction,
+            menuTabs: menuTabs,
+            filter: "text"
+        });
+        columnDefs.push({
             headerName: translateText.translated.Name,
-            field: "user.name_with_id",
+            field: "user.name",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
