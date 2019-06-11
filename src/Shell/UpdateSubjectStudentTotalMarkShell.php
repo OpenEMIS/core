@@ -163,7 +163,7 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                 .')',
                 $this->InstitutionSubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $this->InstitutionSubjectStudents->aliasField('institution_id') => $insitutionId,
-                //$this->InstitutionSubjectStudents->aliasField('status') => 1 (Column is not exist on the table)
+                //$this->InstitutionSubjectStudents->aliasField('status') => 1 //(Column is not exist on the table)
             ]);
 
         if ($limit != 0) {
