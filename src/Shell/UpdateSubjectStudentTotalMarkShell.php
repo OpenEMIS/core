@@ -75,7 +75,10 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                             try {
                                 $this->InstitutionSubjectStudents->query()
                                     ->update()
-                                    ->set(['total_mark' => $itemResults->calculated_total])
+                                    ->set([
+                                        'total_mark' => $itemResults->calculated_total,
+                                        'modified' => Time::now()
+                                    ])
                                     ->where([
                                         'student_id' => $student->student_id,
                                         'academic_period_id' => $student->academic_period_id,
@@ -160,7 +163,7 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                 .')',
                 $this->InstitutionSubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $this->InstitutionSubjectStudents->aliasField('institution_id') => $insitutionId,
-                $this->InstitutionSubjectStudents->aliasField('status') => 1
+                //$this->InstitutionSubjectStudents->aliasField('status') => 1 (Column is not exist on the table)
             ]);
 
         if ($limit != 0) {
