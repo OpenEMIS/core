@@ -1,3 +1,7 @@
+### [3.43.2] - 2019-06-13
+- Bug fix on Administration > Examinations > Exam Centres
+- Bug fix on Institutions > Students > Promotions Page, to show 'next class' options for graduated students if institution offer the programmes
+
 ### [3.43.1] - 2019-04-01
 - Bug fix on Institution > Students > Export
 
