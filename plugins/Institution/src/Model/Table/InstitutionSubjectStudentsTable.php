@@ -2,7 +2,8 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-
+use Cake\I18n\Date;
+use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -146,9 +147,15 @@ class InstitutionSubjectStudentsTable extends AppTable
 
         if (!empty($totalMark)) {
             // update all records of student regardless of institution
+           
+            $modified_user_id = (isset($event->data()[0]->modified_user_id) && $event->data()[0]->modified_user_id)?$event->data()[0]->modified_user_id:$event->data()[0]->created_user_id;
             $this->query()
                 ->update()
-                ->set(['total_mark' => $totalMark->calculated_total])
+                ->set([
+                    'total_mark' => $totalMark->calculated_total,
+                    'modified_user_id' => $modified_user_id,
+                    'modified' => Time::now()
+                ])
                 ->where([
                     'student_id' => $studentId,
                     'academic_period_id' => $academicPeriodId,
