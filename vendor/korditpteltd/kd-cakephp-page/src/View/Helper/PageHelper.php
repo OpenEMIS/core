@@ -249,6 +249,13 @@ class PageHelper extends Helper
         $fields = $this->_View->get('elements');
 
         foreach ($data as $entity) {
+
+        // POCOR-3519
+	    if (!empty($entity->message)) { 
+	              $entity->message = h($entity->message, ENT_QUOTES);
+	    }
+
+
             $row = [];
             foreach ($fields as $field => $attr) {
                 if (($attr['controlType'] == 'string' || $attr['controlType'] == 'text') && !$this->isRTL($this->getValue($entity, $attr))) {
@@ -475,6 +482,7 @@ EOT;
                     }
                     // fall through
                 case 'textarea':
+                    $value = h($value, ENT_QUOTES);// POCOR-3519
                     $value = nl2br($value);
                     // fall through
                 default:
