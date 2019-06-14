@@ -147,13 +147,12 @@ class InstitutionSubjectStudentsTable extends AppTable
 
         if (!empty($totalMark)) {
             // update all records of student regardless of institution
-           
-            $modified_user_id = (isset($event->data()[0]->modified_user_id) && $event->data()[0]->modified_user_id)?$event->data()[0]->modified_user_id:$event->data()[0]->created_user_id;
+            $modifiedUserId = (isset($event->data()[0]->modified_user_id) && $event->data()[0]->modified_user_id)?$event->data()[0]->modified_user_id:$event->data()[0]->created_user_id;
             $this->query()
                 ->update()
                 ->set([
                     'total_mark' => $totalMark->calculated_total,
-                    'modified_user_id' => $modified_user_id,
+                    'modified_user_id' => $modifiedUserId,
                     'modified' => Time::now()
                 ])
                 ->where([
