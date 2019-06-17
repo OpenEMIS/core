@@ -1635,11 +1635,17 @@ class ReportCardsTable extends AppTable
         }
     }
     
-    // Related to JIRA POCOR-4988
+    //  POCOR-4988
     public function onExcelTemplateInitialiseStudentNextYearClass(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
-
+        
+        $condition =  array_key_exists('student_id', $params) 
+                      && array_key_exists('institution_class_id', $params) 
+                      && array_key_exists('institution_id', $params) 
+                      && array_key_exists('academic_period_id', $params)
+                      && array_key_exists('report_card_education_grade_id', $extra);
+        
+        if ($condition) {
             $studentId = $params['student_id'];
             $institutionId = $params['institution_id'];
             $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
