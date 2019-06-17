@@ -539,7 +539,9 @@ class UsersTable extends AppTable
         if ($latestDbStamp >= $currentStamp) {
             $newStamp = $latestDbStamp + 1;
         } else {
-            $newStamp = $currentStamp;
+            list($microSecond, $second) = explode(' ', microtime());
+            $random = $second + $microSecond * 1000000;
+            $newStamp = time() + str_pad(mt_rand(0, $random), 9, '0', STR_PAD_LEFT);
         }
 
         return $prefix.$newStamp;
