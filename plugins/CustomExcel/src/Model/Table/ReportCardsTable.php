@@ -73,7 +73,8 @@ class ReportCardsTable extends AppTable
                 'GroupAssessmentPeriods',
                 'GroupAssessmentItemResults',
                 'AssessmentTermResults',
-                'NextClassSubjects'
+                'NextClassSubjects',
+                'StudentNextYearClass'
             ]
         ]);
     }
@@ -123,7 +124,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentOutcomeResults'] = 'onExcelTemplateInitialiseStudentOutcomeResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentTermResults'] = 'onExcelTemplateInitialiseAssessmentTermResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseNextClassSubjects'] = 'onExcelTemplateInitialiseNextClassSubjects';
-
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentNextYearClass'] = 'onExcelTemplateInitialiseStudentNextYearClass';
         return $events;
     }
 
@@ -1631,6 +1632,31 @@ class ReportCardsTable extends AppTable
                 }
 
                 return null;
+        }
+    }
+    
+    // Related to JIRA POCOR-4988
+    public function onExcelTemplateInitialiseStudentNextYearClass(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+
+            $studentId = $params['student_id'];
+            $institutionId = $params['institution_id'];
+            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $institutionClassStudentsEntities = $InstitutionClassStudents->find()
+                ->select(['InstitutionClasses.name'])
+                ->where([
+                    $InstitutionClassStudents->aliasField('student_id') => $studentId,
+                    $InstitutionClassStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
+                ])
+                ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
+                    'InstitutionClasses.id = '.$InstitutionClassStudents->aliasField('next_institution_class_id')
+                ])                
+                ->hydrate(false)
+                ->first();               
+            $result['name'] = $institutionClassStudentsEntities['InstitutionClasses']['name'];
+            return $result;
         }
     }
 }
