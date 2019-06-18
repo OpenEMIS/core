@@ -602,8 +602,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                   die;
                }
                 
-                
-                
                 $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->Alert->warning('ReportCardStatuses.generateAll');
@@ -728,7 +726,6 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function email(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-       // $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id'], $params['academic_period_id']);
         $this->addReportCardsToEmailProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
         $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
         $this->Alert->warning('ReportCardStatuses.email');
