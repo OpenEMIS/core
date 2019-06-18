@@ -6,15 +6,15 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Query;
 
-class SpecialNeedsTypesTable extends ControllerActionTable
+class SpecialNeedsAssessmentsTypesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('special_need_types');
+        $this->table('special_need_assessments_types');
         parent::initialize($config);
         
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'foreignKey' => 'special_need_type_id']);
-        //$this->hasMany('SpecialNeedsAssessments', ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'special_need_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SpecialNeedsAssessments', ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'special_need_assessment_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('SpecialNeedsReferrals', ['className' => 'SpecialNeeds.SpecialNeedsReferrals', 'foreignKey' => 'reason_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('FieldOption.FieldOption');
