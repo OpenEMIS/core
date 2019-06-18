@@ -220,14 +220,16 @@ class InstitutionSubjectStaffTable extends AppTable
     {
         $subjectId = $options['subject_id'];
         $academicPeriodId = $options['academic_period_id'];
+        $institutionId = $options['institution_id']; // current institution POCOR-4981
         $userId = $options['user']['id']; // current user
         if ($options['user']['super_admin'] == 0) { // if he is not super admin
             $query
                 ->find('bySecurityAccess')
-                ->matching('InstitutionSubjects', function ($q) use ($subjectId, $academicPeriodId) {
+                ->matching('InstitutionSubjects', function ($q) use ($subjectId, $academicPeriodId, $institutionId) {
                     return $q->where([
                         'InstitutionSubjects.education_subject_id' => $subjectId,
-                        'InstitutionSubjects.academic_period_id' => $academicPeriodId
+                        'InstitutionSubjects.academic_period_id' => $academicPeriodId,
+                        'InstitutionSubjects.institution_id' => $institutionId // POCOR-4981
                     ]);
                 })
                 ->where([
@@ -237,6 +239,15 @@ class InstitutionSubjectStaffTable extends AppTable
 
             $query
                 ->find('bySecurityRoleAccess');
+        }
+        
+        // POCOR-4981
+        if(
+            isset($institutionId) 
+            && $institutionId > 0 
+            && $options['user']['super_admin'] == 1) // if he is super admin
+        {
+            $query->where([$this->aliasField('institution_id')=>$institutionId]);
         }
     }
 
