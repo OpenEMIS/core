@@ -520,20 +520,20 @@ class UsersTable extends AppTable
         $prefix = explode(",", $prefix);
         $prefix = ($prefix[1] > 0)? $prefix[0]: '';
 
-        $latest = $this->find()
-            ->order($this->aliasField('id').' DESC')
-            ->first();
-
-        if (is_array($latest)) {
-            $latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
-        } else {
-            $latestOpenemisNo = $latest->openemis_no;
-        }
-        if (empty($prefix)) {
-            $latestDbStamp = $latestOpenemisNo;
-        } else {
-            $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
-        }
+//        $latest = $this->find()
+//            ->order($this->aliasField('id').' DESC')
+//            ->first();
+//
+//        if (is_array($latest)) {
+//            $latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
+//        } else {
+//            $latestOpenemisNo = $latest->openemis_no;
+//        }
+//        if (empty($prefix)) {
+//            $latestDbStamp = $latestOpenemisNo;
+//        } else {
+//            $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
+//        }
 
         list($microSecond, $second) = explode(' ', microtime());
         $random = $second + $microSecond * 1000000;
