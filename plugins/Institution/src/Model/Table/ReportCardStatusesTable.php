@@ -121,11 +121,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
 
             // Publish button, status must be generated
-            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'publish']) && $entity->has('report_card_status') 
-                    && ( $entity->report_card_status == self::GENERATED 
-                         || $entity->report_card_status == '12' 
-                       )
-                ) {
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'publish']) && $entity->has('report_card_status') && $entity->report_card_status == self::GENERATED) {
                 $publishUrl = $this->setQueryString($this->url('publish'), $params);
                 $buttons['publish'] = [
                     'label' => '<i class="fa kd-publish"></i>'.__('Publish'),
@@ -135,12 +131,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
 
             // Unpublish button, status must be published
-            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'unpublish']) 
-                    && $entity->has('report_card_status') 
-                    && ( $entity->report_card_status == self::PUBLISHED 
-                          || $entity->report_card_status == '16'
-                        )
-                    ) {
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'unpublish']) && $entity->has('report_card_status') && $entity->report_card_status == self::PUBLISHED) {
                 $unpublishUrl = $this->setQueryString($this->url('unpublish'), $params);
                 $buttons['unpublish'] = [
                     'label' => '<i class="fa kd-unpublish"></i>'.__('Unpublish'),
@@ -150,13 +141,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
 
             // Single email button, status must be published
-            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'email']) 
-                    && $entity->has('report_card_status')
-                    && ( $entity->report_card_status == self::PUBLISHED 
-                            || $entity->report_card_status == '16' 
-                        )
-               )
-               {
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'email']) && $entity->has('report_card_status') && $entity->report_card_status == self::PUBLISHED) {
                 if (empty($entity->email_status_id) || ($entity->has('email_status_id') && $entity->email_status_id != $this->ReportCardEmailProcesses::SENDING)) {
                     $emailUrl = $this->setQueryString($this->url('email'), $params);
                     $buttons['email'] = [
