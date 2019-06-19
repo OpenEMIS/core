@@ -597,7 +597,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id']);
                 
                if ($checkReportCard) {
-                   $this->Alert->warning('ReportCardStatuses.checkReportCardTemplateDate');
+                   $this->Alert->warning('ReportCardStatuses.checkReportCardTemplatePeriod');
                   return $this->controller->redirect($this->url('index'));
                   die;
                }
