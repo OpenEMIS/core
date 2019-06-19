@@ -122,7 +122,8 @@ class StudentOutcomesTable extends ControllerActionTable
         $outcomeTemplateId = $settings['outcome_template_id'];
         $educationGradeId = $settings['education_grade_id'];
         $criteriaList =  $settings['criteria_list_entities'];
-
+        $student_status_array = ['CURRENT','TRANSFERRED','WITHDRAWN','GRADUATED','PROMOTED','REPEATED'];
+        
         $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionOutcomeResultsTable = TableRegistry::get('Institution.InstitutionOutcomeResults');
@@ -272,7 +273,7 @@ class StudentOutcomesTable extends ControllerActionTable
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('id') => $classId,
-                'StudentStatuses.code' => 'CURRENT'
+                'StudentStatuses.code IN' => $student_status_array
             ])
             ->formatResults(function(ResultSetInterface $results) use ($allOutcomeResults, $studentEntityList) {
                 return $results->map(function ($row) use ($allOutcomeResults, $studentEntityList) {
