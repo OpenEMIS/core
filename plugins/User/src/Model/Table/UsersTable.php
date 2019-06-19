@@ -535,14 +535,9 @@ class UsersTable extends AppTable
             $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
         }
 
-        $currentStamp = time();
-        if ($latestDbStamp >= $currentStamp) {
-            $newStamp = $latestDbStamp + 1;
-        } else {
-            list($microSecond, $second) = explode(' ', microtime());
-            $random = $second + $microSecond * 1000000;
-            $newStamp = time() + str_pad(mt_rand(0, $random), 9, '0', STR_PAD_LEFT);
-        }
+        list($microSecond, $second) = explode(' ', microtime());
+        $random = $second + $microSecond * 1000000;
+        $newStamp = time() + str_pad(mt_rand(0, $random), 9, '0', STR_PAD_LEFT);
 
         return $prefix.$newStamp;
     }
