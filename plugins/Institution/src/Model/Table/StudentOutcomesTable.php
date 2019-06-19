@@ -122,8 +122,8 @@ class StudentOutcomesTable extends ControllerActionTable
         $outcomeTemplateId = $settings['outcome_template_id'];
         $educationGradeId = $settings['education_grade_id'];
         $criteriaList =  $settings['criteria_list_entities'];
-        $student_status_array = ['CURRENT','TRANSFERRED','WITHDRAWN','GRADUATED','PROMOTED','REPEATED'];
-        
+        $student_status_array = ['CURRENT','PROMOTED'];
+
         $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionOutcomeResultsTable = TableRegistry::get('Institution.InstitutionOutcomeResults');
