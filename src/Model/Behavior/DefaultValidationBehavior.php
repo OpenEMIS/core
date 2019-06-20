@@ -30,6 +30,11 @@ class DefaultValidationBehavior extends Behavior {
 	{
 		$this->importValidationFailed = true;
 	}
+        
+        public function setImportValidationPassed()
+	{
+		$this->importValidationFailed = false;
+	}
 
 	private function _attachDefaultValidation($validator) {
 		$schema = $this->_table->schema();
