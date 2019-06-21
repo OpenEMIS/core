@@ -236,12 +236,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function changeNationality() {
         var nationalityId = StudentController.Student.nationality_id;
         var options = StudentController.StudentNationalitiesOptions;
+        var identityOptions = StudentController.StudentIdentitiesOptions;
         for(var i = 0; i < options.length; i++) {
             if (options[i].id == nationalityId) {
-                StudentController.Student.identity_type_id = options[i].identity_type_id;
+                if(options[i].identity_type_id == null){
+                    StudentController.Student.identity_type_id = identityOptions['0'].id;
+                    StudentController.Student.identity_type_name = identityOptions['0'].name;
+                }else{
+                    StudentController.Student.identity_type_id = options[i].identity_type_id;                    
+                    StudentController.Student.identity_type_name = options[i].identity_type.name;   
+                }    
                 StudentController.Student.nationality_name = options[i].name;
-                StudentController.Student.identity_type_name = options[i].identity_type.name;
-                break;
+                break; 
             }
         }
     }
