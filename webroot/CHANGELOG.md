@@ -1,4 +1,4 @@
-### [3.43.2] - 2019-06-13
+### [3.43.3] - 2019-06-21
 - Bug fix on bulk users import in Directories > Import page
 - Bug fix on placeholder for student's next class in Institution > Report Cards
 
