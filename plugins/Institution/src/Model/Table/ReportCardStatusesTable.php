@@ -588,8 +588,20 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id']
                 ])
                 ->count();
+       
+            
+            
 
             if (!$inProgress) {
+                
+               $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id']);
+                
+               if ($checkReportCard) {
+                   $this->Alert->warning('ReportCardStatuses.checkReportCardTemplatePeriod');
+                  return $this->controller->redirect($this->url('index'));
+                  die;
+               }
+                
                 $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->Alert->warning('ReportCardStatuses.generateAll');
@@ -714,7 +726,6 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function email(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-
         $this->addReportCardsToEmailProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
         $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
         $this->Alert->warning('ReportCardStatuses.email');
@@ -987,5 +998,69 @@ class ReportCardStatusesTable extends ControllerActionTable
         fclose($phpResourceFile);
 
         return $file;
+    }
+    
+    private function checkReportCardsToBeProcess($institutionClassId, $reportCardId, $academicPeriodId  = null)
+    {
+        $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $where = [];
+        $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
+        $classStudents = $classStudentsTable->find()
+            ->select([
+                $classStudentsTable->aliasField('education_grade_id'),
+                $classStudentsTable->aliasField('academic_period_id')
+            ])
+            ->where($where)
+            ->first();  
+        
+        if (empty($classStudents)) {
+            return false;
+        }   
+        
+        $condition = [];
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $entityAssessment = $Assessments->find()
+                ->where([
+                    $Assessments->aliasField('academic_period_id') => $classStudents->academic_period_id,
+                    $Assessments->aliasField('education_grade_id') => $classStudents->education_grade_id
+                ])
+                ->first();
+
+        if (!empty($entityAssessment)) {
+            $condition['assessment_id'] = $entityAssessment->id;
+        }
+        
+        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
+        $entityReportCards = $ReportCards->get($reportCardId);
+        
+        $condition['report_card_start_date'] = $entityReportCards->start_date;
+        $condition['report_card_end_date'] = $entityReportCards->end_date;
+        
+        if ( array_key_exists('assessment_id', $condition)
+            && array_key_exists('report_card_start_date', $condition) 
+            && array_key_exists('report_card_end_date', $condition)
+           ) {
+            
+            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $entityAssessmentPeriods = $AssessmentPeriods->find()
+                ->where([
+                    $AssessmentPeriods->aliasField('assessment_id') => $condition['assessment_id'],
+                    $AssessmentPeriods->aliasField('start_date >= ') => $condition['report_card_start_date'],
+                    $AssessmentPeriods->aliasField('end_date <= ') => $condition['report_card_end_date']
+                ])
+                ->order([$AssessmentPeriods->aliasField('start_date')]);
+
+            if (($entityAssessmentPeriods->count() > 0)) {
+                
+                 return false;
+            } else {
+                
+                 return true;
+            }
+            
+        }
+        
+         return false;
+        
     }
 }
