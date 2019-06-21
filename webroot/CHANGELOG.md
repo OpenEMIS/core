@@ -1,4 +1,8 @@
 ### [3.43.2] - 2019-06-13
+- Bug fix on bulk users import in Directories > Import page
+- Bug fix on placeholder for student's next class in Institution > Report Cards
+
+### [3.43.2] - 2019-06-13
 - Bug fix on Administration > Examinations > Exam Centres
 - Bug fix on Institutions > Students > Promotions Page, to show 'next class' options for graduated students if institution offer the programmes
 
