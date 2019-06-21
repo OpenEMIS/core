@@ -12,7 +12,7 @@ class ControllerActionTable extends AppTable {
 
 		$this->addBehavior('OpenEmis.OpenEmis');
 		$this->addBehavior('ControllerAction.ControllerAction', [
-			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
+			'fields' => ['excludes' => ['modified_user_id', 'created_user_id', 'type']]
 		]);
 	}
 

@@ -18,7 +18,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->table('user_special_needs_assessments');
         parent::initialize($config);
 
-        $this->belongsTo('SpecialNeedAssessmentsTypes', ['className' => 'SpecialNeeds.SpecialNeedAssessmentsTypes', 'foreignKey' => 'special_need_assessment_type_id']);
+        $this->belongsTo('SpecialNeedsTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'foreignKey' => 'special_need_type_id', 'conditions' => array('SpecialNeedsTypes.type' => 2, )]);
         $this->belongsTo('SpecialNeedDifficulties', ['className' => 'SpecialNeeds.SpecialNeedsDifficulties', 'foreignKey' => 'special_need_difficulty_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
 
@@ -55,7 +55,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
-            case 'special_need_assessment_type_id':
+            case 'special_need_type_id':
                 return __('Type');
             case 'special_need_difficulty_id':
                 return __('Diffculty');
@@ -70,7 +70,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
         $this->field('date', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
-        $this->setFieldOrder(['special_need_assessment_type_id', 'special_need_difficulty_id']);
+        $this->setFieldOrder(['special_need_type_id', 'special_need_difficulty_id']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -134,12 +134,12 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     private function setupFields($entity = null)
     {
         $this->field('date');
-        $this->field('special_need_assessment_type_id', ['type' => 'select']);
+        $this->field('special_need_type_id', ['type' => 'select']);
         $this->field('special_need_difficulty_id', ['type' => 'select']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('comment', ['type' => 'text']);
 
-        $this->setFieldOrder(['date', 'special_need_assessment_type_id', 'special_need_difficulty_id', 'file_name', 'file_content', 'comment']);
+        $this->setFieldOrder(['date', 'special_need_type_id', 'special_need_difficulty_id', 'file_name', 'file_content', 'comment']);
     }
 }

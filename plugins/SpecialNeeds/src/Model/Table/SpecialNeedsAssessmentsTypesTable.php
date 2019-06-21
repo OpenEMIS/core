@@ -5,12 +5,17 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\Event\Event;
 
 class SpecialNeedsAssessmentsTypesTable extends ControllerActionTable
 {
+    
+     
     public function initialize(array $config)
     {
-        $this->table('special_need_assessments_types');
+        $this->table('special_need_types');    
+
         parent::initialize($config);
         
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'foreignKey' => 'special_need_type_id']);
@@ -24,6 +29,7 @@ class SpecialNeedsAssessmentsTypesTable extends ControllerActionTable
         ]);
     }
 
+    
     public function getVisibleNeedTypes(array $options = [])
     {
         $query = $this
@@ -33,4 +39,14 @@ class SpecialNeedsAssessmentsTypesTable extends ControllerActionTable
             ->toArray();
         return $query;
     }
+
+    public function beforeFind(Event $event, Query $query){
+       return $query->where(['type'=>2]);
+    }
+
+    public function beforeAction() {
+        $this->field('type', ['type' => 'hidden', 'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true], 'value' => 2]);
+    }
+
+    
 }
