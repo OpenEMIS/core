@@ -3,6 +3,7 @@ namespace App\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
+use ArrayObject;
 
 class NoticesTable extends AppTable
 {
@@ -13,4 +14,5 @@ class NoticesTable extends AppTable
             'Dashboard' => ['index']
         ]);
     }
+    
 }
