@@ -18,7 +18,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->table('user_special_needs_assessments');
         parent::initialize($config);
 
-        $this->belongsTo('SpecialNeedTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes']);
+        $this->belongsTo('SpecialNeedsTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'foreignKey' => 'special_need_type_id', 'conditions' => array('SpecialNeedsTypes.type' => 2, )]);
         $this->belongsTo('SpecialNeedDifficulties', ['className' => 'SpecialNeeds.SpecialNeedsDifficulties', 'foreignKey' => 'special_need_difficulty_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
 
