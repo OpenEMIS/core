@@ -14,7 +14,7 @@ class POCOR4976 extends AbstractMigration
         $this->execute('INSERT INTO `z_4976_special_need_types` SELECT * FROM `special_need_types`');
 
         // alter
-        $this->execute('ALTER TABLE `special_need_types` ADD `type` TINYINT NOT NULL DEFAULT 1 COMMENT '1- Special need type , 2- special need assessment type' AFTER `international_code`');
+        $this->execute("ALTER TABLE `special_need_types` ADD `type` TINYINT NOT NULL DEFAULT 1 COMMENT '1- Special need type , 2- special need assessment type' AFTER `international_code`");
     }
 
     public function down()
