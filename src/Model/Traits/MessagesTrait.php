@@ -755,6 +755,7 @@ trait MessagesTrait
             'inProgress' => 'There is already a process running for this Report Card',
             'generate' => 'The Report Card will be generated in the background',
             'generateAll' => 'All Report Cards will be generated in the background',
+            'checkReportCardTemplatePeriod' => 'The Report Card period is not active. Please contact the System Administrator.',
             'publish' => 'The Report Card has been successfully published',
             'publishAll' => 'All generated Report Cards have been published successfully',
             'unpublish' => 'The Report Card has been successfully unpublished',
