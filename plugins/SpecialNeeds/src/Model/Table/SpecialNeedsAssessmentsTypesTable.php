@@ -8,11 +8,13 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
-class SpecialNeedsTypesTable extends ControllerActionTable
+class SpecialNeedsAssessmentsTypesTable extends ControllerActionTable
 {
+    
+     
     public function initialize(array $config)
     {
-        $this->table('special_need_types');
+        $this->table('special_need_types');    
 
         parent::initialize($config);
         
@@ -27,6 +29,7 @@ class SpecialNeedsTypesTable extends ControllerActionTable
         ]);
     }
 
+    
     public function getVisibleNeedTypes(array $options = [])
     {
         $query = $this
@@ -38,12 +41,12 @@ class SpecialNeedsTypesTable extends ControllerActionTable
     }
 
     public function beforeFind(Event $event, Query $query){
-        if(!strpos($_SERVER['REQUEST_URI'],'SpecialNeedsAssessments')){
-       return $query->where(['type'=>1]);
-        }
+       return $query->where(['type'=>2]);
     }
 
-    public function beforeAction(){
-         $this->field('type', ['type' => 'hidden', 'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true], 'value' => 1]);
+    public function beforeAction() {
+        $this->field('type', ['type' => 'hidden', 'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true], 'value' => 2]);
     }
+
+    
 }
