@@ -21,7 +21,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Referrers', ['className' => 'Security.Users', 'foreignKey' => 'referrer_id']);
         $this->belongsTo('SpecialNeedsReferrerTypes', ['className' => 'SpecialNeeds.SpecialNeedsReferrerTypes']);
-        $this->belongsTo('SpecialNeedsTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'foreignKey' => 'reason_type_id']);
+        $this->belongsTo('SpecialNeedsTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'foreignKey' => 'reason_type_id', 'conditions' => array('SpecialNeedsTypes.type' => 1)]);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('OpenEmis.Autocomplete');
