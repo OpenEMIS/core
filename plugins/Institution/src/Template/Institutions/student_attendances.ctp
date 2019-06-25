@@ -172,11 +172,13 @@ $panelHeader = $this->fetch('panelHeader');
     .rtl #institution-student-attendances-table .ag-cell textarea#comment {
         font-size: 14px;
     }
+
+    .mobile-split-btn button.btn-default{z-index:9999!important;}
 </style>
 
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;" float-btn="false">
+        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;" float-btn="true">
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">
                     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
