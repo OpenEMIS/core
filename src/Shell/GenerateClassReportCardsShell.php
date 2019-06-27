@@ -10,6 +10,7 @@ use Cake\Console\Shell;
 
 class GenerateClassReportCardsShell extends Shell
 {
+   
     private $sleepTime = 5;
 
     public function initialize()
@@ -31,6 +32,7 @@ class GenerateClassReportCardsShell extends Shell
             $exit = false;
             
             while (!$exit) {
+                sleep($this->sleepTime);
                 $recordToProcess = $this->ReportCardProcesses->find()
                     ->select([
                         $this->ReportCardProcesses->aliasField('report_card_id'),
