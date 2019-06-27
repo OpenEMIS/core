@@ -589,11 +589,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ])
                 ->count();
        
-            
-            
 
             if (!$inProgress) {
-                
                $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id']);
                 
                if ($checkReportCard) {
@@ -604,11 +601,12 @@ class ReportCardStatusesTable extends ControllerActionTable
                 
                 $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
-                $this->triggerGenerateClassReportCard($params['institution_id'], $params['institution_class_id']);
                 $this->Alert->warning('ReportCardStatuses.generateAll');
+                $this->triggerGenerateClassReportCard($params['institution_id'], $params['institution_class_id']);
             } else {
                 $this->Alert->warning('ReportCardStatuses.inProgress');
             }
+             
         } else {
             $this->Alert->warning('ReportCardStatuses.noTemplate');
         }
