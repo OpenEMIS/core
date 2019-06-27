@@ -1153,7 +1153,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
-        return;
+        //return; By Anand POCOR-4998
         // The last complete step is now transfer staff, add transfer staff logic function call here
         StaffController.postTransferForm();
     });
