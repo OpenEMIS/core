@@ -222,6 +222,7 @@ class InstitutionSubjectStaffTable extends AppTable
         $academicPeriodId = $options['academic_period_id'];
         $institutionId = $options['institution_id']; // current institution POCOR-4981
         $userId = $options['user']['id']; // current user
+        
         if ($options['user']['super_admin'] == 0) { // if he is not super admin
             $allSubjectPermission = $this->getRoleEditPermissionAccessForAllSubjects($userId, $institutionId); //POCOR-4983
             $query
@@ -231,15 +232,13 @@ class InstitutionSubjectStaffTable extends AppTable
                     $academicPeriodId, 
                     $institutionId, 
                     $allSubjectPermission) {
-                    if($allSubjectPermission)
-                    {
+                    
+                    if($allSubjectPermission) {
                         return $q->where([
                             'InstitutionSubjects.academic_period_id' => $academicPeriodId,
                             'InstitutionSubjects.institution_id' => $institutionId // POCOR-4981
                         ]);
-                    }
-                    else
-                    {
+                    } else {
                         return $q->where([
                             'InstitutionSubjects.education_subject_id' => $subjectId,
                             'InstitutionSubjects.academic_period_id' => $academicPeriodId,
@@ -258,12 +257,11 @@ class InstitutionSubjectStaffTable extends AppTable
         }
         
         // POCOR-4981
-        if(
-            isset($institutionId) 
+        if( isset($institutionId) 
             && $institutionId > 0 
             && $options['user']['super_admin'] == 1) // if he is super admin
         {
-            $query->where([$this->aliasField('institution_id')=>$institutionId]);
+            $query->where([$this->aliasField('institution_id') => $institutionId]);
         }
     }
 
@@ -429,13 +427,13 @@ class InstitutionSubjectStaffTable extends AppTable
      * JIRA ISSUE: POCOR-4983
      * Purpose: Any role have permission to edit all subjects marks of the assessment
      * Date: 26 June 2019
-     * Created By: Anand Singh
     */
     
     public function getRoleEditPermissionAccessForAllSubjects($userId, $institutionId)
     {
         $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
         $userAccessRoles = implode(', ', $roles);
+        
         $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
                 ->innerJoin(['SecurityFunctions' => 'security_functions'], [
                     [
@@ -450,7 +448,6 @@ class InstitutionSubjectStaffTable extends AppTable
                                         "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
                                     ]
                               ],
-                    
                     'SecurityRoleFunctions._view' => 1,
                     'SecurityRoleFunctions._edit' => 1
                 ])
