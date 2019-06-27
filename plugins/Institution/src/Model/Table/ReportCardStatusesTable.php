@@ -604,6 +604,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 
                 $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
+                $this->triggerGenerateClassReportCard($params['institution_id'], $params['institution_class_id']);
                 $this->Alert->warning('ReportCardStatuses.generateAll');
             } else {
                 $this->Alert->warning('ReportCardStatuses.inProgress');
@@ -877,9 +878,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $passArray['student_id'] = $studentId;
             }
             $params = json_encode($passArray);
-
             $args = $processModel . " " . $params;
-
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards '.$args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
@@ -891,6 +890,23 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
         }
     }
+    
+    
+    private function triggerGenerateClassReportCard($institutionId,$institutionClassId)
+    {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateClassReportCards '.$institutionId . " " . $institutionClassId;
+        $logs = ROOT . DS . 'logs' . DS . 'GenerateClassReportCards.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        try {
+            $pid = exec($shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when generate all report cards for class : '. $ex);
+        }
+        
+        return ;
+        
+    }
+    
 
     private function addReportCardsToEmailProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
