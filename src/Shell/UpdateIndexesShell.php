@@ -37,12 +37,11 @@ class UpdateIndexesShell extends Shell
 
                 // for cli-debug.log to see still updating
                 Log::write('debug', 'Criteria: '. $key);
-                // end debug
-
+                // end debug                
                 $this->autoUpdateRisks($key, $criteriaData['model'], $institutionId, $userId, $academicPeriodId);
             }
         }
-
+        
         // update the generated_by and generated_on in indexes table
         $this->InstitutionRisks->updateAll(
             [
@@ -83,8 +82,8 @@ class UpdateIndexesShell extends Shell
 
                 $condition = [
                     $CriteriaModel->aliasField('institution_id') => $institutionId,
-                    $CriteriaModel->aliasField('start_date') . ' >= ' => $academicPeriodStartDate,
-                    $CriteriaModel->aliasField('end_date') . ' <= ' => $academicPeriodEndDate,
+                    $CriteriaModel->aliasField('date') . ' >= ' => $academicPeriodStartDate,
+                    $CriteriaModel->aliasField('date') . ' <= ' => $academicPeriodEndDate,
                     $CriteriaModel->aliasField('absence_type_id') => 1 // excused
                 ];
                 break;
@@ -96,8 +95,8 @@ class UpdateIndexesShell extends Shell
 
                 $condition = [
                     $CriteriaModel->aliasField('institution_id') => $institutionId,
-                    $CriteriaModel->aliasField('start_date') . ' >= ' => $academicPeriodStartDate,
-                    $CriteriaModel->aliasField('end_date') . ' <= ' => $academicPeriodEndDate,
+                    $CriteriaModel->aliasField('date') . ' >= ' => $academicPeriodStartDate,
+                    $CriteriaModel->aliasField('date') . ' <= ' => $academicPeriodEndDate,
                     $CriteriaModel->aliasField('absence_type_id') => 2 // unexcused
                 ];
                 break;
@@ -109,8 +108,8 @@ class UpdateIndexesShell extends Shell
 
                 $condition = [
                     $CriteriaModel->aliasField('institution_id') => $institutionId,
-                    $CriteriaModel->aliasField('start_date') . ' >= ' => $academicPeriodStartDate,
-                    $CriteriaModel->aliasField('end_date') . ' <= ' => $academicPeriodEndDate,
+                    $CriteriaModel->aliasField('date') . ' >= ' => $academicPeriodStartDate,
+                    $CriteriaModel->aliasField('date') . ' <= ' => $academicPeriodEndDate,
                     $CriteriaModel->aliasField('absence_type_id') => 3 // late
                 ];
                 break;
@@ -126,11 +125,11 @@ class UpdateIndexesShell extends Shell
                 ];
                 break;
         }
-
+        
         $criteriaModelResults = $CriteriaModel->find()
             ->where([$condition])
             ->all();
-
+        
         foreach ($criteriaModelResults as $criteriaModelEntity) {
             $criteriaModelEntityId = $criteriaModelEntity->id;
 
