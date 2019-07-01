@@ -115,7 +115,8 @@ class RemoveBehavior extends Behavior
             ]);
 
             // force delete fields for super admin
-            if ($this->showForceDeleteFields) {
+            // POCOR-4999
+            /*if ($this->showForceDeleteFields) {
                 $model->field('force_delete', [
                     'type' => 'select',
                     'options' => [1 => __('Yes'), 0 => __('No')],
@@ -127,7 +128,7 @@ class RemoveBehavior extends Behavior
                 $model->field('password', ['type' => $passwordType]);
 
                 $model->setFieldOrder(['to_be_deleted', 'associated_records', 'force_delete', 'password']);
-            }
+            }*/
         }
     }
 
