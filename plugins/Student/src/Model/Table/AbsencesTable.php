@@ -5,6 +5,10 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
+use Cake\ORM\Query; 
+use Cake\ORM\TableRegistry;
+
+use App\Model\Table\ControllerActionTable;
 
 class AbsencesTable extends AppTable
 {
@@ -20,6 +24,7 @@ class AbsencesTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' => 'absence_type_id']);
         $this->belongsTo('InstitutionStudentAbsenceDays', ['className' => 'Institution.InstitutionStudentAbsenceDays', 'foreignKey' => 'institution_student_absence_day_id']);
+       //$this->belongsTo('InstitutionStudentAbsenceDetails', ['className' => 'Institution.InstitutionStudentAbsenceDetails']);
     }
 
     public function beforeAction($event)
@@ -29,24 +34,28 @@ class AbsencesTable extends AppTable
     }
 
     public function indexBeforeAction(Event $event)
-    {
-        $query = $this->request->query;
+    {  
+       // $query = $this->request->query;
+
 
         // $this->fields['end_date']['visible'] = false;
         // $this->fields['full_day']['visible'] = false;
         // $this->fields['start_time']['visible'] = false;
         // $this->fields['end_time']['visible'] = false;
-        // $this->fields['comment']['visible'] = false;
+        $this->fields['institution_id']['visible'] = false;
+        //$this->fields['comment']['visible'] = true;
         $this->fields['student_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
 
         $this->ControllerAction->addField('days');
+        $this->ControllerAction->addField('comment');
         // $this->ControllerAction->addField('time');
 
         $order = 0;
         // $this->ControllerAction->setFieldOrder('start_date', $order++);
         $this->ControllerAction->setFieldOrder('date', $order++);
         $this->ControllerAction->setFieldOrder('days', $order++);
+        //$this->ControllerAction->setFieldOrder('comment', $order++);
         // $this->ControllerAction->setFieldOrder('time', $order++);
         // $this->ControllerAction->setFieldOrder('student_absence_reason_id', $order++);
     }
@@ -88,5 +97,23 @@ class AbsencesTable extends AppTable
     public function indexAfterAction(Event $event, $data)
     {
         $this->setupTabElements();
+    }
+
+    public function beforeFind(Event $event, Query $query, $options, $primary)
+    {
+        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
+            $query
+                ->find('all')
+                ->autoFields(true)
+                ->select([
+                    'comment' => $InstitutionStudentAbsenceDetails->aliasField('comment')
+                ])
+                ->leftJoin(
+                [$InstitutionStudentAbsenceDetails->alias() => $InstitutionStudentAbsenceDetails->table()],
+                [
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $InstitutionStudentAbsenceDetails->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
+                ]
+            );
     }
 }
