@@ -90,7 +90,6 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        //$InstitutionsTable = TableRegistry::get('Institution.Institutions');
        
         if ($academicPeriodId !=0 ) {
             $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
