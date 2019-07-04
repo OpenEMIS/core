@@ -5,13 +5,9 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-//use Cake\Network\Request;
-//use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Hash;
-
-//use App\Model\Traits\OptionsTrait;
 
 
 class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
@@ -94,7 +90,6 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        //$InstitutionsTable = TableRegistry::get('Institution.Institutions');
        
         if ($academicPeriodId !=0 ) {
             $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
