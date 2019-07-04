@@ -5,13 +5,13 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
-use Cake\Datasource\ResultSetInterface;
+//use Cake\Network\Request;
+//use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Hash;
 
-use App\Model\Traits\OptionsTrait;
+//use App\Model\Traits\OptionsTrait;
 
 
 class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
@@ -51,7 +51,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
                 $SpecialNeedsAssessments->aliasField('security_user_id'),
                 'special_need_name' => $SpecialNeedTypes->aliasField('name'),
                 $SpecialNeedsAssessments->aliasField('comment'),
-                'date_of_assessment'=>$SpecialNeedsAssessments->aliasField('date'),
+                'date_of_assessment' => $SpecialNeedsAssessments->aliasField('date'),
                 'special_need_difficulty_id' => $SpecialNeedsAssessments->aliasField('special_need_difficulty_id'),
                 'special_need_difficulty_name' => $SpecialNeedDifficulties->aliasField('name'),
             ])
@@ -87,7 +87,6 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
     {
         
         $requestData = json_decode($settings['process']['params']);
-        //$specialNeedsNames = $settings['special_needs_name'];
         $academicPeriodId = $requestData->academic_period_id;
         $userId = $requestData->user_id;
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
@@ -95,7 +94,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        //$InstitutionsTable = TableRegistry::get('Institution.Institutions');
        
         if ($academicPeriodId !=0 ) {
             $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
@@ -113,7 +112,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('start_date'),
                 $this->aliasField('end_date'),
-                'class_name'=>$Class->aliasField('name'),
+                'class_name' => $Class->aliasField('name'),
             ])
             ->contain([
                 'Users' => [
@@ -331,7 +330,6 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         $identity = $IdentityType->getDefaultEntity();
 
         $requestData = json_decode($settings['process']['params']);
-        $statusId = $requestData->status;
         
         $userId = $requestData->user_id;
         $userSuperAdmin = $requestData->super_admin;
