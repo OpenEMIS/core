@@ -24,7 +24,7 @@ class AbsencesTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' => 'absence_type_id']);
         $this->belongsTo('InstitutionStudentAbsenceDays', ['className' => 'Institution.InstitutionStudentAbsenceDays', 'foreignKey' => 'institution_student_absence_day_id']);
-       //$this->belongsTo('InstitutionStudentAbsenceDetails', ['className' => 'Institution.InstitutionStudentAbsenceDetails']);
+
     }
 
     public function beforeAction($event)
@@ -55,7 +55,6 @@ class AbsencesTable extends AppTable
         // $this->ControllerAction->setFieldOrder('start_date', $order++);
         $this->ControllerAction->setFieldOrder('date', $order++);
         $this->ControllerAction->setFieldOrder('days', $order++);
-        //$this->ControllerAction->setFieldOrder('comment', $order++);
         // $this->ControllerAction->setFieldOrder('time', $order++);
         // $this->ControllerAction->setFieldOrder('student_absence_reason_id', $order++);
     }
@@ -99,7 +98,7 @@ class AbsencesTable extends AppTable
         $this->setupTabElements();
     }
 
-    public function beforeFind(Event $event, Query $query, $options, $primary)
+    public function beforeFind( Event $event, Query $query )
     {
         $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
             $query
@@ -112,8 +111,12 @@ class AbsencesTable extends AppTable
                 [$InstitutionStudentAbsenceDetails->alias() => $InstitutionStudentAbsenceDetails->table()],
                 [
                     $InstitutionStudentAbsenceDetails->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $InstitutionStudentAbsenceDetails->aliasField('date = ') . $this->aliasField('date'),
+                    $InstitutionStudentAbsenceDetails->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $InstitutionStudentAbsenceDetails->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $InstitutionStudentAbsenceDetails->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
                 ]
             );
     }
+    
 }
