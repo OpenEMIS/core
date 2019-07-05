@@ -86,7 +86,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'SubjectStudents' => ['view', 'edit'],
             'ReportCardComments' => ['index'],
-            'StudentOutcomes' => ['index']
+            'StudentOutcomes' => ['index'],
+            'ScheduleTimetable' => ['index']
         ]);
 
         $this->setDeleteStrategy('restrict');

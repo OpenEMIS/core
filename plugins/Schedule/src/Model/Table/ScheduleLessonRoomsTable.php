@@ -23,7 +23,8 @@ class ScheduleLessonRoomsTable extends ControllerActionTable
         ]);
 
         $this->belongsTo('InstitutionRooms', [
-            'className' => 'Institution.InstitutionRooms'
+            'className' => 'Institution.InstitutionRooms',
+            'foreignKey' => 'institution_room_id'
         ]);
     }
 

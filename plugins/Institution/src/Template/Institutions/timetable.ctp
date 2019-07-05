@@ -7,7 +7,7 @@
 $this->start('toolbar');
 ?>
     <?php if ($_back) : ?>
-        <a href="<?= $_back ?>" ng-show="$ctrl.action == 'edit'">
+        <a href="<?= $_back ?>" ng-show="$ctrl.action == 'view' || $ctrl.action == 'edit'">
             <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back') ?>" >
                 <i class="fa kd-back" ></i>
             </button>
@@ -133,7 +133,7 @@ $panelHeader = $this->fetch('panelHeader');
 <div class="panel">
     <div class="panel-body" style="position: relative;">
         <bg-splitter orientation="horizontal" class="content-splitter timetable" elements="getSplitterElements" ng-init="$ctrl.timetableId=<?= $timetable_id; ?>; $ctrl.action='<?= $_action; ?>';" float-btn="false" collapse="{{$ctrl.hideSplitter}}">
-            <bg-pane class="main-content">
+            <bg-pane class="main-content" min-size-p="70" max-size-p="100">
                 <table ng-if="$ctrl.tableReady" class="timetable-table">
                     <thead>
                         <tr class="timetable-header title">
@@ -149,22 +149,39 @@ $panelHeader = $this->fetch('panelHeader');
                                 <h5><?= __('Time') ?></h5>
                             </th>
                             <th ng-repeat="(key, day) in $ctrl.dayOfWeekList">
-                                <h5>{{day.day}}</h5>
+                                <h5>{{day.day.substring(0,3)}}</h5>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr ng-repeat="(key, timeslot) in $ctrl.scheduleTimeslots">
                             <td class="timetable-timeslot">
-                                <h5>{{timeslot.start_time}} - {{timeslot.end_time}}</h5>
+                                <h5>{{$ctrl.toTimeAmPm(timeslot.start_time) | date:'hh:mm a'}} - {{$ctrl.toTimeAmPm(timeslot.end_time) | date:'hh:mm a'}}</h5>
                             </td>
-                            <td class="timetable-lesson {{$ctrl.getClassName(timeslot, day)}} {{($ctrl.getClassName(timeslot, day) == $ctrl.currentSelectedCell.class) ? 'lesson-selected' : ''}}" ng-repeat="(key, day) in $ctrl.dayOfWeekList" ng-click="$ctrl.onTimeslotCellClicked(timeslot, day)" class="">
+                            <td class="timetable-lesson {{$ctrl.getClassName(timeslot, day)}} {{($ctrl.getClassName(timeslot, day) == $ctrl.currentSelectedCell.class) ? 'lesson-selected' : ''}}" ng-repeat="(key, day) in $ctrl.dayOfWeekList" ng-click="$ctrl.onTimeslotCellClicked(timeslot, day)">
+                                <span ng-repeat="(key, lessons) in $ctrl.timetableLessons">
+                                    
+                                    <div ng-if="lessons.timeslot.start_time==timeslot.start_time && lessons.day_of_week==day.day_of_week">
+                                        <div ng-repeat="(key, schedule) in lessons.schedule_lesson_details">
+                                            <div class="input-selection-inline">
+                                                <span><strong>{{schedule.schedule_non_curriculum_lesson.name}}</strong></span>
+                                                <span ng-if="schedule.schedule_curriculum_lesson.code_only == 1"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.education_subject_code}}</strong></span>
+                                                <span ng-if="schedule.schedule_curriculum_lesson.code_only ==null || schedule.schedule_curriculum_lesson.code_only == 0"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.name}}</strong></span>
+                                                
+                                                <br>
+                                                <span ng-repeat="(key, teacher) in schedule.schedule_curriculum_lesson.institution_subject.teachers">{{teacher.name}}</span>
+                                                <br>
+                                                <span>{{schedule.schedule_lesson_room.institution_room.name}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </span>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </bg-pane>
-            <bg-pane class="split-content splitter-slide-out split-with-btn splitter-filter">
+            <bg-pane class="split-content splitter-slide-out split-with-btn splitter-filter" min-size-p="30" max-size-p="30" size-p="40">
                 <div class="split-content-header">
                     <h3>{{$ctrl.splitterContent}}</h3>
                     <div class="split-content-btn">
@@ -176,7 +193,7 @@ $panelHeader = $this->fetch('panelHeader');
                     <div ng-if="$ctrl.splitterContent == $ctrl.SPLITTER_LESSONS" class="timetable-sub-lessons">
                         <div class="lesson-type">
                             <h5><?= __('Type') ?>: </h5>
-                            <div style="display: inline-block; width: 100%;">
+                            <div style="display: inline-block; width: 100%;" class="input select">
                                 <div class="input-select-wrapper" style="width: 90%;">
                                     <select name="lesson_type" ng-options="lesson.id as lesson.name for lesson in $ctrl.lessonType" ng-model="$ctrl.selectedLessonType">
                                     </select>
@@ -198,13 +215,19 @@ $panelHeader = $this->fetch('panelHeader');
                                     <div class="lesson-wrapper non-curriculum lesson-name">
                                         <h6><?= __('Name') ?> </h6>
                                         <div class="input text required">
-                                            <input type="text" ng-model="lesson.schedule_non_curriculum_lesson.name" ng-blur="$ctrl.onUpdateLessonData(key, $ctrl.NON_CURRICULUM_LESSON)"/>
+                                            <input type="text" ng-required="true" ng-model="lesson.schedule_non_curriculum_lesson.name" />
                                         </div>
                                     </div>
                                     <div class="lesson-wrapper non-curriculum institution-room">
                                         <h6><?= __('Room') ?> </h6>
-                                        <div class="input text required">
-                                            <input type="text"/>
+                                        <div class="input text required select" >
+                                            <div class="input-select-wrapper">
+                                            <select ng-disabled="makeNotSelected" ng-model="lesson.schedule_non_curriculum_lesson_room.institution_room_id" ng-change="$ctrl.onUpdateLessonData(key, $ctrl.NON_CURRICULUM_LESSON)">
+                                                <option value="">Select Room</option>
+                                                <option ng-repeat="(key, room) in $ctrl.institutionRooms" value="{{room.id}}">{{room.name}}</option>
+                                               
+                                            </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -212,19 +235,33 @@ $panelHeader = $this->fetch('panelHeader');
                                 <div ng-if="lesson.lesson_type == $ctrl.CURRICULUM_LESSON" class="lesson-form-body">
                                     <div class="lesson-wrapper curriculum lesson-subject">
                                         <h6><?= __('Subject') ?> </h6>
-                                        <div class="input text required">
-                                            <input type="text"/>
+                                        <div class="input text required select">
+                                            <div class="input-select-wrapper">
+                                            <select ng-model="lesson.schedule_curriculum_lesson.institution_subject_id">
+                                                <option value="">Select Subject</option>
+                                                <option ng-repeat="(key, subject) in $ctrl.institutionSubjects" value="{{subject.id}}">{{subject.name}}</option>
+                                               
+                                            </select>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="lesson-wrapper curriculum lesson-code">
                                         <h6><?= __('Display') ?> </h6>
-                                        <input type="checkbox"/>Code Only
+                                        <div class="input">
+                                            <input kd-checkbox-radio="Code Only" value="0" ng-model="lesson.schedule_curriculum_lesson.code_only" type="checkbox">
+                                        </div>
                                     </div>
                                     <hr>
                                     <div class="lesson-wrapper curriculum institution-room">
-                                        <h6><?= __('Room1') ?> </h6>
-                                        <div class="input text required">
-                                            <input type="text"/>
+                                        <h6><?= __('Room') ?> </h6>
+                                        <div class="input text required select">
+                                            <div class="input-select-wrapper">
+                                            <select ng-model="lesson.schedule_curriculum_lesson_room.institution_room_id" ng-change="$ctrl.onUpdateLessonData(key, $ctrl.CURRICULUM_LESSON)">
+                                                <option value="">Select Room</option>
+                                                <option ng-repeat="(key, room) in $ctrl.institutionRooms" value="{{room.id}}">{{room.name}}</option>
+                                               
+                                            </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
