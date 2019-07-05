@@ -73,9 +73,13 @@ class ScheduleLessonsTable extends ControllerActionTable
         $query
             ->contain([
                 'Timeslots',
-                'ScheduleLessonDetails.ScheduleCurriculumLessons',
+                'ScheduleLessonDetails.ScheduleCurriculumLessons'=>[
+                    'InstitutionSubject'=>['Teachers']
+                ],
                 'ScheduleLessonDetails.ScheduleNonCurriculumLessons',
-                'ScheduleLessonDetails.ScheduleLessonRooms'
+                'ScheduleLessonDetails.ScheduleLessonRooms'=>[
+                    'InstitutionRooms'
+                ]
             ])
             ->where([
                 $this->aliasField('institution_schedule_timetable_id') => $timetableId
