@@ -16,7 +16,9 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         ScheduleLessonsTable: 'Schedule.ScheduleLessons',
         ScheduleLessonDetailsTable: 'Schedule.ScheduleLessonDetails',
         AcademicPeriodTable: 'AcademicPeriod.AcademicPeriods',
-        InstitutionClassGradesTable: 'Institution.InstitutionClassGrades'
+        InstitutionClassGradesTable: 'Institution.InstitutionClassGrades',
+        InstitutionRoomsTable: 'Institution.InstitutionRooms',
+        InstitutionSubjectsTable: 'Institution.InstitutionSubjects'
     };
 
     var service = {
@@ -33,7 +35,9 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         saveOverviewData: saveOverviewData,
         saveLessonData: saveLessonData,
         saveLessonDetailCurriculumData: saveLessonDetailCurriculumData,
-        saveLessonDetailNonCurriculumData: saveLessonDetailNonCurriculumData
+        saveLessonDetailNonCurriculumData: saveLessonDetailNonCurriculumData,
+        getInstitutionRooms:getInstitutionRooms,
+        getInstitutionSubjects:getInstitutionSubjects,
     };
 
     return service;
@@ -44,7 +48,42 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         KdDataSvc.controllerAction('ScheduleTimetable');
         KdDataSvc.init(models);
     }
-
+    
+    function getInstitutionRooms(institutionId){
+        var success = function(response, deferred) {
+            if (angular.isDefined(response.data.data)) {
+                deferred.resolve(response.data.data);
+            } else {
+                deferred.reject('There was an error when retrieving the data');
+            }
+        }; 
+        
+        return InstitutionRoomsTable
+            .where({
+                institution_id: institutionId,
+                accessibility: 1,
+                end_year:new Date().getFullYear()
+            })
+            .ajax({success: success, defer: true});          
+    }
+    
+    function getInstitutionSubjects(institutionId, academicPeriodId){
+        var success = function(response, deferred) {
+            if (angular.isDefined(response.data.data)) {
+                deferred.resolve(response.data.data);
+            } else {
+                deferred.reject('There was an error when retrieving the data');
+            }
+        }; 
+        
+        return InstitutionSubjectsTable
+            .where({
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId
+            })
+            .ajax({success: success, defer: true});          
+    }
+    
     function getTimetable(timetableId) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.data)) {
@@ -179,7 +218,31 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function saveLessonDetailCurriculumData(lessonDetailData) {
-        console.log('saveLessonDetailCurriculumData', lessonDetailData);
+       // console.log('saveLessonDetailNonCurriculumData', lessonDetailData);
+        var codeOnly = 0;
+        if(lessonDetailData.schedule_curriculum_lesson.code_only){
+            codeOnly = 1;
+        }
+        var saveData = {
+            day_of_week: lessonDetailData.day_of_week,
+            institution_schedule_timeslot_id: lessonDetailData.institution_schedule_timeslot_id,
+            institution_schedule_timetable_id: lessonDetailData.institution_schedule_timetable_id,
+            lesson_type: lessonDetailData.lesson_type,
+            schedule_lesson_room: {
+                institution_schedule_lesson_detail_id:'1',
+                institution_room_id:lessonDetailData.schedule_curriculum_lesson_room.institution_room_id,
+            },
+            schedule_curriculum_lesson: {
+                institution_subject_id: lessonDetailData.schedule_curriculum_lesson.institution_subject_id,
+                code_only:codeOnly,
+            }
+        };
+
+        if (angular.isDefined(lessonDetailData.id)) {
+            saveData.id = lessonDetailData.id;
+        }
+       
+        return ScheduleLessonDetailsTable.save(saveData);
     }
 
     function saveLessonDetailNonCurriculumData(lessonDetailData) {
@@ -189,7 +252,10 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             institution_schedule_timeslot_id: lessonDetailData.institution_schedule_timeslot_id,
             institution_schedule_timetable_id: lessonDetailData.institution_schedule_timetable_id,
             lesson_type: lessonDetailData.lesson_type,
-            schedule_lesson_rooms: lessonDetailData.schedule_lesson_rooms,
+            schedule_lesson_room: {
+                institution_schedule_lesson_detail_id:'1',
+                institution_room_id:lessonDetailData.schedule_non_curriculum_lesson_room.institution_room_id,
+            },
             schedule_non_curriculum_lesson: {
                 name: lessonDetailData.schedule_non_curriculum_lesson.name
             }
@@ -198,7 +264,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         if (angular.isDefined(lessonDetailData.id)) {
             saveData.id = lessonDetailData.id;
         }
-
+       
         return ScheduleLessonDetailsTable.save(saveData);
     }
 };

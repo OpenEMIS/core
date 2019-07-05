@@ -291,9 +291,9 @@ class ScheduleTimetablesTable extends ControllerActionTable
             'type' => 'element',
             'element' => 'Schedule.Intervals/interval_timeslots'
         ]);
-        $this->field('institution_schedule_interval_id', ['visible' => false]);
+        $this->field('institution_schedule_interval_id', ['visible' => true]);
         $this->setFieldOrder(['academic_period_id', 'institution_schedule_term_id', 'status', 'name', 'grade', 'institution_class_id', 'shift', 'time_slots']);
-
+       
         $tabElements = [
             'ScheduleTimetableOverview' => [
                 'url' => [
@@ -308,7 +308,10 @@ class ScheduleTimetablesTable extends ControllerActionTable
                     'plugin' => $this->controller->plugin,
                     'controller' => $this->controller->name,
                     'action' => 'ScheduleTimetable',
-                    'view'
+                    'view',
+                    'timetableId'=>$this->request->params['pass'][1],
+                    'period'=>$this->request->query('period')
+                    
                 ],
                 'text' => __('Timetable')
             ]
