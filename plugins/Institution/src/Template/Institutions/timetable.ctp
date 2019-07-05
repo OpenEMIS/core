@@ -222,7 +222,7 @@ $panelHeader = $this->fetch('panelHeader');
                                         <h6><?= __('Room') ?> </h6>
                                         <div class="input text required select" >
                                             <div class="input-select-wrapper">
-                                            <select ng-disabled="makeNotSelected" ng-model="lesson.schedule_non_curriculum_lesson_room.institution_room_id" ng-change="$ctrl.onUpdateLessonData(key, $ctrl.NON_CURRICULUM_LESSON)">
+                                            <select ng-model="lesson.schedule_non_curriculum_lesson_room.institution_room_id" ng-change="$ctrl.onUpdateLessonData(key, $ctrl.NON_CURRICULUM_LESSON)">
                                                 <option value="">Select Room</option>
                                                 <option ng-repeat="(key, room) in $ctrl.institutionRooms" value="{{room.id}}">{{room.name}}</option>
                                                
