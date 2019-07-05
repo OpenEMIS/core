@@ -35,11 +35,11 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
             'foreignKey' => 'institution_schedule_lesson_detail_id'
         ]);
 
-        $this->hasMany('ScheduleLessonRooms', [
+        $this->hasOne('ScheduleLessonRooms', [
             'className' => 'Schedule.ScheduleLessonRooms',
             'foreignKey' => 'institution_schedule_lesson_detail_id',
-            'dependent' => true, 
-            'cascadeCallbacks' => true
+            //'dependent' => true, 
+            //'cascadeCallbacks' => true
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
