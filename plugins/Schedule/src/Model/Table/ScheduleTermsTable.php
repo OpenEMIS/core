@@ -180,9 +180,9 @@ class ScheduleTermsTable extends ControllerActionTable
 
         $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
         $attr['type'] = 'date';
-        $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
-        $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
-
+        $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
+        $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
+        
         if (!array_key_exists($this->alias(), $requestData) || !array_key_exists($key, $requestData[$this->alias()])) {
             if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
                 $attr['value'] = $selectedPeriod->start_date;

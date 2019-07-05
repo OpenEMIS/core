@@ -21,7 +21,10 @@ class ScheduleCurriculumLessonsTable extends ControllerActionTable
             'foreignKey' => 'institution_schedule_lesson_detail_id'
         ]);
 
-        // $this->belongsTo('InstitutionSubject', ['className' => '']);
+        $this->belongsTo('InstitutionSubject', [
+            'className' => 'Institution.InstitutionSubjects',
+            'foreignKey' => 'institution_subject_id'
+        ]);
     }
 
     public function validationDefault(Validator $validator)

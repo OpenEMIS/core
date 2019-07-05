@@ -41,7 +41,8 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->belongsTo('RoomTypes', ['className' => 'Infrastructure.RoomTypes']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
         $this->belongsTo('PreviousRooms', ['className' => 'Institution.InstitutionRooms', 'foreignKey' => 'previous_institution_room_id']);
-
+        
+        
         $this->belongsToMany('Subjects', [
             'className' => 'Institution.InstitutionSubjects',
             'joinTable' => 'institution_subjects_rooms',
@@ -75,8 +76,10 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->accessibilityTooltip = $this->getMessage('InstitutionInfrastructures.accessibilityOption');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'SubjectStudents' => ['index']
+            'SubjectStudents' => ['index'],
+            'ScheduleTimetable' => ['index']
         ]);
+       
         $this->setDeleteStrategy('restrict');
     }
 

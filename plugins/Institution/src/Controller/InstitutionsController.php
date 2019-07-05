@@ -444,13 +444,17 @@ class InstitutionsController extends AppController
     // AngularJS
     public function ScheduleTimetable($action = 'view')
     {
+       
         $timetableId = $this->ControllerAction->paramsDecode($this->request->query('timetableId'))['id'];
-
+       
+        $session = $this->request->session();
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+       
         $backUrl = [
             'plugin' => $this->plugin,
             'controller' => $this->name,
             'action' => 'ScheduleTimetableOverview',
-            'institutionId' => $this->request->params['institutionId'],
+            'institutionId' => $institutionId,
             'view',
             $this->ControllerAction->paramsEncode(['id' => $timetableId])
         ];
