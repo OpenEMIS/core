@@ -18,7 +18,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         AcademicPeriodTable: 'AcademicPeriod.AcademicPeriods',
         InstitutionClassGradesTable: 'Institution.InstitutionClassGrades',
         InstitutionRoomsTable: 'Institution.InstitutionRooms',
-        InstitutionSubjectsTable: 'Institution.InstitutionSubjects'
+        InstitutionClassSubjectsTable: 'Institution.InstitutionClassSubjects'
     };
 
     var service = {
@@ -37,7 +37,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         saveLessonDetailCurriculumData: saveLessonDetailCurriculumData,
         saveLessonDetailNonCurriculumData: saveLessonDetailNonCurriculumData,
         getInstitutionRooms:getInstitutionRooms,
-        getInstitutionSubjects:getInstitutionSubjects,
+        getInstitutionClassSubjects:getInstitutionClassSubjects
     };
 
     return service;
@@ -67,7 +67,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             .ajax({success: success, defer: true});          
     }
     
-    function getInstitutionSubjects(institutionId, academicPeriodId){
+    function getInstitutionClassSubjects(institutionId, institutionClassId , academicPeriodId){
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
@@ -76,11 +76,10 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             }
         }; 
         
-        return InstitutionSubjectsTable
-            .where({
-                institution_id: institutionId,
-                academic_period_id: academicPeriodId
-            })
+        return InstitutionClassSubjectsTable
+            .find('AllSubjects', {
+                institution_class_id:institutionClassId,
+            })            
             .ajax({success: success, defer: true});          
     }
     
@@ -218,7 +217,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function saveLessonDetailCurriculumData(lessonDetailData) {
-       // console.log('saveLessonDetailNonCurriculumData', lessonDetailData);
+       
         var codeOnly = 0;
         if(lessonDetailData.schedule_curriculum_lesson.code_only){
             codeOnly = 1;
@@ -246,7 +245,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function saveLessonDetailNonCurriculumData(lessonDetailData) {
-        // console.log('saveLessonDetailNonCurriculumData', lessonDetailData);
+        
         var saveData = {
             day_of_week: lessonDetailData.day_of_week,
             institution_schedule_timeslot_id: lessonDetailData.institution_schedule_timeslot_id,
