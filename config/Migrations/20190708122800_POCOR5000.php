@@ -7,4 +7,8 @@ class POCOR5000 extends AbstractMigration
     {
 		$this->execute('ALTER TABLE examination_centres CHANGE COLUMN `fax` `fax` VARCHAR(30) NULL');
 	}
+	public function down()
+    {
+		$this->execute('ALTER TABLE examination_centres CHANGE COLUMN `fax` `fax` VARCHAR(30) NOT NULL');
+	}
 }
