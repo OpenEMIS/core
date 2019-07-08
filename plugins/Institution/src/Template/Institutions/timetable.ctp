@@ -127,7 +127,9 @@ $panelHeader = $this->fetch('panelHeader');
         height: 25px;
         padding: 5px 10px;
     }
-    
+    .input-selection-inline{
+        width: 100%;
+    }
 </style>
  
 <div class="panel">
@@ -167,9 +169,11 @@ $panelHeader = $this->fetch('panelHeader');
                                                 <span><strong>{{schedule.schedule_non_curriculum_lesson.name}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only == 1"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.education_subject_code}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only ==null || schedule.schedule_curriculum_lesson.code_only == 0"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.name}}</strong></span>
-                                                
-                                                <br>
-                                                <span ng-repeat="(key, teacher) in schedule.schedule_curriculum_lesson.institution_subject.teachers">{{teacher.name}}</span>
+                                                <br ng-show="schedule.schedule_curriculum_lesson.institution_subject.classes.length > 1">
+                                                <span ng-show="schedule.schedule_curriculum_lesson.institution_subject.classes.length > 1" ng-repeat="(key, classname) in schedule.schedule_curriculum_lesson.institution_subject.classes">{{classname.name}}<font ng-show="!$last">, </font></span>
+                                                <br ng-show="schedule.schedule_curriculum_lesson.institution_subject.teachers.length > 0">
+                                                <br ng-show="schedule.schedule_curriculum_lesson.institution_subject.teachers.length > 0">
+                                                <span ng-repeat="(key, teacher) in schedule.schedule_curriculum_lesson.institution_subject.teachers">{{teacher.name}}<font ng-show="!$last">, </font></span>
                                                 <br>
                                                 <span>{{schedule.schedule_lesson_room.institution_room.name}}</span>
                                             </div>
@@ -215,7 +219,8 @@ $panelHeader = $this->fetch('panelHeader');
                                     <div class="lesson-wrapper non-curriculum lesson-name">
                                         <h6><?= __('Name') ?> </h6>
                                         <div class="input text required">
-                                            <input type="text" ng-required="true" ng-model="lesson.schedule_non_curriculum_lesson.name" />
+                                            <input type="text" ng-class="{'form-error':$ctrl.errorMessageNonCurriculum[key].length > 0}" ng-required="true" ng-model="lesson.schedule_non_curriculum_lesson.name" />
+                                            <span class="error-message" ng-show="$ctrl.errorMessageNonCurriculum[key].length >0">{{$ctrl.errorMessageNonCurriculum[key]}}</span>
                                         </div>
                                     </div>
                                     <div class="lesson-wrapper non-curriculum institution-room">
@@ -237,11 +242,12 @@ $panelHeader = $this->fetch('panelHeader');
                                         <h6><?= __('Subject') ?> </h6>
                                         <div class="input text required select">
                                             <div class="input-select-wrapper">
-                                            <select ng-model="lesson.schedule_curriculum_lesson.institution_subject_id">
+                                            <select ng-required="true" ng-class="{'form-error':$ctrl.errorMessageCurriculum[key].length > 0}" ng-model="lesson.schedule_curriculum_lesson.institution_subject_id">
                                                 <option value="">Select Subject</option>
-                                                <option ng-repeat="(key, subject) in $ctrl.institutionSubjects" value="{{subject.id}}">{{subject.name}}</option>
+                                                <option ng-repeat="(key, subject) in $ctrl.institutionClassSubjects" value="{{subject.institution_subject_id}}">{{subject.institution_subject_name}}</option>
                                                
                                             </select>
+                                                <span class="error-message" ng-show="$ctrl.errorMessageCurriculum[key].length > 0">{{$ctrl.errorMessageCurriculum[key]}}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -256,7 +262,7 @@ $panelHeader = $this->fetch('panelHeader');
                                         <h6><?= __('Room') ?> </h6>
                                         <div class="input text required select">
                                             <div class="input-select-wrapper">
-                                            <select ng-model="lesson.schedule_curriculum_lesson_room.institution_room_id" ng-change="$ctrl.onUpdateLessonData(key, $ctrl.CURRICULUM_LESSON)">
+                                            <select ng-model="lesson.schedule_curriculum_lesson_room.institution_room_id"  ng-change="$ctrl.onUpdateLessonData(key, $ctrl.CURRICULUM_LESSON)">
                                                 <option value="">Select Room</option>
                                                 <option ng-repeat="(key, room) in $ctrl.institutionRooms" value="{{room.id}}">{{room.name}}</option>
                                                

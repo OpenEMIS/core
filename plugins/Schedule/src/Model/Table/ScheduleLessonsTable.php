@@ -74,7 +74,7 @@ class ScheduleLessonsTable extends ControllerActionTable
             ->contain([
                 'Timeslots',
                 'ScheduleLessonDetails.ScheduleCurriculumLessons'=>[
-                    'InstitutionSubject'=>['Teachers']
+                    'InstitutionSubject'=>['Classes','Teachers']
                 ],
                 'ScheduleLessonDetails.ScheduleNonCurriculumLessons',
                 'ScheduleLessonDetails.ScheduleLessonRooms'=>[

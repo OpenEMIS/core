@@ -46,9 +46,12 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     vm.lessonList = {};
 
     vm.lessonType = [];
-    vm.institutionRooms = [];
+    //vm.institutionRooms = [];
     vm.institutionSubjects = [];
+    vm.institutionClassSubjects = [];
     vm.selectedLessonType = 0;
+    vm.errorMessageNonCurriculum = [];
+    vm.errorMessageCurriculum = [];
 
     /*
         Non-Curriculum Lesson structure
@@ -76,7 +79,20 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         TimetableSvc.init(angular.baseUrl, $scope);
         UtilsSvc.isAppendLoader(true);
         if (vm.timetableId != null) {
-            TimetableSvc.getTimetable(vm.timetableId)
+            timeTablePageLoad();
+        }
+
+    });
+
+    // error
+    vm.error = function (error) {
+        AlertSvc.error($scope, error);
+        console.log('error', error);
+        return $q.reject(error);
+    };
+    
+    function timeTablePageLoad(){
+        TimetableSvc.getTimetable(vm.timetableId)
             .then(function(timetableData) {
                 console.log('getTimetable', timetableData);
                 vm.timetableData = timetableData;
@@ -136,25 +152,17 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             .then(function(timetableStatus) {
                 console.log('getTimetableStatus', timetableStatus);
                 vm.timetableStatus = timetableStatus;
-                return TimetableSvc.getInstitutionSubjects(vm.timetableData.institution_id, vm.timetableData.academic_period_id);
+                //console.log('timetableDataDetails:', vm.timetableData);               
+                return TimetableSvc.getInstitutionClassSubjects(vm.timetableData.institution_id, vm.timetableData.institution_class_id, vm.timetableData.academic_period_id);
             }, vm.error)
-            .then(function(institutionSubjects) {
-                console.log('getinstitutionSubjects', institutionSubjects);
-                vm.institutionSubjects = institutionSubjects;
+            .then(function(institutionClassSubjects) {
+                console.log('institutionClassSubjects:', institutionClassSubjects);
+                vm.institutionClassSubjects = institutionClassSubjects;
             }, vm.error)
             .finally(function() {
                 UtilsSvc.isAppendLoader(false);
                 AlertSvc.info($scope, 'Timetable will be automatically saved.');
-            })
-        }
-
-    });
-
-    // error
-    vm.error = function (error) {
-        AlertSvc.error($scope, error);
-        console.log('error', error);
-        return $q.reject(error);
+            });
     }
     
     // save events
@@ -185,30 +193,45 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         });
     }
 
-    vm.saveLessonDetails = function(lessonDetail, lessonType) {
+    vm.saveLessonDetails = function(lessonDetail, lessonType, key) {
         console.log('lessonDetail', lessonDetail);
-
+        
         var responseData;
         
         UtilsSvc.isAppendLoader(true);
         if (lessonType == vm.NON_CURRICULUM_LESSON) {
-            console.log('Anand lessonDetail:', lessonDetail);
+            console.log('Anand lessonDetail:', lessonDetail.schedule_non_curriculum_lesson);
             
-            TimetableSvc.saveLessonDetailNonCurriculumData(lessonDetail)
-            .then(function(response) {
-                console.log('non lesson', response);
-            })
-            .finally(function() {
-                UtilsSvc.isAppendLoader(false);
-            });
+            if(lessonDetail.schedule_non_curriculum_lesson.name === ""){  
+                vm.errorMessageNonCurriculum[key] = 'This field cannot be left empty';
+                lessonDetail.schedule_non_curriculum_lesson_room.institution_room_id = '';
+                
+            }else{
+                TimetableSvc.saveLessonDetailNonCurriculumData(lessonDetail)
+                 .then(function(response) {
+                     console.log('non lesson', response);                    
+                 })
+                 .finally(function() {
+                     UtilsSvc.isAppendLoader(false);
+                 });
+             }
+
         } else { // vm.CURRICULUM_LESSON
-            TimetableSvc.saveLessonDetailCurriculumData(lessonDetail)
-            .then(function(response) {
-                console.log('lesson', response);
-            })
-            .finally(function() {
-                UtilsSvc.isAppendLoader(false);
-            });
+            
+            if(lessonDetail.schedule_curriculum_lesson.institution_subject_id === '' || lessonDetail.schedule_curriculum_lesson.institution_subject_id == null){
+                vm.errorMessageCurriculum[key] = 'This field cannot be left empty';
+                lessonDetail.schedule_curriculum_lesson_room.institution_room_id = '';
+                
+            }else{
+                TimetableSvc.saveLessonDetailCurriculumData(lessonDetail)
+                .then(function(response) {
+                    console.log('lesson', response);
+                    vm.errorMessageCurriculum='';
+                })
+                .finally(function() {
+                    UtilsSvc.isAppendLoader(false);
+                });
+            }
         }
     }
 
@@ -239,7 +262,10 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
 
     vm.onUpdateLessonData = function(key, lessonType) {
         console.log('saveLessonDetails', vm.currentLessonList[key]);
-        vm.saveLessonDetails(vm.currentLessonList[key], lessonType);
+        vm.errorMessageCurriculum=[];
+        vm.errorMessageNonCurriculum=[];
+        vm.saveLessonDetails(vm.currentLessonList[key], lessonType, key);
+        timeTablePageLoad();
     };
 
     vm.onDeleteLessonData = function(key) {
@@ -368,8 +394,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             };
         }
 
-        console.log('lessonDetailObject', lessonDetailObject);
-
+        //console.log('lessonDetailObject', lessonDetailObject);
 
         // if (lessonType == NON_CURRICULUM_LESSON) {
         //     lessonObject = {
