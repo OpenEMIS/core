@@ -86,5 +86,5 @@ class ScheduleLessonsTable extends ControllerActionTable
             ]);
 
         return $query;
-    }
+    }     
 }
