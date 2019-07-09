@@ -223,10 +223,16 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                 lessonDetail.schedule_curriculum_lesson_room.institution_room_id = '';
                 
             }else{
-                TimetableSvc.saveLessonDetailCurriculumData(lessonDetail)
+                TimetableSvc.checkCurriculumSubjectExistSameTimeslot(lessonDetail)
                 .then(function(response) {
-                    console.log('lesson', response);
-                    vm.errorMessageCurriculum='';
+                    console.log('curriculumlesson', response);
+                    if(response[0].count > 0){
+                      vm.errorMessageCurriculum[key]='Subject Already exist in timeslot';
+                    }else{
+                      vm.errorMessageCurriculum='';
+                      TimetableSvc.saveLessonDetailCurriculumData(lessonDetail);  
+                    }
+                    
                 })
                 .finally(function() {
                     UtilsSvc.isAppendLoader(false);
