@@ -43,7 +43,7 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'ScheduleTimetable' => ['add']
+            'ScheduleTimetable' => ['index','add']
         ]);
     }
 
@@ -100,4 +100,32 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
 
         return $lessonType;
     }
+    
+    public function findCheckSubjectExistSameTimeslot(Query $query, array $options){
+        $day_of_week = $options['day_of_week'];
+        $institution_schedule_timeslot_id = $options['institution_schedule_timeslot_id'];
+        $institution_schedule_timetable_id = $options['institution_schedule_timetable_id'];
+        $lesson_type = $options['lesson_type'];
+        $institution_room_id = $options['institution_room_id'];
+        $institution_subject_id = $options['institution_subject_id'];
+        $ScheduleCurriculumLessons = TableRegistry::get('Schedule.ScheduleCurriculumLessons');
+        $ScheduleLessonRooms = TableRegistry::get('Schedule.ScheduleLessonRooms');
+        $query
+            ->select(['count' => $query->func()->count('*')])
+            ->contain([
+                'ScheduleCurriculumLessons',
+                'ScheduleLessonRooms'
+            ])
+      
+            ->where([
+                $this->aliasField('lesson_type') => $lesson_type,
+                $this->aliasField('day_of_week') => $day_of_week,
+                $this->aliasField('institution_schedule_timeslot_id') => $institution_schedule_timeslot_id,
+                $this->aliasField('institution_schedule_timetable_id') => $institution_schedule_timetable_id,
+                $ScheduleCurriculumLessons->aliasField('institution_subject_id') => $institution_subject_id,
+                $ScheduleLessonRooms->aliasField('institution_room_id') => $institution_room_id
+            ]);
+        return $query;
+    }
+    
 }
