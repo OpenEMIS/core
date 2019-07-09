@@ -35,6 +35,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         saveOverviewData: saveOverviewData,
         saveLessonData: saveLessonData,
         saveLessonDetailCurriculumData: saveLessonDetailCurriculumData,
+        checkCurriculumSubjectExistSameTimeslot: checkCurriculumSubjectExistSameTimeslot,
         saveLessonDetailNonCurriculumData: saveLessonDetailNonCurriculumData,
         getInstitutionRooms:getInstitutionRooms,
         getInstitutionClassSubjects:getInstitutionClassSubjects
@@ -215,11 +216,38 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
 
         return ScheduleLessonsTable.save(saveData);
     }
+    
+    function checkCurriculumSubjectExistSameTimeslot(lessonDetailData){
+        
+        var searchData = {
+            day_of_week: lessonDetailData.day_of_week,
+            institution_schedule_timeslot_id: lessonDetailData.institution_schedule_timeslot_id,
+            institution_schedule_timetable_id: lessonDetailData.institution_schedule_timetable_id,
+            lesson_type: lessonDetailData.lesson_type,
+            institution_room_id:lessonDetailData.schedule_curriculum_lesson_room.institution_room_id,
+            institution_subject_id: lessonDetailData.schedule_curriculum_lesson.institution_subject_id            
+        };
 
+        var success = function(response, deferred) {
+            console.log('Checkresponse', response);
+            if (angular.isDefined(response.data.data)) {
+                deferred.resolve(response.data.data);
+            } else {
+                deferred.reject('There was an error when retrieving the data');
+            }
+        };
+       
+        return ScheduleLessonDetailsTable
+            .find('checkSubjectExistSameTimeslot', searchData)
+            .ajax({success: success, defer: true}); 
+    }
+    
+    
     function saveLessonDetailCurriculumData(lessonDetailData) {
        
         var codeOnly = 0;
-        if(lessonDetailData.schedule_curriculum_lesson.code_only){
+        //console.log('schedule_curriculum_lesson_details:',lessonDetailData.schedule_curriculum_lesson);
+        if(lessonDetailData.schedule_curriculum_lesson.code_only !=0){
             codeOnly = 1;
         }
         var saveData = {
@@ -236,11 +264,12 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
                 code_only:codeOnly,
             }
         };
-
+        
+        
         if (angular.isDefined(lessonDetailData.id)) {
             saveData.id = lessonDetailData.id;
         }
-       
+        
         return ScheduleLessonDetailsTable.save(saveData);
     }
 
