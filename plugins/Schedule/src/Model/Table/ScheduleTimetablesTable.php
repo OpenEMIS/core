@@ -349,7 +349,8 @@ class ScheduleTimetablesTable extends ControllerActionTable
         } else { // self::PUBLISHED
             $color = '#77B576';
         }
-        $status = $this->_status[$entity->status];;
+        
+        $status = $this->_status[$entity->status];
 
         if ($this->action == 'index') {
             return '<span class="status" style="border:none; background-color: ' . $color . ';">' . $status . '</span>';

@@ -45,6 +45,10 @@ class ScheduleIntervalsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+        
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ScheduleTimetable' => ['index', 'view', 'edit']
+        ]);
         $this->addBehavior('Schedule.Schedule');
     }
 
@@ -315,9 +319,12 @@ class ScheduleIntervalsTable extends ControllerActionTable
     }
 
     // Get Options
-    private function getShiftOptions($academicPeriodId, $allShiftOption = false)
+    public function getShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId='')
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        if($institutionId == '' && empty($institutionId)){
+            $institutionId = $this->Session->read('Institution.Institutions.id');
+        }
+        
         $shiftOptions = $this->Shifts
             ->find('list', [
                 'keyField' => 'id',
