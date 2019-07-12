@@ -1060,7 +1060,7 @@ class UsersTable extends AppTable
         ->where([
             $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
             $UserIdentities->aliasField('identity_type_id') => $nationality->identity_type_id,
-            $UserIdentities->aliasField('nationality_id') => $nationality->id,
+            //$UserIdentities->aliasField('nationality_id') => $nationality->id,
         ])
         ->order([$UserIdentities->aliasField('created') => 'desc'])
         ->first();
@@ -1070,6 +1070,13 @@ class UsersTable extends AppTable
         if (!empty($latestIdentity)) {
             $identityNumber = $latestIdentity->number;
         }
+        
+        // POCOR 3804
+        $UserIdentities->updateAll([
+                'nationality_id' => $nationalityId
+                ],
+                ['security_user_id' => $entity->security_user_id]
+         );
 
         $this->updateAll(
             [
@@ -1122,6 +1129,40 @@ class UsersTable extends AppTable
                 ],
                 ['id' => $entity->security_user_id]
             );
+        } else {
+            /* if its update, check if any user identities type ids matches the preferred nationality identityTypeId.
+             if none found update the identity_number to null */
+            if (!$entity->isNew()) {
+                $userPreferredNationality = $UserNationalityTable
+                    ->find()
+                    ->matching('NationalitiesLookUp')
+                    ->select(['identityTypeId' => 'NationalitiesLookUp.identity_type_id'])
+                    ->where([
+                        $UserNationalityTable->aliasField('security_user_id') => $entity->security_user_id,
+                        $UserNationalityTable->aliasField('preferred') => 1
+                    ])
+                    ->first();
+                if (!empty($userPreferredNationality)) {
+                    $preferredIdentityTypeId = $userPreferredNationality->identityTypeId;
+                    $UserIdentities = TableRegistry::get('User.Identities');
+                    $latestIdentity = $UserIdentities->find()
+                    ->where([
+                        $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
+                        $UserIdentities->aliasField('identity_type_id') => $preferredIdentityTypeId,
+                    ])
+                    ->order([$UserIdentities->aliasField('created') => 'desc'])
+                    ->first();
+
+                    if (empty($latestIdentity)) {
+                        $this->updateAll(
+                            [
+                                'identity_number' => null
+                            ],
+                            ['id' => $entity->security_user_id]
+                        );
+                    }
+                }
+            }
         }
     }
 
