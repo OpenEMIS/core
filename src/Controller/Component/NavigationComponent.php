@@ -1023,7 +1023,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $id])],
                 'selected' => ['Institutions.StaffUser.edit', 'Institutions.StaffAccount', 'Staff.Identities', 'Staff.Nationalities',
                     'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.Attachments', 'StaffComments.index', 'StaffComments.view', 'StaffComments.add', 'StaffComments.edit', 'StaffComments.delete', 'Staff.History', 'Staff.Demographic']
-            ],
+            ],            
             'Staff.EmploymentStatuses' => [
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
@@ -1153,6 +1153,12 @@ class NavigationComponent extends Component
                 'title' => 'Staff',
                 'parent' => 'Profiles.Profiles',
                 'link' => false,
+            ],
+            'Profiles.ScheduleTimetable' => [
+                    'title' => 'Timetables',
+                    'parent' => 'Profiles.Staff',
+                    'selected' => ['Profiles.ScheduleTimetable'],
+                    'params' => ['plugin' => 'Profile']
             ],
                 'Profiles.StaffEmploymentStatuses' => [
                     'title' => 'Career',
