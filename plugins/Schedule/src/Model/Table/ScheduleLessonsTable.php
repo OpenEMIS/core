@@ -87,4 +87,42 @@ class ScheduleLessonsTable extends ControllerActionTable
 
         return $query;
     }     
+    
+    public function findAllLessonsByTimeSlotID(Query $query, array $options)
+    {      
+        $intervalId = $options['institution_schedule_interval_id'];
+        $lessonType = $options['lesson_type'];
+        $staffId = $options['staff_id'];
+        $ScheduleTimeslots = TableRegistry::get('Schedule.ScheduleTimeslots')
+                ->find('list',['id'])
+                ->select('id')
+                ->where(['institution_schedule_interval_id'=>$intervalId])
+                ->hydrate(false)
+                ->toArray();
+        
+        $ScheduleTimeslotsId = implode(',', $ScheduleTimeslots);
+        
+        $query
+            ->contain([
+                'Timeslots',
+                'ScheduleLessonDetails.ScheduleCurriculumLessons'=>[
+                    'InstitutionSubject'=>['Classes','Teachers']
+                ],
+                'ScheduleLessonDetails.ScheduleLessonRooms'=>[
+                    'InstitutionRooms'
+                ]
+            ])
+            ->matching('ScheduleLessonDetails', function(\Cake\ORM\Query $q) use ($lessonType)  {
+                return $q->where(['ScheduleLessonDetails.lesson_type' => $lessonType]);
+            })
+            ->matching('ScheduleLessonDetails.ScheduleCurriculumLessons.InstitutionSubject.Teachers', function(\Cake\ORM\Query $q) use ($staffId) {
+                return $q->where(['InstitutionSubjectStaff.staff_id' => $staffId]);
+            })
+            ->where([
+                $this->aliasField('institution_schedule_timeslot_id IN') => $ScheduleTimeslotsId,
+                
+            ]);
+        
+        return $query;
+    }    
 }
