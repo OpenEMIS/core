@@ -1203,6 +1203,12 @@ class NavigationComponent extends Component
                     'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours',
                         'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes']
                 ],
+                'Profiles.StudentScheduleTimetable' => [
+                        'title' => 'Timetables',
+                        'parent' => 'Profiles.Student',
+                        'selected' => ['Profiles.StudentScheduleTimetable'],
+                        'params' => ['plugin' => 'Profile']
+                ],
                 'Profiles.StudentBankAccounts' => [
                     'title' => 'Finance',
                     'parent' => 'Profiles.Student',
