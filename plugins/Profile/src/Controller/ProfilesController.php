@@ -234,6 +234,12 @@ class ProfilesController extends AppController
                     'timetable.svc'
                 ]);
                 break;
+            case 'StudentScheduleTimetable':
+                $this->Angular->addModules([
+                    'studenttimetable.ctrl',
+                    'studenttimetable.svc'
+                ]);
+                break;
         }
     }
 
@@ -615,7 +621,7 @@ class ProfilesController extends AppController
     public function ScheduleTimetable()
     {
         $userId = $this->Auth->user('id');
-        
+                
         $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $Institutions = TableRegistry::get('Institution.Institutions');
         
@@ -659,11 +665,59 @@ class ProfilesController extends AppController
         $this->set('userId', $userId);
         $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);        
         $this->set('shiftOptions', $shiftOptions);        
-        $shiftDefaultId = key($shiftOptions);
+        $shiftDefaultId = (isset($this->request->query['shift']))?$this->request->query['shift']:key($shiftOptions);
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
         $this->set('shiftDefaultId', $shiftDefaultId);
         $this->set('institutionDefaultId', key($selectedInstitutionOptions));
         $this->set('ngController', 'TimetableCtrl as $ctrl');
+    }
+    
+    public function StudentScheduleTimetable()
+    {
+        $userId = $this->Auth->user('id');
+        
+        $InstitutionStudents =
+            TableRegistry::get('Institution.InstitutionStudents')
+            ->find()
+            ->where([
+                'InstitutionStudents.student_id' => $userId
+            ])
+            ->hydrate(false)
+            ->first();
+        
+        $institutionId = $InstitutionStudents['institution_id'];
+        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+                ->getCurrent();
+        
+        $InstitutionClassStudentsResult = 
+                TableRegistry::get('Institution.InstitutionClassStudents')
+                    ->find()
+                    ->where([
+                        'academic_period_id'=>$academicPeriodId,
+                        'student_id' => $userId,
+                        'institution_id' => $institutionId
+                    ])
+                    ->hydrate(false)
+                    ->first();
+        
+        $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
+        $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
+                ->find()
+                ->where([
+                        'academic_period_id'=>$academicPeriodId,
+                        'institution_class_id' => $institutionClassId,
+                        'institution_id' => $institutionId,
+                        'status' => 2
+                    ])
+                ->hydrate(false)
+                ->first();
+        
+        $this->set('userId', $userId);
+        $timetable_id = (isset($ScheduleTimetables['id']))?$ScheduleTimetables['id']:0;
+        $this->set('timetable_id', $timetable_id);  
+        $this->set('academicPeriodId', $academicPeriodId);
+        $this->set('institutionDefaultId', $institutionId);
+        $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
     }
 }
