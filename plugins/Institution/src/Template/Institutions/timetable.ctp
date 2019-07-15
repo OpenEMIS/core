@@ -1,4 +1,5 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
+<?= $this->Html->script('table2excel.js', ['block' => true])?>
 <?= $this->Html->script('Schedule.angular/timetable.svc', ['block' => true]); ?>
 <?= $this->Html->script('Schedule.angular/timetable.ctrl', ['block' => true]); ?>
 
@@ -17,6 +18,11 @@ $this->start('toolbar');
     <a ng-show="$ctrl.action == 'edit'" ng-click="$ctrl.onInfoClicked()">
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Overview') ?>" >
             <i class="fa fa-info"></i>
+        </button>
+    </a>
+    <a href="javascript:void(0)" ng-show="$ctrl.action == 'view'">
+        <button ng-click="$ctrl.ExportTimetable()" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" >
+            <i class="fa kd-export" ></i>
         </button>
     </a>
 <?php
@@ -136,7 +142,7 @@ $panelHeader = $this->fetch('panelHeader');
     <div class="panel-body" style="position: relative;">
         <bg-splitter orientation="horizontal" class="content-splitter timetable" elements="getSplitterElements" ng-init="$ctrl.timetableId=<?= $timetable_id; ?>; $ctrl.action='<?= $_action; ?>';" float-btn="false" collapse="{{$ctrl.hideSplitter}}">
             <bg-pane class="main-content" min-size-p="70" max-size-p="100">
-                <table ng-if="$ctrl.tableReady" class="timetable-table">
+                <table id="tblTimetable" ng-if="$ctrl.tableReady" class="timetable-table">
                     <thead>
                         <tr class="timetable-header title">
                             <th colspan="{{1 + $ctrl.dayOfWeekList.length}}">
