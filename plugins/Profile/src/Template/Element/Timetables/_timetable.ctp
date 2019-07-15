@@ -1,12 +1,13 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
+<?= $this->Html->script('table2excel.js', ['block' => true])?>
 <?= $this->Html->script('Profile.angular/timetable.svc', ['block' => true]); ?>
 <?= $this->Html->script('Profile.angular/timetable.ctrl', ['block' => true]); ?>
 
 <?php
 $this->start('toolbar');
 ?>
-	<a href="<?=$excelUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" >
+	<a href="javascript:void(0)" ng-show="$ctrl.action == 'view'">
+        <button ng-click="$ctrl.ExportTimetable()" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" >
             <i class="fa kd-export" ></i>
         </button>
     </a>
@@ -113,7 +114,7 @@ $this->end();
 </style>
 <div class="" ng-init="$ctrl.shiftDefaultId=<?= $shiftDefaultId; ?>;$ctrl.institutionId=<?= $institutionDefaultId; ?>;$ctrl.academicPeriodId=<?= $academicPeriodId; ?>;$ctrl.staffId=<?= $userId; ?>;">
 <div class="alert alert-info" ng-show="$ctrl.dayOfWeekList.length <= 0">There are no records.</div>                        
-<table ng-if="$ctrl.tableReady" class="timetable-table" ng-show="$ctrl.dayOfWeekList.length > 0">   
+<table id="tblTimetable" ng-if="$ctrl.tableReady" class="timetable-table" ng-show="$ctrl.dayOfWeekList.length > 0">   
                     <thead>
                     
                         <tr class="timetable-header">
