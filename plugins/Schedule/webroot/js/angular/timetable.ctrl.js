@@ -425,4 +425,10 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         var timeTokens = timeString.split(':');
         return new Date(1970,0,1, timeTokens[0], timeTokens[1], timeTokens[2]);
     };
+    
+    vm.ExportTimetable = function () {
+        $("#tblTimetable").table2excel({
+            filename: "Timetable.xls"
+        });
+    };
 }
