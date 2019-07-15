@@ -21,8 +21,8 @@ $this->start('toolbar');
         </button>
     </a>
     <a href="javascript:void(0)" ng-show="$ctrl.action == 'view'">
-        <button ng-click="$ctrl.ExportTimetable()" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" >
-            <i class="fa kd-export" ></i>
+        <button ng-click="$ctrl.ExportTimetable()" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Download') ?>" >
+            <i class="fa kd-download" ></i>
         </button>
     </a>
 <?php
