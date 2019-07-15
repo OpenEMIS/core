@@ -1,19 +1,6 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
-<?= $this->Html->script('Profile.angular/timetable.svc', ['block' => true]); ?>
-<?= $this->Html->script('Profile.angular/timetable.ctrl', ['block' => true]); ?>
-
-<?php
-$this->start('toolbar');
-?>
-	<a href="<?=$excelUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" >
-            <i class="fa kd-export" ></i>
-        </button>
-    </a>
-<?php
-$this->end();
-?>
-
+<?= $this->Html->script('Profile.angular/studenttimetable.svc', ['block' => true]); ?>
+<?= $this->Html->script('Profile.angular/studenttimetable.ctrl', ['block' => true]); ?>
 
 <?= $this->element('OpenEmis.alert') ?>
 <style>
@@ -111,11 +98,18 @@ $this->end();
         width: 100%;
     }
 </style>
-<div class="" ng-init="$ctrl.shiftDefaultId=<?= $shiftDefaultId; ?>;$ctrl.institutionId=<?= $institutionDefaultId; ?>;$ctrl.academicPeriodId=<?= $academicPeriodId; ?>;$ctrl.staffId=<?= $userId; ?>;">
+<div class="" ng-init="$ctrl.timetableId=<?= $timetable_id; ?>;$ctrl.institutionId=<?= $institutionDefaultId; ?>;$ctrl.academicPeriodId=<?= $academicPeriodId; ?>;$ctrl.studentId=<?= $userId; ?>;">
 <div class="alert alert-info" ng-show="$ctrl.dayOfWeekList.length <= 0">There are no records.</div>                        
 <table ng-if="$ctrl.tableReady" class="timetable-table" ng-show="$ctrl.dayOfWeekList.length > 0">   
                     <thead>
-                    
+                        <tr class="timetable-header title">
+                            <th colspan="{{1 + $ctrl.dayOfWeekList.length}}">
+                                <div>
+                                    <h2>{{$ctrl.overviewData.name}}</h2>
+                                    <h6>Grade: {{$ctrl.overviewData.education_grade_name}} | Class: {{$ctrl.institutionClassData.name}}</h6>
+                                </div>
+                            </th>
+                        </tr>
                         <tr class="timetable-header">
                             <th>
                                 <h5><?= __('Time') ?></h5>
@@ -135,11 +129,15 @@ $this->end();
                                     
                                     <div ng-if="lessons.timeslot.start_time==timeslot.start_time && lessons.day_of_week==day.day_of_week">
                                         <div ng-repeat="(key, schedule) in lessons.schedule_lesson_details">
-                                            <div class="input-selection-inline" ng-show="schedule.schedule_curriculum_lesson.institution_subject.classes.length > 0 && schedule.schedule_curriculum_lesson.institution_subject.teachers.length > 0">                                                
+                                            <div class="input-selection-inline">
+                                                <span><strong>{{schedule.schedule_non_curriculum_lesson.name}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only == 1"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.education_subject_code}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only ==null || schedule.schedule_curriculum_lesson.code_only == 0"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.name}}</strong></span>
                                                 <br ng-show="schedule.schedule_curriculum_lesson.institution_subject.classes.length > 1">
                                                 <span ng-show="schedule.schedule_curriculum_lesson.institution_subject.classes.length > 1" ng-repeat="(key, classname) in schedule.schedule_curriculum_lesson.institution_subject.classes">{{classname.name}}<font ng-show="!$last">, </font></span>
+                                                <br ng-show="schedule.schedule_curriculum_lesson.institution_subject.teachers.length > 0">
+                                                <br ng-show="schedule.schedule_curriculum_lesson.institution_subject.teachers.length > 0">
+                                                <span ng-repeat="(key, teacher) in schedule.schedule_curriculum_lesson.institution_subject.teachers">{{teacher.name}}<font ng-show="!$last">, </font></span>
                                                 <br>
                                                 <span>{{schedule.schedule_lesson_room.institution_room.name}}</span>
                                             </div>
