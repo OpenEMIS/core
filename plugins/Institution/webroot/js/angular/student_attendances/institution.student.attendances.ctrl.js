@@ -18,6 +18,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.totalStudents = '-';
     vm.presentCount = '-';
     vm.absenceCount = '-';
+    vm.lateCount = '-';
 
     vm.allAttendances = '-';
     vm.allPresentCount = '-';
@@ -271,6 +272,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             if (vm.isMarked) {
                 var presentCount = 0;
                 var absenceCount = 0;
+                var lateCount = 0;
 
                 if (vm.totalStudents > 0) {
                     angular.forEach(vm.classStudentList, function(obj, key) {
@@ -280,8 +282,11 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                             switch (code) {
                                 case null:
                                 case attendanceType.PRESENT.code:
+                                    ++presentCount;
+                                     break;
                                 case attendanceType.LATE.code:
                                     ++presentCount;
+                                    ++lateCount;
                                     break;
                                 case attendanceType.UNEXCUSED.code:
                                 case attendanceType.EXCUSED.code:
@@ -294,9 +299,11 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
                 vm.presentCount = presentCount;
                 vm.absenceCount = absenceCount;
+                vm.lateCount = lateCount;
             } else {
                 vm.presentCount = '-';
                 vm.absenceCount = '-';
+                vm.lateCount = '-';  
             }
         } else {
             // all day
