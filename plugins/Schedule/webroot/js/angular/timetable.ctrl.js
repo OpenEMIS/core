@@ -12,12 +12,13 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     vm.DELETE_LESSON = -1;
 
     vm.SPLITTER_OVERVIEW = 'Overview';
+    vm.SPLITTER_CUSTOMIZE = 'Customize';
     vm.SPLITTER_LESSONS = 'Lessons';
 
     // config
     vm.action = 'view';
     vm.hideSplitter = 'true';
-    vm.splitterContent = vm.SPLITTER_OVERVIEW; // Overview/Lessons
+    vm.splitterContent = vm.SPLITTER_LESSONS; // Overview/Lessons
     vm.tableReady = false;
 
     // options and data
@@ -31,6 +32,8 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     vm.timetableStatus = [];
     vm.educationGradeList = [];
     vm.timetableLessons = [];
+    vm.timetableCustomizeColors = [];
+    vm.customizeFormData = {};
 
     // for overview data - display and saving
     vm.overviewData = {};
@@ -119,6 +122,14 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             .then(function(allLessons) {
                 console.log('getTimetableLessons', allLessons);
                 vm.timetableLessons = allLessons;
+                return TimetableSvc.getScheduleTimetableCustomizesTable(vm.timetableId);
+            }, vm.error)
+            .then(function(customizeColors) {
+                console.log('customizeColors', customizeColors);
+                angular.forEach(customizeColors, function(value, key){
+                    vm.timetableCustomizeColors[value.customize_key] = value.customize_value;
+                });
+                console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
                 return TimetableSvc.getEducationGrade(vm.timetableData.institution_class_id);
             }, vm.error)
             .then(function(educationGrades) {
@@ -200,7 +211,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         
         UtilsSvc.isAppendLoader(true);
         if (lessonType == vm.NON_CURRICULUM_LESSON) {
-            console.log('Anand lessonDetail:', lessonDetail.schedule_non_curriculum_lesson);
+            console.log('lessonDetail:', lessonDetail.schedule_non_curriculum_lesson);
             
             if(lessonDetail.schedule_non_curriculum_lesson.name === ""){  
                 vm.errorMessageNonCurriculum[key] = 'This field cannot be left empty';
@@ -283,6 +294,11 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         vm.splitterContent = vm.SPLITTER_OVERVIEW;
         vm.hideSplitter = 'false';
     };
+    
+    vm.onCustomizeClicked = function() {
+        vm.splitterContent = vm.SPLITTER_CUSTOMIZE;
+        vm.hideSplitter = 'false';
+    };
 
     vm.onTimeslotCellClicked = function(timeslot, day) {
         vm.splitterContent = vm.SPLITTER_LESSONS;
@@ -310,6 +326,10 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         vm.toggleSplitter(true);
 
         if (vm.splitterContent == vm.SPLITTER_OVERVIEW) {
+            vm.resetOverviewError(true);
+        }
+        
+        if (vm.splitterContent == vm.SPLITTER_CUSTOMIZE) {
             vm.resetOverviewError(true);
         }
     };
@@ -430,5 +450,12 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         $("#tblTimetable").table2excel({
             filename: "Timetable.xls"
         });
+    };
+    
+    vm.onSaveTitmetableCustomizeData = function() {
+       //vm.timetable_header_background
+       console.log('customizeFormData', vm.customizeFormData)
+       TimetableSvc.saveTimetableCustomizeData(vm.timetableId, vm.customizeFormData);
+       //timeTablePageLoad();
     };
 }
