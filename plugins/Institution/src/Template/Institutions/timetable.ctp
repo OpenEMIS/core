@@ -20,6 +20,11 @@ $this->start('toolbar');
             <i class="fa fa-info"></i>
         </button>
     </a>
+   <a ng-show="$ctrl.action == 'edit'" ng-click="$ctrl.onCustomizeClicked()">
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Customize') ?>" >
+            <i class="fa fa-paint-brush"></i>
+        </button>
+    </a>
     <a href="javascript:void(0)" ng-show="$ctrl.action == 'view'">
         <button ng-click="$ctrl.ExportTimetable()" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Download') ?>" >
             <i class="fa kd-download" ></i>
@@ -136,6 +141,26 @@ $panelHeader = $this->fetch('panelHeader');
     .input-selection-inline{
         width: 100%;
     }
+    
+    .splitter-filter .timetable-sub-customize input {
+        width: 50%;
+    }
+    .splitter-filter .timetable-sub-customize .input-form-wrapper  .input-inline.left{
+       float: left;
+       width: 50%;
+       text-align: left;
+    }
+    .splitter-filter .timetable-sub-customize .input-form-wrapper  .input-inline.right{
+        float: right;
+        width: 50%;
+        text-align: right;
+    }
+    table thead{
+        background-color:{{$ctrl.timetableCustomizeColors['timetable_header_bg']}};        
+    }
+    table thead h2, table thead h5, table thead h6{
+        color:{{$ctrl.timetableCustomizeColors['timetable_header_txt']}};
+    }
 </style>
  
 <div class="panel">
@@ -144,7 +169,7 @@ $panelHeader = $this->fetch('panelHeader');
             <bg-pane class="main-content" min-size-p="70" max-size-p="100">
                 <table id="tblTimetable" ng-if="$ctrl.tableReady" class="timetable-table">
                     <thead>
-                        <tr class="timetable-header title">
+                        <tr class="timetable-header">
                             <th colspan="{{1 + $ctrl.dayOfWeekList.length}}">
                                 <div>
                                     <h2>{{$ctrl.overviewData.name}}</h2>
@@ -171,7 +196,7 @@ $panelHeader = $this->fetch('panelHeader');
                                     
                                     <div ng-if="lessons.timeslot.start_time==timeslot.start_time && lessons.day_of_week==day.day_of_week">
                                         <div ng-repeat="(key, schedule) in lessons.schedule_lesson_details">
-                                            <div class="input-selection-inline">
+                                            <div class="input-selection-inline" style="background-color:{{$ctrl.timetableCustomizeColors['subject_bg_'+schedule.schedule_curriculum_lesson.institution_subject_id]}};color:{{$ctrl.timetableCustomizeColors['subject_txt_'+schedule.schedule_curriculum_lesson.institution_subject_id]}};">
                                                 <span><strong>{{schedule.schedule_non_curriculum_lesson.name}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only == 1"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.education_subject_code}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only ==null || schedule.schedule_curriculum_lesson.code_only == 0"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.name}}</strong></span>
@@ -326,6 +351,55 @@ $panelHeader = $this->fetch('panelHeader');
                             <div class="input text required">
                                 <input type="text" disabled="disabled" value="{{$ctrl.overviewData.interval_name}}"/>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <div ng-if="$ctrl.splitterContent == $ctrl.SPLITTER_CUSTOMIZE" class="timetable-sub-overview timetable-sub-customize">
+                       <div class="input input-selection-inline">
+                        <label><?= __('Timetable Header') ?></label>
+                        <hr>
+                     
+                        <div class="input-form-wrapper">
+                           <div class="input-inline left"><label><?= __('Background') ?></label></div>
+                           <div class="input-inline right">
+                           <i class="fa kd-bg-color"></i>                            
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['timetable_header_bg']" name="timetable_header_background">
+                           </div>
+                        </div>
+                        <div class="input-form-wrapper">
+                           <div class="input-inline left"><label><?= __('Text') ?></label></div>
+                           <div class="input-inline right">
+                            <i class="fa kd-font-color"></i>
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['timetable_header_txt']" name="timetable_header_text">
+                           </div>
+                        </div>
+                        </div>
+                        <div class="input input-selection-inline" ng-repeat="(key, subject) in $ctrl.institutionClassSubjects">
+                            <label>{{subject.institution_subject_name}}</label>
+                            
+                        <hr>
+                        
+                        <div class="input-form-wrapper">
+                           <div class="input-inline left"><label><?= __('Background') ?></label></div>
+                           <div class="input-inline right">
+                           <i class="fa kd-bg-color"></i>                            
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['subject_bg_'+subject.institution_subject_id]" name="subject_background_{{subject.institution_subject_id}}">
+                           </div>
+                        </div>
+                        <div class="input-form-wrapper">
+                           <div class="input-inline left"><label><?= __('Text') ?></label></div>
+                           <div class="input-inline right">
+                            <i class="fa kd-font-color"></i>
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['subject_txt_'+subject.institution_subject_id]" name="subject_text_{{subject.institution_subject_id}}">
+                           </div>
+                        </div>						
+                        </div>	
+						<hr>
+						<div class="input-form-wrapper">
+                           <div class="input-inline left"></div>
+                           <div class="input-inline right">
+                            <button type="button" class="btn btn-primary" ng-click="$ctrl.onSaveTitmetableCustomizeData()">Send</button>
+                           </div>
                         </div>
                     </div>
                 </div>
