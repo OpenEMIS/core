@@ -301,7 +301,8 @@ class InstitutionClassStudentsTable extends AppTable
         $mySubjectsPermission = $sheet['mySubjectsPermission'];
         $assessmentId = $sheet['assessmentId'];
         $staffId = $sheet['staffId'];
-        $student_status_arr = [3,4];
+        $studentStatusCode = ['TRANSFERRED','WITHDRAWN'];
+        $StudentStatuses = $this->StudentStatuses;
         $query
             ->contain([
                 'InstitutionClasses.Institutions',
@@ -315,9 +316,12 @@ class InstitutionClassStudentsTable extends AppTable
                 'Assessments.education_grade_id = InstitutionClassGrades.education_grade_id',
                 'Assessments.id' => $assessmentId
             ])
+            ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                'StudentStatuses.id = '.$this->aliasField('student_status_id')
+            ])
             ->select(['code' => 'Institutions.code', 'institution_id' => 'Institutions.name', 'openemis_number' => 'Users.openemis_no', 'birth_place_area' => 'BirthplaceAreas.name', 'dob' => 'Users.date_of_birth', 'class_name' => 'InstitutionClasses.name'])
             ->where([$this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('student_status_id NOT IN ') => $student_status_arr])
+                $StudentStatuses->aliasField('code NOT IN ') => $studentStatusCode])
             ->order(['class_name']);
 
         if (isset($sheet['classId'])) {

@@ -178,7 +178,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         $InstitutionSubjects = $this->InstitutionSubjects;
         $StudentStatuses = $this->StudentStatuses;
         $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-        $student_status_arr = [3,4];
+        $studentStatusCode = ['TRANSFERRED','WITHDRAWN'];
         return $query
             ->select([
                 $ItemResults->aliasField('id'),
@@ -218,9 +218,16 @@ class InstitutionSubjectStudentsTable extends AppTable
                     $ItemResults->aliasField('education_grade_id') => $gradeId
                 ]
             )
+            ->leftJoin(
+                [$StudentStatuses->alias() => $StudentStatuses->table()],
+                [
+                    $this->aliasField('student_status_id = ') . $StudentStatuses->aliasField('id')
+                ]
+            )
             ->where([
+                $InstitutionSubjects->aliasField('institution_id') => $institutionId,
                 $this->aliasField('institution_class_id') => $classId,
-                $this->aliasField('student_status_id NOT IN ') => $student_status_arr
+                $StudentStatuses->aliasField('code NOT IN ') => $studentStatusCode
             ])
             ->group([
                 $this->aliasField('student_id'),
