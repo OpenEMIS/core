@@ -178,7 +178,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         $InstitutionSubjects = $this->InstitutionSubjects;
         $StudentStatuses = $this->StudentStatuses;
         $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-
+        $student_status_arr = [3,4];
         return $query
             ->select([
                 $ItemResults->aliasField('id'),
@@ -219,7 +219,8 @@ class InstitutionSubjectStudentsTable extends AppTable
                 ]
             )
             ->where([
-                $this->aliasField('institution_class_id') => $classId
+                $this->aliasField('institution_class_id') => $classId,
+                $this->aliasField('student_status_id NOT IN ') => $student_status_arr
             ])
             ->group([
                 $this->aliasField('student_id'),
