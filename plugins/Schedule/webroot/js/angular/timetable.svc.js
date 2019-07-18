@@ -328,7 +328,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             .find('deleteTimetableCustomizeData',{institution_schedule_timetable_id:timetableId})
             .ajax({success: success, defer: true});
         
-        angular.forEach(customizeData.colors, function(value, key){
+        angular.forEach(customizeData, function(value, key){
             var saveData = {
                 institution_schedule_timetable_id: timetableId,
                 institution_id: institutionId,
