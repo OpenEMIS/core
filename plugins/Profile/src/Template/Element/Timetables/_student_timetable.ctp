@@ -97,12 +97,18 @@
     .input-selection-inline{
         width: 100%;
     }
+	table thead{
+        background-color:{{$ctrl.timetableCustomizeColors['timetable_header_bg']}};        
+    }
+    table thead h2, table thead h5, table thead h6{
+        color:{{$ctrl.timetableCustomizeColors['timetable_header_txt']}};
+    }
 </style>
 <div class="" ng-init="$ctrl.timetableId=<?= $timetable_id; ?>;$ctrl.institutionId=<?= $institutionDefaultId; ?>;$ctrl.academicPeriodId=<?= $academicPeriodId; ?>;$ctrl.studentId=<?= $userId; ?>;">
 <div class="alert alert-info" ng-show="$ctrl.dayOfWeekList.length <= 0">There are no records.</div>                        
 <table ng-if="$ctrl.tableReady" class="timetable-table" ng-show="$ctrl.dayOfWeekList.length > 0">   
                     <thead>
-                        <tr class="timetable-header title">
+                        <tr class="timetable-header">
                             <th colspan="{{1 + $ctrl.dayOfWeekList.length}}">
                                 <div>
                                     <h2>{{$ctrl.overviewData.name}}</h2>
@@ -129,7 +135,7 @@
                                     
                                     <div ng-if="lessons.timeslot.start_time==timeslot.start_time && lessons.day_of_week==day.day_of_week">
                                         <div ng-repeat="(key, schedule) in lessons.schedule_lesson_details">
-                                            <div class="input-selection-inline">
+                                            <div class="input-selection-inline" style="background-color:{{$ctrl.timetableCustomizeColors['subject_bg_'+schedule.schedule_curriculum_lesson.institution_subject_id]}};color:{{$ctrl.timetableCustomizeColors['subject_txt_'+schedule.schedule_curriculum_lesson.institution_subject_id]}};">
                                                 <span><strong>{{schedule.schedule_non_curriculum_lesson.name}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only == 1"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.education_subject_code}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only ==null || schedule.schedule_curriculum_lesson.code_only == 0"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.name}}</strong></span>

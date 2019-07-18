@@ -466,11 +466,16 @@ class InstitutionsController extends AppController
             'view',
             $this->ControllerAction->paramsEncode(['id' => $timetableId])
         ];
+        
+        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+                ->getCurrent();
 
         $this->set('_action', $action);
         $this->set('_back', Router::url($backUrl));
 
         $this->set('timetable_id', $timetableId);
+        $this->set('institutionDefaultId', $institutionId);
+        $this->set('academicPeriodId', $academicPeriodId);
         $this->set('ngController', 'TimetableCtrl as $ctrl');
         $this->render('timetable');
     }

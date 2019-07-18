@@ -55,6 +55,8 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     vm.selectedLessonType = 0;
     vm.errorMessageNonCurriculum = [];
     vm.errorMessageCurriculum = [];
+    vm.academicPeriodId = '';
+    vm.institutionId = '';
 
     /*
         Non-Curriculum Lesson structure
@@ -454,8 +456,8 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     
     vm.onSaveTitmetableCustomizeData = function() {
        //vm.timetable_header_background
-       console.log('customizeFormData', vm.customizeFormData)
-       TimetableSvc.saveTimetableCustomizeData(vm.timetableId, vm.customizeFormData);
-       //timeTablePageLoad();
+       console.log('customizeFormData', vm.customizeFormData);
+       TimetableSvc.saveTimetableCustomizeData(vm.timetableId, vm.institutionId, vm.academicPeriodId, vm.customizeFormData);
+       timeTablePageLoad();
     };
 }
