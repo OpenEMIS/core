@@ -129,6 +129,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             .then(function(customizeColors) {
                 console.log('customizeColors', customizeColors);
                 angular.forEach(customizeColors, function(value, key){
+                    vm.customizeFormData[value.customize_key] = value.customize_value;
                     vm.timetableCustomizeColors[value.customize_key] = value.customize_value;
                 });
                 console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
@@ -456,6 +457,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     
     vm.onSaveTitmetableCustomizeData = function() {
        //vm.timetable_header_background
+       UtilsSvc.isAppendLoader(true);
        console.log('customizeFormData', vm.customizeFormData);
        TimetableSvc.saveTimetableCustomizeData(vm.timetableId, vm.institutionId, vm.academicPeriodId, vm.customizeFormData);
        timeTablePageLoad();
