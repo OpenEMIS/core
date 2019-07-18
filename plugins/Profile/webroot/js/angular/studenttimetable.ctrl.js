@@ -22,7 +22,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Stu
 
     // options and data
     vm.studentId = '';
-    vm.timetableId= '5';
+    vm.timetableId= '';
     vm.academicPeriodId = '';
     vm.institutionId = '';
     vm.timetableData = {};
@@ -34,6 +34,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Stu
     vm.dayOfWeekList = [];
     vm.educationGradeList = [];
     vm.timetableLessons = [];
+    vm.timetableCustomizeColors = [];
     vm.scheduleTimeslotsId = [];
 
     // for lessons data - display and saving
@@ -86,6 +87,14 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Stu
             .then(function(allLessons) {
                 console.log('getTimetableLessons', allLessons);
                 vm.timetableLessons = allLessons;
+                return TimetableSvc.getScheduleTimetableCustomizesTable(vm.institutionId, vm.academicPeriodId);               
+            }, vm.error)
+            .then(function(customizeColors) {
+                console.log('customizeColors', customizeColors);
+                angular.forEach(customizeColors, function(value, key){
+                    vm.timetableCustomizeColors[value.customize_key] = value.customize_value;
+                });
+                console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
                 return StudentTimetableSvc.getEducationGrade(vm.timetableData.institution_class_id);
             }, vm.error)
             .then(function(educationGrades) {

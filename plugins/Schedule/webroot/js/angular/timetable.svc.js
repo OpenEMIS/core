@@ -315,12 +315,24 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         return ScheduleLessonDetailsTable.save(saveData);
     }
     
-    function saveTimetableCustomizeData(timetableId, customizeData) {
-  
+    function saveTimetableCustomizeData(timetableId, institutionId, academicPeriodId, customizeData) {
+        var success = function(response, deferred) {
+            console.log('Checkresponse', response);
+            if (angular.isDefined(response.data.data)) {
+                deferred.resolve(response.data.data);
+            } else {
+                deferred.reject('There was an error when retrieving the data');
+            }
+        };
+        ScheduleTimetableCustomizesTable
+            .find('deleteTimetableCustomizeData',{institution_schedule_timetable_id:timetableId})
+            .ajax({success: success, defer: true});
         
         angular.forEach(customizeData.colors, function(value, key){
             var saveData = {
                 institution_schedule_timetable_id: timetableId,
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId,
                 customize_key: key,
                 customize_value: value
             };
