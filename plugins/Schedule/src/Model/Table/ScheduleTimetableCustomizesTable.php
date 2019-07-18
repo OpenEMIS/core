@@ -21,5 +21,10 @@ class ScheduleTimetableCustomizesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ScheduleTimetable' => ['index', 'view', 'edit','add'],
         ]);
-    }    
+    }   
+    
+    public function findDeleteTimetableCustomizeData(Query $query, array $options){
+        $timetable_id = $options['institution_schedule_timetable_id'];
+        return $this->deleteAll(['institution_schedule_timetable_id' => $timetable_id]);
+    }
 }

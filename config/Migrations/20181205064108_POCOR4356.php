@@ -381,6 +381,44 @@ class POCOR4356 extends AbstractMigration
             ->addIndex('institution_room_id')
             ->save();
         // institution_schedule_lesson_rooms - END 
+		
+		
+		// institution_schedule_timetable_customizes
+        $InstitutionScheduleTimetableCustomizes = $this->table('institution_schedule_timetable_customizes', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains all the customize color'
+        ]);
+
+        $InstitutionScheduleTimetableCustomizes
+            ->addColumn('institution_schedule_timetable_id', 'integer', [
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('customize_key', 'string', [
+                'null' => false,
+                'limit' => 100
+            ])
+            ->addColumn('customize_value', 'string', [
+                'null' => false,
+                'limit' => 15
+            ])
+            ->addColumn('academic_period_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to academic_periods.id'
+            ])
+            ->addColumn('institution_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
+            ])
+			->addIndex('institution_schedule_timetable_id')
+            ->addIndex('institution_id')
+            ->addIndex('academic_period_id')
+            ->save();
+        // institution_schedule_timetable_customizes - END
+		
+		
         
         // institution_schedule_timetable_styles (?)
         
@@ -445,6 +483,9 @@ class POCOR4356 extends AbstractMigration
      
         // institution_schedule_lesson_rooms
         $this->execute('DROP TABLE IF EXISTS `institution_schedule_lesson_rooms`');
+		
+		// institution_schedule_timetable_customizes
+        $this->execute('DROP TABLE IF EXISTS `institution_schedule_timetable_customizes`');
 
         // security_functions
         // $this->execute('DROP TABLE IF EXISTS `security_functions`');
