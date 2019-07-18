@@ -364,14 +364,17 @@ $panelHeader = $this->fetch('panelHeader');
                            <div class="input-inline left"><label><?= __('Background') ?></label></div>
                            <div class="input-inline right">
                            <i class="fa kd-bg-color"></i>                            
-                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['timetable_header_bg']" value="{{$ctrl.timetableCustomizeColors.timetable_header_bg}}" name="timetable_header_background">
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData['timetable_header_bg']" value="{{$ctrl.timetableCustomizeColors.timetable_header_bg}}" name="timetable_header_background">
                            </div>
                         </div>
+
                         <div class="input-form-wrapper">
+						
                            <div class="input-inline left"><label><?= __('Text') ?></label></div>
                            <div class="input-inline right">
                             <i class="fa kd-font-color"></i>
-                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['timetable_header_txt']" value="{{$ctrl.timetableCustomizeColors.timetable_header_txt}}"  name="timetable_header_text">
+							
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData['timetable_header_txt']" value="{{$ctrl.timetableCustomizeColors.timetable_header_txt}}"  name="timetable_header_text">
                            </div>
                         </div>
                         </div>
@@ -384,14 +387,14 @@ $panelHeader = $this->fetch('panelHeader');
                            <div class="input-inline left"><label><?= __('Background') ?></label></div>
                            <div class="input-inline right">
                            <i class="fa kd-bg-color"></i>                            
-                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['subject_bg_'+subject.institution_subject_id]" name="subject_background_{{subject.institution_subject_id}}" value="{{$ctrl.timetableCustomizeColors['subject_bg_'+subject.institution_subject_id]}}">
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData['subject_bg_'+subject.institution_subject_id]" name="subject_background_{{subject.institution_subject_id}}" value="{{$ctrl.timetableCustomizeColors.timetable_header_bg}}">
                            </div>
                         </div>
                         <div class="input-form-wrapper">
                            <div class="input-inline left"><label><?= __('Text') ?></label></div>
                            <div class="input-inline right">
                             <i class="fa kd-font-color"></i>
-                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['subject_txt_'+subject.institution_subject_id]" name="subject_text_{{subject.institution_subject_id}}" value="{{$ctrl.timetableCustomizeColors['subject_txt_'+subject.institution_subject_id]}}">
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData['subject_txt_'+subject.institution_subject_id]" name="subject_text_{{subject.institution_subject_id}}" value="{{$ctrl.timetableCustomizeColors['subject_txt_'+subject.institution_subject_id]}}">
                            </div>
                         </div>						
                         </div>	
