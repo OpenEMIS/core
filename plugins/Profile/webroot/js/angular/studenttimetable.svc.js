@@ -18,7 +18,8 @@ function StudentTimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         AcademicPeriodTable: 'AcademicPeriod.AcademicPeriods',
         InstitutionClassGradesTable: 'Institution.InstitutionClassGrades',
         InstitutionRoomsTable: 'Institution.InstitutionRooms',
-        InstitutionClassSubjectsTable: 'Institution.InstitutionClassSubjects'
+        InstitutionClassSubjectsTable: 'Institution.InstitutionClassSubjects',
+        ScheduleTimetableCustomizesTable:'Schedule.ScheduleTimetableCustomizes'
     };
 
     var service = {
@@ -38,7 +39,8 @@ function StudentTimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         checkCurriculumSubjectExistSameTimeslot: checkCurriculumSubjectExistSameTimeslot,
         saveLessonDetailNonCurriculumData: saveLessonDetailNonCurriculumData,
         getInstitutionRooms:getInstitutionRooms,
-        getInstitutionClassSubjects:getInstitutionClassSubjects
+        getInstitutionClassSubjects:getInstitutionClassSubjects,
+        getScheduleTimetableCustomizesTable:getScheduleTimetableCustomizesTable,
     };
 
     return service;
@@ -48,6 +50,22 @@ function StudentTimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         KdDataSvc.base(baseUrl);
         KdDataSvc.controllerAction('ScheduleTimetable');
         KdDataSvc.init(models);
+    }
+    
+    function getScheduleTimetableCustomizesTable(timetableId){
+        var success = function(response, deferred) {
+            if (angular.isDefined(response.data.data)) {
+                deferred.resolve(response.data.data);
+            } else {
+                deferred.reject('There was an error when retrieving the data');
+            }
+        }; 
+        
+        return ScheduleTimetableCustomizesTable
+            .where({
+                institution_schedule_timetable_id: timetableId
+            })
+            .ajax({success: success, defer: true});          
     }
     
     function getInstitutionRooms(institutionId){

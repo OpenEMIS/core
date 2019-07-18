@@ -161,11 +161,12 @@ $panelHeader = $this->fetch('panelHeader');
     table thead h2, table thead h5, table thead h6{
         color:{{$ctrl.timetableCustomizeColors['timetable_header_txt']}};
     }
+	
 </style>
  
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter timetable" elements="getSplitterElements" ng-init="$ctrl.timetableId=<?= $timetable_id; ?>; $ctrl.action='<?= $_action; ?>';" float-btn="false" collapse="{{$ctrl.hideSplitter}}">
+        <bg-splitter orientation="horizontal" class="content-splitter timetable" elements="getSplitterElements" ng-init="$ctrl.timetableId=<?= $timetable_id; ?>;$ctrl.institutionId=<?= $institutionDefaultId; ?>;$ctrl.academicPeriodId=<?= $academicPeriodId; ?>; $ctrl.action='<?= $_action; ?>';" float-btn="false" collapse="{{$ctrl.hideSplitter}}">
             <bg-pane class="main-content" min-size-p="70" max-size-p="100">
                 <table id="tblTimetable" ng-if="$ctrl.tableReady" class="timetable-table">
                     <thead>
@@ -363,14 +364,14 @@ $panelHeader = $this->fetch('panelHeader');
                            <div class="input-inline left"><label><?= __('Background') ?></label></div>
                            <div class="input-inline right">
                            <i class="fa kd-bg-color"></i>                            
-                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['timetable_header_bg']" name="timetable_header_background">
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['timetable_header_bg']" value="{{$ctrl.timetableCustomizeColors.timetable_header_bg}}" name="timetable_header_background">
                            </div>
                         </div>
                         <div class="input-form-wrapper">
                            <div class="input-inline left"><label><?= __('Text') ?></label></div>
                            <div class="input-inline right">
                             <i class="fa kd-font-color"></i>
-                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['timetable_header_txt']" name="timetable_header_text">
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['timetable_header_txt']" value="{{$ctrl.timetableCustomizeColors.timetable_header_txt}}"  name="timetable_header_text">
                            </div>
                         </div>
                         </div>
@@ -383,14 +384,14 @@ $panelHeader = $this->fetch('panelHeader');
                            <div class="input-inline left"><label><?= __('Background') ?></label></div>
                            <div class="input-inline right">
                            <i class="fa kd-bg-color"></i>                            
-                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['subject_bg_'+subject.institution_subject_id]" name="subject_background_{{subject.institution_subject_id}}">
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['subject_bg_'+subject.institution_subject_id]" name="subject_background_{{subject.institution_subject_id}}" value="{{$ctrl.timetableCustomizeColors['subject_bg_'+subject.institution_subject_id]}}">
                            </div>
                         </div>
                         <div class="input-form-wrapper">
                            <div class="input-inline left"><label><?= __('Text') ?></label></div>
                            <div class="input-inline right">
                             <i class="fa kd-font-color"></i>
-                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['subject_txt_'+subject.institution_subject_id]" name="subject_text_{{subject.institution_subject_id}}">
+                            <input type="color" size="10" ng-model="$ctrl.customizeFormData.colors['subject_txt_'+subject.institution_subject_id]" name="subject_text_{{subject.institution_subject_id}}" value="{{$ctrl.timetableCustomizeColors['subject_txt_'+subject.institution_subject_id]}}">
                            </div>
                         </div>						
                         </div>	
