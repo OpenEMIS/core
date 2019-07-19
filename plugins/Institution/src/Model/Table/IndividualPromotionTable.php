@@ -561,19 +561,26 @@ class IndividualPromotionTable extends ControllerActionTable
 
     public function savePromotion(Entity $entity)
     {
+        $studentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
         $id = $entity->id;
         $originalStudent = $this->get($id);
         $studentStatuses = $this->StudentStatuses->findCodeList();
         $statusToUpdate = $entity->student_status_id;
+        
+        
 
         $fromAcademicPeriodId = $entity->from_academic_period_id;
         $toAcademicPeriodId = $entity->academic_period_id;
         $toPeriodData = $this->AcademicPeriods->get($toAcademicPeriodId);
         $effectiveDate = Time::parse($entity->effective_date);
+        $studentStatusId = $studentStatuses['CURRENT'];
+        if($entity->effective_date > date('Y-m-d')){
+            $studentStatusId = $statusToUpdate;
+        }
 
         // InstitutionStudents: Insert new record
         $studentObj = [];
-        $studentObj['student_status_id'] = $studentStatuses['CURRENT'];
+        $studentObj['student_status_id'] = $studentStatusId;
         $studentObj['student_id'] = $entity->student_id;
         $studentObj['education_grade_id'] = $entity->education_grade_id;
         $studentObj['academic_period_id'] = $entity->academic_period_id;
@@ -581,6 +588,18 @@ class IndividualPromotionTable extends ControllerActionTable
         $studentObj['end_year']= $toPeriodData->end_year;
         $studentObj['institution_id'] = $entity->institution_id;
         $studentObj['previous_institution_student_id'] = $id;
+        
+        // StudentStatusUpdates: Insert new record
+        $studentStatusUpdatesObj = $studentStatusUpdates->newEntity();
+        $studentStatusUpdatesObj->model = 'StudentStatusUpdates';
+        $studentStatusUpdatesObj->model_reference = 'Institutions';
+        $studentStatusUpdatesObj->effective_date = $effectiveDate;
+        $studentStatusUpdatesObj->execution_status = 1;
+        $studentStatusUpdatesObj->security_user_id = $entity->student_id;
+        $studentStatusUpdatesObj->institution_id = $entity->institution_id;
+        $studentStatusUpdatesObj->academic_period_id = $entity->academic_period_id;
+        $studentStatusUpdatesObj->education_grade_id = $entity->education_grade_id;        
+        $studentStatusUpdatesObj->status_id = $statusToUpdate; 
 
         if ($toAcademicPeriodId == $fromAcademicPeriodId) {
             // if student is promoted/demoted in the middle of the academic period
@@ -622,7 +641,7 @@ class IndividualPromotionTable extends ControllerActionTable
             $newClassStudent['student_id'] = $entity->student_id;
             $newClassStudent['education_grade_id'] = $entity->education_grade_id;
             $newClassStudent['institution_class_id'] = $entity->institution_class_id;
-            $newClassStudent['student_status_id'] = $studentStatuses['CURRENT'];
+            $newClassStudent['student_status_id'] = $studentStatusId;
             $newClassStudent['institution_id'] = $entity->institution_id;
             $newClassStudent['academic_period_id'] = $entity->academic_period_id;
         }
@@ -653,6 +672,10 @@ class IndividualPromotionTable extends ControllerActionTable
                 if (!empty($classId)) {
                     $InstitutionClassStudents->autoInsertClassStudent($newClassStudent);
                 }
+                
+                // Save record in the studentStatusUpdates
+                $studentStatusUpdates->save($studentStatusUpdatesObj);
+                
                 return true;
             } else {
                 $this->log($newInstitutionStudent->errors, 'debug');
