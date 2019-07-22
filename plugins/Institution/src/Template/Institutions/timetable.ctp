@@ -56,6 +56,7 @@ $panelHeader = $this->fetch('panelHeader');
 
     .timetable-table th, .timetable-table td {
         border: 1px solid #DDD;
+        padding:5px;
     }
 
     .timetable-table .timetable-header * {
@@ -140,6 +141,8 @@ $panelHeader = $this->fetch('panelHeader');
     }
     .input-selection-inline{
         width: 100%;
+        border-radius:5px;
+        margin-bottom:5px;
     }
     
     .splitter-filter .timetable-sub-customize input {
