@@ -55,17 +55,20 @@ class ScheduleTermsTable extends ControllerActionTable
             ->add('end_date', 'overlapDates', [
                 'rule' => function ($value, $context) {
                     $ScheduleTermsTable = $context['providers']['table'];
-
                     $institutionId = $context['data']['institution_id'];
                     $academicPeriodId = $context['data']['academic_period_id'];
                     $endDate = $context['data']['end_date'];
                     $startDate = $context['data']['start_date'];
-
+                    $termIdCondition = '';
+                    if(isset($context['data']['id']) && $context['data']['id'] > 0){
+                        $termIdCondition = array('ScheduleTerms.id !=' => $context['data']['id']);
+                    }
+                    
                     $count = $ScheduleTermsTable 
                         ->find()
                         ->where([
                             $ScheduleTermsTable->aliasField('institution_id') => $institutionId,
-                            $ScheduleTermsTable->aliasField('academic_period_id') => $academicPeriodId,
+                            $ScheduleTermsTable->aliasField('academic_period_id') => $academicPeriodId,                                                            
                             'OR' => [
                                 [
                                     $ScheduleTermsTable->aliasField('start_date <= ') => $startDate,
@@ -83,7 +86,8 @@ class ScheduleTermsTable extends ControllerActionTable
                                     $ScheduleTermsTable->aliasField('start_date <= ') => $startDate,
                                     $ScheduleTermsTable->aliasField('end_date >= ') => $endDate,
                                 ],
-                            ]
+                            ],
+                            $termIdCondition
                         ])
                         ->count();
 
@@ -202,8 +206,8 @@ class ScheduleTermsTable extends ControllerActionTable
         ]);
         $this->field('code');
         $this->field('name');
-        $this->field('start_date');
-        $this->field('end_date');
+        //$this->field('start_date');
+        //$this->field('end_date');
         $this->setFieldOrder(['academic_period_id', 'code', 'name', 'start_date', 'end_date']);
     }
 }
