@@ -23,6 +23,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.allPresentCount = '-';
     vm.allAbsenceCount = '-';
     vm.allLateCount = '-';
+    vm.exportexcel = '';
+    vm.excelExportAUrl = '';
 
     // Options
     vm.academicPeriodOptions = [];
@@ -350,6 +352,17 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     // params
     vm.getClassStudentParams = function() {
+
+        vm.excelExportAUrl = vm.exportexcel
+                             +'?' +
+                            'institution_class_id='+ vm.selectedClass+
+                            '&academic_period_id='+ vm.selectedAcademicPeriod+
+                            '&day_id='+ vm.selectedDay+
+                            '&attendance_period_id='+ vm.selectedAttendancePeriod+
+                            '&week_start_day='+ vm.selectedWeekStartDate+
+                            '&week_end_day='+ vm.selectedWeekEndDate+
+                            '&week_id='+ vm.selectedWeek;
+        
         return {
             institution_id: vm.institutionId,
             institution_class_id: vm.selectedClass,
@@ -384,6 +397,9 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     // changes
     vm.changeAcademicPeriod = function() {
+        console.log("hello");
+        //debugger;
+        //"var test = "/search?fname="+fname"+"&lname="+lname"
         UtilsSvc.isAppendLoader(true);
         InstitutionStudentAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod)
         .then(function(weekListOptions) {
