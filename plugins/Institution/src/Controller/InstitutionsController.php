@@ -470,8 +470,8 @@ class InstitutionsController extends AppController
             'add'
         ];
 
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-        $this->Navigation->addCrumb($crumbTitle);
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $this->Navigation->addCrumb($crumbTitle);
 
         $this->set('_edit', $_edit);
         $this->set('_excel', $_excel);
