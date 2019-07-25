@@ -356,8 +356,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.getClassStudentParams = function() {
 
         vm.excelExportAUrl = vm.exportexcel
-                             +'?' +
-                            'institution_class_id='+ vm.selectedClass+
+                             +'?institution_id='+ vm.institutionId+
+                            '&institution_class_id='+ vm.selectedClass+
                             '&academic_period_id='+ vm.selectedAcademicPeriod+
                             '&day_id='+ vm.selectedDay+
                             '&attendance_period_id='+ vm.selectedAttendancePeriod+
