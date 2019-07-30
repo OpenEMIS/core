@@ -42,7 +42,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             'targetForeignKey' => 'education_subject_id',
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
-            'cascadeCallbacks' => true
+            'cascadeCallbacks' => false
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -410,9 +410,9 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
         $patchOptions->exchangeArray($arrayOptions);
     }
-
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $options) //cant use afterSave because it wont be detected by unit test case.
-    {
+    
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $options){
+        
         if (!$entity->isNew()) { //for edit
             // can't save properly using associated method
             // until we find a better solution, saving of assessment items grade types will be done in afterSave as of now
@@ -445,7 +445,45 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 }
             }
         }
+        
+        unset($entity->education_subjects);        
     }
+    
+//    public function editAfterSave(Event $event, Entity $entity, ArrayObject $options) //cant use afterSave because it wont be detected by unit test case.
+//    {
+//        if (!$entity->isNew()) { //for edit
+//            // can't save properly using associated method
+//            // until we find a better solution, saving of assessment items grade types will be done in afterSave as of now
+//            $id = $entity->id;
+//            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+//            $AssessmentItemsGradingTypes->deleteAll(['assessment_period_id' => $id]);
+//
+//            if ($entity->has('education_subjects')) {
+//                $educationSubjects = $entity->education_subjects;
+//                if (!empty($educationSubjects)) {
+//                    foreach ($educationSubjects as $educationSubject) {
+//                        $query = $AssessmentItemsGradingTypes->find()->where([
+//                            $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubject->_joinData->assessment_item_id,
+//                            $AssessmentItemsGradingTypes->aliasField('assessment_id') => $educationSubject->_joinData->assessment_id,
+//                            $AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id') => $educationSubject->_joinData->assessment_grading_type_id,
+//                            $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $id
+//                        ]);
+//
+//                        if ($query->count() == 0) {
+//                            $newEntity = $AssessmentItemsGradingTypes->newEntity([
+//                                'assessment_id' => $educationSubject->_joinData->assessment_id,
+//                                'education_subject_id' => $educationSubject->_joinData->education_subject_id,
+//                                'assessment_grading_type_id' => $educationSubject->_joinData->assessment_grading_type_id,
+//                                'assessment_period_id' => $id
+//                            ]);
+//
+//                            $AssessmentItemsGradingTypes->save($newEntity);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
