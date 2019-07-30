@@ -42,7 +42,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             'targetForeignKey' => 'education_subject_id',
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
-            'cascadeCallbacks' => false
+            'cascadeCallbacks' => true
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
