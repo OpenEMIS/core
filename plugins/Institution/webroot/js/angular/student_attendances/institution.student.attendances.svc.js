@@ -403,7 +403,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         }
         columnDefs.push({
             headerName: translateText.translated.OpenEmisId,
-            field: "user.id",
+            field: "user.openemis_no",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -472,7 +472,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         columnDefs.push({
             headerName: translateText.translated.OpenEmisId,
-            field: "user.id",
+            field: "user.openemis_no",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
