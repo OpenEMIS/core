@@ -11,6 +11,7 @@ use App\Model\Table\AppTable;
 class AssessmentResultsTable extends AppTable
 {
     private $groupAssessmentPeriodCount = 0;
+    const STUDENT_ENROLLED_STATUS = 1;
 
     public function initialize(array $config)
     {
@@ -676,10 +677,14 @@ class AssessmentResultsTable extends AppTable
                         ]
                     ]
                 ])
-                ->where([$this->aliasField('institution_class_id') => $params['class_id']])
+                ->where([
+                    $this->aliasField('institution_class_id') => $params['class_id'],
+                    $this->aliasField('student_status_id') => self::STUDENT_ENROLLED_STATUS
+                ])
                 ->order(['Users.first_name', 'Users.last_name'])
                 // ->hydrate(false)
                 ->all();
+            
             return $entity->toArray();
         }
     }
