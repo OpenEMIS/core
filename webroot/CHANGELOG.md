@@ -1,3 +1,10 @@
+### [3.43.4] - 2019-07-31
+- Bug fix on Institutions > Performance > Assessments page loading speed
+- Bug fix on Institutions > Performance > Assessments page to allow Staff that has the right access to edit 
+- Bug fix to split the configurations for Special Needs Referral reasons and Special Needs Assessments inn Special Needs feature 
+- Bug fix to enable viewing of side panel in smaller screens in Institutions > Attendance feature
+- Bug fix on identity Type not appearing in User > Overview page
+
 ### [3.43.3] - 2019-06-21
 - Bug fix on bulk users import in Directories > Import page
 - Bug fix on placeholder for student's next class in Institution > Report Cards
