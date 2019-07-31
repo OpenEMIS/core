@@ -12,6 +12,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
+use Cake\I18n\Time;
 use Cake\Log\Log;
 
 class ExaminationCentresTable extends ControllerActionTable {
@@ -245,14 +246,46 @@ class ExaminationCentresTable extends ControllerActionTable {
         if (!array_key_exists($specialNeedsFieldKey, $data[$this->alias()])) {
             $data[$this->alias()][$specialNeedsFieldKey] = [];
         }
+        
+        // Get special need type ids POCOR-4231
+        $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedTypes;
+        $allSpecialNeeds = $SpecialNeedTypesTable->getVisibleNeedTypes();
+        $allSpecialNeedsData = array_keys($allSpecialNeeds);
 
         $specialNeedIds = array_column($data[$this->alias()][$specialNeedsFieldKey], 'special_need_type_id');
         $originalSpecialNeeds = $entity->extractOriginal([$specialNeedsFieldKey])[$specialNeedsFieldKey];
-        foreach ($originalSpecialNeeds as $key => $need) {
-            if (!in_array($need['special_need_type_id'], $specialNeedIds)) {
-                $this->ExaminationCentreSpecialNeeds->delete($need);
-                unset($entity->examination_centre_special_needs[$key]);
+        
+        // Get unique ids which are not present for remove POCOR-4231
+        $RemoveSpecialNeedIds = array_diff($allSpecialNeedsData, $specialNeedIds);
+        if (count($RemoveSpecialNeedIds) > 0 && $entity->institution_id > 0) {
+            foreach ($RemoveSpecialNeedIds as $removeSNI) {
+                $this->ExaminationCentreSpecialNeeds->deleteAll(
+                       [  'special_need_type_id' => $removeSNI, 
+                          'examination_centre_id' => $entity->institution_id
+                        ]);
             }
+        }
+        
+        // Get unique ids for new special need type ids and save in table  POCOR-4231
+        $associatedSpecialNeedsTemp = [];
+        $associatedSpecialNeeds = $this->ExaminationCentreSpecialNeeds
+            ->find('all')
+            ->where(['examination_centre_id' => $entity->institution_id])
+            ->toArray();
+        foreach ($associatedSpecialNeeds as $associatedSpecialNeed) {
+            $associatedSpecialNeedsTemp[] = $associatedSpecialNeed->special_need_type_id;
+        }
+        
+        $AddNewSpecialNeedIds = array_diff($specialNeedIds, $associatedSpecialNeedsTemp);
+        
+        foreach($AddNewSpecialNeedIds as $AddNewSpecialNeedId) {
+            $data = [];            
+            $data = $this->ExaminationCentreSpecialNeeds->newEntity();            
+            $data['examination_centre_id'] = $entity->institution_id;
+            $data['special_need_type_id'] = $AddNewSpecialNeedId;
+            $data['created_user_id'] = $entity->created_user_id;
+            $data['created'] = Time::now();
+            $this->ExaminationCentreSpecialNeeds->save($data);
         }
     }
 
@@ -412,15 +445,22 @@ class ExaminationCentresTable extends ControllerActionTable {
         $fieldKey = 'examination_centre_special_needs';
 
         if ($action == 'view') {
+            $associatedSpecialNeedsTemp = [];
+            $associatedSpecialNeeds = $this->ExaminationCentreSpecialNeeds->find('all')->where(['examination_centre_id' => $entity->institution_id])->toArray();
             $associated = $entity->extractOriginal([$fieldKey]);
-            if (!empty($associated[$fieldKey])) {
-                foreach ($associated[$fieldKey] as $key => $obj) {
-                    $rowData = [];
-                    $rowData[] = $obj->special_need_type->name;
-                    $tableCells[] = $rowData;
-                }
+            foreach ($associatedSpecialNeeds as $associatedSpecialNeed) {
+                $associatedSpecialNeedsTemp[] = $associatedSpecialNeed->special_need_type_id;
             }
 
+            if (!empty($associated[$fieldKey])) {
+                foreach ($associated[$fieldKey] as $key => $obj) {
+                    if (in_array($obj->special_need_type_id, $associatedSpecialNeedsTemp)) {
+                        $rowData = [];
+                        $rowData[] = $obj->special_need_type->name;
+                        $tableCells[] = $rowData;
+                    }
+                }
+            }
         } else if ($action == 'edit') {
             // options for special needs types
             $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedTypes;
@@ -432,16 +472,23 @@ class ExaminationCentresTable extends ControllerActionTable {
 
             $selectedSpecialNeeds = [];
             if ($this->request->is(['get'])) {
+                $associatedSpecialNeedsTemp = [];
+                $associatedSpecialNeeds = $this->ExaminationCentreSpecialNeeds->find('all')->where(['examination_centre_id' => $entity->institution_id])->toArray();
+
+                foreach ($associatedSpecialNeeds as $associatedSpecialNeed) {
+                    $associatedSpecialNeedsTemp[] = $associatedSpecialNeed->special_need_type_id;
+                }
                 $associated = $entity->extractOriginal([$fieldKey]);
                 if (!empty($associated[$fieldKey])) {
                     foreach ($associated[$fieldKey] as $key => $obj) {
-                        $selectedSpecialNeeds[] = [
-                            'special_need_type_id' => $obj->special_need_type_id,
-                            'name' => $obj->special_need_type->name
-                        ];
+                        if (in_array($obj->special_need_type_id, $associatedSpecialNeedsTemp)) {
+                            $selectedSpecialNeeds[] = [
+                                'special_need_type_id' => $obj->special_need_type_id,
+                                'name' => $obj->special_need_type->name
+                            ];
+                        }
                     }
                 }
-
             } else if ($this->request->is(['post', 'put'])) {
                 if (array_key_exists($fieldKey, $requestData[$alias])) {
                     foreach ($requestData[$alias][$fieldKey] as $key => $obj) {

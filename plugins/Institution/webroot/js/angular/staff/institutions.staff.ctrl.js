@@ -263,12 +263,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function changeNationality() {
         var nationalityId = StaffController.Staff.nationality_id;
         var options = StaffController.StaffNationalitiesOptions;
+        var identityOptions = StaffController.StaffIdentitiesOptions;
         for(var i = 0; i < options.length; i++) {
             if (options[i].id == nationalityId) {
-                StaffController.Staff.identity_type_id = options[i].identity_type_id;
+                if(options[i].identity_type_id == null){
+                    StaffController.Staff.identity_type_id = identityOptions['0'].id;
+                    StaffController.Staff.identity_type_name = identityOptions['0'].name;
+                }else{
+                    StaffController.Staff.identity_type_id = options[i].identity_type_id;
+                    StaffController.Staff.identity_type_name = options[i].identity_type.name; 
+                }
                 StaffController.Staff.nationality_name = options[i].name;
-                StaffController.Staff.identity_type_name = options[i].identity_type.name;
-                break;
+                break;  
             }
         }
     }

@@ -172,11 +172,39 @@ $panelHeader = $this->fetch('panelHeader');
     .rtl #institution-student-attendances-table .ag-cell textarea#comment {
         font-size: 14px;
     }
+
+    .mobile-split-btn button.btn-default{z-index:9999!important; bottom:40px; position:fixed !important; right:15px;}
+
+    @media screen and (max-width:667px){
+         .table-wrapper ::-webkit-scrollbar {
+             -webkit-appearance: none;
+         }
+
+         .table-wrapper ::-webkit-scrollbar:vertical {
+             width: 8px;
+         }
+
+         .table-wrapper ::-webkit-scrollbar:horizontal {
+             height: 8px;
+         }
+
+         .table-wrapper ::-webkit-scrollbar-thumb {
+             background-color: rgba(0, 0, 0, .3);
+             border-radius: 10px;
+             border: 2px solid #ffffff;
+         }
+
+         .table-wrapper ::-webkit-scrollbar-track {
+             border-radius: 10px;
+             background-color: #ffffff;
+         }
+    }
+
 </style>
 
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;" float-btn="false">
+        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;" float-btn="true">
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">
                     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
