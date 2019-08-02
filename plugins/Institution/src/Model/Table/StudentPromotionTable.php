@@ -813,7 +813,7 @@ class StudentPromotionTable extends AppTable
                 }
             }
             if (empty($students)) {
-                $this->Alert->warning($this->aliasField('noData'));
+                //$this->Alert->warning($this->aliasField('noData'));
             }
         }
 
