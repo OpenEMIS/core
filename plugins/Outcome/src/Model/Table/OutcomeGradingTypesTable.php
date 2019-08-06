@@ -64,7 +64,13 @@ class OutcomeGradingTypesTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['GradingOptions.InstitutionOutcomeResults']);
+
+        if ($this->request->params['action'] == 'GradingTypes') 
+        {
+            $query->contain(['GradingOptions']);
+        } else {
+            $query->contain(['GradingOptions.InstitutionOutcomeResults']);
+        }
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
