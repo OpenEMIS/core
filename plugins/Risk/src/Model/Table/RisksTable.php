@@ -492,9 +492,7 @@ class RisksTable extends ControllerActionTable
         $originalEntityList = [];
         
         // Get original data from table
-        $originalEntity = $this->RiskCriterias
-                ->find()
-                ->where(['risk_id'=>$entity->id])
+        $originalEntity = $this->RiskCriterias->find()->where(['risk_id'=>$entity->id])
                 ->toArray();
         
         // get list of original entity
