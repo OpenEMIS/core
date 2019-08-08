@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-
+use DateTime;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -61,14 +61,19 @@ class InstitutionGradesTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
+        $today = new DateTime();
+        $startDate = $today->format('d-m-Y');
         $this->field('level');
-        $this->field('programme');
+        $this->field('programme');        
         $this->field('end_date', ['default_date' => false]);
         $this->field('education_grade_id');
+        $this->field('education_subject_id');
 
         if ($this->action == 'add') {
+            $this->field('start_date', ['value' => $startDate]);
             $this->setFieldOrder([
-                'level', 'programme', 'start_date', 'end_date', 'education_grade_id'
+                'level', 'programme','education_grade_id', 'start_date', 
+                'end_date','education_subject_id'
             ]);
         } else if ($this->action == 'index') {
             $this->setFieldOrder([
@@ -127,15 +132,18 @@ class InstitutionGradesTable extends ControllerActionTable
              * so if errors array is more than 1, other fields are having an error
              */
             if (empty($errors) || count($errors)==1) {
+                
                 if ($data->offsetExists('grades')) {
                     $gradeIsSelected = false;
                     $error = true;
                     $gradeEntities = [];
-                    foreach ($data['grades'] as $key=>$grade) {
-                        if ($grade['education_grade_id'] != 0) {
+                    
+                        if ($data['grades']['education_grade_id'] != 0 
+                            && $data['grades']['education_grade_id'] != ''
+                            ) {
                             $error = false;
                             $gradeIsSelected = true;
-
+                            $grade['education_grade_id'] = $data['grades']['education_grade_id'];
                             // need to set programme value since it was marked as required in validationDefault()
                             $grade['programme'] = $entity->programme;
                             $grade['start_date'] = $entity->start_date;
@@ -143,13 +151,13 @@ class InstitutionGradesTable extends ControllerActionTable
                             if ($entity->has('end_date')) {
                                 $grade['end_date'] = $entity->end_date;
                             }
-
+                            
                             $gradeEntities[$key] = $this->newEntity($grade);
                             if ($gradeEntities[$key]->errors()) {
                                 $error = true;
                             }
                         }
-                    }
+                  
                     if ($error && $gradeIsSelected) {
                         $model->Alert->error($this->aliasField('failedSavingGrades'));
                         return false;
@@ -179,17 +187,21 @@ class InstitutionGradesTable extends ControllerActionTable
                     ->find('order')
                     ->where([$this->EducationGrades->aliasField('education_programme_id') => $entity->programme])
                     ->count();
+            
+            $educationGradeId = ($data['grades']['education_grade_id'] =='')
+                               ?0:$data['grades']['education_grade_id'];
             $existingGradeCount = $this->find()
                     ->select([$this->EducationGrades->aliasField('name')])
                     ->contain([$this->EducationGrades->alias()])
                     ->where([
                         $this->EducationGrades->aliasField('education_programme_id') => $entity->programme,
+                        $this->aliasField('education_grade_id') => $educationGradeId,
                         $this->aliasField('institution_id') => $entity->institution_id
                     ])
                     ->count();
-
-            if ($educationGradeCount == $existingGradeCount) {
-                $this->Alert->warning($this->aliasField('allGradesAlreadyAdded'));
+            
+            if ($existingGradeCount) {
+                $this->Alert->warning($this->aliasField('gradesAlreadyAdded'));
                 $event->stopPropagation();
                 return $this->controller->redirect($this->url('index'));
             } else {
@@ -238,7 +250,6 @@ class InstitutionGradesTable extends ControllerActionTable
     {
         $data[$this->alias()]['programme'] = 0;
     }
-
 
 /******************************************************************************************************************
 **
@@ -331,19 +342,64 @@ class InstitutionGradesTable extends ControllerActionTable
                 if (empty($programmeId)) {
                     $programmeId = 0;
                 }
-                $data = $this->EducationGrades->find()
+                
+                $data = $this->EducationGrades->find('list')
                 ->find('visible')
                 ->find('order')
                 ->where(['EducationGrades.education_programme_id' => $programmeId])
-                ->all();
+                ->toArray();
 
                 $institutionId = $this->Session->read('Institution.Institutions.id');
                 $exists = $this->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
                 ->where([$this->aliasField('institution_id') => $institutionId])
                 ->toArray();
-
+              
                 $attr['data'] = $data;
                 $attr['exists'] = $exists;
+            }
+        } else if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+        }
+        return $attr;
+    }
+    
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    {       
+        if ($action == 'add') {
+            $attr['type'] = 'element';
+            $attr['element'] = 'Institution.Programmes/subjects';
+            if ($request->is(['post', 'put'])) {
+                
+                $educationGradeId = $request->data($this->aliasField('grades.education_grade_id'));
+
+                if (!empty($educationGradeId)) {
+                    
+                    
+                    $existingSubjectsInGrade = 
+                    TableRegistry::get('Education.EducationGradesSubjects')
+                    ->find('list', [
+                        'keyField' => 'education_subject_id',
+                        'valueField' => 'education_subject_id'
+                    ])
+                    ->where(['EducationGradesSubjects.education_grade_id' => $educationGradeId])
+                    ->toArray();
+                   
+                    $subjectQuery = TableRegistry::get('Education.EducationSubjects')
+                    ->find()
+                    ->find('visible')
+                    ->find('order');
+
+                    // only show subjects that have been added in the grade
+                    if (!empty($existingSubjectsInGrade)) {
+                        $subjectQuery->where([
+                            'EducationSubjects.id IN' => $existingSubjectsInGrade
+                            ]);
+                    }
+
+                    $subjectOptions = $subjectQuery->toArray();
+                }
+                
+                $attr['data'] = $subjectOptions;
             }
         } else if ($action == 'edit') {
             $attr['type'] = 'readonly';
