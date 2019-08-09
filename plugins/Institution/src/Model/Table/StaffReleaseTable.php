@@ -390,12 +390,12 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
                 //Restrict Staff Release Between Different Provider
                 $restrictStaffReleaseBetweenDifferentProvider = $ConfigItems->value('restrict_staff_release_between_different_provider');
 
-                if ($restrictStaffReleaseBetweenDifferentProvider) {                    
-                    if ($entity->has('institution_id')) {
+                if ($restrictStaffReleaseBetweenDifferentProvider && 
+                    $entity->has('institution_id')    
+                    ) {                    
                         $institutionId = $entity->institution_id;
                         $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
                         $conditions['institution_type_id !='] = $institutionTypeId;
-                    }
                 }
 
                 $options = $this->NewInstitutions->find('list', [
