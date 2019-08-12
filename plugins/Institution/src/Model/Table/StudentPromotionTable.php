@@ -354,6 +354,18 @@ class StudentPromotionTable extends AppTable
                                 ->count();
                         }
                     ]);
+                    $studentsPeriod = $this->find()
+                    ->matching('Users')
+                    ->matching('EducationGrades')
+                    ->where([
+                        $this->aliasField('institution_id') => $institutionId,
+                        $this->aliasField('academic_period_id') => $selectedPeriod,
+                        $this->aliasField('student_status_id') => $statuses['CURRENT']
+                    ])
+                    ->toArray();
+                    if(count($studentsPeriod) == 0){
+                        $attr['attr']['value'] = "";
+                    }
                 }
 
                 $attr['onChangeReload'] = 'changeGradeToPromote';
@@ -706,7 +718,7 @@ class StudentPromotionTable extends AppTable
                         $this->aliasField('student_status_id') => $studentStatuses['CURRENT']
                     ])
                     ->toArray();
-                    if(empty($studentsPeriod)){
+                    if(count($studentsPeriod) == 0){
                         $this->Alert->warning($this->aliasField('noData'));
                     }
 
