@@ -1285,6 +1285,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             ->select(['id'])
                             ->first();
                     }
+                    
                     if (!$existingSchoolSubjects) {
                         $newSchoolSubjects[$key] = [
                             'name' => $educationSubject['name'],
