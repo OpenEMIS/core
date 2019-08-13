@@ -238,7 +238,28 @@ class InstitutionGradesTable extends ControllerActionTable
         if (count($data['grades']['education_grade_subject_id']) > 0
         ) {
             $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
-            $createdUserId = $session->read('Auth.User.id');
+            $createdUserId = $session->read('Auth.User.id');            
+            $institutionClassGrades = TableRegistry::get('InstitutionClassGrades')
+                    ->find()->select([
+                        'InstitutionClassGrades.education_grade_id',
+                        'InstitutionClassGrades.institution_class_id',
+                        'InstitutionClasses.academic_period_id',
+                        'InstitutionClasses.institution_id'
+                    ])
+                    ->innerJoin(['InstitutionClasses' => 'institution_classes'],
+                        [	                            
+                            'InstitutionClasses.id = InstitutionClassGrades.institution_class_id',
+                        ])
+                    ->where([
+                        'InstitutionClassGrades.education_grade_id'=>$entity->education_grade->id,
+                        'InstitutionClasses.institution_id = '.$entity->institution_id,
+                        ])
+                    ->first();
+            
+            $gradeSubjectEntities = array_values(
+                    array_filter($gradeSubjectEntities)
+                    );
+
             foreach($gradeSubjectEntities as $gradeSubjectId){ 
                 if($gradeSubjectId > 0){
                     $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
@@ -255,6 +276,146 @@ class InstitutionGradesTable extends ControllerActionTable
                     $institutionProgramGradeSubject->save($gradeSubject);   
                 }
             }
+            
+        $academicPeriodId = $institutionClassGrades->InstitutionClasses['academic_period_id'];
+        $errors = $institutionClassGrades->errors();
+        if (empty($errors)) {
+            /**
+             * get the list of education_grade_id from the education_grades array
+             */           
+            $grades = $institutionClassGrades->education_grade_id;
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            /**
+             * from the list of grades, find the list of subjects group by grades in (education_grades_subjects) where visible = 1
+             */
+            $educationGradeSubjects = $EducationGrades
+                    ->find()
+                    ->contain(['EducationSubjects' => function ($query) use ($grades) {
+                        return $query
+                            ->join([
+                                [
+                                    'table' => 'education_grades_subjects',
+                                    'alias' => 'GradesSubjects',
+                                    'conditions' => [
+                                        'GradesSubjects.education_grade_id IN' => $grades,
+                                        'GradesSubjects.education_subject_id = EducationSubjects.id',
+                                        'GradesSubjects.visible' => 1
+                                    ]
+                                ]
+                            ]);
+                    }])
+                    ->where([
+                        'EducationGrades.id IN' => $grades,
+                        'EducationGrades.visible' => 1
+                    ])
+                    ->toArray();
+            unset($EducationGrades);
+            unset($grades);
+
+            $educationSubjects = [];
+            if (count($educationGradeSubjects) > 0) {
+                foreach ($educationGradeSubjects as $gradeSubject) {
+                    foreach ($gradeSubject->education_subjects as $subject) {
+                        if(in_array($subject->id, $gradeSubjectEntities)){
+                            if (!isset($educationSubjects[$gradeSubject->id.'_'.$subject->id])) {
+                                $educationSubjects[$gradeSubject->id.'_'.$subject->id] = [
+                                    'id' => $subject->id,
+                                    'education_grade_id' => $gradeSubject->id,
+                                    'name' => $subject->name
+                                ];
+                            }
+                        }
+                    }
+                    unset($subject);
+                }
+                unset($gradeSubject);
+            }
+            unset($educationGradeSubjects);
+                        
+            if (!empty($educationSubjects)) {
+                /**
+                 * for each education subjects, find the primary key of institution_classes using (entity->academic_period_id and institution_id and education_subject_id)
+                 */
+                $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+                $institutionSubjects = $InstitutionSubjects->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'education_subject_id'
+                    ])
+                    ->where([
+                        $InstitutionSubjects->aliasField('academic_period_id') => $academicPeriodId,
+                        $InstitutionSubjects->aliasField('institution_id') => $entity->institution_id,
+                        $InstitutionSubjects->aliasField('education_subject_id').' IN' => array_column($educationSubjects, 'id')
+                    ])
+                    ->toArray();
+                $institutionSubjectsIds = [];
+                foreach ($institutionSubjects as $key => $value) {
+                    $institutionSubjectsIds[$value][] = $key;
+                }
+
+                unset($institutionSubjects);
+
+                /**
+                 * using the list of primary keys, search institution_class_subjects (InstitutionClassSubjects) to check for existing records
+                 * if found, don't insert,
+                 * else create a record in institution_subjects (InstitutionSubjects)
+                 * and link to the subject in institution_class_subjects (InstitutionClassSubjects) with status 1
+                 */
+                $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+                $newSchoolSubjects = [];
+
+                foreach ($educationSubjects as $key => $educationSubject) {
+                    $existingSchoolSubjects = false;
+                    if (array_key_exists($key, $institutionSubjectsIds)) {
+                        $existingSchoolSubjects = $InstitutionClassSubjects->find()
+                            ->where([
+                                $InstitutionClassSubjects->aliasField('institution_class_id') => $institutionClassGrades->institution_class_id,
+                                $InstitutionClassSubjects->aliasField('institution_class_id').' IN' => $institutionSubjectsIds[$key],
+                            ])
+                            ->select(['id'])
+                            ->first();
+                    }
+                    
+                    if (!$existingSchoolSubjects) {
+                        $newSchoolSubjects[$key] = [
+                            'name' => $educationSubject['name'],
+                            'institution_id' => $entity->institution_id,
+                            'education_grade_id' => $educationSubject['education_grade_id'],
+                            'education_subject_id' => $educationSubject['id'],
+                            'academic_period_id' => $academicPeriodId,
+                            'class_subjects' => [
+                                [
+                                    'status' => 1,
+                                    'institution_class_id' => $institutionClassGrades->institution_class_id
+                                ]
+                            ]
+                        ];
+                    }
+                }
+               
+                if (!empty($newSchoolSubjects)) {
+                    $newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
+                    foreach ($newSchoolSubjects as $subject) {
+                        $institutionProgramGradeSubjects = 
+                            TableRegistry::get('InstitutionProgramGradeSubjects')
+                            ->find('list')
+                            ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $subject->education_grade_id,
+                                'InstitutionProgramGradeSubjects.education_grade_subject_id' => $subject->education_subject_id,
+                                'InstitutionProgramGradeSubjects.institution_id' => $subject->institution_id
+                                ])
+                            ->count(); 
+                        
+                        if($institutionProgramGradeSubjects > 0){
+                            $InstitutionSubjects->save($subject);
+                        }
+                    }
+                    unset($subject);
+                }
+                unset($newSchoolSubjects);
+                unset($InstitutionSubjects);
+                unset($InstitutionClassSubjects);
+            }
+        }
+           
         }
     }
     
