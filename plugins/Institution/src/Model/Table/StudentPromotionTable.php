@@ -364,7 +364,7 @@ class StudentPromotionTable extends AppTable
                     ])
                     ->count();
 
-                    if ($studentsPeriod == 0){
+                    if ($studentsPeriod == 0) {
                         $attr['attr']['value'] = "";
                     }
                 }
