@@ -362,8 +362,9 @@ class StudentPromotionTable extends AppTable
                         $this->aliasField('academic_period_id') => $selectedPeriod,
                         $this->aliasField('student_status_id') => $statuses['CURRENT']
                     ])
-                    ->toArray();
-                    if(count($studentsPeriod) == 0){
+                    ->count();
+
+                    if ($studentsPeriod == 0){
                         $attr['attr']['value'] = "";
                     }
                 }
@@ -717,8 +718,9 @@ class StudentPromotionTable extends AppTable
                         $this->aliasField('academic_period_id') => $selectedPeriod,
                         $this->aliasField('student_status_id') => $studentStatuses['CURRENT']
                     ])
-                    ->toArray();
-                    if(count($studentsPeriod) == 0){
+                    ->count();
+                    
+                    if ($studentsPeriod == 0) {
                         $this->Alert->warning($this->aliasField('noData'));
                     }
 
