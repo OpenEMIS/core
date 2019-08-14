@@ -623,7 +623,8 @@ trait MessagesTrait
             'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
             'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.',
             'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type',
-            'contact_required' => 'Contact is required'
+            'contact_required' => 'Contact is required',
+            'nationality_required' => 'Nationality cant be empty.',
         ],
         'ImportInstitutionSurveys' => [
             'restrictImport' => 'Import operation is not allowed as the record is already Done'
