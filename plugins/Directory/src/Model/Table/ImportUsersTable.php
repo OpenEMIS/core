@@ -228,6 +228,44 @@ class ImportUsersTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $isStudentIdentityMandatory = $ConfigItems->value('StudentIdentities');
+        $isStaffIdentityMandatory = $ConfigItems->value('StaffIdentities');
+        $isStaffNationalitiesMandatory = $ConfigItems->value('StaffNationalities');
+        $isStudentNationalitiesMandatory = $ConfigItems->value('StudentNationalities');
+        
+        // identity number mandatory
+        if (($tempRow['account_type'] == "is_staff") && 
+                ($isStaffIdentityMandatory) && 
+                empty($tempRow['identity_type_id']) && 
+                (empty($tempRow['identity_number']))) {            
+                $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
+                return false;
+        }
+
+        if (($tempRow['account_type'] == "is_student") && 
+                empty($tempRow['identity_type_id']) && 
+                ($isStudentIdentityMandatory) && 
+                (empty($tempRow['identity_number']))) {            
+                $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
+                return false;
+        }
+
+        // Nationalities Mandatory
+        if (($tempRow['account_type'] == "is_staff") && 
+                ($isStaffNationalitiesMandatory) && 
+                (empty($tempRow['nationality_id']))) {
+                $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
+                return false;
+        }
+
+        if (($tempRow['account_type'] == "is_student") 
+                && ($isStudentNationalitiesMandatory) && 
+                (empty($tempRow['nationality_id']))) {
+                $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
+                return false;
+        }
+        
         //if identity type selected, then need to specify identity number
         if ($tempRow->offsetExists('identity_type_id') && !empty($tempRow['identity_type_id'])) {
             if (!$tempRow->offsetExists('identity_number') || empty($tempRow['identity_number'])) {
