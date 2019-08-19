@@ -11,6 +11,9 @@ use App\Model\Table\AppTable;
 
 class ImportUsersTable extends AppTable
 {
+    const IS_STAFF = "is_staff";
+    const IS_STUDENT = "is_student";
+
     public function initialize(array $config)
     {
         $this->table('import_mapping');
@@ -235,35 +238,29 @@ class ImportUsersTable extends AppTable
         $isStudentNationalitiesMandatory = $ConfigItems->value('StudentNationalities');
         
         // identity number mandatory
-        if (($tempRow['account_type'] == "is_staff") && 
-                ($isStaffIdentityMandatory) && 
-                empty($tempRow['identity_type_id']) && 
-                (empty($tempRow['identity_number']))) {            
-                $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
-                return false;
+        if (($tempRow['account_type'] == self::IS_STAFF) && ($isStaffIdentityMandatory) 
+            && empty($tempRow['identity_type_id']) && (empty($tempRow['identity_number']))) {            
+            $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
+            return false;
         }
 
-        if (($tempRow['account_type'] == "is_student") && 
-                empty($tempRow['identity_type_id']) && 
-                ($isStudentIdentityMandatory) && 
-                (empty($tempRow['identity_number']))) {            
-                $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
-                return false;
+        if (($tempRow['account_type'] == self::IS_STUDENT) && empty($tempRow['identity_type_id'])
+            && ($isStudentIdentityMandatory) && (empty($tempRow['identity_number']))) {            
+            $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
+            return false;
         }
 
         // Nationalities Mandatory
-        if (($tempRow['account_type'] == "is_staff") && 
-                ($isStaffNationalitiesMandatory) && 
-                (empty($tempRow['nationality_id']))) {
-                $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
-                return false;
+        if (($tempRow['account_type'] == self::IS_STAFF) && ($isStaffNationalitiesMandatory) 
+            && (empty($tempRow['nationality_id']))) {
+            $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
+            return false;
         }
 
-        if (($tempRow['account_type'] == "is_student") 
-                && ($isStudentNationalitiesMandatory) && 
-                (empty($tempRow['nationality_id']))) {
-                $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
-                return false;
+        if (($tempRow['account_type'] == self::IS_STUDENT) && ($isStudentNationalitiesMandatory) 
+            && (empty($tempRow['nationality_id']))) {
+            $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
+            return false;
         }
         
         //if identity type selected, then need to specify identity number
@@ -486,11 +483,11 @@ class ImportUsersTable extends AppTable
         $isStudentIdentityMandatory = $ConfigItems->value('StudentIdentities');
         $isStaffIdentityMandatory = $ConfigItems->value('StaffIdentities');
 
-        if (($tempRow['account_type'] == "is_staff") && ($isStaffIdentityMandatory) && (empty($cellValue))) {
+        if (($tempRow['account_type'] == self::IS_STAFF) && ($isStaffIdentityMandatory) && (empty($cellValue))) {
             $result = 'Staff identity is mandatory';
         };
 
-        if (($tempRow['account_type'] == "is_student") && ($isStudentIdentityMandatory) && (empty($cellValue))) {
+        if (($tempRow['account_type'] == self::IS_STUDENT) && ($isStudentIdentityMandatory) && (empty($cellValue))) {
             $result = 'Student identity is mandatory';
         };
 
