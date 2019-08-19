@@ -97,6 +97,34 @@ class StaffLeaveTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $entity = $this->getNumberOfDays($entity);
+        $staff_id = $entity['staff_id'];
+        $institution_id = $entity['institution_id'];
+        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $staffData = $InstitutionStaff
+            ->find('all')
+            ->where([
+                        'InstitutionStaff.institution_id' => $institution_id,
+                        'InstitutionStaff.staff_id' => $staff_id
+                    ])
+            ->group([
+                'InstitutionStaff.staff_id'
+            ])
+            ->toArray();
+            $date_from = $entity['date_from']->format('Y-m-d');
+            $date_to = $entity['date_to']->format('Y-m-d');
+            $start_date = $staffData[0]['start_date']->format('Y-m-d');
+            $end_date = $staffData[0]['end_date']->format('Y-m-d');
+            if ($start_date > $date_from) {
+                $this->Alert->error('AlertRules.StaffLeave.noleave', ['reset' => true]);
+                return false;
+            } else if ($date_from > $end_date) {
+                $this->Alert->error('AlertRules.StaffLeave.noleaveenddate', ['reset' => true]);
+                return false;
+            } else if ($date_to > $end_date) {
+                $this->Alert->error('AlertRules.StaffLeave.noleaveenddateto', ['reset' => true]);
+                return false;
+            }
+
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
