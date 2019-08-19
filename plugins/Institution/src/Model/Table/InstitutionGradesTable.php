@@ -50,8 +50,8 @@ class InstitutionGradesTable extends ControllerActionTable
             ->add('start_date', 'ruleCompareWithInstitutionDateOpened', [
                     'rule' => ['compareWithInstitutionDateOpened']
                 ])
-            ->requirePresence('programme')
-            ;
+            ->requirePresence('programme');
+        
         return $validator;
     }
 
@@ -133,6 +133,7 @@ class InstitutionGradesTable extends ControllerActionTable
              * education_grade_id will always be empty
              * so if errors array is more than 1, other fields are having an error
              */
+            
             if (empty($errors) || count($errors)==1) {
                 
                 if ($data->offsetExists('grades')) {
@@ -172,6 +173,7 @@ class InstitutionGradesTable extends ControllerActionTable
                             $entity->education_grade_id = $grade->education_grade_id;
                             $result = $this->save($grade);
                             $lastInsertId=$result->id;
+                            
                             // POCOR 5001  
                             if (count($data['grades']['education_grade_subject_id']) > 0
                             ) {
@@ -261,6 +263,7 @@ class InstitutionGradesTable extends ControllerActionTable
                     );
 
             foreach($gradeSubjectEntities as $gradeSubjectId){ 
+                
                 if($gradeSubjectId > 0){
                     $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
                     $gradeSubject = $institutionProgramGradeSubject->newEntity();
@@ -279,6 +282,7 @@ class InstitutionGradesTable extends ControllerActionTable
             
         $academicPeriodId = $institutionClassGrades->InstitutionClasses['academic_period_id'];
         $errors = $institutionClassGrades->errors();
+        
         if (empty($errors)) {
             /**
              * get the list of education_grade_id from the education_grades array
@@ -309,14 +313,20 @@ class InstitutionGradesTable extends ControllerActionTable
                         'EducationGrades.visible' => 1
                     ])
                     ->toArray();
+                    
             unset($EducationGrades);
             unset($grades);
 
             $educationSubjects = [];
+            
             if (count($educationGradeSubjects) > 0) {
+                
                 foreach ($educationGradeSubjects as $gradeSubject) {
+                    
                     foreach ($gradeSubject->education_subjects as $subject) {
+                        
                         if(in_array($subject->id, $gradeSubjectEntities)){
+                            
                             if (!isset($educationSubjects[$gradeSubject->id.'_'.$subject->id])) {
                                 $educationSubjects[$gradeSubject->id.'_'.$subject->id] = [
                                     'id' => $subject->id,
@@ -324,12 +334,18 @@ class InstitutionGradesTable extends ControllerActionTable
                                     'name' => $subject->name
                                 ];
                             }
+                            
                         }
+                        
                     }
+                    
                     unset($subject);
+                    
                 }
+                
                 unset($gradeSubject);
             }
+            
             unset($educationGradeSubjects);
                         
             if (!empty($educationSubjects)) {
@@ -348,6 +364,7 @@ class InstitutionGradesTable extends ControllerActionTable
                     ])
                     ->toArray();
                 $institutionSubjectsIds = [];
+                
                 foreach ($institutionSubjects as $key => $value) {
                     $institutionSubjectsIds[$value][] = $key;
                 }
@@ -365,6 +382,7 @@ class InstitutionGradesTable extends ControllerActionTable
 
                 foreach ($educationSubjects as $key => $educationSubject) {
                     $existingSchoolSubjects = false;
+                    
                     if (array_key_exists($key, $institutionSubjectsIds)) {
                         $existingSchoolSubjects = $InstitutionClassSubjects->find()
                             ->where([
@@ -446,6 +464,7 @@ class InstitutionGradesTable extends ControllerActionTable
                 $yearOpened = $institution->year_opened;
             }
             $year = $dateOpened->format('Y');
+            
             if ($yearOpened != $year) {
                 $month = $dateOpened->format('m');
                 $day = $dateOpened->format('d');
@@ -453,6 +472,7 @@ class InstitutionGradesTable extends ControllerActionTable
                 $institution->date_opened = $dateOpened;
                 $Institution->save($institution);
             }
+            
             $formatDate = $dateOpened->format('d-m-Y');
         } catch (\Exception $e) {
             $institution->date_opened = new Time('01-01-1970');
@@ -529,6 +549,7 @@ class InstitutionGradesTable extends ControllerActionTable
         if ($action == 'add') {
             $attr['empty'] = true;
             $attr['options'] = [];
+            
             if ($this->request->is(['post', 'put'])) {
                 $levelId = $this->request->data($this->aliasField('level'));
                 $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
@@ -543,6 +564,7 @@ class InstitutionGradesTable extends ControllerActionTable
                 $attr['options'] = $programmeOptions;
                 $attr['onChangeReload'] = 'changeProgramme';
             }
+            
         } else if ($action == 'edit') {
             $attr['type'] = 'readonly';
         }
@@ -554,6 +576,7 @@ class InstitutionGradesTable extends ControllerActionTable
         if ($action == 'add') {
             $attr['type'] = 'element';
             $attr['element'] = 'Institution.Programmes/grades';
+            
             if ($request->is(['post', 'put'])) {
                 $programmeId = $request->data($this->aliasField('programme'));
 
@@ -575,6 +598,7 @@ class InstitutionGradesTable extends ControllerActionTable
                 $attr['data'] = $data;
                 $attr['exists'] = $exists;
             }
+            
         } else if ($action == 'edit') {
             $attr['type'] = 'readonly';
         }
@@ -586,6 +610,7 @@ class InstitutionGradesTable extends ControllerActionTable
         if ($action == 'add') {
             $attr['type'] = 'element';
             $attr['element'] = 'Institution.Programmes/subjects';
+            
             if ($request->is(['post', 'put'])) {
                 
                 $educationGradeId = $request->data($this->aliasField('grades.education_grade_id'));
@@ -767,6 +792,7 @@ class InstitutionGradesTable extends ControllerActionTable
             ->where(['InstitutionGrades.institution_id = ' . $institutionsId])
             ->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
         $data = $query->toArray();
+        
         if($listOnly) {
             $list = [];
             foreach ($data as $key => $obj) {
@@ -790,13 +816,15 @@ class InstitutionGradesTable extends ControllerActionTable
     {
         $query = $this->find('all')
                     ->select(['start_date', 'end_date'])
-                    ->where($conditions)
-                    ;
+                    ->where($conditions);
+        
         $result = $query->toArray();
         $startDateObject = null;
+        
         foreach ($result as $key=>$value) {
             $startDateObject = $this->getLowerDate($startDateObject, $value->start_date);
         }
+        
         if (is_object($startDateObject)) {
             $startDate = $startDateObject->toDateString();
         } else {
@@ -804,9 +832,11 @@ class InstitutionGradesTable extends ControllerActionTable
         }
 
         $endDateObject = null;
+        
         foreach ($result as $key=>$value) {
             $endDateObject = $this->getHigherDate($endDateObject, $value->end_date);
         }
+        
         if (is_object($endDateObject)) {
             $endDate = $endDateObject->toDateString();
         } else {
@@ -822,6 +852,7 @@ class InstitutionGradesTable extends ControllerActionTable
         $academicPeriodConditions = [];
         $academicPeriodConditions['parent_id >'] = 0;
         $academicPeriodConditions['end_date >='] = $startDate;
+        
         if($nullDate == 0) {
             $academicPeriodConditions['start_date <='] = $endDate;
         } else {
@@ -835,6 +866,7 @@ class InstitutionGradesTable extends ControllerActionTable
                     ->order('`order`')
                     ;
         $result = $query->toArray();
+        
         if (empty($result)) {
             $Alert->warning('Institution.Institutions.noProgrammes');
             return [];
@@ -854,9 +886,11 @@ class InstitutionGradesTable extends ControllerActionTable
         if (is_null($a)) {
             return $b;
         }
+        
         if (is_null($b)) {
             return $a;
         }
+        
         return (($a->toUnixString() <= $b->toUnixString()) ? $a : $b);
     }
 
@@ -871,9 +905,11 @@ class InstitutionGradesTable extends ControllerActionTable
         if (is_null($a)) {
             return $b;
         }
+        
         if (is_null($b)) {
             return $a;
         }
+        
         return (($a->toUnixString() >= $b->toUnixString()) ? $a : $b);
     }
 
@@ -886,9 +922,11 @@ class InstitutionGradesTable extends ControllerActionTable
         $query->where([
             $this->aliasField('institution_id') => $institutionId
         ]);
+        
         if (!is_null($academicPeriodId)) {
             $query->find('academicPeriod', ['academic_period_id' => $academicPeriodId]);
         }
+        
         $query->group([$this->aliasField('education_grade_id')]);
 
         return $query;
@@ -921,6 +959,7 @@ class InstitutionGradesTable extends ControllerActionTable
         // will check if the institution_class_id are in the Institutions.
         $associatedClassCount = 0;
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        
         foreach ($associatedClassObj as $key => $obj) {
             $institutionsClassId = $obj['institution_class_id'];
             $count = $InstitutionClasses->find()
@@ -929,6 +968,7 @@ class InstitutionGradesTable extends ControllerActionTable
                     $InstitutionClasses->aliasField('institution_id') => $institutionId
                 ])
                 ->count();
+            
             if ($count > 0) {
                 $associatedClassCount++;
             }
