@@ -353,11 +353,13 @@ class StudentPromotionTable extends AppTable
                                     $GradeStudents->aliasField('student_status_id') => $statuses['CURRENT']
                                 ])
                                 ->count();
+                                
                                 if ($gradeStudentsCounter > 0 ) { 
-                                     $counter = true; 
-                                     } else { 
-                                     $counter = false; 
-                                     } 
+                                    $counter = true; 
+                                } else { 
+                                    $counter = false; 
+                                } 
+
                             return $gradeStudentsCounter; 
                         }
                     ]);
