@@ -338,12 +338,13 @@ class StudentPromotionTable extends AppTable
                     $attr['type'] = 'select';
                     $selectedGrade = null;
                     $GradeStudents = $this;
+                    $counter = false;
 
                     $this->advancedSelectOptions($gradeOptions, $selectedGrade, [
                         'selectOption' => false,
                         'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
                         'callable' => function($id) use ($GradeStudents, $institutionId, $selectedPeriod, $statuses) {
-                            return $GradeStudents
+                            $gradeStudentsCounter = $GradeStudents
                                 ->find()
                                 ->where([
                                     $GradeStudents->aliasField('institution_id') => $institutionId,
@@ -352,21 +353,17 @@ class StudentPromotionTable extends AppTable
                                     $GradeStudents->aliasField('student_status_id') => $statuses['CURRENT']
                                 ])
                                 ->count();
+                                if ($gradeStudentsCounter > 0 ) { 
+                                     $counter = true; 
+                                     } else { 
+                                     $counter = false; 
+                                     } 
+                            return $gradeStudentsCounter; 
                         }
                     ]);
-                    $studentsPeriod = $this->find()
-                    ->matching('Users')
-                    ->matching('EducationGrades')
-                    ->where([
-                        $this->aliasField('institution_id') => $institutionId,
-                        $this->aliasField('academic_period_id') => $selectedPeriod,
-                        $this->aliasField('student_status_id') => $statuses['CURRENT']
-                    ])
-                    ->count();
-
-                    if ($studentsPeriod == 0) {
-                        $attr['attr']['value'] = "";
-                    }
+                    if ($counter === false) { 
+                    $attr['attr']['value'] = ""; 
+                 }
                 }
 
                 $attr['onChangeReload'] = 'changeGradeToPromote';
