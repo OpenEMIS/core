@@ -96,22 +96,24 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $entity = $this->getNumberOfDays($entity);
         $staff_id = $entity['staff_id'];
         $institution_id = $entity['institution_id'];
-        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $date_from = $entity['date_from']->format('Y-m-d');
+        $date_to = $entity['date_to']->format('Y-m-d');
+        $entity = $this->getNumberOfDays($entity);
+        
+        $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $staffData = $InstitutionStaff
             ->find('all')
             ->where([
-                        'InstitutionStaff.institution_id' => $institution_id,
-                        'InstitutionStaff.staff_id' => $staff_id
+                        $InstitutionStaff->aliasField('institution_id = ') => $institution_id,
+                        $InstitutionStaff->aliasField('staff_id = ') => $staff_id
                     ])
             ->group([
-                'InstitutionStaff.staff_id'
+                $InstitutionStaff->aliasField('staff_id')
             ])
             ->toArray();
-            $date_from = $entity['date_from']->format('Y-m-d');
-            $date_to = $entity['date_to']->format('Y-m-d');
+            
             $start_date = $staffData[0]['start_date']->format('Y-m-d');
             $end_date = $staffData[0]['end_date']->format('Y-m-d');
             if ($start_date > $date_from) {

@@ -2075,10 +2075,19 @@ class StaffTable extends ControllerActionTable
         if ($dayId == -1) {
             $condition_query = [
                 $this->aliasField('start_date <= ') => $weekStartDate,
-            $this->aliasField('start_date <> ') => $weekEndDate
+            $this->aliasField('start_date <= ') => $weekEndDate,
+                'OR' => [
+                    $this->aliasField('end_date is ') => null,
+                    $this->aliasField('end_date >= ') => $weekEndDate
+                ]
         ];
         } else {
-            $condition_query = [$this->aliasField('start_date <= ') => $dayDate];
+            $condition_query = [$this->aliasField('start_date <= ') => $dayDate,
+                'OR' => [
+                $this->aliasField('end_date is ') => null,
+                $this->aliasField('end_date >= ') => $dayDate
+                ]
+            ];
         }
         $query = $query
             ->matching('Users')
