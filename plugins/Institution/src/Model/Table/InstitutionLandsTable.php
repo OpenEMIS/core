@@ -833,14 +833,14 @@ class InstitutionLandsTable extends ControllerActionTable
         $this->field('year_disposed');
         $this->field('land_type_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('start_date', ['entity' => $entity,
-                        'attr' => [
-                        'label' => [
-                            'text' => __('Effective date') . ' <i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="bottom" uib-tooltip="' . __($this->effectiveDateTooltip) . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
-                            'escape' => false,
-                            'class' => 'tooltip-desc'
-                        ]
-                    ]                
-                ]);
+            'attr' => [
+                'label' => [
+                    'text' => __('Effective date') . ' <i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="bottom" uib-tooltip="' . __($this->effectiveDateTooltip) . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
+                    'escape' => false,
+                    'class' => 'tooltip-desc'
+                ]
+            ]
+        ]);
         $this->field('end_date', ['entity' => $entity]);
         $this->field('infrastructure_ownership_id', ['type' => 'select']);
         $this->field('infrastructure_condition_id', ['type' => 'select']);
