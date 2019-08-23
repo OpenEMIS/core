@@ -169,7 +169,15 @@ class ImportStaffLeaveTable extends AppTable
         }
     }
 
-    public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateAcademicPeriodsData(
+            Event $event,
+            $lookupPlugin,
+            $lookupModel,
+            $lookupColumn,
+            $translatedCol,
+            ArrayObject $data, 
+            $columnOrder
+    ) {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -177,9 +185,12 @@ class ImportStaffLeaveTable extends AppTable
         $endDateLabel = $this->getExcelLabel($lookedUpTable, 'end_date');
         $data[$columnOrder]['lookupColumn'] = 4;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $startDateLabel, $endDateLabel, $translatedCol];
+       
         if (!empty($modelData)) {
-            foreach($modelData as $row) {
-                if ($row->academic_period_level_id == 1) { //validate that only period level "year" will be shown
+            foreach ($modelData as $row) {
+
+                if ($row->academic_period_level_id == 1) {
+                    //validate that only period level "year" will be shown
                     $date = $row->start_date;
                     $data[$columnOrder]['data'][] = [
                         $row->name,
