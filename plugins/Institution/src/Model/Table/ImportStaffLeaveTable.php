@@ -169,6 +169,17 @@ class ImportStaffLeaveTable extends AppTable
         }
     }
 
+    /**
+     * onImportPopulateAcademicPeriodsData method description.
+     *
+     * @param Event $event The Event to use.
+     * @param  $lookupPlugin value.
+     * @param  $lookupModel value.
+     * @param  $translatedCol value.
+     * @param  $lookupColumn value.
+     * @param  array|\ArrayObject $data .
+     * @param array $columnOrder value.
+     */
     public function onImportPopulateAcademicPeriodsData(
             Event $event,
             $lookupPlugin,
