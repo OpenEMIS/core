@@ -129,19 +129,16 @@ class ImportInstitutionTextbooksTable extends AppTable
                 $tempRow['academic_period_id'] = $textbookEntity->academic_period_id;
                 $tempRow['education_subject_id'] = $textbookEntity->education_subject_id;
                 $tempRow['education_grade_id'] = $textbookEntity->education_grade_id;
-                
                 //check for student being assigned 2 same book.
                 $InstitutionTextbooks = TableRegistry::get('Institution.InstitutionTextbooks');
-                
-                //POCOR-3669
+
                 if ($tempRow->offsetExists('code') && empty($tempRow['code'])) {
                     $InstitutionTextbookData = $InstitutionTextbooks->find('all', [
-                        'order' => [$InstitutionTextbooks->aliasField('id') => 'DESC']
-                    ])->first();
-
-                    $tempRow['code'] = $textbookEntity->code.'-'.($InstitutionTextbookData->id + 1);
+                                'order' => [$InstitutionTextbooks->aliasField('id') => 'DESC']
+                            ])->first();
+                    $tempRow['code'] = $textbookEntity->code . '-' . ($InstitutionTextbookData->id + 1);
                 }
-                
+
                 if ($tempRow->offsetExists('student_id')) {
                     if (!empty($tempRow['student_id'])) {
                         $query = $InstitutionTextbooks->find()
