@@ -92,24 +92,21 @@ class InstitutionGradesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']);
-            /*->order([
-                'EducationLevels.order' => 'ASC',
-                'EducationCycles.order' => 'ASC',
-                'EducationProgrammes.order' => 'ASC',
-                'EducationGrades.order' => 'ASC',
-            ])*/
         $sortList = ['InstitutionGrades.start_date','InstitutionGrades.end_date'];
+        
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
+
         $extra['options']['sortWhitelist'] = $sortList;
         $requestQuery = $this->request->query;
         $sortable = array_key_exists('sort', $requestQuery) ? true : false;
+
         if (!$sortable) {
-            $query
-                ->order([
-                    'InstitutionGrades.start_date','InstitutionGrades.end_date'
-                ]);
+            $query->order([
+                'InstitutionGrades.start_date',
+                'InstitutionGrades.end_date'
+            ]);
         }
     }
 
