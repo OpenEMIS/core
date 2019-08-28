@@ -137,29 +137,36 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 this.api.sizeColumnsToFit();
             },
             onCellValueChanged: function(params) {
-                if (params.newValue != params.oldValue) {
-                    if (angular.isUndefined(vm.comments[params.data.student_id])) {
-                        vm.comments[params.data.student_id] = {};
+                
+                if (params.newValue.match(/^[a-zA-Z0-9](.*[a-zA-Z0-9])?$/)) {                    
+                    if (params.newValue != params.oldValue) {
+                        
+                        if (angular.isUndefined(vm.comments[params.data.student_id])) {
+                            vm.comments[params.data.student_id] = {};
+                        }
+
+                        if (angular.isUndefined(vm.comments[params.data.student_id][params.colDef.field])) {
+                            vm.comments[params.data.student_id][params.colDef.field] = {};
+                        }
+
+                        vm.comments[params.data.student_id][params.colDef.field] = params.newValue;
+
+                        // set last modified user name
+                        params.data.modified_by = vm.currentUserName;
+
+                        InstitutionsCommentsSvc.saveSingleRecordData(params, vm.currentTab)
+                        .then(function(response) {
+                        }, function(error) {
+                            console.log(error);
+                        });
+
+                        // Important: to refresh the grid after data is modified
+                        vm.gridOptions.api.refreshView();
                     }
-
-                    if (angular.isUndefined(vm.comments[params.data.student_id][params.colDef.field])) {
-                        vm.comments[params.data.student_id][params.colDef.field] = {};
-                    }
-
-                    vm.comments[params.data.student_id][params.colDef.field] = params.newValue;
-
-                    // set last modified user name
-                    params.data.modified_by = vm.currentUserName;
-
-                    InstitutionsCommentsSvc.saveSingleRecordData(params, vm.currentTab)
-                    .then(function(response) {
-                    }, function(error) {
-                        console.log(error);
-                    });
-
-                    // Important: to refresh the grid after data is modified
-                    vm.gridOptions.api.refreshView();
-                }
+                }  else{
+                    params.data.comments = '';
+                    vm.gridOptions.api.redrawRows();
+                }          
             },
             onGridReady: function() {
                 vm.onChangeSubject(tab);
