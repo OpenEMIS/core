@@ -24,6 +24,17 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+                ->add('comment', 'length', [
+                'rule' => ['maxLength', 80],
+                'message' => 'Comment must not be more then 80 characters.'
+                ]);
+    }
+
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {

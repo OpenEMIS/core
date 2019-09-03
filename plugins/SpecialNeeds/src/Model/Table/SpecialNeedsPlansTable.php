@@ -31,6 +31,17 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         ]);
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+                ->add('comment', 'length', [
+                'rule' => ['maxLength', 80],
+                'message' => 'Comment must not be more then 80 characters.'
+                ]);
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('comment', ['visible' => false]);
