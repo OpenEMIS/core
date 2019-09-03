@@ -477,6 +477,27 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //echo "<pre>";print_r($entity['date_closed']);die;
+        $institution_id = $entity['id'];
+        $date_closed = $entity['date_closed']->format('Y-m-d');
+        if (!empty($date_closed) && isset($date_closed)) {
+            /*$InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            $AbsenceDetail = $InstitutionStudentAbsences
+            ->find()
+            ->where([$InstitutionStudentAbsences->aliasField('institution_id') => $institution_id,
+                $InstitutionStudentAbsences->aliasField('date') => $date_closed
+                    ])
+            ->toArray();
+            //$AbsenceDetail = $InstitutionStudentAbsences->get($date_closed);
+            //print_r($AbsenceDetail);die;
+            if ( (!empty($AbsenceDetail)) && (count($AbsenceDetail) > 0)) {
+            $InstitutionStudentAbsences->deleteAll([
+                'institution_id' => $institution_id,
+                'date' => $date_closed
+            ]);   
+            }*/
+            $this->triggerDeleteRecordsClosedDateShell($institution_id,$date_closed);
+        }
         if ($entity->isNew()) {
             $entity->shift_type = 0;
         }
@@ -1380,5 +1401,23 @@ class InstitutionsTable extends ControllerActionTable
         }
 
         return $value;
+    }
+
+    public function triggerDeleteRecordsClosedDateShell($institutionId, $dateClosed)
+    {
+        $args = '';
+        $args .= !is_null($institutionId) ? ''.$institutionId : '';
+        $args .= !is_null($dateClosed) ? ' '.$dateClosed : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake DeleteRecordsClosedDate "'.$args.'"';
+        $logs = ROOT . DS . 'logs' . DS . 'DeleteRecordsClosedDate.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+
+        try {
+            $pid = exec($shellCmd);
+            Log::write('debug', $shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when link all exam centres : '. $ex);
+        }
     }
 }
