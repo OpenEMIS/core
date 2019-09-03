@@ -55,6 +55,10 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
                 ]
             ])
+            ->add('comment', 'length', [
+                'rule' => ['maxLength', 80],
+                'message' => 'Comment must not be more then 80 characters.'
+             ])
             ->allowEmpty('file_content');
     }
 

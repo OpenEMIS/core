@@ -38,7 +38,15 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->allowEmpty('file_content');
+                ->add('description', 'length', [
+                'rule' => ['maxLength', 80],
+                'message' => 'Description must not be more then 80 characters.'
+                ])
+                ->add('comment', 'length', [
+                'rule' => ['maxLength', 80],
+                'message' => 'Comment must not be more then 80 characters.'
+                ])
+                ->allowEmpty('file_content');
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
