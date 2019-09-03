@@ -19,8 +19,5 @@ class POCOR4976 extends AbstractMigration
 
     public function down()
     {
-		$this->dropTable('special_need_types');
-		$this->execute('RENAME TABLE `z_4976_special_need_types` TO `special_need_types`');
-		$this->execute('ALTER TABLE `special_need_types` DROP COLUMN `type`'); 
     }
 }

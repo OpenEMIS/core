@@ -42,10 +42,6 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('comment', 'length', [
-                'rule' => ['maxLength', 80],
-                'message' => 'Comment must not be more then 50 characters.'
-             ])
             ->allowEmpty('file_content');
     }
 
