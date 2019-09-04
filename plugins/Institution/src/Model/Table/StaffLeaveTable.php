@@ -130,7 +130,7 @@ class StaffLeaveTable extends ControllerActionTable
         $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'time', 'start_time', 'full_day', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
     }
 
-    public function s(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('start_time', ['visible' => false]);
         $this->field('end_time', ['visible' => false]);
