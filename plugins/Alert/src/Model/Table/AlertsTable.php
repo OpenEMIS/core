@@ -3,6 +3,8 @@ namespace Alert\Model\Table;
 
 use ArrayObject;
 
+use Cake\I18n\Date;
+use Cake\I18n\Time;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -19,6 +21,9 @@ class AlertsTable extends ControllerActionTable
     use OptionsTrait;
 
     private $statusTypes = [];
+    CONST SLEEP_TIME = 10;
+    CONST LIMIT = 15;
+    
 
     public function initialize(array $config)
     {
@@ -91,6 +96,7 @@ class AlertsTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $shellName = $entity->process_name;
+        $triggeredOn = $entity->triggered_on;
 
         if (array_key_exists('view', $buttons)) {
             if ($this->AccessControl->check(['Alerts', 'Alerts', 'process'])) { // to check execute permission
@@ -122,20 +128,125 @@ class AlertsTable extends ControllerActionTable
     }
 
     public function process(Event $event, ArrayObject $extra)
-    {
+    {   
         $requestQuery = $this->request->query;
         $params = [];
+        
         if (array_key_exists('queryString', $requestQuery)) {
             $params = $this->paramsDecode($requestQuery['queryString']);
         }
-
-        $this->stopShell($params['shell_name']); // create and remove the shell stop of the shell
-        $this->triggerAlertFeatureShell($params['shell_name']); // trigger the feature shell
+       
+        
+//                $row = $this->find()->where([
+//                    $this->aliasField('process_name') => $params['shell_name']
+//                ])->first();
+//        $nextTriggeredOn = Time::parse($row->next_triggered_on)->format('Y-m-d');
+//        $today = Time::now()->format('Y-m-d');
+//        $currentHrs = Time::now()->format('H:i:s');
+//        $minHrs = Time::parse($row->triggered_on)->modify('-35 minutes')->format('H:i:s');
+//        $maxHrs = Time::parse($row->triggered_on)->modify('+35 minutes')->format('H:i:s');
+//        $isTriggeredOn = ($today == $nextTriggeredOn AND $currentHrs > $minHrs AND $currentHrs < $maxHrs);
+//       // $flag = true;
+        
+        
+        
+      //  echo "$today <br/> $nextTriggeredOn <br/> current $currentHrs <br/> min $minHrs <br/> $currentHrs <br/> max $maxHrs";
+        
+        
+       
+        $this->alertToProcess();
+      //  echo Time::now()->format('H:i:s');  die;
+        // die('im');
+        
+//        $row = $this->find()->where([
+//                    $this->aliasField('process_name') => $params['shell_name']
+//                ])->first();
+//        $nextTriggeredOn = Time::parse($row->next_triggered_on)->format('Y-m-d');
+//        $today = Time::now()->format('Y-m-d');
+//        $currentHrs = Time::now()->format('H:i:s');
+//        $minHrs = Time::parse($row->triggered_on)->modify('-35 minutes')->format('H:i:s');
+//        $maxHrs = Time::parse($row->triggered_on)->modify('+35 minutes')->format('H:i:s');
+//        $isTriggeredOn = ($today == $nextTriggeredOn AND $currentHrs > $minHrs AND $currentHrs < $maxHrs);
+       // $flag = true;
+        
+       // echo "$today <br/> $nextTriggeredOn <br/> $currentHrs <br/> $minHrs <br/> $currentHrs <br/> $maxHrs";
+        
+      //  var_dump($isTriggeredOn);  die;
+        
+//        if ($isTriggeredOn) {  //die; 
+//            $this->stopShell($params['shell_name']); // create and remove the shell stop of the shell
+//            $this->triggerAlertFeatureShell($params['shell_name']); // trigger the feature shell
+//            $this->UpdateNextTrigger($row->next_triggered_on, $params['shell_name']);
+//            sleep(10);
+//        } else if (!$this->isShellStopExist($params['shell_name'])) {
+//             $this->stopShell($params['shell_name']); 
+//        }
+        
+       
 
         // redirect to respective page from params['action']
         $url = $this->url($params['action']);
         $event->stopPropagation();
         return $this->controller->redirect($url);
+    }
+    
+    public function UpdateNextTrigger($nextTriggeredOn, $shellName) 
+    {
+        $this->query()
+                ->update()
+                ->set([
+                    'next_triggered_on' => Time::parse($nextTriggeredOn)
+                    ->modify('+1 day')
+                    ->format('Y-m-d 00:00:00'),
+                    'modified' => Time::now()
+                ])
+                ->where([
+                    $this->aliasField('process_name') => $shellName
+                ])
+                ->execute();
+    }
+    
+    
+    public function alertToProcess()
+    {   
+                
+        $recordToProcess = $this->find('all')->select(
+                        [
+                            $this->aliasField('process_name'),
+                            $this->aliasField('next_triggered_on'),
+                            $this->aliasField('triggered_on')
+                        ]
+                )
+                ->where([
+                    'next_triggered_on >= ' => Time::now()->format('Y-m-d 00:00:00'),
+                    'next_triggered_on <= ' => Time::now()->format('Y-m-d 23:59:59')
+                ])
+                ->hydrate(false)
+                ->limit(self::LIMIT);
+     
+        if (!empty($recordToProcess)) {  
+            
+            foreach ($recordToProcess as $key => $alertProcess) {
+                $nextTriggeredOn = Time::parse($alertProcess['next_triggered_on'])->format('Y-m-d');
+                $today = Time::now()->format('Y-m-d');
+                $currentHrs = Time::now()->format('H:i:s');
+                $minHrs = Time::parse($alertProcess['triggered_on'])->modify('-3 minutes')->format('H:i:s');
+                $maxHrs = Time::parse($alertProcess['triggered_on'])->modify('+6 minutes')->format('H:i:s');
+                $isTriggeredOn = ($today == $nextTriggeredOn AND $currentHrs > $minHrs AND $currentHrs < $maxHrs);
+                //var_dump($isTriggeredOn);  die;
+                if ($isTriggeredOn) {
+                    $this->stopShell($alertProcess['process_name']); // create and remove the shell stop of the shell
+                    $this->triggerAlertFeatureShell($alertProcess['process_name']); // trigger the feature shell
+                    $this->UpdateNextTrigger($alertProcess['next_triggered_on'], $alertProcess['process_name']);
+                  // sleep(self::SLEEP_TIME);
+                    return ;
+                } else if (!$this->isShellStopExist($alertProcess['process_name'])) {
+                    $this->stopShell($alertProcess['process_name']);
+                     return ;
+                }
+            }
+        }
+        
     }
 
     public function onGetName(Event $event, Entity $entity)
