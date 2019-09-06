@@ -7,10 +7,6 @@ use Cake\Console\Shell;
 
 class AutomateAlertSchedulerShell extends Shell
 {
-    //CONST SLEEP_TIME = 10;
-    //CONST LIMIT = 15;
-    
-
     public function initialize()
     {
         parent::initialize();
