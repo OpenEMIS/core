@@ -39,12 +39,12 @@ class SpecialNeedsServicesTable extends ControllerActionTable
 
         return $validator
                 ->add('description', 'length', [
-                'rule' => ['maxLength', 255],
-                'message' => 'Description must not be more then 255 characters.'
+                'rule' => ['maxLength', 350],
+                'message' => 'Description must not be more then 350 characters.'
                 ])
                 ->add('comment', 'length', [
-                'rule' => ['maxLength', 255],
-                'message' => 'Comment must not be more then 255 characters.'
+                'rule' => ['maxLength', 350],
+                'message' => 'Comment must not be more then 350 characters.'
                 ])
                 ->allowEmpty('file_content');
     }
