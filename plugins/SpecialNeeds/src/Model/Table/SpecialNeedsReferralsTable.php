@@ -57,7 +57,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             ])
             ->add('comment', 'length', [
                 'rule' => ['maxLength', 350],
-                'message' => 'Comment must not be more then 350 characters.'
+                'message' => __('Comment must not be more then 350 characters.')
              ])
             ->allowEmpty('file_content');
     }
