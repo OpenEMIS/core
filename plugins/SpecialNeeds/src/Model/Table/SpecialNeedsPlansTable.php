@@ -37,8 +37,8 @@ class SpecialNeedsPlansTable extends ControllerActionTable
 
         return $validator
                 ->add('comment', 'length', [
-                'rule' => ['maxLength', 80],
-                'message' => 'Comment must not be more then 80 characters.'
+                'rule' => ['maxLength', 255],
+                'message' => 'Comment must not be more then 255 characters.'
                 ]);
     }
 
