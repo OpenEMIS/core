@@ -1127,6 +1127,9 @@ class InstitutionClassesTable extends ControllerActionTable
                                     [$Staff->aliasField('end_date IS NULL')]
                                 ]
                             ])
+                            ->order([
+                                $Staff->Users->aliasField('first_name')
+                            ])
                             ->formatResults(function ($results) {
                                 $returnArr = [];
                                 foreach ($results as $result) {
