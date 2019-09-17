@@ -13,6 +13,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     var translateText = {
         'original': {
+            'openemis_no': 'OpenEMIS ID',
             'Name': 'Name',
             'Attendance': 'Attendance',
             'TimeIn': 'Time In',
@@ -163,12 +164,19 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
 
         columnDefs.push({
+            headerName: translateText.translated.openemis_no,
+            field: "_matchingData.Users.openemis_no",
+            pinned: direction,
+            menuTabs: []
+        });
+
+        columnDefs.push({
             headerName: translateText.translated.Name,
-            field: "_matchingData.Users.name_with_id",
+            field: "_matchingData.Users.name",
             filter: "text",
             filterParams: filterParams,
             pinned: direction,
-            menuTabs: menuTabs,
+            menuTabs: menuTabs
         });
 
         columnDefs.push({
@@ -225,13 +233,21 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
 
         columnDefs.push({
+            headerName: translateText.translated.openemis_no,
+            field: "_matchingData.Users.openemis_no",
+            pinned: direction,
+            menuTabs: []
+        });
+
+        columnDefs.push({
             headerName: translateText.translated.Name,
-            field: "_matchingData.Users.name_with_id",
+            field: "_matchingData.Users.name",
+            filter: "text",
             filterParams: filterParams,
             pinned: direction,
-            menuTabs: menuTabs,
-            filter: "text",
+            menuTabs: menuTabs
         });
+
         angular.forEach(dayList, function(dayObj, dayKey) {
             if (dayObj.id != -1) {
                 var dayText = dayObj.name;
