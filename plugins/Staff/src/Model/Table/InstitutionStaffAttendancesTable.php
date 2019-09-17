@@ -28,11 +28,22 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->allowEmpty('time_out')
-            ->add('time_out', 'ruleCompareTimeReverse', [
-                'rule' => ['compareDateReverse', 'time_in', false],
-                'message' => __('Time Out cannot be earlier than Time In')
-            ]);
+                        ->allowEmpty('time_out')
+                        ->add('time_out', 'ruleCustom', [
+                            'rule' => function($value, $context) {
+                                return  !(!empty($context['data']['time_out']) && empty($context['data']['time_in']));
+                            },
+                            'message' => __('Record does not exist.')
+                        ])
+                        ->add('time_out', 'ruleCompareTimeReverse', [
+                            'rule' => ['compareDateReverse', 'time_in', false],
+                            'message' => __('Time Out cannot be earlier than Time In'),
+                            'on' => function ($context) {
+                                    if (!(!empty($context['data']['time_out']) && empty($context['data']['time_in']))) {
+                                            return true;
+                                    }
+                        }
+        ]);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)

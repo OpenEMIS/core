@@ -465,6 +465,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                             } else if (response.data.error.time_out.ruleCompareTimeReverse) {
                                 errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
                             }
+                            else if (response.data.error.time_out.ruleCustom) {
+                                errorMsg = response.data.error.time_out.ruleCustom;
+                            }
+                            
                             AlertSvc.error(scope, errorMsg);
                         } else {
                             AlertSvc.success(scope, 'Time record successfully saved.');
