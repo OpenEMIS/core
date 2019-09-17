@@ -61,6 +61,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             ])
             ->requirePresence('institutions', 'create')
             ->allowEmpty('postal_code')
+            ->allowEmpty('fax')
             ->add('postal_code', 'ruleCustomPostalCode', [
                 'rule' => ['validateCustomPattern', 'postal_code'],
                 'provider' => 'table',
@@ -690,14 +691,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $requestData['website'] = $institutionRecord->website;
                         $newEntity = $model->newEntity($requestData->getArrayCopy());
                         
-                        if ($newEntity->errors('telephone') && $newEntity->errors('fax')) {
-                            $this->Alert->error('general.contactInstitution.both', ['reset' => 'override']);
-                            return false;
-                        } else if ($newEntity->errors('telephone')) {
+                        if ($newEntity->errors('telephone')) {
                             $this->Alert->error('general.contactInstitution.telephone', ['reset' => 'override']);
-                            return false;
-                        } else if ($newEntity->errors('fax')) {
-                            $this->Alert->error('general.contactInstitution.fax', ['reset' => 'override']);
                             return false;
                         }
                         
