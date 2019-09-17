@@ -905,3 +905,12 @@ a,
 /* End of fix for dropdown editing cell */
 
 /* End of overwrites for POCOR-3233 */
+
+
+/* fix for POCOR-4896 */
+.input-group-addon.disabled,
+.input-group-addon.disabled:hover {
+    background: #ccc !important;
+    border-color: #9a9a9a !important;
+}
+/* end fix for POCOR-4896 */

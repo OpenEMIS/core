@@ -426,14 +426,18 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             time = convert12Timeformat(params.value[timeKey]);
         }
         var scope = params.context.scope;
+        var leave = data.attendance[data.date].leave;
+        var isDisabled = (leave && leave.length > 0 && leave[0].isFullDay === 1);
+
         // div element
         var timeInputDivElement = document.createElement('div');
-        timeInputDivElement.setAttribute('id', timepickerId);
+        if (!isDisabled) timeInputDivElement.setAttribute('id', timepickerId); // for pop up
         timeInputDivElement.setAttribute('class', 'input-group time');
         var timeInputElement = document.createElement('input');
         timeInputElement.setAttribute('class', 'form-control');
+        if (isDisabled) timeInputElement.setAttribute('disabled', true); // for styling ui
         var timeSpanElement = document.createElement('span');
-        timeSpanElement.setAttribute('class', 'input-group-addon');
+        timeSpanElement.setAttribute('class', (isDisabled) ? 'input-group-addon disabled' : 'input-group-addon'); // for styling ui
         var timeIconElement = document.createElement('i');
         timeIconElement.setAttribute('class', 'glyphicon glyphicon-time');
 
