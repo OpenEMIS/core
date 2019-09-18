@@ -155,8 +155,8 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     {
         $today = date('Y-m-d');
         $lastExectuedDate = null;
-        $dir = new Folder(ROOT . DS . 'tmp');
-        $file = new File($dir->path. DS .'UpdateStudentStatus', true);
+        $dir = new Folder(ROOT . DS . 'logs');
+        $file = new File($dir->path. DS .'UpdateStudentStatus.log', true);
         $updateStudentStatus = json_decode($file->read());
         if (isset($updateStudentStatus[1])) {
             $lastExectuedDate = $updateStudentStatus[1];
