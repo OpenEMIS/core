@@ -258,7 +258,10 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
                                 errorMsg = response.data.error;
                             } else if (response.data.error.time_out.ruleCompareTimeReverse) {
                                 errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
+                            } else if (response.data.error.time_out.timeInShouldNotEmpty) {
+                                errorMsg = response.data.error.time_out.timeInShouldNotEmpty;
                             }
+                            
                             AlertSvc.error(scope, errorMsg);
                         } else {
                             AlertSvc.success(scope, 'Time record successfully saved.');
