@@ -266,7 +266,7 @@ class ConfigItemsTable extends AppTable
                         $attr['data'] = [];
                     } else if ($entity->type == 'Student Settings') {
                         $attr['type'] = 'integer';
-                        $attr['attr'] = ['min' => 1, 'max' => 100];
+                        $attr['attr'] = ['min' => 1, 'max' => 200];
                     }
                 }
             }
@@ -681,12 +681,12 @@ class ConfigItemsTable extends AppTable
     private $validateMaxStudentsPerClass = [
         'num' => [
             'rule'  => 'numeric',
-            'message' => 'Numeric Value should be between 0 to 100',
+            'message' => 'Numeric Value should be between 0 to 200',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 0, 100],
-            'message' => 'Numeric Value should be between 0 to 100',
+            'rule'  => ['range', 0, 200],
+            'message' => 'Numeric Value should be between 0 to 200',
             'last' => true
         ]
     ];
@@ -694,12 +694,12 @@ class ConfigItemsTable extends AppTable
     private $validateMaxStudentsPerSubject = [
         'num' => [
             'rule'  => 'numeric',
-            'message' => 'Numeric Value should be between 0 to 100',
+            'message' => 'Numeric Value should be between 0 to 200',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 0, 100],
-            'message' => 'Numeric Value should be between 0 to 100',
+            'rule'  => ['range', 0, 200],
+            'message' => 'Numeric Value should be between 0 to 200',
             'last' => true
         ],
         'checkMaxStudentsPerSubject' => [

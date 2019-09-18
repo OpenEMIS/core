@@ -14,6 +14,9 @@ class ReportShell extends Shell {
 	}
 
  	public function main() {
+		
+		ini_set('memory_limit', '-1'); //  -1 is for infinite , By default it is 128M & it's not sufficient
+
 		$id = $this->args[0];
 
 		try {
