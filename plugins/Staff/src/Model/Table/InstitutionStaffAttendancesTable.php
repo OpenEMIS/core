@@ -26,12 +26,12 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-
+        
         return $validator
                         ->allowEmpty('time_out')
-                        ->add('time_out', 'ruleCustom', [
+                        ->add('time_out', 'TimeInShouldNotEmpty', [
                             'rule' => function($value, $context) {
-                                return  !(!empty($context['data']['time_out']) && empty($context['data']['time_in']));
+                                return !(!empty($context['data']['time_out']) && empty($context['data']['time_in']));
                             },
                             'message' => __('Record does not exist.')
                         ])
@@ -39,10 +39,10 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
                             'rule' => ['compareDateReverse', 'time_in', false],
                             'message' => __('Time Out cannot be earlier than Time In'),
                             'on' => function ($context) {
-                                    if (!(!empty($context['data']['time_out']) && empty($context['data']['time_in']))) {
-                                            return true;
-                                    }
+                        if (!(!empty($context['data']['time_out']) && empty($context['data']['time_in']))) {
+                            return true;
                         }
+                    }
         ]);
     }
 
