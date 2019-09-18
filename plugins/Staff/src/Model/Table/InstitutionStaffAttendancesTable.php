@@ -1,4 +1,5 @@
 <?php
+
 namespace Staff\Model\Table;
 
 use ArrayObject;
@@ -9,6 +10,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionStaffAttendancesTable extends ControllerActionTable {
+
     public function initialize(array $config) {
         $this->table('institution_staff_attendances');
         parent::initialize($config);
@@ -23,13 +25,12 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         $this->addBehavior('TrackActivity', ['target' => 'User.InstitutionStaffAttendanceActivities', 'key' => 'security_user_id', 'keyField' => 'staff_id']);
     }
 
-    public function validationDefault(Validator $validator)
-    {
+    public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
-        
+
         return $validator
                         ->allowEmpty('time_out')
-                        ->add('time_out', 'TimeInShouldNotEmpty', [
+                        ->add('time_out', 'timeInShouldNotEmpty', [
                             'rule' => function($value, $context) {
                                 return !(!empty($context['data']['time_out']) && empty($context['data']['time_in']));
                             },
@@ -46,8 +47,7 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
         if (!$entity->isNew()) {
             // delete record if user removes the time in and comment
             $time_in = $entity->time_in;
@@ -57,4 +57,5 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
             }
         }
     }
+
 }

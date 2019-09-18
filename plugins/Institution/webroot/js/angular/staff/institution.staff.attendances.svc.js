@@ -464,8 +464,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                                 errorMsg = response.data.error;
                             } else if (response.data.error.time_out.ruleCompareTimeReverse) {
                                 errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
-                            } else if (response.data.error.time_out.TimeInShouldNotEmpty) {
-                                errorMsg = response.data.error.time_out.TimeInShouldNotEmpty;
+                            } else if (response.data.error.time_out.timeInShouldNotEmpty) {
+                                errorMsg = response.data.error.time_out.timeInShouldNotEmpty;
                             }
                             
                             AlertSvc.error(scope, errorMsg);
