@@ -316,6 +316,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
                 $this->aliasField('previous_institution_id') => $institutionId,
                 'OR' => [
                     'WorkflowStepsParams.value' => self::OUTGOING, // institution_owner for the step can always see the record
+                    'WorkflowStepsParams.value' => self::INCOMING, // POCOR-4998
                     $this->aliasField('all_visible') => 1
                 ]
             ]);
