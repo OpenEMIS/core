@@ -14,13 +14,13 @@ class POCOR5009 extends AbstractMigration
         $this->execute('INSERT INTO `z_5009_security_users` SELECT * FROM `security_users`');
 
         // alter
-		$this->execute("ALTER TABLE `security_users` DROP INDEX `openemis_no`, ADD UNIQUE `openemis_no` (`openemis_no`) USING BTREE;");
-        $this->execute("ALTER TABLE `security_users` DROP INDEX `username`, ADD UNIQUE `username` (`username`) USING BTREE;");
+	$this->execute("ALTER TABLE `security_users` DROP INDEX `openemis_no`,   ADD UNIQUE INDEX `openemis_no_UNIQUE` (`openemis_no`) ;");
+        $this->execute("ALTER TABLE `security_users` DROP INDEX `username`, ADD UNIQUE INDEX `username_UNIQUE` (`username`);");
     }
 
     public function down()
     {
-		$this->execute('DROP TABLE security_users');
+	$this->execute('DROP TABLE security_users');
         $this->table('z_5009_security_users')->rename('security_users');
     }
 }
