@@ -140,8 +140,7 @@ trait MessagesTrait
             'ownerAddNotAllowed' => 'You are not allowed to add infrastructure as there are no shifts configured in the current academic period',
             'occupierAddNotAllowed' => 'You are not allowed to add infrastructure as an occupier',
             'occupierEditNotAllowed' => 'You are not allowed to edit infrastructure as an occupier',
-            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier',
-            //'accessibilityOption' => 'Designed for use by anyone including those with special needs/disabilities.',
+            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier',            
             'accessibilityOption' => 'This room is accessible to people with special needs including wheelchairs',
         ],
         'InfrastructureTypes' => [
