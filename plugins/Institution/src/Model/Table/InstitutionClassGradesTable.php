@@ -10,6 +10,10 @@ class InstitutionClassGradesTable extends AppTable {
 		
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'ScheduleTimetable' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator) {
