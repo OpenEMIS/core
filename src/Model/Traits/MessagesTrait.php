@@ -140,8 +140,8 @@ trait MessagesTrait
             'ownerAddNotAllowed' => 'You are not allowed to add infrastructure as there are no shifts configured in the current academic period',
             'occupierAddNotAllowed' => 'You are not allowed to add infrastructure as an occupier',
             'occupierEditNotAllowed' => 'You are not allowed to edit infrastructure as an occupier',
-            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier',
-            'accessibilityOption' => 'Designed for use by anyone including those with special needs/disabilities.'
+            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier',            
+            'accessibilityOption' => 'This room is accessible to people with special needs including wheelchairs',
         ],
         'InfrastructureTypes' => [
             'noLevels' => 'No Available Levels',
@@ -2329,6 +2329,21 @@ trait MessagesTrait
                 ]
             ],
             'addEdit' => 'This feature is for historical record use only. For current records, please refrain from adding record on this page.'
+        ],
+        'Schedule' => [
+            'ScheduleTerms' => [
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
+                    'overlapDates' => 'Date range selected overlap with existing data.'
+                ],
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ]
+            ]
         ]
     ];
 
