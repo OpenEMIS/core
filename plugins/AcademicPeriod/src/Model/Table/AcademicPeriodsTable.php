@@ -84,7 +84,8 @@ class AcademicPeriodsTable extends AppTable
             'StudentExaminationResults' => ['index'],
             'OpenEMIS_Classroom' => ['index', 'view'],
             'InstitutionStaffAttendances' => ['index', 'view'],
-            'StudentAttendances' => ['index', 'view']
+            'StudentAttendances' => ['index', 'view'],
+            'ScheduleTimetable' => ['index']
         ]);
         
         $this->addBehavior('Institution.Calendar');
@@ -1001,6 +1002,23 @@ class AcademicPeriodsTable extends AppTable
                     return $row;
                 });
             });
+    }
+
+    public function findWorkingDayOfWeek(Query $query, array $options)
+    {
+        $workingDayOfWeek = $this->getWorkingDaysOfWeek();
+
+        $dayOfWeek = [];
+        foreach ($workingDayOfWeek as $index => $day) {
+            $dayOfWeek[] = [
+                'day_of_week' => $index + 1,
+                'day' => $day
+            ];
+        }
+        
+        return $query->formatResults(function (ResultSetInterface $results) use ($dayOfWeek) {
+            return $dayOfWeek;
+        });
     }
 
     public function findDaysForPeriodWeek(Query $query, array $options)
