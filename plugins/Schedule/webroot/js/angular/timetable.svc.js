@@ -81,7 +81,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         return InstitutionRoomsTable
             .where({
                 institution_id: institutionId,
-                accessibility: 1,
+                //accessibility: 1,
                 end_year:new Date().getFullYear()
             })
             .ajax({success: success, defer: true});          
