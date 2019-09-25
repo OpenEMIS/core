@@ -21,7 +21,7 @@ class POCOR5009 extends AbstractMigration
 		foreach ($query as $key => $value)
 		{
 			$this->updateDuplicateOpenEmisNo($value['openemis_no']);
-			sleep(2);
+			//sleep(2);
 		}
 			
 		$this->execute("ALTER TABLE `security_users` DROP INDEX `openemis_no`, ADD UNIQUE INDEX `openemis_no_UNIQUE` (`openemis_no`)");
@@ -65,42 +65,45 @@ class POCOR5009 extends AbstractMigration
 	
 	public function getUniqueOpenemisId($flag)
 	{
-		$User = TableRegistry::get('User.Users');
-		$prefix = '';
+            $User = TableRegistry::get('User.Users');
+            $prefix = '';
 
-        $prefix = TableRegistry::get('Configuration.ConfigItems')->value('openemis_id_prefix');
-        $prefix = explode(",", $prefix);
-        $prefix = ($prefix[1] > 0)? $prefix[0]: '';
+            $prefix = TableRegistry::get('Configuration.ConfigItems')->value('openemis_id_prefix');
+            $prefix = explode(",", $prefix);
+            $prefix = ($prefix[1] > 0) ? $prefix[0] : '';
 
-        $latest = $User->find()
-            ->order($User->aliasField('id').' DESC')
-            ->first();
-	
+            $latest = $User->find()
+                    ->order($User->aliasField('id') . ' DESC')
+                    ->first();
 
-        if (is_array($latest)) {
-            $latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
-        } else {
-            $latestOpenemisNo = $latest->openemis_no;
-        }
-        if (empty($prefix)) {
-            $latestDbStamp = $latestOpenemisNo;
-        } else {
-            $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
-        }
 
-        $currentStamp = time();
-        if ($latestDbStamp >= $currentStamp) {
-            $newStamp = $latestDbStamp + 1;
-        } else {
-            $newStamp = $currentStamp;
-        }
+            if (is_array($latest)) {
+                $latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
+            } else {
+                $latestOpenemisNo = $latest->openemis_no;
+            }
+
+            if (empty($prefix)) {
+                $latestDbStamp = $latestOpenemisNo;
+            } else {
+                $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
+            }
+
+            $currentStamp = time();
+
+            if ($latestDbStamp >= $currentStamp) {
+                $newStamp = $latestDbStamp + 1;
+            } else {
+                $newStamp = $currentStamp;
+            }
 
         return $prefix.$newStamp+$flag;
 	}
 		
 	public function down()
-    {
-		$this->execute('DROP TABLE IF EXISTS `security_users`');
-        $this->execute('RENAME TABLE `z_5009_security_users` TO `security_users`');
-    }
+       {
+	    $this->execute('DROP TABLE IF EXISTS `security_users`');
+            $this->execute('RENAME TABLE `z_5009_security_users` TO `security_users`');
+       }
+
 }
