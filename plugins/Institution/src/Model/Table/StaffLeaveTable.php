@@ -688,49 +688,77 @@ class StaffLeaveTable extends ControllerActionTable
         $endDate = $endDate->modify('+1 day');
         $interval = new DateInterval('P1D');
         $datePeriod = new DatePeriod($startDate, $interval, $endDate);
-
+        $CalendarEvents = TableRegistry::get('Calendars');
+        $CalendarTypes = TableRegistry::get('CalendarTypes');
+        $CalendarEventsData = $CalendarEvents
+                                ->find('all')
+                                ->contain(['CalendarTypes','CalendarEventDates'])
+                                ->join([
+                                    [
+                                        'type' => 'left',
+                                        'table' => 'calendar_types',
+                                        'conditions' => [
+                                            $CalendarEvents->aliasField('calendar_type_id') => $CalendarTypes->aliasField('id')
+                                        ]
+                                    ]
+                                ])                                
+                                ->where([
+                                    $CalendarEvents->aliasField('institution_id') => $institutionId])                               
+                                ->orWhere([ 
+                                    $CalendarEvents->aliasField('institution_id') => -1
+                                ])
+                                ->andWhere([
+                                    $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
+                                ])
+                                ->toArray();
+        $public_calendar_event_dates = array();
+        foreach ($CalendarEventsData as $key => $value) {
+            array_push($public_calendar_event_dates,$value['calendar_event_dates'][0]['date']->format('Y-m-d'));
+        }
         $count = 0;
         $overlap = false;
         foreach ($datePeriod as $key => $date) {
-            $dayText = $date->format('l');
-            if (in_array($dayText, $workingDaysOfWeek)) {
-                $count = $count + $day;
-                foreach ($exisitingLeaveRecords as $key => $value) {
-                    $comparisonId = $value->id;
-                    $dateFromStr = $value->date_from->format("Y-m-d");
-                    $dateToStr = $value->date_to->format("Y-m-d");
-                    $comparisonDateStr = $date->format("Y-m-d");
-                    $comparisonStartTime = $this->formatTime($value->start_time);
-                    $comparisonEndTime = $this->formatTime($value->end_time);
-                    $comparisonFullDay = $value->full_day;
-                    $isDateInRange = $this->checkDateInRange($dateFromStr, $dateToStr, $comparisonDateStr);
+            if (!in_array($date->format('Y-m-d'), $public_calendar_event_dates)) {
+                $dayText = $date->format('l');
+                if (in_array($dayText, $workingDaysOfWeek)) {
+                    $count = $count + $day;
+                    foreach ($exisitingLeaveRecords as $key => $value) {
+                        $comparisonId = $value->id;
+                        $dateFromStr = $value->date_from->format("Y-m-d");
+                        $dateToStr = $value->date_to->format("Y-m-d");
+                        $comparisonDateStr = $date->format("Y-m-d");
+                        $comparisonStartTime = $this->formatTime($value->start_time);
+                        $comparisonEndTime = $this->formatTime($value->end_time);
+                        $comparisonFullDay = $value->full_day;
+                        $isDateInRange = $this->checkDateInRange($dateFromStr, $dateToStr, $comparisonDateStr);
 
-                    if ($isDateInRange) {
-                        //If leave date applied overlaps existing records and both are non full day leave, check for overlapping in time.
-                        if($comparisonFullDay == 0 && $isFullDayLeave == 0){
-                            $existingConditions[$this->aliasField('date_from >=')] = $comparisonDateStr;
-                            $existingConditions[$this->aliasField('date_to <=')] = $comparisonDateStr;
-                            $overlapHalfDayLeaveRecords = $this
-                            ->find()
-                            ->where([$existingConditions])
-                            ->count();
-                            if ($overlapHalfDayLeaveRecords >= 2) {
+                        if ($isDateInRange) {
+                            //If leave date applied overlaps existing records and both are non full day leave, check for overlapping in time.
+                            if($comparisonFullDay == 0 && $isFullDayLeave == 0){
+                                $existingConditions[$this->aliasField('date_from >=')] = $comparisonDateStr;
+                                $existingConditions[$this->aliasField('date_to <=')] = $comparisonDateStr;
+                                $overlapHalfDayLeaveRecords = $this
+                                ->find()
+                                ->where([$existingConditions])
+                                ->count();
+                                if ($overlapHalfDayLeaveRecords >= 2) {
+                                    $overlap = true;
+                                    break;
+                                } else if (($comparisonStartTime <= $entityEndTime) && ($comparisonEndTime >= $entityStartTime)) {
+                                   // Overlapping in time found
+                                   $overlap = true;
+                                   break;
+                                }
+                            } else {
                                 $overlap = true;
                                 break;
-                            } else if (($comparisonStartTime <= $entityEndTime) && ($comparisonEndTime >= $entityStartTime)) {
-                               // Overlapping in time found
-                               $overlap = true;
-                               break;
                             }
-                        } else {
-                            $overlap = true;
-                            break;
                         }
                     }
                 }
-            }
-            if ($overlap) {
-                break;
+                if ($overlap) {
+                    break;
+                }
             }
         }
         if ($overlap) {
