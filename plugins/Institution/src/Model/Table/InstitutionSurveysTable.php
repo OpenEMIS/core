@@ -84,9 +84,18 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
+        $InstitutionSurveyAnswers = TableRegistry::get('Institution.InstitutionSurveyAnswers');
         $query
-            ->select(['code' => 'Institutions.code', 'description' => 'SurveyForms.description', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])
-            ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives']);
+            ->select(['code' => 'Institutions.code', 'description' => 'SurveyForms.description', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name',
+                'text_value' => 'InstitutionSurveyAnswers.text_value'
+        ])
+            ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives'])
+            ->leftJoin(
+                    [$InstitutionSurveyAnswers->alias() => $InstitutionSurveyAnswers->table()],
+                    [
+                        $InstitutionSurveyAnswers->aliasField('institution_survey_id = ') . $this->aliasField('id')
+                    ]
+                );
     }
 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
