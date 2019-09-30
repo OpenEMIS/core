@@ -7,11 +7,7 @@ $this->start('toolbar');
 ?>
 
 <?php if ($_excel) : ?>
-    <a href="<?=$excelUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" >
-            <i class="fa kd-export" ></i>
-        </button>
-    </a>
+    <a ng-href="{{$ctrl.excelExportAUrl}}" ng-show="$ctrl.action == 'view'" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Export"><i class="fa kd-export"></i></a>
 <?php endif; ?>
 
 <?php if ($_import) : ?>
@@ -204,7 +200,7 @@ $panelHeader = $this->fetch('panelHeader');
 
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;" float-btn="true">
+        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;$ctrl.exportexcel='<?=$excelUrl ?>';" float-btn="true">
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">
                     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
