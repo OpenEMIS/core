@@ -1,3 +1,10 @@
+### [3.43.5] - 2019-09-18
+- Bug fix on Administration > System Setup > Field Options > Staff Position Titles > Disable Force Delete when a record has other information linked
+- Bug Fix on System Configurations > Student Settings: Increase Maximum Students Per Class/Subjects to 200
+- Big Fix on Administration > System Setup > Localization > Translations: added the following translations for the Institutions > Student > Add page warning labels
+- Bug Fix on Institutions > Students > Promote: Student should remain 'Enrolled' until Student Promoted Effective Date
+- Bug Fix on Institutions > Risks : System displays Generated On/By and updates Status once done
+- Bug Fix on Institutions > Staff > Add : Staff Transfer Workflow
 ### [3.43.4] - 2019-07-31
 - Bug fix on Institutions > Performance > Assessments page loading speed
 - Bug fix on Institutions > Performance > Assessments page to allow Staff that has the right access to edit 
