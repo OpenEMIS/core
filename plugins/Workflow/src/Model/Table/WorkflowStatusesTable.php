@@ -349,7 +349,7 @@ class WorkflowStatusesTable extends AppTable {
 				'valueField' => 'name'
 			])
 			->matching('WorkflowSteps')
-			->where([$this->aliasField('id') => $workflowStatusId])
+			->where([ $this->aliasField('id'). ' IN ' => $workflowStatusId ])
 			->select(['id' => 'WorkflowSteps.id', 'name' => 'WorkflowSteps.name'])
 			->toArray();
 	}
