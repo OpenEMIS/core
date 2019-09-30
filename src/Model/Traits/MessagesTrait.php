@@ -141,7 +141,8 @@ trait MessagesTrait
             'occupierAddNotAllowed' => 'You are not allowed to add infrastructure as an occupier',
             'occupierEditNotAllowed' => 'You are not allowed to edit infrastructure as an occupier',
             'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier',
-            'accessibilityOption' => 'Designed for use by anyone including those with special needs/disabilities.'
+            'accessibilityOption' => 'Designed for use by anyone including those with special needs/disabilities.',
+            'effectiveDate' => 'Date should be within Academic Period.'
         ],
         'InfrastructureTypes' => [
             'noLevels' => 'No Available Levels',
