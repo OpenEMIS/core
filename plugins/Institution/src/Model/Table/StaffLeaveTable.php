@@ -117,7 +117,7 @@ class StaffLeaveTable extends ControllerActionTable
             $startDate = $staffData[0]['start_date']->format('Y-m-d');
             $endDate = $staffData[0]['end_date']->format('Y-m-d');
             if ($startDate > $dateFrom) {
-                $this->Alert->error('AlertRules.StaffLeave.noleave', ['reset' => true]);
+                $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
                 return false;
             } else if ($dateFrom > $endDate) {
                 $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
