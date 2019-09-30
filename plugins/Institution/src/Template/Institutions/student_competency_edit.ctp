@@ -16,6 +16,8 @@ $this->start('panelBody');
     .ag-body-container {
         max-height: 380px;
     }
+    .ag-floating-bottom-viewport 
+    .ag-floating-bottom-container .ag-row{min-height:110px;}
 </style>
 <form accept-charset="utf-8" id="content-main-form" class="ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionStudentCompetenciesCtrl as InstitutionStudentCompetenciesController" ng-init="InstitutionStudentCompetenciesController.classId=<?= $classId ?>; InstitutionStudentCompetenciesController.competencyTemplateId=<?=$competencyTemplateId ?>;">
     <div class="form-horizontal">
