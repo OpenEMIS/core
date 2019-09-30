@@ -1443,4 +1443,13 @@ class RecordBehavior extends Behavior
         }
         return '';
     }
+
+    private function coordinates($data, $fieldInfo, $options = [])
+    {
+        if (isset($data[$fieldInfo['id']])) {
+            return $data[$fieldInfo['id']];
+        } else {
+            return '';
+        }
+    }
 }
