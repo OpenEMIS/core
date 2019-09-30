@@ -45,7 +45,7 @@ $panelHeader = $this->fetch('panelHeader');
 
 <style>
     .attendance-dashboard .data-section.single-day {
-        width: 32%;
+        width: 24%;
     }
 
     .attendance-dashboard .data-section i.fa-address-book-o {
@@ -227,6 +227,12 @@ $panelHeader = $this->fetch('panelHeader');
                             <h1 class="data-header">{{$ctrl.absenceCount}}</h1>
                         </div>
                     </div>
+                    <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
+                        <div class="data-field">
+                            <h4><?= __('No. of Students Late') ?></h4>
+                            <h1 class="data-header">{{$ctrl.lateCount}}</h1>
+                        </div>
+                    </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <i class="fa fa-address-book-o"></i>
                         <div class="data-field">
@@ -242,14 +248,14 @@ $panelHeader = $this->fetch('panelHeader');
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Late') ?></h4>
-                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
+                            <h4><?= __('No. of Absence') ?></h4>
+                            <h1 class="data-header">{{$ctrl.allAbsenceCount}}</h1>
                         </div>
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Absence') ?></h4>
-                            <h1 class="data-header">{{$ctrl.allAbsenceCount}}</h1>
+                            <h4><?= __('No. of Late') ?></h4>
+                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
                         </div>
                     </div>
                 </div>
