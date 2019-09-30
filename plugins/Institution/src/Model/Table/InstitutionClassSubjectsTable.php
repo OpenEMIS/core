@@ -18,36 +18,11 @@ class InstitutionClassSubjectsTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
-    
-        $this->addBehavior('Restful.RestfulAccessControl', [
-            'ScheduleTimetable' => ['index']
-        ]);
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
         $subjectEntity = $this->InstitutionSubjects->get($entity->institution_subject_id);
         $this->InstitutionSubjects->delete($subjectEntity);
-    }
-    
-    public function findAllSubjects(Query $query, array $options)
-    {       
-        $institutionClassId = $options['institution_class_id'];
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $query
-            ->select([
-                 $this->aliasField('id'),
-                 'institution_subject_id'=>$InstitutionSubjects->aliasField('id'),
-                 'institution_subject_name'=>$InstitutionSubjects->aliasField('name'),
-            ])
-            ->contain(['InstitutionSubjects'])
-            ->where([
-                $this->aliasField('institution_class_id') => $institutionClassId
-            ])
-            ->order([
-                $InstitutionSubjects->aliasField('name')=>'DESC'
-            ]);
-        
-        return $query;
     }
 }
