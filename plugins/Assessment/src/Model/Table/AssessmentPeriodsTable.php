@@ -132,6 +132,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists('academic_term')) {
+
             if (trim($data['academic_term']) == '') {
                 $data['academic_term'] = null;
             }
@@ -144,6 +145,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $assessmentPeriods = $entity->assessment_periods;
         $form = $event->subject()->Form;
         $tableRows = [];
+
         foreach ($assessmentPeriods as $key => $period) {
             $row = [];
             $row[] = $period->code . ' - ' . $period->name;
@@ -183,8 +185,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
         // Before action logic
         $assessmentId = $request->query('template');
         $academicPeriodId = $request->query('period');
-
-
         $entity = false;
 
         if ($model->exists($assessmentId)) {
@@ -202,6 +202,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->field('assessment_periods', ['attr' => ['required' => true], 'type' => 'assessment_periods', 'valueClass' => 'table-full-width']);
 
         if ($entity) {
+
             if ($request->is(['post', 'put'])) {
                 $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
                 $patchOptions = new ArrayObject(['validate' => false, 'associated' => ['AssessmentPeriods' => ['validate' => false]]]);
@@ -389,7 +390,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
         }
 
         $this->setupFields($entity);
-
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
     }
 
@@ -405,23 +405,21 @@ class AssessmentPeriodsTable extends ControllerActionTable
         }
 
         $newOptions = ['associated' => ['EducationSubjects']];
-
         $arrayOptions = $patchOptions->getArrayCopy();
         $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
         $patchOptions->exchangeArray($arrayOptions);
     }
-
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $options) //cant use afterSave because it wont be detected by unit test case.
-    {
+    
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $options){
+        
         if (!$entity->isNew()) { //for edit
-            // can't save properly using associated method
-            // until we find a better solution, saving of assessment items grade types will be done in afterSave as of now
             $id = $entity->id;
             $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
             $AssessmentItemsGradingTypes->deleteAll(['assessment_period_id' => $id]);
 
             if ($entity->has('education_subjects')) {
                 $educationSubjects = $entity->education_subjects;
+
                 if (!empty($educationSubjects)) {
                     foreach ($educationSubjects as $educationSubject) {
                         $query = $AssessmentItemsGradingTypes->find()->where([
@@ -445,7 +443,45 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 }
             }
         }
+        
+        unset($entity->education_subjects);        
     }
+    
+//    public function editAfterSave(Event $event, Entity $entity, ArrayObject $options) //cant use afterSave because it wont be detected by unit test case.
+//    {
+//        if (!$entity->isNew()) { //for edit
+//            // can't save properly using associated method
+//            // until we find a better solution, saving of assessment items grade types will be done in afterSave as of now
+//            $id = $entity->id;
+//            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+//            $AssessmentItemsGradingTypes->deleteAll(['assessment_period_id' => $id]);
+//
+//            if ($entity->has('education_subjects')) {
+//                $educationSubjects = $entity->education_subjects;
+//                if (!empty($educationSubjects)) {
+//                    foreach ($educationSubjects as $educationSubject) {
+//                        $query = $AssessmentItemsGradingTypes->find()->where([
+//                            $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubject->_joinData->assessment_item_id,
+//                            $AssessmentItemsGradingTypes->aliasField('assessment_id') => $educationSubject->_joinData->assessment_id,
+//                            $AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id') => $educationSubject->_joinData->assessment_grading_type_id,
+//                            $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $id
+//                        ]);
+//
+//                        if ($query->count() == 0) {
+//                            $newEntity = $AssessmentItemsGradingTypes->newEntity([
+//                                'assessment_id' => $educationSubject->_joinData->assessment_id,
+//                                'education_subject_id' => $educationSubject->_joinData->education_subject_id,
+//                                'assessment_grading_type_id' => $educationSubject->_joinData->assessment_grading_type_id,
+//                                'assessment_period_id' => $id
+//                            ]);
+//
+//                            $AssessmentItemsGradingTypes->save($newEntity);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
