@@ -791,7 +791,10 @@ trait MessagesTrait
             ],
             'StaffLeave' => [
                 'value' => 'Days within %d to %d',
-                'leavePeriodOverlap' => 'Leave period applied overlaps existing records.'
+                'leavePeriodOverlap' => 'Leave period applied overlaps existing records.',
+                'noLeave' => 'Date from is less than joining date of staff.',
+                'noLeaveEndDate' => 'Date from is greater than end date of staff.',
+                'noLeaveEndDateTo' => 'Date to is greater than end date of staff.'
             ],
             'StaffType' => [
                 'value' => 'Days within %d to %d'
