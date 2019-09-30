@@ -430,55 +430,9 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentStatusUpdates']);
     }
-
-
-    public function ScheduleTimetableOverview()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Schedule.ScheduleTimetables']);
-    }
-
-    public function ScheduleIntervals() 
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Schedule.ScheduleIntervals']);
-    }
-
-    public function ScheduleTerms()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Schedule.ScheduleTerms']);
-    }
-    // Timetable - END
+    // End
 
     // AngularJS
-    public function ScheduleTimetable($action = 'view')
-    {
-       
-        $timetableId = $this->ControllerAction->paramsDecode($this->request->query('timetableId'))['id'];
-       
-        $session = $this->request->session();
-        $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
-       
-        $backUrl = [
-            'plugin' => $this->plugin,
-            'controller' => $this->name,
-            'action' => 'ScheduleTimetableOverview',
-            'institutionId' => $institutionId,
-            'view',
-            $this->ControllerAction->paramsEncode(['id' => $timetableId])
-        ];
-        
-        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
-                ->getCurrent();
-
-        $this->set('_action', $action);
-        $this->set('_back', Router::url($backUrl));
-
-        $this->set('timetable_id', $timetableId);
-        $this->set('institutionDefaultId', $institutionId);
-        $this->set('academicPeriodId', $academicPeriodId);
-        $this->set('ngController', 'TimetableCtrl as $ctrl');
-        $this->render('timetable');
-    }
-
     public function StudentAttendances()
     {
         $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
@@ -1260,13 +1214,6 @@ class InstitutionsController extends AppController
                 $this->Angular->addModules([
                     'institution.staff.attendances.ctrl',
                     'institution.staff.attendances.svc'
-                ]);
-                break;
-            
-            case 'ScheduleTimetable':
-                $this->Angular->addModules([
-                    'timetable.ctrl',
-                    'timetable.svc'
                 ]);
                 break;
         }
