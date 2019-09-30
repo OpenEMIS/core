@@ -68,7 +68,7 @@ class ExaminationItemsTable extends AppTable {
                 'rule'  => ['range', 0, 2],
                 'last' => true
             ])
-            ->allowEmpty('education_subject_id')
+            ->notEmpty('education_subject_id')
             ->notEmpty('examination_grading_type_id')
             ->add('examination_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'registration_end_date', false]
