@@ -96,34 +96,34 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $staffId = $entity['staff_id'];
-        $institutionId = $entity['institution_id'];
-        $dateFrom = $entity['date_from']->format('Y-m-d');
-        $dateTo = $entity['date_to']->format('Y-m-d');
+        $staff_id = $entity['staff_id'];
+        $institution_id = $entity['institution_id'];
+        $date_from = $entity['date_from']->format('Y-m-d');
+        $date_to = $entity['date_to']->format('Y-m-d');
         $entity = $this->getNumberOfDays($entity);
         
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $staffData = $InstitutionStaff
             ->find('all')
             ->where([
-                        $InstitutionStaff->aliasField('institution_id = ') => $institutionId,
-                        $InstitutionStaff->aliasField('staff_id = ') => $staffId
+                        $InstitutionStaff->aliasField('institution_id = ') => $institution_id,
+                        $InstitutionStaff->aliasField('staff_id = ') => $staff_id
                     ])
             ->group([
                 $InstitutionStaff->aliasField('staff_id')
             ])
             ->toArray();
             
-            $startDate = $staffData[0]['start_date']->format('Y-m-d');
-            $endDate = $staffData[0]['end_date']->format('Y-m-d');
-            if ($startDate > $dateFrom) {
+            $start_date = $staffData[0]['start_date']->format('Y-m-d');
+            $end_date = $staffData[0]['end_date']->format('Y-m-d');
+            if ($start_date > $date_from) {
                 $this->Alert->error('AlertRules.StaffLeave.noleave', ['reset' => true]);
                 return false;
-            } else if ($dateFrom > $endDate) {
-                $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
+            } else if ($date_from > $end_date) {
+                $this->Alert->error('AlertRules.StaffLeave.noleaveenddate', ['reset' => true]);
                 return false;
-            } else if ($dateTo > $endDate) {
-                $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDateTo', ['reset' => true]);
+            } else if ($date_to > $end_date) {
+                $this->Alert->error('AlertRules.StaffLeave.noleaveenddateto', ['reset' => true]);
                 return false;
             }
 
