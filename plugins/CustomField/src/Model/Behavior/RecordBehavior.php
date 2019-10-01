@@ -1446,8 +1446,10 @@ class RecordBehavior extends Behavior
 
     private function coordinates($data, $fieldInfo, $options = [])
     {
-        if (isset($data[$fieldInfo['id']])) {
-            return $data[$fieldInfo['id']];
+        if (!empty($data[$fieldInfo['id']])) {
+        $coordinates = preg_replace('/[{}""]/', '', $data[$fieldInfo['id']]);
+        $coordinatesVal = preg_replace('/,/', ' | ', $coordinates);
+            return $coordinatesVal;
         } else {
             return '';
         }
