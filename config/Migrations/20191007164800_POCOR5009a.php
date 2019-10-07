@@ -27,6 +27,7 @@ class POCOR5009a extends AbstractMigration
 	public function down()
     {
 	    $this->execute('DROP TABLE IF EXISTS `openemis_temps`');
+		$this->execute('DROP EVENT IF EXISTS delete_openemis_temps_at_midnight');		
     }
 
 }
