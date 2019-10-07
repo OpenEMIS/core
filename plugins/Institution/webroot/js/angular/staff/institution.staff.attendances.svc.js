@@ -501,6 +501,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             });
         }, 1);
 
+        timeInputElement.addEventListener('select', function(event) {
+            $(this).click();
+        });
+
         timeInputElement.addEventListener('click', function(event) {
             $('#' + timepickerId).timepicker();
         });
