@@ -14,7 +14,7 @@ class POCOR5009a extends AbstractMigration
 				'limit' => 150,
                 'null' => false])
               ->addColumn('ip_address', 'string',[
-				'limit' => 150,
+				'limit' => 40,
                 'null' => false])
               ->create();
 			  
