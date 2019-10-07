@@ -16,9 +16,15 @@ class POCOR5009a extends AbstractMigration
               ->addColumn('ip_address', 'string',[
 				'limit' => 40,
                 'null' => false])
+			  ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+			  ])
               ->create();
+		
+		$this->execute("ALTER TABLE `openemis_temps` DROP INDEX `openemis_no`, ADD UNIQUE INDEX `openemis_no_UNIQUE` (`openemis_no`)");
 			  
-		$this->execute('CREATE EVENT delete_openemis_temps_at_midnight ON SCHEDULE EVERY 1 DAY STARTS CURDATE() + INTERVAL 1 DAY DO TRUNCATE openemis_temps');
+		$this->execute('CREATE EVENT delete_openemis_temps_at_midnight ON SCHEDULE EVERY 1 DAY STARTS CURDATE() + INTERVAL 1 DAY DO delete from openemis_temps where created < DATE_SUB(NOW() , INTERVAL 1 DAY)');
 		 
 		$this->execute('SET GLOBAL event_scheduler=ON');		 
 		 
