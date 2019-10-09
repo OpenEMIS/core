@@ -536,7 +536,7 @@ class UsersTable extends AppTable
         }
 
         $currentStamp = time();
-        if ($latestDbStamp >= $currentStamp) {
+        if ($latestDbStamp <= $currentStamp) {
             $newStamp = $latestDbStamp + 1;
         } else {
             $newStamp = $currentStamp;
