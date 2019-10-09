@@ -549,7 +549,7 @@ class UsersTable extends AppTable
                 ->where(['openemis_no' => $newOpenemisNo])
                 ->first();
        
-        if($resultOpenemisTemps->openemis_no != ''){  
+        if(!empty($resultOpenemisTemps->openemis_no)){  
            $resultOpenemisTemp = $openemisTemps->find('all')                
                 ->order(['id' => 'DESC'])
                 ->first();
