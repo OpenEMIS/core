@@ -22,7 +22,7 @@ class POCOR5009a extends AbstractMigration
 			  ])
               ->create();
 		
-		$this->execute("ALTER TABLE `openemis_temps` DROP INDEX `openemis_no`, ADD UNIQUE INDEX `openemis_no_UNIQUE` (`openemis_no`)");
+		$this->execute("ALTER TABLE `openemis_temps` ADD UNIQUE INDEX `openemis_no_UNIQUE` (`openemis_no`)");
 			  
 		$this->execute('CREATE EVENT delete_openemis_temps_at_midnight ON SCHEDULE EVERY 1 DAY STARTS CURDATE() + INTERVAL 1 DAY DO delete from openemis_temps where created < DATE_SUB(NOW() , INTERVAL 1 DAY)');
 		 
