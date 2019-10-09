@@ -910,6 +910,16 @@ class InstitutionsController extends AppController
             $session = $this->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
         }
+        $_import = $this->AccessControl->check(['Institutions', 'ImportStaffAttendances', 'add']);
+
+        $importUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'ImportStaffAttendances',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+            'add'
+        ];
+        $this->set('importUrl', Router::url($importUrl));
         $this->set('_edit', $_edit);
         $this->set('_history', $_history);
         $this->set('institution_id', $institutionId);
@@ -1441,16 +1451,18 @@ class InstitutionsController extends AppController
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
 
-            //Students By Grade for current year, excludes transferred and withdrawn students
+            //Students By Grade for current year, excludes transferred ,withdrawn, promoted, repeated students
             $params = [
-                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]
+                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
+                    $statuses['PROMOTED'], $statuses['REPEATED']]]
             ];
 
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_stage', $params);
 
-            //Students By Year, excludes transferred and withdrawn students
+            //Students By Year, excludes transferred withdrawn,promoted,repeated students
             $params = [
-                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]
+                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
+                    $statuses['PROMOTED'], $statuses['REPEATED']]]
             ];
 
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
