@@ -13,6 +13,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     var translateText = {
         'original': {
+            'openemis_no': 'OpenEMIS ID',
             'Name': 'Name',
             'Attendance': 'Attendance',
             'TimeIn': 'Time In',
@@ -23,6 +24,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         'translated': {
         }
     };
+
+    var errorElms = {};
 
     var service = {
         init: init,
@@ -163,12 +166,19 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
 
         columnDefs.push({
+            headerName: translateText.translated.openemis_no,
+            field: "_matchingData.Users.openemis_no",
+            pinned: direction,
+            menuTabs: []
+        });
+
+        columnDefs.push({
             headerName: translateText.translated.Name,
-            field: "_matchingData.Users.name_with_id",
+            field: "_matchingData.Users.name",
             filter: "text",
             filterParams: filterParams,
             pinned: direction,
-            menuTabs: menuTabs,
+            menuTabs: menuTabs
         });
 
         columnDefs.push({
@@ -225,13 +235,21 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
 
         columnDefs.push({
+            headerName: translateText.translated.openemis_no,
+            field: "_matchingData.Users.openemis_no",
+            pinned: direction,
+            menuTabs: []
+        });
+
+        columnDefs.push({
             headerName: translateText.translated.Name,
-            field: "_matchingData.Users.name_with_id",
+            field: "_matchingData.Users.name",
+            filter: "text",
             filterParams: filterParams,
             pinned: direction,
-            menuTabs: menuTabs,
-            filter: "text",
+            menuTabs: menuTabs
         });
+
         angular.forEach(dayList, function(dayObj, dayKey) {
             if (dayObj.id != -1) {
                 var dayText = dayObj.name;
@@ -426,18 +444,22 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             time = convert12Timeformat(params.value[timeKey]);
         }
         var scope = params.context.scope;
+        var leave = data.attendance[data.date].leave;
+        var isDisabled = (leave && leave.length > 0 && leave[0].isFullDay === 1);
+
         // div element
         var timeInputDivElement = document.createElement('div');
-        timeInputDivElement.setAttribute('id', timepickerId);
+        if (!isDisabled) timeInputDivElement.setAttribute('id', timepickerId); // for pop up
         timeInputDivElement.setAttribute('class', 'input-group time');
         var timeInputElement = document.createElement('input');
         timeInputElement.setAttribute('class', 'form-control');
+        if (isDisabled) timeInputElement.setAttribute('disabled', true); // for styling ui
         var timeSpanElement = document.createElement('span');
-        timeSpanElement.setAttribute('class', 'input-group-addon');
+        timeSpanElement.setAttribute('class', (isDisabled) ? 'input-group-addon disabled' : 'input-group-addon'); // for styling ui
         var timeIconElement = document.createElement('i');
         timeIconElement.setAttribute('class', 'glyphicon glyphicon-time');
 
-        if (hasError(data, timeKey)) {
+        if (hasError(data, timeKey, timepickerId)) {
             timeInputElement.setAttribute("class", "form-control form-error");
         }
         setTimeout(function(event) {
@@ -447,26 +469,36 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 if (params.value[timeKey] == null) {
                     params.value.isNew = true;
                 }
-                var time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
+                var time24Hour = null;
+                if (timeInputElement.value.length > 0) {
+                    time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
+                }
                 saveStaffAttendance(params, timeKey, time24Hour, academicPeriodId)
                 .then(
                     function(response) {
                         clearError(data, timeKey);
-                        if(response.data.error.length == 0){
+                        if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
+                            setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
+                            var errorMsg = 'There was an error when saving record';
+                            if (typeof response.data.error === 'string') {
+                                errorMsg = response.data.error;
+                            } else if (response.data.error.time_out.ruleCompareTimeReverse) {
+                                errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
+                            } else if (response.data.error.time_out.timeInShouldNotEmpty) {
+                                errorMsg = response.data.error.time_out.timeInShouldNotEmpty;
+                            }
+                            
+                            AlertSvc.error(scope, errorMsg);
+                        } else {
                             AlertSvc.success(scope, 'Time record successfully saved.');
                             params.value.isNew = false;
                             params.value[timeKey] = time24Hour;
-                            setError(data, timeKey, false);
-                        }else{
-                            setError(data, timeKey, true);
-                            console.log(response.data.error);
-                            AlertSvc.error(scope, response.data.error.time_out.ruleCompareTimeReverse);
+                            setError(data, timeKey, false, { id: timepickerId, elm: timeInputElement });
                         }
                     },
                     function(error) {
-                        console.log('error', error);
                         clearError(data, timeKey);
-                        setError(data, timeKey, true);
+                        setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
                         AlertSvc.error(scope, 'There was an error when saving record');
                     }
                 )
@@ -488,6 +520,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 });
             });
         }, 1);
+
+        timeInputElement.addEventListener('select', function(event) {
+            $(this).click();
+        });
 
         timeInputElement.addEventListener('click', function(event) {
             $('#' + timepickerId).timepicker();
@@ -543,6 +579,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             time_out: params.data.attendance[dateString].time_out,
             comment: params.data.attendance[dateString].comment
         };
+
         staffAttendanceData[dataKey] = dataValue;
         if(!params.data.attendance[dateString].isNew) {
             return InstitutionStaffAttendances.edit(staffAttendanceData);
@@ -551,27 +588,33 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
     }
 
-    function setError(data, dataKey, error) {
+    function setError(data, dataKey, error, input) {
         if (angular.isUndefined(data.save_error)) {
             data.save_error = {};
         }
 
-        data.save_error[dataKey] = error;
+        var index = Object.keys(errorElms).indexOf(input.id);
+        if (error) {
+            input.elm.className += ' form-error';
+            input.elm.value = '';
+            if (index === -1) errorElms[input.id] = input.elm;
+        } else {
+            input.elm.className = input.elm.className.replace(/ form-error/gi, '');
+            if (index > -1) delete errorElms[input.id];
+        }
     }
 
-    function hasError(data, key) {
-        return (angular.isDefined(data.save_error) && angular.isDefined(data.save_error[key]) && data.save_error[key]);
+    function hasError(data, key, id) {
+        return angular.isDefined(errorElms[id]);
     }
 
     function clearError(data, skipKey) {
         if (angular.isUndefined(data.save_error)) {
             data.save_error = {};
         }
-
-        angular.forEach(data.save_error, function(error, key) {
-            if (key != skipKey) {
-                data.save_error[key] = false;
-            }
-        })
+        angular.forEach(errorElms, function(elm, id) {
+            elm.className = elm.className.replace(/ form-error/gi, '');
+        });
+        errorElms = {};
     }
 };

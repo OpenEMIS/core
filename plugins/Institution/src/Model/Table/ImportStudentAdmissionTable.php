@@ -446,7 +446,8 @@ class ImportStudentAdmissionTable extends AppTable {
                         ->where([$this->Students->aliasField('id') => $studentId])
                         ->select(['Genders.code'])
                         ->first();
-                $userGender = $query->Genders->code;
+                
+                $userGender = $query->gender->code;
 
                 if ($userGender != $institutionGenderCode) {
                     return sprintf('Institution only accepts %s student.', $institutionGender);
