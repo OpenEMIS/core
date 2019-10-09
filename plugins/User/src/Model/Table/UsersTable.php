@@ -536,13 +536,33 @@ class UsersTable extends AppTable
         }
 
         $currentStamp = time();
-        if ($latestDbStamp >= $currentStamp) {
+        if ($latestDbStamp <= $currentStamp) {
             $newStamp = $latestDbStamp + 1;
         } else {
             $newStamp = $currentStamp;
         }
-
-        return $prefix.$newStamp;
+        
+        $newOpenemisNo = $prefix.$newStamp;
+        $openemisTemps = TableRegistry::get('User.OpenemisTemps');        
+        
+        $resultOpenemisTemps = $openemisTemps->find('all')
+                ->where(['openemis_no' => $newOpenemisNo])
+                ->first();
+       
+        if(!empty($resultOpenemisTemps->openemis_no)){  
+           $resultOpenemisTemp = $openemisTemps->find('all')                
+                ->order(['id' => 'DESC'])
+                ->first();
+           
+           $newOpenemisNo = $resultOpenemisTemp->openemis_no + 1;
+        }       
+        
+        $openemisTemp = $openemisTemps->newEntity();
+        $openemisTemp->openemis_no = $newOpenemisNo;
+        $openemisTemp->ip_address = $_SERVER['REMOTE_ADDR'];
+        $openemisTemps->save($openemisTemp);
+        
+        return $newOpenemisNo;
     }
 
     public function validationDefault(Validator $validator)
