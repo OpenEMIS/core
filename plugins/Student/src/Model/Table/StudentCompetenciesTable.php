@@ -98,7 +98,6 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        //$studentId = 10519;
         $session = $this->request->session();
         if ($this->controller->name == 'Profiles') {
             $studentId = $session->read('Auth.User.id');
