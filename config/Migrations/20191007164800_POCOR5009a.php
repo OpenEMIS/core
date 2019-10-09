@@ -26,7 +26,7 @@ class POCOR5009a extends AbstractMigration
 			  
 		$this->execute('CREATE EVENT delete_openemis_temps_at_midnight ON SCHEDULE EVERY 1 DAY STARTS CURDATE() + INTERVAL 1 DAY DO delete from openemis_temps where created < DATE_SUB(NOW() , INTERVAL 1 DAY)');
 		 
-		$this->execute('SET GLOBAL event_scheduler=ON');		 
+		//$this->execute('SET GLOBAL event_scheduler=ON');		 
 		 
     }	
 		
