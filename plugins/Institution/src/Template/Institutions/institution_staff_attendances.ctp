@@ -6,14 +6,6 @@
 <?php
 $this->start('toolbar');
 ?>
-<!-- <?php if ($_excel) : ?>
-    <a href="<?=$excelUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" >
-            <i class="fa kd-export" ></i>
-        </button>
-    </a>
-<?php endif; ?> -->
-
 <!-- <?php if ($_import) : ?>
     <a href="<?=$importUrl ?>" ng-show="$ctrl.action == 'view'">
         <button class="btn btn-xs btn-default" data-toggle="{{test()}}" data-placement="bottom" data-container="body" title="<?= __('Import') ?>" >
@@ -29,6 +21,11 @@ $this->start('toolbar');
 
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit'" ng-click="$ctrl.onBackClick()">
         <i class="fa kd-back"></i>
+    </button>
+<?php endif; ?>
+<?php if ($_excel) : ?>
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" ng-show="$ctrl.action == 'view'" ng-click="$ctrl.onExcelClick()">
+        <i class="fa kd-export" ></i>
     </button>
 <?php endif; ?>
 <?php
@@ -184,7 +181,8 @@ $institutionId = $paramsQuery['institution_id'];
 </style>
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>; $ctrl.history=<?= $_history ? $_history : 0 ?>;" float-btn="true">
+        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>; $ctrl.excelUrl='<?= $excelUrl;?>'; $ctrl.history=<?= $_history ? $_history : 0 ?>;" float-btn="false">
+
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">
                     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
