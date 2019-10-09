@@ -113,7 +113,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             columnDefs: [],
             rowData: [],
             headerHeight: 38,
-            rowHeight: 38,
+            rowHeight: 60,
             enableColResize: false,
             enableSorting: false,
             unSortIcon: true,
@@ -213,7 +213,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     function onChangeColumnDefs(action, tab) {
         var deferred = $q.defer();
 
-        InstitutionsCommentsSvc.getColumnDefs(action, tab, vm.currentUserName, vm.comments, vm.commentCodeOptions)
+        InstitutionsCommentsSvc.getColumnDefs(action, tab, vm.currentUserName, vm.comments, vm.commentCodeOptions, CommentTextEditor)
         .then(function(cols)
         {
             if (vm.gridOptions != null) {
@@ -241,4 +241,32 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     function onBackClick() {
         $scope.action = 'view';
     }
+
+
+    // function to act as a class
+    function CommentTextEditor () {}
+
+    // gets called once before the renderer is used
+    CommentTextEditor.prototype.init = function(params) {
+        // create the cell
+        this.eInput = document.createElement('textarea');
+        this.eInput.setAttribute("id", 'comment');
+        this.eInput.value = params.value;
+    };
+
+    // gets called once when grid ready to insert the element
+    CommentTextEditor.prototype.getGui = function() {
+        return this.eInput;
+    };
+
+    // returns the new value after editing
+    CommentTextEditor.prototype.getValue = function() {
+        return this.eInput.value;
+    };
+
+    // if true, then this editor will appear in a popup
+    CommentTextEditor.prototype.isPopup = function() {
+        // and we could leave this method out also, false is the default
+        return false;
+    };
 }
