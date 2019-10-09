@@ -309,6 +309,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         vm.pageSizeDropdown.setAttribute('id', 'page-size');
         vm.pageSizeDropdown.setAttribute('style', 'background-color: #FFFFFF');
         vm.pageSizeDropdown.onchange = onPageSizeChanged;
+        var dropdown = document.createElement('select');
+        dropdown.setAttribute('id', 'page-size');
+        dropdown.setAttribute('style', 'background-color: #FFFFFF');
+        dropdown.onchange = onPageSizeChanged;
 
         //Create and append the options
         for (var i = 10; i <= 20; i += 10) {
@@ -319,13 +323,18 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         }
 
         dropdownContainer.appendChild(vm.pageSizeDropdown);
+         //   dropdown.appendChild(option);
+        //}
 
+        dropdownContainer.appendChild(dropdown);
         return dropdownContainer;
     }
 
     function onPageSizeChanged() {
         var limit = this.value;
         vm.gridOptions.api.paginationSetPageSize(Number(limit));
+        vm.count = 0;
         vm.onChangeSubject(vm.currentTab, limit);
+        // var value = document.getElementById('page-size').value;
     }
 }
