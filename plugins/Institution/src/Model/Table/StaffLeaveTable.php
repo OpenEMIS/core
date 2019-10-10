@@ -83,6 +83,9 @@ class StaffLeaveTable extends ControllerActionTable
             ->add('date_from', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
             ])
+            ->add('date_from', 'leavePeriodOverlap', [
+                'rule' => ['noOverlappingStaffAttendance']
+            ])
             ->allowEmpty('file_content');
     }
 

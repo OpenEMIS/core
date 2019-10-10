@@ -906,20 +906,36 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function InstitutionStaffAttendances()
+    public function InstitutionStaffAttendances($pass = 'index')
     {
-        $_edit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'edit']);
-        $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        if ($pass == 'excel') {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']);
         } else {
-            $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
+            $_edit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'edit']);
+            $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
+            $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
+            if (!empty($this->request->param('institutionId'))) {
+                $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            } else {
+                $session = $this->request->session();
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+
+            $excelUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'InstitutionStaffAttendances',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+                'excel'
+            ];
+
+            $this->set('_edit', $_edit);
+            $this->set('_excel', $_excel);
+            $this->set('_history', $_history);
+            $this->set('institution_id', $institutionId);
+            $this->set('excelUrl', Router::url($excelUrl));
+            $this->set('ngController', 'InstitutionStaffAttendancesCtrl as $ctrl');
         }
-        $this->set('_edit', $_edit);
-        $this->set('_history', $_history);
-        $this->set('institution_id', $institutionId);
-        $this->set('ngController', 'InstitutionStaffAttendancesCtrl as $ctrl');
     }
 
     public function implementedEvents()

@@ -19,6 +19,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     vm.onChangeColumnDefs = onChangeColumnDefs;
     vm.onEditClick = onEditClick;
     vm.onBackClick = onBackClick;
+    vm.addPageSizeDropdown = addPageSizeDropdown;
 
     // Initialisation
     angular.element(document).ready(function() {
@@ -132,7 +133,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             pagination: true,
             paginationPageSize: 10,
             maxBlocksInCache: 1,
-            cacheBlockSize: 10,
+            cacheBlockSize: 20,
             onGridSizeChanged: function(e) {
                 this.api.sizeColumnsToFit();
             },
@@ -164,11 +165,12 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             onGridReady: function() {
                 vm.onChangeSubject(tab);
                 this.api.sizeColumnsToFit();
+                vm.addPageSizeDropdown();
             }
         };
     }
 
-    function onChangeSubject(tab) {
+    function onChangeSubject(tab, limit = 10) {
         AlertSvc.reset(vm);
         vm.currentTab = tab;
 
@@ -180,7 +182,6 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
 
         vm.onChangeColumnDefs($scope.action, tab);
 
-        var limit = 10;
         var dataSource = {
             pageSize: limit,
             getRows: function (params) {
@@ -240,5 +241,58 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
 
     function onBackClick() {
         $scope.action = 'view';
+    }
+
+    function addPageSizeDropdown() {
+        var wrapper = document.createElement('div');
+        wrapper.setAttribute('class', 'display-limit');
+        wrapper.setAttribute('style', 'margin: 0');
+
+        var displayLabel = document.createElement('span');
+        displayLabel.innerHTML = 'Display';
+        displayLabel.setAttribute('style', 'margin: 0');
+        wrapper.appendChild(displayLabel);
+
+        var recordLabel = document.createElement('span');
+        recordLabel.innerHTML = 'records';
+
+        var dropdown = createDropdownElement();
+        wrapper.appendChild(dropdown);
+
+        wrapper.appendChild(recordLabel);
+
+        var paginationBar = document.querySelector('.sg-theme div[ref="south"] .ag-paging-panel');
+        paginationBar.appendChild(wrapper);
+    }
+
+    function createDropdownElement() {
+        var dropdownContainer = document.createElement('div');
+        dropdownContainer.setAttribute('class', 'input-select-wrapper');
+        dropdownContainer.setAttribute('style', 'margin: 0 5px');
+
+        var dropdown = document.createElement('select');
+        dropdown.setAttribute('id', 'page-size');
+        dropdown.setAttribute('style', 'background-color: #FFFFFF');
+        dropdown.onchange = onPageSizeChanged;
+
+        //Create and append the options
+        for (var i = 10; i <= 20; i += 10) {
+            var option = document.createElement("option");
+            option.value = i;
+            option.text = i;
+            dropdown.appendChild(option);
+        }
+
+        dropdownContainer.appendChild(dropdown);
+
+        return dropdownContainer;
+    }
+
+    function onPageSizeChanged() {
+        var limit = this.value;
+        vm.gridOptions.api.paginationSetPageSize(Number(limit));
+        vm.count = 0;
+        vm.onChangeSubject(vm.currentTab, limit);
+        // var value = document.getElementById('page-size').value;
     }
 }
