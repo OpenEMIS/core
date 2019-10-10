@@ -21,6 +21,8 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         }
     };
 
+    var errorElms = {};
+
     var service = {
         init: init,
         translate: translate,
@@ -219,14 +221,18 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         if (data.InstitutionStaffAttendances[timeKey] != null && data.InstitutionStaffAttendances[timeKey] != "") {
             time = convert12Timeformat(data.InstitutionStaffAttendances[timeKey]);
         }
+
+        var isDisabled = data.isOverlapLeave;
         // div element
         var timeInputDivElement = document.createElement('div');
+        if (!isDisabled) timeInputDivElement.setAttribute('id', timepickerId); // for pop up
         timeInputDivElement.setAttribute('id', timepickerId);
         timeInputDivElement.setAttribute('class', 'input-group time');
         var timeInputElement = document.createElement('input');
         timeInputElement.setAttribute('class', 'form-control');
+        if (isDisabled) timeInputElement.setAttribute('disabled', true); // for styling ui
         var timeSpanElement = document.createElement('span');
-        timeSpanElement.setAttribute('class', 'input-group-addon');
+        timeSpanElement.setAttribute('class', (isDisabled) ? 'input-group-addon disabled' : 'input-group-addon'); // for styling ui
         var timeIconElement = document.createElement('i');
         timeIconElement.setAttribute('class', 'glyphicon glyphicon-time');
 
@@ -240,32 +246,41 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
                 if (data.InstitutionStaffAttendances[timeKey] == null) {
                     data.isNew = true;
                 }
-                var time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
+                var time24Hour = null;
+                if (timeInputElement.value.length > 0) {
+                    time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
+                }
                 saveStaffAttendance(data, timeKey, time24Hour, academicPeriodId)
                 .then(
                     function(response) {
                         clearError(data, timeKey);
-                        if(response.data.error.length == 0){
+                        if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
+                            setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
+                            var errorMsg = 'There was an error when saving record';
+                            if (typeof response.data.error === 'string') {
+                                errorMsg = response.data.error;
+                            } else if (response.data.error.time_out.ruleCompareTimeReverse) {
+                                errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
+                            } else if (response.data.error.time_out.timeInShouldNotEmpty) {
+                                errorMsg = response.data.error.time_out.timeInShouldNotEmpty;
+                            }
+                            
+                            AlertSvc.error(scope, errorMsg);
+                        } else {
                             AlertSvc.success(scope, 'Time record successfully saved.');
                             data.isNew = false;
                             data.InstitutionStaffAttendances[timeKey] = time24Hour;
-                            setError(data, timeKey, false);
-                        }else{
-                            setError(data, timeKey, true);
-                            console.log(response.data.error);
-                            AlertSvc.error(scope, response.data.error.time_out.ruleCompareTimeReverse);
+                            setError(data, timeKey, false, { id: timepickerId, elm: timeInputElement });
                         }
                     },
                     function(error) {
-                        console.log('error', error);
                         clearError(data, timeKey);
-                        setError(data, timeKey, true);
+                        setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
                         AlertSvc.error(scope, 'There was an error when saving record');
                     }
                 )
                 .finally(function() {
                     UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
-                    console.log('attendance.' + data.date);
                     var refreshParams = {
                         columns: [
                             'attendance.' + data.date,
@@ -345,8 +360,8 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         return sHours + ":" + sMinutes + " " + meridian;
     }
 
-    function hasError(data, key) {
-        return (angular.isDefined(data.save_error) && angular.isDefined(data.save_error[key]) && data.save_error[key]);
+    function hasError(data, key, id) {
+        return angular.isDefined(errorElms[id]);
     }
 
     function clearError(data, skipKey) {
@@ -357,13 +372,26 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
             if (key != skipKey) {
                 data.save_error[key] = false;
             }
-        })
+        });
+        angular.forEach(errorElms, function(elm, id) {
+            elm.className = elm.className.replace(/ form-error/gi, '');
+        });
     }
 
-    function setError(data, dataKey, error) {
+    function setError(data, dataKey, error, input) {
         if (angular.isUndefined(data.save_error)) {
             data.save_error = {};
         }
         data.save_error[dataKey] = error;
+
+        var index = Object.keys(errorElms).indexOf(input.id);
+        if (error) {
+            input.elm.className += ' form-error';
+            input.elm.value = '';
+            if (index === -1) errorElms[input.id] = input.elm;
+        } else {
+            input.elm.className = input.elm.className.replace(/ form-error/gi, '');
+            if (index > -1) delete errorElms[input.id];
+        }
     }
 };

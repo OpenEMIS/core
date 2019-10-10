@@ -1,3 +1,30 @@
+### [3.43.5] - 2019-09-18
+- Bug fix on Administration > System Setup > Field Options > Staff Position Titles > Disable Force Delete when a record has other information linked
+- Bug Fix on System Configurations > Student Settings: Increase Maximum Students Per Class/Subjects to 200
+- Big Fix on Administration > System Setup > Localization > Translations: added the following translations for the Institutions > Student > Add page warning labels
+- Bug Fix on Institutions > Students > Promote: Student should remain 'Enrolled' until Student Promoted Effective Date
+- Bug Fix on Institutions > Risks : System displays Generated On/By and updates Status once done
+- Bug Fix on Institutions > Staff > Add : Staff Transfer Workflow
+### [3.43.7] - 2019-10-09
+- Institution > Student > Add Student. Mismatched OpenEMIS ID and username assigned to the students in the system.
+- Transferred status should override Enrolled status
+- Institutions > Students > Import : Incorrect error message during student import
+- Administration > Examinations > Exam Centre : Fax should not be a mandatory criteria when creating an exam centre
+- Institution > Students > Pending Transfer Out: Create a transfer record in sending Institution when receiving Institution initiate a transfer
+- Institution > Attendance > Staff: Remove time in and time out
+- Institution > Attendance > Student/Staff: Order Name by Alphabetical Order
+- Institution > Attendance > Staff : export feature for Staff attendance
+- Profiles> Scholarship > Add: User should not be able to apply to a closed scholarship
+- Insitutions > Attendance> Staff Attendance: Attendance marking to be disabled for that user if user has a full day leave
+- Administration > Survey > Questions: Tooltips
+### [3.43.5] - 2019-09-18
+- Administration > System Setup > Field Options > Staff Position Titles > Disable Force Delete when a record has other information linked
+- System Configurations > Student Settings: Increase Maximum Students Per Class/Subjects to 200
+- Administration > System Setup > Localization > Translations: added the following translations for the Institutions > Student > Add page warning labels
+- Institutions > Students > Promote: Student should remain 'Enrolled' until Student Promoted Effective Date
+- Institutions > Risks : System displays Generated On/By and updates Status once done
+- Institutions > Staff > Add : Staff Transfer Workflow
+>>>>>>> origin/3.43.7
 ### [3.43.4] - 2019-07-31
 - Bug fix on Institutions > Performance > Assessments page loading speed
 - Bug fix on Institutions > Performance > Assessments page to allow Staff that has the right access to edit 

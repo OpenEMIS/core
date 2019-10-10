@@ -758,9 +758,11 @@ class StudentsTable extends ControllerActionTable
         // End
 
         $search = $this->getSearchKey();
+       
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+            $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
         } else {
             if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
                 $query->where([$this->aliasField('student_status_id') => $selectedStatus]);

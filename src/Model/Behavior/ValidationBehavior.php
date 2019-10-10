@@ -2088,6 +2088,38 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    public static function noOverlappingStaffAttendance($field, array $globalData)
+    {
+        $data = $globalData['data'];
+        // only validate full day leave
+        if (!$data['full_day']) {
+            return true;
+        }
+        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
+        $staffId = $data['staff_id'];
+        $institutionId = $data['institution_id'];
+        $academicPeriodId = $data['academic_period_id'];
+
+        $weekStartDate = $data['date_from'];
+        $weekEndDate = $data['date_to'];
+
+        $staffAttendances = $InstitutionStaffAttendances
+            ->find()
+            ->where([
+                $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                $InstitutionStaffAttendances->aliasField('staff_id') => $staffId,
+                $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
+                $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'"
+            ])
+            ->first();
+        // Check if staff aattendance exists
+        if ($staffAttendances) {
+            return false;
+        }
+        return true;
+    }
+
     public static function checkStaffAssignment($field, array $globalData)
     {
         $data = $globalData['data'];

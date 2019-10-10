@@ -1895,7 +1895,8 @@ class StaffTable extends ControllerActionTable
         if ($institutionId != '') {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
-        // $academicPeriodId = $options['academic_period_id'];
+        $academicPeriodId = $options['academic_period_id'];
+
         $weekStartDate = $options['week_start_day'];
         $weekEndDate = $options['week_end_day'];
 
@@ -1914,6 +1915,39 @@ class StaffTable extends ControllerActionTable
                 $workingDaysArr[] = $date;
             }
         }
+
+        $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+        $staffLeavesByWeekStartAndEnd = $StaffLeaveTable
+            ->find()
+            ->matching('StaffLeaveTypes')
+            ->where([
+                $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
+                $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
+                $StaffLeaveTable->aliasField('staff_id') => $staffId,
+                $StaffLeaveTable->aliasField('full_day') => 1,
+                [
+                    'OR' => [
+                        [
+                            $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate. "'",
+                            $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate. "'"
+                        ],
+                        [
+                            $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate. "'",
+                            $StaffLeaveTable->aliasField("date_to >= '") . $weekStartDate. "'"
+                        ],
+                        [
+                            $StaffLeaveTable->aliasField("date_from <= '") . $weekEndDate. "'",
+                            $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate. "'"
+                        ],
+                        [
+                            $StaffLeaveTable->aliasField("date_from <= '") . $weekStartDate. "'",
+                            $StaffLeaveTable->aliasField("date_to >= '") . $weekEndDate. "'"
+                        ]
+                    ]
+                ]
+            ])
+            ->hydrate(false)
+            ->toArray();
 
         $query = $query
             ->select([
@@ -1951,7 +1985,8 @@ class StaffTable extends ControllerActionTable
                 $InstitutionStaffAttendances->aliasField('academic_period_id'),
                 $InstitutionStaffAttendances->aliasField('date')
             ])
-            ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr) {
+            // ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr) {
+            ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr, $staffLeavesByWeekStartAndEnd) {
                 $results = $results->toArray();
                 $resultsCount = count($results);
                 $formatResultDates = [];
@@ -1960,12 +1995,16 @@ class StaffTable extends ControllerActionTable
                     $found = false;
                     $workingDay = $date->format('Y-m-d');
                     foreach ($results as $result) {
+                        // to flag so that we only add to result when there is attendance records
+                        $isHaveAttendance = false;
+
                         $cloneResult = clone $result;
                         $InstitutionStaffAttendanceDate = $cloneResult->InstitutionStaffAttendances['date'];
                         if ($InstitutionStaffAttendanceDate == $workingDay){
                             $cloneResult['isNew'] = false;
                             $cloneResult['date'] = date("l, d F Y", strtotime($InstitutionStaffAttendanceDate));
-                            $formatResultDates[] = $cloneResult;
+                            $isHaveAttendance = true;
+                            // $formatResultDates[] = $cloneResult;
                             $found = true;
                         }
                         //if iteration is in the last index of cloneResult and the date still cannot be found, insert the date in and also set the start_time and end_time to null
@@ -1975,6 +2014,22 @@ class StaffTable extends ControllerActionTable
                             $cloneResult->InstitutionStaffAttendances['time_in'] = null;
                             $cloneResult->InstitutionStaffAttendances['time_out'] = null;
                             $cloneResult->InstitutionStaffAttendances['date'] = $workingDay;
+                            $isHaveAttendance = true;
+                            // $formatResultDates[] = $cloneResult;
+                        }
+                        if ($isHaveAttendance) {
+                            $isOverlap = false;
+                            if (count($staffLeavesByWeekStartAndEnd) > 0) {
+                                $currDate = strtotime($workingDay);
+                                foreach ($staffLeavesByWeekStartAndEnd as $staffLeaveRecord) {
+                                    if (strtotime($staffLeaveRecord['date_from']) <= $currDate &&
+                                        $currDate <= strtotime($staffLeaveRecord['date_to'])
+                                    ) {
+                                        $isOverlap = true;
+                                    }
+                                }
+                            }
+                            $cloneResult->isOverlapLeave = $isOverlap;
                             $formatResultDates[] = $cloneResult;
                         }
                         $i++;
