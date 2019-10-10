@@ -323,10 +323,6 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         }
 
         dropdownContainer.appendChild(vm.pageSizeDropdown);
-         //   dropdown.appendChild(option);
-        //}
-
-        dropdownContainer.appendChild(dropdown);
         return dropdownContainer;
     }
 
