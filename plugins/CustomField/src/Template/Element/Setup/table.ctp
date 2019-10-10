@@ -130,6 +130,8 @@
 					</div>
 				</div>
 			<?php endif; ?>
+		</div>
+	</div>
 <?php elseif ($ControllerAction['action'] == 'edit') : ?>
 	<div class="input">
 		<label class="tooltip-desc"><?= __('Create Table'); ?>

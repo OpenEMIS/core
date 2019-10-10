@@ -104,6 +104,9 @@ class StudentAttendancesTable extends ControllerActionTable
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionClassId,
+            ])
+            ->order([
+                $this->Users->aliasField('first_name')
             ]);
 
 
