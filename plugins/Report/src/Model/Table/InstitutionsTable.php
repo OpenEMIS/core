@@ -603,18 +603,16 @@ class InstitutionsTable extends AppTable
 
                 if (empty($institutionList)) {
                     $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
-
                     $attr['type'] = 'select';
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    
+
                     if (in_array($feature, ['Report.BodyMasses'])) {
-                      $institutionOptions = ['' => '-- '.__('Select').' --', '0' => __('All Institutions')] + $institutionList;
-                    }else{
-                      $institutionOptions = ['' => '-- '.__('Select').' --'] + $institutionList;  
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                    } else {
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
-                    
 
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
