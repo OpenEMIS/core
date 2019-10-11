@@ -338,8 +338,8 @@ class StudentPromotionTable extends AppTable
                     $attr['type'] = 'select';
                     $selectedGrade = null;
                     $GradeStudents = $this;
-                    $counter = false;
-
+                    $counter = 0;
+                    //echo '<pre>';print_r($gradeOptions);die;
                     $this->advancedSelectOptions($gradeOptions, $selectedGrade, [
                         'selectOption' => false,
                         'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
@@ -363,7 +363,20 @@ class StudentPromotionTable extends AppTable
                             return $gradeStudentsCounter; 
                         }
                     ]);
-                    if ($counter === false) { 
+
+                    foreach ($gradeOptions as $key=>$value) {
+                        $gradeStudentsCounter = $GradeStudents
+                                ->find()
+                                ->where([
+                                    $GradeStudents->aliasField('institution_id') => $institutionId,
+                                    $GradeStudents->aliasField('academic_period_id') => $selectedPeriod,
+                                    $GradeStudents->aliasField('education_grade_id') => $key,
+                                    $GradeStudents->aliasField('student_status_id') => $statuses['CURRENT']
+                                ])
+                                ->count();
+                        $counter += $gradeStudentsCounter;
+                    }
+                    if ($counter == 0) { 
                     $attr['attr']['value'] = ""; 
                  }
                 }
