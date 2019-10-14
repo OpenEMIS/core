@@ -339,7 +339,6 @@ class StudentPromotionTable extends AppTable
                     $selectedGrade = null;
                     $GradeStudents = $this;
                     $counter = 0;
-                    //echo '<pre>';print_r($gradeOptions);die;
                     $this->advancedSelectOptions($gradeOptions, $selectedGrade, [
                         'selectOption' => false,
                         'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
