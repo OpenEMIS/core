@@ -115,16 +115,20 @@ class StaffLeaveTable extends ControllerActionTable
             ->toArray();
             
             $startDate = $staffData[0]['start_date']->format('Y-m-d');
-            $endDate = $staffData[0]['end_date']->format('Y-m-d');
+            
             if ($startDate > $dateFrom) {
                 $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
                 return false;
-            } else if ($dateFrom > $endDate) {
+            } 
+            if (!empty($staffData[0]['end_date'])) {
+                $endDate = $staffData[0]['end_date']->format('Y-m-d');
+                if ($dateFrom > $endDate) {
                 $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
                 return false;
-            } else if ($dateTo > $endDate) {
+                } else if ($dateTo > $endDate) {
                 $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDateTo', ['reset' => true]);
                 return false;
+                }
             }
 
         if (!$entity) {
