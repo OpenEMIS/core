@@ -220,8 +220,8 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
             time = convert12Timeformat(data.InstitutionStaffAttendances[timeKey]);
         }
         var date = data.InstitutionStaffAttendances.date;
-        var startDateObj = new Date(data.start_date); 
-        var startDate = formatDate(startDateObj);
+        var startDate = new Date(data.start_date); 
+        startDate = formatDate(startDate);
         
         var isDisabled = (date && date.length > 0 && date < startDate);
         // div element
