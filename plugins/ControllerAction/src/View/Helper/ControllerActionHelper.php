@@ -300,7 +300,7 @@ class ControllerActionHelper extends Helper
             if (isset($attr['tableColumnClass'])) {
                 $row[] = [$value, ['class' => $attr['tableColumnClass']]];
             } else {
-                $row[] = $value;
+                $row[] =  __($value);
             }
         }
 
@@ -609,17 +609,18 @@ class ControllerActionHelper extends Helper
 
                 if ($_fieldAttr['label']) {
                     $labelClass = implode(' ', $_labelClass);
-                    $rowContent = sprintf($_labelCol.$_valueCol, $labelClass, __($label), $valueClass, $value);
+                    $rowContent = sprintf($_labelCol.$_valueCol, $labelClass, __($label), $valueClass, __($value));
                 } else { // no label
-                    $rowContent = sprintf($_valueCol, $valueClass, $value);
+                    $rowContent = sprintf($_valueCol, $valueClass, __($value));
                 }
                 if (!array_key_exists('override', $_fieldAttr)) {
                     $html .= sprintf($row, $rowClass, $rowContent);
                 } else {
-                    $html .= sprintf($row, $rowClass, $value);
+                    $html .= sprintf($row, $rowClass, __($value));
                 }
             }
         }
+        
         $this->HtmlField->includes('view', $table);
         return $html;
     }
