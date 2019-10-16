@@ -219,14 +219,21 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         if (data.InstitutionStaffAttendances[timeKey] != null && data.InstitutionStaffAttendances[timeKey] != "") {
             time = convert12Timeformat(data.InstitutionStaffAttendances[timeKey]);
         }
+        var date = data.InstitutionStaffAttendances.date;
+        var startDt = data.start_date;
+        var d = new Date(start_date); 
+        var startDate = formatDate(d);
+        
+        var isDisabled = (date && date.length > 0 && date < startDate);
         // div element
         var timeInputDivElement = document.createElement('div');
-        timeInputDivElement.setAttribute('id', timepickerId);
+        if (!isDisabled) timeInputDivElement.setAttribute('id', timepickerId);
         timeInputDivElement.setAttribute('class', 'input-group time');
         var timeInputElement = document.createElement('input');
         timeInputElement.setAttribute('class', 'form-control');
+        if (isDisabled) timeInputElement.setAttribute('disabled', true);
         var timeSpanElement = document.createElement('span');
-        timeSpanElement.setAttribute('class', 'input-group-addon');
+        timeSpanElement.setAttribute('class', (isDisabled) ? 'input-group-addon disabled' : 'input-group-addon');
         var timeIconElement = document.createElement('i');
         timeIconElement.setAttribute('class', 'glyphicon glyphicon-time');
 
@@ -344,6 +351,19 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         var sMinutes = minutes.toString();
         return sHours + ":" + sMinutes + " " + meridian;
     }
+
+    function formatDate(date) { 
+                var day = date.getDate(); 
+                if (day < 10) { 
+                    day = "0" + day; 
+                } 
+                var month = date.getMonth() + 1; 
+                if (month < 10) { 
+                    month = "0" + month; 
+                } 
+                var year = date.getFullYear(); 
+                return year + "-" + month + "-" + day; 
+            } 
 
     function hasError(data, key) {
         return (angular.isDefined(data.save_error) && angular.isDefined(data.save_error[key]) && data.save_error[key]);
