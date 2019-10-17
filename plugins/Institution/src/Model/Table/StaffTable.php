@@ -1953,6 +1953,7 @@ class StaffTable extends ControllerActionTable
             ->select([
                 $this->aliasField('institution_id'),
                 $this->aliasField('staff_id'),
+                $this->aliasField('start_date'),
                 $this->Users->aliasField('openemis_no'),
                 $this->Users->aliasField('first_name'),
                 $this->Users->aliasField('middle_name'),
@@ -2246,7 +2247,6 @@ class StaffTable extends ControllerActionTable
                     return $row;
                 });
             });
-//echo "<pre>";print_r($query);die;
         return $query;
     }
 }
