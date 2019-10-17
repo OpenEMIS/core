@@ -222,17 +222,21 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
             time = convert12Timeformat(data.InstitutionStaffAttendances[timeKey]);
         }
 
-        var isDisabled = data.isOverlapLeave;
+        var date = data.InstitutionStaffAttendances.date;
+        var startDate = new Date(data.start_date); 
+        startDate = formatDate(startDate);
+        var isDisabled = (date && date.length > 0 && date < startDate);
         // div element
         var timeInputDivElement = document.createElement('div');
-        if (!isDisabled) timeInputDivElement.setAttribute('id', timepickerId); // for pop up
-        timeInputDivElement.setAttribute('id', timepickerId);
+        
+        if (!isDisabled) timeInputDivElement.setAttribute('id', timepickerId);
         timeInputDivElement.setAttribute('class', 'input-group time');
         var timeInputElement = document.createElement('input');
         timeInputElement.setAttribute('class', 'form-control');
-        if (isDisabled) timeInputElement.setAttribute('disabled', true); // for styling ui
+        if (isDisabled) timeInputElement.setAttribute('disabled', true);
         var timeSpanElement = document.createElement('span');
-        timeSpanElement.setAttribute('class', (isDisabled) ? 'input-group-addon disabled' : 'input-group-addon'); // for styling ui
+        timeSpanElement.setAttribute('class', (isDisabled) ? 'input-group-addon disabled' : 'input-group-addon');
+
         var timeIconElement = document.createElement('i');
         timeIconElement.setAttribute('class', 'glyphicon glyphicon-time');
 
@@ -358,6 +362,24 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         }
         var sMinutes = minutes.toString();
         return sHours + ":" + sMinutes + " " + meridian;
+    }
+    
+    
+
+    function formatDate(date) {
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+        
+        if (day < 10) {
+            day = "0" + day;
+        }
+        
+        if (month < 10) {
+            month = "0" + month;
+        }
+        
+        return year + "-" + month + "-" + day;
     }
 
     function hasError(data, key, id) {
