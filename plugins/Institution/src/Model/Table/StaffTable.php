@@ -1953,6 +1953,7 @@ class StaffTable extends ControllerActionTable
             ->select([
                 $this->aliasField('institution_id'),
                 $this->aliasField('staff_id'),
+                $this->aliasField('start_date'),
                 $this->Users->aliasField('openemis_no'),
                 $this->Users->aliasField('first_name'),
                 $this->Users->aliasField('middle_name'),
@@ -2126,12 +2127,31 @@ class StaffTable extends ControllerActionTable
 
         $attendanceByStaffIdRecords = Hash::combine($allStaffAttendances, '{n}.id', '{n}', '{n}.staff_id');
         $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
-
+        $conditionQuery = [];
+        if ($dayId == -1) {
+            $conditionQuery = [
+                $this->aliasField('start_date <= ') => $weekStartDate,
+            $this->aliasField('start_date <= ') => $weekEndDate,
+                'OR' => [
+                    $this->aliasField('end_date is ') => null,
+                    $this->aliasField('end_date >= ') => $weekEndDate
+                ]
+        ];
+        } else {
+            $conditionQuery = [$this->aliasField('start_date <= ') => $dayDate,
+                'OR' => [
+                $this->aliasField('end_date is ') => null,
+                $this->aliasField('end_date >= ') => $dayDate
+                ]
+            ];
+        }
         $query = $query
             ->matching('Users')
-            ->where([
+            ->where(
+                [
                 $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('staff_status_id') => 1
+                $this->aliasField('staff_status_id') => 1,
+                $conditionQuery
             ])
             ->order([
                 $this->Users->aliasField('first_name')

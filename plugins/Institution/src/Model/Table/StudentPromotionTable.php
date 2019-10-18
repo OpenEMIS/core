@@ -338,12 +338,13 @@ class StudentPromotionTable extends AppTable
                     $attr['type'] = 'select';
                     $selectedGrade = null;
                     $GradeStudents = $this;
+                    $counter = 0;
 
                     $this->advancedSelectOptions($gradeOptions, $selectedGrade, [
                         'selectOption' => false,
                         'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
                         'callable' => function($id) use ($GradeStudents, $institutionId, $selectedPeriod, $statuses) {
-                            return $GradeStudents
+                            $gradeStudentsCounter = $GradeStudents
                                 ->find()
                                 ->where([
                                     $GradeStudents->aliasField('institution_id') => $institutionId,
@@ -352,8 +353,26 @@ class StudentPromotionTable extends AppTable
                                     $GradeStudents->aliasField('student_status_id') => $statuses['CURRENT']
                                 ])
                                 ->count();
+                                
+                            return $gradeStudentsCounter; 
                         }
                     ]);
+
+                    foreach ($gradeOptions as $key=>$value) {
+                        $gradeStudentsCounter = $GradeStudents
+                                ->find()
+                                ->where([
+                                    $GradeStudents->aliasField('institution_id') => $institutionId,
+                                    $GradeStudents->aliasField('academic_period_id') => $selectedPeriod,
+                                    $GradeStudents->aliasField('education_grade_id') => $key,
+                                    $GradeStudents->aliasField('student_status_id') => $statuses['CURRENT']
+                                ])
+                                ->count();
+                        $counter += $gradeStudentsCounter;
+                    }
+                    if ($counter == 0) { 
+                    $attr['attr']['value'] = ""; 
+                 }
                 }
 
                 $attr['onChangeReload'] = 'changeGradeToPromote';
@@ -695,6 +714,22 @@ class StudentPromotionTable extends AppTable
         $students = [];
         $nextClasses = [];
         if (!empty($selectedPeriod) && $selectedPeriod != -1) {
+
+            $studentStatuses = $this->statuses;
+            $studentsPeriod = $this->find()
+                    ->matching('Users')
+                    ->matching('EducationGrades')
+                    ->where([
+                        $this->aliasField('institution_id') => $institutionId,
+                        $this->aliasField('academic_period_id') => $selectedPeriod,
+                        $this->aliasField('student_status_id') => $studentStatuses['CURRENT']
+                    ])
+                    ->count();
+                    
+                    if ($studentsPeriod == 0) {
+                        $this->Alert->warning($this->aliasField('noData'));
+                    }
+
             $selectedNextPeriod = $entity->has('next_academic_period_id') ? $entity->next_academic_period_id : null;
             $selectedGrade = $entity->has('grade_to_promote') ? $entity->grade_to_promote : null;
             $selectedNextGrade = $entity->has('education_grade_id') ? $entity->education_grade_id : null;
@@ -812,9 +847,9 @@ class StudentPromotionTable extends AppTable
                     }
                 }
             }
-            if (empty($students)) {
+            /*if (empty($students)) {
                 $this->Alert->warning($this->aliasField('noData'));
-            }
+            }*/
         }
 
         if (empty($nextClasses)) {
