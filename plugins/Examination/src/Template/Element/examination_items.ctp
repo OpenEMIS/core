@@ -121,8 +121,7 @@
                                          <td>
                                             <?php
                                                 if ($ControllerAction['action'] == 'add') {
-                                                    // user can choose not to select subject
-                                                    $emptySubject = ['0' => '-- ' . __('Select') . ' --'];
+                                                    $emptySubject = '-- ' . __('Select') . ' --';
                                                     echo $this->Form->input("$fieldPrefix.education_subject_id", [
                                                         'type' => 'select',
                                                         'label' => false,
