@@ -13,6 +13,7 @@ use Cake\Network\Exception\NotFoundException;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
+use Cake\I18n\Date;
 
 class AcademicPeriodsTable extends AppTable
 {
@@ -772,17 +773,21 @@ class AcademicPeriodsTable extends AppTable
         } else {
             $tempStamp = $stampFirstDayOfMonth;
         }
-
         // while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth && $tempStamp < $stampToday){
         while ($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth) {
+
             $weekDay = date('l', $tempStamp);
             $date = date('Y-m-d', $tempStamp);
             $day = date('d', $tempStamp);
 
+            $dateObj = new Date($tempStamp);
+            $dayFormat = __($dateObj->format('l')) . ' (' . $this->formatDate($dateObj) . ') ';
+
             $days[] = [
                 'weekDay' => $weekDay,
                 'date' => $date,
-                'day' => $day
+                'day' => $day,
+                'dayFormat' => $dayFormat
             ];
 
             $tempStamp = strtotime('+1 day', $tempStamp);
