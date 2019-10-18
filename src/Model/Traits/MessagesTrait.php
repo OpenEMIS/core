@@ -141,7 +141,8 @@ trait MessagesTrait
             'occupierAddNotAllowed' => 'You are not allowed to add infrastructure as an occupier',
             'occupierEditNotAllowed' => 'You are not allowed to edit infrastructure as an occupier',
             'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier',
-            'accessibilityOption' => 'Designed for use by anyone including those with special needs/disabilities.'
+            'accessibilityOption' => 'Designed for use by anyone including those with special needs/disabilities.',
+            'effectiveDate' => 'Date should be within Academic Period.'
         ],
         'InfrastructureTypes' => [
             'noLevels' => 'No Available Levels',
@@ -623,7 +624,8 @@ trait MessagesTrait
             'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
             'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.',
             'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type',
-            'contact_required' => 'Contact is required'
+            'contact_required' => 'Contact is required',
+            'nationality_required' => 'Nationality cant be empty.',
         ],
         'ImportInstitutionSurveys' => [
             'restrictImport' => 'Import operation is not allowed as the record is already Done'
@@ -789,7 +791,10 @@ trait MessagesTrait
             ],
             'StaffLeave' => [
                 'value' => 'Days within %d to %d',
-                'leavePeriodOverlap' => 'Leave period applied overlaps existing records.'
+                'leavePeriodOverlap' => 'Leave period applied overlaps existing records.',
+                'noLeave' => 'Date from is less than joining date of staff.',
+                'noLeaveEndDate' => 'Date from is greater than end date of staff.',
+                'noLeaveEndDateTo' => 'Date to is greater than end date of staff.'
             ],
             'StaffType' => [
                 'value' => 'Days within %d to %d'

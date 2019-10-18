@@ -7,11 +7,7 @@ $this->start('toolbar');
 ?>
 
 <?php if ($_excel) : ?>
-    <a href="<?=$excelUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" >
-            <i class="fa kd-export" ></i>
-        </button>
-    </a>
+    <a ng-href="{{$ctrl.excelExportAUrl}}" ng-show="$ctrl.action == 'view'" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Export"><i class="fa kd-export"></i></a>
 <?php endif; ?>
 
 <?php if ($_import) : ?>
@@ -49,7 +45,7 @@ $panelHeader = $this->fetch('panelHeader');
 
 <style>
     .attendance-dashboard .data-section.single-day {
-        width: 32%;
+        width: 24%;
     }
 
     .attendance-dashboard .data-section i.fa-address-book-o {
@@ -204,7 +200,7 @@ $panelHeader = $this->fetch('panelHeader');
 
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;" float-btn="true">
+        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;$ctrl.exportexcel='<?=$excelUrl ?>';" float-btn="true">
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">
                     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
@@ -231,6 +227,12 @@ $panelHeader = $this->fetch('panelHeader');
                             <h1 class="data-header">{{$ctrl.absenceCount}}</h1>
                         </div>
                     </div>
+                    <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
+                        <div class="data-field">
+                            <h4><?= __('No. of Students Late') ?></h4>
+                            <h1 class="data-header">{{$ctrl.lateCount}}</h1>
+                        </div>
+                    </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <i class="fa fa-address-book-o"></i>
                         <div class="data-field">
@@ -246,14 +248,14 @@ $panelHeader = $this->fetch('panelHeader');
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Late') ?></h4>
-                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
+                            <h4><?= __('No. of Absence') ?></h4>
+                            <h1 class="data-header">{{$ctrl.allAbsenceCount}}</h1>
                         </div>
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Absence') ?></h4>
-                            <h1 class="data-header">{{$ctrl.allAbsenceCount}}</h1>
+                            <h4><?= __('No. of Late') ?></h4>
+                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
                         </div>
                     </div>
                 </div>
