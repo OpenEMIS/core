@@ -1,10 +1,18 @@
-### [3.43.5] - 2019-09-18
-- Bug fix on Administration > System Setup > Field Options > Staff Position Titles > Disable Force Delete when a record has other information linked
-- Bug Fix on System Configurations > Student Settings: Increase Maximum Students Per Class/Subjects to 200
-- Big Fix on Administration > System Setup > Localization > Translations: added the following translations for the Institutions > Student > Add page warning labels
-- Bug Fix on Institutions > Students > Promote: Student should remain 'Enrolled' until Student Promoted Effective Date
-- Bug Fix on Institutions > Risks : System displays Generated On/By and updates Status once done
-- Bug Fix on Institutions > Staff > Add : Staff Transfer Workflow
+### [3.43.8] - 2019-10-08
+- Administration > Examinations : Make Education Subject mandatory
+- Infrastructure : Start date : Added a Tooltip
+- Directory > Import: Import validation should follow settings in System Configurations
+- Reports>Institutions>Student Body Masses: To have select all institutions option
+- Administration > System configuration > Institution > Shifts : Allow adding of more than 4 shifts
+- Attendance & Absent > Export Report > Missing Staff records
+- Performance > Outcome/Competency: Increase overall comment box to fit 5 lines of text
+- Institution > Students > Promote/Graduate : Notification Message 
+- Institutions > Attendance > Students : Export
+- Administration > Performance > Assessment > Assessment periods > 404 error when updating assessment period fix
+- Performance > Assessments: Only display Enrolled/Promoted/Graduated students
+- Performance > Outcomes > Export: Promoted student is not in the excel fix
+- Reports > Survey: All Institutions > Only show Institutions that are covered within the Institution Type
+- Institutions > Attendance > Student : Dashboard update
 ### [3.43.7] - 2019-10-09
 - Institution > Student > Add Student. Mismatched OpenEMIS ID and username assigned to the students in the system.
 - Transferred status should override Enrolled status
@@ -18,13 +26,12 @@
 - Insitutions > Attendance> Staff Attendance: Attendance marking to be disabled for that user if user has a full day leave
 - Administration > Survey > Questions: Tooltips
 ### [3.43.5] - 2019-09-18
-- Administration > System Setup > Field Options > Staff Position Titles > Disable Force Delete when a record has other information linked
-- System Configurations > Student Settings: Increase Maximum Students Per Class/Subjects to 200
-- Administration > System Setup > Localization > Translations: added the following translations for the Institutions > Student > Add page warning labels
-- Institutions > Students > Promote: Student should remain 'Enrolled' until Student Promoted Effective Date
-- Institutions > Risks : System displays Generated On/By and updates Status once done
-- Institutions > Staff > Add : Staff Transfer Workflow
->>>>>>> origin/3.43.7
+- Bug fix on Administration > System Setup > Field Options > Staff Position Titles > Disable Force Delete when a record has other information linked
+- Bug Fix on System Configurations > Student Settings: Increase Maximum Students Per Class/Subjects to 200
+- Big Fix on Administration > System Setup > Localization > Translations: added the following translations for the Institutions > Student > Add page warning labels
+- Bug Fix on Institutions > Students > Promote: Student should remain 'Enrolled' until Student Promoted Effective Date
+- Bug Fix on Institutions > Risks : System displays Generated On/By and updates Status once done
+- Bug Fix on Institutions > Staff > Add : Staff Transfer Workflow
 ### [3.43.4] - 2019-07-31
 - Bug fix on Institutions > Performance > Assessments page loading speed
 - Bug fix on Institutions > Performance > Assessments page to allow Staff that has the right access to edit 
