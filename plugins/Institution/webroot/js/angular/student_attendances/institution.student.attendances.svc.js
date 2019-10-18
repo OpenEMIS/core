@@ -19,7 +19,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         'LATE': {
             code: 'LATE',
             icon: 'fa fa-check-circle-o',
-            color: '#77B576'
+            color: '#999'
         },
         'UNEXCUSED': {
             code: 'UNEXCUSED',
