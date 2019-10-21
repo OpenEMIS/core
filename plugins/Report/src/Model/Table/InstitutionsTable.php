@@ -57,6 +57,7 @@ class InstitutionsTable extends AppTable
             Institutions::ACADEMIC => 'Academic Institution',
             Institutions::NON_ACADEMIC => 'Non-Academic Institution'
         ];
+
     }
 
     public function validationDefault(Validator $validator)
@@ -114,7 +115,7 @@ class InstitutionsTable extends AppTable
             ->notEmpty('institution_type_id')
             ->notEmpty('institution_id');
         return $validator;
-    }    
+    }
 
     public function validationStudents(Validator $validator)
     {
@@ -185,7 +186,7 @@ class InstitutionsTable extends AppTable
             $options['validate'] = 'studentAttendanceSummary';
         } elseif ($data[$this->alias()]['feature'] == 'Report.BodyMasses') {
             $options['validate'] = 'bodyMasses';
-        }       
+        }
     }
 
     public function addAfterAction(Event $event, Entity $entity)
@@ -201,7 +202,7 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'academic_period_id';
                     $fieldsOrder[] = 'education_grade_id';
                     break;
-                
+
                 default:
                     break;
             }
@@ -447,8 +448,9 @@ class InstitutionsTable extends AppTable
     {
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.BodyMasses']))
+            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.BodyMasses', 'Report.InstitutionSpecialNeedsStudents','Report.InstitutionStudentsWithSpecialNeeds']))
                 ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
+
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();
