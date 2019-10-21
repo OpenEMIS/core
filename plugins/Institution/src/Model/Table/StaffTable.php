@@ -1643,7 +1643,7 @@ class StaffTable extends ControllerActionTable
     }
 
     public function findClassStaffOptions(Query $query, array $options)
-    {
+    { 
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
         $todayDate = Time::now();
@@ -1670,6 +1670,9 @@ class StaffTable extends ControllerActionTable
                         [$this->aliasField('end_date >= ') => $todayDate],
                         [$this->aliasField('end_date IS NULL')]
                     ]
+                ])
+                ->order([
+                $this->Users->aliasField('first_name')
                 ])
                 ->formatResults(function ($results) {
                     $returnArr = [];
@@ -1709,6 +1712,9 @@ class StaffTable extends ControllerActionTable
                     [$this->aliasField('end_date').' > ' => Time::now()],
                     [$this->aliasField('end_date').' IS NULL']
                 ]
+            ])
+            ->order([
+               $this->Users->aliasField('first_name')
             ])
             ->formatResults(function ($results) {
                 $returnArr = [];
