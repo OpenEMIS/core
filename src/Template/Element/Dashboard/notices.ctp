@@ -11,7 +11,8 @@
 					</li>
 					<li class="list-group-item" ng-repeat="notice in DashboardController.notices | orderBy:'order'" ng-cloak>
 						<div class="notice-message">
-							<p>{{notice.message}}</p>
+							<p>{{notice.message|removeEmded }}</p>
+                                                         <iframe width="200" height="200" src="{{trustedUrl(notice.message|getUrl)}}" frameborder="0" allowfullscreen></iframe>             
 						</div>
 						<!-- To add the following mapping when notice attachment is added -->
 						<div class="notice-attachments" ng-show="notice.attachment">
