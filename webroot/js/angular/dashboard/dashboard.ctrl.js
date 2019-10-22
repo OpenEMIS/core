@@ -1,11 +1,29 @@
-angular
+var dashBoardApp = angular
     .module('dashboard.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'dashboard.svc'])
     .controller('DashboardCtrl', DashboardController);
+    
+    dashBoardApp.filter('removeEmded', function () {
+        return function (text) {
+            var str = text.replace(/\{.*?\}/g, "");
+            return str;
+        };
+    });
+    
+    dashBoardApp.filter('getUrl', function(){
+        return function(input) {
+            var youtubeUrl  = input.split('|');
+            youtubeUrl = youtubeUrl[1].split('}');
+            return youtubeUrl[0].replace('/watch?v=', '/embed/');
+        }
+    });
+    
+DashboardController.$inject = ['$scope', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DashboardSvc','$sce'];
 
-DashboardController.$inject = ['$scope', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DashboardSvc'];
-
-function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, AggridLocaleSvc, DashboardSvc) {
-	var vm = this;
+function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, AggridLocaleSvc, DashboardSvc,$sce) {
+    var vm = this;
+        $scope.trustedUrl = function(input) {
+            return $sce.trustAsResourceUrl(input);
+        }
 
     // Variables
     vm.collapse = "true";
