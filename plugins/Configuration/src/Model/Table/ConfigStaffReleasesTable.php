@@ -20,6 +20,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
     CONST STAFF_RELEASE_BY_TYPES = 'staff_release_by_types';
     CONST STAFF_RELEASE_BY_SECTORS = 'staff_release_by_sectors';
     CONST RESTRICT_STAFF_RELEASE_BETWEEN_SAME_TYPE = 'restrict_staff_release_between_same_type';
+    CONST RESTRICT_STAFF_RELEASE_BETWEEN_DIFFERENT_PROVIDER = 'restrict_staff_release_between_different_provider';
     CONST SELECTION_DISABLE = "0";
 
     public function initialize(array $config)
@@ -228,6 +229,10 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                     $valueOptions = $this->getSelectOptions('general.yesno');
                     $value = array_key_exists($entity->value, $valueOptions) ? $valueOptions[$entity->value] : '';
                     break;
+                case self::RESTRICT_STAFF_RELEASE_BETWEEN_DIFFERENT_PROVIDER:
+                    $valueOptions = $this->getSelectOptions('general.yesno');
+                    $value = array_key_exists($entity->value, $valueOptions) ? $valueOptions[$entity->value] : '';
+                    break;
                 default:
                     break;
             }
@@ -261,6 +266,10 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                         $defaultValueOptions = $this->getSelectOptions('general.yesno');
                         $value = array_key_exists($entity->default_value, $defaultValueOptions) ? $defaultValueOptions[$entity->default_value] : '';
                         break;
+                    case self::RESTRICT_STAFF_RELEASE_BETWEEN_DIFFERENT_PROVIDER:
+                        $defaultValueOptions = $this->getSelectOptions('general.yesno');
+                        $value = array_key_exists($entity->default_value, $defaultValueOptions) ? $defaultValueOptions[$entity->default_value] : '';
+                        break;
                     default:
                         break;
                 }
@@ -289,6 +298,9 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                         }
                         break;
                     case self::RESTRICT_STAFF_RELEASE_BETWEEN_SAME_TYPE:
+                        $attr['visible'] = false;
+                        break;
+                    case self::RESTRICT_STAFF_RELEASE_BETWEEN_DIFFERENT_PROVIDER:
                         $attr['visible'] = false;
                         break;
                     default:
@@ -344,6 +356,11 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                         }
                         break;
                     case self::RESTRICT_STAFF_RELEASE_BETWEEN_SAME_TYPE:
+                        $valueOptions = $this->getSelectOptions('general.yesno');
+                        $attr['type'] = 'select';
+                        $attr['options'] = $valueOptions;
+                        break;
+                    case self::RESTRICT_STAFF_RELEASE_BETWEEN_DIFFERENT_PROVIDER:
                         $valueOptions = $this->getSelectOptions('general.yesno');
                         $attr['type'] = 'select';
                         $attr['options'] = $valueOptions;
@@ -430,6 +447,22 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         }
         return $isRestricted;
     }
+    
+    public function checkStaffReleaseRestrictedBetweenDifferentProvider($institutionId = 0, $compareInstitutionId = 0)
+    {
+        $isRestricted = false;
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $restrictStaffReleaseBetweenDifferentProvider = $ConfigItems->value('restrict_staff_release_between_different_provider');
+
+        if ($restrictStaffReleaseBetweenDifferentProvider) {
+            $differentType = $this->compareInstitutionDifferentType($institutionId, $compareInstitutionId);
+
+            if (!$differentType) {
+                $isRestricted = true;
+            }
+        }
+        return $isRestricted;
+    }
 
     public function compareInstitutionType($institutionId = 0, $compareInstitutionId = 0)
     {
@@ -438,6 +471,15 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         $compareInstitutionTypeId = $Institutions->get($compareInstitutionId)->institution_type_id;
 
         return $institutionTypeId == $compareInstitutionTypeId;
+    }
+    
+    public function compareInstitutionDifferentType($institutionId = 0, $compareInstitutionId = 0)
+    {
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
+        $compareInstitutionTypeId = $Institutions->get($compareInstitutionId)->institution_type_id;
+
+        return $institutionTypeId != $compareInstitutionTypeId;
     }
 
 }
