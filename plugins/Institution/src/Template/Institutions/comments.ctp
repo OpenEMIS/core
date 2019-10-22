@@ -58,6 +58,32 @@ $institutionId = $paramsQuery['institution_id'];
         </div>
     </div>
 
+    <style>
+        .ag-cell.ag-cell-inline-editing {
+            padding: 0 !important;
+        }
+        .ag-cell textarea#comment.error,
+        .ag-cell #student_absence_reason_id select.error,
+        .ag-cell #absence_type_id select.error {
+            border-color: #CC5C5C !important;
+        }
+        
+        .ag-cell textarea#comment:focus {
+            outline: none;
+        }
+
+        .ag-cell textarea#comment {
+            display: block;
+            padding: 9px 8px;
+            -webkit-border-radius: 3px;
+            border-radius: 3px;
+            font-size: 12px;
+            height: 98%;
+            width: 100%;
+            border: 1px solid #CCC;
+        }
+    </style>
+
 <?php
 $this->end();
 ?>

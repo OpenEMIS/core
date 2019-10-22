@@ -206,7 +206,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         return deferred.promise;
     };
 
-    function getColumnDefs(action, tab, currentUserName, _comments, commentCodeOptions) {
+    function getColumnDefs(action, tab, currentUserName, _comments, commentCodeOptions, _commentTextEditor) {
         var deferred = $q.defer();
 
         var menuTabs = [ "filterMenuTab" ];
@@ -222,7 +222,11 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
-            suppressMenu: true
+            suppressMenu: true,
+            cellStyle: {
+                lineHeight: '45px'
+            },
+            maxWidth: 125
         });
         columnDefs.push({
             headerName: "Name",
@@ -231,7 +235,12 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
-            suppressMenu: true
+            suppressMenu: true,
+            cellStyle: {
+                lineHeight: '45px'
+            },
+            minWidth: 100,
+            maxWidth: 250
         });
         columnDefs.push({
             headerName: "Status",
@@ -239,13 +248,20 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
-            suppressMenu: true
+            suppressMenu: true,
+            cellStyle: {
+                lineHeight: '45px'
+            },
+            maxWidth: 100
         });
         columnDefs.push({
             headerName: "student id",
             field: "student_id",
             hide: true,
-            filterParams: filterParams
+            filterParams: filterParams,
+            cellStyle: {
+                lineHeight: '45px'
+            },
         });
 
         var allowEdit = action == 'edit';
@@ -269,9 +285,12 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                         }
                     } 
                     return marks;
-                }
+                },
+                cellStyle: {
+                    lineHeight: '45px'
+                },
+                maxWidth: 140
             };
-
             columnDefs.push(columnDef);
         }
 
@@ -299,7 +318,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 filterParams: filterParams,
                 filter: 'text',
                 menuTabs: menuTabs,
-                suppressMenu: true
+                suppressMenu: true,
+                cellStyle: {
+                    whiteSpace: 'normal !important',
+                    overflowY: 'auto',
+                    lineHeight: '45px'
+                },
+                maxWidth: 350
             };
             columnDef = this.renderSelect(allowEdit, columnDef, extra, _comments);
             columnDefs.push(columnDef);
@@ -320,7 +345,11 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                         } 
                     } 
                     return marks;
-                }
+                },
+                cellStyle: {
+                    lineHeight: '45px'
+                },
+                maxWidth: 140
             };
             columnDefs.push(columnDef);
         }
@@ -333,7 +362,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
-            suppressMenu: true
+            suppressMenu: true,
+            cellStyle: {
+                whiteSpace: 'normal !important',
+                overflowY: 'auto'
+            },
+            autoHeight: true,
+            cellEditor: _commentTextEditor
         };
         columnDef = this.renderText(allowEdit, columnDef, extra, _comments);
         columnDefs.push(columnDef);
@@ -346,7 +381,12 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 filterParams: filterParams,
                 filter: 'text',
                 menuTabs: menuTabs,
-                suppressMenu: true
+                suppressMenu: true,
+                cellStyle: {
+                    lineHeight: '45px'
+                },
+                minWidth: 100,
+                maxWidth: 250
             });
         }
 
@@ -369,7 +409,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         if (allowEdit && editPermission) {
             cols = angular.merge(cols, {
                 editable: true,
-                cellClass: 'oe-cell-highlight'
+                cellClass: 'oe-cell-highlight',
             });
         }
 
