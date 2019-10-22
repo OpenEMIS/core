@@ -490,12 +490,14 @@ class RisksTable extends ControllerActionTable
         $userId = $this->request->session()->read('Auth.User.id');
         $undeletedList = [];
         $originalEntityList = [];
-        $originalEntity = [];
-        $originalEntity = $entity->extractOriginal([$fieldKey]);
-
+        
+        // Get original data from table
+        $originalEntity = $this->RiskCriterias->find()->where(['risk_id'=>$entity->id])
+                ->toArray();
+        
         // get list of original entity
-        if (isset($originalEntity[$fieldKey])) {
-            foreach ($originalEntity[$fieldKey] as $key => $obj) {
+        if (isset($originalEntity)) {
+            foreach ($originalEntity as $key => $obj) {
                 $originalEntityList[$obj->id] = $obj->criteria;
             }
         }
@@ -508,7 +510,7 @@ class RisksTable extends ControllerActionTable
                 }
             }
         }
-
+        
         // compare the original list and undeleted list, if not in undeleted list will be deleted.
         if (!empty($originalEntityList)) {
             foreach ($originalEntityList as $key => $obj) {
