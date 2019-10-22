@@ -169,6 +169,51 @@ class ImportStaffLeaveTable extends AppTable
         }
     }
 
+    /**
+     * onImportPopulateAcademicPeriodsData method description.
+     *
+     * @param Event $event The Event to use.
+     * @param  $lookupPlugin value.
+     * @param  $lookupModel value.
+     * @param  $translatedCol value.
+     * @param  $lookupColumn value.
+     * @param  array|\ArrayObject $data .
+     * @param array $columnOrder value.
+     */
+    public function onImportPopulateAcademicPeriodsData(
+            Event $event,
+            $lookupPlugin,
+            $lookupModel,
+            $lookupColumn,
+            $translatedCol,
+            ArrayObject $data, 
+            $columnOrder
+    ) {
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+        $startDateLabel = $this->getExcelLabel($lookedUpTable, 'start_date');
+        $endDateLabel = $this->getExcelLabel($lookedUpTable, 'end_date');
+        $data[$columnOrder]['lookupColumn'] = 4;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $startDateLabel, $endDateLabel, $translatedCol];
+       
+        if (!empty($modelData)) {
+            foreach ($modelData as $row) {
+
+                if ($row->academic_period_level_id == 1) {
+                    //validate that only period level "year" will be shown
+                    $date = $row->start_date;
+                    $data[$columnOrder]['data'][] = [
+                        $row->name,
+                        $row->start_date->format('d/m/Y'),
+                        $row->end_date->format('d/m/Y'),
+                        $row->{$lookupColumn}
+                    ];
+                }
+            }
+        }
+    }
+
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         if (!$this->institutionId) {

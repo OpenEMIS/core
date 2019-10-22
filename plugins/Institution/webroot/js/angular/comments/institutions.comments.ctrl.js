@@ -13,6 +13,8 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     vm.currentUserName = null;
     vm.currentUserId = null;
 
+    vm.pageSizeDropdown = null;
+
     // Functions
     vm.initGrid = initGrid;
     vm.onChangeSubject = onChangeSubject;
@@ -114,7 +116,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             columnDefs: [],
             rowData: [],
             headerHeight: 38,
-            rowHeight: 38,
+            rowHeight: 60,
             enableColResize: false,
             enableSorting: false,
             unSortIcon: true,
@@ -171,6 +173,11 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     }
 
     function onChangeSubject(tab, limit = 10) {
+        if (vm.currentTab !== tab) {
+            vm.gridOptions.api.paginationSetPageSize(Number(limit));
+            if (vm.pageSizeDropdown !== null) vm.pageSizeDropdown.value = 10;
+        }
+
         AlertSvc.reset(vm);
         vm.currentTab = tab;
 
@@ -214,7 +221,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     function onChangeColumnDefs(action, tab) {
         var deferred = $q.defer();
 
-        InstitutionsCommentsSvc.getColumnDefs(action, tab, vm.currentUserName, vm.comments, vm.commentCodeOptions)
+        InstitutionsCommentsSvc.getColumnDefs(action, tab, vm.currentUserName, vm.comments, vm.commentCodeOptions, CommentTextEditor)
         .then(function(cols)
         {
             if (vm.gridOptions != null) {
@@ -243,6 +250,34 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         $scope.action = 'view';
     }
 
+
+    // function to act as a class
+    function CommentTextEditor () {}
+
+    // gets called once before the renderer is used
+    CommentTextEditor.prototype.init = function(params) {
+        // create the cell
+        this.eInput = document.createElement('textarea');
+        this.eInput.setAttribute("id", 'comment');
+        this.eInput.value = params.value;
+    };
+
+    // gets called once when grid ready to insert the element
+    CommentTextEditor.prototype.getGui = function() {
+        return this.eInput;
+    };
+
+    // returns the new value after editing
+    CommentTextEditor.prototype.getValue = function() {
+        return this.eInput.value;
+    };
+
+    // if true, then this editor will appear in a popup
+    CommentTextEditor.prototype.isPopup = function() {
+        // and we could leave this method out also, false is the default
+        return false;
+    };
+    
     function addPageSizeDropdown() {
         var wrapper = document.createElement('div');
         wrapper.setAttribute('class', 'display-limit');
@@ -270,6 +305,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         dropdownContainer.setAttribute('class', 'input-select-wrapper');
         dropdownContainer.setAttribute('style', 'margin: 0 5px');
 
+        vm.pageSizeDropdown = document.createElement('select');
+        vm.pageSizeDropdown.setAttribute('id', 'page-size');
+        vm.pageSizeDropdown.setAttribute('style', 'background-color: #FFFFFF');
+        vm.pageSizeDropdown.onchange = onPageSizeChanged;
         var dropdown = document.createElement('select');
         dropdown.setAttribute('id', 'page-size');
         dropdown.setAttribute('style', 'background-color: #FFFFFF');
@@ -280,11 +319,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             var option = document.createElement("option");
             option.value = i;
             option.text = i;
-            dropdown.appendChild(option);
+            vm.pageSizeDropdown.appendChild(option);
         }
 
-        dropdownContainer.appendChild(dropdown);
-
+        dropdownContainer.appendChild(vm.pageSizeDropdown);
         return dropdownContainer;
     }
 
