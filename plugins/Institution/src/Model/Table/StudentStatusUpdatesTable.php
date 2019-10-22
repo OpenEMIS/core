@@ -88,19 +88,30 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 
     public function getStudentWithdrawalRecords($first = false)
     {
+        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        $academicPeriodDetail = $this->AcademicPeriods->get($currentAcademicPeriod);
+        $academicPeriodEffectiveDate = $academicPeriodDetail->start_date->format('Y-m-d');
+        $academicPeriodEndDate = $academicPeriodDetail->end_date->format('Y-m-d');
+        
         $today = Time::now();
-        $query = $this
-            ->find()
-            ->where([
-                $this->aliasField('effective_date <= ') => $today,
-                $this->aliasField('execution_status') => self::NOT_EXECUTED
-            ])
-            ->order(['created' => 'asc']);
-        if ($first) {
-            $studentWithdrawRecords = $query->first();
-        } else {
-            $studentWithdrawRecords = $query->toArray();
+        $studentWithdrawRecords = [];
+        $todayDate = $today->format('Y-m-d');
+        
+        if($academicPeriodEndDate >= $todayDate && $academicPeriodEffectiveDate <= $todayDate){
+            $query = $this
+                ->find()
+                ->where([
+                    $this->aliasField('effective_date <= ') => $today,
+                    $this->aliasField('execution_status') => self::NOT_EXECUTED
+                ])
+                ->order(['created' => 'asc']);
+            if ($first) {
+                $studentWithdrawRecords = $query->first();
+            } else {
+                $studentWithdrawRecords = $query->toArray();
+            }        
         }
+        
         return $studentWithdrawRecords;
     }
 
