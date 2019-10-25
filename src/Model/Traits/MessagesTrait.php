@@ -234,7 +234,6 @@ trait MessagesTrait
             'start_date' => 'Start Date',
             'end_date' => 'End Date',
             'education_grade' => 'Education Grades',
-            'gradesAlreadyAdded' => 'Selected Education Grade for the selected Education Programme already added.',
             'allGradesAlreadyAdded' => 'All possible Education Grades for the selected Education Programme already added.'
         ],
         'InstitutionShifts' => [
