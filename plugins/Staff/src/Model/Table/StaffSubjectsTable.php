@@ -170,6 +170,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 
     private function getSubjectOptions() {
         $subjectOptions = [];
+        
         if (
             array_key_exists($this->alias(), $this->request->data)
              && array_key_exists('institution_class_id', $this->request->data[$this->alias()])
@@ -190,11 +191,15 @@ class StaffSubjectsTable extends ControllerActionTable {
                     $this->InstitutionSubjects->aliasField('institution_id') => $this->request->data[$this->alias()]['institution_id'],
                     $this->InstitutionSubjects->aliasField('academic_period_id') => $this->request->data[$this->alias()]['academic_period_id']
                 ])
-                ->toArray()
-                ;
+                ->order([
+                        $this->InstitutionSubjects->aliasField('name')
+                    ])
+                ->toArray();
+                
             // data massage for teacher names
             foreach ($subjectOptions as $key => $value) {
                 $tempTeacherArray = [];
+                
                 if ($value->has('teachers')) {
                     foreach ($value->teachers as $tkey => $tvalue) {
                         $tempTeacherArray[$tvalue->id] = $tvalue->name;
