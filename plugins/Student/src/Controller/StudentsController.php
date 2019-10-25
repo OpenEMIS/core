@@ -214,6 +214,25 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisits']);
     }
+    public function Competencies()
+    {
+        $session = $this->request->session();
+
+        if ($session->check('Student.Students.id')) {
+            $studentId = $session->read('Student.Students.id');
+            $session->write('Student.Competencies.student_id', $studentId);
+
+            // tabs
+            $options = ['type' => 'student'];
+            $tabElements = $this->getAcademicTabElements($options);
+            $this->set('tabElements', $tabElements);
+            $this->set('selectedAction', 'Competencies');
+            // End
+
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCompetencies']);
+        }
+        
+    }
     // Visits - END
     // End
 
@@ -640,5 +659,17 @@ class StudentsController extends AppController
                 }
             }
         }
+    }
+
+    public function getCompetencyTabElements($options = [])
+    {
+        $queryString = $this->request->query('queryString');
+        $tabElements = [
+            'Competencies' => [
+                'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],
+                'text' => __('Items')
+            ]
+        ];
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }
