@@ -1,3 +1,10 @@
+### [3.44.0] - 2019-10-25
+- Bug Fix on Report > Student Report slow generation
+- Implemented Competencies tab to students profile
+- Implemented sorting by first name in Classes and Subjects
+- Implemented sorting of Subjects Alphabetically when adding subjects on Staff > Career > Subjects > Add page
+- Implemented a change of the institution column to comments on Student > Academic > Absences page
+- Implemented a new formatting for the Notices box to add a video
 ### [3.43.9] - 2019-10-22
 - Performance > Outcome > Export: Blank fix
 - Administration > Performance > Outcomes > Grading Types: 404 error fix
