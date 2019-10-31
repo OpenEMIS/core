@@ -75,6 +75,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
         if ($entity->absence_type_id == 0) {
             $this->delete($entity);
+            $this->deleteStudentAbsence($entity);
         }
 
         if ($entity->isNew() || $entity->dirty('absence_type_id')) {
@@ -139,6 +140,40 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 $absenceEntity = $InstitutionStudentAbsences->patchEntity($absenceEntity, $data);
                 $InstitutionStudentAbsences->save($absenceEntity);
             }
+        }
+    }
+    
+    public function deleteStudentAbsence($entity = null){
+        $classId = $entity->institution_class_id;
+        $academicPeriodId = $entity->academic_period_id;
+        $date = $entity->date;
+        $institutionId = $entity->institution_id;
+        $studentId = $entity->student_id;
+        $absenceTypeId = $entity->absence_type_id;
+        
+        $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        
+        $totalRecordCount = $this
+                ->find()
+                ->where([
+                    $this->aliasField('institution_class_id') => $classId,
+                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->aliasField('date') => $date,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('student_id') => $studentId
+                ])
+                ->count();
+        
+        if($totalRecordCount <= 0){
+           
+            $data = [
+                        'institution_class_id' => $classId,
+                        'academic_period_id' => $academicPeriodId,
+                        'date' => $date->format('Y-m-d'),
+                        'institution_id' => $institutionId,
+                        'student_id' => $studentId
+                    ];
+            $InstitutionStudentAbsences->deleteAll($data);
         }
     }
 }
