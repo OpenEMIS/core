@@ -11,7 +11,7 @@ if ($action == 'add') : ?>
             [
                 'empty' => '-- Select --',
                 'onchange'=>"$('#reload').val('changeEducationGradeId').click();return false;",                            
-            ],
+            ]
         );         
     ?>
 
