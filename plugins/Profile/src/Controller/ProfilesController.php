@@ -110,6 +110,7 @@ class ProfilesController extends AppController
     public function StaffSalaries()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']); }
     public function StaffBehaviours()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']); }
     public function StudentOutcomes()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']); }
+    public function StudentCompetencies()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCompetencies']); }
     public function ScholarshipApplications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipApplications']); }
     public function Demographic()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']); }
     public function ProfileStudents()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Students']); }
@@ -373,7 +374,7 @@ class ProfilesController extends AppController
             $query->where([$model->aliasField('security_user_id') => $loginUserId]);
         } else if ($model->hasField('student_id')) {
             $query->where([$model->aliasField('student_id') => $loginUserId]);
-        } else if ($model->hasField('staff_id')) {
+        } else if ($model->hasField('staff_id') && $model->alias!='StudentCompetencies') {
             $query->where([$model->aliasField('staff_id') => $loginUserId]);
         } else if ($model->hasField('applicant_id')) {
             $query->where([$model->aliasField('applicant_id') => $loginUserId]);
@@ -461,6 +462,7 @@ class ProfilesController extends AppController
             'Absences' => ['text' => __('Absences')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
+            'Competencies' => ['text' => __('Competencies')],
             'Results' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
@@ -602,6 +604,18 @@ class ProfilesController extends AppController
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
         }
 
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public function getCompetencyTabElements($options = [])
+    {
+        $queryString = $this->request->query('queryString');
+        $tabElements = [
+            'Competencies' => [
+                'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],
+                'text' => __('Items')
+            ]
+        ];
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 }
