@@ -214,6 +214,8 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisits']);
     }
+    // Visits - END
+    
     public function Competencies()
     {
         $session = $this->request->session();
@@ -233,7 +235,6 @@ class StudentsController extends AppController
         }
         
     }
-    // Visits - END
     // End
 
     // AngularJS
