@@ -75,6 +75,7 @@ class ProgrammesTable extends ControllerActionTable
 		// end POCOR-1893
 
 		$sortList = ['AcademicPeriods.name'];
+		
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
