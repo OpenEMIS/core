@@ -1129,6 +1129,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Profiles',
                 'link' => false,
             ],
+
                 'Profiles.StaffEmploymentStatuses' => [
                     'title' => 'Career',
                     'parent' => 'Profiles.Staff',
@@ -1146,6 +1147,12 @@ class NavigationComponent extends Component
                     'parent' => 'Profiles.Staff',
                     'params' => ['plugin' => 'Profile'],
                     'selected' => ['Profiles.TrainingNeeds', 'Profiles.TrainingResults', 'Profiles.Courses']
+                ],
+                'Profiles.ScheduleTimetable' => [
+                        'title' => 'Timetables',
+                        'parent' => 'Profiles.Staff',
+                        'selected' => ['Profiles.ScheduleTimetable'],
+                        'params' => ['plugin' => 'Profile']
                 ],
         ];
         return $navigation;
