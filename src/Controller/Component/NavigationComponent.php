@@ -940,6 +940,12 @@ class NavigationComponent extends Component
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
                     'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentRisks', 'Students.Outcomes', 'Institutions.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit']
             ],
+            'Students.StudentScheduleTimetable' => [
+                'title' => 'Timetables',
+                'parent' => 'Institutions.Students.index',
+                'selected' => ['Students.StudentScheduleTimetable'],
+                'params' => ['plugin' => 'Student']
+            ],
             'Students.Employments' => [
                 'title' => 'Professional',
                 'parent' => 'Institutions.Students.index',
@@ -1022,6 +1028,12 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications', 'Institutions.StaffTrainingResults', 'Institutions.CourseCatalogue', 'Staff.Courses'],
+            ],
+            'Staff.ScheduleTimetable' => [
+                'title' => 'Timetables',
+                'parent' => 'Institutions.Staff.index',
+                'selected' => ['Staff.ScheduleTimetable'],
+                'params' => ['plugin' => 'Staff']
             ],
             'Staff.Healths' => [
                 'title' => 'Health',
