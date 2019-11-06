@@ -604,7 +604,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             studentRecords[key]['gender_name'] = studentRecords[key]['gender']['name'];
             
             if (studentRecords[key]['is_student'] == 1 && studentRecords[key]['is_staff'] == 1) {
-                $account_type = 'Student,Staff';
+                $account_type = 'Student, Staff';
             } else if (studentRecords[key]['is_student'] == 1 && studentRecords[key]['is_staff'] == 0) {
                 $account_type = 'Student';
             } else if (studentRecords[key]['is_student'] == 0 && studentRecords[key]['is_staff'] == 1) {

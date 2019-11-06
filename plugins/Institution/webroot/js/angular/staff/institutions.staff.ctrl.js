@@ -680,7 +680,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             staffRecords[key]['date_of_birth'] = InstitutionsStaffSvc.formatDate(staffRecords[key]['date_of_birth']);
             staffRecords[key]['gender_name'] = staffRecords[key]['gender']['name'];
             if (staffRecords[key]['is_student'] == 1 && staffRecords[key]['is_staff'] == 1) {
-                $account_type = 'Student,Staff';
+                $account_type = 'Student, Staff';
             } else if (staffRecords[key]['is_student'] == 1 && staffRecords[key]['is_staff'] == 0) {
                 $account_type = 'Student';
             } else if (staffRecords[key]['is_student'] == 0 && staffRecords[key]['is_staff'] == 1) {
