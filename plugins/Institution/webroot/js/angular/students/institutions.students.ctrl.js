@@ -713,7 +713,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.startDate = studentStartDateFormatted;
         $scope.endDate = periodEndDate;
         
-        console.log('studentData:', studentData);
         angular.forEach(StudentController.educationGradeOptions.availableOptions, function(value, key) {
             if(value.education_grade_id == studentData['institution_students'][0]['education_grade_id']){
                 StudentController.educationGradeOptions.selectedOption = StudentController.educationGradeOptions.availableOptions[key];
@@ -724,8 +723,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         startDatePicker.datepicker("setStartDate", studentStartDateFormatted);
         startDatePicker.datepicker("setEndDate", periodEndDate);
         startDatePicker.datepicker("setDate", studentStartDateFormatted);
-        console.log(StudentController.educationGradeOptions);
-        
         
         StudentController.classOptions = {};
         StudentController.transferReasonOptions = {};
