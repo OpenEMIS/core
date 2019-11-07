@@ -49,7 +49,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['SpecialNeeds.SpecialNeedTypes'])
+        $query->contain(['SpecialNeeds.SpecialNeedsTypes'])
             ->where([$this->aliasField('super_admin') => 0]);
 
         $search = $this->getSearchKey();
@@ -104,7 +104,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['SpecialNeeds.SpecialNeedTypes', 'SpecialNeeds.SpecialNeedDifficulties']);
+        $query->contain(['SpecialNeeds.SpecialNeedsTypes', 'SpecialNeeds.SpecialNeedDifficulties']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
