@@ -81,7 +81,7 @@ class OpenEmisComponent extends Component
         }
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $footer = $ConfigItems->value('footer');
-        $controller->set('footer', $footer);
+        $controller->set('footerText', $footer);
     }
 
     private function getTheme()
