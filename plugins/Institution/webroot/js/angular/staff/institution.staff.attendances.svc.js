@@ -463,7 +463,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             timeInputElement.setAttribute("class", "form-control form-error");
         }
         setTimeout(function(event) {
-            var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time});
+            var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time, showInputs: false});
             $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
                 if (params.value[timeKey] == null) {
