@@ -166,7 +166,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         if ($query) {
             $userId = $query['user_id'];
             $studentEntity = $this->Users->get($userId, [
-                'contain' => ['Genders', 'SpecialNeeds.SpecialNeedTypes', 'SpecialNeeds.SpecialNeedDifficulties']
+                'contain' => ['Genders', 'SpecialNeeds.SpecialNeedsTypes', 'SpecialNeeds.SpecialNeedDifficulties']
             ]);
 
             if (!empty($studentEntity)) {
@@ -387,7 +387,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                         'keyField' => 'special_need_type_id',
                         'valueField' => 'special_need_type.name'
                     ])
-                    ->contain('SpecialNeedTypes')
+                    ->contain('SpecialNeedsTypes')
                     ->where([$ExaminationCentreSpecialNeeds->aliasField('examination_centre_id') => $selectedExamCentre])
                     ->toArray();
 
