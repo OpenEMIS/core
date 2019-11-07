@@ -12,6 +12,7 @@ use Cake\ORM\ResultSet;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Collection\Collection;
 
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
@@ -690,7 +691,7 @@ class StaffLeaveTable extends ControllerActionTable
         $datePeriod = new DatePeriod($startDate, $interval, $endDate);
         $CalendarEvents = TableRegistry::get('Calendars');
         $CalendarTypes = TableRegistry::get('CalendarTypes');
-        $CalendarEventsData = $CalendarEvents
+        $publicCalendarEvents = $CalendarEvents
                                 ->find('all')
                                 ->contain(['CalendarTypes','CalendarEventDates'])
                                 ->join([
@@ -711,14 +712,17 @@ class StaffLeaveTable extends ControllerActionTable
                                     $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
                                 ])
                                 ->toArray();
-        $public_calendar_event_dates = array();
-        foreach ($CalendarEventsData as $key => $value) {
-            array_push($public_calendar_event_dates,$value['calendar_event_dates'][0]['date']->format('Y-m-d'));
-        }
+        $collection = new Collection($publicCalendarEvents);
+
+        $mapCollection = $collection->map(function ($value, $key) {
+            return $value['calendar_event_dates'][0]['date']->format('Y-m-d');
+        });
+        $publicCalendarEventDates = $mapCollection->toArray();
+        
         $count = 0;
         $overlap = false;
         foreach ($datePeriod as $key => $date) {
-            if (!in_array($date->format('Y-m-d'), $public_calendar_event_dates)) {
+            if (!in_array($date->format('Y-m-d'), $publicCalendarEventDates)) {
                 $dayText = $date->format('l');
                 if (in_array($dayText, $workingDaysOfWeek)) {
                     $count = $count + $day;
