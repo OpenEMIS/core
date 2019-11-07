@@ -485,9 +485,17 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <label><?= __('Academic Period') ?></label>
                     <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['academic_period']['name']" disabled="disabled">
                 </div>
-                <div class="input string">
+                <div class="input select required">
                     <label><?= __('Education Grade') ?></label>
-                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['education_grade']['name']" disabled="disabled">
+                    <div class="input-select-wrapper">
+                    <select name="Students[education_grade_id]" ng-required="required" id="students-education-grade-id"
+                            ng-options="option.education_grade.name for option in InstitutionStudentController.educationGradeOptions.availableOptions track by option.id"
+                            ng-model="InstitutionStudentController.educationGradeOptions.selectedOption"
+                            ng-change="InstitutionStudentController.onChangeEducationGrade()"
+                            >
+                            <option value="">-- <?= __('Select') ?> --</option>
+                    </select>
+                    </div>
                     <div ng-if="InstitutionStudentController.postResponse.error.education_grade_id" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.education_grade_id">{{ error }}</p>
                     </div>

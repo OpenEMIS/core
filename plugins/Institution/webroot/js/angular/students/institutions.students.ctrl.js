@@ -704,7 +704,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // setup transfer student input fields
         var studentData = StudentController.selectedStudentData;
         var periodEndDate = InstitutionsStudentsSvc.formatDate(studentData['institution_students'][0]['academic_period']['end_date']);
-
+        
         // only allow transfer start date to be one day after the student's current start date
         var studentStartDate = new Date(studentData['institution_students'][0]['start_date']);
         studentStartDate.setDate(studentStartDate.getDate() + 1);
@@ -712,24 +712,35 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         StudentController.startDate = studentStartDateFormatted;
         $scope.endDate = periodEndDate;
-
+        
+        console.log('studentData:', studentData);
+        angular.forEach(StudentController.educationGradeOptions.availableOptions, function(value, key) {
+            if(value.education_grade_id == studentData['institution_students'][0]['education_grade_id']){
+                StudentController.educationGradeOptions.selectedOption = StudentController.educationGradeOptions.availableOptions[key];
+            }
+        });
+        
         var startDatePicker = angular.element(document.getElementById('Students_transfer_start_date'));
         startDatePicker.datepicker("setStartDate", studentStartDateFormatted);
         startDatePicker.datepicker("setEndDate", periodEndDate);
         startDatePicker.datepicker("setDate", studentStartDateFormatted);
-
+        console.log(StudentController.educationGradeOptions);
+        
+        
         StudentController.classOptions = {};
         StudentController.transferReasonOptions = {};
-
+        
         InstitutionsStudentsSvc.getClasses({
             institutionId: StudentController.institutionId,
             academicPeriodId: studentData['institution_students'][0]['academic_period_id'],
             gradeId: studentData['institution_students'][0]['education_grade_id'],
         })
-        .then(function(classes) {
+        .then(function(classes) {      
+                  
             StudentController.classOptions = {
                 availableOptions: classes,
             };
+            
             return InstitutionsStudentsSvc.getStudentTransferReasons();
         }, function(error) {
             console.log(error);
@@ -921,6 +932,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function postTransferForm() {
         var transferReasonId = (StudentController.transferReasonOptions.hasOwnProperty('selectedOption'))? StudentController.transferReasonOptions.selectedOption.id: null;
         var classId = (StudentController.classOptions.hasOwnProperty('selectedOption'))? StudentController.classOptions.selectedOption.id: null;
+        var educationGradeId = (StudentController.educationGradeOptions.hasOwnProperty('selectedOption'))? StudentController.educationGradeOptions.selectedOption.education_grade_id: '';
+        
+        if (educationGradeId == undefined) {
+            educationGradeId = '';
+        }        
+        
         var startDate = StudentController.startDate;
         var startDateArr = startDate.split("-");
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
@@ -939,7 +956,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             assignee_id: -1,
             institution_id: StudentController.institutionId,
             academic_period_id: StudentController.selectedStudentData.institution_students[0]['academic_period_id'],
-            education_grade_id: StudentController.selectedStudentData.institution_students[0]['education_grade_id'],
+            education_grade_id: educationGradeId,
             institution_class_id: classId,
             previous_institution_id: StudentController.selectedStudentData.institution_students[0]['institution_id'],
             previous_academic_period_id: StudentController.selectedStudentData.institution_students[0]['academic_period_id'],
