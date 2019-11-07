@@ -55,6 +55,7 @@ class ProgrammesTable extends ControllerActionTable
 		$this->fields['photo_content']['visible'] = 'false';
 		$this->fields['openemis_no']['visible'] = 'false';
 		$this->fields['institution_id']['type'] = 'integer';
+		$this->fields['academic_period_id']['sort'] = ['field' => 'AcademicPeriods.name'];
 
 		$this->setFieldOrder([
 			'academic_period_id', 'institution_id', 'education_grade_id', 'start_date', 'end_date', 'student_status_id'
@@ -72,6 +73,13 @@ class ProgrammesTable extends ControllerActionTable
 			$studentId = $session->read('Student.Students.id');
 		}
 		// end POCOR-1893
+
+		$sortList = ['AcademicPeriods.name'];
+		
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
 
         $query->where([$this->aliasField('student_id') => $studentId]);
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
