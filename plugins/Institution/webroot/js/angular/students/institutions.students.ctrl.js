@@ -604,13 +604,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             studentRecords[key]['gender_name'] = studentRecords[key]['gender']['name'];
             
             if (studentRecords[key]['is_student'] == 1 && studentRecords[key]['is_staff'] == 1) {
-                $account_type = 'Student, Staff';
+                studentRecords[key]['account_type'] = 'Student, Staff';
             } else if (studentRecords[key]['is_student'] == 1 && studentRecords[key]['is_staff'] == 0) {
-                $account_type = 'Student';
+                studentRecords[key]['account_type'] = 'Student';
             } else if (studentRecords[key]['is_student'] == 0 && studentRecords[key]['is_staff'] == 1) {
-                $account_type = 'Staff';
+                studentRecords[key]['account_type'] = 'Staff';
             }
-            studentRecords[key]['account_type'] = $account_type;
 
             if (studentRecords[key]['main_nationality'] != null) {
                 studentRecords[key]['nationality_name'] = studentRecords[key]['main_nationality']['name'];
