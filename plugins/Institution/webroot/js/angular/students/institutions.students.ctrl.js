@@ -171,7 +171,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 'date_of_birth': 'Date Of Birth',
                 'nationality_name': 'Nationality',
                 'identity_type_name': 'Identity Type',
-                'identity_number': 'Identity Number'
+                'identity_number': 'Identity Number',
+                'account_type': 'Account Type'
             };
             promises[1] = InstitutionsStudentsSvc.translate(translateFields);
 
@@ -287,7 +288,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     {headerName: StudentController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translatedTexts.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translatedTexts.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                    {headerName: StudentController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
+                    {headerName: StudentController.translatedTexts.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
                 enableColResize: false,
@@ -600,6 +602,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
             studentRecords[key]['date_of_birth'] = InstitutionsStudentsSvc.formatDate(studentRecords[key]['date_of_birth']);
             studentRecords[key]['gender_name'] = studentRecords[key]['gender']['name'];
+            
+            if (studentRecords[key]['is_student'] == 1 && studentRecords[key]['is_staff'] == 1) {
+                studentRecords[key]['account_type'] = 'Student, Staff';
+            } else if (studentRecords[key]['is_student'] == 1 && studentRecords[key]['is_staff'] == 0) {
+                studentRecords[key]['account_type'] = 'Student';
+            } else if (studentRecords[key]['is_student'] == 0 && studentRecords[key]['is_staff'] == 1) {
+                studentRecords[key]['account_type'] = 'Staff';
+            }
 
             if (studentRecords[key]['main_nationality'] != null) {
                 studentRecords[key]['nationality_name'] = studentRecords[key]['main_nationality']['name'];
