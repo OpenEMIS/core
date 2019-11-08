@@ -95,13 +95,13 @@ class StudentStatusUpdatesTable extends ControllerActionTable
        
         $studentWithdrawRecords = [];
         $today = Time::now();
-        $todayDate = $today->format('Y-m-d');
+        $today = $today->format('Y-m-d');
         
-        if($academicPeriodEndDate >= $todayDate && $academicPeriodEffectiveDate <= $todayDate){
+        if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
             $query = $this
                 ->find()
                 ->where([
-                    $this->aliasField('effective_date <= ') => $todayDate,
+                    $this->aliasField('effective_date <= ') => $today,
                     $this->aliasField('execution_status') => self::NOT_EXECUTED
                 ])
                 ->order(['created' => 'asc']);
