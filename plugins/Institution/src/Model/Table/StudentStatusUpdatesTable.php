@@ -101,7 +101,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
             $query = $this
                 ->find()
                 ->where([
-                    $this->aliasField('effective_date <= ') => Time::now(),
+                    $this->aliasField('effective_date <= ') => $today,
                     $this->aliasField('execution_status') => self::NOT_EXECUTED
                 ])
                 ->order(['created' => 'asc']);
