@@ -53,6 +53,7 @@
 		<?php
 			$genderOptions = $attr['data']['filter']['genders']['options'];
 			$selectedGender = $attr['data']['filter']['genders']['selected'];
+			$ConfigureName = $attr['data']['configure_student_name'];
 		?>
 			<div class="select">
 				<label><?=__('Gender');?>:</label>
@@ -202,7 +203,18 @@
 							?>
 							<?= $this->html->link($obj->student_openemis_no, $newUrl) ?>
 						</td>
-						<td><?= $obj->user->name ?></td>
+						<td><?php 
+							if (!empty($obj->user->identity_number)) {
+								if ($ConfigureName == 2) {
+									echo $obj->user->identity_number.' - '.$obj->user->name;
+								} else {
+									echo $obj->user->identity_number.' - '.$obj->user->first_name.' '.$obj->user->last_name;
+									}
+							}
+							else {
+							echo $obj->user->name;
+							}
+							?></td>
 						<td><?= __($obj->student_gender) ?></td>
 						<td><?= (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
 						<td><?= __($obj->student_status_name) ?></td>
