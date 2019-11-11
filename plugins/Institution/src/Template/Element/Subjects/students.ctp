@@ -38,7 +38,7 @@
 
 				<tbody>
 				<?php
-				$ConfigureName = $attr['data']['configure_student_name'];
+				$configureStudentName = $attr['data']['configure_student_name'];
 				foreach($attr['data']['students'] as $i => $obj) :
 					if ($action=='edit') :
 						$n = $obj->student_id;
@@ -130,7 +130,7 @@
 						</td>
 						<td><?php 
 							if (!empty($obj->user->identity_number)) {
-								if ($ConfigureName == 2) {
+								if ($configureStudentName == 2) {
 									echo $obj->user->identity_number.' - '.$obj->user->name;
 								} else {
 									echo $obj->user->identity_number.' - '.$obj->user->first_name.' '.$obj->user->last_name;

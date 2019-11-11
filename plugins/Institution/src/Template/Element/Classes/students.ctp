@@ -53,7 +53,7 @@
 		<?php
 			$genderOptions = $attr['data']['filter']['genders']['options'];
 			$selectedGender = $attr['data']['filter']['genders']['selected'];
-			$ConfigureName = $attr['data']['configure_student_name'];
+			$configureStudentName = $attr['data']['configure_student_name'];
 		?>
 			<div class="select">
 				<label><?=__('Gender');?>:</label>
@@ -205,7 +205,7 @@
 						</td>
 						<td><?php 
 							if (!empty($obj->user->identity_number)) {
-								if ($ConfigureName == 2) {
+								if ($configureStudentName == 2) {
 									echo $obj->user->identity_number.' - '.$obj->user->name;
 								} else {
 									echo $obj->user->identity_number.' - '.$obj->user->first_name.' '.$obj->user->last_name;
