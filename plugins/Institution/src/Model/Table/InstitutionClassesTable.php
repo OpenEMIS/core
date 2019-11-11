@@ -675,6 +675,10 @@ class InstitutionClassesTable extends ControllerActionTable
         $gradeOptions = [];
         $statusOptions = [];
         $genderOptions = [];
+
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigureStudentName = $ConfigItems->value("configure_student_name");
+
         foreach ($entity->class_students as $key => $value) {
             if (!empty($value->education_grade)) { //grade filter
                 $gradeOptions[$value->education_grade->id]['name'] = $value->education_grade->name;
@@ -786,6 +790,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->fields['students']['data']['filter']['genders']['options'] = $genderOptions;
         $this->fields['students']['data']['filter']['genders']['selected'] = $extra['selectedGender'];
+        $this->fields['students']['data']['configure_student_name'] = $ConfigureStudentName;
 
         $this->fields['education_grades']['data']['grades'] = $entity->education_grades;
 
