@@ -38,6 +38,7 @@
 
 				<tbody>
 				<?php
+				$ConfigureName = $attr['data']['configure_student_name'];
 				foreach($attr['data']['students'] as $i => $obj) :
 					if ($action=='edit') :
 						$n = $obj->student_id;
@@ -127,7 +128,18 @@
 							?>
 							<?= $this->html->link($obj->student_openemis_no, $newUrl) ?>
 						</td>
-						<td><?= $obj->student_name ?></td>
+						<td><?php 
+							if (!empty($obj->user->identity_number)) {
+								if ($ConfigureName == 2) {
+									echo $obj->user->identity_number.' - '.$obj->user->name;
+								} else {
+									echo $obj->user->identity_number.' - '.$obj->user->first_name.' '.$obj->user->last_name;
+									}
+							}
+							else {
+							echo $obj->user->name;
+							}
+							?></td>
 						<td><?= __($obj->institution_class->name) ?></td>
 						<td><?= $obj->student_gender ?></td>
 						<td><?= __($obj->student_status->name) ?></td>
