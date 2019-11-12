@@ -37,7 +37,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        return $validator->notEmpty(['positions_held','previous_end_date','new_institution_id', 'workflow_assignee_id'])
+        return $validator->notEmpty(['positions_held','previous_end_date', 'workflow_assignee_id'])
             ->add('previous_end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'position_start_date', false]
             ]);
@@ -237,15 +237,27 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
         $this->field('new_FTE', ['type' => 'hidden']);
         $this->field('new_start_date', ['type' => 'hidden']);
         $this->field('new_end_date', ['type' => 'hidden']);
-
-        $this->setFieldOrder([
-            'previous_information_header', 'staff_id', 'previous_institution_id', 'institution_position_id', 'FTE', 'staff_type_id', 'position_start_date', 'previous_end_date',
-            'previous_start_date', 'previous_FTE', 'previous_staff_type_id',
-            'new_information_header', 'new_institution_id', 'new_start_date',
-            'transfer_reasons_header', 'comment',
-            // hidden fields
-            'all_visible', 'previous_institution_staff_id','previous_staff_type_id'
-        ]);
+        
+        if($entity->new_institution_id == $entity->previous_institution_id){
+            $this->setFieldOrder([
+                'previous_information_header', 'staff_id', 'previous_institution_id', 'institution_position_id', 'FTE', 'staff_type_id', 'position_start_date', 'previous_end_date',
+                'previous_start_date', 'previous_FTE', 'previous_staff_type_id',
+                'new_information_header', 'new_start_date',
+                'transfer_reasons_header', 'comment',
+                // hidden fields
+                'all_visible', 'previous_institution_staff_id','previous_staff_type_id'
+            ]);
+        }else{
+            $this->setFieldOrder([
+                'previous_information_header', 'staff_id', 'previous_institution_id', 'institution_position_id', 'FTE', 'staff_type_id', 'position_start_date', 'previous_end_date',
+                'previous_start_date', 'previous_FTE', 'previous_staff_type_id',
+                'new_information_header', 'new_institution_id', 'new_start_date',
+                'transfer_reasons_header', 'comment',
+                // hidden fields
+                'all_visible', 'previous_institution_staff_id','previous_staff_type_id'
+            ]);
+        }
+        
     }
 
     public function onGetInstitutionPositionId(Event $event, Entity $entity)
@@ -435,6 +447,17 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
+    }
+    
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        if(empty($entity->new_institution_id)){
+            $StaffTable = TableRegistry::get('Institution.Staff');
+            $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
+            $staffStatusId = $StaffStatusesTable->getIdByCode('END_OF_ASSIGNMENT');
+            $StaffTable->updateAll(['staff_status_id' => $staffStatusId], ['staff_id'=>$entity->staff_id]);            
+            $entity->new_institution_id = $entity->previous_institution_id;
+        }
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
