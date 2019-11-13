@@ -82,8 +82,9 @@ class StaffQualificationsTable extends AppTable  {
                 'institution_code' => 'Institutions.code',
                 'staff_position_name' => 'StaffPositionTitles.name',
                 'staff_type_name' => 'StaffTypes.name',
-                'qualification_level' => 'QualificationLevels.name'
-
+                'qualification_level' => 'QualificationLevels.name',
+                'identity_type_id' => 'Users.identity_type_id',
+                'identity_number' => 'Users.identity_number'
             ])
             ->contain([
                 'QualificationTitles.QualificationLevels',
@@ -120,7 +121,9 @@ class StaffQualificationsTable extends AppTable  {
                 'Users' => [
                     'fields' => [
                         'first_name',
-                        'last_name'
+                        'last_name',
+                        'identity_type_id',
+                        'identity_number'
                     ]
                 ]
 
@@ -144,9 +147,8 @@ class StaffQualificationsTable extends AppTable  {
             ->innerJoin(
                 ['StaffTypes' => 'staff_types'],
                     ['InstitutionStaff.staff_type_id = StaffTypes.id']
-            )
-            ;
-        
+            );
+      
         if (!$superAdmin) {
             $query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
         }
@@ -299,7 +301,7 @@ class StaffQualificationsTable extends AppTable  {
             'type' => 'string',
             'label' => ''
         ];
-
+        
         $fields->exchangeArray($newFields);
     }
 }
