@@ -95,8 +95,8 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
             $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
         }
 
-        $studentIdList = $settings['student_id_list'];
-
+        $studentIdList = (count($settings['student_id_list']) > 0)?$settings['student_id_list']:0;
+        
         $query
             ->select([
                 $this->aliasField('id'),
