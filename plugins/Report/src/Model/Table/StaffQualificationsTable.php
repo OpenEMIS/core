@@ -146,7 +146,7 @@ class StaffQualificationsTable extends AppTable  {
                     ['InstitutionStaff.staff_type_id = StaffTypes.id']
             )
             ;
-
+        
         if (!$superAdmin) {
             $query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
         }
@@ -282,6 +282,20 @@ class StaffQualificationsTable extends AppTable  {
         $newFields[] = [
             'key' => 'StaffQualifications.gpa',
             'field' => 'gpa',
+            'type' => 'string',
+            'label' => ''
+        ];
+        
+        $newFields[] = [
+            'key' => 'Users.identity_type_id',
+            'field' => 'identity_type_id',
+            'type' => 'string',
+            'label' => ''
+        ];
+        
+        $newFields[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'identity_number',
             'type' => 'string',
             'label' => ''
         ];
