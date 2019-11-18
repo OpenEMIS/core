@@ -18,6 +18,10 @@ class InstitutionClassSubjectsTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
+        
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ScheduleTimetable' => ['index']
+        ]);
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
