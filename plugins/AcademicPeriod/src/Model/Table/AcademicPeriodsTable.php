@@ -85,7 +85,8 @@ class AcademicPeriodsTable extends AppTable
             'StudentExaminationResults' => ['index'],
             'OpenEMIS_Classroom' => ['index', 'view'],
             'InstitutionStaffAttendances' => ['index', 'view'],
-            'StudentAttendances' => ['index', 'view']
+            'StudentAttendances' => ['index', 'view'],
+            'ScheduleTimetable' => ['index']
         ]);
         
         $this->addBehavior('Institution.Calendar');

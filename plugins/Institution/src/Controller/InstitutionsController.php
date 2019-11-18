@@ -1300,6 +1300,13 @@ class InstitutionsController extends AppController
                     'institution.staff.attendances.svc'
                 ]);
                 break;
+            
+            case 'ScheduleTimetable':
+                $this->Angular->addModules([
+                    'timetable.ctrl',
+                    'timetable.svc'
+                ]);
+                break;
         }
     }
 
