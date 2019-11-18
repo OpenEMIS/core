@@ -60,13 +60,13 @@ class QualificationsTable extends ControllerActionTable
 			'actions.download.show',
 			true
 		);
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStaffQualifications']);
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
-            ->requirePresence('qualification_level')
             ->requirePresence('qualification_country_id')
             ->allowEmpty('graduate_year')
 			->add('graduate_year', 'ruleNumeric', [
@@ -97,7 +97,7 @@ class QualificationsTable extends ControllerActionTable
     {
         $query->contain(['QualificationTitles.QualificationLevels']);
     }
-
+    
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'qualification_level') {
@@ -356,6 +356,20 @@ class QualificationsTable extends ControllerActionTable
     {
 		$this->setupTabElements();
 	}
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($event->data['entity']['action_type']) {
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $data = $AcademicPeriods
+                    ->find()
+                    ->where([
+                        'AcademicPeriods.id' => $event->data['entity']['graduate_year']
+                    ])
+                    ->toArray();
+            $event->data['entity']['graduate_year'] = $data[0]->name;
+        }
+    }
 
     private function setupFields(Entity $entity)
     {
