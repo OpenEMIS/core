@@ -168,6 +168,26 @@ class ImportStaffQualificationsTable extends AppTable
         }
     }
 
+    public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $modelData = $lookedUpTable->find('all')
+                                    ->order($lookupModel.'.order');
+
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'Name');
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+        
+        if (!empty($modelData)) {
+            foreach ($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->name,
+                    $row->{$lookupColumn}
+                ];
+            }
+        }
+    }
+
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
     	if (empty($this->staffId)) {
