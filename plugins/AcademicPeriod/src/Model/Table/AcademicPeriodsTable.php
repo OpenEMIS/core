@@ -1009,6 +1009,23 @@ class AcademicPeriodsTable extends AppTable
             });
     }
 
+    public function findWorkingDayOfWeek(Query $query, array $options)
+    {
+        $workingDayOfWeek = $this->getWorkingDaysOfWeek();
+
+        $dayOfWeek = [];
+        foreach ($workingDayOfWeek as $index => $day) {
+            $dayOfWeek[] = [
+                'day_of_week' => $index + 1,
+                'day' => $day
+            ];
+        }
+        
+        return $query->formatResults(function (ResultSetInterface $results) use ($dayOfWeek) {
+            return $dayOfWeek;
+        });
+    }
+
     public function findDaysForPeriodWeek(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
