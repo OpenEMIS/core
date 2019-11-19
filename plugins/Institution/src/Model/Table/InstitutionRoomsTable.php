@@ -129,8 +129,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
-            ->notEmpty('room_type_id');
-        ;
+            ->notEmpty('room_type_id');        
     }
 
     public function validationSavingByAssociation(Validator $validator)
