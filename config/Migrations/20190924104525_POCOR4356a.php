@@ -19,7 +19,7 @@ class POCOR4356a extends AbstractMigration
                 'parent_id' => 1000,
                 '_view' => 'Students.StudentScheduleTimetable',
                 'order' => $uniqueId + 1,
-                'visible' => 1,
+                'visible' => 0,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -32,7 +32,7 @@ class POCOR4356a extends AbstractMigration
                 'parent_id' => 1000,
                 '_view' => 'Staff.ScheduleTimetable',
                 'order' => $uniqueId + 2,
-                'visible' => 1,
+                'visible' => 0,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
