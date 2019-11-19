@@ -14,6 +14,7 @@ use App\Controller\AppController;
 class ProfilesController extends AppController
 {
     public $activeObj = null;
+    const APPROVED = 1;
 
     private $redirectedViewFeature = [
         // student academic
@@ -226,6 +227,18 @@ class ProfilesController extends AppController
                 $this->Angular->addModules([
                     'staff.attendances.ctrl',
                     'staff.attendances.svc'
+                ]);
+                break;
+            case 'ScheduleTimetable':
+                $this->Angular->addModules([
+                    'timetable.ctrl',
+                    'timetable.svc'
+                ]);
+                break;
+            case 'StudentScheduleTimetable':
+                $this->Angular->addModules([
+                    'studenttimetable.ctrl',
+                    'studenttimetable.svc'
                 ]);
                 break;
         }
