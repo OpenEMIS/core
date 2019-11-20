@@ -31,7 +31,6 @@ class ImportStaffQualificationsTable extends AppTable
         $events['Model.import.onImportPopulateQualificationTitlesData'] = 'onImportPopulateQualificationTitlesData';
         $events['Model.import.onImportPopulateEducationFieldOfStudiesData'] = 'onImportPopulateEducationFieldOfStudiesData';
         $events['Model.import.onImportPopulateCountriesData'] = 'onImportPopulateCountriesData';
-        $events['Model.import.onImportPopulateAcademicPeriodsData'] = 'onImportPopulateAcademicPeriodsData';
         $events['Model.import.onImportPopulateQualificationSpecialisationsData'] = 'onImportPopulateQualificationSpecialisationsData';
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
         return $events;
@@ -102,25 +101,6 @@ class ImportStaffQualificationsTable extends AppTable
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
                                 ->select(['name', $lookupColumn])
-                                ->order($lookupModel.'.order');
-
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
-        if (!empty($modelData)) {
-            foreach ($modelData->toArray() as $row) {
-                $data[$columnOrder]['data'][] = [
-                    $row->name,
-                    $row->{$lookupColumn}
-                ];
-            }
-        }
-    }
-
-    public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $modelData = $lookedUpTable->find('all')
                                 ->order($lookupModel.'.order');
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
