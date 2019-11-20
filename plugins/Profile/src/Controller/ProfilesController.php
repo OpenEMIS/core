@@ -674,7 +674,7 @@ class ProfilesController extends AppController
        
         
         $shiftOptions = TableRegistry::get('Schedule.ScheduleIntervals')
-                ->getShiftOptions($academicPeriodId, false, $institutionId);
+                ->getStaffShiftOptions($academicPeriodId, false, $institutionId);
         
         $this->set('userId', $userId);
         $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);        
