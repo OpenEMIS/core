@@ -357,20 +357,6 @@ class QualificationsTable extends ControllerActionTable
 		$this->setupTabElements();
 	}
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($event->data['entity']['action_type']) {
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $data = $AcademicPeriods
-                    ->find()
-                    ->where([
-                        'AcademicPeriods.id' => $event->data['entity']['graduate_year']
-                    ])
-                    ->toArray();
-            $event->data['entity']['graduate_year'] = $data[0]->name;
-        }
-    }
-
     private function setupFields(Entity $entity)
     {
         $this->field('qualification_title_id', ['type' => 'select', 'entity' => $entity]);
