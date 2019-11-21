@@ -347,4 +347,29 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         return $shiftOptions;
     }
+    
+    public function getStaffShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId='')
+    {
+        $shiftOptions = $this->Shifts
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->select([
+                'id' => $this->Shifts->aliasField('id'),
+                'name' => 'ShiftOptions.name'
+            ])
+            ->contain('ShiftOptions')
+            ->where([
+                $this->Shifts->aliasField('academic_period_id') => $academicPeriodId,
+                $this->Shifts->aliasField('Institution_id') => $institutionId
+            ])
+            ->toArray();
+
+        if (!empty($shiftOptions) && $allShiftOption) {
+            $shiftOptions = ['-1' => '-- ' . __('All Shifts') . ' --'] + $shiftOptions;
+        }
+
+        return $shiftOptions;
+    }
 }
