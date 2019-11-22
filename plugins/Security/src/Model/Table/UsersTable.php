@@ -207,6 +207,7 @@ class UsersTable extends AppTable
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
         $query->find('notSuperAdmin');
+        $query->select($this->aliasField('IdentityTypes.name'));
         $query->contain(['MainNationalities', 'IdentityTypes']);
     }
 
