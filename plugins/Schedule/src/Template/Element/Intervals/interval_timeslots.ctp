@@ -92,7 +92,7 @@
                                                 echo $this->Form->input("$fieldPrefix.interval", [
                                                     'type' => 'number',
                                                     'label' => false,
-                                                    'onblur' => "$('#reload').val('changeInterval').click();"
+                                                    'onkeyup' => "if(this.value.length == 2) $('#reload').val('changeInterval').click();"
                                                 ]);
                                             ?>
                                         </td>
