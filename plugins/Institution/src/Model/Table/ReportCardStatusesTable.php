@@ -576,7 +576,13 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
-
+        $inValidTemplate = $this->ReportCards->checkInValidTemplate($params['report_card_id']);
+        
+        if ($inValidTemplate) {
+           $url = $this->url('index');
+            $this->Alert->warning('ReportCardStatuses.inValidTemplate');
+            return $this->controller->redirect($this->url('index')); 
+        }
         if ($hasTemplate) {
             $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
             $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
@@ -594,7 +600,13 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
-
+        $inValidTemplate = $this->ReportCards->checkInValidTemplate($params['report_card_id']);
+        
+        if ($inValidTemplate) {
+           $url = $this->url('index');
+            $this->Alert->warning('ReportCardStatuses.inValidTemplate');
+            return $this->controller->redirect($this->url('index')); 
+        }
         if ($hasTemplate) {
             $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
             $inProgress = $ReportCardProcesses->find()
