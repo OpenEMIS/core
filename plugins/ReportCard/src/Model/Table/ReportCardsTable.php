@@ -10,8 +10,6 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
-use Cake\I18n\Time;
-use Cake\I18n\Date;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardsTable extends ControllerActionTable
@@ -489,27 +487,6 @@ class ReportCardsTable extends ControllerActionTable
         }
 
         return $hasTemplate;
-    }
-
-    public function checkInValidTemplate($reportCardId = 0)
-    {
-        $inValidTemplate = false;
-
-        if (!empty($reportCardId)) {
-            $entity = $this->get($reportCardId);
-            $end_date = $entity->end_date->format('Y-m-d');
-            $date = Time::now()->format('Y-m-d');
-           // echo $date;die;
-            $date = date('Y-m-d');
-
-            if ($end_date < $date) {
-                $inValidTemplate = true;
-            } else {
-                $inValidTemplate = false;
-            }
-        }
-
-        return $inValidTemplate;
     }
 
     public function downloadTemplate()
