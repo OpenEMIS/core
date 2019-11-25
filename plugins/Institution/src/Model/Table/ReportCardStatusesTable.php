@@ -1072,10 +1072,10 @@ class ReportCardStatusesTable extends ControllerActionTable
 
             if (($entityAssessmentPeriods->count() > 0)) {
                 
-                 return true;
+                 return false;
             } else {
                 
-                 return false;
+                 return true;
             }
             
         }
