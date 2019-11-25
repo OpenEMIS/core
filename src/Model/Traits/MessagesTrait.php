@@ -765,6 +765,7 @@ trait MessagesTrait
             'email' => 'The Report Card will be sent in the background',
             'emailAll' => 'All Report Cards will be sent in the background',
             'emailInProgress' => 'There is already a email process sending in the background',
+            'inValidTemplate' => 'The Report Card cannot be generated because template end date is over'
         ],
         'RecipientPaymentStructures' => [
             'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
