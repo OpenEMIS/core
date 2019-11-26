@@ -122,7 +122,7 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
                 $this->aliasField('day_of_week') => $day_of_week,
                 $this->aliasField('institution_schedule_timeslot_id') => $institution_schedule_timeslot_id,
                 $this->aliasField('institution_schedule_timetable_id') => $institution_schedule_timetable_id,
-                $ScheduleCurriculumLessons->aliasField('institution_subject_id') => $institution_subject_id,
+                //$ScheduleCurriculumLessons->aliasField('institution_subject_id') => $institution_subject_id,
                 $ScheduleLessonRooms->aliasField('institution_room_id') => $institution_room_id
             ]);
         return $query;
