@@ -25,6 +25,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     vm.staffId = '';
     vm.academicPeriodId = '';
     vm.institutionId = '';
+    vm.scheduleIntervalDefaultId = '';
     vm.timetableData = {};
     vm.institutionClassData = {};
     vm.scheduleIntervalData = {};
@@ -88,6 +89,9 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                     vm.timetableCustomizeColors[value.customize_key] = value.customize_value;
                 });
                 console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
+                if(vm.scheduleIntervalDefaultId != ''){
+                    return TimetableSvc.getTimetableLessons(vm.scheduleIntervalDefaultId, vm.staffId);
+                }
                 return TimetableSvc.getTimetableLessons(vm.scheduleIntervalData[0].id, vm.staffId);
             }, vm.error)
             .then(function(allLessons) {
