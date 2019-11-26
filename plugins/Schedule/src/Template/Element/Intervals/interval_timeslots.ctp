@@ -149,11 +149,12 @@
         }
     });
 })(jQuery);
-    function changeIntervalInput(interval){
-       $(interval).donetyping(function(){
-         $('#reload').val('changeInterval').click();
-      });
-    }
+
+function changeIntervalInput(interval){
+   $(interval).donetyping(function(){
+     $('#reload').val('changeInterval').click();
+  });
+}
     
 </script>
 <?php elseif ($ControllerAction['action'] == 'edit') : ?>
