@@ -241,7 +241,8 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                 .then(function(response) {
                     console.log('curriculumlesson', response);
                     if(response[0].count > 0){
-                      vm.errorMessageCurriculum[key]='Subject Already exist in timeslot';
+                      //vm.errorMessageCurriculum[key]='Subject Already exist in timeslot';
+                      vm.errorMessageCurriculum[key]='Selected Room already occupied by another subject.';
                     }else{
                       vm.errorMessageCurriculum='';
                       TimetableSvc.saveLessonDetailCurriculumData(lessonDetail);  

@@ -19,15 +19,29 @@
             //'default' => $selectedInstitutionOptions,
         ));
         
-        echo $this->Form->input('shift', array(
-            'class' => 'form-control',
-            'label' => false,
-            'options' => $shiftOptions,
-            'url' => $baseUrl,
-            'data-named-group' => 'intitution_id',
-            'data-named-key' => 'shift',
-            'default' => $shiftDefaultId
-        ));
+        if(!empty($shiftOptions)){
+            echo $this->Form->input('shift', array(
+                'class' => 'form-control',
+                'label' => false,
+                'options' => $shiftOptions,
+                'url' => $baseUrl,
+                'data-named-group' => 'intitution_id',
+                'data-named-key' => 'shift',
+                'default' => $shiftDefaultId
+            ));
+        }
+        
+        if(!empty($scheduleIntervals)){
+            echo $this->Form->input('schedule_interval_id', array(
+                'class' => 'form-control',
+                'label' => false,
+                'options' => $scheduleIntervals,
+                'url' => $baseUrl,
+                'data-named-group' => 'shift',
+                'data-named-key' => 'schedule_interval_id',
+                'default' => $scheduleIntervalDefaultId
+            ));
+        }
     ?>
     </div>
 </div>  
