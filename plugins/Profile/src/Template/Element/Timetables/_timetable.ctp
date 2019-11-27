@@ -114,7 +114,7 @@ $this->end();
         width: 100%;
     }
 </style>
-<div class="" ng-init="$ctrl.shiftDefaultId=<?= $shiftDefaultId; ?>;$ctrl.institutionId=<?= $institutionDefaultId; ?>;$ctrl.academicPeriodId=<?= $academicPeriodId; ?>;$ctrl.staffId=<?= $userId; ?>;">
+<div class="" ng-init="$ctrl.shiftDefaultId=<?= $shiftDefaultId; ?>;$ctrl.institutionId=<?= $institutionDefaultId; ?>;$ctrl.academicPeriodId=<?= $academicPeriodId; ?>;$ctrl.staffId=<?= $userId; ?>;$ctrl.scheduleIntervalDefaultId=<?= $scheduleIntervalDefaultId;?>;">
 <div class="alert alert-info" ng-show="$ctrl.dayOfWeekList.length <= 0">There are no records.</div>                        
 <table id="tblTimetable" ng-if="$ctrl.tableReady" class="timetable-table" ng-show="$ctrl.dayOfWeekList.length > 0">   
                     <thead>
