@@ -25,6 +25,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     vm.staffId = '';
     vm.academicPeriodId = '';
     vm.institutionId = '';
+    vm.scheduleIntervalDefaultId = '';
     vm.timetableData = {};
     vm.institutionClassData = {};
     vm.scheduleIntervalData = {};
@@ -48,7 +49,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
 
     // ready
     angular.element(document).ready(function () {        
-        console.log('shiftDefaultId', vm.shiftDefaultId);
+        //console.log('shiftDefaultId', vm.shiftDefaultId);
 
         TimetableSvc.init(angular.baseUrl, $scope);
         UtilsSvc.isAppendLoader(true);
@@ -61,37 +62,40 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     // error
     vm.error = function (error) {
         AlertSvc.error($scope, error);
-        console.log('error', error);
+        //console.log('error', error);
         return $q.reject(error);
     };
     
     function timeTablePageLoad(){
         TimetableSvc.getIntervaltable(vm.shiftDefaultId, vm.academicPeriodId, vm.institutionId)
             .then(function(scheduleIntervalData) {
-                console.log('scheduleIntervalData', scheduleIntervalData);
+                //console.log('scheduleIntervalData', scheduleIntervalData);
                 vm.scheduleIntervalData = scheduleIntervalData;                
                 return TimetableSvc.getTimeslots(vm.scheduleIntervalData[0].id);
             }, vm.error)
             .then(function(timeslotsData) {
-                console.log('getTimeslots', timeslotsData);
+                //console.log('getTimeslots', timeslotsData);
                 vm.scheduleTimeslots = timeslotsData;
                 return TimetableSvc.getWorkingDayOfWeek();
             }, vm.error)
             .then(function(workingDayOfWeek) {
-                console.log('getWorkingDayOfWeek', workingDayOfWeek);
+                //console.log('getWorkingDayOfWeek', workingDayOfWeek);
                 vm.dayOfWeekList = workingDayOfWeek;
                 return TimetableSvc.getScheduleTimetableCustomizesTable(vm.institutionId, vm.academicPeriodId);               
             }, vm.error)
             .then(function(customizeColors) {
-                console.log('customizeColors', customizeColors);
+                //console.log('customizeColors', customizeColors);
                 angular.forEach(customizeColors, function(value, key){
                     vm.timetableCustomizeColors[value.customize_key] = value.customize_value;
                 });
-                console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
+                //console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
+                if(vm.scheduleIntervalDefaultId != ''){
+                    return TimetableSvc.getTimetableLessons(vm.scheduleIntervalDefaultId, vm.staffId);
+                }
                 return TimetableSvc.getTimetableLessons(vm.scheduleIntervalData[0].id, vm.staffId);
             }, vm.error)
             .then(function(allLessons) {
-                console.log('getTimetableLessons', allLessons);
+                //console.log('getTimetableLessons', allLessons);
                 vm.timetableLessons = allLessons;
             }, vm.error)
             .finally(function() {

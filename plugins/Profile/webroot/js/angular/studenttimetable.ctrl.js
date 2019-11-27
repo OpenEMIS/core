@@ -57,14 +57,14 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Stu
     // error
     vm.error = function (error) {
         AlertSvc.error($scope, error);
-        console.log('error', error);
+        //console.log('error', error);
         return $q.reject(error);
     };
     
     function timeTablePageLoad(){       
         StudentTimetableSvc.getTimetable(vm.timetableId)
             .then(function(timetableData) {
-                console.log('getTimetable', timetableData);
+                //console.log('getTimetable', timetableData);
                 vm.timetableData = timetableData;
                 vm.institutionClassData = timetableData.institution_class;
                 vm.scheduleIntervalData = timetableData.schedule_interval;
@@ -73,32 +73,32 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Stu
                 return StudentTimetableSvc.getTimeslots(vm.timetableData.institution_schedule_interval_id);
             }, vm.error)
             .then(function(timeslotsData) {
-                console.log('getTimeslots', timeslotsData);
+                ////console.log('getTimeslots', timeslotsData);
                 vm.scheduleTimeslots = timeslotsData;
 
                 return StudentTimetableSvc.getWorkingDayOfWeek();
             }, vm.error)
             .then(function(workingDayOfWeek) {
-                console.log('getWorkingDayOfWeek', workingDayOfWeek);
+                //console.log('getWorkingDayOfWeek', workingDayOfWeek);
                 vm.dayOfWeekList = workingDayOfWeek;
 
                 return StudentTimetableSvc.getTimetableLessons(vm.timetableData.id);
             }, vm.error)
             .then(function(allLessons) {
-                console.log('getTimetableLessons', allLessons);
+                ////console.log('getTimetableLessons', allLessons);
                 vm.timetableLessons = allLessons;
                 return TimetableSvc.getScheduleTimetableCustomizesTable(vm.institutionId, vm.academicPeriodId);               
             }, vm.error)
             .then(function(customizeColors) {
-                console.log('customizeColors', customizeColors);
+                //console.log('customizeColors', customizeColors);
                 angular.forEach(customizeColors, function(value, key){
                     vm.timetableCustomizeColors[value.customize_key] = value.customize_value;
                 });
-                console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
+                //console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
                 return StudentTimetableSvc.getEducationGrade(vm.timetableData.institution_class_id);
             }, vm.error)
             .then(function(educationGrades) {
-                console.log('getEducationGrade', educationGrades);
+                //console.log('getEducationGrade', educationGrades);
                 vm.educationGradeList = educationGrades;
                 vm.overviewData.education_grade_name = '';
 
@@ -113,26 +113,26 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Stu
                 return StudentTimetableSvc.getLessonType();
             })
             .then(function(lessonType) {
-                console.log('getLessonType', lessonType);
+                //console.log('getLessonType', lessonType);
                 vm.lessonType = lessonType;
                
                 return StudentTimetableSvc.getInstitutionRooms(vm.timetableData.institution_id);
             }, vm.error)
             
             .then(function(institutionRooms) {
-                console.log('getInstitutionRooms', institutionRooms);
+                //console.log('getInstitutionRooms', institutionRooms);
                 vm.institutionRooms = institutionRooms;
 
                 return StudentTimetableSvc.getTimetableStatus();
             }, vm.error)
             .then(function(timetableStatus) {
-                console.log('getTimetableStatus', timetableStatus);
+                //console.log('getTimetableStatus', timetableStatus);
                 vm.timetableStatus = timetableStatus;
-                //console.log('timetableDataDetails:', vm.timetableData);               
+                ////console.log('timetableDataDetails:', vm.timetableData);               
                 return StudentTimetableSvc.getInstitutionClassSubjects(vm.timetableData.institution_id, vm.timetableData.institution_class_id, vm.timetableData.academic_period_id);
             }, vm.error)
             .then(function(institutionClassSubjects) {
-                console.log('institutionClassSubjects:', institutionClassSubjects);
+                //console.log('institutionClassSubjects:', institutionClassSubjects);
                 vm.institutionClassSubjects = institutionClassSubjects;
             }, vm.error)
             .finally(function() {
