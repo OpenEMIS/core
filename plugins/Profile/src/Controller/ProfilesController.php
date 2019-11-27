@@ -671,13 +671,21 @@ class ProfilesController extends AppController
         $academicPeriodOptions =TableRegistry::get('AcademicPeriod.AcademicPeriods')
                  ->getYearList();
         
-       
-        
         $shiftOptions = TableRegistry::get('Schedule.ScheduleIntervals')
                 ->getStaffShiftOptions($academicPeriodId, false, $institutionId);
+        $intervals = TableRegistry::get('Schedule.ScheduleIntervals');
+        $scheduleIntervals = $intervals->find('list')
+        ->where([
+            $intervals->aliasField('academic_period_id') => $academicPeriodId,
+            $intervals->aliasField('institution_id') => $institutionId
+        ])
+        ->toArray();
         
         $this->set('userId', $userId);
-        $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);        
+        $this->set('selectedInstitutionOptions', $selectedInstitutionOptions); 
+        $this->set('scheduleIntervals', $scheduleIntervals) ;  
+        $scheduleIntervalDefaultId = (isset($this->request->query['schedule_interval_id']))?$this->request->query['schedule_interval_id']:key($scheduleIntervals);
+        $this->set('scheduleIntervalDefaultId', $scheduleIntervalDefaultId);
         $this->set('shiftOptions', $shiftOptions);        
         $shiftDefaultId = (isset($this->request->query['shift']))?$this->request->query['shift']:key($shiftOptions);
         $this->set('academicPeriodId', $academicPeriodId);
