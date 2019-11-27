@@ -15,9 +15,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
 {
     const DRAFT = 1;
     const PUBLISHED = 2;
-
     const DEFAULT = -1;
-
     private $_status = [];
 
     public function initialize(array $config)
@@ -503,12 +501,14 @@ class ScheduleTimetablesTable extends ControllerActionTable
         if (is_null($educationGradeId) || is_null($academicPeriodId)) {
             return [];
         }
-
+        
+        $institutionId = $this->Session->read('Institution.Institutions.id');
         $classOptions = $this->InstitutionClasses
             ->find('list')
             ->find('byGrades', ['education_grade_id' => $educationGradeId])
             ->where([
-                $this->InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId
+                $this->InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
+                $this->InstitutionClasses->aliasField('institution_id') => $institutionId
             ])
             ->group([$this->InstitutionClasses->aliasField('id')])
             ->toArray();
