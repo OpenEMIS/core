@@ -66,6 +66,8 @@ $this->end();
         right: 0;
     }
 
+    .rtl .splitter-filter .timetable-sub-overview > div { position:static;}
+
     .splitter-filter .lesson-form  {
         border: 1px solid #ddd;
         border-radius: 3px;
