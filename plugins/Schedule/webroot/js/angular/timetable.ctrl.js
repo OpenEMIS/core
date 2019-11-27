@@ -78,8 +78,8 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
 
     // ready
     angular.element(document).ready(function () {
-        console.log('action', vm.action);
-        console.log('timetableId', vm.timetableId);
+        //console.log('action', vm.action);
+        //console.log('timetableId', vm.timetableId);
 
         TimetableSvc.init(angular.baseUrl, $scope);
         UtilsSvc.isAppendLoader(true);
@@ -92,14 +92,14 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     // error
     vm.error = function (error) {
         AlertSvc.error($scope, error);
-        console.log('error', error);
+        //console.log('error', error);
         return $q.reject(error);
     };
     
     function timeTablePageLoad(){
         TimetableSvc.getTimetable(vm.timetableId)
             .then(function(timetableData) {
-                console.log('getTimetable', timetableData);
+                //console.log('getTimetable', timetableData);
                 vm.timetableData = timetableData;
                 vm.institutionClassData = timetableData.institution_class;
                 vm.scheduleIntervalData = timetableData.schedule_interval;
@@ -110,33 +110,33 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                 return TimetableSvc.getTimeslots(vm.timetableData.institution_schedule_interval_id);
             }, vm.error)
             .then(function(timeslotsData) {
-                console.log('getTimeslots', timeslotsData);
+                //console.log('getTimeslots', timeslotsData);
                 vm.scheduleTimeslots = timeslotsData;
 
                 return TimetableSvc.getWorkingDayOfWeek();
             }, vm.error)
             .then(function(workingDayOfWeek) {
-                console.log('getWorkingDayOfWeek', workingDayOfWeek);
+                //console.log('getWorkingDayOfWeek', workingDayOfWeek);
                 vm.dayOfWeekList = workingDayOfWeek;
 
                 return TimetableSvc.getTimetableLessons(vm.timetableData.id);
             }, vm.error)
             .then(function(allLessons) {
-                console.log('getTimetableLessons', allLessons);
+                //console.log('getTimetableLessons', allLessons);
                 vm.timetableLessons = allLessons;
                 return TimetableSvc.getScheduleTimetableCustomizesTable(vm.timetableId);
             }, vm.error)
             .then(function(customizeColors) {
-                console.log('customizeColors', customizeColors);
+                //console.log('customizeColors', customizeColors);
                 angular.forEach(customizeColors, function(value, key){
                     vm.customizeFormData[value.customize_key] = value.customize_value;
                     vm.timetableCustomizeColors[value.customize_key] = value.customize_value;
                 });
-                console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
+                //console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
                 return TimetableSvc.getEducationGrade(vm.timetableData.institution_class_id);
             }, vm.error)
             .then(function(educationGrades) {
-                console.log('getEducationGrade', educationGrades);
+                //console.log('getEducationGrade', educationGrades);
                 vm.educationGradeList = educationGrades;
                 vm.overviewData.education_grade_name = '';
 
@@ -151,26 +151,26 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                 return TimetableSvc.getLessonType();
             })
             .then(function(lessonType) {
-                console.log('getLessonType', lessonType);
+                //console.log('getLessonType', lessonType);
                 vm.lessonType = lessonType;
                
                 return TimetableSvc.getInstitutionRooms(vm.timetableData.institution_id);
             }, vm.error)
             
             .then(function(institutionRooms) {
-                console.log('getInstitutionRooms', institutionRooms);
+                //console.log('getInstitutionRooms', institutionRooms);
                 vm.institutionRooms = institutionRooms;
 
                 return TimetableSvc.getTimetableStatus();
             }, vm.error)
             .then(function(timetableStatus) {
-                console.log('getTimetableStatus', timetableStatus);
+                //console.log('getTimetableStatus', timetableStatus);
                 vm.timetableStatus = timetableStatus;
                 //console.log('timetableDataDetails:', vm.timetableData);               
                 return TimetableSvc.getInstitutionClassSubjects(vm.timetableData.institution_id, vm.timetableData.institution_class_id, vm.timetableData.academic_period_id);
             }, vm.error)
             .then(function(institutionClassSubjects) {
-                console.log('institutionClassSubjects:', institutionClassSubjects);
+                //console.log('institutionClassSubjects:', institutionClassSubjects);
                 vm.institutionClassSubjects = institutionClassSubjects;
             }, vm.error)
             .finally(function() {
@@ -208,13 +208,13 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     }
 
     vm.saveLessonDetails = function(lessonDetail, lessonType, key) {
-        console.log('lessonDetail', lessonDetail);
+        //console.log('lessonDetail', lessonDetail);
         
         var responseData;
         
         UtilsSvc.isAppendLoader(true);
         if (lessonType == vm.NON_CURRICULUM_LESSON) {
-            console.log('lessonDetail:', lessonDetail.schedule_non_curriculum_lesson);
+            //console.log('lessonDetail:', lessonDetail.schedule_non_curriculum_lesson);
             
             if(lessonDetail.schedule_non_curriculum_lesson.name === ""){  
                 vm.errorMessageNonCurriculum[key] = 'This field cannot be left empty';
@@ -223,7 +223,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             }else{
                 TimetableSvc.saveLessonDetailNonCurriculumData(lessonDetail)
                  .then(function(response) {
-                     console.log('non lesson', response);                    
+                     //console.log('non lesson', response);                    
                  })
                  .finally(function() {
                      UtilsSvc.isAppendLoader(false);
@@ -239,7 +239,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             }else{
                 TimetableSvc.checkCurriculumSubjectExistSameTimeslot(lessonDetail)
                 .then(function(response) {
-                    console.log('curriculumlesson', response);
+                    //console.log('curriculumlesson', response);
                     if(response[0].count > 0){
                       //vm.errorMessageCurriculum[key]='Subject Already exist in timeslot';
                       vm.errorMessageCurriculum[key]='Selected Room already occupied by another subject.';
@@ -257,7 +257,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     }
 
     vm.saveLessonSlot = function() {
-        console.log('saveLessonSlot', vm.currentSelectedCell);
+        //console.log('saveLessonSlot', vm.currentSelectedCell);
 
         var lessonData = {
             day_of_week: vm.currentSelectedCell.day_of_week.day_of_week,
@@ -277,12 +277,12 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     
     // button/change events
     vm.onUpdateOverviewData = function(field) {
-        console.log('onUpdateOverviewData', vm.overviewData);
+        //console.log('onUpdateOverviewData', vm.overviewData);
         vm.saveOverviewData(field);
     };
 
     vm.onUpdateLessonData = function(key, lessonType) {
-        console.log('saveLessonDetails', vm.currentLessonList[key]);
+        //console.log('saveLessonDetails', vm.currentLessonList[key]);
         vm.errorMessageCurriculum=[];
         vm.errorMessageNonCurriculum=[];
         vm.saveLessonDetails(vm.currentLessonList[key], lessonType, key);
@@ -290,7 +290,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     };
 
     vm.onDeleteLessonData = function(key) {
-        console.log('onDeleteLessonData', vm.currentLessonList[key]);
+        //console.log('onDeleteLessonData', vm.currentLessonList[key]);
         vm.currentLessonList.splice(key, 1);
     };
 
@@ -321,7 +321,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             vm.currentLessonList.push(vm.getEmptyLessonDetailObject(vm.selectedLessonType));
         }
 
-        console.log(vm.currentLessonList);
+        //console.log(vm.currentLessonList);
 
         vm.selectedLessonType = 0;
     };
@@ -359,7 +359,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
 
     vm.getClassName = function(timeslot, day) {
         return 'lesson-' + timeslot.id + '-' + day.day_of_week;
-    }
+    };
 
     vm.getLessonTitle = function(lessonTypeId) {
         for (var lesson in vm.lessonType) {
@@ -459,7 +459,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     vm.onSaveTitmetableCustomizeData = function() {
        //vm.timetable_header_background
        UtilsSvc.isAppendLoader(true);
-       console.log('customizeFormData', vm.customizeFormData);
+       //console.log('customizeFormData', vm.customizeFormData);
        TimetableSvc.saveTimetableCustomizeData(vm.timetableId, vm.institutionId, vm.academicPeriodId, vm.customizeFormData);
        timeTablePageLoad();
     };
