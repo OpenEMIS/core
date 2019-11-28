@@ -70,8 +70,13 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
         TimetableSvc.getIntervaltable(vm.shiftDefaultId, vm.academicPeriodId, vm.institutionId)
             .then(function(scheduleIntervalData) {
                 //console.log('scheduleIntervalData', scheduleIntervalData);
-                vm.scheduleIntervalData = scheduleIntervalData;                
-                return TimetableSvc.getTimeslots(vm.scheduleIntervalData[0].id);
+                vm.scheduleIntervalData = scheduleIntervalData;   
+                if(vm.scheduleIntervalDefaultId != null){
+                    return TimetableSvc.getTimeslots(vm.scheduleIntervalDefaultId);
+                }else{
+                    return TimetableSvc.getTimeslots(vm.scheduleIntervalData[0].id);
+                }
+                
             }, vm.error)
             .then(function(timeslotsData) {
                 //console.log('getTimeslots', timeslotsData);
@@ -89,13 +94,15 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                     vm.timetableCustomizeColors[value.customize_key] = value.customize_value;
                 });
                 //console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
-                if(vm.scheduleIntervalDefaultId != ''){
+                //console.log('scheduleIntervalDefaultId: ', vm.scheduleIntervalDefaultId);
+                if(vm.scheduleIntervalDefaultId != null){
                     return TimetableSvc.getTimetableLessons(vm.scheduleIntervalDefaultId, vm.staffId);
+                }else{
+                    return TimetableSvc.getTimetableLessons(vm.scheduleIntervalData[0].id, vm.staffId);
                 }
-                return TimetableSvc.getTimetableLessons(vm.scheduleIntervalData[0].id, vm.staffId);
             }, vm.error)
             .then(function(allLessons) {
-                //console.log('getTimetableLessons', allLessons);
+                console.log('getTimetableLessons', allLessons);
                 vm.timetableLessons = allLessons;
             }, vm.error)
             .finally(function() {

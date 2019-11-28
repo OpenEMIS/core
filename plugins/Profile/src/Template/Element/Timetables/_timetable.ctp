@@ -138,7 +138,7 @@ $this->end();
                                     
                                     <div ng-if="lessons.timeslot.start_time==timeslot.start_time && lessons.day_of_week==day.day_of_week">
                                         <div ng-repeat="(key, schedule) in lessons.schedule_lesson_details">
-                                            <div class="input-selection-inline" ng-show="schedule.schedule_curriculum_lesson.institution_subject.classes.length > 0 && schedule.schedule_curriculum_lesson.institution_subject.teachers.length > 0">                                                
+                                            <div class="input-selection-inline" ng-show="schedule.schedule_curriculum_lesson.institution_subject.classes.length > 0 && schedule.schedule_curriculum_lesson.institution_subject.teachers.length > 0 && schedule.schedule_curriculum_lesson.institution_subject.id == lessons._matchingData.InstitutionSubject.id">                                                
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only == 1"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.education_subject_code}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only ==null || schedule.schedule_curriculum_lesson.code_only == 0"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.name}}</strong></span>
                                                 <br ng-show="schedule.schedule_curriculum_lesson.institution_subject.classes.length > 1">
