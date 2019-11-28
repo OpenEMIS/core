@@ -12,6 +12,7 @@ use Cake\Routing\Router;
 
 class StaffController extends AppController
 {
+    const APPROVED = 1;
     private $features = [
         // General
         'Identities',
@@ -261,6 +262,12 @@ class StaffController extends AppController
                 $this->Angular->addModules([
                     'staff.attendances.ctrl',
                     'staff.attendances.svc'
+                ]);
+                break;
+            case 'ScheduleTimetable':
+                $this->Angular->addModules([
+                    'timetable.ctrl',
+                    'timetable.svc'
                 ]);
                 break;
         }
@@ -591,5 +598,65 @@ class StaffController extends AppController
                 }
             }
         }
+    }
+    
+    public function ScheduleTimetable()
+    { 
+        $session = $this->request->session();
+        if ($session->check('Staff.Staff.id')) {
+            $userId = $session->read('Staff.Staff.id');               
+        }else{
+            $userId = $this->Auth->user('id');
+        }
+                
+        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        
+        
+        $InstitutionStaff = $InstitutionStaff
+            ->find()
+            ->where([
+                'InstitutionStaff.staff_id' => $userId,
+                'InstitutionStaff.staff_status_id' => self::APPROVED
+            ])
+            ->hydrate(false)
+            ->first();
+        
+        $institutionId = $InstitutionStaff['institution_id'];
+        
+        $selectedInstitutionOptions = $Institutions
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->select([
+                'id' => $Institutions->aliasField('id'),
+                'name' => $Institutions->aliasField('name'),
+            ])
+            ->where([
+                $Institutions->aliasField('id') => $institutionId,
+            ])
+            ->hydrate(false)
+            ->toArray();       
+        
+        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+                ->getCurrent();
+        $academicPeriodOptions =TableRegistry::get('AcademicPeriod.AcademicPeriods')
+                 ->getYearList();
+        
+       
+        
+        $shiftOptions = TableRegistry::get('Schedule.ScheduleIntervals')
+                ->getShiftOptions($academicPeriodId, false, $institutionId);
+        
+        $this->set('userId', $userId);
+        $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);        
+        $this->set('shiftOptions', $shiftOptions);        
+        $shiftDefaultId = (isset($this->request->query['shift']))?$this->request->query['shift']:key($shiftOptions);
+        $this->set('academicPeriodId', $academicPeriodId);
+        $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
+        $this->set('shiftDefaultId', $shiftDefaultId);
+        $this->set('institutionDefaultId', key($selectedInstitutionOptions));
+        $this->set('ngController', 'TimetableCtrl as $ctrl');
     }
 }
