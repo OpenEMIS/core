@@ -118,7 +118,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function getTimeslots(scheduleIntervalId) {
-        console.log(scheduleIntervalId);
+        //console.log(scheduleIntervalId);
 
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.data)) {
