@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 
 class ScheduleLessonsTable extends ControllerActionTable
 {
+    const PUBLISH = 2;
     public function initialize(array $config)
     {
         $this->table('institution_schedule_lessons');
@@ -91,17 +92,19 @@ class ScheduleLessonsTable extends ControllerActionTable
     public function findAllLessonsByTimeSlotID(Query $query, array $options)
     {      
         $intervalId = $options['institution_schedule_interval_id'];
-        $lessonType = $options['lesson_type'];
         $staffId = $options['staff_id'];
-        $ScheduleTimeslots = TableRegistry::get('Schedule.ScheduleTimeslots')
-                ->find('list',['id'])
-                ->select('id')
-                ->where(['institution_schedule_interval_id'=>$intervalId])
+        $scheduleTimeTable = TableRegistry::get('Schedule.ScheduleTimetables')
+                ->find()
+                ->where(['institution_schedule_interval_id'=>$intervalId,'status'=>  self::PUBLISH])
                 ->hydrate(false)
-                ->toArray();
+                ->first();
         
-        $ScheduleTimeslotsId = implode(',', $ScheduleTimeslots);
+        $timetableId = 0;
         
+        if(!empty($scheduleTimeTable['id'])){
+            $timetableId = $scheduleTimeTable['id'];
+        }
+                
         $query
             ->contain([
                 'Timeslots',
@@ -112,17 +115,14 @@ class ScheduleLessonsTable extends ControllerActionTable
                     'InstitutionRooms'
                 ]
             ])
-            ->matching('ScheduleLessonDetails', function(\Cake\ORM\Query $q) use ($lessonType)  {
-                return $q->where(['ScheduleLessonDetails.lesson_type' => $lessonType]);
-            })
             ->matching('ScheduleLessonDetails.ScheduleCurriculumLessons.InstitutionSubject.Teachers', function(\Cake\ORM\Query $q) use ($staffId) {
                 return $q->where(['InstitutionSubjectStaff.staff_id' => $staffId]);
             })
             ->where([
-                $this->aliasField('institution_schedule_timeslot_id IN') => $ScheduleTimeslotsId,
+                $this->aliasField('institution_schedule_timetable_id') => $timetableId,
                 
             ]);
-        
+       
         return $query;
     } 
     
