@@ -1350,8 +1350,10 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
-
-        return $query
+        $staffId = $options['user']['id'];
+        $isStaff = $options['user']['is_staff'];
+        
+        $query
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('name')
@@ -1361,6 +1363,13 @@ class InstitutionClassesTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $academicPeriodId
             ])
             ->order([$this->aliasField('name')]);
+        if($isStaff){
+            $query->where([
+                $this->aliasField('staff_id') => $staffId
+            ]);
+        }
+
+        return $query;
     }
 
     public function getSubjectClasses($institutionId, $academicPeriodId, $gradeId, $subjectId)
