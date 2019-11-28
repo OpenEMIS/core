@@ -407,11 +407,9 @@ class StudentAttendancesTable extends ControllerActionTable
 
                                 if (isset($this->request) && ('excel' === $this->request->pass[0])) {
                                     $row->name = $row['user']['openemis_no'] . ' - ' . $row['user']['first_name'] . ' ' . $row['user']['last_name'];
-                                    $row->week_attendance_status_monday = $studentAttenanceData[$studentId]['Monday'][1];
-                                    $row->week_attendance_status_tuesday = $studentAttenanceData[$studentId]['Tuesday'][1];
-                                    $row->week_attendance_status_wednesday = $studentAttenanceData[$studentId]['Wednesday'][1];
-                                    $row->week_attendance_status_thursday = $studentAttenanceData[$studentId]['Thursday'][1];
-                                    $row->week_attendance_status_friday = $studentAttenanceData[$studentId]['Friday'][1];
+                                    foreach ($studentAttenanceData[$studentId] as $key => $value) {
+                                        $row->{'week_attendance_status_'.$key} = $value[1];
+                                    }
                                 }
 
                             }
@@ -486,36 +484,31 @@ class StudentAttendancesTable extends ControllerActionTable
 
         if ($day_id == -1) {
 
-            $newArray[] = [
-                'key' => 'StudentAttendances.week_attendance_status_monday',
-                'field' => 'week_attendance_status_monday',
-                'type' => 'string',
-                'label' => 'Monday'
-            ];
-            $newArray[] = [
-                'key' => 'StudentAttendances.week_attendance_status_tuesday',
-                'field' => 'week_attendance_status_tuesday',
-                'type' => 'string',
-                'label' => 'Tuesday'
-            ];
-            $newArray[] = [
-                'key' => 'StudentAttendances.week_attendance_status_wednesday',
-                'field' => 'week_attendance_status_wednesday',
-                'type' => 'string',
-                'label' => 'Wednesday'
-            ];
-            $newArray[] = [
-                'key' => 'StudentAttendances.week_attendance_status_thursday',
-                'field' => 'week_attendance_status_thursday',
-                'type' => 'string',
-                'label' => 'Thursday'
-            ];
-            $newArray[] = [
-                'key' => 'StudentAttendances.week_attendance_status_friday',
-                'field' => 'week_attendance_status_friday',
-                'type' => 'string',
-                'label' => 'Friday'
-            ];
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+            $daysPerWeek = $ConfigItems->value('days_per_week');
+
+            $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+            $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
+                ->where([
+                    'ConfigItemOptions.option_type' =>'first_day_of_week',
+                    'ConfigItemOptions.visible' => 1
+                ])
+                ->toArray();
+
+                $schooldays = [];
+                for ($i = 0; $i < $daysPerWeek; ++$i) {
+                    $schooldays[] = ($firstDayOfWeek + 7 + $i) % 7;
+                }
+               
+               foreach ($schooldays as $key => $value) {
+                    $newArray[] = [
+                        'key' => 'StudentAttendances.week_attendance_status_'.$options[$value],
+                        'field' => 'week_attendance_status_'.$options[$value],
+                        'type' => 'string',
+                        'label' => $options[$value]
+                    ];
+               }
         } else {
             $newArray[] = [
                 'key' => 'StudentAttendances.attendance',
