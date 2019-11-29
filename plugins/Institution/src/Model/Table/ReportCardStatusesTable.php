@@ -576,8 +576,16 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
-
+        
         if ($hasTemplate) {
+             $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id']);
+                
+            if ($checkReportCard) {
+                $this->Alert->warning('ReportCardStatuses.checkReportCardTemplatePeriod');
+               return $this->controller->redirect($this->url('index'));
+               die;
+            }
+
             $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
             $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
             $this->Alert->warning('ReportCardStatuses.generate');
@@ -594,29 +602,26 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
-
+        
         if ($hasTemplate) {
-            $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
-            $inProgress = $ReportCardProcesses->find()
-                ->where([
-                    $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
-                    $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id']
-                ])
-                ->count();
-       
-            
-            
-
-            if (!$inProgress) {
-                
-               $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id']);
+            $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id']);
                 
                if ($checkReportCard) {
                    $this->Alert->warning('ReportCardStatuses.checkReportCardTemplatePeriod');
                   return $this->controller->redirect($this->url('index'));
                   die;
                }
-                
+
+            $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
+            $inProgress = $ReportCardProcesses->find()
+                ->where([
+                    $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
+                    $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id']
+                ])
+                ->count();      
+                        
+
+            if (!$inProgress) {                   
                 $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->Alert->warning('ReportCardStatuses.generateAll');
