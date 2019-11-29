@@ -500,15 +500,18 @@ class StudentAttendancesTable extends ControllerActionTable
                 for ($i = 0; $i < $daysPerWeek; ++$i) {
                     $schooldays[] = ($firstDayOfWeek + 7 + $i) % 7;
                 }
+
+                if (!empty($schooldays)) {
                
-               foreach ($schooldays as $key => $value) {
-                    $newArray[] = [
-                        'key' => 'StudentAttendances.week_attendance_status_'.$options[$value],
-                        'field' => 'week_attendance_status_'.$options[$value],
-                        'type' => 'string',
-                        'label' => $options[$value]
-                    ];
-               }
+                   foreach ($schooldays as $key => $value) {
+                        $newArray[] = [
+                            'key' => 'StudentAttendances.week_attendance_status_'.$options[$value],
+                            'field' => 'week_attendance_status_'.$options[$value],
+                            'type' => 'string',
+                            'label' => $options[$value]
+                        ];
+                   }
+                }
         } else {
             $newArray[] = [
                 'key' => 'StudentAttendances.attendance',
