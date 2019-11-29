@@ -509,6 +509,31 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.Subjects'],
                     'params' => ['plugin' => 'Institution']
                 ],
+                
+                'Institution.Schedules' => [
+                    'title' => 'Schedules',
+                    'parent' => 'Institution.Academic',
+                    'link' => false
+                ],
+                
+                'Institutions.ScheduleTimetableOverview' => [
+                    'title' => 'Timetables',
+                    'parent' => 'Institution.Schedules',
+                    'selected' => ['Institutions.ScheduleTimetableOverview', 'Institutions.ScheduleTimetable'],
+                    'params' => ['plugin' => 'Institution']
+                ],
+                'Institutions.ScheduleIntervals' => [
+                    'title' => 'Intervals',
+                    'parent' => 'Institution.Schedules',
+                    'selected' => ['Institutions.ScheduleIntervals'],
+                    'params' => ['plugin' => 'Institution']
+                ],
+                'Institutions.ScheduleTerms' => [
+                    'title' => 'Terms',
+                    'parent' => 'Institution.Schedules',
+                    'selected' => ['Institutions.ScheduleTerms'],
+                    'params' => ['plugin' => 'Institution']
+                ],
 
                 'Institutions.Textbooks' => [
                     'title' => 'Textbooks',
@@ -536,6 +561,17 @@ class NavigationComponent extends Component
                         'selected' => ['Institutions.FeederIncomingInstitutions'],
                         'params' => ['plugin' => 'Institution']
                     ],
+                // 'Institution.Schedules' => [
+                //     'title' => 'Schedules',
+                //     'parent' => 'Institution.Feeders',
+                //     'link' => false
+                // ],
+                // 'Institutions.ScheduleTerms' => [
+                //     'title' => 'Terms',
+                //     'parent' => 'Institution.Academic',
+                //     'selected' => ['Institutions.ScheduleTerms'],
+                //     'params' => ['plugin' => 'Institution']
+                // ],
 
             'Institutions.Students.index' => [
                 'title' => 'Students',
@@ -941,6 +977,12 @@ class NavigationComponent extends Component
                     'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentRisks', 'Students.Outcomes', 'Institutions.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit',
                     'Students.Competencies']
             ],
+            'Students.StudentScheduleTimetable' => [
+                'title' => 'Timetables',
+                'parent' => 'Institutions.Students.index',
+                'selected' => ['Students.StudentScheduleTimetable'],
+                'params' => ['plugin' => 'Student']
+            ],
             'Students.Employments' => [
                 'title' => 'Professional',
                 'parent' => 'Institutions.Students.index',
@@ -1023,6 +1065,12 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications', 'Institutions.StaffTrainingResults', 'Institutions.CourseCatalogue', 'Staff.Courses'],
+            ],
+            'Staff.ScheduleTimetable' => [
+                'title' => 'Timetables',
+                'parent' => 'Institutions.Staff.index',
+                'selected' => ['Staff.ScheduleTimetable'],
+                'params' => ['plugin' => 'Staff']
             ],
             'Staff.Healths' => [
                 'title' => 'Health',
@@ -1130,6 +1178,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Profiles',
                 'link' => false,
             ],
+
                 'Profiles.StaffEmploymentStatuses' => [
                     'title' => 'Career',
                     'parent' => 'Profiles.Staff',
@@ -1147,6 +1196,12 @@ class NavigationComponent extends Component
                     'parent' => 'Profiles.Staff',
                     'params' => ['plugin' => 'Profile'],
                     'selected' => ['Profiles.TrainingNeeds', 'Profiles.TrainingResults', 'Profiles.Courses']
+                ],
+                'Profiles.ScheduleTimetable' => [
+                        'title' => 'Timetables',
+                        'parent' => 'Profiles.Staff',
+                        'selected' => ['Profiles.ScheduleTimetable'],
+                        'params' => ['plugin' => 'Profile']
                 ],
         ];
         return $navigation;
@@ -1172,6 +1227,12 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Profile'],
                     'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours',
                         'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes']
+                ],
+                'Profiles.StudentScheduleTimetable' => [
+                        'title' => 'Timetables',
+                        'parent' => 'Profiles.Student',
+                        'selected' => ['Profiles.StudentScheduleTimetable'],
+                        'params' => ['plugin' => 'Profile']
                 ],
                 'Profiles.StudentBankAccounts' => [
                     'title' => 'Finance',
