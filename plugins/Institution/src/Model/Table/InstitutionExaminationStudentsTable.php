@@ -428,7 +428,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                     'keyField' => 'special_need_type_id',
                     'valueField' => 'special_need_type.name'
                 ])
-                ->contain('SpecialNeedTypes')
+                ->contain('SpecialNeedsTypes')
                 ->where([$ExaminationCentreSpecialNeeds->aliasField('examination_centre_id') => $examinationCentreId])
                 ->toArray();
 
@@ -488,7 +488,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         'InstitutionExaminationStudents.examination_id' => $examinationId,
                         'InstitutionExaminationStudents.student_id = '.$ClassStudents->aliasField('student_id')
                     ])
-                    ->contain('Users.SpecialNeeds.SpecialNeedTypes')
+                    ->contain('Users.SpecialNeeds.SpecialNeedsTypes')
                     ->leftJoinWith('Users.SpecialNeeds')
                     ->where([
                         $ClassStudents->aliasField('institution_id') => $this->institutionId,
