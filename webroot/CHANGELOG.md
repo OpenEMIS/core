@@ -1,3 +1,6 @@
+### [3.45.0] - 2019-11-28
+- Implemented lesson timetable feature: Institution > Academic > Schedules
+
 ### [3.44.1] - 2019-11-01
 - Bug fix on Attendance: Changes made in Attendace not reflected in individual student profile.
 - Bug Fix on Competencies: Not availabe in student profile > academic
