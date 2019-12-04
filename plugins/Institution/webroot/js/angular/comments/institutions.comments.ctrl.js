@@ -135,7 +135,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             pagination: true,
             paginationPageSize: 10,
             maxBlocksInCache: 1,
-            cacheBlockSize: 20,
+            cacheBlockSize: 10,
             onGridSizeChanged: function(e) {
                 this.api.sizeColumnsToFit();
             },
