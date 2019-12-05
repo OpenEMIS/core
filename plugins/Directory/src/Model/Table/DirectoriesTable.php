@@ -412,8 +412,20 @@ class DirectoriesTable extends ControllerActionTable
             $this->field('openemis_no', ['user_type' => $userType]);
             $this->addCustomUserBehavior($userType);
         } elseif ($this->action == 'view') {
-            $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
-            $this->addCustomUserBehavior($userType);
+            $encodedParam = $this->request->params['pass'][1];
+            $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
+            $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
+            
+            if ($userInfo->is_student) {
+                $userType = self::STUDENT;
+                $this->addCustomUserBehavior($userType);
+            } elseif ($userInfo->is_staff) {
+                $userType = self::STAFF;
+                $this->addCustomUserBehavior($userType);
+            } elseif ($userInfo->is_guardian) {
+                $userType = self::GUARDIAN;
+                $this->addCustomUserBehavior($userType);
+            }
         }
     }
     
