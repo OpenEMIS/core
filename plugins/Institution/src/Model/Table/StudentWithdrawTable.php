@@ -128,8 +128,7 @@ class StudentWithdrawTable extends ControllerActionTable
         Log::write('debug', $existingStudentEntity);
 
         if ($existingStudentEntity) {
-            $StudentStatusUpdateData = $StudentStatusUpdates->find()->where(['id' => $entity->id])->first();
-            $existingStudentEntity->student_status_id = $StudentStatusUpdateData->status_id;
+            $existingStudentEntity->student_status_id = $statuses['WITHDRAWN'];
             $Students->save($existingStudentEntity);
         }
 
