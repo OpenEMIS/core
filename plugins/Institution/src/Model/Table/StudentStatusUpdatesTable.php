@@ -16,6 +16,8 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     const MAX_PROCESSES = 1;
     const NOT_EXECUTED = 1;
     const EXECUTED = 2;
+    const WITHDRAWN = 4;
+
     public function initialize(array $config)
     {
         $this->table('student_status_updates');
@@ -102,7 +104,8 @@ class StudentStatusUpdatesTable extends ControllerActionTable
                 ->find()
                 ->where([
                     $this->aliasField('effective_date <= ') => $today,
-                    $this->aliasField('execution_status') => self::NOT_EXECUTED
+                    $this->aliasField('execution_status') => self::NOT_EXECUTED,
+                    $this->aliasField('status_id') => self::WITHDRAWN,
                 ])
                 ->order(['created' => 'asc']);
             if ($first) {
