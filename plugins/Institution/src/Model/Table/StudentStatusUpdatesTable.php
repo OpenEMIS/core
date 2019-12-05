@@ -105,7 +105,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
                 ->where([
                     $this->aliasField('effective_date <= ') => $today,
                     $this->aliasField('execution_status') => self::NOT_EXECUTED,
-                    $this->aliasField('status_id') => self::WITHDRAWN,
+                    $this->aliasField('status_id') => self::WITHDRAWN
                 ])
                 ->order(['created' => 'asc']);
             if ($first) {
