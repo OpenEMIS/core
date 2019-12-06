@@ -120,7 +120,7 @@ class StudentWithdrawTable extends ControllerActionTable
             $Students->aliasField('student_id') => $entity->security_user_id,
             $Students->aliasField('academic_period_id') => $entity->academic_period_id,
             $Students->aliasField('education_grade_id') => $entity->education_grade_id,
-            $Students->aliasField('student_status_id') => $statuses['CURRENT']
+            $Students->aliasField('student_status_id') => $statuses['WITHDRAWN']
         ])
         ->first();
 
