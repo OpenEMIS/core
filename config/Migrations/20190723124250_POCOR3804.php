@@ -27,8 +27,8 @@ class POCOR3804 extends AbstractMigration
         $this->execute('UPDATE security_users SET 
             identity_number = (SELECT number FROM user_identities 
             WHERE security_user_id = security_users.id AND 
-            user_identities.identity_type_id = security_users.identity_type_id AND number <> ""
-            GROUP BY number) 
+            user_identities.identity_type_id = security_users.identity_type_id
+            AND number <> "" ORDER BY user_identities.id DESC LIMIT 1) 
             WHERE security_users.identity_number=""');
     }
 
