@@ -18,6 +18,5 @@ class ExaminationCentreSpecialNeedsTable extends AppTable {
         $this->belongsTo('SpecialNeedsTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'foreignKey' => 'special_need_type_id']);
 
         $this->addBehavior('CompositeKey');
-        //echo "<pre>";print_r($this);die;
     }
 }
