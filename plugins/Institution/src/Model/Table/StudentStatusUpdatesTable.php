@@ -73,7 +73,9 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 
     public function afterSave()
     {
+        $this->log('=======>Before triggerUpdateStudentStatusShell', 'debug');
         $this->triggerUpdateStudentStatusShell();
+        $this->log(' <<<<<<<<<<======== After triggerUpdateStudentStatusShell', 'debug');
     }
 
     public function onGetExecutionStatus(Event $event, Entity $entity)
