@@ -259,7 +259,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                     'keyField' => 'special_need_type_id',
                     'valueField' => 'special_need_type.name'
                 ])
-                ->contain('SpecialNeedTypes')
+                ->contain('SpecialNeedsTypes')
                 ->where([$ExaminationCentreSpecialNeeds->aliasField('examination_centre_id') => $examinationCentreId])
                 ->toArray();
 
@@ -325,7 +325,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                         'ExaminationCentresExaminationsStudents.examination_id' => $examinationId,
                         'ExaminationCentresExaminationsStudents.student_id = '.$InstitutionStudents->aliasField('student_id')
                     ])
-                    ->contain('Users.SpecialNeeds.SpecialNeedTypes')
+                    ->contain('Users.SpecialNeeds.SpecialNeedsTypes')
                     ->leftJoinWith('Users.SpecialNeeds')
                     ->where([
                         $InstitutionStudents->aliasField('institution_id') => $institutionId,
