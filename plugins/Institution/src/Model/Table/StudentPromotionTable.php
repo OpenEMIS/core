@@ -1159,7 +1159,7 @@ class StudentPromotionTable extends AppTable
                     $currentData = $this->Session->read($sessionKey);
                     $studentStatusId = $currentData->student_status_id;
 
-                    if (in_array($studentStatusId, [$this->statuses['PROMOTED'], $this->statuses['REPEATED'], $this->statuses['GRADUATED']])) {
+                    if (in_array($studentStatusId, [$this->statuses['PROMOTED'], $this->statuses['REPEATED']])) {
                         $buttons[0] = $saveAsDraftButton;
                         $buttons[1] = $confirmButton;
                         $buttons[2] = $cancelButton;
