@@ -1,3 +1,15 @@
+### [3.45.1] - 2019-12-06
+- Implemented indication to identify if user is a staff/student  in Institution > Add Students/Staff
+- Implemented sort button in Institution > Students > Academic > Programme
+- Bug fixed on Administration > Examinations 
+- Bug fixed on updating Title and Footer Administration > System Setup > System Configurations > System 
+- Bug fixed on displaying custom fields in Directory > General > User Overview
+- Bug fixed on Institution > Report Card > Statuses
+- Bug fixed on Institution > Staff > Career > Leave 
+- Bug fixed on repeating grade in transferred school
+- Bug fixed on Institution > Student Promotion/Repeat process
+- Bug fixed on Institution > Attendance > Staff 5 minutes interval time
+
 ### [3.45.0] - 2019-11-28
 - Implemented lesson timetable feature: Institution > Academic > Schedules
 
