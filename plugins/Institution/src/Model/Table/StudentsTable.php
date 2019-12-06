@@ -1147,9 +1147,11 @@ class StudentsTable extends ControllerActionTable
         // check if student exists in current year
         $academicPeriodId = ($student->has('academic_period_id'))? $student->academic_period_id: null;
         $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-        if ($academicPeriodId != $currentAcademicPeriod) {
-            return false;
-        }
+        
+        // POCOR-5003
+        //if ($academicPeriodId != $currentAcademicPeriod) {
+            //return false;
+        //}
 
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $studentStatusList = array_flip($StudentStatuses->findCodeList());

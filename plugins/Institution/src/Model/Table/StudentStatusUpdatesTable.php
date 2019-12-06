@@ -73,7 +73,9 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 
     public function afterSave()
     {
+        $this->log('=======>Before triggerUpdateStudentStatusShell', 'debug');
         $this->triggerUpdateStudentStatusShell();
+        $this->log(' <<<<<<<<<<======== After triggerUpdateStudentStatusShell', 'debug');
     }
 
     public function onGetExecutionStatus(Event $event, Entity $entity)
@@ -98,10 +100,16 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $today = $today->format('Y-m-d');
         
         if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
+            Log::write('debug', 'End date');
+            Log::write('debug', $academicPeriodEndDate);
+             Log::write('debug', 'Start date');
+             Log::write('debug', $academicPeriodEffectiveDate);
+             Log::write('debug', 'Today date');
+             Log::write('debug', $today);
             $query = $this
                 ->find()
                 ->where([
-                    $this->aliasField('effective_date <= ') => Time::now(),
+                    $this->aliasField('effective_date <= ') => $today,
                     $this->aliasField('execution_status') => self::NOT_EXECUTED
                 ])
                 ->order(['created' => 'asc']);
