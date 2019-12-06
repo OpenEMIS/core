@@ -664,7 +664,9 @@ class IndividualPromotionTable extends ControllerActionTable
             $existingClassStudent->student_status_id = $statusToUpdate;
         }
         // End
-
+        $this->log($existingInstitutionStudent, 'debug');
+        $this->log($newInstitutionStudent, 'debug');
+        
         if ($this->save($existingInstitutionStudent)) {
             if ($this->save($newInstitutionStudent)) {
                 // update old class if exists
@@ -676,6 +678,9 @@ class IndividualPromotionTable extends ControllerActionTable
                     $InstitutionClassStudents->autoInsertClassStudent($newClassStudent);
                 }
                 
+                $this->log($studentStatusUpdatesObj, 'debug');
+                
+
                 // Save record in the studentStatusUpdates
                 $studentStatusUpdates->save($studentStatusUpdatesObj);
                 
