@@ -15,8 +15,9 @@ class ExaminationCentreSpecialNeedsTable extends AppTable {
     {
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
-        $this->belongsTo('SpecialNeedTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes']);
+        $this->belongsTo('SpecialNeedsTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'foreignKey' => 'special_need_type_id']);
 
         $this->addBehavior('CompositeKey');
+        //echo "<pre>";print_r($this);die;
     }
 }
