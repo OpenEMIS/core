@@ -1443,4 +1443,17 @@ class RecordBehavior extends Behavior
         }
         return '';
     }
+
+    private function coordinates($data, $fieldInfo, $options = [])
+    {
+        $coordinates = '';
+
+        if (!empty($data[$fieldInfo['id']])) {
+            $coordinates = preg_replace('/[{}""]/', '', $data[$fieldInfo['id']]);
+            $coordinates = preg_replace('/,/', ' | ', $coordinates);
+        }
+
+        return $coordinates;
+    }
+
 }

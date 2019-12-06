@@ -454,6 +454,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var timeInputElement = document.createElement('input');
         timeInputElement.setAttribute('class', 'form-control');
         if (isDisabled) timeInputElement.setAttribute('disabled', true); // for styling ui
+        timeInputElement.setAttribute('readonly', 'readonly');
         var timeSpanElement = document.createElement('span');
         timeSpanElement.setAttribute('class', (isDisabled) ? 'input-group-addon disabled' : 'input-group-addon'); // for styling ui
         var timeIconElement = document.createElement('i');
@@ -463,7 +464,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             timeInputElement.setAttribute("class", "form-control form-error");
         }
         setTimeout(function(event) {
-            var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time});
+            var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time, showInputs: true});
             $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
                 if (params.value[timeKey] == null) {

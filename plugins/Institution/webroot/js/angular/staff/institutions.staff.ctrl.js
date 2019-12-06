@@ -197,7 +197,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 'date_of_birth': 'Date Of Birth',
                 'nationality_name': 'Nationality',
                 'identity_type_name': 'Identity Type',
-                'identity_number': 'Identity Number'
+                'identity_number': 'Identity Number',
+                'account_type': 'Account Type'
             };
             promises[1] = InstitutionsStaffSvc.translate(translateFields);
 
@@ -351,7 +352,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                    {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
                 enableColResize: false,
@@ -657,6 +659,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function processStaffRecord(staffRecords, params, totalRowCount) {
+        console.log(staffRecords);
         for(var key in staffRecords) {
             staffRecords[key]['institution_name'] = '-';
             staffRecords[key]['academic_period_name'] = '-';
@@ -676,6 +679,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
             staffRecords[key]['date_of_birth'] = InstitutionsStaffSvc.formatDate(staffRecords[key]['date_of_birth']);
             staffRecords[key]['gender_name'] = staffRecords[key]['gender']['name'];
+            if (staffRecords[key]['is_student'] == 1 && staffRecords[key]['is_staff'] == 1) {
+                staffRecords[key]['account_type'] = 'Student, Staff';
+            } else if (staffRecords[key]['is_student'] == 1 && staffRecords[key]['is_staff'] == 0) {
+                staffRecords[key]['account_type'] = 'Student';
+            } else if (staffRecords[key]['is_student'] == 0 && staffRecords[key]['is_staff'] == 1) {
+                staffRecords[key]['account_type'] = 'Staff';
+            }
 
             if (!staffRecords[key].hasOwnProperty('name')) {
                 staffRecords[key]['name'] = '';
