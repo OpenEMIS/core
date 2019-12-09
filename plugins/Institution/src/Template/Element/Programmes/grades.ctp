@@ -1,5 +1,21 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
+<?php
+
+if ($action == 'add') : ?>
+<div class="input select required">
+    <label><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
+    <?php         
+        echo $this->Form->select(
+            "grades.education_grade_id", 
+            $attr['data'],
+            [
+                'empty' => '-- Select --',
+                'onchange'=>"$('#reload').val('changeEducationGradeId').click();return false;",                            
+            ]
+        );         
+?>
+
 <?php if ($action == 'add') : ?>
 
 <div class="input clearfix">
