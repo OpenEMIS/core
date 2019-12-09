@@ -130,7 +130,7 @@
 						</td>
 						<td><?php 
 							if (!empty($obj->user->identity_number)) {
-								if ($configureStudentName == 2) {
+								if ($configureStudentName) {
 									echo $obj->user->identity_number.' - '.$obj->user->name;
 								} else {
 									echo $obj->user->identity_number.' - '.$obj->user->first_name.' '.$obj->user->last_name;
