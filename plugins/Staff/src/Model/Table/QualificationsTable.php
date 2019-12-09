@@ -60,13 +60,13 @@ class QualificationsTable extends ControllerActionTable
 			'actions.download.show',
 			true
 		);
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStaffQualifications']);
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
-            ->requirePresence('qualification_level')
             ->requirePresence('qualification_country_id')
             ->allowEmpty('graduate_year')
 			->add('graduate_year', 'ruleNumeric', [
@@ -97,7 +97,7 @@ class QualificationsTable extends ControllerActionTable
     {
         $query->contain(['QualificationTitles.QualificationLevels']);
     }
-
+    
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'qualification_level') {
