@@ -530,6 +530,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $entity->class_name = implode(', ', (new Collection($entity->classes))->extract('name')->toArray());
         $this->fields['students']['data']['students'] = $entity->subject_students;
         $this->fields['past_teachers']['data'] = $this->getPastTeachers($entity);
+
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $configureStudentName = $ConfigItems->value("configure_student_name");
+        $this->fields['students']['data']['configure_student_name'] = $configureStudentName;
         return $entity;
     }
 
