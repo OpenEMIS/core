@@ -38,14 +38,14 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $SpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments');
-        $SpecialNeedTypes = TableRegistry::get('SpecialNeeds.SpecialNeedTypes');
+        $SpecialNeedsTypes = TableRegistry::get('SpecialNeeds.SpecialNeedsTypes');
         $SpecialNeedDifficulties = TableRegistry::get('SpecialNeeds.SpecialNeedDifficulties');
 
         $SpecialNeedsStudents = $SpecialNeedsAssessments
             ->find()
             ->select([
                 $SpecialNeedsAssessments->aliasField('security_user_id'),
-                'special_need_name' => $SpecialNeedTypes->aliasField('name'),
+                'special_need_name' => $SpecialNeedsTypes->aliasField('name'),
                 $SpecialNeedsAssessments->aliasField('comment'),
                 'date_of_assessment' => $SpecialNeedsAssessments->aliasField('date'),
                 'special_need_difficulty_id' => $SpecialNeedsAssessments->aliasField('special_need_difficulty_id'),
@@ -56,7 +56,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
                     [$SpecialNeedsAssessments->aliasField('special_need_difficulty_id')=>$SpecialNeedDifficulties->aliasField('id')])
             ->contain([
                 'Users',                
-                $SpecialNeedTypes->alias(),
+                $SpecialNeedsTypes->alias(),
                 $SpecialNeedDifficulties->alias()
             ])
             
