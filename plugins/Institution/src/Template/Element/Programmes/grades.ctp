@@ -10,8 +10,8 @@ if ($action == 'add') : ?>
             $attr['data'],
             [
                 'empty' => '-- Select --',
-                'onchange'=>"$('#reload').val('changeEducationGradeId').click();return false;",                            
-            ],
+                'onchange'=>"$('#reload').val('changeEducationGradeId').click();return false;",                           
+            ]
         );         
     ?>
 
