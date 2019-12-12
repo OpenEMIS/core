@@ -24,12 +24,14 @@ class POCOR5059 extends AbstractMigration
             WHERE user_identities.nationality_id=""');
 		
         // update indentity number in security_users table
-		$userIdentityRows = $this->fetchAll('SELECT * FROM `user_identities` WHERE number <> "" GROUP BY security_user_id ORDER BY id ASC');
-		foreach($userIdentityRows as $userIdentityRow){
-			$this->execute('UPDATE security_users
-			SET security_users.identity_number = "'.$userIdentityRow['number'].'"
-			WHERE security_users.identity_number=""');
-		}
+		$userIdentityRows = $this->fetchAll('SELECT * FROM `user_identities` WHERE user_identities.number <> "" AND user_identities.number <> NULL GROUP BY security_user_id ORDER BY id ASC');
+		if(!empty($userIdentityRows)){
+			foreach($userIdentityRows as $userIdentityRow){
+				$this->execute('UPDATE security_users
+				SET security_users.identity_number = "'.$userIdentityRow['number'].'"
+				WHERE security_users.identity_number="" AND security_users.id = "'.$userIdentityRow['security_user_id'].'"');
+			}
+		}		
     }
 
     // rollback
