@@ -1,3 +1,10 @@
+### [3.46.0] - 2019-12-13
+- Implemented students with Special Needs report in Reports > Institution 
+- Implemented import feature in Staff > Qualification
+- Implemented ability to add/remove subjects to/from programmes in Institution > Academic > Programmes
+- Implemented ability to show default identity in Institution > Classes/Subjects
+- Implemented default identity in Staff > Qualification report
+
 ### [3.45.1] - 2019-12-06
 - Implemented indication to identify if user is a staff/student  in Institution > Add Students/Staff
 - Implemented sort button in Institution > Students > Academic > Programme
