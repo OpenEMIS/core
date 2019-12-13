@@ -81,7 +81,8 @@ class StaffController extends AppController
             'ImportStaff'       => ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
             'TrainingResults'   => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
             'Achievements'      => ['className' => 'Staff.Achievements'],
-            'ImportSalaries'    => ['className' => 'Staff.ImportSalaries', 'actions' => ['add']]
+            'ImportSalaries'    => ['className' => 'Staff.ImportSalaries', 'actions' => ['add']],
+            'ImportStaffQualifications'    => ['className' => 'Staff.ImportStaffQualifications', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Training.Training');
