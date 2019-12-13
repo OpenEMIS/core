@@ -404,13 +404,6 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'Institutions.area_code',
-            'field' => 'area_code',
-            'type' => 'string',
-            'label' => __('Area Education Code')
-        ];
-
-        $newFields[] = [
             'key' => 'Users.gender_id',
             'field' => 'gender_name',
             'type' => 'string',
