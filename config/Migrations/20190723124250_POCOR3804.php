@@ -16,20 +16,23 @@ class POCOR3804 extends AbstractMigration
         $this->execute('INSERT INTO `zz_3804_security_users` SELECT * FROM `security_users`');
 
         // update nationality id in user_identities
-        $this->execute('UPDATE user_identities SET 
-                nationality_id = (SELECT nationality_id 
-                FROM security_users WHERE 
-                security_user_id = security_users.id AND 
-                user_identities.identity_type_id = security_users.identity_type_id)
-                WHERE user_identities.nationality_id=""');
+        $this->execute('UPDATE user_identities 
+			JOIN security_users
+			ON user_identities.security_user_id = security_users.id AND 
+			user_identities.identity_type_id = security_users.identity_type_id
+			SET user_identities.nationality_id = security_users.nationality_id 
+            WHERE user_identities.nationality_id=""');
 		
-        // update indentity number in security_users
-        $this->execute('UPDATE security_users SET 
-            identity_number = (SELECT number FROM user_identities 
-            WHERE security_user_id = security_users.id AND 
-            user_identities.identity_type_id = security_users.identity_type_id
-            AND number <> "" ORDER BY user_identities.id DESC LIMIT 1) 
-            WHERE security_users.identity_number=""');
+        // update indentity number in security_users table
+		$userIdentityRows = $this->fetchAll('SELECT `user_identities`.`number`,`user_identities`.`security_user_id` FROM `user_identities` WHERE `user_identities`.`number` <> "" AND `user_identities`.`number` IS NOT NULL GROUP BY security_user_id ORDER BY id DESC');
+		
+		if(!empty($userIdentityRows)){
+			foreach($userIdentityRows as $userIdentityRow){
+				$this->execute('UPDATE security_users
+				SET security_users.identity_number = "'.$userIdentityRow['number'].'"
+				WHERE security_users.identity_number="" AND security_users.id = "'.$userIdentityRow['security_user_id'].'"');
+			}
+		}	
     }
 
     // rollback
