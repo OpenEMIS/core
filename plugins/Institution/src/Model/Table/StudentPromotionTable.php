@@ -999,7 +999,8 @@ class StudentPromotionTable extends AppTable
                         unset($studentObj['selected']);
                         if ($saveAsDraft) {
                             // only save draft if current object is not graduating and next_institution_class_id is selected
-                            if($statusToUpdate != $studentStatuses['GRADUATED']) {
+                            //POCOR-5037
+                            //if($statusToUpdate != $studentStatuses['GRADUATED']) { 
                                 $classStudents = TableRegistry::get('Institution.InstitutionClassStudents');
                                 $classStudents
                                     ->query()
@@ -1013,7 +1014,7 @@ class StudentPromotionTable extends AppTable
                                         'student_status_id' => $studentStatuses['CURRENT']
                                     ])
                                     ->execute();
-                            }
+                            //}
                             $this->Alert->success($this->aliasField('saveDraftSuccess'), ['reset' => true]);
                         } else {
                             if ($nextAcademicPeriodId != 0) {
@@ -1159,7 +1160,7 @@ class StudentPromotionTable extends AppTable
                     $currentData = $this->Session->read($sessionKey);
                     $studentStatusId = $currentData->student_status_id;
 
-                    if (in_array($studentStatusId, [$this->statuses['PROMOTED'], $this->statuses['REPEATED']])) {
+                    if (in_array($studentStatusId, [$this->statuses['PROMOTED'], $this->statuses['GRADUATED'], $this->statuses['REPEATED']])) {
                         $buttons[0] = $saveAsDraftButton;
                         $buttons[1] = $confirmButton;
                         $buttons[2] = $cancelButton;
