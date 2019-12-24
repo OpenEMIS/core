@@ -8,7 +8,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
-
+use Cake\Collection\Collection;
 class SurveysTable extends AppTable
 {
     private $surveyStatuses = [];
@@ -62,8 +62,8 @@ class SurveysTable extends AppTable
     }
 
     public function onExcelAfterHeader(Event $event, ArrayObject $settings)
-    {
-        if ($settings['renderNotComplete']) {
+    {  
+       if ($settings['renderNotComplete'] || $settings['renderNotOpen']) {
             $fields = $settings['sheet']['fields'];
             $requestData = json_decode($settings['process']['params']);
             $surveyFormId = $requestData->survey_form;
@@ -81,7 +81,9 @@ class SurveysTable extends AppTable
                 ->select([ 'institution_type_id' => $SurveyFormsFilters->aliasField('survey_filter_id') ]);
 
             $InstitutionsTable = $this->Institutions;
-            $missingRecords = $InstitutionsTable->find()
+            
+            if($settings['renderNotComplete']){
+                $missingRecords = $InstitutionsTable->find()
                 ->where(['NOT EXISTS ('.
                     $this->find()->where([
                         $this->aliasField('academic_period_id').' = '.$academicPeriodId,
@@ -97,7 +99,8 @@ class SurveysTable extends AppTable
                     'area' => 'Areas.name',
                     'area_administrative' => 'AreaAdministratives.name'
                 ]);
-
+                
+           
                 if ($institutionType->cleanCopy()->first()->institution_type_id) {
                 $missingRecords->where([
                     $InstitutionsTable->aliasField('institution_type_id').' IN ('.$institutionType.')'
@@ -130,10 +133,67 @@ class SurveysTable extends AppTable
                     }
                 }
                 $writer->writeSheetRow($sheetName, $row);
+                }
+            }
+            
+           if($settings['renderNotOpen']){
+            $missingRecords = $InstitutionsTable->find()
+                ->where(['EXISTS ('.
+                    $this->find()->where([
+                        $this->aliasField('academic_period_id').' = '.$academicPeriodId,
+                        $this->aliasField('survey_form_id').' = '.$surveyFormId,
+                        $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id')
+                    ])
+                .')'])
+                ->innerJoinWith('Areas')
+                ->leftJoinWith('AreaAdministratives')
+                ->select([
+                    'institution_id' => $InstitutionsTable->aliasField('name'),
+                    'code' => $InstitutionsTable->aliasField('code'),
+                    'area' => 'Areas.name',
+                    'area_administrative' => 'AreaAdministratives.name'
+                ]);
+                
+           
+                if ($institutionType->cleanCopy()->first()->institution_type_id) {
+                $missingRecords->where([
+                    $InstitutionsTable->aliasField('institution_type_id').' IN ('.$institutionType.')'
+                ]);
+            }
+
+            if (!$superAdmin) {
+                $missingRecords->find('ByAccess', ['userId' => $userId]);
+            }
+
+            $writer = $settings['writer'];
+            $sheetName = $settings['sheet']['name'];
+            $mappingArray = ['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'code'];
+
+            foreach ($missingRecords->all() as $record) {
+                $record->academic_period_id = $academicPeriodName;
+                $record->survey_form_id = $surveyFormName;
+                $record->status_id = $record->status_id = __('Open');;
+
+                $row = [];
+                foreach ($fields as $field) {
+                    if (in_array($field['field'], $mappingArray)) {
+                        $row[] = __($record->{$field['field']});
+                    } else if ($field['field'] == 'area') {
+                        $row[] = __($record->area);
+                    } else if ($field['field'] == 'area_administrative') {
+                        $row[] = __($record->area_administrative);
+                    } else {
+                        $row[] = '';
+                    }
+                }
+                $writer->writeSheetRow($sheetName, $row);
+             }
             }
             $settings['renderNotComplete'] = false;
+           
         }
-    }
+        
+      }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
@@ -144,13 +204,23 @@ class SurveysTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $status = $requestData->status;
         $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
-
+        
         if (!empty($academicPeriodId)) {
             $surveyStatuses = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusesCode('Institution.InstitutionSurveys');
-            if (!$status || $surveyStatuses[$status] == 'NOT_COMPLETED') {
-                $settings['renderNotComplete'] = true;
+           
+            if($surveyStatuses[$status] == ''){
+                  $settings['renderNotOpen'] = true;
+                  $settings['renderNotComplete'] = true;
+            }
+            else if ($surveyStatuses[$status] == 'Open') {
+                  $settings['renderNotOpen'] = true;
+                  $settings['renderNotComplete'] = false;
+            } else if (  !$status || $surveyStatuses[$status] == 'NOT_COMPLETED') {
+                  $settings['renderNotOpen'] = false;
+                  $settings['renderNotComplete'] = true;
             } else {
-                $settings['renderNotComplete'] = false;
+                  $settings['renderNotComplete'] = false;
+                  $settings['renderNotOpen'] = false;
             }
         } else {
             $academicPeriodId = 0;
@@ -184,6 +254,7 @@ class SurveysTable extends AppTable
 
         // Stop the customfieldlist behavior onExcelBeforeStart function
         $event->stopPropagation();
+       
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
@@ -319,7 +390,9 @@ class SurveysTable extends AppTable
                     $surveyStatuses = $this->Workflow->getWorkflowStatuses('Institution.InstitutionSurveys');
                     $attr['type'] = 'select';
                     $surveyTable = $this;
-                    $attr['options'] = $surveyStatuses;
+                    $arrAll = array("all" => "All" );
+                    $collectionData = new Collection($surveyStatuses);
+                    $attr['options'] = $collectionData->append($arrAll)->toArray();
                     return $attr;
                 }
             }
