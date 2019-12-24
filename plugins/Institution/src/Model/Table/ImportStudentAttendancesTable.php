@@ -21,7 +21,6 @@ class ImportStudentAttendancesTable extends AppTable {
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'StudentAbsencesPeriodDetails']);
-
         $this->StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $this->Institutions = TableRegistry::get('Institution.Institutions');
         $this->Students = TableRegistry::get('Institution.Students');
@@ -273,7 +272,7 @@ class ImportStudentAttendancesTable extends AppTable {
             $rowInvalidCodeCols['student_id'] = __('OpenEMIS ID was not defined');
             return false;
         }
-
+        
         if (!$this->institutionId) {
             $rowInvalidCodeCols['institution_id'] = __('No active institution');
             $tempRow['institution_id'] = false;
@@ -285,7 +284,7 @@ class ImportStudentAttendancesTable extends AppTable {
         $tempRow['academic_period_id'] = $currentPeriodId;
         $classId = $this->request->query('class');
         $tempRow['institution_class_id'] = $classId;
-
+       
         if (empty($tempRow['date'])) {
             $rowInvalidCodeCols['date'] = __('This field cannot be left empty');
             return false;
@@ -304,7 +303,9 @@ class ImportStudentAttendancesTable extends AppTable {
             $periodIds = $periods->extract('id');
             $periodIds = $periodIds->toArray();
             if (!in_array($currentPeriodId, $periodIds)) {
-                $rowInvalidCodeCols['date'] = __('Date is not within current academic period');
+                $currentPeriod = [];
+                $currentPeriod =  $this->AcademicPeriods->get($currentPeriodId);
+                $rowInvalidCodeCols['date'] = __('Date:- '.$tempRow['date']->format('d/m/Y').' is not within current academic year: '.$currentPeriod->name);
                 $tempRow['academic_period_id'] = false;
                 return false;
             }
