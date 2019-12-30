@@ -571,12 +571,12 @@ class IndividualPromotionTable extends ControllerActionTable
         $toPeriodData = $this->AcademicPeriods->get($toAcademicPeriodId);
         $effectiveDate = Time::parse($entity->effective_date);
         $studentStatusId = $studentStatuses['CURRENT'];
-
-        if($entity->effective_date > date('Y-m-d'))
+        
+        if($entity->effective_date > date('d-m-Y'))
         {
             $studentStatusId = $statusToUpdate;
         }
-
+        
         // InstitutionStudents: Insert new record
         $studentObj = [];
         $studentObj['student_status_id'] = $studentStatusId;
