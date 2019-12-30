@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 
@@ -571,8 +572,9 @@ class IndividualPromotionTable extends ControllerActionTable
         $toPeriodData = $this->AcademicPeriods->get($toAcademicPeriodId);
         $effectiveDate = Time::parse($entity->effective_date);
         $studentStatusId = $studentStatuses['CURRENT'];
-        
-        if($entity->effective_date > date('d-m-Y'))
+        $todayDate = Date::now();
+       
+        if($effectiveDate->format('Y-m-d') > $todayDate->format('Y-m-d'))
         {
             $studentStatusId = $statusToUpdate;
         }
