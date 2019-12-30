@@ -573,8 +573,10 @@ class IndividualPromotionTable extends ControllerActionTable
         $effectiveDate = Time::parse($entity->effective_date);
         $studentStatusId = $studentStatuses['CURRENT'];
         $todayDate = Date::now();
-       
-        if($effectiveDate->format('Y-m-d') > $todayDate->format('Y-m-d'))
+        $todayDate = $todayDate->format('Y-m-d');
+        $promoteEffectiveDate = $effectiveDate->format('Y-m-d');
+        
+        if($promoteEffectiveDate > $todayDate)
         {
             $studentStatusId = $statusToUpdate;
         }
