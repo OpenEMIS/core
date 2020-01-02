@@ -63,6 +63,7 @@ class SurveysTable extends AppTable
 
     public function onExcelAfterHeader(Event $event, ArrayObject $settings)
     {  
+    
        if ($settings['renderNotComplete'] || $settings['renderNotOpen']) {
             $fields = $settings['sheet']['fields'];
             $requestData = json_decode($settings['process']['params']);
@@ -83,7 +84,7 @@ class SurveysTable extends AppTable
             $InstitutionsTable = $this->Institutions;
             
             if($settings['renderNotComplete']){
-                $missingRecords = $InstitutionsTable->find()
+                $notCompleteRecords = $InstitutionsTable->find()
                 ->where(['NOT EXISTS ('.
                     $this->find()->where([
                         $this->aliasField('academic_period_id').' = '.$academicPeriodId,
@@ -100,22 +101,22 @@ class SurveysTable extends AppTable
                     'area_administrative' => 'AreaAdministratives.name'
                 ]);
                 
-           
+               
                 if ($institutionType->cleanCopy()->first()->institution_type_id) {
-                $missingRecords->where([
+                $notCompleteRecords->where([
                     $InstitutionsTable->aliasField('institution_type_id').' IN ('.$institutionType.')'
                 ]);
             }
 
             if (!$superAdmin) {
-                $missingRecords->find('ByAccess', ['userId' => $userId]);
+                $notCompleteRecords->find('ByAccess', ['userId' => $userId]);
             }
 
             $writer = $settings['writer'];
             $sheetName = $settings['sheet']['name'];
             $mappingArray = ['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'code'];
 
-            foreach ($missingRecords->all() as $record) {
+            foreach ($notCompleteRecords->all() as $record) {
                 $record->academic_period_id = $academicPeriodName;
                 $record->survey_form_id = $surveyFormName;
                 $record->status_id = __('Not Completed');
@@ -137,12 +138,13 @@ class SurveysTable extends AppTable
             }
             
            if($settings['renderNotOpen']){
-            $missingRecords = $InstitutionsTable->find()
+            $notOpenRecords = $InstitutionsTable->find()
                 ->where(['EXISTS ('.
                     $this->find()->where([
                         $this->aliasField('academic_period_id').' = '.$academicPeriodId,
                         $this->aliasField('survey_form_id').' = '.$surveyFormId,
-                        $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id')
+                        $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id'),
+                        $this->aliasField('status_id').'='. 1
                     ])
                 .')'])
                 ->innerJoinWith('Areas')
@@ -154,25 +156,25 @@ class SurveysTable extends AppTable
                     'area_administrative' => 'AreaAdministratives.name'
                 ]);
                 
-           
+           // print_r($notOpenRecords);die;
                 if ($institutionType->cleanCopy()->first()->institution_type_id) {
-                $missingRecords->where([
+                $notOpenRecords->where([
                     $InstitutionsTable->aliasField('institution_type_id').' IN ('.$institutionType.')'
                 ]);
             }
 
             if (!$superAdmin) {
-                $missingRecords->find('ByAccess', ['userId' => $userId]);
+                $notOpenRecords->find('ByAccess', ['userId' => $userId]);
             }
 
             $writer = $settings['writer'];
             $sheetName = $settings['sheet']['name'];
             $mappingArray = ['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'code'];
 
-            foreach ($missingRecords->all() as $record) {
+            foreach ($notOpenRecords->all() as $record) {
                 $record->academic_period_id = $academicPeriodName;
                 $record->survey_form_id = $surveyFormName;
-                $record->status_id = $record->status_id = __('Open');;
+                $record->status_id = $record->status_id = __('Open');
 
                 $row = [];
                 foreach ($fields as $field) {
@@ -189,7 +191,9 @@ class SurveysTable extends AppTable
                 $writer->writeSheetRow($sheetName, $row);
              }
             }
+            
             $settings['renderNotComplete'] = false;
+            $settings['renderNotOpen'] = false;
            
         }
         
@@ -219,8 +223,8 @@ class SurveysTable extends AppTable
                   $settings['renderNotOpen'] = false;
                   $settings['renderNotComplete'] = true;
             } else {
-                  $settings['renderNotComplete'] = false;
-                  $settings['renderNotOpen'] = false;
+                 $settings['renderNotOpen'] = false;
+                 $settings['renderNotComplete'] = false;
             }
         } else {
             $academicPeriodId = 0;
@@ -234,16 +238,23 @@ class SurveysTable extends AppTable
         if (!$status) $status = array_keys($surveyStatuses);
 
         $surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
-
+        
         $this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
         if (!empty($surveyStatuses)) {
-            $statusCondition = [
-                $this->aliasField('status_id').' IN ' => array_keys($surveyStatuses)
-            ];
+            if($settings['renderNotComplete'] === true){
+                $statusCondition = [
+                    $this->aliasField('status_id').' NOT IN (1,2,3)'
+                ];
+            }else{
+                $statusCondition = [
+                    $this->aliasField('status_id').' IN ' => array_keys($surveyStatuses)
+                ];
+            }
+            
             $condition = array_merge($condition, $statusCondition);
         }
         $condition = array_merge($condition, $configCondition);
-
+       
         $this->setCondition($condition);
 
         // For Surveys only
