@@ -12,7 +12,10 @@ use Cake\Collection\Collection;
 class SurveysTable extends AppTable
 {
     private $surveyStatuses = [];
-
+    const OPENSTATUS = 1;
+    const PENDINGAPPROVAL = 2;
+    const COMPLETEDSTATUS = 3;
+    
     public function initialize(array $config)
     {
         $this->table('institution_surveys');
@@ -144,7 +147,7 @@ class SurveysTable extends AppTable
                         $this->aliasField('academic_period_id').' = '.$academicPeriodId,
                         $this->aliasField('survey_form_id').' = '.$surveyFormId,
                         $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id'),
-                        $this->aliasField('status_id').'='. 1
+                        $this->aliasField('status_id').' IN ('.self::OPENSTATUS.','.self::PENDINGAPPROVAL.')'
                     ])
                 .')'])
                 ->innerJoinWith('Areas')
@@ -156,7 +159,7 @@ class SurveysTable extends AppTable
                     'area_administrative' => 'AreaAdministratives.name'
                 ]);
                 
-           // print_r($notOpenRecords);die;
+          
                 if ($institutionType->cleanCopy()->first()->institution_type_id) {
                 $notOpenRecords->where([
                     $InstitutionsTable->aliasField('institution_type_id').' IN ('.$institutionType.')'
@@ -207,24 +210,28 @@ class SurveysTable extends AppTable
         $surveyFormId = $requestData->survey_form;
         $academicPeriodId = $requestData->academic_period_id;
         $status = $requestData->status;
+       
         $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
         
         if (!empty($academicPeriodId)) {
             $surveyStatuses = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusesCode('Institution.InstitutionSurveys');
            
-            if($surveyStatuses[$status] == ''){
+            if($status == '' || $status == 'all'){
                   $settings['renderNotOpen'] = true;
                   $settings['renderNotComplete'] = true;
-            }
-            else if ($surveyStatuses[$status] == 'Open') {
+                  
+            } elseif ($surveyStatuses[$status] == 'Open') {
+                
                   $settings['renderNotOpen'] = true;
                   $settings['renderNotComplete'] = false;
-            } else if (  !$status || $surveyStatuses[$status] == 'NOT_COMPLETED') {
+                  
+            } elseif (  !$status || $surveyStatuses[$status] == 'NOT_COMPLETED') {
                   $settings['renderNotOpen'] = false;
                   $settings['renderNotComplete'] = true;
+                  
             } else {
-                 $settings['renderNotOpen'] = false;
-                 $settings['renderNotComplete'] = false;
+                  $settings['renderNotOpen'] = false;
+                  $settings['renderNotComplete'] = false;
             }
         } else {
             $academicPeriodId = 0;
@@ -240,10 +247,15 @@ class SurveysTable extends AppTable
         $surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
         
         $this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
-        if (!empty($surveyStatuses)) {
-            if($settings['renderNotComplete'] === true){
+        if (!empty($surveyStatuses) || $status == '' || $status == 'all') {
+            
+            if($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === true){
                 $statusCondition = [
-                    $this->aliasField('status_id').' NOT IN (1,2,3)'
+                    $this->aliasField('status_id').' IN ('.self::COMPLETEDSTATUS.')'
+                ];
+            }elseif($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === false){
+                $statusCondition = [
+                    $this->aliasField('status_id').' NOT IN ('.self::OPENSTATUS.', '.self::PENDINGAPPROVAL.', '.self::COMPLETEDSTATUS.' )'
                 ];
             }else{
                 $statusCondition = [
@@ -252,7 +264,9 @@ class SurveysTable extends AppTable
             }
             
             $condition = array_merge($condition, $statusCondition);
-        }
+            
+           
+       }
         $condition = array_merge($condition, $configCondition);
        
         $this->setCondition($condition);
