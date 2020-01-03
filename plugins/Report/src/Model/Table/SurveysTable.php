@@ -12,9 +12,9 @@ use Cake\Collection\Collection;
 class SurveysTable extends AppTable
 {
     private $surveyStatuses = [];
-    const OPENSTATUS = 1;
+    const OPEN = 1;
     const PENDINGAPPROVAL = 2;
-    const COMPLETEDSTATUS = 3;
+    const COMPLETED = 3;
     
     public function initialize(array $config)
     {
@@ -147,7 +147,7 @@ class SurveysTable extends AppTable
                         $this->aliasField('academic_period_id').' = '.$academicPeriodId,
                         $this->aliasField('survey_form_id').' = '.$surveyFormId,
                         $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id'),
-                        $this->aliasField('status_id').' IN ('.self::OPENSTATUS.','.self::PENDINGAPPROVAL.')'
+                        $this->aliasField('status_id').' IN ('.self::OPEN.','.self::PENDINGAPPROVAL.')'
                     ])
                 .')'])
                 ->innerJoinWith('Areas')
@@ -251,11 +251,11 @@ class SurveysTable extends AppTable
             
             if($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === true){
                 $statusCondition = [
-                    $this->aliasField('status_id').' IN ('.self::COMPLETEDSTATUS.')'
+                    $this->aliasField('status_id').' IN ('.self::COMPLETED.')'
                 ];
             }elseif($settings['renderNotComplete'] === true && $settings['renderNotOpen'] === false){
                 $statusCondition = [
-                    $this->aliasField('status_id').' NOT IN ('.self::OPENSTATUS.', '.self::PENDINGAPPROVAL.', '.self::COMPLETEDSTATUS.' )'
+                    $this->aliasField('status_id').' NOT IN ('.self::OPEN.', '.self::PENDINGAPPROVAL.', '.self::COMPLETED.' )'
                 ];
             }else{
                 $statusCondition = [
