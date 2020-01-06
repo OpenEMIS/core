@@ -115,7 +115,8 @@ class StaffLeaveTable extends ControllerActionTable
                     ])
             ->order([$InstitutionStaff->aliasField('created') => 'DESC'])
             ->group([
-                $InstitutionStaff->aliasField('staff_id')
+                $InstitutionStaff->aliasField('staff_id'),
+                $InstitutionStaff->aliasField('id')
             ])
             ->toArray();
             
