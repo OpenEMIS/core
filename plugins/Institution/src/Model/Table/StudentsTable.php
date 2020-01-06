@@ -280,7 +280,7 @@ class StudentsTable extends ControllerActionTable
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => ''
+            'label' => 'BEMIS ID'
         ];
 
         $extraField[] = [
