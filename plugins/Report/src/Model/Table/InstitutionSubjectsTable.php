@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
 class InstitutionSubjectsTable extends AppTable  {
@@ -43,6 +44,8 @@ class InstitutionSubjectsTable extends AppTable  {
         if (!empty($institutionId)) {
             $conditions['Institutions.id'] = $institutionId;
         }
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 
         $query
             ->select([
@@ -61,8 +64,9 @@ class InstitutionSubjectsTable extends AppTable  {
                 'area_administrative_code' => 'AreaAdministratives.code',
                 'area_administrative_name' => 'AreaAdministratives.name',
                 'EducationGrades.name',
-                'EducationSubjects.name',
-                'AcademicPeriods.name'
+                'class_name' => 'InstitutionClasses.name',
+                'AcademicPeriods.name',
+                
             ])
             ->contain([
                 'Institutions.Areas',
@@ -71,7 +75,14 @@ class InstitutionSubjectsTable extends AppTable  {
                 'EducationSubjects',
                 'AcademicPeriods'
             ])
+            ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+                $this->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
+            ])
+            ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
+            ])
             ->where($conditions);
+            //echo "<pre>";print_r($query);die;
     }
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -83,7 +94,9 @@ class InstitutionSubjectsTable extends AppTable  {
     {
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
+        
         foreach ($cloneFields as $key => $value) {
+            
             $newFields[] = $value;
             if ($value['field'] == 'institution_id') {
                 $newFields[] = [
@@ -120,8 +133,22 @@ class InstitutionSubjectsTable extends AppTable  {
                     'type' => 'string',
                     'label' => __('Area Administrative')
                 ];
+
+                $newFields[] = [
+                    'key' => 'InstitutionClasses.name',
+                    'field' => 'class_name',
+                    'type' => 'string',
+                    'label' => __('InstitutionClasses')
+                ];
             }
         }
+
+        
         $fields->exchangeArray($newFields);
+        foreach ($fields as $key => $value) {
+            if ($value['field'] == 'education_subject_id') {
+                unset($fields[$key]);
+            }
+        }
     }
 }
