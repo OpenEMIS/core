@@ -91,7 +91,16 @@ class InstitutionSubjectsTable extends AppTable  {
 	}
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
-    {
+    {        
+        foreach ($fields as $key => $value) {
+            if ($value['field'] == 'education_subject_id') {
+                $fields[$key] = array('key' => 'InstitutionClasses.name',
+                    'field' => 'class_name',
+                    'type' => 'string',
+                    'label' => __('InstitutionClasses'));
+            }
+        }
+       
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
         
@@ -134,21 +143,10 @@ class InstitutionSubjectsTable extends AppTable  {
                     'label' => __('Area Administrative')
                 ];
 
-                $newFields[] = [
-                    'key' => 'InstitutionClasses.name',
-                    'field' => 'class_name',
-                    'type' => 'string',
-                    'label' => __('InstitutionClasses')
-                ];
+                
             }
         }
-
         
-        $fields->exchangeArray($newFields);
-        foreach ($fields as $key => $value) {
-            if ($value['field'] == 'education_subject_id') {
-                unset($fields[$key]);
-            }
-        }
+        $fields->exchangeArray($newFields); 
     }
 }
