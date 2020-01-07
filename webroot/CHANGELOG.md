@@ -1,3 +1,16 @@
+### [3.46.1] - 2020-01-07
+- Implemented Save as Draft button for Graduation process 
+- Implemented Institution > Staff >Staff Release : Release To option not mandatory
+- Bug fixed student status when Promoted: Institution > Students > Individual Student Promotion
+- Bug fixed student status when Withdrawn: Institution > Students > Student > Withdraw
+- Bug fixed spelling error for Difficulty: Institutions > Students/Staff > Special Needs > Assessments
+- Bug fixed to change status of students who are wrongly assigned to Withdrawn status with a Data Patch
+- Bug fixed Examinations > Register (Single and Bulk): 404 Error
+- Bug fixed Reports > Institutions > Survey : To differentiate Status column for Completed/Not Completed/Open
+- Bug fixed Institutions > Academic > Programmes : Unable to sort according to start date/end date
+- Bug fixed Institutions > Student > Attendance (All days/Individual day): Reduce the height of each row
+- Bug fixed Institution > Attendance > Student Import: Unable to import Late records
+
 ### [3.46.0] - 2019-12-13
 - Implemented students with Special Needs report in Reports > Institution 
 - Implemented import feature in Staff > Qualification
