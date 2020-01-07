@@ -215,7 +215,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-            ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedTypes'])
+            ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedTypes']) 
             ->contain('Examinations')
             ->matching('Areas')
             ->matching('AcademicPeriods');
