@@ -98,7 +98,8 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $studentWithdrawRecords = [];
         $today = Time::now();
         $today = $today->format('Y-m-d');
-        
+        $Date = "2020-01-09";
+        $today = date('Y-m-d', strtotime($Date. ' + 1 days'));
         if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
             Log::write('debug', 'End date');
             Log::write('debug', $academicPeriodEndDate);
