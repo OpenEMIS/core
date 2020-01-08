@@ -114,6 +114,12 @@ class StudentWithdrawTable extends ControllerActionTable
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
         $statuses = $StudentStatuses->findCodeList();
+        
+        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        $academicPeriodDetail = $this->AcademicPeriods->get($currentAcademicPeriod);
+        $academicPeriodEffectiveDate = $academicPeriodDetail->start_date->format('Y-m-d');
+        $academicPeriodEndDate = $academicPeriodDetail->end_date->format('Y-m-d');
+        
         $statusId = $entity->status_id;
         $existingStudentEntity = $Students->find()->where([
             $Students->aliasField('institution_id') => $entity->institution_id,
@@ -132,7 +138,14 @@ class StudentWithdrawTable extends ControllerActionTable
         }
 
         Log::write('debug', 'Updating Student Status Updates Entity: '.$entity->security_user_id);
-        $StudentStatusUpdates->updateAll(['execution_status' => 2], ['id' => $entity->id]);
+        $today = Time::now();
+        $today = $today->format('Y-m-d');
+        
+        if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
+            $StudentStatusUpdates->updateAll(['execution_status' => 2], ['id' => $entity->id]);
+        }else{
+            $StudentStatusUpdates->updateAll(['execution_status' => 1], ['id' => $entity->id]);
+        }
     }
 
     public function onApproval(Event $event, $id, Entity $workflowTransitionEntity)
@@ -142,17 +155,20 @@ class StudentWithdrawTable extends ControllerActionTable
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
         Log::write('debug', 'initializing insert newEntity to student_status_updates queue: id >>>> '. $entity->student_id.' student_id >>>> '.$entity->student_id);
-        $newEntity = $StudentStatusUpdates->newEntity([
-            'model' => $this->registryAlias(),
-            'model_reference' => $entity->id,
-            'effective_date' => $entity->effective_date,
-            'security_user_id' => $entity->student_id,
-            'institution_id' => $entity->institution_id,
-            'academic_period_id' => $entity->academic_period_id,
-            'education_grade_id' => $entity->education_grade_id,
-            'status_id' => $statuses['WITHDRAWN']
-        ]);
-        $StudentStatusUpdates->save($newEntity);
+        if($workflowTransitionEntity->workflow_action_name == 'Approve'){
+            $newEntity = $StudentStatusUpdates->newEntity([
+                'model' => $this->registryAlias(),
+                'model_reference' => $entity->id,
+                'effective_date' => $entity->effective_date,
+                'security_user_id' => $entity->student_id,
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'education_grade_id' => $entity->education_grade_id,
+                'status_id' => $statuses['WITHDRAWN']
+            ]);
+            $StudentStatusUpdates->save($newEntity);           
+            $StudentStatusUpdates->checkRequireUpdate();
+        }
         Log::write('debug', 'newEntity record inserted into student_status_updates queue: id >>>> '. $newEntity->id.' student_id >>>> '.$newEntity->security_user_id);
     }
 
