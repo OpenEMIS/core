@@ -24,9 +24,11 @@
 							<?php
 							$checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
 							$checkboxOptions['value'] = $obj->id;
-							if (in_array($obj->id, $attr['exists'])) {
-								$checkboxOptions['disabled'] = 'disabled';
-								$checkboxOptions['checked'] = 'checked';
+							if (!empty($attr['exists'])) {
+								if (in_array($obj->id, $attr['exists'])) {
+									$checkboxOptions['disabled'] = 'disabled';
+									$checkboxOptions['checked'] = 'checked';
+								}
 							}
 							echo $this->Form->checkbox("grades.education_grade_subject_id.$i", $checkboxOptions);
 
