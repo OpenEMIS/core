@@ -7,7 +7,7 @@ if ($action == 'add') : ?>
     <?php         
         echo $this->Form->select(
             "grades.education_grade_id", 
-            (!empty($attr['data'])) ? $attr['data'] :array(),
+            $attr['data'],
             [
                 'empty' => '-- Select --',
                 'onchange'=>"$('#reload').val('changeEducationGradeId').click();return false;",                           
