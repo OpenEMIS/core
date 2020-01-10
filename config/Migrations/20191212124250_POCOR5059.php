@@ -27,9 +27,10 @@ class POCOR5059 extends AbstractMigration
 		$userIdentityRows = $this->fetchAll('SELECT `user_identities`.`number`,`user_identities`.`security_user_id` FROM `user_identities` WHERE `user_identities`.`number` <> "" AND `user_identities`.`number` IS NOT NULL GROUP BY security_user_id ORDER BY id DESC');
 		if(!empty($userIdentityRows)){
 			foreach($userIdentityRows as $userIdentityRow){
-				$this->execute('UPDATE security_users
-				SET security_users.identity_number = "'.$userIdentityRow['number'].'"
-				WHERE security_users.identity_number="" AND security_users.id = "'.$userIdentityRow['security_user_id'].'"');
+				$this->execute("UPDATE `security_users`
+				          SET `security_users`.`identity_number` = '" . $userIdentityRow['number'] . "'
+				      WHERE `security_users`.`identity_number` = ''
+                                         AND `security_users`.`id` = '" . $userIdentityRow['security_user_id'] . "'");
 			}
 		}				
     }
