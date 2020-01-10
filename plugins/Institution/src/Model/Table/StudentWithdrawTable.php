@@ -119,15 +119,14 @@ class StudentWithdrawTable extends ControllerActionTable
             $Students->aliasField('institution_id') => $entity->institution_id,
             $Students->aliasField('student_id') => $entity->security_user_id,
             $Students->aliasField('academic_period_id') => $entity->academic_period_id,
-            $Students->aliasField('education_grade_id') => $entity->education_grade_id,
-            $Students->aliasField('student_status_id') => $statuses['WITHDRAWN']
+            $Students->aliasField('education_grade_id') => $entity->education_grade_id
         ])
         ->first();
 
         Log::write('debug', 'Updating Student StatusId >>>>>>>>>>>>>>>>>>>>>> ');
         Log::write('debug', $existingStudentEntity);
-
-        if ($existingStudentEntity) {
+        
+        if ($existingStudentEntity && $entity->status_id == $statuses['WITHDRAWN']) {
             $existingStudentEntity->student_status_id = $statuses['WITHDRAWN'];
             $Students->save($existingStudentEntity);
         }
