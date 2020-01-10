@@ -58,7 +58,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             case 'special_need_type_id':
                 return __('Type');
             case 'special_need_difficulty_id':
-                return __('Diffculty');
+                return __('Difficulty');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
