@@ -81,6 +81,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         // check if report card request is valid
         $reportCardId = $this->request->query('report_card_id');
+        
         if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
@@ -172,18 +173,41 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
-        $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
-        $this->field('report_card');
-        $this->field('status', ['sort' => ['field' => 'report_card_status']]);
-        $this->field('started_on');
-        $this->field('completed_on');
-        $this->field('email_status');
-        $this->fields['next_institution_class_id']['visible'] = false;
-        $this->fields['academic_period_id']['visible'] = false;
-        $this->fields['student_status_id']['visible'] = false;
+        
+       $data = $this->request->query;
+        
+        if($data['class_id']=='all'){
+                $this->field('class_name');
+                $this->field('status', ['sort' => ['field' => 'report_card_status']]);
+                $this->field('progress');
+                $this->fields['report_queue']['visible'] = false;
+                $this->fields['openemis_no']['visible'] = false;
+                $this->fields['student_id']['visible'] = false;
+                $this->fields['report_card']['visible'] = false;
+                $this->fields['started_on']['visible'] = false;
+                $this->fields['completed_on']['visible'] = false;
+                $this->fields['email_status']['visible'] = false;
+                $this->fields['next_institution_class_id']['visible'] = false;
+                $this->fields['academic_period_id']['visible'] = false;
+                $this->fields['student_status_id']['visible'] = false;
+                
+        } else {
+            
+                $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+                $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
+                $this->field('report_card');
+                $this->field('status', ['sort' => ['field' => 'report_card_status']]);
+                $this->field('started_on');
+                $this->field('completed_on');
+                $this->field('email_status');
+                $this->fields['next_institution_class_id']['visible'] = false;
+                $this->fields['academic_period_id']['visible'] = false;
+                $this->fields['student_status_id']['visible'] = false;
+        }
     }
 
+    
+    
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
@@ -209,8 +233,10 @@ class ReportCardStatusesTable extends ControllerActionTable
             ])
             ->hydrate(false)
             ->toArray();
+       // print_r($this->reportProcessList); die;
     }
 
+   
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -238,6 +264,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->ReportCards->aliasField('education_grade_id IN ') => $availableGrades
                 ])
                 ->toArray();
+            //print_r($reportCardOptions);die;
         } else {
             $this->Alert->warning('ReportCardStatuses.noProgrammes');
         }
@@ -250,9 +277,10 @@ class ReportCardStatusesTable extends ControllerActionTable
         // Class filter
         $classOptions = [];
         $selectedClass = !is_null($this->request->query('class_id')) ? $this->request->query('class_id') : -1;
-
+        
         if ($selectedReportCard != -1) {
             $reportCardEntity = $this->ReportCards->find()->where(['id' => $selectedReportCard])->first();
+            //print_r($reportCardEntity);die;
             if (!empty($reportCardEntity)) {
                 $classOptions = $Classes->find('list')
                     ->matching('ClassGrades')
@@ -263,13 +291,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ])
                     ->order([$Classes->aliasField('name')])
                     ->toArray();
+                
+                
+                //print_r($classOptions);die;
             } else {
                 // if selected report card is not valid, do not show any students
                 $selectedClass = -1;
             }
         }
-
-        $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
+        $classesAll   = array("all" => "All Classes" );
+        $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions + $classesAll ;
         $this->controller->set(compact('classOptions', 'selectedClass'));
         $where[$this->aliasField('institution_class_id')] = $selectedClass;
         //End
@@ -306,7 +337,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->autoFields(true)
             ->where($where)
             ->all();
-
+       // print_r($query);die;
         if (is_null($this->request->query('sort'))) {
             $query
                 ->contain('Users')
@@ -314,7 +345,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
 
         $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
-
+        
         // sort
         $sortList = ['report_card_status', 'Users.first_name', 'Users.openemis_no'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
@@ -332,7 +363,9 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
+        
         $reportCardId = $this->request->query('report_card_id');
+        
         $classId = $this->request->query('class_id');
 
         if (!is_null($reportCardId) && !is_null($classId)) {
