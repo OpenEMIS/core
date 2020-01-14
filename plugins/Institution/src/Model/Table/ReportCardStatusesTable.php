@@ -137,7 +137,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                             'url' => $generateUrl
                             ];
                 } else {
-                    $indexAttr['title'] = 'Generate button is inactive';
+                    $indexAttr['title'] = $this->getMessage('ReportCardStatuses.inActive');
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
                             'attr' => $indexAttr,
