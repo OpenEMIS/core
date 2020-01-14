@@ -138,13 +138,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                             'url' => $generateUrl
                             ];
                     }
-                } else {
-                            $buttons['generate'] = [
-                                'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                                'attr' => $indexAttr,
-                                'url' => $generateUrl
-                            ];
-                }
+                } 
             }
 
             // Publish button, status must be generated
