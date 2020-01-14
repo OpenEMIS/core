@@ -136,6 +136,13 @@ class ReportCardStatusesTable extends ControllerActionTable
                             'attr' => $indexAttr,
                             'url' => $generateUrl
                             ];
+                } else {
+                    $indexAttr['title'] = 'Generate button is inactive';
+                    $buttons['generate'] = [
+                            'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
+                            'attr' => $indexAttr,
+                            'url' => 'javascript:void(0)'
+                            ];
                 } 
             }
 
@@ -429,6 +436,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
                     }
                 } else {
+                    $generateButton['url'] = 'javascript:void(0)';
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
                 }
 
