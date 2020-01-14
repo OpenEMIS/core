@@ -114,21 +114,21 @@ class ReportCardStatusesTable extends ControllerActionTable
             if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
-                $ReportCardsData = $this->ReportCards
+                $reportCardsData = $this->ReportCards
                                     ->find()
                                     ->where([
                                         $this->ReportCards->aliasField('id') => $reportCardId])
                                     ->first();
 
 
-                if (!empty($ReportCardsData->generate_start_date)) {
+                if (!empty($reportCardsData->generate_start_date)) {
                 $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
                 }
 
-                if (!empty($ReportCardsData->generate_end_date)) {
+                if (!empty($reportCardsData->generate_end_date)) {
                 $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
                 }
-                $date = date('Y-m-d');
+                $date = Time::now()->format('Y-m-d');
 
                 if (!empty($generateStartDate) && !empty($generateEndDate)) {
                     if ($date >= $generateStartDate && $date <= $generateEndDate) {
