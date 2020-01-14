@@ -62,21 +62,33 @@ class MultiGradeBehavior extends Behavior
             'element' => 'Institution.Classes/multi_grade',
         ]);
 
-        $staffId = is_null($model->request->data($model->aliasField('staff_id'))) ? 0 : $model->request->data($model->aliasField('staff_id'));
-        $secondaryStaffId = is_null($model->request->data($model->aliasField('secondary_staff_id'))) ? 0 : $model->request->data($model->aliasField('secondary_staff_id'));
+        $staffId = is_null($model->request->data($model->aliasField('staff_id'))) ? [] : [$model->request->data($model->aliasField('staff_id'))];
+        $secondaryStaffIds = is_null($model->request->data($model->aliasField('classes_secondary_staff'))['_ids']) ? [] : $model->request->data($model->aliasField('classes_secondary_staff'))['_ids'];
+
+        $staffOptions = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId, $secondaryStaffIds);
+        $secondaryStaffOptions = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId, $staffId);
+        $secondaryPlaceholderText = '';
+        if (array_key_exists(0, $secondaryStaffOptions)) {
+            $secondaryPlaceholderText = $secondaryStaffOptions[0];
+            unset($secondaryStaffOptions[0]);
+        }
+
         $model->fields['students']['visible'] = false;
-        $model->fields['staff_id']['options'] = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId, $secondaryStaffId);
+
+        $model->fields['staff_id']['options'] = $staffOptions;
         $model->fields['staff_id']['onChangeReload'] = true;
         $model->fields['staff_id']['select'] = false;
 
-        $model->fields['secondary_staff_id']['options'] = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId, $staffId);
-        $model->fields['secondary_staff_id']['onChangeReload'] = true;
-        $model->fields['secondary_staff_id']['select'] = false;
+        $model->fields['classes_secondary_staff']['options'] = $secondaryStaffOptions;
+        $model->fields['classes_secondary_staff']['onChangeReload'] = true;
+        $model->fields['classes_secondary_staff']['select'] = false;
+        $model->fields['classes_secondary_staff']['type'] = 'chosenSelect';
+        $model->fields['classes_secondary_staff']['placeholder'] = $secondaryPlaceholderText;
 
         $model->fields['total_male_students']['visible'] = false;
         $model->fields['total_female_students']['visible'] = false;  
         $model->setFieldOrder([
-            'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'secondary_staff_id', 'capacity', 'multi_grade_field'
+            'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'classes_secondary_staff', 'capacity', 'multi_grade_field'
         ]);
     }
 
@@ -98,6 +110,8 @@ class MultiGradeBehavior extends Behavior
             }
         }
 
+        $requestData[$model->alias()]['secondary_staff'] = $requestData[$model->alias()]['classes_secondary_staff'];
+
         if (!$hasSelection) {
             /*
              * set institution_id to empty to trigger validation error in ControllerActionComponent
@@ -118,5 +132,28 @@ class MultiGradeBehavior extends Behavior
                 $model->Alert->error($requestData['errorMessage'], ['reset'=>true]);
             }
         }
+    }
+
+    public function afterSaveCommit(Event $event, Entity $entity)
+    {
+        if ($entity->has('secondary_staff') && !empty($entity->secondary_staff['_ids'])) {
+            $secondaryStaffIds = $entity->secondary_staff['_ids'];
+            $classId = $entity->id;
+            $ClassesSecondaryStaff = $this->_table->ClassesSecondaryStaff;
+            $secondaryStaffData = [];
+
+            if (!empty($secondaryStaffIds)) {
+                foreach ($secondaryStaffIds as $secondaryStaffId) {
+                    $secondaryStaffData[] = [
+                        'secondary_staff_id' => $secondaryStaffId,
+                        'institution_class_id' => $classId
+                    ];
+                }
+
+                $secondaryStaffEntities = $ClassesSecondaryStaff->newEntities($secondaryStaffData);
+                $ClassesSecondaryStaff->saveMany($secondaryStaffEntities);
+            }
+        }
+       
     }
 }
