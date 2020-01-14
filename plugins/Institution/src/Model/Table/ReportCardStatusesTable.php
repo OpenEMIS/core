@@ -130,14 +130,12 @@ class ReportCardStatusesTable extends ControllerActionTable
                 }
                 $date = Time::now()->format('Y-m-d');
 
-                if (!empty($generateStartDate) && !empty($generateEndDate)) {
-                    if ($date >= $generateStartDate && $date <= $generateEndDate) {
+                if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                             $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
                             'attr' => $indexAttr,
                             'url' => $generateUrl
                             ];
-                    }
                 } 
             }
 
