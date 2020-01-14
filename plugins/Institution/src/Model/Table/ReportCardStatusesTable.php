@@ -113,11 +113,38 @@ class ReportCardStatusesTable extends ControllerActionTable
             // Generate button, all statuses
             if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
-                $buttons['generate'] = [
-                    'label' => '<i class="fa fa-refresh"></i>'.__('Generate'),
-                    'attr' => $indexAttr,
-                    'url' => $generateUrl
-                ];
+
+                $reportCard = $this->ReportCards
+                                    ->find()
+                                    ->where([
+                                        $this->ReportCards->aliasField('id') => $reportCardId])
+                                    ->first();
+
+
+                if (!empty($reportCard->generate_start_date)) {
+                $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
+                }
+
+                if (!empty($reportCard->generate_end_date)) {
+                $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
+                }
+                $date = Time::now()->format('Y-m-d');
+
+                if (!empty($generateStartDate) && !empty($generateEndDate)) {
+                    if ($date >= $generateStartDate && $date <= $generateEndDate) {
+                            $buttons['generate'] = [
+                            'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
+                            'attr' => $indexAttr,
+                            'url' => $generateUrl
+                            ];
+                    }
+                } else {
+                            $buttons['generate'] = [
+                                'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
+                                'attr' => $indexAttr,
+                                'url' => $generateUrl
+                            ];
+                }
             }
 
             // Publish button, status must be generated
@@ -384,7 +411,34 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $generateButton['label'] = '<i class="fa fa-refresh"></i>';
                 $generateButton['attr'] = $toolbarAttr;
                 $generateButton['attr']['title'] = __('Generate All');
-                $extra['toolbarButtons']['generateAll'] = $generateButton;
+                //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
+                if (!is_null($this->request->query('report_card_id'))) {
+                    $reportCardId = $this->request->query('report_card_id');
+                }
+
+                $ReportCardsData = $this->ReportCards
+                                    ->find()
+                                    ->where([
+                                        $this->ReportCards->aliasField('id') => $reportCardId])
+                                    ->first();
+
+
+                if (!empty($ReportCardsData->generate_start_date)) {
+                $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
+                }
+
+                if (!empty($ReportCardsData->generate_end_date)) {
+                $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
+                }
+                $date = date('Y-m-d');
+
+                if (!empty($generateStartDate) && !empty($generateEndDate)) {
+                    if ($date >= $generateStartDate && $date <= $generateEndDate) {
+                    $extra['toolbarButtons']['generateAll'] = $generateButton;
+                    }
+                } else {
+                    $extra['toolbarButtons']['generateAll'] = $generateButton;
+                }
 
                 // Publish all button
                 if ($generatedCount > 0) {

@@ -80,6 +80,17 @@ class ReportCardsTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'start_date', false]
                 ]
             ])
+            ->add('generate_start_date', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+            ])
+            ->add('generate_end_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+                ],
+                'ruleCompareDateReverse' => [
+                    'rule' => ['compareDateReverse', 'generate_start_date', false]
+                ]
+            ])
             ->allowEmpty('excel_template');
     }
 
@@ -94,6 +105,8 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['excel_template_name']['visible'] = false;
         $this->field('start_date', ['type' => 'date']);
         $this->field('end_date', ['type' => 'date']);
+        $this->field('generate_start_date', ['type' => 'date']);
+        $this->field('generate_end_date', ['type' => 'date']);
         $this->field('excel_template');
     }
 
@@ -104,7 +117,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['principal_comments_required']['visible'] = false;
         $this->fields['homeroom_teacher_comments_required']['visible'] = false;
         $this->fields['teacher_comments_required']['visible'] = false;
-        $this->setFieldOrder(['code', 'name', 'start_date', 'end_date', 'education_grade_id', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_grade_id', 'excel_template']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -147,7 +160,7 @@ class ReportCardsTable extends ControllerActionTable
         // End
 
         $this->setupFields($entity);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
 
         // Added
         $this->setupTabElements($entity);
@@ -189,7 +202,7 @@ class ReportCardsTable extends ControllerActionTable
     {
         $this->setupFields($entity);
         $this->field('education_programme_id', ['type' => 'select']);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -213,7 +226,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['code']['type'] = 'readonly';
         $this->fields['name']['type'] = 'readonly';
         $this->field('education_programme_id', ['entity' => $entity]);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
     }
 
     public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
@@ -513,5 +526,9 @@ class ReportCardsTable extends ControllerActionTable
         $tabElements = $this->controller->getReportCardTab($entity->id);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+        //echo "<pre>";print_r($event);die;
     }
 }
