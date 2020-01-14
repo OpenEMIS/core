@@ -1,3 +1,9 @@
+### [3.46.2] - 2020-01-14
+- Bug Fixed Institution > Student > Academic: Withdraw Workflow not completed, but student status is changed to Withdrawn
+- Bug Fixed Institution > Student > Academic: Future date Student Withdrawal status did not change when date arrives
+- Bug Fixed Institution > Academics > Programmes: When adding a programme there is a 404 Error
+- Bug Fixed Institution > Staff > Career > Leave: Staffs who have a Assigned and an End of Assignment Position in the current Insitution cannot apply for leave
+
 ### [3.46.1] - 2020-01-07
 - Implemented Save as Draft button for Graduation process 
 - Implemented Institution > Staff >Staff Release : Release To option not mandatory
