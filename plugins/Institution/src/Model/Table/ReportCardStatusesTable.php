@@ -114,18 +114,18 @@ class ReportCardStatusesTable extends ControllerActionTable
             if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
-                $reportCardsData = $this->ReportCards
+                $reportCard = $this->ReportCards
                                     ->find()
                                     ->where([
                                         $this->ReportCards->aliasField('id') => $reportCardId])
                                     ->first();
 
 
-                if (!empty($reportCardsData->generate_start_date)) {
+                if (!empty($reportCard->generate_start_date)) {
                 $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
                 }
 
-                if (!empty($reportCardsData->generate_end_date)) {
+                if (!empty($reportCard->generate_end_date)) {
                 $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
                 }
                 $date = Time::now()->format('Y-m-d');
@@ -133,14 +133,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                 if (!empty($generateStartDate) && !empty($generateEndDate)) {
                     if ($date >= $generateStartDate && $date <= $generateEndDate) {
                             $buttons['generate'] = [
-                            'label' => '<i class="fa fa-refresh"></i>'.__('Generate'),
+                            'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
                             'attr' => $indexAttr,
                             'url' => $generateUrl
                             ];
                     }
                 } else {
                             $buttons['generate'] = [
-                                'label' => '<i class="fa fa-refresh"></i>'.__('Generate'),
+                                'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
                                 'attr' => $indexAttr,
                                 'url' => $generateUrl
                             ];
