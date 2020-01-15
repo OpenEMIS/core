@@ -168,8 +168,8 @@ class InstitutionGradesTable extends ControllerActionTable
                                 $grade['end_date'] = $entity->end_date;
                             }
                             
-                            $gradeEntities[$key] = $this->newEntity($grade);
-                            if ($gradeEntities[$key]->errors()) {
+                            $gradeEntities[] = $this->newEntity($grade);
+                            if ($gradeEntities[0]->errors()) {
                                 $error = true;
                             }
                         }
