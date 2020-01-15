@@ -137,7 +137,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                             'url' => $generateUrl
                             ];
                 } else {
-                    $indexAttr['title'] = $this->getMessage('ReportCardStatuses.inActive');
+                    $indexAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
                             'attr' => $indexAttr,
@@ -435,7 +435,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                     if ($date >= $generateStartDate && $date <= $generateEndDate) {
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
                     }
-                } else {
+                } else { 
+                    $generateButton['attr']['data-html'] = true;
+                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
                     $generateButton['url'] = 'javascript:void(0)';
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
                 }
