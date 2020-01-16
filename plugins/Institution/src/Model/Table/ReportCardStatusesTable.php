@@ -130,21 +130,20 @@ class ReportCardStatusesTable extends ControllerActionTable
                 }
                 $date = Time::now()->format('Y-m-d');
 
-                if (!empty($generateStartDate) && !empty($generateEndDate)) {
-                    if ($date >= $generateStartDate && $date <= $generateEndDate) {
+                if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                             $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
                             'attr' => $indexAttr,
                             'url' => $generateUrl
                             ];
-                    }
                 } else {
-                            $buttons['generate'] = [
-                                'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                                'attr' => $indexAttr,
-                                'url' => $generateUrl
+                    $indexAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
+                    $buttons['generate'] = [
+                            'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
+                            'attr' => $indexAttr,
+                            'url' => 'javascript:void(0)'
                             ];
-                }
+                } 
             }
 
             // Publish button, status must be generated
@@ -436,7 +435,10 @@ class ReportCardStatusesTable extends ControllerActionTable
                     if ($date >= $generateStartDate && $date <= $generateEndDate) {
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
                     }
-                } else {
+                } else { 
+                    $generateButton['attr']['data-html'] = true;
+                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
+                    $generateButton['url'] = 'javascript:void(0)';
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
                 }
 
