@@ -376,14 +376,16 @@ class ImportStudentAttendancesTable extends AppTable {
             if (!$AccessControl->isAdmin()) {
                 if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
                     $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
-
+                    $query->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                        'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
+                    ]);
                     if (!$classPermission) {
                         $query->where(['1 = 0'], [], true);
                     } else {
                         $query->where([
                             'OR' => [
                                 ['InstitutionClasses.staff_id' => $userId],
-                                ['InstitutionClasses.secondary_staff_id' => $userId]
+                                ['ClassesSecondaryStaff.secondary_staff_id' => $userId]
                             ]
                         ]);
                     }
