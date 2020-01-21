@@ -765,7 +765,7 @@ trait MessagesTrait
             'email' => 'The Report Card will be sent in the background',
             'emailAll' => 'All Report Cards will be sent in the background',
             'emailInProgress' => 'There is already a email process sending in the background',
-			'date_closed' => 'Generate date for report card has closed'
+			'date_closed' => 'Generate date for report card has been closed'
         ],
         'RecipientPaymentStructures' => [
             'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
