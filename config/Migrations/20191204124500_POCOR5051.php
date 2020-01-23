@@ -11,8 +11,8 @@ class POCOR5051 extends AbstractMigration
         $this->execute('CREATE TABLE `z_5051_report_cards` LIKE `report_cards`');
         $this->execute('INSERT INTO `z_5051_report_cards` SELECT * FROM `report_cards`');
 
-        $this->execute('ALTER TABLE `report_cards` ADD COLUMN generate_start_date date AFTER end_date');   
-        $this->execute('ALTER TABLE `report_cards` ADD COLUMN generate_end_date date AFTER generate_start_date');
+        $this->execute('ALTER TABLE `report_cards` ADD COLUMN generate_start_date datetime default NULL AFTER end_date');   
+        $this->execute('ALTER TABLE `report_cards` ADD COLUMN generate_end_date datetime default NULL AFTER generate_start_date');
     }
 
     // rollback
