@@ -42,11 +42,13 @@ class StudentGuardiansTable extends AppTable  {
                 'guardian_last_name' => 'Guardians.last_name',
                 'address' => 'Guardians.address',
                 'email' => 'Guardians.email',
-                'gender_name' => 'Genders.name'
+                'gender_name' => 'Genders.name',
+                'contact_no' => 'UserContacts.value'
              ])
             ->leftJoin(['Users' => 'security_users'], [
                             'Users.id = ' . $this->aliasfield('student_id')
                         ])
+            
             ->leftJoin(['Guardians' => 'security_users'], [
                             'Guardians.id = ' . $this->aliasfield('guardian_id')
                         ])
@@ -67,6 +69,9 @@ class StudentGuardiansTable extends AppTable  {
                         ])
             ->leftJoin(['StudentStatuses' => 'student_statuses'], [
                             'InstitutionStudents.student_status_id = ' . 'StudentStatuses.id'
+                        ])
+            ->leftJoin(['UserContacts' => 'user_contacts'], [
+                            'Guardians.id = ' . 'UserContacts.security_user_id'
                         ])
             ->where(['StudentStatuses.code' => 'CURRENT',
                             'InstitutionClassStudents.student_status_id = ' . 'StudentStatuses.id']);
@@ -144,6 +149,13 @@ class StudentGuardiansTable extends AppTable  {
             'field' => 'email',
             'type' => 'string',
             'label' => __('Guardians Email')
+        ]; 
+
+        $extraFields[] = [
+            'key' => 'UserContacts.value',
+            'field' => 'contact_no',
+            'type' => 'string',
+            'label' => __('Guardians Primary Phone Contact')
         ];               
         $newFields = $extraFields;
         
