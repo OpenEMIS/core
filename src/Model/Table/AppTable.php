@@ -22,7 +22,7 @@ class AppTable extends Table
     use UtilityTrait;
     use LogTrait;
     use OptionListTrait;
-
+    
     public function initialize(array $config)
     {
         Time::$defaultLocale = 'en_US';
@@ -284,14 +284,16 @@ class AppTable extends Table
     // Event: 'ControllerAction.Model.onGetFieldLabel'
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
+       
         if ($field == 'openemis_no') {
-            return 'OpenEMIS ID';
+            return 'BEMIS ID';
         }
         return $this->getFieldLabel($module, $field, $language, $autoHumanize);
     }
 
     public function getFieldLabel($module, $field, $language, $autoHumanize = true)
     {
+        
         $Labels = TableRegistry::get('Labels');
         $label = $Labels->getLabel($module, $field, $language);
         if ($label === false && $autoHumanize) {
@@ -310,7 +312,7 @@ class AppTable extends Table
     // Event: 'Model.excel.onExcelGetLabel'
     public function onExcelGetLabel(Event $event, $module, $col, $language)
     {
-        return __($this->getFieldLabel($module, $col, $language));
+       return __($this->getFieldLabel($module, $col, $language));
     }
 
     public function getButtonAttr()
