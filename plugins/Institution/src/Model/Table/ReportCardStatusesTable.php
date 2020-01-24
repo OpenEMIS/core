@@ -122,11 +122,11 @@ class ReportCardStatusesTable extends ControllerActionTable
 
 
                 if (!empty($reportCard->generate_start_date)) {
-                $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
+                $generateStartDate = $reportCard->generate_start_date->format('Y-m-d');
                 }
 
                 if (!empty($reportCard->generate_end_date)) {
-                $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
+                $generateEndDate = $reportCard->generate_end_date->format('Y-m-d');
                 }
                 $date = Time::now()->format('Y-m-d');
 
@@ -429,12 +429,12 @@ class ReportCardStatusesTable extends ControllerActionTable
                 if (!empty($ReportCardsData->generate_end_date)) {
                 $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
                 }
-                $date = date('Y-m-d');
+                $date = Time::now()->format('Y-m-d');
 
-                if (!empty($generateStartDate) && !empty($generateEndDate)) {
-                    if ($date >= $generateStartDate && $date <= $generateEndDate) {
+                if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
+                    
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
-                    }
+                    
                 } else { 
                     $generateButton['attr']['data-html'] = true;
                     $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
