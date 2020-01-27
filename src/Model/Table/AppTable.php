@@ -22,7 +22,7 @@ class AppTable extends Table
     use UtilityTrait;
     use LogTrait;
     use OptionListTrait;
-    
+    const OpenEMIS = 'BEMIS ID';
     public function initialize(array $config)
     {
         Time::$defaultLocale = 'en_US';
@@ -284,9 +284,9 @@ class AppTable extends Table
     // Event: 'ControllerAction.Model.onGetFieldLabel'
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-       
+        
         if ($field == 'openemis_no') {
-            return 'BEMIS ID';
+          return self::OpenEMIS;
         }
         return $this->getFieldLabel($module, $field, $language, $autoHumanize);
     }
