@@ -61,10 +61,35 @@ class StudentClass extends Entity
     		;
     		$result = '';
     		foreach ($data->toArray() as $key => $value) {
-    			$cycleName = $value->education_grade->education_programme->education_cycle->name;
-	    		$programmeName = $value->education_grade->education_programme->name;
-	    		$gradeName = $value->education_grade->name;
-	    		$result .= sprintf('%s - %s - %s', $cycleName, $programmeName, $gradeName).'<br>';
+                    $cycleName = $value->education_grade->education_programme->education_cycle->name;
+                    $programmeName = $value->education_grade->education_programme->name;
+                    $gradeName = $value->education_grade->name;
+                    //$result .= sprintf('%s - %s - %s', $cycleName, $programmeName, $gradeName).'<br>';
+                    $result .= $gradeName.'<br>';
+    		}
+    		return $result;
+    	}
+
+    	return $name;
+	}
+        
+        protected function _getCurrentClass() {
+    	$name = '';
+
+    	if ($this->has('institution_class_id')) {
+    		$InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+    		$data = $InstitutionClassGrades
+    			->find()
+    			->where([
+                    $InstitutionClassGrades->aliasField('institution_class_id') => $this->institution_class_id
+                ])
+    		->contain(['InstitutionClasses','EducationGrades'=>['EducationProgrammes'=>['EducationCycles']]])->toArray()
+    		;
+                
+    		$result = '';
+    		foreach ($data as $key => $value) {
+                    $currentClass = $value->institution_class->name;
+                    $result .= $currentClass;
     		}
     		return $result;
     	}
