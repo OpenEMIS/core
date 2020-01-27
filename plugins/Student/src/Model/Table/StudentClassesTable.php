@@ -56,12 +56,14 @@ class StudentClassesTable extends ControllerActionTable
 
         $this->field('academic_period', []);
         $this->field('institution', []);
+        $this->field('current_class', []);
         $this->field('education_grade', []);
         $this->field('homeroom_teacher_name', []);
 
         $order = 0;
         $this->setFieldOrder('academic_period', $order++);
         $this->setFieldOrder('institution', $order++);
+        $this->setFieldOrder('current_class', $order++);
         $this->setFieldOrder('education_grade', $order++);
         $this->setFieldOrder('institution_class_id', $order++);
         $this->setFieldOrder('homeroom_teacher_name', $order++);
