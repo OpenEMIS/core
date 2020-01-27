@@ -106,7 +106,7 @@ class StudentGuardiansTable extends AppTable  {
             'key' => 'EducationGrades.name',
             'field' => 'education_grade_name',
             'type' => 'string',
-            'label' => __('Grade')
+            'label' => __('Education Grade')
         ];
 
         $extraFields[] = [
