@@ -21,7 +21,7 @@ class POCOR5219 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'en' => 'Guradians First Name',
+                'en' => 'Guardians First Name',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -31,12 +31,17 @@ class POCOR5219 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'en' => 'Guradians Address',
+                'en' => 'Guardians Address',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
             [
                 'en' => 'Guardians Email',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Guardians Primary Phone Contact',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ]
