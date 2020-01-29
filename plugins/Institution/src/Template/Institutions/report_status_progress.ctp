@@ -102,10 +102,19 @@ $table = $ControllerAction['table'];
                         $progress = intval(($current / $total ) * 100);
                     }
                     
+                    if($progress == 100){
+                       ?>
+                       <tr>
+                        <?php
+                    }else{
+                     ?>
+                       <tr row-id="<?= $obj->id ?>">
+                        <?php   
+                    }
                     ?>
-                    <tr row-id="<?= $obj->id ?>">
+                    
                         <td><?= $obj->name ?></td>
-                        <td>
+                        <td class="modified">
                             <?php
                             if ($progress == 100) {
                                 echo __('Completed');
@@ -115,7 +124,7 @@ $table = $ControllerAction['table'];
                             ?>
 
                         </td>
-                        <td>
+                        <td class="expiryDate">
                         <?php
                         if ($progress == 100) {
                             echo $progress . '%';
