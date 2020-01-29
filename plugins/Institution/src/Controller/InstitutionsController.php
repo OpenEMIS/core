@@ -2052,10 +2052,12 @@ class InstitutionsController extends AppController
                         } elseif ($entity->inCompleted == $total && $entity->inProcess == 0) {
                             // if only the status is complete, than percent will be 100, total record can still be 0 if the shell excel generation is slow, and percent should not be 100.
                             $data['percent'] = 100;
-                            $data['status'] = 'Completed';
+                            $data['modified'] = 'Completed';
+                            $data['expiry_date'] = '100%';
                         } else {
                             $data['percent'] = 0;
-                            $data['status'] = 'In Progress';
+                            $data['modified'] = 'In Progress';
+                            $data['expiry_date'] = null;
                         }
                         
                         $dataSet[$entity->id] = $data;
