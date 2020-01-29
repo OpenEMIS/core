@@ -80,14 +80,62 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         // Academic Periods filter
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);        
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'institutionId'));
+        
         $academicPeriodId = $this->request->query('academic_period_id');
         $reportCardId = $this->request->query('report_card_id');
         
         
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $reportCardTable = TableRegistry::get('ReportCard.ReportCards');
+        $reportCardOptions = $reportCardTable
+                        ->find('list',[
+                            'keyField' => 'id',
+                            'valueField' => 'name'
+                            ])
+                        ->where(['academic_period_id'=>$selectedAcademicPeriod])
+                        ->hydrate(false)
+                        ->toArray();
+        
+        $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
+        $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'institutionId', 'reportCardOptions', 'selectedReportCard'));
+         
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $selectedClass = !is_null($this->request->query('class_id')) ? $this->request->query('class_id') : 'all';
+        $classOptions = [];
+        $classLists = [];
+        if ($selectedReportCard != -1) {
+            $reportCardEntity = $reportCardTable->find()->where(['id' => $selectedReportCard])->first();
+            if (!empty($reportCardEntity)) {
+                $classOptions = $classLists = $Classes->find('list')
+                    ->matching('ClassGrades')
+                    ->where([
+                        $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                        $Classes->aliasField('institution_id') => $institutionId,
+                        'ClassGrades.education_grade_id' => $reportCardEntity->education_grade_id
+                    ])
+                    ->order([$Classes->aliasField('name')])
+                    ->toArray();
+            } else {
+                // if selected report card is not valid, do not show any students
+                $selectedClass = 'all';
+            }
+        }
+        
+        $classOptions['all']   = "All Classes" ;
+        
+       // echo $selectedClass; die;
+        $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
+        $this->controller->set(compact('classOptions', 'selectedClass'));
+       
+        
         $reportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
         $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $classIds = 0;
+        if(!empty($classLists)){
+            $classIds = array_keys($classLists);
+        }
+        
         
         $query
                 ->select([
@@ -105,7 +153,12 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                                 'status' => 3
                             ])->count()
                 ])
-                ->where(['academic_period_id' => $academicPeriodId]);
+                ->where([
+                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('id IN') => $classIds
+                    ]);
+       
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
