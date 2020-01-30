@@ -2,6 +2,8 @@
 namespace OpenEmis\View\Helper;
 
 use Cake\View\Helper;
+use Cake\Utility\Security;
+use Cake\Controller\Exception\SecurityException;
 
 class ResourceHelper extends Helper {
 	public $helpers = ['Html'];
@@ -56,4 +58,21 @@ class ResourceHelper extends Helper {
 		$path = $this->generatePath($path, 'js');
 		return $this->Html->script($path);
 	}
+        
+        public function urlsafeB64Encode($input)
+        {
+            return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
+        }
+        
+        public function paramsEncode($params = [])
+        {
+            $sessionId = Security::hash('session_id', 'sha256');
+            $params[$sessionId] = session_id();
+            $jsonParam = json_encode($params);
+            $base64Param = $this->urlsafeB64Encode($jsonParam);
+            $signature = Security::hash($jsonParam, 'sha256', true);
+            $base64Signature = $this->urlsafeB64Encode($signature);
+            return "$base64Param.$base64Signature";
+        }
+        
 }

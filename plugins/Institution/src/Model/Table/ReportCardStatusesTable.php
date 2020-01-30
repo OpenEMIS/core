@@ -294,7 +294,11 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $selectedClass = -1;
             }
         }
-
+        
+        if(!empty($classOptions)){
+            $classOptions['all']   = "All Classes" ;
+        }
+        
         $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
         $this->controller->set(compact('classOptions', 'selectedClass'));
         $where[$this->aliasField('institution_class_id')] = $selectedClass;

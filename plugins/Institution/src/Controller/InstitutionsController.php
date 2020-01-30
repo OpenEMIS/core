@@ -356,8 +356,39 @@ class InstitutionsController extends AppController
     }
     public function ReportCardStatuses()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
+        $classId = $this->request->query['class_id'];
+        $academicPeriodId = $this->request->query['academic_period_id'];
+        $reportCardId = $this->request->query['report_card_id'];
+       
+        if(!empty($classId) && $classId == 'all'){
+            return $this->redirect(['action' => 'ReportCardStatusProgress', 
+                    'class_id' => $classId,
+                    'academic_period_id' => $academicPeriodId,
+                    'report_card_id' => $reportCardId
+                ]);
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
+        }
     }
+    
+    public function ReportCardStatusProgress()
+    {
+        $classId = $this->request->query['class_id'];
+        $academicPeriodId = $this->request->query['academic_period_id'];
+        $reportCardId = $this->request->query['report_card_id'];
+       
+        if(!empty($classId) && $classId <> 'all'){
+            return $this->redirect(['action' => 'ReportCardStatuses', 
+                    'class_id' => $classId,
+                    'academic_period_id' => $academicPeriodId,
+                    'report_card_id' => $reportCardId
+                ]);
+        } else {
+           $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatusProgress']);
+            $this->render('report_status_progress');
+        }
+    }
+    
     public function InstitutionStudentsReportCards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
@@ -1968,5 +1999,74 @@ class InstitutionsController extends AppController
                 }
             }
         }
+    }
+    
+    public function ajaxGetReportCardStatusProgress()
+    {
+        $this->autoRender = false;
+        $dataSet = [];
+        
+        if (isset($this->request->query['ids'])) {
+            $ids = $this->request->query['ids'];
+            
+            $academicPeriodId = $this->request->query('academic_period_id');
+            $reportCardId = $this->request->query('report_card_id');
+            $institutionId = $this->request->query('institution_id');
+            
+            $institutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $reportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
+            $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        
+            if (!empty($ids)) {
+                
+                $results = $institutionClasses
+                ->find()
+                ->select([
+                    'id','name','institution_id',
+                    
+                    'inProcess' => $reportCardProcesses->find()->where([
+                                'report_card_id' => $reportCardId,
+                                'academic_period_id' => $academicPeriodId,
+                                'institution_id' => $institutionId,
+                            ])->count(),
+                    'inCompleted' => $institutionStudentsReportCards->find()->where([
+                                'report_card_id' => $reportCardId,
+                                'academic_period_id' => $academicPeriodId,
+                                'institution_id' => $institutionId,
+                                'status' => 3
+                            ])->count()
+                ])
+                ->where(['academic_period_id' => $academicPeriodId, 
+                        $institutionClasses->aliasField('id IN ') => $ids
+                        ])->all();
+                
+                if (!$results->isEmpty()) {
+                    foreach ($results as $key => $entity) {
+                        
+                        $total = $entity->inCompleted + $entity->inProcess;
+                        if ($entity->inCompleted > 0 && $entity->inProcess > 0) {                            
+                            $data['percent'] = intval(($entity->inCompleted / $total) * 100);
+                            if ($data['percent'] > 100) {
+                                $data['percent'] = 100;
+                            }
+                        } elseif ($entity->inCompleted == $total && $entity->inProcess == 0) {
+                            // if only the status is complete, than percent will be 100, total record can still be 0 if the shell excel generation is slow, and percent should not be 100.
+                            $data['percent'] = 100;
+                            $data['modified'] = 'Completed';
+                            $data['expiry_date'] = '100%';
+                        } else {
+                            $data['percent'] = 0;
+                            $data['modified'] = 'In Progress';
+                            $data['expiry_date'] = null;
+                        }
+                        
+                        $dataSet[$entity->id] = $data;
+                    }
+                }
+            }
+        }
+
+        echo json_encode($dataSet);
+        die;
     }
 }
