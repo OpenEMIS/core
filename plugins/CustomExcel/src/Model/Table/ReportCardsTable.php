@@ -653,7 +653,7 @@ class ReportCardsTable extends AppTable
                             'postal_code'
                         ]
                     ],
-                    'SecondaryStaff' => [
+                    'ClassesSecondaryStaff.SecondaryStaff' => [
                         'fields' => [
                             'openemis_no',
                             'first_name',
