@@ -82,7 +82,6 @@ class InstitutionSubjectsTable extends AppTable  {
                 $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
             ])
             ->where($conditions);
-            //echo "<pre>";print_r($query);die;
     }
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
