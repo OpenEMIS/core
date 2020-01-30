@@ -13,7 +13,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     var translateText = {
         'original': {
-            'openemis_no': 'OpenEMIS ID',
+            'openemis_no': 'BEMIS ID',
             'Name': 'Name',
             'Attendance': 'Attendance',
             'TimeIn': 'Time In',
