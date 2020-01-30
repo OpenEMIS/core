@@ -263,7 +263,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         // set cell style to follow placeholder
-        $objWorksheet->getCell($cellCoordinate)->setValue(__($cellValue));
+        $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
         $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
 
         // set column width to follow placeholder
