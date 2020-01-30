@@ -527,7 +527,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         timeInputElement.addEventListener('click', function(event) {
+            timeInputElement.removeAttribute('readonly', 'readonly');
             $('#' + timepickerId).timepicker();
+        });
+        
+        timeInputElement.addEventListener('keydown', function(event) {
+            if(event.keyCode != 8){
+                event.preventDefault();
+            }
         });
 
         timeSpanElement.appendChild(timeIconElement);
