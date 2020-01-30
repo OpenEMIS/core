@@ -29,7 +29,7 @@ class InstitutionClassesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);        
         $this->hasMany('ClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_class_id']);
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'institution_shift_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -464,12 +464,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'education_stage_order' => $query->func()->min('EducationStages.order')
             ])
             ->contain([
-                'ClassesSecondaryStaff' => [
-                    'fields' => ['institution_class_id', 'secondary_staff_id']
-                ],
-                'ClassesSecondaryStaff.SecondaryStaff' => [
-                    'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
-                ],
+                'ClassesSecondaryStaff.SecondaryStaff',
                 'Staff' => [
                     'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
                 ]
