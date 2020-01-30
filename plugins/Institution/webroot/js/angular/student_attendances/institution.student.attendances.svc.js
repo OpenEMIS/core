@@ -43,7 +43,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     var translateText = {
         'original': {
-            'OpenEmisId': 'OpenEMIS ID',
+            'OpenEmisId': 'BEMIS ID',
             'Name': 'Name',
             'Attendance': 'Attendance',
             'ReasonComment': 'Reason / Comment',
