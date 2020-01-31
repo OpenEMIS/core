@@ -46,9 +46,6 @@ class InstitutionClassBehavior extends Behavior
                 ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
                     'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
                 ])
-                ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                    'InstitutionClasses.id = InstitutionClassesSecondaryStaff.institution_class_id'
-                ])
                 ->where([
                     // basically if AllClasses permission is granted, the user should see all classes of that institution
                     // if MyClasses permission is granted, the user must either be a homeroom teacher or a secondary teacher of that class in order to see that class
@@ -70,7 +67,7 @@ class InstitutionClassBehavior extends Behavior
                                 ], [
                                     'OR' => [ // cater for both homeroom teacher and secondary teacher
                                         "InstitutionClasses.staff_id" => $userId,
-                                        "InstitutionClassesSecondaryStaff.secondary_staff_id" => $userId
+                                        "InstitutionClasses.secondary_staff_id" => $userId
                                     ]
                                 ]
                             ]
@@ -121,7 +118,7 @@ class InstitutionClassBehavior extends Behavior
         if (!$this->checkAllClassesPermission($action)) {
             if ($this->checkMyClassesPermission($action)) {
                 $userId = $this->_table->Auth->user('id');
-                if (!$this->checkUserHasClassPermission($entity, $userId)) {
+                if ($userId != $entity->staff_id && $userId != $entity->secondary_staff_id) {
                     $urlParams = $this->_table->url('view');
                     $event->stopPropagation();
                     $this->_table->Alert->error('security.noAccess');
@@ -147,14 +144,10 @@ class InstitutionClassBehavior extends Behavior
             }
             if (!$AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
                 if ($AccessControl->check(['Institutions', 'Classes', $permission], $roles)) {
-                    $query
-                        ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                            'InstitutionClasses.id = InstitutionClassesSecondaryStaff.institution_class_id'
-                        ])
-                        ->where([
+                    $query->where([
                         'OR' => [
                             [$this->_table->aliasField('staff_id') => $userId],
-                            ['InstitutionClassesSecondaryStaff.secondary_staff_id' => $userId]
+                            [$this->_table->aliasField('secondary_staff_id') => $userId]
                         ]
                     ]);
                 } else {
@@ -210,7 +203,7 @@ class InstitutionClassBehavior extends Behavior
                 if (!$this->checkAllClassesPermission($action)) {
                     if ($this->checkMyClassesPermission($action)) {
                         $userId = $this->_table->Auth->user('id');
-                        if (!$this->checkUserHasClassPermission($entity, $userId)) {
+                        if ($userId != $entity->staff_id && $userId != $entity->secondary_staff_id) {
                             $urlParams = $this->_table->ControllerAction->url('index');
                             $event->stopPropagation();
                             $this->_table->Alert->error('security.noAccess');
@@ -226,7 +219,7 @@ class InstitutionClassBehavior extends Behavior
                     if ($this->checkMyClassesPermission('edit')) {
                         $userId = $this->_table->Auth->user('id');
                         // Remove the edit button from those records who does not belong to the user
-                        if (!$this->checkUserHasClassPermission($entity, $userId)) {
+                        if ($userId != $entity->staff_id && $userId != $entity->secondary_staff_id) {
                             if (isset($extra['toolbarButtons']) && isset($extra['toolbarButtons']['edit'])) {
                                 unset($extra['toolbarButtons']['edit']);
                             }
@@ -238,21 +231,5 @@ class InstitutionClassBehavior extends Behavior
                 }
                 break;
         }
-    }
-
-    private function checkUserHasClassPermission(Entity $entity, $userId)
-    {
-        if ($entity->staff_id == $userId) {
-            return true;
-        }
-
-        $secondaryStaffList = $entity->classes_secondary_staff;
-        foreach ($secondaryStaffList as $secondaryStaffEntity) {
-            if ($secondaryStaffEntity->secondary_staff_id == $userId) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

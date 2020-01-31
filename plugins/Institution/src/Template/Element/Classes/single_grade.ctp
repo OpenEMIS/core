@@ -1,19 +1,5 @@
 <?php ?>
-<style>
-	@media only screen and (min-width: 800px) {
-		.table-in-view {
-			overflow: visible;
-		}	
-	}
 
-	.secondary-staff {
-		max-width: 300px;
-	}
-
-	.secondary-staff .search-field > input {
-		width: 210px !important;
-	}
-</style>
 <div class="input clearfix">
 	<label for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
 	<div class="table-wrapper">
@@ -114,18 +100,14 @@
 						<?php endif; ?>
 						</td>
 
-						<td class="secondary-staff"><?php
-
-						$secondaryAttr = [
-							'options' => $attr['data']['secondaryStaffAttr']['options'],
-							'field' => sprintf($attr['data']['secondaryStaffAttr']['fieldName'], $i),
-							'model' => $attr['data']['secondaryStaffAttr']['model'],
-							'placeholder' => $attr['data']['secondaryStaffAttr']['placeholder']
-						];
-
-						echo $this->HtmlField->chosenSelectInput($secondaryAttr, [
-							'multiple' => true
-						]);
+						<td><?php
+						echo $this->Form->input(sprintf('MultiClasses.%d.secondary_staff_id', $i), array(
+							'options' => $attr['data']['staffOptions'],
+							'label' => false,
+							'div' => false,
+							'between' => false,
+							'after' => false
+						));
 						?></td>
 					</tr>
 					<?php

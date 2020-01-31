@@ -59,7 +59,6 @@ class StaffTable extends ControllerActionTable
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffRelease', ['className' => 'Institution.StaffRelease', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('SecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'foreignKey' => 'secondary_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -1757,17 +1756,16 @@ class StaffTable extends ControllerActionTable
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
 
         $homeroomRoleId = $SecurityRoles->getHomeroomRoleId();
         $securityGroupId = $Institution->get($institutionId)->security_group_id;
 
-        $query
-            ->select([ // to find records for homeroom teacher
-                'staff_id' => $this->aliasField('staff_id')
-            ])
+        return $query
             ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
-                $InstitutionClasses->aliasField('staff_id = ') . $this->aliasField('staff_id')
+                'OR' => [
+                    $InstitutionClasses->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+                    $InstitutionClasses->aliasField('secondary_staff_id = ') . $this->aliasField('staff_id')
+                ]
             ])
             ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
                 $SecurityGroupUsers->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
@@ -1778,25 +1776,7 @@ class StaffTable extends ControllerActionTable
                 $InstitutionClasses->aliasField('id') => $classId,
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('staff_id') => $staffId
-            ])
-            ->union( // to find records for secondary_staff_id
-                $InstitutionClassesSecondaryStaff
-                    ->find()
-                    ->select([
-                        $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
-                    ])
-                    ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
-                            $SecurityGroupUsers->aliasField('security_user_id = ') . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id'),
-                            $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
-                            $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
-                    ])
-                    ->where([
-                        $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
-                        $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId
-                    ])
-            );
-
-        return $query;
+            ]);
     }
 
     public function removeInactiveStaffSecurityRole()
