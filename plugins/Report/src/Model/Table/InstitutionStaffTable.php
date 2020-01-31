@@ -222,17 +222,12 @@ class InstitutionStaffTable extends AppTable
         if ($entity->has('staff_id')) {
             $staffId = $entity->staff_id;
             $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
-            $ClassesSecondaryStaffTable = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
-
             $query = $ClassesTable
                 ->find()
                 ->select([
                     $ClassesTable->aliasField('id'),
                     $ClassesTable->aliasField('staff_id'),
-                    $ClassesSecondaryStaffTable->aliasField('secondary_staff_id')
-                ])
-                ->innerJoin([$ClassesSecondaryStaffTable->alias() => $ClassesSecondaryStaffTable->table()], [
-                    $ClassesSecondaryStaffTable->aliasField('institution_class_id = ') . $ClassesTable->aliasField('id')
+                    $ClassesTable->aliasField('secondary_staff_id')
                 ])
                 ->contain([
                     'EducationGrades' => [
@@ -248,7 +243,7 @@ class InstitutionStaffTable extends AppTable
                 ->where([
                     'OR' => [
                         [$ClassesTable->aliasField('staff_id') => $staffId],
-                        [$ClassesSecondaryStaffTable->aliasField('secondary_staff_id') => $staffId]
+                        [$ClassesTable->aliasField('secondary_staff_id') => $staffId]
                     ]
                 ]);
 

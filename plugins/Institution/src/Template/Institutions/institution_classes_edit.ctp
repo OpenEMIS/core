@@ -1,9 +1,6 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Institution.angular/institutionclasses/institution.class.students.svc', ['block' => true]); ?>
 <?= $this->Html->script('Institution.angular/institutionclasses/institution.class.students.ctrl', ['block' => true]); ?>
-<?= $this->Html->css('ControllerAction.../plugins/chosen/css/chosen.min', ['block' => true]); ?>
-<?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min', ['block' => true]); ?>
-<?= $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', ['block' => true]); ?>
 <?php
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
@@ -74,20 +71,17 @@ $this->start('panelBody');
         </div>
     </div>
     <div class="input select">
-        <label><?= __('Secondary Teachers') ?></label>
-        <select chosen
-            data-placeholder="-- <?=__('Select Teacher or Leave Blank') ?> --"
-            name="InstitutionClasses[secondary_staff_id]"
-            id="institutionclasses-secondary-staff-id"
-            multiple="multiple"
-            class="chosen-select"
-            options="InstitutionClassStudentsController.secondaryTeacherOptions"
-            ng-model="InstitutionClassStudentsController.selectedSecondaryTeacher"
-            ng-options="option.id as option.name for option in InstitutionClassStudentsController.secondaryTeacherOptions"
-            ng-init="InstitutionClassStudentsController.selectedSecondaryTeacher=[];"
-            ng-change="InstitutionClassStudentsController.teacherOptions = InstitutionClassStudentsController.changeStaff(InstitutionClassStudentsController.selectedSecondaryTeacher);"
->
-        </select>
+        <label><?= __('Secondary Teacher') ?></label>
+        <div class="input-select-wrapper">
+            <select name="InstitutionClasses[secondary_staff_id]" id="institutionclasses-secondary-staff-id"
+                ng-options="option.id as option.name for option in InstitutionClassStudentsController.secondaryTeacherOptions"
+                ng-model="InstitutionClassStudentsController.selectedSecondaryTeacher"
+                ng-init="InstitutionClassStudentsController.selectedSecondaryTeacher=null;"
+                ng-change="InstitutionClassStudentsController.teacherOptions = InstitutionClassStudentsController.changeStaff(InstitutionClassStudentsController.selectedSecondaryTeacher);"
+                >
+                <option value="" >-- <?= __('Select Teacher or Leave Blank') ?> --</option>
+            </select>
+        </div>
         <div ng-if="InstitutionClassStudentsController.postError.staff_id" class="error-message">
             <p ng-repeat="error in InstitutionClassStudentsController.postError.staff_id">{{ error }}</p>
         </div>

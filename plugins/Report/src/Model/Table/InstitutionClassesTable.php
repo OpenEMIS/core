@@ -18,9 +18,9 @@ class InstitutionClassesTable extends AppTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Staff', ['className' => 'User.Users',                       'foreignKey' => 'staff_id']);
+        $this->belongsTo('SecondaryStaff', ['className' => 'User.Users',                        'foreignKey' => 'secondary_staff_id']);
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts',    'foreignKey' => 'institution_shift_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions',         'foreignKey' => 'institution_id']);
-        $this->hasMany('ClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_class_id']);
 
         $this->belongsToMany('EducationGrades', [
             'className' => 'Education.EducationGrades',
@@ -88,6 +88,7 @@ class InstitutionClassesTable extends AppTable
                 'shift_name' => 'ShiftOptions.name',
                 'name' => 'InstitutionClasses.name',
                 'staff_id' => 'InstitutionClasses.staff_id',
+                'secondary_staff_id' => 'InstitutionClasses.secondary_staff_id'
             ])
             ->contain([
                 'AcademicPeriods' => [
@@ -114,6 +115,15 @@ class InstitutionClassesTable extends AppTable
                         'Staff.middle_name',
                         'Staff.third_name',
                         'Staff.last_name'
+                    ]
+                ],
+                'SecondaryStaff' => [
+                    'fields' => [
+                        'SecondaryStaff.openemis_no',
+                        'SecondaryStaff.first_name',
+                        'SecondaryStaff.middle_name',
+                        'SecondaryStaff.third_name',
+                        'SecondaryStaff.last_name',
                     ]
                 ]
             ])
@@ -206,6 +216,13 @@ class InstitutionClassesTable extends AppTable
         $newFields[] = [
             'key' => 'InstitutionClasses.staff_id',
             'field' => 'staff_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.secondary_staff_id',
+            'field' => 'secondary_staff_id',
             'type' => 'integer',
             'label' => ''
         ];

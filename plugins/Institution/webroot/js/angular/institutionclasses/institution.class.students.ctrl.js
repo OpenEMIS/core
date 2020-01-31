@@ -1,7 +1,7 @@
 //Multi Select v.1.0.0
 agGrid.initialiseAgGridWithAngular1(angular);
 
-angular.module('institution.class.students.ctrl', ['agGrid', 'kd-angular-multi-select', 'utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institution.class.students.svc', 'angular.chosen'])
+angular.module('institution.class.students.ctrl', ['agGrid', 'kd-angular-multi-select', 'utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institution.class.students.svc'])
     .controller('InstitutionClassStudentsCtrl', InstitutionClassStudentsController);
 
 InstitutionClassStudentsController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionClassStudentsSvc'];
@@ -56,7 +56,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
     Controller.redirectUrl = '';
     Controller.selectedShift = null;
     Controller.selectedTeacher = null;
-    Controller.selectedSecondaryTeacher = [];
+    Controller.selectedSecondaryTeacher = null;
     Controller.className = '';
     Controller.academicPeriodName = '';
     Controller.postError = [];
@@ -77,13 +77,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
             InstitutionClassStudentsSvc.getClassDetails(Controller.classId)
             .then(function(response) {
                 Controller.selectedTeacher = response.staff_id;
-
-                var secondaryTeachers = [];
-                angular.forEach(response.classes_secondary_staff, function(value, key) {
-                    this.push(value.secondary_staff_id);
-                }, secondaryTeachers);
-                Controller.selectedSecondaryTeacher = secondaryTeachers;
-
+                Controller.selectedSecondaryTeacher = response.secondary_staff_id;
                 Controller.selectedShift = response.institution_shift_id;
                 Controller.className = response.name;
                 Controller.academicPeriodId = response.academic_period_id;
@@ -187,16 +181,9 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
     function changeStaff(key) {
         var newOptions = [];
         for (var i = 0; i < Controller.mainTeacherOptions.length; i++) {
-            if (key instanceof Array) {
-                if (!key.includes(Controller.mainTeacherOptions[i].id)) {
-                    newOptions.push(Controller.mainTeacherOptions[i]);
-                }
-            } else {
-                if (Controller.mainTeacherOptions[i].id != key) {
-                    newOptions.push(Controller.mainTeacherOptions[i]);
-                }
+            if (Controller.mainTeacherOptions[i].id != key) {
+                newOptions.push(Controller.mainTeacherOptions[i]);
             }
-            
         }
         return newOptions;
     }
@@ -258,20 +245,12 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         postData.id = Controller.classId;
         postData.name = Controller.className;
         postData.staff_id = Controller.selectedTeacher;
+        postData.secondary_staff_id = Controller.selectedSecondaryTeacher;
         postData.institution_shift_id = Controller.selectedShift;
         postData.classStudents = classStudents;
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;
         postData.capacity = parseInt(Controller.classCapacity);
-
-        // postData.secondary_staff_id = Controller.selectedSecondaryTeacher;
-        postData.classes_secondary_staff = [];
-        angular.forEach(Controller.selectedSecondaryTeacher, function(value, key) {
-            this.push({
-                secondary_staff_id: value,
-                institution_class_id: Controller.classId
-            });
-        }, postData.classes_secondary_staff);
 
         if(postData.capacity > Controller.maxStudentsPerClass) {
             Controller.postError.capacity = {
