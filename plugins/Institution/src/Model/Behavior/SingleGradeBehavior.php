@@ -115,28 +115,13 @@ class SingleGradeBehavior extends Behavior
             $grade = $model->EducationGrades->get($selectedEducationGradeId)->toArray();
         }
 
-        $staffOptions = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId);
-        $secondaryStaffOptions = $staffOptions;
-        $secondaryPlaceholderText = '';
-
-        if (array_key_exists(0, $secondaryStaffOptions)) {
-            $secondaryPlaceholderText = $secondaryStaffOptions[0];
-            unset($secondaryStaffOptions[0]);
-        }
-
         $model->field('single_grade_field', [
             'type'      => 'element',
             'element'   => 'Institution.Classes/single_grade',
             'data'      => [    'numberOfClasses'   => $numberOfClasses,
-                                'staffOptions'      => $staffOptions,
+                                'staffOptions'      => $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId),
                                 'existedClasses'    => $model->getExistedClasses($institutionId, $selectedAcademicPeriodId, $selectedEducationGradeId),
-                                'grade'             => $grade,
-                                'secondaryStaffAttr' => [
-                                    'options' => $secondaryStaffOptions,
-                                    'fieldName' => '%d.classes_secondary_staff',
-                                    'model' => 'MultiClasses',
-                                    'placeholder' => $secondaryPlaceholderText,
-                                ]
+                                'grade'             => $grade
             ]
         ]);
 
@@ -144,8 +129,8 @@ class SingleGradeBehavior extends Behavior
         $model->fields['students']['visible'] = false;
         $model->fields['staff_id']['visible'] = false;
         $model->fields['staff_id']['type'] = 'hidden';
-        $model->fields['classes_secondary_staff']['visible'] = false;
-        $model->fields['classes_secondary_staff']['type'] = 'hidden';
+        $model->fields['secondary_staff_id']['visible'] = false;
+        $model->fields['secondary_staff_id']['type'] = 'hidden';
         $model->fields['total_male_students']['visible'] = false;
         $model->fields['total_female_students']['visible'] = false;   
         $model->setFieldOrder([
@@ -155,6 +140,7 @@ class SingleGradeBehavior extends Behavior
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
+
         $process = function ($model, $entity) use ($requestData, $extra) {
             $commonData = $requestData['InstitutionClasses'];
             /**
@@ -167,7 +153,6 @@ class SingleGradeBehavior extends Behavior
                     $requestData['MultiClasses'][$key]['academic_period_id'] = $commonData['academic_period_id'];
                     $requestData['MultiClasses'][$key]['capacity'] = $commonData['capacity'];
                     $requestData['MultiClasses'][$key]['education_grades']['_ids'] = [$commonData['education_grade']];
-                    $requestData['MultiClasses'][$key]['secondary_staff'] = $requestData['MultiClasses'][$key]['classes_secondary_staff'];
                 }
 
                 $classes = $model->newEntities($requestData['MultiClasses']);
@@ -185,25 +170,7 @@ class SingleGradeBehavior extends Behavior
                 unset($class);
                 if (!$error) {
                     foreach ($classes as $class) {
-                        $savedEntity = $model->save($class);
-                        if ($savedEntity->has('secondary_staff') && !empty($savedEntity->secondary_staff['_ids'])) {
-                            $secondaryStaffIds = $savedEntity->secondary_staff['_ids'];
-                            $classId = $savedEntity->id;
-                            $ClassesSecondaryStaff = $this->_table->ClassesSecondaryStaff;
-                            $secondaryStaffData = [];
-
-                            if (!empty($secondaryStaffIds)) {
-                                foreach ($secondaryStaffIds as $secondaryStaffId) {
-                                    $secondaryStaffData[] = [
-                                        'secondary_staff_id' => $secondaryStaffId,
-                                        'institution_class_id' => $classId
-                                    ];
-                                }
-
-                                $secondaryStaffEntities = $ClassesSecondaryStaff->newEntities($secondaryStaffData);
-                                $ClassesSecondaryStaff->saveMany($secondaryStaffEntities);
-                            }
-                        }
+                        $model->save($class);
                     }
                     unset($class);
                     $requestData['errorMessage'] = false;

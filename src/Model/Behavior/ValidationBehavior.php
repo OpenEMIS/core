@@ -2707,21 +2707,9 @@ class ValidationBehavior extends Behavior
 
     public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)
     {
-        if ($homeRoomTeacher != 0 && isset($globalData['data'][$secondaryHomeRoomTeacher])) {
-            $secondaryHomeroomData = $globalData['data'][$secondaryHomeRoomTeacher];
-
-            if (array_key_exists('_ids', $secondaryHomeroomData) && !empty($secondaryHomeroomData['_ids'])) { // For Classes add action
-                foreach ($secondaryHomeroomData['_ids'] as $secondaryStaffId) {
-                    if ($homeRoomTeacher == $secondaryStaffId) {
-                        return false;
-                    }
-                }
-            } elseif (!array_key_exists('_ids', $secondaryHomeroomData) &&is_array($secondaryHomeroomData)) { // For Classes edit action
-                foreach ($secondaryHomeroomData as $teacherObj) {
-                    if ($homeRoomTeacher == $teacherObj['secondary_staff_id']) {
-                        return false;
-                    }
-                }
+        if ($homeRoomTeacher != 0 && $globalData['data'][$secondaryHomeRoomTeacher] != 0) {
+            if ($homeRoomTeacher == $globalData['data'][$secondaryHomeRoomTeacher]) {
+                return false;
             }
         }
         return true;
@@ -2858,7 +2846,7 @@ class ValidationBehavior extends Behavior
         }
 
         $query = $InstitutionClasses->find()
-                ->matching('ClassesSecondaryStaff.SecondaryStaff.InstitutionStaff.Positions')
+                ->matching('SecondaryStaff.InstitutionStaff.Positions')
                 ->where([
                     'Positions.id' => $globalData['data']['id']
                 ])

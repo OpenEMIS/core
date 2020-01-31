@@ -23,10 +23,10 @@ class StaffClassesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('SecondaryUser', ['className' => 'User.Users', 'foreignKey' => 'secondary_staff_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
-        $this->hasMany('ClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_class_id']);
 
         /*
             note that in DirectoriesController
@@ -42,6 +42,7 @@ class StaffClassesTable extends ControllerActionTable
     {
         $this->fields['class_number']['visible'] = false;
         $this->fields['institution_shift_id']['visible'] = false;
+        $this->fields['secondary_staff_id']['visible'] = false;
         $this->fields['capacity']['visible'] = false;
 
         $this->field('total_students', []);

@@ -89,6 +89,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $this->field('class_number', ['visible' => false]);
         $this->field('staff_id', ['visible' => false]);
         $this->field('institution_shift_id', ['visible' => false]);
+        $this->field('secondary_staff_id', ['visible' => false]);
         $this->field('capacity', ['visible' => false]);
     }
 
@@ -172,12 +173,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     $query->where(['1 = 0'], [], true);
                 } else
                 {
-                    $query
-                        ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
+                    $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
                         'InstitutionClasses.id = '.$ClassGrades->aliasField('institution_class_id'),
-                        ])
-                        ->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                            'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
                         ])
                         ;
 
@@ -186,7 +183,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                           $query->where([
                                 'OR' => [
                                     ['InstitutionClasses.staff_id' => $userId],
-                                    ['ClassesSecondaryStaff.secondary_staff_id' => $userId]
+                                    ['InstitutionClasses.secondary_staff_id' => $userId]
                                 ]
                             ]);
                     } else {
@@ -204,7 +201,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                             $query->where([
                                 'OR' => [
                                     ['InstitutionClasses.staff_id' => $userId],
-                                    ['ClassesSecondaryStaff.secondary_staff_id' => $userId],
+                                    ['InstitutionClasses.secondary_staff_id' => $userId],
                                     ['InstitutionSubjectStaff.staff_id' => $userId]
                                 ]
                             ]);
