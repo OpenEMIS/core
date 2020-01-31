@@ -10,6 +10,8 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
+use Cake\I18n\Date;
+use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardsTable extends ControllerActionTable
@@ -529,6 +531,14 @@ class ReportCardsTable extends ControllerActionTable
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-        //echo "<pre>";print_r($event);die;
+
+        if (!empty($entity->generate_start_date)) {
+            $entity->generate_start_date = (new Date($entity->generate_start_date))->format('Y-m-d H:i:s');
+        }
+
+        if (!empty($entity->generate_end_date)) {
+            $entity->generate_end_date = (new Date($entity->generate_end_date))->format('Y-m-d H:i:s');
+        }        
     }
+
 }
