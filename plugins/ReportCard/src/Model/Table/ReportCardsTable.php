@@ -529,6 +529,14 @@ class ReportCardsTable extends ControllerActionTable
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-        //echo "<pre>";print_r($event);die;
-    }
+
+        if (!empty($entity->generate_start_date)) {
+            $entity->generate_start_date = (new Date($entity->generate_start_date))->format('Y-m-d H:i:s');
+        }
+
+        if (!empty($entity->generate_end_date)) {
+            $entity->generate_end_date = (new Date($entity->generate_end_date))->format('Y-m-d H:i:s');
+        }        
+    } 
+
 }
