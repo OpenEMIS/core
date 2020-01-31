@@ -26,11 +26,11 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('SecondaryStaff', ['className' => 'User.Users', 'foreignKey' => 'secondary_staff_id']);
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'institution_shift_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
         $this->hasMany('ClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'foreignKey' => 'institution_class_id']);
+        $this->hasMany('ClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_class_id']);
 
         $this->belongsToMany('EducationGrades', [
             'className' => 'Education.EducationGrades',
@@ -132,16 +132,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                         'Staff.preferred_name'
                     ]
                 ],
-                'SecondaryStaff' => [
-                    'fields' => [
-                        'SecondaryStaff.id',
-                        'SecondaryStaff.first_name',
-                        'SecondaryStaff.middle_name',
-                        'SecondaryStaff.third_name',
-                        'SecondaryStaff.last_name',
-                        'SecondaryStaff.preferred_name'
-                    ]
-                ],
                 'ClassAttendanceRecords' => function ($q) use ($academicPeriodId, $year, $month) {
                     return $q
                         ->where([
@@ -160,7 +150,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'institution_type' => 'Types.name',
                 'academic_period_name' => 'AcademicPeriods.name',
                 'staff_id' => 'Staff.id',
-                'secondary_staff_id' => 'SecondaryStaff.id',
                 'shift_name' => 'ShiftOptions.name',
                 'education_stage_order' => $query->func()->min('EducationStages.order')
             ])
@@ -372,13 +361,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $newFields[] = [
             'key' => 'InstitutionClasses.staff_id',
             'field' => 'staff_id',
-            'type' => 'integer',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'InstitutionClasses.secondary_staff_id',
-            'field' => 'secondary_staff_id',
             'type' => 'integer',
             'label' => ''
         ];
