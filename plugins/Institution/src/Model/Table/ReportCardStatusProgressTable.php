@@ -26,7 +26,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
-        $this->table('Institution_classes');
+        $this->table('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
