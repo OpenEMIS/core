@@ -539,6 +539,6 @@ class ReportCardsTable extends ControllerActionTable
         if (!empty($entity->generate_end_date)) {
             $entity->generate_end_date = (new Date($entity->generate_end_date))->format('Y-m-d H:i:s');
         }        
-    }
+    } 
 
 }
