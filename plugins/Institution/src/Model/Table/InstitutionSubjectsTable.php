@@ -513,7 +513,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'Classes',
+            'Classes.ClassesSecondaryStaff',
             'Teachers',
             'Rooms',
             'SubjectStudents' => [
