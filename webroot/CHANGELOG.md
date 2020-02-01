@@ -1,3 +1,8 @@
+### [3.47.0] - 2020-02-01
+- Implemented a new Report: Reports > Students > Guardians
+- Implemented a System Configuration option to Enable/Disable the Generate All Button for Student Report Cards
+- Implemented Progress indicator for Report Card generation
+
 ### [3.46.2] - 2020-01-14
 - Bug Fixed Institution > Student > Academic: Withdraw Workflow not completed, but student status is changed to Withdrawn
 - Bug Fixed Institution > Student > Academic: Future date Student Withdrawal status did not change when date arrives
