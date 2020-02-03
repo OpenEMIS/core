@@ -765,7 +765,8 @@ trait MessagesTrait
             'unpublishAll' => 'All published Report Cards have been unpublished successfully',
             'email' => 'The Report Card will be sent in the background',
             'emailAll' => 'All Report Cards will be sent in the background',
-            'emailInProgress' => 'There is already a email process sending in the background'
+            'emailInProgress' => 'There is already a email process sending in the background',
+			'date_closed' => 'Generate date for report card has been closed'
         ],
         'RecipientPaymentStructures' => [
             'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
@@ -2281,6 +2282,13 @@ trait MessagesTrait
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+				'generate_start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'generate_end_date' => [
+                    'ruleCompareDateReverse' => 'Generate End Date should not be earlier than Generate Start Date',
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ],
