@@ -135,7 +135,7 @@ class InstitutionGradesTable extends ControllerActionTable
 ******************************************************************************************************************/
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        $session = $this->Session;
+        
         $errors = $entity->errors();
         $process = function($model, $entity) use ($data, $errors) {
             /**
@@ -248,7 +248,7 @@ class InstitutionGradesTable extends ControllerActionTable
             ArrayObject $extra
     ){
         // POCOR 5001    
-        $session = $this->Session;
+        
         if (count($data['grades']['education_grade_subject_id']) > 0
         ) {
             $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
