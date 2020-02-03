@@ -113,22 +113,18 @@ class StaffLeaveTable extends ControllerActionTable
                         $InstitutionStaff->aliasField('institution_id = ') => $institutionId,
                         $InstitutionStaff->aliasField('staff_id = ') => $staffId
                     ])
-            ->order([$InstitutionStaff->aliasField('created') => 'DESC'])
-            ->group([
-                $InstitutionStaff->aliasField('staff_id'),
-                $InstitutionStaff->aliasField('id')
-            ])
-            ->toArray();
-            
-            $startDate = $staffData[0]['start_date']->format('Y-m-d');
+            ->order([$InstitutionStaff->aliasField('id') => 'DESC'])
+            ->first();
+              
+        $startDate = $staffData->start_date->format('Y-m-d');
             
         if ($startDate > $dateFrom) {
             $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
             return false;
         }
         
-        if (!empty($staffData[0]['end_date'])) {
-            $endDate = $staffData[0]['end_date']->format('Y-m-d');
+        if (!empty($staffData->end_date)) {
+            $endDate = $staffData->end_date->format('Y-m-d');
             
             if ($dateFrom > $endDate) {
                 $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
@@ -138,7 +134,7 @@ class StaffLeaveTable extends ControllerActionTable
                 return false;
             }
         }
-
+        
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
