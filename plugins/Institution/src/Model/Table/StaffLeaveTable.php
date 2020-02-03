@@ -114,12 +114,8 @@ class StaffLeaveTable extends ControllerActionTable
                         $InstitutionStaff->aliasField('staff_id = ') => $staffId
                     ])
             ->order([$InstitutionStaff->aliasField('id') => 'DESC'])
-            ->group([
-                $InstitutionStaff->aliasField('staff_id'),
-                $InstitutionStaff->aliasField('id')
-            ])
             ->first();
-        
+              
         $startDate = $staffData->start_date->format('Y-m-d');
             
         if ($startDate > $dateFrom) {
