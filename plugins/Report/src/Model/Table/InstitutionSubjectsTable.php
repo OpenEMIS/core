@@ -96,7 +96,7 @@ class InstitutionSubjectsTable extends AppTable  {
                 $fields[$key] = array('key' => 'InstitutionClasses.name',
                     'field' => 'class_name',
                     'type' => 'string',
-                    'label' => __('InstitutionClasses'));
+                    'label' => __('Institution Class'));
             }
         }
        
