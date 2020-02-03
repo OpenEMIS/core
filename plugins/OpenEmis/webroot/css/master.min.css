@@ -139,3 +139,13 @@ tags-input{width:30%!important;display:inline-block!important;-webkit-border-rad
 .kdx-charts .chart-container{position:relative;top:unset;left:unset;right:unset;bottom:unset}.kdx-charts .chart-container div{height:auto}
 /* KDX-VISUALIZATION v.1.0.0 */
 .kdx-visualization .kdx-visualization-menu-btn.rounded-circle{border-radius:50%!important}
+
+/* Change css as per POCOR-5247 Institutions > Survey > Forms: To allow at least 5 columns in one view
+*/
+.table-wrapper.shadow-right .table-in-view .input.string input{
+    min-width: 75px !important;
+    padding-right: 10px;
+    max-width: 75px !important;
+}
+/* Change css as per POCOR-5247 Institutions > Survey > Forms: To allow at least 5 columns in one view
+*/
