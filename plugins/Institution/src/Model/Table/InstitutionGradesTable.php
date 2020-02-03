@@ -190,7 +190,7 @@ class InstitutionGradesTable extends ControllerActionTable
                             if (count($data['grades']['education_grade_subject_id']) > 0
                             ) {
                                 $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
-                                $createdUserId = $session->read('Auth.User.id');
+                                $createdUserId = $this->Session->read('Auth.User.id');
                                 foreach($gradeSubjectEntities as $gradeSubjectId){ 
                                     if($gradeSubjectId > 0){
                                         $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
@@ -252,7 +252,7 @@ class InstitutionGradesTable extends ControllerActionTable
         if (count($data['grades']['education_grade_subject_id']) > 0
         ) {
             $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
-            $createdUserId = $session->read('Auth.User.id');            
+            $createdUserId = $this->Session->read('Auth.User.id');            
             $institutionClassGrades = TableRegistry::get('InstitutionClassGrades')
                     ->find()->select([
                         'InstitutionClassGrades.education_grade_id',
