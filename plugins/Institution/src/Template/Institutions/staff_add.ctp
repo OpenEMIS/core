@@ -354,7 +354,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input type="string" value="<?= __('Assigned') ?>" disabled="disabled">
                 </div>
 
-                <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
+                <!--<div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
                     <label><?= __('Academic Period') ?></label>
                     <div class="input-select-wrapper">
                         <select name="Staff[academic_period_id]" id="staff-academic-period-id"
@@ -367,7 +367,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <div ng-if="InstitutionStaffController.postResponse.error.academic_period_id" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.academic_period_id">{{ error }}</p>
                     </div>
-                </div>
+                </div>-->
 
                 <div class="input date required" ng-show="!InstitutionStaffController.completeDisabled">
                     <label for="Staff_start_date"><?= __('Start Date') ?></label>
