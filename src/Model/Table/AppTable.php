@@ -22,7 +22,7 @@ class AppTable extends Table
     use UtilityTrait;
     use LogTrait;
     use OptionListTrait;
-    const OpenEMIS = 'BEMIS ID';
+    const OpenEMIS = 'OpenEMIS ID';
     public function initialize(array $config)
     {
         Time::$defaultLocale = 'en_US';
@@ -284,18 +284,30 @@ class AppTable extends Table
     // Event: 'ControllerAction.Model.onGetFieldLabel'
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
+        $Labels     = TableRegistry::get('Labels');
+        $moduleName = $Labels->find()
+                ->select(['name'])
+                ->where(['module' => $event->data['module'],'field'=>'openemis_no'])
+                ->first();
         
-        if ($field == 'openemis_no') {
-          return self::OpenEMIS;
-        }
+        if ($field == 'openemis_no' && empty($moduleName['name'])) {
+             return self::OpenEMIS;
+        } 
+        
+        if ($field == 'openemis_no' && !empty($moduleName['name'])) {
+             return $moduleName['name'];
+        } 
+        
         return $this->getFieldLabel($module, $field, $language, $autoHumanize);
     }
 
     public function getFieldLabel($module, $field, $language, $autoHumanize = true)
     {
-        
+        //print_r($field);die;
         $Labels = TableRegistry::get('Labels');
+       
         $label = $Labels->getLabel($module, $field, $language);
+        
         if ($label === false && $autoHumanize) {
             $label = Inflector::humanize($field);
             if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
@@ -306,6 +318,7 @@ class AppTable extends Table
         if (substr($label, -1) == ')') {
             $label = $label.' ';
         }
+        //print_r($label);die;
         return $label;
     }
 
