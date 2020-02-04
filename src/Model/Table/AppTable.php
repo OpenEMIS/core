@@ -302,9 +302,7 @@ class AppTable extends Table
 
     public function getFieldLabel($module, $field, $language, $autoHumanize = true)
     {
-        //print_r($field);die;
         $Labels = TableRegistry::get('Labels');
-       
         $label = $Labels->getLabel($module, $field, $language);
         
         if ($label === false && $autoHumanize) {
@@ -314,10 +312,11 @@ class AppTable extends Table
             }
             $label = __($label);
         }
+        
         if (substr($label, -1) == ')') {
             $label = $label.' ';
         }
-        //print_r($label);die;
+        
         return $label;
     }
 
