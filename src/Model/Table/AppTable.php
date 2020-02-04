@@ -285,17 +285,17 @@ class AppTable extends Table
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         $Labels     = TableRegistry::get('Labels');
-        $moduleName = $Labels->find()
+        $fieldName = $Labels->find()
                 ->select(['name'])
                 ->where(['module' => $event->data['module'],'field'=>'openemis_no'])
                 ->first();
         
-        if ($field == 'openemis_no' && empty($moduleName['name'])) {
+        if ($field == 'openemis_no' && empty($fieldName['name'])) {
              return self::OpenEMIS;
         } 
         
-        if ($field == 'openemis_no' && !empty($moduleName['name'])) {
-             return $moduleName['name'];
+        if ($field == 'openemis_no' && !empty($fieldName['name'])) {
+             return $fieldName['name'];
         } 
         
         return $this->getFieldLabel($module, $field, $language, $autoHumanize);
