@@ -716,7 +716,7 @@ class ImportBehavior extends Behavior
                     $activeSheet->getStyle($alpha)
                         ->getNumberFormat()
                         ->setFormatCode('dd/mm/yyyy');
-                }
+                }                
             } else {
                 $currentRowHeight = $this->suggestRowHeight(strlen($value), $currentRowHeight);
                 $activeSheet->getRowDimension($lastRowToAlign)->setRowHeight($currentRowHeight);
@@ -1223,16 +1223,19 @@ class ImportBehavior extends Behavior
         $customColumnCounter = 0;
 
         for ($col = 0; $col < $totalColumns; ++$col) {
-            $cell = $sheet->getCellByColumnAndRow($col, $row);
+            $cell = $sheet->getCellByColumnAndRow($col, $row); 
 
-            if (PHPExcel_Shared_Date::isDateTime($cell)) {
+            if (self::timeTwelvehoursValidator($cell->getFormattedValue()) == 1) {
+                $cell->getStyle()->getNumberFormat()->setFormatCode('h:mm:ss');
+                $originalValue = $cell->getFormattedValue();
+            } else if (PHPExcel_Shared_Date::isDateTime($cell)) {
                 $cell->getStyle()->getNumberFormat()->setFormatCode('dd/mm/yyyy');
                 $originalValue = $cell->getFormattedValue();
             } else {
                 $originalValue = $cell->getValue();
             }
 
-            $cellValue = $originalValue;
+             $cellValue = $originalValue;
             // need to understand this check
             // @hanafi - this might be for type casting a double or boolean value to a string to avoid data loss when assigning
             // them to $val. Example: the value of latitude, "1.05647" might become "1" if not casted as a string type.
@@ -1415,6 +1418,36 @@ class ImportBehavior extends Behavior
 
         return $rowPass;
     }
+
+   private static function timeTwelvehoursValidator( $time ) {
+
+      
+     $regex = '/^(1[012]|[1-9])\:[0-5][0-9]\:[0-5][0-9]\s*[ap]m$/i';
+       
+      if ( preg_match($regex, $time) ) {
+        return true;
+      }
+
+      $regex = '/^(1[012]|[1-9])\:[0-5][0-9]\s*[ap]m$/i';
+       
+      if ( preg_match($regex, $time) ) {
+        return true;
+      }
+        
+       $regex = '/^([0-1][0-9])\:[0-5][0-9]\s*[ap]m$/i';
+       
+      if ( preg_match($regex, $time) ) {
+        return true;
+      }
+      
+      $regex = '/^([0-1][0-9])\:[0-5][0-9]\:[0-5][0-9]\s*[ap]m$/i';
+       
+      if ( preg_match($regex, $time) ) {
+        return true;
+      }
+      
+      return false;
+}
 
 
 /******************************************************************************************************************

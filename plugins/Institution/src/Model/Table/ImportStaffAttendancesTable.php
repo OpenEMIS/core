@@ -12,6 +12,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use DateTime;
 use PHPExcel_Worksheet;
+use Cake\I18n\Time;
 use Workflow\Model\Behavior\WorkflowBehavior;
 
 class ImportStaffAttendancesTable extends AppTable {
@@ -21,10 +22,10 @@ class ImportStaffAttendancesTable extends AppTable {
         $this->table('import_mapping');
         parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'StaffAbsences',
+        $this->addBehavior('Import.Import', ['plugin'=>'Staff', 'model'=>'InstitutionStaffAttendances',
             'backUrl' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionStaffAttendances']]);
 
-        $this->StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
+        $this->InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $this->Institutions = TableRegistry::get('Institution.Institutions');
         $this->Staff = TableRegistry::get('Institution.Staff');
         $this->Users = TableRegistry::get('User.Users');
@@ -47,12 +48,9 @@ class ImportStaffAttendancesTable extends AppTable {
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $newEvent = [
-            'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
-            'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
-            'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
-            'Model.import.onImportPopulateStaffLeaveTypesData' => 'onImportPopulateStaffLeaveTypesData',
-            'Model.import.onImportPopulateAcademicPeriodsData' => 'onImportPopulateAcademicPeriodsData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
+            'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
+            'Model.import.onImportPopulateAcademicPeriodsData' => 'onImportPopulateAcademicPeriodsData',
             'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
         ];
         $events = array_merge($events, $newEvent);
@@ -64,14 +62,16 @@ class ImportStaffAttendancesTable extends AppTable {
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
-        $tempRow['entity'] = $this->StaffAbsences->newEntity();
-        $tempRow['full_day'] = 1;
-        $tempRow['institution_id'] = false;
-        $tempRow['academic_period_id'] = false;
+    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    {
+        $tempRow['staff_id'] = $tempRow['openemis_no'];
+        $tempRow['date'] = (new Date($tempRow['date']))->format('Y-m-d');
+        $institutionId = $this->ControllerAction->paramsDecode($this->request->params['institutionId']);
+        $id = $institutionId['id'];
+        $tempRow['institution_id'] = $id;
+        unset($tempRow['openemis_no']);
+        return true;
     }
-
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
 
     public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
@@ -108,82 +108,7 @@ class ImportStaffAttendancesTable extends AppTable {
         }
     }
 
-    public function onImportPopulateStaffLeaveTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-
-        $result = $lookedUpTable
-            ->find('all')
-            ->select([
-                $lookedUpTable->aliasField('name'),
-                $lookedUpTable->aliasField($lookupColumn)
-            ])
-            ->order([
-                $lookedUpTable->aliasField('name')
-            ])
-            ->all();
-
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
-
-        if (!$result->isEmpty()) {
-            $modelData = $result->toArray();
-            foreach ($modelData as $row) {
-                $data[$columnOrder]['data'][] = [
-                    $row->name,
-                    $row->{$lookupColumn}
-                ];
-            }
-        }
-    }
-
-    public function onImportPopulateWorkflowStepsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-
-        $workflowResult = $this->Workflows
-            ->find()
-            ->select([
-                'workflow_id' => $this->Workflows->aliasField('id'),
-                'workflow_name' => $this->Workflows->aliasField('name'),
-                'workflow_step_id' => $lookedUpTable->aliasField('id'),
-                'workflow_step_name' => $lookedUpTable->aliasField('name'),
-                'workflow_filter_id' => $this->WorkflowsFilters->aliasField('filter_id')
-            ])
-            ->matching('WorkflowModels', function ($q) {
-                return $q->where(['WorkflowModels.model' => 'Institution.StaffLeave']);
-            })
-            ->matching($lookupModel)
-            ->leftJoin(
-                [$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()],
-                [$this->Workflows->aliasField('id = ') . $this->WorkflowsFilters->aliasField('workflow_id')]
-            )
-            ->order([
-                $this->Workflows->aliasField('name'),
-                $lookupModel.'.category'
-            ])
-            ->all();
-
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 4;
-        $data[$columnOrder]['data'][] = [__('Staff Leave Type Id'), __('Workflow'), $translatedReadableCol, $translatedCol];
-
-        if (!$workflowResult->isEmpty()) {
-            $modelData = $workflowResult->toArray();
-
-            foreach ($modelData as $row) {
-                $leaveTypeId = ($row->workflow_filter_id == 0) ? __('Apply To All') : $row->workflow_filter_id;
-
-                $data[$columnOrder]['data'][] = [
-                    $leaveTypeId,
-                    $row->workflow_name,
-                    $row->workflow_step_name,
-                    $row->workflow_step_id
-                ];
-            }
-        }
-    }
+    
 
     public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
@@ -207,62 +132,20 @@ class ImportStaffAttendancesTable extends AppTable {
                 }
             }
         }
-    }   
+    } 
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-        if (!$this->institutionId) {
-            $rowInvalidCodeCols['institution_id'] = __('No active institution');
-            $tempRow['institution_id'] = false;
-            return false;
-        }
 
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData) {
+        $process = function($model, $entity) use ($requestData) {
+            $errors = $entity->errors();
+            if (empty($errors)) {
+                $this->_generate($requestData);
+                return true;
+            } else {
+                return false;
+            }
+        };
         
-
-        $tempRow['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
-        $tempRow['institution_id'] = $this->institutionId;
-
-        $filterIdCondition = [$this->WorkflowSteps->aliasField('id') => $tempRow['status_id']];
-
-        // find workflow for the specific staff leave type
-        $filterStepsQuery = $this->Workflows
-            ->find()
-            ->matching('WorkflowModels', function ($q) {
-                return $q->where(['WorkflowModels.model' => 'Institution.StaffLeave']);
-            })
-            ->matching($this->WorkflowSteps->alias())
-            ->leftJoin(
-                [$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()],
-                [$this->Workflows->aliasField('id = ') . $this->WorkflowsFilters->aliasField('workflow_id')]
-            )
-            ->where([$this->WorkflowsFilters->aliasField('filter_id') => $tempRow['staff_leave_type_id']]);
-
-        $filterStepsResult = $filterStepsQuery->all();
-
-        if ($filterStepsResult->isEmpty()) {
-            // if specific staff leave type cannot be found, override the existing where condition, and find with apply to all filter (0)
-            $result = $filterStepsQuery
-                ->where($filterIdCondition, [], true)
-                ->where([$this->WorkflowsFilters->aliasField('filter_id') => 0])
-                ->all();
-        } else {
-            // if specific staff leave type can be found, use the query to find if the steps existed in the workflow
-            $result = $filterStepsQuery
-                ->where($filterIdCondition)
-                ->all();
-        }
-
-        if ($result->isEmpty()) {
-            $rowInvalidCodeCols['status_id'] = __('Selected value does not match with Staff Leave Type');
-            return false;
-        }
-
-        return true;
-    }
-
-    public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
-        $flipped = array_flip($columns);
-        $key = $flipped['staff_id'];
-        $tempPassedRecord['data'][$key] = $originalRow[$key];
     }
 
 }
