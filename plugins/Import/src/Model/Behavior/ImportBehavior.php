@@ -1598,8 +1598,4 @@ class ImportBehavior extends Behavior
         7 => 'Failed to write file to disk.',
         8 => 'A PHP extension stopped the file upload.',
     );
-
-    private static function isTimeAmPm($time) {
-         return preg_match('^(?:0?[0-9]|1[0-2])[-:][0-5][0-9]\s*[ap]m$', $time);
-    }
 }
