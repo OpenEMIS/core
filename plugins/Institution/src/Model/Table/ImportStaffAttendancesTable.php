@@ -65,8 +65,7 @@ class ImportStaffAttendancesTable extends AppTable {
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $tempRow['staff_id'] = $tempRow['openemis_no'];
-        $formattedDate = DateTime::createFromFormat('d/m/Y', $tempRow['date']);
-        $tempRow['date'] = $formattedDate;
+        $tempRow['date'] = DateTime::createFromFormat('d/m/Y', $tempRow['date']);
         $institutionId = $this->ControllerAction->paramsDecode($this->request->params['institutionId']);
         $id = $institutionId['id'];
         $tempRow['institution_id'] = $id;
