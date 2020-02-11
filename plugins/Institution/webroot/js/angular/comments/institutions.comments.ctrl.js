@@ -133,7 +133,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             stopEditingWhenGridLosesFocus: true,
             ensureDomOrder: true,
             pagination: true,
-            paginationPageSize: 10,
+            paginationPageSize: 5,
             maxBlocksInCache: 1,
             cacheBlockSize: 10,
             onGridSizeChanged: function(e) {
@@ -193,7 +193,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             pageSize: limit,
             getRows: function (params) {
                 var page = parseInt(params.startRow / limit) + 1;
-
+              
                 UtilsSvc.isAppendSpinner(true, 'institution-comment-table');
                 InstitutionsCommentsSvc.getRowData(vm.academicPeriodId, $scope.institutionId, $scope.classId, vm.educationGradeId, $scope.reportCardId, vm.commentCodeOptions, tab, limit, page)
                 .then(function(response) {
@@ -328,6 +328,9 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
 
     function onPageSizeChanged() {
         var limit = this.value;
+        vm.gridOptions.api.gridOptionsWrapper.setProperty('cacheBlockSize', limit);
+        vm.gridOptions.api.gridOptionsWrapper.setProperty('paginationPageSize', Number(limit/2));
+        vm.gridOptions.api.infinitePageRowModel.resetCache();
         vm.gridOptions.api.paginationSetPageSize(Number(limit));
         vm.count = 0;
         vm.onChangeSubject(vm.currentTab, limit);
