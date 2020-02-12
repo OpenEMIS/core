@@ -1005,7 +1005,17 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
                 'excel'
             ];
+            $_import = $this->AccessControl->check(['Institutions', 'ImportStaffAttendances', 'add']);
 
+            $importUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'ImportStaffAttendances',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+                'add'
+            ];
+            $this->set('importUrl', Router::url($importUrl));
+            $this->set('_import', $_import);
             $this->set('_edit', $_edit);
             $this->set('_excel', $_excel);
             $this->set('_history', $_history);
@@ -1013,22 +1023,6 @@ class InstitutionsController extends AppController
             $this->set('excelUrl', Router::url($excelUrl));
             $this->set('ngController', 'InstitutionStaffAttendancesCtrl as $ctrl');
         }
-
-        $_import = $this->AccessControl->check(['Institutions', 'ImportStaffAttendances', 'add']);
-
-        $importUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'ImportStaffAttendances',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'add'
-        ];
-        $this->set('importUrl', Router::url($importUrl));
-        $this->set('_edit', $_edit);
-        $this->set('_history', $_history);
-        $this->set('institution_id', $institutionId);
-        $this->set('ngController', 'InstitutionStaffAttendancesCtrl as $ctrl');
-
     }
 
     public function implementedEvents()

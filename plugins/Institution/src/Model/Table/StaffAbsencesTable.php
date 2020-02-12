@@ -17,7 +17,7 @@ use Cake\Collection\Collection;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
 
-class StaffLeaveTable extends ControllerActionTable
+class StaffAbsencesTable extends ControllerActionTable
 {
     // Workflow Steps - category
     const TO_DO = 1;
@@ -59,7 +59,7 @@ class StaffLeaveTable extends ControllerActionTable
         );
 
         $this->addBehavior('Workflow.Workflow');
-        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStaffLeave']);
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStaffAttendances']);
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
@@ -74,20 +74,7 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
-        return $validator
-            ->add('date_to', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'date_from', true]
-            ])
-            ->add('date_to', 'ruleInAcademicPeriod', [
-                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
-            ])
-            ->add('date_from', 'ruleInAcademicPeriod', [
-                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
-            ])
-            ->add('date_from', 'leavePeriodOverlap', [
-                'rule' => ['noOverlappingStaffAttendance']
-            ])
-            ->allowEmpty('file_content');
+        return $validator;
     }
 
     public function implementedEvents()
@@ -113,18 +100,20 @@ class StaffLeaveTable extends ControllerActionTable
                         $InstitutionStaff->aliasField('institution_id = ') => $institutionId,
                         $InstitutionStaff->aliasField('staff_id = ') => $staffId
                     ])
-            ->order([$InstitutionStaff->aliasField('id') => 'DESC'])
-            ->first();
-              
-        $startDate = $staffData->start_date->format('Y-m-d');
+            ->group([
+                $InstitutionStaff->aliasField('staff_id')
+            ])
+            ->toArray();
+            
+            $startDate = $staffData[0]['start_date']->format('Y-m-d');
             
         if ($startDate > $dateFrom) {
             $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
             return false;
         }
         
-        if (!empty($staffData->end_date)) {
-            $endDate = $staffData->end_date->format('Y-m-d');
+        if (!empty($staffData[0]['end_date'])) {
+            $endDate = $staffData[0]['end_date']->format('Y-m-d');
             
             if ($dateFrom > $endDate) {
                 $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
@@ -134,7 +123,7 @@ class StaffLeaveTable extends ControllerActionTable
                 return false;
             }
         }
-        
+
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
