@@ -1,3 +1,14 @@
+### [3.47.1] - 2020-02-12
+- Bug Fixed for Leave Application for Staff that has two positions
+- Bug Fixed Institution > Academic > Programme: 404 error encountered after creating a Programme
+- Bug Fixed Institution > Attendance > Staff: User is not able to remove start and end time
+- Bug Fixed Institution > Performance > Assessment > Report: Report generated blank for student who had 0 marks
+- Bug Fixed Reports > Institutions > Subjects : To remove Subject Name Column and Include Class Name Column
+- Bug Fixed Adminsitration > System Setup > Label : Labels with OpenEMIS ID are not updated with the changes
+- Bug Fixed Institution > Report Cards > Comments: Comments not displaying students on 2nd and 4th page
+- Bug Fixed Reports > Institutions: New staff attendance report
+- Bug Fixed Institution > Attendance > Staff : To develop import feature for new staff attendance
+
 ### [3.47.0] - 2020-02-01
 - Implemented a new Report: Reports > Students > Guardians
 - Implemented a System Configuration option to Enable/Disable the Generate All Button for Student Report Cards
