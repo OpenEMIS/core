@@ -22,7 +22,7 @@ class AppTable extends Table
     use UtilityTrait;
     use LogTrait;
     use OptionListTrait;
-
+    const OpenEMIS = 'OpenEMIS ID';
     public function initialize(array $config)
     {
         Time::$defaultLocale = 'en_US';
@@ -284,9 +284,19 @@ class AppTable extends Table
     // Event: 'ControllerAction.Model.onGetFieldLabel'
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'openemis_no') {
-            return 'OpenEMIS ID';
-        }
+        $Labels     = TableRegistry::get('Labels');
+        $fieldLabel = $Labels->find()
+                ->select(['name'])
+                ->where(['module' => $event->data['module'],'field'=>'openemis_no'])
+                ->first();
+        
+        if ($field == 'openemis_no' && !empty($fieldLabel['name'])) {
+             return $fieldLabel['name'];
+             
+        } else if ($field == 'openemis_no') {
+		    return self::OpenEMIS;
+		}
+        
         return $this->getFieldLabel($module, $field, $language, $autoHumanize);
     }
 
@@ -294,6 +304,7 @@ class AppTable extends Table
     {
         $Labels = TableRegistry::get('Labels');
         $label = $Labels->getLabel($module, $field, $language);
+        
         if ($label === false && $autoHumanize) {
             $label = Inflector::humanize($field);
             if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
@@ -301,16 +312,18 @@ class AppTable extends Table
             }
             $label = __($label);
         }
+        
         if (substr($label, -1) == ')') {
             $label = $label.' ';
         }
+        
         return $label;
     }
 
     // Event: 'Model.excel.onExcelGetLabel'
     public function onExcelGetLabel(Event $event, $module, $col, $language)
     {
-        return __($this->getFieldLabel($module, $col, $language));
+       return __($this->getFieldLabel($module, $col, $language));
     }
 
     public function getButtonAttr()
