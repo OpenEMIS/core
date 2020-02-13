@@ -32,6 +32,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
+        $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportCompetencyTemplates']);
     }
 
     public function validationDefault(Validator $validator)
