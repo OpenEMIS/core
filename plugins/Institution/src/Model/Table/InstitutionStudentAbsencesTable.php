@@ -476,8 +476,8 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ->all();
 
         if (!$result->isEmpty()) {
-            $gradeList = $result->toArray();
-            $allGradeList = ["all" => __('All')];
+            $gradeList    = $result->toArray();
+            $allGradeList = ["all" => 'All'];
             $educationGradesOptions = $allGradeList + $gradeList;
             
         } else {
@@ -500,7 +500,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ])
                 ->order([$InstitutionClasses->aliasField('id')])
                 ->first();
-           //print_r($firstInstitutionClassIdResult);die;
+          
             if (!empty($firstInstitutionClassIdResult)) {
                 $requestQuery['institution_class_id'] = $firstInstitutionClassIdResult->id;
             } else {
@@ -542,7 +542,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
 
         $params['element'] = ['filter' => ['name' => 'Cases.StudentAbsences/controls', 'order' => 2]];
-       // print_r($params['element']);die;
+      
         $params['options'] = [
             'selectedAcademicPeriod' => $selectedAcademicPeriod,
             'academicPeriodOptions' => $academicPeriodOptions,
