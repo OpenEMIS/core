@@ -14,6 +14,7 @@ class POCOR4603 extends AbstractMigration
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains all staff for all institution classes'
         ]);
+		
         $InstitutionClassesSecondaryStaff
             ->addColumn('id', 'char', [
                 'limit' => 64,
