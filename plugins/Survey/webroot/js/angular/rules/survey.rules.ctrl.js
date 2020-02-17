@@ -84,36 +84,107 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
             var rules = [];
             // console.log(response.data);
 
-            for(i = 0; i < response.data.length; i++) {
-                question = response.data[i];
-                var shortName = question.name;
-                var number = i + 1;
-                if (shortName.length > 30) {
-                    shortName = shortName.substring(0,29)+'...';
-                }
-
-                var rule = {
-                	enabled: 0,
-                	dependent_question_id: undefined,
-                	show_options: undefined
-                };
-                if (question.survey_rule_enabled != null) {
-                    rule = {
-                        enabled: question.survey_rule_enabled,
-                        dependent_question_id: question.dependent_question,
-                        show_options: JSON.parse(question.show_options)
+            if(window.innerWidth<=767){
+                for(i = 0; i < response.data.length; i++) {
+                    question = response.data[i];
+                    var shortName = question.name;
+                    var number = i + 1;
+                    
+                    if (shortName.length > 30) {
+                       shortName = shortName.substring(0,29)+'...';
                     }
+    
+                    var rule = {
+                        enabled: 0,
+                        dependent_question_id: undefined,
+                        show_options: undefined
+                    };
+                    if (question.survey_rule_enabled != null) {
+                        rule = {
+                            enabled: question.survey_rule_enabled,
+                            dependent_question_id: question.dependent_question,
+                            show_options: JSON.parse(question.show_options)
+                        }
+                    }
+                    surveyQuestions[i] = {
+                        no: number,
+                        survey_question_id: question.survey_question_id,
+                        name: question.name,
+                        short_name: number + '. ' + shortName,
+                        order: question.order,
+                        field_type: question.custom_field.field_type,
+                        rule: rule
+                    };
                 }
-                surveyQuestions[i] = {
-                    no: number,
-                    survey_question_id: question.survey_question_id,
-                    name: question.name,
-                    short_name: number + '. ' + shortName,
-                    order: question.order,
-                    field_type: question.custom_field.field_type,
-                    rule: rule
-                };
-            }
+            } /**Select Dropdown Check */
+    
+            if((window.innerWidth > 767) && (window.innerWidth<=1199)){
+                for(i = 0; i < response.data.length; i++) {
+                    question = response.data[i];
+                    var shortName = question.name;
+                    var number = i + 1;
+                    
+                    if (shortName.length > 30) {
+                       shortName = shortName.substring(0,96)+'...';
+                    }
+    
+                    var rule = {
+                        enabled: 0,
+                        dependent_question_id: undefined,
+                        show_options: undefined
+                    };
+                    if (question.survey_rule_enabled != null) {
+                        rule = {
+                            enabled: question.survey_rule_enabled,
+                            dependent_question_id: question.dependent_question,
+                            show_options: JSON.parse(question.show_options)
+                        }
+                    }
+                    surveyQuestions[i] = {
+                        no: number,
+                        survey_question_id: question.survey_question_id,
+                        name: question.name,
+                        short_name: number + '. ' + shortName,
+                        order: question.order,
+                        field_type: question.custom_field.field_type,
+                        rule: rule
+                    };
+                }
+            } /**Select Dropdown Check */
+    
+            if(window.innerWidth>1199){
+                for(i = 0; i < response.data.length; i++) {
+                    question = response.data[i];
+                    var shortName = question.name;
+                    var number = i + 1;
+                    
+                    if (shortName.length > 30) {
+                       shortName = shortName.substring(0,126)+'...';
+                    }
+    
+                    var rule = {
+                        enabled: 0,
+                        dependent_question_id: undefined,
+                        show_options: undefined
+                    };
+                    if (question.survey_rule_enabled != null) {
+                        rule = {
+                            enabled: question.survey_rule_enabled,
+                            dependent_question_id: question.dependent_question,
+                            show_options: JSON.parse(question.show_options)
+                        }
+                    }
+                    surveyQuestions[i] = {
+                        no: number,
+                        survey_question_id: question.survey_question_id,
+                        name: question.name,
+                        short_name: number + '. ' + shortName,
+                        order: question.order,
+                        field_type: question.custom_field.field_type,
+                        rule: rule
+                    };
+                }
+            }/**Select Dropdown Check */
             vm.surveyQuestions = surveyQuestions;
         }, function(error) {
             console.log(error);
