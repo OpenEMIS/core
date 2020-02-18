@@ -407,9 +407,9 @@ class InstitutionSubjectStaffTable extends AppTable
                                         FROM institution_class_subjects
                                         JOIN institution_classes
                                         ON institution_classes.id = institution_class_subjects.institution_class_id
-                                        JOIN institution_classes_secondary_staff
+                                        JOIN institution_classes_secondary_staff ON
                                         institution_classes_secondary_staff.institution_class_id = institution_classes.id
-                                        AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes_secondary_staff.secondary_staff_id = ' . $userId . ')
+                                        AND (institution_classes.staff_id = "' . $userId . '" OR institution_classes_secondary_staff.secondary_staff_id = "' . $userId . '")
                                         WHERE institution_class_subjects.institution_subject_id = InstitutionSubjectStaff.institution_subject_id
                                         LIMIT 1
                                     )'
