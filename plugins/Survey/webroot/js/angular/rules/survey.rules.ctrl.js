@@ -83,37 +83,27 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
             var surveyQuestions = [];
             var rules = [];
             // console.log(response.data);
-
-            // if(window.innerWidth<=767)
+            
                 for(i = 0; i < response.data.length; i++) {
                     question = response.data[i];
                     var shortName = question.name;
                     var number = i + 1;
-                    console.log(shortName.length,  shortName)
-
-                    if ((window.innerWidth <= 767) && (shortName.length > 30)) { /** to fix text in dropdown POCOR-3331*/
+                   
+                    /* to fix text length in dropdown POCOR-3331*/
+                    if ((window.innerWidth <= 767) && (shortName.length > 30)) {
                         shortName = shortName.substring(0, 29) + '...';
-                    } else if ((shortName.length > 96) && ((window.innerWidth > 767) && (window.innerWidth <= 1199))) {
+                    } else if (shortName.length > 96 && window.innerWidth <= 1280) {
                         shortName = shortName.substring(0, 96) + '...';
-                    } else if ((shortName.length > 100) && ((window.innerWidth > 1199) && (window.innerWidth <= 1280))) {
-                        shortName = shortName.substring(0, 100) + '...';
                     } else if ((shortName.length > 110) && ((window.innerWidth > 1280) && (window.innerWidth <= 1366))) {
                         shortName = shortName.substring(0, 110) + '...';
-                    } else if ((shortName.length > 120) && ((window.innerWidth > 1366) && (window.innerWidth <= 1440))) {
+                    } else if ((shortName.length > 120) && ((window.innerWidth > 1366) && (window.innerWidth <= 1500))) {
                         shortName = shortName.substring(0, 120) + '...';
-                    } else if ((shortName.length > 130) && ((window.innerWidth > 1440) && (window.innerWidth <= 1500))) {
-                        shortName = shortName.substring(0, 130) + '...';
-                    } else if ((shortName.length > 150) && ((window.innerWidth > 1500) && (window.innerWidth <= 1600))) {
+                    } else if ((shortName.length > 150) && ((window.innerWidth > 1500) && (window.innerWidth <= 1800))) {
                         shortName = shortName.substring(0, 150) + '...';
-                    } else if ((shortName.length > 155) && ((window.innerWidth > 1600) && (window.innerWidth <= 1700))) {
-                        shortName = shortName.substring(0, 155) + '...';
-                    } else if ((shortName.length > 160) && ((window.innerWidth > 1700) && (window.innerWidth <= 1800))) {
-                        shortName = shortName.substring(0, 160) + '...';
                     } else if ((shortName.length > 170) && ((window.innerWidth > 1800) && (window.innerWidth <= 1920))) {
                         shortName = shortName.substring(0, 170) + '...';
                     }
 
-    
                     var rule = {
                         enabled: 0,
                         dependent_question_id: undefined,
@@ -136,8 +126,6 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                         rule: rule
                     };
                 }
-           /**Select Dropdown Check */
-    
             
             vm.surveyQuestions = surveyQuestions;
         }, function(error) {
