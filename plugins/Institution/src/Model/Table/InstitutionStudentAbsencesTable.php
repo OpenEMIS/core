@@ -179,11 +179,12 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $Students = TableRegistry::get('Institution.Students');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $ClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
         $Cases = TableRegistry::get('Cases.InstitutionCases');
 
         $classTeachers = $Students->find()
             ->select([
-                'secondary_staff_id' => $Classes->aliasField('secondary_staff_id')
+                'secondary_staff_id' => $ClassesSecondaryStaff->aliasField('secondary_staff_id')
             ])
             ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                 $ClassStudents->aliasField('student_id = ') . $Students->aliasField('student_id'),
@@ -194,6 +195,9 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ])
             ->innerJoin([$Classes->alias() => $Classes->table()], [
                 $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
+            ])
+            ->innerJoin([$ClassesSecondaryStaff->alias() => $ClassesSecondaryStaff->table()], [
+                $ClassesSecondaryStaff->aliasField('institution_class_id = ') . $Classes->aliasField('id')
             ])
             ->where([
                 $Students->aliasField('student_id') => $linkedRecordEntity->student_id,
