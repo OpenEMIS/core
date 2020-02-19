@@ -1,3 +1,6 @@
+### [3.48.0] - 2020-02-19
+- Implemented the ability for Secondary Teacher to enter comments on behalf of Homeroom Teacher
+
 ### [3.47.1] - 2020-02-12
 - Bug Fixed for Leave Application for Staff that has two positions
 - Bug Fixed Institution > Academic > Programme: 404 error encountered after creating a Programme

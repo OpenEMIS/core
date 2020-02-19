@@ -636,6 +636,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionClasses(Event $event, array $params, ArrayObject $extra)
     {
+        
         if (array_key_exists('institution_class_id', $params)) {
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $entity = $InstitutionClasses->get($params['institution_class_id'], [
@@ -653,7 +654,7 @@ class ReportCardsTable extends AppTable
                             'postal_code'
                         ]
                     ],
-                    'SecondaryStaff' => [
+                    'ClassesSecondaryStaff.SecondaryStaff' => [
                         'fields' => [
                             'openemis_no',
                             'first_name',
