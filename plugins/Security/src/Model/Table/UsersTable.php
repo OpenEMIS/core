@@ -214,12 +214,19 @@ class UsersTable extends AppTable
     public function viewBeforeQuery(Event $event, Query $query)
     {
         $options['auto_contain'] = false;
-        $query->contain(['Roles']);
+        $query->contain(['Roles', 'Nationalities']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity)
     {
         $this->setupTabElements(['id' => $entity->id]);
+    }
+    
+    public function onGetNationalityId(Event $event, Entity $entity){     
+       $nationalities = TableRegistry::get('Nationalities')->get($entity->nationality_id);
+       $entity->nationalit_id = $nationalities->name;
+       return $entity->nationalit_id;
+      
     }
 
     private function setupTabElements($options)
