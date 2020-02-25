@@ -20,6 +20,7 @@ class CounsellingsTable extends AppTable
 
         $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
+        $this->belongsTo('Requesters', ['className' => 'Security.Users', 'foreign_key' => 'requester_id']);
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
@@ -91,5 +92,18 @@ class CounsellingsTable extends AppTable
             ->toArray();
 
         return $counselorOptions;
+    }
+
+    public function getRequesterOptions()
+    {        
+        $Users = TableRegistry::get('Security.Users');
+        $userOptions = $Users
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->toArray();
+
+        return $userOptions;
     }
 }
