@@ -110,6 +110,9 @@ class CounsellingsController extends PageController
         $counselorOptions = $this->Counsellings->getCounselorOptions($institutionId);
         $page->get('counselor_id')->setControlType('select')->setOptions($counselorOptions);
 
+        $requestorOptions = $this->Counsellings->getRequesterOptions();
+        $page->get('requester_id')->setControlType('select')->setOptions($requestorOptions);
+
         // set the file upload for attachment
         $page->get('file_content')
             ->setLabel('Attachment')
