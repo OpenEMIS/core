@@ -16,7 +16,9 @@ use App\Model\Table\ControllerActionTable;
 
 class IdentitiesTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+    const ISPREFERRED = 1;
+
+    public function initialize(array $config)
 	{
 		$this->table('user_identities');
 		parent::initialize($config);
@@ -141,7 +143,7 @@ class IdentitiesTable extends ControllerActionTable
                 $preferredNationality = TableRegistry::get('User.UserNationalities')
                         ->find()
                         ->where(['nationality_id'=>$entity->nationality_id,
-                                'preferred' => 1
+                                'preferred' => self::ISPREFERRED
                                 ])
                         ->first();
 
@@ -180,7 +182,7 @@ class IdentitiesTable extends ControllerActionTable
 			->select(['nationality_id', 'identityTypeId' => 'NationalitiesLookUp.identity_type_id'])
 			->where([
 				'security_user_id' => $userId,
-                'preferred' => 1
+                'preferred' => self::ISPREFERRED
 			])
             ->first();
 
