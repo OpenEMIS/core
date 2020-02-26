@@ -567,7 +567,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 $Institutions = TableRegistry::get('Institution.Institutions');
 
                 // start: restrict staff transfer by type
-                $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_transfer_by_type');
+                $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_release_between_same_type');
                 if ($restrictStaffTransferByType) {
                     if ($entity->has('institution_id')) {
                         $institutionId = $entity->institution_id;
@@ -580,7 +580,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 // end: restrict staff transfer by type
 
                 // start: restrict staff transfer by provider
-                $restrictStaffTransferByProvider = $ConfigItems->value('restrict_staff_transfer_by_provider');
+                $restrictStaffTransferByProvider = $ConfigItems->value('restrict_staff_release_between_different_provider');
                 if ($restrictStaffTransferByProvider) {
                     if ($entity->has('institution_id')) {
                         $institutionId = $entity->institution_id;
