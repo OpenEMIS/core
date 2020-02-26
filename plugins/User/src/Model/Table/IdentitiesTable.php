@@ -135,10 +135,10 @@ class IdentitiesTable extends ControllerActionTable
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
 	{ 
-            $NationalitiesLookUp = TableRegistry::get('Nationalities')->get($entity->nationality_id);
-            if($NationalitiesLookUp->identity_type_id == $entity->identity_type_id){
+            $nationalitiesLookUp = TableRegistry::get('Nationalities')->get($entity->nationality_id);
+            if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
                 $user = TableRegistry::get('User.Users');
-                $UserNationalityTable = TableRegistry::get('User.UserNationalities')
+                $preferredNationality = TableRegistry::get('User.UserNationalities')
                         ->find()
                         ->where(['nationality_id'=>$entity->nationality_id,
                                 'preferred' => 1
