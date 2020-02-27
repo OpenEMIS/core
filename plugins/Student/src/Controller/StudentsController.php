@@ -63,7 +63,7 @@ class StudentsController extends AppController
         $this->ControllerAction->models = [
             'Accounts'          => ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
             'Nationalities'     => ['className' => 'User.Nationalities'],
-            'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view', 'remove']],
+            'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
             'Behaviours'        => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'Extracurriculars'  => ['className' => 'Student.Extracurriculars'],
             'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
