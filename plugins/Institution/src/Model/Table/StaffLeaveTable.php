@@ -125,31 +125,24 @@ class StaffLeaveTable extends ControllerActionTable
             ->order([$InstitutionStaff->aliasField('id') => 'DESC'])
             ->toArray();
             
-            $count = 0;
-            
-            $staffStartDates = array();
-            $staffEndDates = array();
-
-            foreach ($staffData as $key => $value) {
-                if (!empty($value['start_date'])) {
-                $staffStartDates[$key] = $value['start_date']->format('Y-m-d');
-                } 
-                if (!empty($value['end_date'])) {
-                    $staffEndDates[$key] = $value['end_date']->format('Y-m-d');
-                }
-                if ($value['StaffStatuses']['code'] == 'ASSIGNED') {
-
-                    $count++;
-                }
+            $collection = new Collection($staffData);
+            $startDates = $collection->max('start_date')
+                          ->toArray();
+            $startDate = $startDates['start_date']->format('Y-m-d');
+            $endDates = $collection->max('end_date')
+                          ->toArray();
+                         
+            if (!empty($endDates['end_date'])) {
+                $endDate = $endDates['end_date']->format('Y-m-d');
             }
-
-            $startDate = max($staffStartDates);
+            $count = $collection->countBy('StaffStatuses.code')
+                        ->toArray();
+            
             if ($startDate > $dateFrom) {
                 $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
                 return false;
             } 
-            if ($count == 0) {                
-                $endDate = max($staffEndDates);
+            if (empty($count['ASSIGNED'])) { 
                 
                 if ($dateFrom > $endDate) {
                     $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
