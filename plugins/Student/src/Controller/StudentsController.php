@@ -63,7 +63,7 @@ class StudentsController extends AppController
         $this->ControllerAction->models = [
             'Accounts'          => ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
             'Nationalities'     => ['className' => 'User.Nationalities'],
-            'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
+            'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view', 'remove']],
             'Behaviours'        => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'Extracurriculars'  => ['className' => 'Student.Extracurriculars'],
             'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
@@ -367,7 +367,7 @@ class StudentsController extends AppController
                 }
                 if (! $enrolledStatus) {
                     if ($model->alias() != 'BankAccounts' && $model->alias() != 'StudentFees') {
-                       // $this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
+                        $this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
                     }
                 }
             }
@@ -660,7 +660,7 @@ class StudentsController extends AppController
                     // CAv4 off the add/edit/remove action
                     $model->toggle('add', false);
                     $model->toggle('edit', false);
-                    //$model->toggle('remove', false);
+                    $model->toggle('remove', false);
                 } else if ($model instanceof \App\Model\Table\AppTable) {
                     // CAv3 hide button and redirect when user change the Url
                     $model->addBehavior('ControllerAction.HideButton');
