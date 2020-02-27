@@ -35,15 +35,14 @@ class AbsencesTable extends AppTable
         $queryString = $this->request->query('queryString');
         if ($queryString) {
             $event->stopPropagation();
-            $condition = $this->paramsDecode($queryString);
-            $entity = $this->get($condition['id']);
+            $condition = $this->paramsDecode($queryString);            
+            $entity = $this->get($condition['id']);            
             $institutionStudentAbsenceDaysEntity = $this->InstitutionStudentAbsenceDays->get($entity->institution_student_absence_day_id);
             $this->InstitutionStudentAbsenceDays->delete($institutionStudentAbsenceDaysEntity);
             TableRegistry::get('InstitutionStudentAbsenceDetails')
                     ->deleteAll(['student_id'=>$entity->student_id,
                             'date'=>$entity->date,
-                            ]);
-            
+                            ]);            
             
             $this->delete($entity);
             $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
