@@ -142,7 +142,6 @@ class StaffLeaveTable extends ControllerActionTable
                     $count++;
                 }
             }
-            //echo "<pre>";print_r($staffData);die();
 
             $startDate = max($staffStartDates);
             if ($startDate > $dateFrom) {
