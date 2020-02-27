@@ -110,7 +110,7 @@ class StaffLeaveTable extends ControllerActionTable
         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $staffData = $InstitutionStaff
             ->find('all')
-            ->select([$StaffStatuses->aliasField('name')])
+            ->select([$StaffStatuses->aliasField('code')])
             ->select($InstitutionStaff)
             ->leftJoin(
                 [$StaffStatuses->alias() => $StaffStatuses->table()],
@@ -137,10 +137,12 @@ class StaffLeaveTable extends ControllerActionTable
                 if (!empty($value['end_date'])) {
                     $staffEndDates[$key] = $value['end_date']->format('Y-m-d');
                 }
-                if ($value['StaffStatuses']['name'] == 'ASSIGNED') {
+                if ($value['StaffStatuses']['code'] == 'ASSIGNED') {
+
                     $count++;
                 }
             }
+            //echo "<pre>";print_r($staffData);die();
 
             $startDate = max($staffStartDates);
             if ($startDate > $dateFrom) {
@@ -158,7 +160,7 @@ class StaffLeaveTable extends ControllerActionTable
                     return false;
                 }
             } 
-            
+
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
