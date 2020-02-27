@@ -107,40 +107,48 @@ class StaffLeaveTable extends ControllerActionTable
         $entity = $this->getNumberOfDays($entity);
         
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $staffData = $InstitutionStaff
             ->find('all')
+            ->select([$StaffStatuses->aliasField('name')])
+            ->select($InstitutionStaff)
+            ->leftJoin(
+                [$StaffStatuses->alias() => $StaffStatuses->table()],
+                [
+                    $StaffStatuses->aliasField('id = ') . $InstitutionStaff->aliasField('staff_status_id')
+                ]
+            )
             ->where([
                         $InstitutionStaff->aliasField('institution_id = ') => $institutionId,
                         $InstitutionStaff->aliasField('staff_id = ') => $staffId
                     ])
             ->order([$InstitutionStaff->aliasField('id') => 'DESC'])
             ->toArray();
-
-        $staffStartDates = array();
-        $staffEndDates = array();
-        $position = 0;
-        foreach ($staffData as $key=>$value) {
-            if (!empty($value['start_date'])) {
-            $start_date = $value['start_date']->format('Y-m-d');
-                array_push($staffStartDates, $start_date);
-            }
-            if (!empty($value['end_date'])) {
-            $end_date = $value['end_date']->format('Y-m-d');         
-            array_push($staffEndDates, $end_date);
-            }  else if (empty($value['end_date'])) {
-                $position = 1;
-            }
-        }   
-              
-        $startDate = max($staffStartDates);
             
-        if ($startDate > $dateFrom) {
-            $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
-            return false;
-        } 
-        
-            if (!$position) {               
-                $endDate = max($staffEndDates);            
+            $count = 0;
+            
+            $staffStartDates = array();
+            $staffEndDates = array();
+
+            foreach ($staffData as $key => $value) {
+                if (!empty($value['start_date'])) {
+                $staffStartDates[$key] = $value['start_date']->format('Y-m-d');
+                } 
+                if (!empty($value['end_date'])) {
+                    $staffEndDates[$key] = $value['end_date']->format('Y-m-d');
+                }
+                if ($value['StaffStatuses']['name'] == 'ASSIGNED') {
+                    $count++;
+                }
+            }
+
+            $startDate = max($staffStartDates);
+            if ($startDate > $dateFrom) {
+                $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
+                return false;
+            } 
+            if ($count == 0) {                
+                $endDate = max($staffEndDates);
                 
                 if ($dateFrom > $endDate) {
                     $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
@@ -149,9 +157,8 @@ class StaffLeaveTable extends ControllerActionTable
                     $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDateTo', ['reset' => true]);
                     return false;
                 }
-            }
-        
-        
+            } 
+            
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
