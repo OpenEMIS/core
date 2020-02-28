@@ -390,6 +390,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
 
                 //restrict staff release between same type
                 $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_release_between_same_type');
+               
                 $conditionsInstitutionTypeId = [];
                 if ($restrictStaffTransferByType) {
                     if ($entity->has('institution_id')) {
@@ -406,8 +407,9 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
                     $entity->has('institution_id')    
                     ) {                    
                         $institutionId = $entity->institution_id;
-                        $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
-                        $conditionsInstitutionTypeId['institution_type_id !='] = $institutionTypeId;
+                        $institutionProviderId = $Institutions->get($institutionId)->institution_provider_id;
+                        
+                        $conditions['institution_provider_id'] = $institutionProviderId;
                 }
                
                 $options = $this->NewInstitutions->find('list', [
