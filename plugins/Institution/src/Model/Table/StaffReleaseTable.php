@@ -395,8 +395,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
                 if ($restrictStaffTransferByType) {
                     if ($entity->has('institution_id')) {
                         $institutionId = $entity->institution_id;
-                        $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
-                        $conditionsInstitutionTypeId['institution_type_id'] = $institutionTypeId;
+                        $conditionsInstitutionTypeId['institution_type_id'] = $Institutions->get($institutionId)->institution_type_id;
                     }
                 }
                 
@@ -407,9 +406,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
                     $entity->has('institution_id')    
                     ) {                    
                         $institutionId = $entity->institution_id;
-                        $institutionProviderId = $Institutions->get($institutionId)->institution_provider_id;
-                        
-                        $conditions['institution_provider_id'] = $institutionProviderId;
+                        $conditions['institution_provider_id'] = $Institutions->get($institutionId)->institution_provider_id;                        
                 }
                
                 $options = $this->NewInstitutions->find('list', [
