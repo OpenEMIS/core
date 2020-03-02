@@ -16,7 +16,9 @@ use App\Model\Table\ControllerActionTable;
 
 class IdentitiesTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+    const ISPREFERRED = 1;
+
+    public function initialize(array $config)
 	{
 		$this->table('user_identities');
 		parent::initialize($config);
@@ -134,25 +136,42 @@ class IdentitiesTable extends ControllerActionTable
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
-	{
-		$listeners = [
-            TableRegistry::get('User.Users')
-        ];
-        $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
+	{ 
+            $nationalitiesLookUp = TableRegistry::get('Nationalities')->get($entity->nationality_id);
+            if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
+                $user = TableRegistry::get('User.Users');
+                $preferredNationality = TableRegistry::get('User.UserNationalities')
+                        ->find()
+                        ->where(['nationality_id'=>$entity->nationality_id,
+                                'preferred' => self::ISPREFERRED
+                                ])
+                        ->first();
+
+                $userDetail = $user->get($entity->security_user_id);  
+                if (!empty($preferredNationality)) {
+                    $userDetail->nationality_id = $entity->nationality_id;
+                }
+                $userDetail->identity_type_id = $entity->identity_type_id;
+                $userDetail->identity_number = $entity->number;
+                $user->save($userDetail);  
+            }                
+            
+            $listeners = [
+                TableRegistry::get('User.Users')
+            ];
+            $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
 	{
-		$listeners = [
-            TableRegistry::get('User.Users')
-        ];
-        $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
+            $listeners = [
+                TableRegistry::get('User.Users')
+            ];
+            $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
 	}
 
 	public function getLatestDefaultIdentityNo($userId) 
 	{
-
-		die;
         //check identity type that ties to the nationality
 		$UserNationalityTable = TableRegistry::get('User.UserNationalities');
 
@@ -163,7 +182,7 @@ class IdentitiesTable extends ControllerActionTable
 			->select(['nationality_id', 'identityTypeId' => 'NationalitiesLookUp.identity_type_id'])
 			->where([
 				'security_user_id' => $userId,
-                'preferred' => 1
+                'preferred' => self::ISPREFERRED
 			])
             ->first();
 
