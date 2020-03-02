@@ -31,6 +31,23 @@ class AbsencesTable extends AppTable
     {
         // $this->fields['student_absence_reason_id']['type'] = 'select';
         $this->fields['institution_student_absence_day_id']['visible'] = false;
+        // POCOR-5245
+        $queryString = $this->request->query('queryString');
+        if ($queryString) {
+            $event->stopPropagation();
+            $condition = $this->paramsDecode($queryString);            
+            $entity = $this->get($condition['id']);            
+            $institutionStudentAbsenceDaysEntity = $this->InstitutionStudentAbsenceDays->get($entity->institution_student_absence_day_id);
+            $this->InstitutionStudentAbsenceDays->delete($institutionStudentAbsenceDaysEntity);
+            TableRegistry::get('InstitutionStudentAbsenceDetails')
+                    ->deleteAll(['student_id'=>$entity->student_id,
+                            'date'=>$entity->date,
+                            ]);            
+            
+            $this->delete($entity);
+            $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
+            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
+        }
     }
 
     public function indexBeforeAction(Event $event)
@@ -58,11 +75,11 @@ class AbsencesTable extends AppTable
         // $this->ControllerAction->setFieldOrder('time', $order++);
         // $this->ControllerAction->setFieldOrder('student_absence_reason_id', $order++);
     }
-
+    
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         parent::onUpdateActionButtons($event, $entity, $buttons);
-
+        
         if (array_key_exists('view', $buttons)) {
             $institutionId = $entity->institution->id;
             $url = [
@@ -81,10 +98,28 @@ class AbsencesTable extends AppTable
             }
             // end POCOR-1893
         }
+        
+        if (array_key_exists('remove', $buttons)) {
+            $institutionId = $entity->institution->id;
+            $url = [
+                'plugin' => 'Student',
+                'controller' => 'Students',
+                'action' => 'Absences',
+                'remove',
+                'queryString' => $this->paramsEncode(['id' => $entity->id])
+            ];
+            $buttons['remove']['url'] = $url;
+
+            // POCOR-5245 unset the view button on profiles controller
+            if ($this->controller->name == 'Profiles') {
+                unset($buttons['remove']);
+            }
+            // end POCOR-5245
+        }
 
         return $buttons;
     }
-
+    
     private function setupTabElements()
     {
         $options['type'] = 'student';
