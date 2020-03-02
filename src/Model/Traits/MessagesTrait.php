@@ -737,6 +737,9 @@ trait MessagesTrait
         'UserNationalities' => [
             'noRecordRemain' => 'There should be at least one Nationality record'
         ],
+        'StudentAbsence' => [
+            'deleteRecord' => 'Student absence record deleted successfully'
+        ],
         'EducationStructure' => [
             'noGradesSetup' => 'Please set up Education Grades before adding Grade Subjects',
             'noProgrammesSetup' => 'Please set up Education Programmes before adding Grade Subjects'

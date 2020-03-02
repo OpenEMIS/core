@@ -1,3 +1,9 @@
+### [3.48.1] - 2020-03-02
+- Bug Fixed for Administration > Security > Roles > System Role: Enabled Delete permission for Student Attendance
+- Bug Fixed for Institution > Staff > Staff Release Configurations
+- Bug Fixed for Student > Academic > Classes : System does not display student's current class in Classes tab
+- Bug Fixed for Administration > Security > Users: Nationality and Identity Type field displays index instead of actual data
+
 ### [3.48.0] - 2020-02-19
 - Implemented the ability for Secondary Teacher to enter comments on behalf of Homeroom Teacher
 
