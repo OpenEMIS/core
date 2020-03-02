@@ -94,16 +94,50 @@ class CounsellingsTable extends AppTable
         return $counselorOptions;
     }
 
-    public function getRequesterOptions()
+    public function getRequesterOptions($institutionId)
     {        
-        $Users = TableRegistry::get('Security.Users');
-        $userOptions = $Users
+        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+
+        $requestorOptions = $this->Requesters
             ->find('list', [
                 'keyField' => 'id',
-                'valueField' => 'name'
+                'valueField' => 'name_with_id'
+            ])
+            ->leftJoin(
+                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
+                    [
+                        $InstitutionStaff->aliasField('staff_id = ') . $this->Requesters->aliasField('id'),
+                        $InstitutionStaff->aliasField('institution_id') => $institutionId,
+                        $InstitutionStaff->aliasField('staff_status_id') => self::ASSIGNED
+                    ]
+                )
+            ->leftJoin(
+                    [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                    [
+                        $InstitutionStudents->aliasField('student_id = ') . $this->Requesters->aliasField('id'),
+                        $InstitutionStudents->aliasField('institution_id') => $institutionId
+                    ]
+                )
+            ->join([
+                        'type' => 'LEFT',
+                        'table' => 'institutions',
+                        'alias' => 'Institutions',
+                        'conditions' => [
+                            'OR' => [
+                            'Institutions.id = '.$InstitutionStaff->aliasField('institution_id'),
+                                'Institutions.id = '.$InstitutionStudents->aliasField('institution_id')
+                            ]
+                    ]
+                ])
+            ->where(['Institutions.id is not NULL']) 
+            ->group([$this->Requesters->aliasField('id')])   
+            ->order([
+                $this->Requesters->aliasField('first_name'),
+                $this->Requesters->aliasField('last_name')
             ])
             ->toArray();
-
-        return $userOptions;
+            return $requestorOptions;
     }
 }
