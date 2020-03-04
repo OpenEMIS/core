@@ -6,6 +6,7 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\I18n;
 
 class OpenEmisComponent extends Component
 {
@@ -69,6 +70,7 @@ class OpenEmisComponent extends Component
         $controller->set('lastModified', $this->lastModified);
         $brand = Configure::read('schoolMode') ? 'OpenSMIS' : 'OpenEMIS';
         $controller->set('footerBrand', $brand);
+        $controller->set('dateLanguage', I18n::locale());
 
         //Retriving the panel width size from session
         if ($session->check('System.layout')) {
