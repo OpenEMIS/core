@@ -98,6 +98,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $events;
     }
 
+    
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $staffId = $entity['staff_id'];
@@ -107,13 +108,23 @@ class StaffLeaveTable extends ControllerActionTable
         $entity = $this->getNumberOfDays($entity);
         
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $staffData = $InstitutionStaff
             ->find('all')
+            ->innerJoin(
+                [$StaffStatuses->alias() => $StaffStatuses->table()],
+                [
+                    $StaffStatuses->aliasField('id = ') . $InstitutionStaff->aliasField('staff_status_id')
+                ]
+            )
             ->where([
                         $InstitutionStaff->aliasField('institution_id = ') => $institutionId,
                         $InstitutionStaff->aliasField('staff_id = ') => $staffId
                     ])
-            ->order([$InstitutionStaff->aliasField('id') => 'DESC'])
+            ->order([
+                      $InstitutionStaff->aliasField('id') => 'DESC',
+                      $StaffStatuses->aliasField('code') => 'ASC'
+                    ])
             ->first();
               
         $startDate = $staffData->start_date->format('Y-m-d');
