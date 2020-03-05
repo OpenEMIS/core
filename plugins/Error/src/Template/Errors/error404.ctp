@@ -24,7 +24,7 @@ $baseUrl .= 'Dashboard';
 			</div>	
 		</div>
 	</div>
-</div>
+</div> 
 
 <style type="text/css">
 	.breadcrumb,
