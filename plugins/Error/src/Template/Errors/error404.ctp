@@ -19,8 +19,8 @@ $baseUrl .= 'Dashboard';
 				<h5><?php echo __('The page you are looking for might have been removed, renamed or is temporarily unavailable. If you have any enquiries, please contact the administrator'); ?> <a href="../About"><?php echo __('here'); ?></a>.</h5>
 			</div>
 			<div class="error-buttons">
-				<a class="btn btn-default" href="javascript:history.back()"><i class="fa fa-chevron-left"></i> Back</a>
-				<a class="btn btn-default" href="<?=$baseUrl ?>"><i class="fa fa-home"></i> Home</a>
+				<a class="btn btn-default" href="javascript:history.back()"><i class="fa fa-chevron-left"></i> <?php echo __('Back');?></a>
+				<a class="btn btn-default" href="<?=$baseUrl ?>"><i class="fa fa-home"></i> <?php echo __('Home');?></a>
 			</div>	
 		</div>
 	</div>
