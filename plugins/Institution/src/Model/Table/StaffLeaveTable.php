@@ -133,7 +133,7 @@ class StaffLeaveTable extends ControllerActionTable
                           ->toArray();
                          
             if (!empty($endDates['end_date'])) {
-                $endDate = $endDates['end_date']->format('Y-m-d');
+                $endDate = $endDates['end_date']->format('Y-m-d'); 
             }
             $count = $collection->countBy('StaffStatuses.code')
                         ->toArray();
