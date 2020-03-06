@@ -122,28 +122,22 @@ class StaffLeaveTable extends ControllerActionTable
                         $InstitutionStaff->aliasField('institution_id = ') => $institutionId,
                         $InstitutionStaff->aliasField('staff_id = ') => $staffId
                     ])
-            ->order([$InstitutionStaff->aliasField('id') => 'DESC'])
-            ->toArray();
-            
-            $collection = new Collection($staffData);
-            $startDates = $collection->max('start_date')
-                          ->toArray();
-            $startDate = $startDates['start_date']->format('Y-m-d');
-            $endDates = $collection->max('end_date')
-                          ->toArray();
-                         
-            if (!empty($endDates['end_date'])) {
-                $endDate = $endDates['end_date']->format('Y-m-d'); 
-            }
-            $count = $collection->countBy('StaffStatuses.code')
-                        ->toArray();
-            
+            ->order([
+                     $StaffStatuses->aliasField('code') => 'ASC'
+                   ])
+            ->first();
+            $startDate = $staffData->start_date->format('Y-m-d');
+            if ($startDate > $dateFrom) {
+            $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
+           return false;
+        }
+        
+        if (!empty($staffData->end_date)) {
+            $endDate = $staffData->end_date->format('Y-m-d');
             if ($startDate > $dateFrom) {
                 $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
                 return false;
             } 
-            if (empty($count['ASSIGNED'])) { 
-                
                 if ($dateFrom > $endDate) {
                     $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
                     return false;
@@ -151,8 +145,7 @@ class StaffLeaveTable extends ControllerActionTable
                     $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDateTo', ['reset' => true]);
                     return false;
                 }
-            } 
-
+            }
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
