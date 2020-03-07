@@ -1474,6 +1474,7 @@ class StaffTable extends ControllerActionTable
         $academicPeriodList = array_reverse($academicPeriodList, true);
 
         foreach ($academicPeriodList as $periodId => $periodName) {
+            if ($periodId == $currentPeriodId) {
             foreach ($dataSet as $dkey => $dvalue) {
                 if (!array_key_exists($periodName, $dataSet[$dkey]['data'])) {
                     $dataSet[$dkey]['data'][$periodName] = 0;
@@ -1504,6 +1505,7 @@ class StaffTable extends ControllerActionTable
                     $dataSet['Total']['data'][$periodName] += $staffByYear[$genderName];
                 }
             }
+        }
         }
 
         $params['dataSet'] = $dataSet->getArrayCopy();

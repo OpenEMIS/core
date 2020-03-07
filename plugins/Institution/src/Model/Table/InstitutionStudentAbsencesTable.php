@@ -430,8 +430,8 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     public function onSetFilterToolbarElement(Event $event, ArrayObject $params, $institutionId)
     {
+       
         $requestQuery = $params['query'];
-
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
 
@@ -441,7 +441,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
         $selectedAcademicPeriod = $requestQuery['academic_period_id'];
         $academicPeriodOptions = $AcademicPeriods->getYearList();
-
+        
         // education_grade_id
         if (empty($requestQuery['education_grade_id'])) {
             $firstInstitutionEducationGradesResult = $InstitutionEducationGrades
@@ -455,9 +455,10 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ->group('education_grade_id')
                 ->order(['education_grade_id'])
                 ->first();
-
+           
             if (!empty($firstInstitutionEducationGradesResult)) {
-                $requestQuery['education_grade_id'] = $firstInstitutionEducationGradesResult->id;
+                //$requestQuery['education_grade_id'] = $firstInstitutionEducationGradesResult->id;
+                  $requestQuery['education_grade_id'] = 'all';
             } else {
                 $requestQuery['education_grade_id'] = -1;
             }
@@ -479,14 +480,17 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ->all();
 
         if (!$result->isEmpty()) {
-            $gradeList = $result->toArray();
-            $educationGradesOptions = $gradeList;
+            $gradeList    = $result->toArray();
+            $allGradeList = ["all" => 'All'];
+            $educationGradesOptions = $allGradeList + $gradeList;
+            
         } else {
             $educationGradesOptions = ['-1' => __('No Grades')];
         }
 
         // institution_class_id
         if (empty($requestQuery['institution_class_id'])) {
+           
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $firstInstitutionClassIdResult = $InstitutionClasses
                 ->find('byGrades', ['education_grade_id' => $selectedEducationGrades])
@@ -500,7 +504,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ])
                 ->order([$InstitutionClasses->aliasField('id')])
                 ->first();
-
+          
             if (!empty($firstInstitutionClassIdResult)) {
                 $requestQuery['institution_class_id'] = $firstInstitutionClassIdResult->id;
             } else {
@@ -509,8 +513,10 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
 
         if ($selectedEducationGrades != -1) {
+            
             $selectedClassId = $requestQuery['institution_class_id'];
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            
             $result = $InstitutionClasses
                 ->find('list', [
                     'keyField' => 'id',
@@ -526,9 +532,10 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     [$InstitutionClasses->aliasField('institution_id') => $institutionId]
                 ])
                 ->all();
-
+           
             if (!$result->isEmpty()) {
                 $classList = $result->toArray();
+               
                 $institutionClassOptions = $classList;
             } else {
                 $institutionClassOptions = ['-1' => __('No Classes')];
@@ -539,7 +546,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
 
         $params['element'] = ['filter' => ['name' => 'Cases.StudentAbsences/controls', 'order' => 2]];
-        $params['query'] = $requestQuery;
+      
         $params['options'] = [
             'selectedAcademicPeriod' => $selectedAcademicPeriod,
             'academicPeriodOptions' => $academicPeriodOptions,
@@ -552,9 +559,11 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     public function onCaseIndexBeforeQuery(Event $event, $requestQuery, Query $query)
     {
+        
         if (array_key_exists('institution_class_id', $requestQuery) && $requestQuery['institution_class_id'] != -1) {
             $institutionClassId = $requestQuery['institution_class_id'];
             $educationGradeId = $requestQuery['education_grade_id'];
+            
             $academicPeriodId = $requestQuery['academic_period_id'];
 
             $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
