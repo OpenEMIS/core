@@ -1,3 +1,12 @@
+### [3.48.2] - 2020-03-07
+- Bug Fixed Institutions > Performance > Assessments : User is unable to view classes that have subjects assigned to them
+- Bug fixed where staff with an End of Assignment position get a 'Date from is greater than end date of staff' error when applying for leave
+- Bug Fixed Administration > Workflow > Rules > Student Attendances: Missing options for post events assignments
+- Bug Fixed Support date plugin for multiple languages
+- Bug Fixed where Institutions > Students > Create New Student: Nationalities Order is Incorrect
+- Bug Fixed Administration > Textbook > Import: Error 404 when importing records 
+- Bug Fixed Institution > Cases > Student Attendance : Set All grades as Default
+
 ### [3.48.1] - 2020-03-02
 - Bug Fixed for Administration > Security > Roles > System Role: Enabled Delete permission for Student Attendance
 - Bug Fixed for Institution > Staff > Staff Release Configurations
