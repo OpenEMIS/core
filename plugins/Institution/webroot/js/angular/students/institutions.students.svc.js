@@ -776,6 +776,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return Nationalities
             .select()
             .contain(['IdentityTypes'])
+            .order(['Nationalities.order'])
             .ajax({defer: true});
     }
 
