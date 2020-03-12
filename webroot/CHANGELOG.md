@@ -1,3 +1,7 @@
+### [3.48.3] - 2020-03-12
+- Bug Fixed Institutions > Performance > Competencies/Outcomes : Staff unable to view competencies/outcomes of assigned classes/subjects
+- Bug Fixed Institutions/Directory > Add User : Unable to save when user enter identity number
+
 ### [3.48.2] - 2020-03-07
 - Bug Fixed Institutions > Performance > Assessments : User is unable to view classes that have subjects assigned to them
 - Bug fixed where staff with an End of Assignment position get a 'Date from is greater than end date of staff' error when applying for leave
