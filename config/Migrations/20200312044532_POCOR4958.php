@@ -18,11 +18,20 @@ class POCOR4958 extends AbstractMigration
 	   $InstitutionClasses = $InstitutionClassesTable->find()
 			->hydrate(false)
             ->toArray();
+		$counter = 0;
 		foreach($InstitutionClasses as $InstitutionClass){			
 			$countMale = $InstitutionClassStudentsTable->getMaleCountByClass($InstitutionClass['id']);
             $countFemale = $InstitutionClassStudentsTable->getFemaleCountByClass($InstitutionClass['id']);	
 			
-			$InstitutionClassesTable->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $InstitutionClass['id']]);					
+			$InstitutionClassesTable->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $InstitutionClass['id']]);	
+			
+			$counter ++;
+			
+			if($counter == 100){
+				sleep(30);
+				$counter = 0;
+			}
+			
 		}		
     }
 
