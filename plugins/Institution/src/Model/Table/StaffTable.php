@@ -989,6 +989,10 @@ class StaffTable extends ControllerActionTable
             $indexDashboard = 'dashboard';
 
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+                $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $currentYearId = $AcademicPeriod->getCurrent();
+                $periodId = $this->request->query['academic_period_id'];
+                if ($currentYearId == $periodId) {
                 $indexElements['mini_dashboard'] = [
                     'name' => $indexDashboard,
                     'data' => [
@@ -999,6 +1003,7 @@ class StaffTable extends ControllerActionTable
                     'options' => [],
                     'order' => 2
                 ];
+                }
             }
             foreach ($indexElements as $key => $value) {
                 if ($value['name']=='OpenEmis.ControllerAction/index') {
