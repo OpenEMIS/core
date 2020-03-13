@@ -25,7 +25,7 @@ class POCOR4958 extends AbstractMigration
 			
 			$InstitutionClassesTable->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $InstitutionClass['id']]);	
 			
-			$counter ++;
+			$counter++;
 			
 			if($counter == 100){
 				sleep(30);
