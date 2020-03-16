@@ -656,6 +656,13 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution'],
                 ],
 
+                'Institutions.ReportCardStatuses' => [
+                    'title' => 'Report Cards',
+                    'parent' => 'Institution.Performance',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.ReportCardStatuses'],
+                ],
+
                 'Institutions.Risks.index' => [
                 'title' => 'Risks',
                 'parent' => 'Institutions.Institutions.index',
@@ -700,12 +707,7 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.ReportCardComments','Institutions.Comments'],
                 ],
 
-                'Institutions.ReportCardStatuses' => [
-                    'title' => 'Statuses',
-                    'parent' => 'Institutions.ReportCards',
-                    'params' => ['plugin' => 'Institution'],
-                    'selected' => ['Institutions.ReportCardStatuses'],
-                ],
+                
 
             'Institutions.Positions' => [
                 'title' => 'Positions',
