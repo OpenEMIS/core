@@ -235,7 +235,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                     ->innerJoin(['ExaminationCentres' => 'examination_centres'], [
                         'ExaminationCentres.id = InstitutionExaminationStudents.examination_centre_id'
                     ])
-                    ->contain('Users.SpecialNeeds.SpecialNeedTypes')
+                    ->contain('Users.SpecialNeeds.SpecialNeedsTypes')
                     ->where([
                         $ClassStudents->aliasField('institution_id') => $institutionId,
                         $ClassStudents->aliasField('academic_period_id') => $academicPeriodId,
@@ -261,7 +261,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                         'InstitutionExaminationStudents.examination_id' => $attr['entity']->examination_id,
                         'InstitutionExaminationStudents.student_id = '.$ClassStudents->aliasField('student_id')
                     ])
-                    ->contain('Users.SpecialNeeds.SpecialNeedTypes')
+                    ->contain('Users.SpecialNeeds.SpecialNeedsTypes')
                     ->where([$ClassStudents->aliasField('student_id').' IN ' => $studentIds])
                     ->group([$ClassStudents->aliasField('student_id')])
                     ->select(['examination_centre_id' => 'InstitutionExaminationStudents.examination_centre_id', 'registration_number' => 'InstitutionExaminationStudents.registration_number'])
