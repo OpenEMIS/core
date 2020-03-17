@@ -31,7 +31,8 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     vm.allAttendances = 0;
     vm.allPresentCount = 0;
     vm.allLeaveCount = 0;
-
+    vm.allLateCount = 0;
+    
     // gridOptions
     vm.gridReady = false;
     vm.gridOptions = {
@@ -236,9 +237,10 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
         vm.totalStaff = 0;
         vm.allAttendances = 0;
         vm.allLeaveCount = 0;
-
+        vm.allLateCount = 0;
         vm.staffList = staffList;
         vm.totalStaff = staffList.length;
+        console.log(staffList.length);
         if (staffList.length > 0) {
             angular.forEach(staffList, function(staff) {
                 // for All Days Dashboard
@@ -250,6 +252,10 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
                     if (attendance.leave.length > 0) {
                         vm.allLeaveCount = vm.allLeaveCount + 1;
                     }
+                    if (attendance.absence_type_id == 3) {
+                       vm.allLateCount = vm.allLateCount + 1;
+                       console.log('Late:',vm.allLateCount );
+                    }
                 });
             });
             if (vm.allPresentCount == 0) {
@@ -257,6 +263,9 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
             }
             if (vm.allLeaveCount == 0) {
                 vm.allLeaveCount = '-';
+            }
+            if (vm.allLateCount == 0) {
+                vm.allLateCount = '-';
             }
         }
     }
