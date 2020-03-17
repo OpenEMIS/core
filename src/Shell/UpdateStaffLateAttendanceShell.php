@@ -25,9 +25,7 @@ class UpdateStaffLateAttendanceShell extends Shell
     }
 
     public function main($staffId, $date)
-    {   print_r($staffId);
-        print_r($date);
-        die;
+    {   
         try {
             $connection = ConnectionManager::get('default');
             $connection->query("UPDATE `institution_shifts`
