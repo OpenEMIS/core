@@ -42,6 +42,7 @@ $paramsQuery = $this->ControllerAction->getQueryString();
 $institutionId = $paramsQuery['institution_id'];
 ?>
 <style>
+    .data-section{width:20%;}
     .attendance-dashboard .data-section.single-day {
         width: 32%;
     }
@@ -214,6 +215,12 @@ $institutionId = $paramsQuery['institution_id'];
                         <div class="data-field">
                             <h4><?= __('No. of Staff on Leave') ?></h4>
                             <h1 class="data-header">{{$ctrl.allLeaveCount}}</h1>
+                        </div>
+                    </div>
+                    <div class="data-section">
+                        <div class="data-field">
+                            <h4><?= __('No. of Staff on Late') ?></h4>
+                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
                         </div>
                     </div>
                 </div>
