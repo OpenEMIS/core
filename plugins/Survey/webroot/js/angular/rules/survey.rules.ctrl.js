@@ -82,6 +82,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         {
             var surveyQuestions = [];
             var rules = [];
+            const mobSc=767, tabletSc=1280, laptopSc=1366, macSc=1500, desktopSc=1800, largerDesktopSc=1920;
             // console.log(response.data);
             
                 for(i = 0; i < response.data.length; i++) {
@@ -90,17 +91,17 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                     var number = i + 1;
                    
                     /* to fix text length in dropdown POCOR-3331*/
-                    if ((window.innerWidth <= 767) && (shortName.length > 30)) {
+                    if ((window.innerWidth <= mobSc) && (shortName.length > 30)) {
                         shortName = shortName.substring(0, 29) + '...';
-                    } else if (shortName.length > 96 && window.innerWidth <= 1280) {
+                    } else if (shortName.length > 96 && window.innerWidth <= tabletSc) {
                         shortName = shortName.substring(0, 96) + '...';
-                    } else if ((shortName.length > 110) && ((window.innerWidth > 1280) && (window.innerWidth <= 1366))) {
+                    } else if ((shortName.length > 110) && (window.innerWidth <= laptopSc)) {
                         shortName = shortName.substring(0, 110) + '...';
-                    } else if ((shortName.length > 120) && ((window.innerWidth > 1366) && (window.innerWidth <= 1500))) {
+                    } else if ((shortName.length > 120)&& (window.innerWidth <= macSc)) {
                         shortName = shortName.substring(0, 120) + '...';
-                    } else if ((shortName.length > 150) && ((window.innerWidth > 1500) && (window.innerWidth <= 1800))) {
+                    } else if ((shortName.length > 150) && (window.innerWidth <= desktopSc)) {
                         shortName = shortName.substring(0, 150) + '...';
-                    } else if ((shortName.length > 170) && ((window.innerWidth > 1800) && (window.innerWidth <= 1920))) {
+                    } else if ((shortName.length > 170)  && (window.innerWidth <= largerDesktopSc)) {
                         shortName = shortName.substring(0, 170) + '...';
                     }
 
