@@ -29,12 +29,11 @@ class InstitutionClassesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->hasMany('ClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_class_id']);
-        $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'institution_shift_id']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-
+        $this->belongsTo('SecondaryStaff', ['className' => 'User.Users', 'foreignKey' => 'secondary_staff_id']);
+        $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts',    'foreignKey' => 'institution_shift_id']);
+        $this->belongsTo('InstitutionStaffShifts', ['className' => 'Institution.InstitutionStaffShifts',    'foreignKey' => 'institution_shift_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions',         'foreignKey' => 'institution_id']);
 
         $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
         $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'saveStrategy' => 'replace', 'cascadeCallbacks' => true]);
@@ -94,13 +93,14 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $validator
             ->allowEmpty('staff_id')
+            ->allowEmpty('secondary_staff_id')
             ->requirePresence('name')
             ->add('name', 'ruleUniqueNamePerAcademicPeriod', [
                 'rule' => 'uniqueNamePerAcademicPeriod',
                 'provider' => 'table',
             ])
             ->add('staff_id', 'ruleCheckHomeRoomTeachers', [
-                'rule' => ['checkHomeRoomTeachers', 'classes_secondary_staff'],
+                'rule' => ['checkHomeRoomTeachers', 'secondary_staff_id'],
                 'provider' => 'table',
             ])
             ->add('capacity', 'ruleCheckMaxStudentsPerClass', [
@@ -155,7 +155,12 @@ class InstitutionClassesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $query = $this->request->query;
-
+        
+        if(!empty($this->request->data['InstitutionClasses']['institution_shift_id'])){
+            $extra['institution_shift_id'] = $this->request->data['InstitutionClasses']['institution_shift_id'];
+        }
+        
+        
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $extra['institution_id'] = $institutionId;
         $academicPeriodOptions = $this->getAcademicPeriodOptions($institutionId);
@@ -249,6 +254,8 @@ class InstitutionClassesTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $action = $this->action;
+        $institutionShiftId = $extra['entity']->institution_shift_id;
+        
         if ($action != 'add') {
             $staffOptions = [];
             $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
@@ -454,6 +461,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'class_number',
                 'capacity',
                 'staff_id',
+                'secondary_staff_id',
                 'total_male_students',
                 'total_female_students',
                 'institution_shift_id',
@@ -466,7 +474,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 'education_stage_order' => $query->func()->min('EducationStages.order')
             ])
             ->contain([
-                'ClassesSecondaryStaff.SecondaryStaff',
+                'SecondaryStaff' => [
+                    'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
+                ],
                 'Staff' => [
                     'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
                 ]
@@ -1170,9 +1180,17 @@ class InstitutionClassesTable extends ControllerActionTable
                             })
                             ->find('byInstitution', ['Institutions.id'=>$institutionId])
                             ->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
+                            
+                            ->innerJoin(
+                                ['InstitutionStaffShifts' => 'institution_staff_shifts'],
+                                ['InstitutionStaffShifts.staff_id = ' . $Staff->aliasField('staff_id')]
+                            )
+                            
                             ->where([
-                                $Staff->aliasField('staff_id NOT IN') => $staffIds,
-                                $Staff->aliasField('start_date <= ') => $todayDate,
+                                $Staff->aliasField('staff_id').' <> ' => $staffId,
+                                $Staff->aliasField('start_date <= ')  => $todayDate,
+                                'InstitutionStaffShifts.shift_id' => $institutionShiftId,
+                            
                                 'OR' => [
                                     [$Staff->aliasField('end_date >= ') => $todayDate],
                                     [$Staff->aliasField('end_date IS NULL')]
