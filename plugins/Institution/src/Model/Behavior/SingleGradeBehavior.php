@@ -42,6 +42,7 @@ class SingleGradeBehavior extends Behavior
         $institutionId = $extra['institution_id'];
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
         $selectedEducationGradeId = $extra['selectedEducationGradeId'];
+        $institutionShiftId = $extra['institution_shift_id'];
         $numberOfClasses = 1;
 
         if ($request->is(['post']) && array_key_exists($model->alias(), $request->data)) {
@@ -128,7 +129,7 @@ class SingleGradeBehavior extends Behavior
             'type'      => 'element',
             'element'   => 'Institution.Classes/single_grade',
             'data'      => [    'numberOfClasses'   => $numberOfClasses,
-                                'staffOptions'      => $staffOptions,
+                                'staffOptions'      => $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId,0, $institutionShiftId),
                                 'existedClasses'    => $model->getExistedClasses($institutionId, $selectedAcademicPeriodId, $selectedEducationGradeId),
                                 'grade'             => $grade,
                                 'secondaryStaffAttr' => [
