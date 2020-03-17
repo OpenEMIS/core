@@ -106,13 +106,13 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
     {
         $specialNeedList = $this->find()
-            ->contain(['SpecialNeedTypes', 'SpecialNeedDifficulties'])
+            ->contain(['SpecialNeedsTypes', 'SpecialNeedDifficulties'])
             ->where([$this->aliasField('security_user_id') => $studentId])
             ->all();
 
         $referenceDetails = [];
         foreach ($specialNeedList as $key => $obj) {
-            $specialNeedName = $obj->special_need_type->name;
+            $specialNeedName = $obj->special_needs_type->name;
             $specialNeedDifficulties = $obj->special_need_difficulty->name;
 
             $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';
