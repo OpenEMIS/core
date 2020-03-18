@@ -76,7 +76,7 @@ class StaffSubjectsTable extends ControllerActionTable {
                 
                 $query->where(['InstitutionSubjects.academic_period_id' => $academicPeriodId]);
                 
-                $this->controller->set(compact('academicPeriodOptions','selectedAcademicPeriod'));
+                $this->controller->set(compact('academicPeriodOptions','academicPeriodId'));
                
                 
 	}
