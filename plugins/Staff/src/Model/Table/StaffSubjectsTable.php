@@ -66,14 +66,17 @@ class StaffSubjectsTable extends ControllerActionTable {
 		]);
                 
                 // Academic Periods
-                $academicPeriodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getYearList();
-                $selectedAcademicPeriod = '';
-                if(!empty($this->request->query('academic_period_id'))){
-                    $selectedAcademicPeriod = $this->request->query('academic_period_id');                
-                    $query->where(['InstitutionSubjects.academic_period_id' => $selectedAcademicPeriod]);                    
-                }                
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodId = $AcademicPeriods->getCurrent();
+                $academicPeriodOptions = $AcademicPeriods->getYearList();
                 
-                $this->controller->set(compact('academicPeriodOptions','selectedAcademicPeriod'));
+                if(!empty($this->request->query('academic_period_id'))){
+                    $academicPeriodId = $this->request->query('academic_period_id');                     
+                }    
+                
+                $query->where(['InstitutionSubjects.academic_period_id' => $academicPeriodId]);
+                
+                $this->controller->set(compact('academicPeriodOptions','academicPeriodId'));
                
                 
 	}
