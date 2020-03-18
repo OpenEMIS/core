@@ -16,7 +16,7 @@
                 'label' => false,
                 'options' => $academicPeriodOptions,
                 'url' => $baseUrl,
-                'default' => $selectedAcademicPeriod,
+                'default' => $academicPeriodId,
                 'data-named-key' => 'academic_period_id'
             ));
         }
