@@ -17,9 +17,11 @@ class POCOR5033p extends AbstractMigration
         //Insert data into security functions
         $this->execute("INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, 
 		`_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
-		VALUES('9012','Import Competency Templates','Competencies','Administration','Competencies','5000',NULL,NULL,NULL,NULL,'ImportTextbooks.add|ImportTextbooks.template|ImportTextbooks.results|ImportTextbooks.downloadFailed|ImportTextbooks.downloadPassed','9012','1',NULL,'2','2018-03-29 23:55:35','1','2017-02-07 02:03:42')");
+		VALUES('9012','Import Competency Templates','Competencies','Administration','Competencies','5000',NULL,NULL,NULL,NULL,'ImportTextbooks.add|ImportTextbooks.template|ImportTextbooks.results|ImportTextbooks.downloadFailed|ImportTextbooks.downloadPassed','9012','1',NULL,'2','2018-03-29 23:55:35','1',NOW())");
 
-		$this->execute("INSERT INTO `security_role_functions` (`_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, `security_function_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) values('1','1','1','1','0','10','9012',NULL,NULL,'2','2018-03-29 23:55:35')");
+		$this->execute("INSERT INTO `security_role_functions` (`_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, `security_function_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) values('0','0','0','0','0','2','9012',NULL,NULL,'2',NOW())");
+
+        $this->execute("INSERT INTO `security_role_functions` (`_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, `security_function_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) values('1','1','1','1','0','10','9012',NULL,NULL,'2',NOW())");
 	}
 
 	public function down() {
