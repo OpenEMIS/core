@@ -17,7 +17,7 @@ class POCOR5033p extends AbstractMigration
         //Insert data into security functions
         $this->execute("INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, 
 		`_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
-		VALUES('9012','Import Competency Templates','Competencies','Administration','Competencies','5000',NULL,NULL,NULL,NULL,'ImportTextbooks.add|ImportTextbooks.template|ImportTextbooks.results|ImportTextbooks.downloadFailed|ImportTextbooks.downloadPassed','9012','1',NULL,'2','2018-03-29 23:55:35','1',NOW())");
+		VALUES('9012','Import Competency Templates','Competencies','Administration','Competencies','5000',NULL,NULL,NULL,NULL,'ImportCompetencyTemplates.add|ImportCompetencyTemplates.template|ImportCompetencyTemplates.results|ImportCompetencyTemplates.downloadFailed|ImportCompetencyTemplates.downloadPassed','9012','1',NULL,'2',NOW(),'1',NOW())");
 
 		$this->execute("INSERT INTO `security_role_functions` (`_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, `security_function_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) values('0','0','0','0','0','2','9012',NULL,NULL,'2',NOW())");
 
