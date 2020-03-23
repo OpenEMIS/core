@@ -466,22 +466,49 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                     </div>
                 </div>
 
-            <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
+                <div class="input select required"  >
                     <label><?= __('Shifts') ?></label>
-                    <div class="input-select-wrapper">
-                     <!-- <p>{{InstitutionStaffController.staffShiftsOptions}}</p>-->
-                     <!--<select name="staff[staff_shifts_id]" id="staff-shifts-id" data-placeholder="Select Shifts" class="chosen-select"  multiple="multiple"
-                            ng-model="InstitutionStaffController.staffTypeId"
-                            ng-options="option.name for option in InstitutionStaffController.staffShiftsOptions track by option.id"
-                            ng-init="InstitutionStaffController.staffTypeId = '';"
-                      >-->
-                      <select chosen name="Staff[staff_shifts_id]" ng-model="InstitutionStaffController.staffShiftsId" id="staff-shifts-id" data-placeholder="Select Shifts" >
-                            <option value="{{optionss.id}}" ng-repeat="optionss in InstitutionStaffController.staffShiftsOptions">{{optionss.name}}</option>
+                    
+                   <div class="input-select-wrapper">
+                   
+                    
+                   
+                     <select name="staff[staff_shifts_id][_ids][]" id="staff-shifts-id" data-placeholder="Select Shifts"  multiple="multiple"  class="chosen-select"
+                            ng-model="InstitutionStaffController.staffShiftsId"
+                            ng-options="staffShifts.name for staffShifts in InstitutionStaffController.staffShiftsOptions track by staffShifts.id"
+                            ng-init="InstitutionStaffController.staffShiftsId = '';"
+                     >
+                     <option label="First Shift" value="141">First Shift</option>
+                     <option label="Second Shift" value="189">Second Shift</option>
+
                       </select>
-                 </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.staff_type_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.staff_type_id">{{ error }}</p>
-                    </div>
+
+
+                      <select chosen
+            multiple="multiple"
+            data-placeholder="<?=__('Select Classes') ?>"
+            class="chosen-select"
+            options="InstitutionStaffController.staffShiftsOptions"
+            ng-model="InstitutionStaffController.staffShiftsId"
+            ng-options="item.id as item.name for item in InstitutionStaffController.staffShiftsOptions"
+            ng-init="InstitutionStaffController.staffShiftsId = []">
+        </select>
+
+                     
+                   <!--  <select chosen name="Staff[staff_shifts_id]" ng-model="InstitutionStaffController.staffShiftsId" id="staff-shifts-id" data-placeholder="Select Shifts">
+                            <option value="{{optionss.id}}" ng-repeat="optionss in InstitutionStaffController.staffShiftsOptions">{{optionss.name}}</option>
+                      </select>-->
+
+   <!-- <div class="input-select-wrapper">
+    <select ng-model="InstitutionStaffController.staffShiftsId" ng-options="optionss in InstitutionStaffController.staffShiftsOptions" class="chosen-select" multiple="multiple" data-placeholder="Select Shifts"></select>
+    </div> -->
+
+                     <!-- <select chosen name="Staff[staff_shifts_id][]" ng-model="InstitutionStaffController.staffShiftsId" id="staff-shifts-id" data-placeholder="Select Shifts" multiple="multiple" class="chosen-select">
+                            <option value="{{optionss.id}}">First Shifts</option>
+                            <option>SEcond Shifts</option>
+                      </select>-->
+            </div>
+                    
             </div>
                 
          
