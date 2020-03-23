@@ -610,7 +610,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
     
     function postAssignedStaffShift(shiftData) {
         
-        console.log(shiftData);
+        console.log("shiftD"+shiftData);
         var a= StaffShifts.save(shiftData);
         console.log("staffShitfs"+a);
         return false;
