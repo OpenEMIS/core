@@ -79,7 +79,7 @@ class SurveyStatusesTable extends ControllerActionTable
     {
         $AcademicPeriodLevels = TableRegistry::get('AcademicPeriod.AcademicPeriodLevels');
         $levelOptions = $AcademicPeriodLevels->getList()->toArray();
-
+        
         $attr['options'] = $levelOptions;
         $attr['onChangeReload'] = 'changePeriod';
         if ($action != 'add') {
@@ -93,6 +93,7 @@ class SurveyStatusesTable extends ControllerActionTable
         $selectedLevel = key($this->fields['academic_period_level']['options']);
         if ($request->is('post')) {
             $selectedLevel = $request->data($this->aliasField('academic_period_level'));
+           
         }
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -102,7 +103,7 @@ class SurveyStatusesTable extends ControllerActionTable
             ->find('order')
             ->where([$AcademicPeriods->aliasField('academic_period_level_id') => $selectedLevel])
             ->toArray();
-
+       // print_r($periodOptions);die;
         $attr['type'] = 'chosenSelect';
         $attr['options'] = $periodOptions;
         return $attr;
