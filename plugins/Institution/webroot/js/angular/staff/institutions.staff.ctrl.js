@@ -24,7 +24,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.academicPeriodOptions = {};
     StaffController.institutionPositionOptions = {};
     StaffController.staffTypeOptions = {};
-    StaffController.staffShiftsOptions = {};
+    StaffController.staffShiftsOptions = [];
     StaffController.staffTypeId = {};
     StaffController.step = 'internal_search';
     StaffController.showExternalSearchButton = false;
@@ -711,7 +711,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         return staffRecords;
     }
 
-    function insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, userRecord, shiftId) {
+    function insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, userRecord, shiftId={}) {
         UtilsSvc.isAppendLoader(true);
         AlertSvc.reset($scope);
         
@@ -731,8 +731,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 staff_id: staffId,
                 shift_id: shiftId,
             };
-        //alert(data);
-        console.log(data);
+       
+        console.log("data",data);
+        console.log("shiftData",shiftData);
+        
         var deferred = $q.defer();
 
         InstitutionsStaffSvc.postAssignedStaff(data)
@@ -746,8 +748,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             angular.forEach(postResponse.data.error , function(value) {
                 counter++;
             }, log);
-
-            if (counter == 0) {
+            
+             if (counter == 0) {
+           
                 InstitutionsStaffSvc.postAssignedStaffShift(shiftData);
                 AlertSvc.success($scope, 'The staff is added successfully.');
                 $window.location.href = 'add?staff_added=true';
@@ -979,6 +982,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var startDate = StaffController.startDate;
         var startDateArr = startDate.split("-");
         var shiftId = StaffController.staffShiftsId;
+        console.log("ShiftIdssss"+shiftId);
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
         for(i = 0; i < startDateArr.length; i++) {
             if (startDateArr[i] == undefined || startDateArr[i] == null || startDateArr[i] == '') {

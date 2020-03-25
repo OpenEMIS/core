@@ -452,7 +452,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
                     <label><?= __('Staff Type') ?></label>
                     <div class="input-select-wrapper">
-                   <!-- <p>{{InstitutionStaffController.staffTypeOptions|json}}</p> -->
+                  
                         <select name="Staff[staff_type_id]" id="staff-staff-type-id" 
                            ng-model="InstitutionStaffController.staffTypeId"
                            ng-options="option.name for option in InstitutionStaffController.staffTypeOptions track by option.id"
@@ -469,11 +469,12 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                 <div class="input select required"  >
                     <label><?= __('Shifts') ?></label>
                    <div class="input-select-wrapper">    
+                  
                         <select chosen name="staff[staff_shifts_id][_ids][]" id="staff-shifts-id" data-placeholder="Select Shifts"  multiple="multiple"  class="chosen-select"
                                 ng-model="InstitutionStaffController.staffShiftsId"
                                 options="InstitutionStaffController.staffShiftsOptions"
-                                ng-options="staffShifts.id as staffShifts.name for staffShifts in InstitutionStaffController.staffShiftsOptions"
-                                ng-init="InstitutionStaffController.staffShiftsId = '';"
+                                ng-options="staffShifts.id as staffShifts.name for staffShifts in InstitutionStaffController.staffShiftsOptions "
+                                ng-init="InstitutionStaffController.staffShiftsId = [];"
                         >
                         </select>
                     </div>
