@@ -609,11 +609,12 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
     };
     
     function postAssignedStaffShift(shiftData) {
-        
-        console.log("shiftD"+shiftData);
-        var a= StaffShifts.save(shiftData);
-        console.log("staffShitfs"+a);
-        return false;
+       
+        angular.forEach(shiftData.shift_id, function(value, key) {
+            var shift_id = {'staff_id':shiftData.staff_id,'shift_id':value}
+            StaffShifts.save(shift_id);
+        });
+       return false;
     };
     
     function setInstitutionId(id) {
