@@ -468,30 +468,16 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
 
                 <div class="input select required"  >
                     <label><?= __('Shifts') ?></label>
-                    
                    <div class="input-select-wrapper">    
-                        <select ng-if="InstitutionStaffController.staffShiftsOptions.length > 1" chosen name="staff[staff_shifts_id][_ids][]" id="staff-shifts-id" data-placeholder="Select Shifts"  multiple="multiple"  class="chosen-select"
+                        <select chosen name="staff[staff_shifts_id][_ids][]" id="staff-shifts-id" data-placeholder="Select Shifts"  multiple="multiple"  class="chosen-select"
                                 ng-model="InstitutionStaffController.staffShiftsId"
                                 options="InstitutionStaffController.staffShiftsOptions"
                                 ng-options="staffShifts.id as staffShifts.name for staffShifts in InstitutionStaffController.staffShiftsOptions"
                                 ng-init="InstitutionStaffController.staffShiftsId = '';"
                         >
                         </select>
-
-                        <select ng-if="InstitutionStaffController.staffShiftsOptions.length == 1" chosen name="staff[staff_shifts_id][_ids][]" id="staff-shifts-id" data-placeholder="Select Shifts"
-                                ng-model="InstitutionStaffController.staffShiftsId"
-                                options="InstitutionStaffController.staffShiftsOptions"
-                                ng-options="staffShifts.id as staffShifts.name for staffShifts in InstitutionStaffController.staffShiftsOptions"
-                                ng-init="InstitutionStaffController.staffShiftsId = '';"
-                        >
-                            <option value="">---Please select---</option>
-                        </select>
-
                     </div>
-                    
                 </div>
-                
-         
             </form>
         </div>
         <div class="step-pane sample-pane" data-step="5" data-name="transferStaff" ng-show="InstitutionStaffController.step == 'transfer_staff';">
