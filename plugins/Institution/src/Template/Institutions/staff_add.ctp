@@ -15,6 +15,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min.js', ['block' => true]);
 $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', ['block' => true]);
 ?>
+<style>.chosen-choices .search-field .default{width:90px !important;}</style>
 <div class="alert {{class}}" ng-hide="message == null">
     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a><?= __('{{message}}') ?>
 </div>
@@ -466,9 +467,12 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                     </div>
                 </div>
 
+
+               
+
                 <div class="input select required"  >
                     <label><?= __('Shifts') ?></label>
-                   <div class="input-select-wrapper">    
+                    
                   
                         <select chosen name="staff[staff_shifts_id][_ids][]" id="staff-shifts-id" data-placeholder="Select Shifts"  multiple="multiple"  class="chosen-select"
                                 ng-model="InstitutionStaffController.staffShiftsId"
@@ -477,7 +481,7 @@ $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', 
                                 ng-init="InstitutionStaffController.staffShiftsId = [];"
                         >
                         </select>
-                    </div>
+                  
                 </div>
             </form>
         </div>
