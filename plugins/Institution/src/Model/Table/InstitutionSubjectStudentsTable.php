@@ -227,7 +227,7 @@ class InstitutionSubjectStudentsTable extends AppTable
             ->where([
                 $InstitutionSubjects->aliasField('institution_id') => $institutionId,
                 $this->aliasField('institution_class_id') => $classId,
-                $StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']
+                //$StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']
             ])
             ->group([
                 $this->aliasField('student_id'),
