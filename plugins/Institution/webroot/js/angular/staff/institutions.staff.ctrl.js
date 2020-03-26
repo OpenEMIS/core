@@ -1046,8 +1046,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function addStaffUser(staffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, shiftId) {
         var deferred = $q.defer();
         var newStaffData = staffData;
-        alert(newStaffData);
-        console.log(newStaffData);
+        
         newStaffData['academic_period_id'] = academicPeriodId;
         newStaffData['start_date'] = startDate;
         if (!StaffController.externalSearch) {
