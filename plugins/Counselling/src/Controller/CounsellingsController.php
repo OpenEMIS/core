@@ -110,6 +110,9 @@ class CounsellingsController extends PageController
         $counselorOptions = $this->Counsellings->getCounselorOptions($institutionId);
         $page->get('counselor_id')->setControlType('select')->setOptions($counselorOptions);
 
+        $requestorOptions = $this->Counsellings->getRequesterOptions($institutionId);
+        $page->get('requester_id')->setControlType('select')->setOptions($requestorOptions);
+
         // set the file upload for attachment
         $page->get('file_content')
             ->setLabel('Attachment')
@@ -124,7 +127,8 @@ class CounsellingsController extends PageController
 
         $page->move('counselor_id')->after('date');
         $page->move('guidance_type_id')->after('counselor_id');
-        $page->move('guidance_utilized')->after('guidance_type_id');
+        $page->move('requester_id')->after('guidance_type_id');
+        $page->move('guidance_utilized')->after('requester_id');
         $page->move('description')->after('guidance_utilized');
         $page->move('intervention')->after('description');
         $page->move('comment')->after('intervention');

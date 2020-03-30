@@ -20,6 +20,7 @@ class CounsellingsTable extends AppTable
 
         $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
+        $this->belongsTo('Requesters', ['className' => 'Security.Users', 'foreign_key' => 'requester_id']);
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
@@ -91,5 +92,52 @@ class CounsellingsTable extends AppTable
             ->toArray();
 
         return $counselorOptions;
+    }
+
+    public function getRequesterOptions($institutionId)
+    {        
+        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+
+        $requestorOptions = $this->Requesters
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name_with_id'
+            ])
+            ->leftJoin(
+                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
+                    [
+                        $InstitutionStaff->aliasField('staff_id = ') . $this->Requesters->aliasField('id'),
+                        $InstitutionStaff->aliasField('institution_id') => $institutionId,
+                        $InstitutionStaff->aliasField('staff_status_id') => self::ASSIGNED
+                    ]
+                )
+            ->leftJoin(
+                    [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                    [
+                        $InstitutionStudents->aliasField('student_id = ') . $this->Requesters->aliasField('id'),
+                        $InstitutionStudents->aliasField('institution_id') => $institutionId
+                    ]
+                )
+            ->join([
+                        'type' => 'LEFT',
+                        'table' => 'institutions',
+                        'alias' => 'Institutions',
+                        'conditions' => [
+                            'OR' => [
+                            'Institutions.id = '.$InstitutionStaff->aliasField('institution_id'),
+                                'Institutions.id = '.$InstitutionStudents->aliasField('institution_id')
+                            ]
+                    ]
+                ])
+            ->where(['Institutions.id is not NULL']) 
+            ->group([$this->Requesters->aliasField('id')])   
+            ->order([
+                $this->Requesters->aliasField('first_name'),
+                $this->Requesters->aliasField('last_name')
+            ])
+            ->toArray();
+            return $requestorOptions;
     }
 }
