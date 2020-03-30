@@ -1,5 +1,5 @@
 angular
-    .module('institutions.staff.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.staff.svc'])
+    .module('institutions.staff.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.staff.svc', 'angular.chosen'])
     .controller('InstitutionsStaffCtrl', InstitutionStaffController);
 
 InstitutionStaffController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStaffSvc'];
@@ -24,6 +24,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.academicPeriodOptions = {};
     StaffController.institutionPositionOptions = {};
     StaffController.staffTypeOptions = {};
+    StaffController.staffShiftsOptions = [];
     StaffController.staffTypeId = {};
     StaffController.step = 'internal_search';
     StaffController.showExternalSearchButton = false;
@@ -107,11 +108,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.defaultIdentityTypeName;
     StaffController.defaultIdentityTypeId;
     StaffController.postResponse;
-
+    StaffController.staffShiftsId = '';
     angular.element(document).ready(function () {
         InstitutionsStaffSvc.init(angular.baseUrl);
         InstitutionsStaffSvc.setInstitutionId(StaffController.institutionId);
-
+        console.log("staffshifts:", InstitutionsStaffSvc.getStaffShifts(StaffController.institutionId, StaffController.startDate));
         UtilsSvc.isAppendLoader(true);
 
         InstitutionsStaffSvc.getAcademicPeriods()
@@ -131,7 +132,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 availableOptions: periods,
                 selectedOption: selectedPeriod[0]
             };
-
+            console.log("AcademicPeriod:",StaffController.academicPeriodOptions.selectedOption.id);
             StaffController.institutionPositionOptions = {
                 availableOptions: [],
                 selectedOption: ''
@@ -146,6 +147,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             promises.push(InstitutionsStaffSvc.getInstitution(StaffController.institutionId));
             promises.push(InstitutionsStaffSvc.getStaffTransfersByTypeConfig());
             promises.push(InstitutionsStaffSvc.getStaffTransfersByProviderConfig());
+            promises.push(InstitutionsStaffSvc.getStaffShifts(StaffController.institutionId,StaffController.academicPeriodOptions.selectedOption.id));
            return $q.all(promises);
         }, function(error) {
             console.log(error);
@@ -153,6 +155,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             UtilsSvc.isAppendLoader(false);
         })
         .then(function(promisesObj) {
+            //console.log(promisesObj);
             var promises = [];
             var addNewStaffConfig = promisesObj[0].data;
             var staffTypes = promisesObj[1].data;
@@ -161,6 +164,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             var institutionProvider = promisesObj[2].data[0]['institution_provider_id']; // new institution provider id
             StaffController.institutionName = institutionName;
             StaffController.staffTypeOptions = staffTypes;
+            StaffController.staffShiftsOptions = promisesObj[5];
             StaffController.institutionType = institutionType; // to set into controller for other functions to access the value
             StaffController.institutionProvider = institutionProvider; // to set into controller for other functions to access the value
             StaffController.restrictStaffTransferByTypeValue = promisesObj[3].data;
@@ -707,9 +711,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         return staffRecords;
     }
 
-    function insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, userRecord) {
+    function insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, userRecord, shiftId={}) {
         UtilsSvc.isAppendLoader(true);
         AlertSvc.reset($scope);
+        
         var data = {
             staff_id: staffId,
             staff_name: staffId,
@@ -722,6 +727,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             start_date: startDate,
             end_date: endDate
         };
+         var shiftData = {
+                staff_id: staffId,
+                shift_id: shiftId,
+            };
+       
+        console.log("data",data);
+        console.log("shiftData",shiftData);
+        
         var deferred = $q.defer();
 
         InstitutionsStaffSvc.postAssignedStaff(data)
@@ -735,8 +748,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             angular.forEach(postResponse.data.error , function(value) {
                 counter++;
             }, log);
-
-            if (counter == 0) {
+            
+             if (counter == 0) {
+           
+                InstitutionsStaffSvc.postAssignedStaffShift(shiftData);
                 AlertSvc.success($scope, 'The staff is added successfully.');
                 $window.location.href = 'add?staff_added=true';
                 deferred.resolve(StaffController.postResponse);
@@ -957,6 +972,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function postForm() {
         var deferred = $q.defer();
+        console.log("StaffController"+StaffController);
         var academicPeriodId = (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StaffController.academicPeriodOptions.selectedOption.id: '';
         var positionType = StaffController.positionType;
         var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption') && StaffController.institutionPositionOptions.selectedOption != null) ? StaffController.institutionPositionOptions.selectedOption.value: '';
@@ -965,6 +981,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var staffTypeId = (StaffController.staffTypeId != null && StaffController.staffTypeId.hasOwnProperty('id')) ? StaffController.staffTypeId.id : '';
         var startDate = StaffController.startDate;
         var startDateArr = startDate.split("-");
+        var shiftId = StaffController.staffShiftsId;
+        console.log("ShiftIdssss"+shiftId);
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
         for(i = 0; i < startDateArr.length; i++) {
             if (startDateArr[i] == undefined || startDateArr[i] == null || startDateArr[i] == '') {
@@ -981,7 +999,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 return StaffController.addStaffUser(amendedStaffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
             } else {
                 var staffId = StaffController.selectedStaff;
-                return StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, {});
+                return StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, {}, shiftId);
             }
         } else {
             if (StaffController.selectedStaffData != null) {
@@ -1020,14 +1038,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 } else {
                     staffData['password'] = (staffData['password'] == '') ? null : staffData['password'];
                 }
-                return StaffController.addStaffUser(staffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
+                return StaffController.addStaffUser(staffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, shiftId);
             }
         }
     }
 
-    function addStaffUser(staffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate) {
+    function addStaffUser(staffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, shiftId) {
         var deferred = $q.defer();
         var newStaffData = staffData;
+        
         newStaffData['academic_period_id'] = academicPeriodId;
         newStaffData['start_date'] = startDate;
         if (!StaffController.externalSearch) {
@@ -1042,7 +1061,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         .then(function(user){
             if (user[0].error.length === 0) {
                 var staffId = user[0].data.id;
-                deferred.resolve(StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, user[1]));
+                deferred.resolve(StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, user[1], shiftId));
             } else {
                 StaffController.postResponse = user[0];
                 AlertSvc.error($scope, 'The record is not added due to errors encountered.');

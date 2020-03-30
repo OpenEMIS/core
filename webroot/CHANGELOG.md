@@ -1,10 +1,18 @@
 ### [3.48.3] - 2020-03-12
+- Implemented Year Acquired field in Institution > Infrastructure > Overview to be Mandatory
+- Implemented the Move of Institutions > Report Cards > Report Cards Statuses to Institution > Performance and rename it to Report Cards
+- Implemented a Requester field in Institution > Students > Counselling to record who requested for student counselling
+- Implemented a Academic Period filter to Staff > Subjects page
+- Implemented Import function for Administration > Performance > Competencies
+- Implemented Shifts field on Institution > Staff > Add Staff
+
+### [3.48.3] - 2020-03-12
 - Bug Fixed Institutions > Performance > Competencies/Outcomes : Staff unable to view competencies/outcomes of assigned classes/subjects
 - Bug Fixed Institutions/Directory > Add User : Unable to save when user enter identity number
 
 ### [3.48.2] - 2020-03-07
 - Bug Fixed Institutions > Performance > Assessments : User is unable to view classes that have subjects assigned to them
-- Bug fixed where staff with an End of Assignment position get a 'Date from is greater than end date of staff' error when applying for leave
+- Bug Fixed where staff with an End of Assignment position get a 'Date from is greater than end date of staff' error when applying for leave
 - Bug Fixed Administration > Workflow > Rules > Student Attendances: Missing options for post events assignments
 - Bug Fixed Support date plugin for multiple languages
 - Bug Fixed where Institutions > Students > Create New Student: Nationalities Order is Incorrect

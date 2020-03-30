@@ -35,7 +35,9 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'ClassStudents' => ['index']
+            'ClassStudents' => ['index'],
+            'Staff' => ['index', 'add'],
+            'InstitutionStaffAttendances' => ['index', 'add','edit']
         ]);
 
         $this->behaviors()->get('ControllerAction')->config([
@@ -773,5 +775,28 @@ class InstitutionShiftsTable extends ControllerActionTable
         }
 
         return $query;
+    }
+    
+    public function findStaffShiftsAttendance(Query $query, array $options)
+    {
+        $staffId = $options['staff_id'];
+        $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
+        $staffShiftsData   = $query
+                           ->leftJoin(
+                                [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
+                                [
+                                    $institutionStaffShifts->aliasField('shift_id = ') . $this->aliasField('id')
+                                ]
+                            )
+                           ->select([
+                                'institutionShiftId' => $this->aliasField('id'),
+                                'startTime' => $this->aliasField('start_time'),
+                                'endTime'   => $this->aliasField('end_time'),
+                             ])
+                            ->where([
+                             $institutionStaffShifts->aliasField('staff_id') => $staffId
+                            ])->first();
+            
+        return $staffShiftsData;
     }
 }

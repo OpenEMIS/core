@@ -22,6 +22,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getColumnDefs: getColumnDefs,
         getStaffData: getStaffData,
         postAssignedStaff: postAssignedStaff,
+        postAssignedStaffShift: postAssignedStaffShift,
         getExternalSourceUrl: getExternalSourceUrl,
         addUser: addUser,
         makeDate: makeDate,
@@ -51,6 +52,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getExternalSourceMapping: getExternalSourceMapping,
         getPositionList: getPositionList,
         getStaffTypes: getStaffTypes,
+        getStaffShifts: getStaffShifts,
         getInstitution: getInstitution,
         addStaffTransferRequest: addStaffTransferRequest,
         generatePassword: generatePassword,
@@ -62,7 +64,9 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         StaffTransferIn: 'Institution.StaffTransferIn',
         StaffUser: 'Institution.StaffUser',
         StaffRecord: 'Institution.Staff',
+        StaffShifts: 'Institution.InstitutionStaffShifts',
         StaffTypes: 'Staff.StaffTypes',
+        InstitutionShifts: 'Institution.InstitutionShifts',
         InstitutionGrades: 'Institution.InstitutionGrades',
         Institutions: 'Institution.Institutions',
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
@@ -595,6 +599,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
     };
 
     function postAssignedStaff(data) {
+        console.log(data);
         var institutionId = this.getInstitutionId();
         data['institution_id'] = institutionId;
         data['staff_status_id'] = 1;
@@ -602,7 +607,16 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         data['end_date'] = this.formatDateForSaving(data['end_date']);
         return StaffRecord.save(data);
     };
-
+    
+    function postAssignedStaffShift(shiftData) {
+       
+        angular.forEach(shiftData.shift_id, function(value, key) {
+            var shift_id = {'staff_id':shiftData.staff_id,'shift_id':value}
+            StaffShifts.save(shift_id);
+        });
+       return false;
+    };
+    
     function setInstitutionId(id) {
         this.institutionId = id;
     }
@@ -712,8 +726,18 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         .select()
         .ajax({defer: true});
     }
-
-    function getInstitution(institutionId) {
+    
+    function getStaffShifts(institutionId, academicPeriodId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return InstitutionShifts.find('shiftOptions', 
+        {institution_id: institutionId, 
+            academic_period_id: academicPeriodId})
+                .ajax({success: success, defer: true});
+        }
+    
+     function getInstitution(institutionId) {
         return Institutions
         .select()
         .where({'id': institutionId})

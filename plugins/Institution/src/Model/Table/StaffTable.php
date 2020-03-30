@@ -2131,7 +2131,7 @@ class StaffTable extends ControllerActionTable
         }
 
         $allStaffAttendances = $InstitutionStaffAttendances
-            ->find()
+            ->find('all')
             ->where([
                 $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
                 $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
@@ -2219,6 +2219,7 @@ class StaffTable extends ControllerActionTable
                                     'time_in' => $this->formatTime($attendanceRecord['time_in']),
                                     'time_out' => $this->formatTime($attendanceRecord['time_out']),
                                     'comment' => $attendanceRecord['comment'],
+                                    'absence_type_id' => $attendanceRecord['absence_type_id'],
                                     'isNew' => false
                                 ];
                                 break;
@@ -2231,6 +2232,7 @@ class StaffTable extends ControllerActionTable
                                 'time_in' => null,
                                 'time_out' => null,
                                 'comment' => null,
+                                'absence_type_id' => null,
                                 'isNew' => true
                             ];
                         }
