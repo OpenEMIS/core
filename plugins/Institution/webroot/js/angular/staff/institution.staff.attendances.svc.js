@@ -8,12 +8,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
    var models = {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         InstitutionStaffAttendances: 'Staff.InstitutionStaffAttendances',
-        Staff: 'Institution.Staff'
+        Staff: 'Institution.Staff',
+        StaffAttendances: 'Institution.StaffAttendances',
+        InstitutionShiftsTable:'Institution.InstitutionShifts'
     };
 
     var translateText = {
         'original': {
-            'openemis_no': 'BEMIS ID',
+            'openemis_no': 'OpenEMIS ID',
             'Name': 'Name',
             'Attendance': 'Attendance',
             'TimeIn': 'Time In',
@@ -36,7 +38,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         getDayListOptions:getDayListOptions,
         getAllStaffAttendances: getAllStaffAttendances,
         getColumnDefs: getColumnDefs,
-        getAllDayColumnDefs: getAllDayColumnDefs,
+        getAllDayColumnDefs: getAllDayColumnDefs
     };
     return service;
 
@@ -302,12 +304,27 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var timeIn = params.value.time_in;
         var timeOut = params.value.time_out;
         var data = params.data;
+        
+        var staffId = params.data.staff_id;
         var rowIndex = params.rowIndex;
         var timeinPickerId = 'time-in-' + rowIndex;
         var timeoutPickerId = 'time-out-' + rowIndex;
         var time = '';
         var historyUrl = data.historyUrl;
-
+        var successInstitutionShifts = function(response, deferred) {
+           
+           if(response.data.data.length > 0){
+              
+              params.value.time_in = response.data.data[0].startTime; 
+           }
+            
+            deferred.resolve(response.data.data);
+        };
+        
+        var shiftsAttendance =  InstitutionShiftsTable.find('StaffShiftsAttendance', 
+         {staff_id: staffId})
+                .ajax({success: successInstitutionShifts, defer: true});
+        
         if (action == 'edit') {
             var divElement = document.createElement('div');
             var timeInInputDivElement = createTimeElement(params, 'time_in', rowIndex);
@@ -337,8 +354,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
     }
 
     function getAllDayTimeInTimeOutElement(params) {
+        console.log(params);
         var timeIn = params.time_in;
+        console.log(timeIn);
         var timeOut = params.time_out;
+         console.log(timeOut);
         var time = '';
         if (timeIn && timeOut){
             time = '<div class="time-view"><font color= "#77B576"><i class="fa fa-external-link-square"></i> '+ convert12Timeformat(timeIn) + '</div><div class="time-view"><i class="fa fa-external-link"></i> ' + convert12Timeformat(timeOut) +  '</font></div>';

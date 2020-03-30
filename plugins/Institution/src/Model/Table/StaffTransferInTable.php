@@ -16,7 +16,8 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     public function initialize(array $config)
     {
         parent::initialize($config);
-
+        $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
+        
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index'],
             'Staff' => ['index', 'add']
@@ -46,7 +47,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                     return array_key_exists('new_end_date', $context['data']) && !empty($context['data']['new_end_date']);
                 }
             ])
-            ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id']);
+            ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id','shifts_id']);
     }
 
     public function implementedEvents()
@@ -170,7 +171,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('new_FTE', ['type' => 'select']);
         $this->field('new_institution_position_id', ['type' => 'select']);
         $this->field('new_staff_type_id', ['type' => 'select']);
-
+        $this->field('shifts_id', ['type' => 'chosenSelect','placeholder' => __('Select Shifts'),]);
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
         $this->field('comment');
     }
@@ -277,7 +278,57 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
             return $attr;
         }
     }
+    
+    public function onUpdateFieldShiftsId(Event $event, array $attr, $action, Request $request)
+    {
+      
+        $institutionId = !empty($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        
+        if (in_array($action, ['edit', 'approve'])) {
+            $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
+            $options = $this->ShiftOptions($institutionId,$academicPeriodId);
+            // need to specify select option for approve action
+            $attr['options'] = $options;
+            return $attr;
+        }
+    }
 
+    
+    public function ShiftOptions($institutionId,$academicPeriodId)
+    {
+        $institutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+        $institutionData   = $institutionShifts->find()
+                            ->innerJoinWith('ShiftOptions')
+                            ->innerJoinWith('Institutions')
+                            ->select([
+                                'institutionShiftId' => 'InstitutionShifts.id',
+                                'institutionId' => 'Institutions.id',
+                                'institutionCode' => 'Institutions.code',
+                                'institutionName' => 'Institutions.name',
+                                'shiftOptionName' => 'ShiftOptions.name'
+                             ])
+                            ->where([
+                            'location_institution_id' => $institutionId,
+                            'academic_period_id'      => $academicPeriodId
+                            ]);
+                            
+                $data = $institutionData->toArray();
+               
+        $list = [];
+        foreach ($data as $key => $obj) {
+           
+            if ($obj->institutionId == $institutionId) { //if the shift owned by itself, then no need to show the shift owner
+                $shiftName = $obj->shiftOptionName;
+            } else {
+                $shiftName = $obj->institutionCode . " - " . $obj->institutionName . " - " . __($obj->shiftOptionName);
+            }
+            
+            $list[$obj->institutionShiftId] = $shiftName;
+        }
+         
+        return $list;
+    }
+    
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];

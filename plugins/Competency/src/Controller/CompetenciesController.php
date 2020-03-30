@@ -18,7 +18,13 @@ class CompetenciesController extends AppController
     public function Periods()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.CompetencyPeriods']); }
     public function GradingTypes()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.CompetencyGradingTypes']); }
     // End
-
+     public function initialize()
+    {       
+        parent::initialize();
+        $this->ControllerAction->models = [
+            'ImportCompetencyTemplates'   => ['className' => 'Competency.ImportCompetencyTemplates', 'actions' => ['add']]
+        ];
+    }
     public function getCompetencyTabs()
     {
         $tabElements = [
@@ -77,4 +83,6 @@ class CompetenciesController extends AppController
 
         $this->set('contentHeader', $header);
     }
+
+
 }

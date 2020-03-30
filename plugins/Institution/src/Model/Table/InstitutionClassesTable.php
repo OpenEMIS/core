@@ -155,6 +155,10 @@ class InstitutionClassesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $query = $this->request->query;
+        
+        if(!empty($this->request->data['InstitutionClasses']['institution_shift_id'])){
+            $extra['institution_shift_id'] = $this->request->data['InstitutionClasses']['institution_shift_id'];
+        }
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $extra['institution_id'] = $institutionId;
@@ -249,6 +253,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $action = $this->action;
+	$institutionShiftId = $extra['entity']->institution_shift_id;
         if ($action != 'add') {
             $staffOptions = [];
             $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
@@ -892,6 +897,7 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         $this->fields['institution_shift_id']['options'] = $shiftOptions;
+	$this->fields['institution_shift_id']['onChangeReload'] = true;
 
         if (empty($shiftOptions)) {
             $this->Alert->warning($this->aliasField('noShift'));
@@ -1135,7 +1141,7 @@ class InstitutionClassesTable extends ControllerActionTable
         return $studentOptions;
     }
 
-    public function getStaffOptions($institutionId, $action = 'edit', $academicPeriodId = 0, $staffIds = [])
+    public function getStaffOptions($institutionId, $action = 'edit', $academicPeriodId = 0, $staffIds = [], $institutionShiftId = 0)
     {
         if (in_array($action, ['edit', 'add'])) {
             $options = [0 => '-- ' . $this->getMessage($this->aliasField('selectTeacherOrLeaveBlank')) . ' --'];
@@ -1170,9 +1176,14 @@ class InstitutionClassesTable extends ControllerActionTable
                             })
                             ->find('byInstitution', ['Institutions.id'=>$institutionId])
                             ->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
-                            ->where([
+                            ->innerJoin(
+                                ['InstitutionStaffShifts' => 'institution_staff_shifts'],
+                                ['InstitutionStaffShifts.staff_id = ' . $Staff->aliasField('staff_id')]
+                            )
+			    ->where([
                                 $Staff->aliasField('staff_id NOT IN') => $staffIds,
                                 $Staff->aliasField('start_date <= ') => $todayDate,
+				 'InstitutionStaffShifts.shift_id' => $institutionShiftId,
                                 'OR' => [
                                     [$Staff->aliasField('end_date >= ') => $todayDate],
                                     [$Staff->aliasField('end_date IS NULL')]

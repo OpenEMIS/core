@@ -827,3 +827,13 @@ table .input-group {
     left: 0;
     right: auto !important;
 }
+
+/* Change css as per POCOR-5247 Institutions > Survey > Forms: To allow at least 5 columns in one view*/
+.table-wrapper.shadow-right .table-in-view .input.string input,.table-wrapper.shadow-left .table-in-view .input.string input{
+    min-width: 75px !important; padding-right: 10px;width: 100% !important;
+}
+.table-wrapper.shadow-right .table-in-view .input.string, .table-wrapper.shadow-left .table-in-view .input.string{display:inline-block;}
+.table-wrapper.shadow-right .table>tbody>tr>td:first-child, .table-wrapper.shadow-left .table>tbody>tr>td:first-child{max-width:100px !important;}
+.table-wrapper.shadow-right .table>tbody>tr, .table-wrapper.shadow-left .table>tbody>tr{width:100%;}
+.table-wrapper.shadow-right .table>tbody>tr>td, .table-wrapper.shadow-left .table>tbody>tr>td{width:20% !important;}
+/* Change css as per POCOR-5247 Institutions > Survey > Forms: To allow at least 5 columns in one view*/
