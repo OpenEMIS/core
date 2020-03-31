@@ -905,6 +905,10 @@ class StudentsTable extends ControllerActionTable
             $indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
 
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+                $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $currentYearId = $AcademicPeriod->getCurrent();
+                $periodId = $this->request->query['academic_period_id'];
+                if ($currentYearId == $periodId) {
                 $indexElements[] = [
                     'name' => $indexDashboard,
                     'data' => [
@@ -915,6 +919,7 @@ class StudentsTable extends ControllerActionTable
                     'options' => [],
                     'order' => 2
                 ];
+                }
             }
 
             foreach ($indexElements as $key => $value) {
