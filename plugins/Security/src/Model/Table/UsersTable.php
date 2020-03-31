@@ -225,8 +225,8 @@ class UsersTable extends AppTable
     public function onGetNationalityId(Event $event, Entity $entity){     
         if (!empty($entity->nationality_id)) {
            $nationalities = TableRegistry::get('Nationalities')->get($entity->nationality_id);
-           $entity->nationalit_id = $nationalities->name;
-           return $entity->nationalit_id;
+           $entity->nationality_name = $nationalities->name;
+           return $entity->nationality_name;
         }
     }
 
