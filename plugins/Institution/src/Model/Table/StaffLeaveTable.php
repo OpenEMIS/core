@@ -72,15 +72,27 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator)
     {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
+        if ($allowOutAcademicYear == 1) {
+            $a = NumberOfYear();
+            echo $a;die;
+        }
         $validator = parent::validationDefault($validator);
+
+        /*$validator
+            ->add('date_to', 'ruleNumberOfYear',
+                [
+                'rule' => ['NumberOfYear', 'date_to',true]
+                ]);*/
 
         return $validator
             ->add('date_to', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_from', true]
             ])
-            ->add('date_to', 'ruleInAcademicPeriod', [
+            /*->add('date_to', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
-            ])
+            ])*/
             ->add('date_from', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
             ])
@@ -175,7 +187,7 @@ class StaffLeaveTable extends ControllerActionTable
         ]);
 
         $this->field('staff_id', ['type' => 'hidden']);
-
+        $this->field('end_academic_period_id', ['visible' => false]);
         $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'time', 'start_time', 'full_day', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
     }
 
