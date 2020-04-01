@@ -13,6 +13,9 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Collection\Collection;
+use Cake\I18n\Date;
+use Cake\I18n\Time;
+
 
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
@@ -72,23 +75,14 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator)
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
-        if ($allowOutAcademicYear == 1) {
-            $a = NumberOfYear();
-            echo $a;die;
-        }
         $validator = parent::validationDefault($validator);
-
-        /*$validator
-            ->add('date_to', 'ruleNumberOfYear',
-                [
-                'rule' => ['NumberOfYear', 'date_to',true]
-                ]);*/
-
         return $validator
             ->add('date_to', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_from', true]
+            ])
+            ->add('date_to', 'ruleDateToInRange', [
+                'rule' => ['DateToInRange'],
+                'message' => __('Date to is greater than number of year range')
             ])
             /*->add('date_to', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
