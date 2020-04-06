@@ -1,4 +1,4 @@
-### [3.48.3] - 2020-03-12
+### [3.49.0] - 2020-03-30
 - Implemented Year Acquired field in Institution > Infrastructure > Overview to be Mandatory
 - Implemented the Move of Institutions > Report Cards > Report Cards Statuses to Institution > Performance and rename it to Report Cards
 - Implemented a Requester field in Institution > Students > Counselling to record who requested for student counselling
