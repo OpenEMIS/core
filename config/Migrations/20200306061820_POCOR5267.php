@@ -104,6 +104,24 @@ class POCOR5267 extends AbstractMigration
 				'edit' => 0,
 				'delete' => 0,
 				'execute' => 0
+            ],
+            [ 'id' => $uniqueId + 10, 'name' => 'Create Student',
+				'model' => 'Institution.Students',
+				'index' => 1,
+				'view' => 1,
+				'add' => 1,
+				'edit' => 1,
+				'delete' => 0,
+				'execute' => 0
+            ],
+            [ 'id' => $uniqueId + 11, 'name' => 'Identity Types',
+				'model' => 'FieldOption.IdentityTypes',
+				'index' => 1,
+				'view' => 1,
+				'add' => 0,
+				'edit' => 0,
+				'delete' => 0,
+				'execute' => 0
             ]
         ];
 
