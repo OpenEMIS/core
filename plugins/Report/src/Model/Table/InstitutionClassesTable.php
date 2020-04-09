@@ -88,6 +88,7 @@ class InstitutionClassesTable extends AppTable
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
         $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
         $query
             ->select([
                 $this->aliasField('id'),
@@ -102,8 +103,11 @@ class InstitutionClassesTable extends AppTable
                 'shift_name' => 'ShiftOptions.name',
                 'name' => 'InstitutionClasses.name',
                 'staff_id' => 'InstitutionClasses.staff_id',
-                'teacher' => 'TeacherPosition.name',
-                'assistant_teacher' => 'AssistantTeacherPosition.name',
+                'secondary_staff_name' => $query->func()->concat([
+                    'SecurityUsers.first_name' => 'literal',
+                    " ",
+                    'SecurityUsers.last_name' => 'literal'
+                ]),
                 'total_male_students' => 'InstitutionClasses.total_male_students',
                 'total_female_students' => 'InstitutionClasses.total_female_students',
                 'total_students' => $query->newExpr('InstitutionClasses.total_male_students + InstitutionClasses.total_female_students')
@@ -137,23 +141,15 @@ class InstitutionClassesTable extends AppTable
                 ]
             ])
             ->leftJoin(
-            ['InstitutionPositions' => 'institution_positions'],
+            ['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'],
             [
-                'InstitutionPositions.institution_id = '. $this->aliasField('institution_id')
+                'InstitutionClassesSecondaryStaff.institution_class_id = '. $this->aliasField('id')
             ]
             )
             ->leftJoin(
-            ['TeacherPosition' => 'staff_position_titles'],
+            ['SecurityUsers' => 'security_users'],
             [
-                'TeacherPosition.id = '. 'InstitutionPositions.staff_position_title_id',
-                'TeacherPosition.name' => 'Teacher'
-            ]
-            )
-            ->leftJoin(
-            ['AssistantTeacherPosition' => 'staff_position_titles'],
-            [
-                'AssistantTeacherPosition.id = '. 'InstitutionPositions.staff_position_title_id',
-                'AssistantTeacherPosition.name' => 'Assistant Teacher'
+                'SecurityUsers.id = '. $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
             ]
             )
             ->where([
@@ -162,9 +158,9 @@ class InstitutionClassesTable extends AppTable
             ])
             ->order([
                 'AcademicPeriods.order',
-                'Institutions.code'
+                'Institutions.code',
+                'InstitutionClasses.id'
             ]);
-            echo "<pre>";print_r($query);die;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -251,21 +247,14 @@ class InstitutionClassesTable extends AppTable
             'key' => 'InstitutionClasses.staff_id',
             'field' => 'staff_id',
             'type' => 'integer',
-            'label' => ''
+            'label' => 'Home Room Teacher'
         ];
 
         $newFields[] = [
-            'key' => 'TeacherPosition.name',
-            'field' => 'teacher',
+            'key' => '',
+            'field' => 'secondary_staff_name',
             'type' => 'string',
-            'label' => 'Class Teacher'
-        ];
-
-        $newFields[] = [
-            'key' => 'AssistantTeacherPosition.name',
-            'field' => 'assistant_teacher',
-            'type' => 'string',
-            'label' => 'Assistant Teacher'
+            'label' => 'Secondary Teacher'
         ];
 
         $newFields[] = [
