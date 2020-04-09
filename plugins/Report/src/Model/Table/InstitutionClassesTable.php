@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\ORM\TableRegistry;
 
 class InstitutionClassesTable extends AppTable
 {
@@ -74,6 +75,19 @@ class InstitutionClassesTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $requestData = json_decode($settings['process']['params']);
+        $institution_id = $requestData->institution_id;
+        if ($institution_id != 0) {
+            $where['Institutions.id'] = $institution_id;
+        }
+        else {
+            $where = array();
+        }
+        $academic_period_id = $requestData->academic_period_id;
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $query
             ->select([
                 $this->aliasField('id'),
@@ -88,6 +102,11 @@ class InstitutionClassesTable extends AppTable
                 'shift_name' => 'ShiftOptions.name',
                 'name' => 'InstitutionClasses.name',
                 'staff_id' => 'InstitutionClasses.staff_id',
+                'teacher' => 'TeacherPosition.name',
+                'assistant_teacher' => 'AssistantTeacherPosition.name',
+                'total_male_students' => 'InstitutionClasses.total_male_students',
+                'total_female_students' => 'InstitutionClasses.total_female_students',
+                'total_students' => $query->newExpr('InstitutionClasses.total_male_students + InstitutionClasses.total_female_students')
             ])
             ->contain([
                 'AcademicPeriods' => [
@@ -117,10 +136,35 @@ class InstitutionClassesTable extends AppTable
                     ]
                 ]
             ])
+            ->leftJoin(
+            ['InstitutionPositions' => 'institution_positions'],
+            [
+                'InstitutionPositions.institution_id = '. $this->aliasField('institution_id')
+            ]
+            )
+            ->leftJoin(
+            ['TeacherPosition' => 'staff_position_titles'],
+            [
+                'TeacherPosition.id = '. 'InstitutionPositions.staff_position_title_id',
+                'TeacherPosition.name' => 'Teacher'
+            ]
+            )
+            ->leftJoin(
+            ['AssistantTeacherPosition' => 'staff_position_titles'],
+            [
+                'AssistantTeacherPosition.id = '. 'InstitutionPositions.staff_position_title_id',
+                'AssistantTeacherPosition.name' => 'Assistant Teacher'
+            ]
+            )
+            ->where([
+                'InstitutionClasses.academic_period_id' => $academic_period_id,
+                $where
+            ])
             ->order([
                 'AcademicPeriods.order',
                 'Institutions.code'
             ]);
+            echo "<pre>";print_r($query);die;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -208,6 +252,41 @@ class InstitutionClassesTable extends AppTable
             'field' => 'staff_id',
             'type' => 'integer',
             'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'TeacherPosition.name',
+            'field' => 'teacher',
+            'type' => 'string',
+            'label' => 'Class Teacher'
+        ];
+
+        $newFields[] = [
+            'key' => 'AssistantTeacherPosition.name',
+            'field' => 'assistant_teacher',
+            'type' => 'string',
+            'label' => 'Assistant Teacher'
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.total_male_students',
+            'field' => 'total_male_students',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.total_female_students',
+            'field' => 'total_female_students',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'total_students',
+            'type' => 'integer',
+            'label' => 'Total Students'
         ];
 
         $fields->exchangeArray($newFields);
