@@ -2,6 +2,7 @@
 namespace Report\Model\Behavior;
 
 use ArrayObject;
+use ZipArchive;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -44,10 +45,10 @@ class ReportListBehavior extends Behavior {
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$query = $settings['query'];
-
+		//print_r($query);die;
 		$settings['pagination'] = false;
 		$fields = $this->_table->ControllerAction->getFields($this->ReportProgress);
-
+		//print_r($fields);die;
 		$fields['current_records']['visible'] = false;
 		$fields['total_records']['visible'] = false;
 		$fields['error_message']['visible'] = false;
@@ -86,12 +87,14 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = ['xlsx' => 'Excel', 'pdf' => 'abc'];
+		
+		$attr['options'] = ['xlsx' => 'Excel', 'pdf' => 'abc','zip' => 'Photo'];
 		$attr['select'] = false;
 		return $attr;
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		
 		$data[$this->_table->alias()]['locale'] = I18n::locale();
 		$session = new Session();
 		$data[$this->_table->alias()]['user_id'] = $session->read('Auth.User.id');
@@ -105,6 +108,7 @@ class ReportListBehavior extends Behavior {
 				return false;
 			}
 		};
+		//print_r($process);die;
 		return $process;
 	}
 
@@ -161,6 +165,7 @@ class ReportListBehavior extends Behavior {
 	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
 	{
 		$process = $extra['process'];
+		
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
@@ -279,4 +284,52 @@ class ReportListBehavior extends Behavior {
 			return $this->_table->controller->redirect($url);
 		}
 	}
+  // Event $event, ArrayObject $extra
+	public function downloadAll($id)
+    {
+		$this->_table->controller->autoRender = false;
+
+        $params = $this->getQueryString();
+
+        // only download report cards with generated or published status
+        $statusArray = [self::GENERATED, self::PUBLISHED];
+
+        $files = $query
+            ->select([
+                'photo_name'    => 'Students.photo_name',
+                'photo_content' => 'Students.photo_content',
+            ])
+           ->where([$this->aliasField('is_student') => 1, $this->aliasField('openemis_no') => 1548403405]);
+
+        if (!empty($files)) {
+            $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
+            $zipName = 'PhotoReport' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $filepath = $path . $zipName;
+
+            $zip = new ZipArchive;
+            $zip->open($filepath, ZipArchive::CREATE);
+            foreach ($files as $file) {
+              $zip->addFromString($file->file_name,  $this->getFile($file->file_content));
+            }
+            $zip->close();
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/zip");
+            header("Content-Length: ".filesize($filepath));
+            header("Content-Disposition: attachment; filename=".$zipName);
+            readfile($filepath);
+
+            // delete file after download
+            unlink($filepath);
+        } else {
+            $event->stopPropagation();
+            $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
+            return $this->controller->redirect($this->url('index'));
+        }
+    }
+
+
 }
