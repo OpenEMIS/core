@@ -525,7 +525,7 @@ class InstitutionClassStudentsTable extends AppTable
             ->find()
             ->contain('Users')
             ->matching('StudentStatuses', function ($q) {
-                return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN', 'REPEATED']]);
+                return $q->where(['StudentStatuses.code' => 'CURRENT']);
             })
             ->where([$this->Users->aliasField('gender_id') => $gender_id])
             ->where([$this->aliasField('institution_class_id') => $classId])
@@ -541,7 +541,7 @@ class InstitutionClassStudentsTable extends AppTable
             ->find()
             ->contain('Users')
             ->matching('StudentStatuses', function ($q) {
-                return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN', 'REPEATED']]);
+                return $q->where(['StudentStatuses.code' => 'CURRENT']);
             })
             ->where([$this->Users->aliasField('gender_id') => $gender_id])
             ->where([$this->aliasField('institution_class_id') => $classId])
