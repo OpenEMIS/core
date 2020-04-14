@@ -22,8 +22,10 @@ class ReportProgressTable extends AppTable  {
 	}
 
 	public function addReport($obj) {
+		
 		if (isset($obj['params'])) {
 			$obj['params'] = json_encode($obj['params']);
+			// echo '<pre>';print_r($obj['params']);die;
 		}
 
 		/* Currently disable the logic to prevent user to create duplicate reports
@@ -53,9 +55,18 @@ class ReportProgressTable extends AppTable  {
 		return $result->id;
 	}
 
-	public function generate($id) {
-		$cmd = ROOT . DS . 'bin' . DS . 'cake Report ' . $id;
-		$logs = ROOT . DS . 'logs' . DS . 'reports.log & echo $!';
+	public function generate($id, $fileFormat) {
+		
+		if($fileFormat == 'zip'){
+			$cmd = ROOT . DS . 'bin' . DS . 'cake StudentsPhotoDownload ' . $id;
+		    $logs = ROOT . DS . 'logs' . DS . 'student-photo-reports.log & echo $!';
+		} 
+
+		if($fileFormat == 'xlsx'){
+			$cmd = ROOT . DS . 'bin' . DS . 'cake Report ' . $id;
+			$logs = ROOT . DS . 'logs' . DS . 'reports.log & echo $!';
+		}
+		
 		$shellCmd = $cmd . ' >> ' . $logs;
 
 		try {
@@ -71,10 +82,11 @@ class ReportProgressTable extends AppTable  {
 
 	public function purge($userId=null, $now=false) {
 		$format = 'Y-m-d';
+
 		$conditions = [$this->aliasField('expiry_date') . ' < ' => date($format)];
 
 		$query = $this->find();
-
+		
 		if (!$now) {
 			$query->where($conditions);
 		}

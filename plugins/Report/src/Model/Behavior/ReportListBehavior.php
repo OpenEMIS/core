@@ -22,6 +22,7 @@ class ReportListBehavior extends Behavior {
 
 	public function initialize(array $config) {
 		$this->ReportProgress = TableRegistry::get('Report.ReportProgress');
+		$this->SecurityUsers  = TableRegistry::get('Security.Users');
 	}
 
 	public function implementedEvents() {
@@ -102,6 +103,7 @@ class ReportListBehavior extends Behavior {
 		$process = function($model, $entity) use ($data) {
 			$errors = $entity->errors();
 			if (empty($errors)) {
+				//echo "testing"; die;
 				$this->_generate($data);
 				return true;
 			} else {
@@ -247,10 +249,11 @@ class ReportListBehavior extends Behavior {
 
 		$ReportProgress = TableRegistry::get('Report.ReportProgress');
 		$obj = ['name' => $name, 'module' => $alias, 'params' => $params];
-
+		$fileFormat = $obj['params']['format'];
 		$id = $ReportProgress->addReport($obj);
+
 		if ($id !== false) {
-			$ReportProgress->generate($id);
+			$ReportProgress->generate($id, $fileFormat);
 		}
 	}
 
@@ -284,32 +287,39 @@ class ReportListBehavior extends Behavior {
 			return $this->_table->controller->redirect($url);
 		}
 	}
-  // Event $event, ArrayObject $extra
-	public function downloadAll($id)
-    {
+
+	private function getFile($phpResourceFile) {
+        $file = '';
+        while (!feof($phpResourceFile)) {
+            $file .= fread($phpResourceFile, 8192);
+        }
+        fclose($phpResourceFile);
+
+        return $file;
+	}
+	
+	public function zipArchievePhoto($id)
+    { 
+	
 		$this->_table->controller->autoRender = false;
-
-        $params = $this->getQueryString();
-
-        // only download report cards with generated or published status
-        $statusArray = [self::GENERATED, self::PUBLISHED];
-
-        $files = $query
-            ->select([
-                'photo_name'    => 'Students.photo_name',
-                'photo_content' => 'Students.photo_content',
-            ])
-           ->where([$this->aliasField('is_student') => 1, $this->aliasField('openemis_no') => 1548403405]);
-
-        if (!empty($files)) {
-            $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
-            $zipName = 'PhotoReport' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
-            $filepath = $path . $zipName;
-
-            $zip = new ZipArchive;
-            $zip->open($filepath, ZipArchive::CREATE);
+		$files = $this->SecurityUsers->find()
+				->select(['id','openemis_no','photo_name','photo_content'])
+				->where(['is_student' =>1, 'photo_content !=' =>''])
+				->toList();
+		
+        if (!empty($files) ) {
+			
+            $path = WWW_ROOT . 'downloads' . DS . 'student-photo' . DS;
+			$zipName = 'StudentPhotoReport' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+			$filepath = $path . $zipName;
+		
+			$zip = new ZipArchive;
+			$zip->open($filepath, ZipArchive::CREATE);
             foreach ($files as $file) {
-              $zip->addFromString($file->file_name,  $this->getFile($file->file_content));
+
+				  $target_file = basename($file->photo_name);
+                  $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+			      $zip->addFromString($file->openemis_no.'.'.$imageFileType,  $this->getFile($file->photo_content));
             }
             $zip->close();
 
@@ -319,17 +329,19 @@ class ReportListBehavior extends Behavior {
             header("Content-Type: application/force-download");
             header("Content-Type: application/zip");
             header("Content-Length: ".filesize($filepath));
-            header("Content-Disposition: attachment; filename=".$zipName);
+		    header("Content-Disposition: attachment; filename=".$zipName);
+		    
             readfile($filepath);
-
-            // delete file after download
-            unlink($filepath);
+			
+			// delete file after download
+			// unlink($filepath);
+			// die;
         } else {
-            $event->stopPropagation();
-            $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
-            return $this->controller->redirect($this->url('index'));
+			$controller = $this->_table->controller->name;
+			$table = $this->_table->alias();
+			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
+			$url = ['controller' => $controller, 'action' => $table, 'index'];
+			return $this->_table->controller->redirect($url);
         }
     }
-
-
 }
