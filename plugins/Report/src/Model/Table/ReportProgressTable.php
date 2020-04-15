@@ -25,7 +25,6 @@ class ReportProgressTable extends AppTable  {
 		
 		if (isset($obj['params'])) {
 			$obj['params'] = json_encode($obj['params']);
-			// echo '<pre>';print_r($obj['params']);die;
 		}
 
 		/* Currently disable the logic to prevent user to create duplicate reports
@@ -44,14 +43,24 @@ class ReportProgressTable extends AppTable  {
 			}
 		}
 		*/
-
+		$fileFormat = json_decode($obj['params']);
+		
 		$obj['file_path'] = NULL;
 		$obj['current_records'] = 0;
 		$obj['total_records'] = 0;
 		$obj['status'] = self::PENDING;
-
+		
 		$newEntity = $this->newEntity($obj);
 		$result = $this->save($newEntity);
+
+		if($fileFormat->format == 'zip'){
+			$expiryDate = new Time();
+			$expiryDate->addDays(5);
+			$this->updateAll(
+			['status' => self::COMPLETED, 'file_path' => WWW_ROOT. 'downloads', 'expiry_date' => $expiryDate, 'modified' => new Time()],
+			['id' => $result->id]
+		);
+		}
 		return $result->id;
 	}
 
