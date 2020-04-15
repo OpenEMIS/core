@@ -76,17 +76,27 @@ class StaffLeaveTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        return $validator
-            ->add('date_to', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'date_from', true]
-            ])
+
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
+
+        if ($allowOutAcademicYear == 1) {
+            $validator
             ->add('date_to', 'ruleDateToInRange', [
                 'rule' => ['DateToInRange'],
                 'message' => __('Date to is greater than number of year range')
-            ])
-            /*->add('date_to', 'ruleInAcademicPeriod', [
+            ]);
+        } else {
+            $validator
+            ->add('date_to', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
-            ])*/
+            ]);
+        }
+        
+        return $validator
+            ->add('date_to', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'date_from', true]
+            ])  
             ->add('date_from', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
             ])
