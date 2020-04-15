@@ -1,3 +1,15 @@
+### [3.49.1] - 2020-4-15
+- Bug Fixed Administration > Security > Users: 404 error when clicking on View and Edit function
+- Bug Fixed Administration > System Setup > Localization > Translations: Added "Create New Student"
+- Bug Fixed Administration > Survey > Rules: Text in Dropdown boxes get cut off
+- Bug Fixed Institutions > Student > Transfer: Student not able to be transferred due to absence record
+- Bug Fixed Institutions > Students/Staff: Hide mini dashboard when user selects a non-current Academic Period
+- Bug Fixed Institutions > Survey > Forms: To allow at least 5 columns in one view
+- Bug Fixed Institutions > Performance > Assessments: If a student is transferred mid year the student's assessments result will not be removed
+- Bug Fixed Institutions > Performance > Assessments: Assessment Reports will inlcude students in all statuses
+- Bug Fixed Institutions > Classes: Total number of students should not include the count for Repeated students
+- Bug Fixed Institutions > Staff > Add: Academic period field removed
+
 ### [3.49.0] - 2020-03-30
 - Implemented Year Acquired field in Institution > Infrastructure > Overview to be Mandatory
 - Implemented the Move of Institutions > Report Cards > Report Cards Statuses to Institution > Performance and rename it to Report Cards
