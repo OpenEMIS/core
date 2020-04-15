@@ -678,8 +678,8 @@ class AssessmentResultsTable extends AppTable
                     ]
                 ])
                 ->where([
-                    $this->aliasField('institution_class_id') => $params['class_id'],
-                    $this->aliasField('student_status_id') => self::STUDENT_ENROLLED_STATUS
+                    $this->aliasField('institution_class_id') => $params['class_id']/*,
+                    $this->aliasField('student_status_id') => self::STUDENT_ENROLLED_STATUS*/
                 ])
                 ->order(['Users.first_name', 'Users.last_name'])
                 // ->hydrate(false)
