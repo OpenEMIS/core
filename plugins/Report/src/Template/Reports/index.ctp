@@ -41,10 +41,10 @@ $this->start('panelBody');
 			<tbody>
 			
 				<?php foreach ($data as $obj) : 
-					  $fileFormat = json_decode($obj->params);
+					 $fileFormat = json_decode($obj->params);
 				 ?>
 				<tr row-id="<?= $obj->id ?>">
-					<td><?= $obj->name ?><?php if($fileFormat->format == 'zip'){echo 'Photo';}?></td>
+					<td><?= $obj->name ?><?php if($fileFormat->format == 'zip'){echo ' Photos';}?></td>
                     <td><?= $table->formatDateTime($obj->created) ?></td>
                     <td><?= $obj->has('created_user') ? $obj->created_user->name_with_id : '' ?></td>
 					<td class="modified"><?= !empty($obj->file_path) ? $table->formatDateTime($obj->modified) : '' ?></td>
@@ -76,8 +76,9 @@ $this->start('panelBody');
 							$downloadClass = 'none';
 							$errorClass = '';
 						}
+						
 						$downloadOptions = ($fileFormat->format == 'zip')?'zipArchievePhoto':'download';
-						echo $this->Html->link(__('Download'), ['action' => $ControllerAction['table']->alias(), $downloadOptions, $obj->id], ['class' => $downloadClass, 'target' => '_self'], []);
+						echo $this->Html->link(__('Download'), ['action' => $ControllerAction['table']->alias(), $downloadOptions, $obj->id, $ControllerAction['table']->alias()], ['class' => $downloadClass, 'target' => '_self'], []);
 						?>
 						<a href="#" data-toggle="tooltip" title="<?= __('Please contact the administrator for assistance.') ?>" class="<?php echo $errorClass ?>"><?php echo __('Error') ?></a>
 					</td>
