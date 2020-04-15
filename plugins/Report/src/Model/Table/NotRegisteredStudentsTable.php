@@ -57,7 +57,7 @@ class NotRegisteredStudentsTable extends AppTable
         $currentStatus = $this->StudentStatuses->getIdByCode('CURRENT');
 
         $query
-            ->contain(['Users.Genders', 'Users.MainNationalities', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedTypes', 'Institutions'])
+            ->contain(['Users.Genders', 'Users.MainNationalities', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedsTypes', 'Institutions'])
             ->leftJoin([$ExamCentreStudents->alias() => $ExamCentreStudents->table()], [
                 $ExamCentreStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ExamCentreStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
@@ -207,7 +207,7 @@ class NotRegisteredStudentsTable extends AppTable
             $allSpecialNeeds = [];
 
             foreach($specialNeeds as $key => $need) {
-                $allSpecialNeeds[] = $need->special_need_type->name;
+                $allSpecialNeeds[] = $need->special_needs_type->name;
             }
 
             return implode(', ', $allSpecialNeeds);

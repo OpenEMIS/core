@@ -157,7 +157,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $query
             ->contain([
-                'Users.SpecialNeeds.SpecialNeedTypes', 
+                'Users.SpecialNeeds.SpecialNeedsTypes', 
                 'Users.Genders', 
                 'Users.Nationalities.NationalitiesLookUp', 
                 'Users.IdentityTypes'
@@ -350,7 +350,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $specialNeeds = [];
         if ($entity->has('user')) {
             foreach ($entity->user->special_needs as $key => $obj) {
-                $specialNeeds[] = $obj->special_need_type->name;
+                $specialNeeds[] = $obj->special_needs_type->name;
             }
         }
 

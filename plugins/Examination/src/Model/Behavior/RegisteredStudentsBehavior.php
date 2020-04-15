@@ -80,7 +80,7 @@ class RegisteredStudentsBehavior extends Behavior {
             $query = $model->find()->where($idKey);
 
             $query
-                ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders', 'Institutions'], true)
+                ->contain(['Users.SpecialNeeds.SpecialNeedsTypes', 'Users.Genders', 'Institutions'], true)
                 ->matching('AcademicPeriods')
                 ->matching('Examinations');
 
@@ -720,7 +720,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $specialNeeds = [];
         if ($entity->has('user')) {
             foreach ($entity->user->special_needs as $key => $obj) {
-                $specialNeeds[] = $obj->special_need_type->name;
+                $specialNeeds[] = $obj->special_needs_type->name;
             }
         }
 
