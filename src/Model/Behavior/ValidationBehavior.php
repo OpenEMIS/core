@@ -2922,10 +2922,8 @@ class ValidationBehavior extends Behavior
     public static function DateToInRange($field, array $globalData)
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
-        if ($allowOutAcademicYear == 1) {
-            $numberOfYear = $ConfigItems->value('allow_no_year');
-        }
+        $numberOfYear = $ConfigItems->value('allow_no_year');
+        
         if ($numberOfYear > 1) {
             $dateTo = (new Date($field))->format('Y-m-d');
             $dateFrom = (new Date($globalData['data']['date_from']))->format('Y-m-d');       
