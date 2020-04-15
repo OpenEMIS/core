@@ -21,8 +21,10 @@ class ReportListBehavior extends Behavior {
 	public $ReportProgress;
 
 	public function initialize(array $config) {
+		
 		$this->ReportProgress = TableRegistry::get('Report.ReportProgress');
 		$this->SecurityUsers  = TableRegistry::get('Security.Users');
+		
 	}
 
 	public function implementedEvents() {
@@ -38,6 +40,7 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function afterAction(Event $event, $config) {
+		
 		if ($this->_table->action == 'index') {
 			$this->_table->controller->set('ControllerAction', $config);
 			$this->_table->ControllerAction->renderView('/Reports/index');
@@ -103,14 +106,13 @@ class ReportListBehavior extends Behavior {
 		$process = function($model, $entity) use ($data) {
 			$errors = $entity->errors();
 			if (empty($errors)) {
-				//echo "testing"; die;
 				$this->_generate($data);
 				return true;
 			} else {
 				return false;
 			}
 		};
-		//print_r($process);die;
+		
 		return $process;
 	}
 
@@ -147,6 +149,7 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
+		
 		$process = $settings['process'];
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
@@ -166,8 +169,8 @@ class ReportListBehavior extends Behavior {
 
 	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
 	{
-		$process = $extra['process'];
 		
+		$process = $extra['process'];
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
@@ -249,6 +252,7 @@ class ReportListBehavior extends Behavior {
 
 		$ReportProgress = TableRegistry::get('Report.ReportProgress');
 		$obj = ['name' => $name, 'module' => $alias, 'params' => $params];
+		
 		$fileFormat = $obj['params']['format'];
 		$id = $ReportProgress->addReport($obj);
 
@@ -298,19 +302,25 @@ class ReportListBehavior extends Behavior {
         return $file;
 	}
 	
-	public function zipArchievePhoto($id)
+	public function zipArchievePhoto($id, $module)
     { 
-	
+		if($module == 'Students'){
+			$where	= ['is_student' =>1, 'photo_content !=' =>''];
+		}
+		if($module == 'Staff'){
+			$where  = ['is_staff' 	=>1, 'photo_content !=' =>''];
+		}
+		
 		$this->_table->controller->autoRender = false;
 		$files = $this->SecurityUsers->find()
 				->select(['id','openemis_no','photo_name','photo_content'])
-				->where(['is_student' =>1, 'photo_content !=' =>''])
+				->where($where)
 				->toList();
 		
         if (!empty($files) ) {
 			
-            $path = WWW_ROOT . 'downloads' . DS . 'student-photo' . DS;
-			$zipName = 'StudentPhotoReport' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $path = WWW_ROOT . 'downloads' . DS . $module.'-photo' . DS;
+			$zipName = $module.'PhotoReport' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
 			$filepath = $path . $zipName;
 		
 			$zip = new ZipArchive;
