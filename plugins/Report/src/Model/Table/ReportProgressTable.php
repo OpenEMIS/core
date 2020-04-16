@@ -71,7 +71,7 @@ class ReportProgressTable extends AppTable  {
 		    $logs = ROOT . DS . 'logs' . DS . 'student-photo-reports.log & echo $!';
 		} 
 
-		if($fileFormat == 'xlsx'){
+		else {
 			$cmd = ROOT . DS . 'bin' . DS . 'cake Report ' . $id;
 			$logs = ROOT . DS . 'logs' . DS . 'reports.log & echo $!';
 		}
