@@ -660,7 +660,7 @@ class NavigationComponent extends Component
                     'title' => 'Report Cards',
                     'parent' => 'Institution.Performance',
                     'params' => ['plugin' => 'Institution'],
-                    'selected' => ['Institutions.ReportCardStatuses'],
+                    'selected' => ['Institutions.ReportCardStatuses', 'Institutions.ReportCardStatusProgress'],
                 ],
 
                 'Institutions.Risks.index' => [
