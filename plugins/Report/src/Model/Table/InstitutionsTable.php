@@ -621,7 +621,7 @@ class InstitutionsTable extends AppTable
                     $attr['attr']['required'] = true;
                 } else {
 
-                    if (in_array($feature, ['Report.BodyMasses'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
