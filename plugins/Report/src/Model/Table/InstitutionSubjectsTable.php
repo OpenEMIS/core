@@ -49,6 +49,20 @@ class InstitutionSubjectsTable extends AppTable  {
 
         $query
             ->select([
+                'institution_code' => 'Institutions.code',
+                'institution_name' => $query->func()->concat(['Institutions.code' => 'literal', ' - ', 'Institutions.name' => 'literal']),
+                'area_code' => 'Areas.code',
+                'area_name' => $query->func()->concat(['Areas.code' => 'literal', ' - ', 'Areas.name' => 'literal']),
+                'area_administrative_code' => 'AreaAdministratives.code',
+                'area_administrative_name' => 'AreaAdministratives.name',
+                'EducationGrades.name',
+                'class_name' => 'InstitutionClasses.name',
+                'AcademicPeriods.name',
+                'total_students' => $query
+                    ->newExpr()
+                    ->add($this->aliasField('total_male_students'))
+                    ->add($this->aliasField('total_female_students'))
+                    ->tieWith('+'),
                 $this->aliasField('name'),
                 $this->aliasField('no_of_seats'),
                 $this->aliasField('total_male_students'),
@@ -57,16 +71,6 @@ class InstitutionSubjectsTable extends AppTable  {
                 $this->aliasField('education_grade_id'),
                 $this->aliasField('education_subject_id'),
                 $this->aliasField('academic_period_id'),
-                'institution_code' => 'Institutions.code',
-                'Institutions.name',
-                'area_code' => 'Areas.code',
-                'area_name' => 'Areas.name',
-                'area_administrative_code' => 'AreaAdministratives.code',
-                'area_administrative_name' => 'AreaAdministratives.name',
-                'EducationGrades.name',
-                'class_name' => 'InstitutionClasses.name',
-                'AcademicPeriods.name',
-                
             ])
             ->contain([
                 'Institutions.Areas',
@@ -81,16 +85,17 @@ class InstitutionSubjectsTable extends AppTable  {
             ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
                 $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
             ])
-            ->where($conditions);
+            ->where($conditions);        
     }
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->controller->getFeatureOptions('Institutions');
-		return $attr;
-	}
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+            $attr['options'] = $this->controller->getFeatureOptions('Institutions');
+            return $attr;
+    }
+        
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
-    {        
+    {   
         foreach ($fields as $key => $value) {
             if ($value['field'] == 'education_subject_id') {
                 $fields[$key] = array('key' => 'InstitutionClasses.name',
@@ -99,51 +104,76 @@ class InstitutionSubjectsTable extends AppTable  {
                     'label' => __('Institution Class'));
             }
         }
-       
+        
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
         
         foreach ($cloneFields as $key => $value) {
             
-            $newFields[] = $value;
-            if ($value['field'] == 'institution_id') {
+            if (in_array($value['field'], ['academic_period_id'])) {
+                    unset($cloneFields[$key]);
+                    break;
+            }
+            
+            if ($value['field'] == 'class_name') {
                 $newFields[] = [
-                    'key' => 'Institutions.code',
-                    'field' => 'institution_code',
+                    'key' => 'institution_name',
+                    'field' => 'institution_name',
                     'type' => 'string',
-                    'label' => ''
+                    'label' => 'Institution'
                 ];
-
+                
                 $newFields[] = [
-                    'key' => 'Institutions.area_code',
-                    'field' => 'area_code',
-                    'type' => 'string',
-                    'label' => __('Area Education Code')
-                ];
-
-                $newFields[] = [
-                    'key' => 'Institutions.area',
+                    'key' => 'area_name',
                     'field' => 'area_name',
                     'type' => 'string',
                     'label' => __('Area Education')
                 ];
-
-                $newFields[] = [
-                    'key' => 'AreaAdministratives.code',
-                    'field' => 'area_administrative_code',
-                    'type' => 'string',
-                    'label' => __('Area Administrative Code')
-                ];
-
-                $newFields[] = [
-                    'key' => 'AreaAdministratives.name',
-                    'field' => 'area_administrative_name',
-                    'type' => 'string',
-                    'label' => __('Area Administrative')
-                ];
-
                 
+                $newFields[] = [
+                    'key' => 'InstitutionClasses.name',
+                    'field' => 'class_name',
+                    'type' => 'string',
+                    'label' => __('Institution Class')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'InstitutionSubjects.name',
+                    'field' => 'name',
+                    'type' => 'string',
+                    'label' => __('Subject Name')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'InstitutionSubjects.no_of_seats',
+                    'field' => 'no_of_seats',
+                    'type' => 'integer',
+                    'label' => __('Number of seats')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'InstitutionSubjects.total_male_students',
+                    'field' => 'total_male_students',
+                    'type' => 'integer',
+                    'label' => __('Number of Male students')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'InstitutionSubjects.total_female_students',
+                    'field' => 'total_female_students',
+                    'type' => 'integer',
+                    'label' => __('Number of Female students')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'total_students',
+                    'field' => 'total_students',
+                    'type' => 'integer',
+                    'label' => __('Total number of students')
+                ];
+
             }
+            //$newFields[] = $value;
         }
         
         $fields->exchangeArray($newFields); 
