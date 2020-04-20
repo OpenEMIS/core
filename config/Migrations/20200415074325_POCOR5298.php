@@ -7,18 +7,16 @@ use Cake\Utility\Text;
 class POCOR5298 extends AbstractMigration
 {
     public function up()
-    {
+    {        
+        // security_roles
+        $this->execute('CREATE TABLE `z_5298_security_roles` LIKE `security_roles`');
+        $this->execute('INSERT INTO `z_5298_security_roles` SELECT * FROM `security_roles`');
+        $this->execute("UPDATE `security_roles` SET `code` = 'MOE_ADMIN' WHERE `name` = 'MOE ADMIN'");
         $securityRolesRows = $this->fetchAll("SELECT * FROM `security_roles` WHERE `name` = 'MOE ADMIN' AND `code` = 'MOE_ADMIN'");
         
         if(!empty($securityRolesRows[0]['id'])){
         
             $securityRolesId = $securityRolesRows[0]['id'];
-
-            // security_roles
-            $this->execute('CREATE TABLE `z_5298_security_roles` LIKE `security_roles`');
-            $this->execute('INSERT INTO `z_5298_security_roles` SELECT * FROM `security_roles`');
-            $this->execute("UPDATE `security_roles` SET `code` = 'MOE_ADMIN' WHERE `name` = 'MOE ADMIN'");
-
             // staff_position_titles
             $this->execute('CREATE TABLE `z_5298_staff_position_titles` LIKE `staff_position_titles`');
             $this->execute('INSERT INTO `z_5298_staff_position_titles` SELECT * FROM `staff_position_titles`');
