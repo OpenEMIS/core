@@ -1,3 +1,14 @@
+### [3.50.1] - 2020-4-20
+- Bug Fixed Institutions > Performance > Report Cards: Left Navigation Menu collapsed when selecting the last filter on the page
+- Bug Fixed Institutions > Examinations > Students: 404 Error when assigning students into Examinations
+- Bug Fixed Administration > Workflow > Rules tab > Student Attendance: Missing post events
+- Bug Fixed Administration > Report Cards: Configuration for Template generation moved to Administration > Performance > Report Cards
+- Bug Fixed Administration > System Setup > Labels: Report Cards Labels
+- Bug Fixed Administration > Security> Roles: General Checkbox is not working in RTL Firefox browser
+- Bug Fixed Staff Leave: Unable to add leave that spans over multiple academic periods
+- Bug Fixed Textareas does not have validation for maximum number of characters resulting in error page
+- Bug Fixed General > Error 404 Page: No arabic version for RTL
+
 ### [3.49.1] - 2020-4-15
 - Bug Fixed Administration > Security > Users: 404 error when clicking on View and Edit function
 - Bug Fixed Administration > System Setup > Localization > Translations: Added "Create New Student"
