@@ -143,7 +143,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                         'InstitutionExaminationStudents.examination_id' => $examinationId,
                         'InstitutionExaminationStudents.student_id = '.$InstitutionStudents->aliasField('student_id')
                     ])
-                    ->contain('Users.SpecialNeeds.SpecialNeedTypes')
+                    ->contain('Users.SpecialNeeds.SpecialNeedsTypes')
                     ->leftJoinWith('Users.SpecialNeeds')
                     ->where([
                         $InstitutionStudents->aliasField('institution_id') => $institutionId,

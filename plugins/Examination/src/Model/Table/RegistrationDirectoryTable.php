@@ -157,7 +157,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
             $specialNeeds = $entity->special_needs;
 
             foreach ($specialNeeds as $key => $need) {
-                $array[] = $need->special_need_type->name;
+                $array[] = $need->special_needs_type->name;
             }
             $value = implode(', ', $array);
         }
@@ -173,7 +173,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
                 $specialNeeds = $entity->special_needs;
 
                 foreach ($specialNeeds as $key => $need) {
-                    $needsArray[] = ['special_need' => $need->special_need_type->name, 'special_need_difficulty' => $need->special_need_difficulty->name];
+                    $needsArray[] = ['special_need' => $need->special_needs_type->name, 'special_need_difficulty' => $need->special_need_difficulty->name];
                 }
             }
 
