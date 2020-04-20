@@ -181,6 +181,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
         $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']);
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -725,6 +726,30 @@ class InstitutionsTable extends AppTable
         }
         if (!$superAdmin) {
             $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
+        }
+    }
+    
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.InstitutionSubjects'])) {
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                $subjectOptions = $EducationSubjects
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                    ->find('visible')
+                    ->order([
+                        $EducationSubjects->aliasField('order') => 'ASC'
+                    ])
+                    ->toArray();
+
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
+            } else {
+                $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
         }
     }
 }
