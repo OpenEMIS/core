@@ -251,15 +251,9 @@ class InstitutionsInfrastructureTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $feature = $requestData->feature;
         $filter = $requestData->institution_filter;
-
         $cloneFields = $fields->getArrayCopy();
-       //print_r( $cloneFields);die;
         $newFields = [];
-        //foreach ($cloneFields as $key => $value) {
-             //$newFields[] = $value;
-
-         //   if ($value['field'] == 'code') {
-
+        
             $newFields[] = [
                 'key' => 'InstitutionsInfrastructure.name',
                 'field' => 'name',
@@ -281,14 +275,10 @@ class InstitutionsInfrastructureTable extends AppTable
                 'type' => 'string',
                 'label' => __('Infrastructure Code')
             ];
-        // }
-        //}
-
-        //$fields->exchangeArray($newFields);
-
+       
         if ($feature == 'Report.InstitutionsInfrastructure' && $filter == self::NO_FILTER) {
             // Stop the customfieldlist behavior onExcelUpdateFields function
-           
+
             $includedFields = ['name', 'code', 'institutionlands_code'];
             foreach ($newFields as $key => $value) {
                 if (!in_array($value['field'], $includedFields)) {
@@ -374,30 +364,12 @@ class InstitutionsInfrastructureTable extends AppTable
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
         $institutionLands = TableRegistry::get('Institution.InstitutionLands');
-        $institutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
-        $institutionFloors = TableRegistry::get('Institution.InstitutionFloors');
-        $institutionRooms = TableRegistry::get('Institution.InstitutionRooms');
         $query
-                    ->select(['institutionlands_code'=>$institutionLands->aliasField('code'),
-                            'institutionlands_code'=>$institutionBuildings->aliasField('code'),
-                            'institutionlands_code'=>$institutionFloors->aliasField('code'),
-                            'institutionlands_code'=>$institutionRooms->aliasField('code')])
-                    ->select(['institutionlands_code'=>$institutionBuildings->aliasField('code')])
+                    ->select(['institutionlands_code'=>$institutionLands->aliasField('code')])
                     ->innerJoin([$institutionLands->alias() => $institutionLands->table()], [
-                       $institutionLands->aliasField('institution_id = ') . $this->aliasField('id'),
-                     ])
-                    ->innerJoin([$institutionBuildings->alias() => $institutionBuildings->table()], [
-                        $institutionBuildings->aliasField('institution_id = ') . $this->aliasField('id'),
-                    ])
-                    ->innerJoin([$institutionFloors->alias() => $institutionFloors->table()], [
-                        $institutionFloors->aliasField('institution_id = ') . $this->aliasField('id'),
-                    ])
-                    ->innerJoin([$institutionRooms->alias() => $institutionRooms->table()], [
-                        $institutionRooms->aliasField('institution_id = ') . $this->aliasField('id'),
+                        $institutionLands->aliasField('institution_id = ') . $this->aliasField('id'),
                     ]);
-                    ;
 
-                           
         if (!$superAdmin) {
             $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
         }
