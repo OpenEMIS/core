@@ -31,7 +31,7 @@ class POCOR5298 extends AbstractMigration
             $this->execute("INSERT INTO `staff_position_titles_grades` (`staff_position_title_id`, `staff_position_grade_id`) 
     VALUE('".$staffPositionTitlesId."', '-1');");
 
-                    // workflow_rule_events
+            // workflow_rule_events
             $this->execute('CREATE TABLE `z_5298_workflow_rule_events` LIKE `workflow_rule_events`');
             $this->execute('INSERT INTO `z_5298_workflow_rule_events` SELECT * FROM `workflow_rule_events`');
             $this->execute("INSERT INTO `workflow_rule_events` (`workflow_rule_id`, `event_key`) VALUE('18', 'Workflow.onAssignToMoeadmin')");
