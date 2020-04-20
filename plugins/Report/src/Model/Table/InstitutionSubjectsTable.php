@@ -17,8 +17,8 @@ class InstitutionSubjectsTable extends AppTable  {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-
-		$this->addBehavior('Excel', [
+        
+	$this->addBehavior('Excel', [
             'autoFields' => false
         ]);
 		$this->addBehavior('Report.ReportList');
@@ -36,6 +36,7 @@ class InstitutionSubjectsTable extends AppTable  {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
+        $educationSubjectId = $requestData->education_subject_id;
 
         $conditions = [];
         if (!empty($academicPeriodId)) {
@@ -44,8 +45,15 @@ class InstitutionSubjectsTable extends AppTable  {
         if (!empty($institutionId)) {
             $conditions['Institutions.id'] = $institutionId;
         }
+        
+        if (!empty($educationSubjectId)) {
+            $conditions[$this->aliasField('education_subject_id')] = $educationSubjectId;
+        }
+        
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $Staff = TableRegistry::get('User.Users');
 
         $query
             ->select([
@@ -58,6 +66,8 @@ class InstitutionSubjectsTable extends AppTable  {
                 'EducationGrades.name',
                 'class_name' => 'InstitutionClasses.name',
                 'AcademicPeriods.name',
+                'staff_id' => 'InstitutionSubjectStaff.staff_id',
+                'staff_name' => $query->func()->concat(['Users.openemis_no' => 'literal', ' - ', 'Users.first_name' => 'literal', ' ', 'Users.last_name' => 'literal']),
                 'total_students' => $query
                     ->newExpr()
                     ->add($this->aliasField('total_male_students'))
@@ -85,7 +95,13 @@ class InstitutionSubjectsTable extends AppTable  {
             ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
                 $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
             ])
-            ->where($conditions);        
+            ->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()], [
+                $InstitutionSubjectStaff->aliasField('institution_subject_id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
+            ])
+            ->leftJoin([$Staff->alias() => $Staff->table()], [
+                $Staff->aliasField('id =') . $InstitutionSubjectStaff->aliasField('staff_id')
+            ])
+            ->where($conditions);            
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -142,6 +158,13 @@ class InstitutionSubjectsTable extends AppTable  {
                     'field' => 'name',
                     'type' => 'string',
                     'label' => __('Subject Name')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'staff_name',
+                    'field' => 'staff_name',
+                    'type' => 'string',
+                    'label' => __('Subject Teacher')
                 ];
                 
                 $newFields[] = [
