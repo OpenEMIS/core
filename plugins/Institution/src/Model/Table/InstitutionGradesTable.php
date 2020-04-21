@@ -293,9 +293,8 @@ class InstitutionGradesTable extends ControllerActionTable
             }
             
         $academicPeriodId = $institutionClassGrades->InstitutionClasses['academic_period_id'];
-        $errors = $institutionClassGrades->errors();
         
-        if (empty($errors)) {
+        if (!empty($institutionClassGrades)) {
             /**
              * get the list of education_grade_id from the education_grades array
              */           
