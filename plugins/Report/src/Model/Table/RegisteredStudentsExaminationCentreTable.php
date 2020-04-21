@@ -74,7 +74,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
         $Rooms = TableRegistry::get('Examination.ExaminationCentreRooms');
 
         $query
-            ->contain(['Users.Genders', 'Users.MainNationalities', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedTypes', 'Institutions', 'Examinations.EducationGrades'])
+            ->contain(['Users.Genders', 'Users.MainNationalities', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedsTypes', 'Institutions', 'Examinations.EducationGrades'])
             ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -278,7 +278,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
             $allSpecialNeeds = [];
 
             foreach($specialNeeds as $key => $need) {
-                $allSpecialNeeds[] = $need->special_need_type->name;
+                $allSpecialNeeds[] = $need->special_needs_type->name;
             }
 
             return implode(', ', $allSpecialNeeds);

@@ -74,7 +74,7 @@ $checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
                                     <?php
                                         $specialNeeds = [];
                                         foreach ($obj->user->special_needs as $key => $item) {
-                                            $specialNeeds[] = $item->special_need_type->name;
+                                            $specialNeeds[] = $item->special_needs_type->name;
                                         }
                                         echo implode(', ', $specialNeeds);
                                     ?>

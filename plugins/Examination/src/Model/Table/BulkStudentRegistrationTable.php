@@ -257,7 +257,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
             $query = $ExaminationCentreSpecialNeeds
                 ->find('list', [
                     'keyField' => 'special_need_type_id',
-                    'valueField' => 'special_need_type.name'
+                    'valueField' => 'special_needs_type.name'
                 ])
                 ->contain('SpecialNeedsTypes')
                 ->where([$ExaminationCentreSpecialNeeds->aliasField('examination_centre_id') => $examinationCentreId])

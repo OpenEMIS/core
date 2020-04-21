@@ -392,6 +392,8 @@ class ValidationBehavior extends Behavior
                 return $dateTwo > $dateOne;
             }
         }
+
+        
     }
 
     public static function dateAfterEnrollment($check, array $globalData)
@@ -2908,4 +2910,35 @@ class ValidationBehavior extends Behavior
 
         return !$workflowResult->isEmpty();
     }
+
+    public static function NumberOfYear($field, $academicFieldName, $options = [], $globalData)
+    {
+        
+        return $field;
+
+        return false;
+    }
+
+    public static function DateToInRange($field, array $globalData)
+    {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $numberOfYear = $ConfigItems->value('allow_no_year');
+        
+        if ($numberOfYear > 1) {
+            $dateTo = (new Date($field))->format('Y-m-d');
+            $dateFrom = (new Date($globalData['data']['date_from']))->format('Y-m-d');       
+            
+            $endDate = Time::parse($dateFrom)->modify('+'.(int)$numberOfYear.' years')->format('Y-m-d');
+            
+            if ($dateTo > $endDate) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+        else {
+            return true;
+        }
+    }
+
 }
