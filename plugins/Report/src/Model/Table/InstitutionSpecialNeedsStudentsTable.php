@@ -40,7 +40,7 @@ class InstitutionSpecialNeedsStudentsTable extends AppTable  {
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $SpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments');
-        $SpecialNeedTypes = TableRegistry::get('SpecialNeeds.SpecialNeedTypes');
+        $SpecialNeedTypes = TableRegistry::get('SpecialNeeds.SpecialNeedsTypes');
 
         $SpecialNeedsStudents = $SpecialNeedsAssessments
             ->find()
