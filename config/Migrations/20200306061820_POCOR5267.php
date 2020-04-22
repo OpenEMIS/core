@@ -122,6 +122,15 @@ class POCOR5267 extends AbstractMigration
 				'edit' => 0,
 				'delete' => 0,
 				'execute' => 0
+            ],                    
+            [ 'id' => $uniqueId + 12, 'name' => 'Areas',
+				'model' => 'Area.Areas',
+				'index' => 1,
+				'view' => 1,
+				'add' => 0,
+				'edit' => 0,
+				'delete' => 0,
+				'execute' => 0
             ]
         ];
 
