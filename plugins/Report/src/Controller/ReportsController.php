@@ -72,7 +72,8 @@ class ReportsController extends AppController
                 'Report.InstitutionCases' => __('Cases'),
                 'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
                 //'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
-                'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs')
+                'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
+                'Report.SpecialNeedsFacilities' => __('Special Needs Facilities')
             ];
         } elseif ($module == 'Students') {
             $options = [
