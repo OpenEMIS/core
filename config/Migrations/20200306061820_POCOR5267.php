@@ -122,6 +122,42 @@ class POCOR5267 extends AbstractMigration
 				'edit' => 0,
 				'delete' => 0,
 				'execute' => 0
+            ],                    
+            [ 'id' => $uniqueId + 12, 'name' => 'Areas',
+				'model' => 'Area.Areas',
+				'index' => 1,
+				'view' => 1,
+				'add' => 1,
+				'edit' => 1,
+				'delete' => 0,
+				'execute' => 0
+            ],                    
+            [ 'id' => $uniqueId + 13, 'name' => 'Status',
+				'model' => 'Student.StudentStatuses',
+				'index' => 1,
+				'view' => 1,
+				'add' => 1,
+				'edit' => 1,
+				'delete' => 0,
+				'execute' => 0
+            ],                    
+            [ 'id' => $uniqueId + 14, 'name' => 'AcademicPeriod',
+				'model' => 'AcademicPeriod.AcademicPeriods',
+				'index' => 1,
+				'view' => 1,
+				'add' => 1,
+				'edit' => 1,
+				'delete' => 0,
+				'execute' => 0
+            ],                    
+            [ 'id' => $uniqueId + 15, 'name' => 'Education',
+				'model' => 'Education.EducationGrades',
+				'index' => 1,
+				'view' => 1,
+				'add' => 1,
+				'edit' => 1,
+				'delete' => 0,
+				'execute' => 0
             ]
         ];
 
