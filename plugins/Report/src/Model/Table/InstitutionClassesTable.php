@@ -11,6 +11,8 @@ use Cake\ORM\TableRegistry;
 
 class InstitutionClassesTable extends AppTable
 {
+    public const CLASS_TEACHER = 'Home Room Teacher';
+    public const ASSISTANT_TEACHER = 'Secondary Teacher';
 
     public function initialize(array $config)
     {
@@ -77,11 +79,9 @@ class InstitutionClassesTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
+        $where = [];
         if ($institution_id != 0) {
             $where['Institutions.id'] = $institution_id;
-        }
-        else {
-            $where = array();
         }
         $academic_period_id = $requestData->academic_period_id;
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
@@ -247,14 +247,14 @@ class InstitutionClassesTable extends AppTable
             'key' => 'InstitutionClasses.staff_id',
             'field' => 'staff_id',
             'type' => 'integer',
-            'label' => 'Home Room Teacher'
+            'label' => self::CLASS_TEACHER
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'secondary_staff_name',
             'type' => 'string',
-            'label' => 'Secondary Teacher'
+            'label' => self::ASSISTANT_TEACHER
         ];
 
         $newFields[] = [
