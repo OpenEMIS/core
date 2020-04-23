@@ -459,7 +459,8 @@ class InstitutionsTable extends AppTable
     {
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.StaffAttendances', 'Report.BodyMasses', 'Report.InstitutionSpecialNeedsStudents','Report.InstitutionStudentsWithSpecialNeeds']))
+            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.StaffAttendances', 'Report.BodyMasses', 'Report.InstitutionSpecialNeedsStudents','Report.InstitutionStudentsWithSpecialNeeds',
+                'Report.InstitutionCommittees']))
                 ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -586,7 +587,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses'])) {
+            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.InstitutionCommittees'])) {
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
                     $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
@@ -612,7 +613,27 @@ class InstitutionsTable extends AppTable
                     }
 
                     $institutionList = $institutionQuery->toArray();
-                }
+                } else {
+                   $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                           'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->order([
+                           $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                       $userId = $this->Auth->user('id');
+                       $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
+                 }
+                 //echo "<pre>";print_r($institutionList);die;
 
                 if (empty($institutionList)) {
                     $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
