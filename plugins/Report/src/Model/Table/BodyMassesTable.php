@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\ORM\TableRegistry;
 
 use App\Model\Table\AppTable;
 
@@ -62,7 +63,36 @@ class BodyMassesTable extends AppTable
 
         return $age;
     }
+    
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $identityTypeName = '';
+        if (!is_null($entity->identity_type)) {
+            $identityType = TableRegistry::get('FieldOption.IdentityTypes')->find()->where(['id'=>$entity->identity_type])->first();
+            $identityTypeName = $identityType->name;
+        }
+        return $identityTypeName;
+    }
 
+    public function onExcelGetBmi(Event $event, Entity $entity)
+    {
+        $bodyMassIndex = 'Anand';
+        
+        if (!is_null($entity->bmi) ) {
+            if($entity->bmi <= 18.5){
+                $bodyMassIndex = "Underweight";
+            }elseif($entity->bmi > 18.5 && $entity->bmi <= 24.9){
+                $bodyMassIndex = "Normal";
+            }elseif($entity->bmi > 25 && $entity->bmi <= 29.9){
+                $bodyMassIndex = "Overweight";
+            }elseif($entity->bmi > 29.9){
+                $bodyMassIndex = "Obesity";
+            }            
+        }
+
+        return $bodyMassIndex;
+    } 
+        
     public function onExcelGetGender(Event $event, Entity $entity)
     {
         $gender = '';
@@ -86,7 +116,12 @@ class BodyMassesTable extends AppTable
         if (!empty($institutionId)) {
             $conditions['Institutions.id'] = $institutionId;
         }
-
+        
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
+        
+        $Class = TableRegistry::get('Institution.InstitutionClasses');
+        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        
         $query
             ->select([
                 $this->aliasField('student_id'),
@@ -97,7 +132,9 @@ class BodyMassesTable extends AppTable
                 'bm_height' => 'UserBodyMasses.height',
                 'bm_weight' => 'UserBodyMasses.weight',
                 'bm_body_mass_index' => 'UserBodyMasses.body_mass_index',
-                'bm_comment' => 'UserBodyMasses.comment'
+                'bmi' => 'UserBodyMasses.body_mass_index',
+                'bm_comment' => 'UserBodyMasses.comment',
+                'class_name' => 'InstitutionClasses.name'
             ])
             ->contain([
                 'Users' => [
@@ -107,7 +144,9 @@ class BodyMassesTable extends AppTable
                         'Users.middle_name',
                         'Users.third_name',
                         'Users.last_name',
-                        'date_of_birth' => 'Users.date_of_birth'
+                        'date_of_birth' => 'Users.date_of_birth',
+                        'identity_number' => 'Users.identity_number',
+                        'identity_type' => 'Users.identity_type_id'
                     ]
                 ],
                 'EducationGrades' => [
@@ -139,6 +178,16 @@ class BodyMassesTable extends AppTable
                     'UserBodyMasses.academic_period_id = ' . $this->aliasField('academic_period_id')
                 ]
             )
+            ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
+                $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
+            ])
+            ->leftJoin([$Class->alias() => $Class->table()], [
+                $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
+            ])
              ->where($conditions);
     }
 
@@ -154,6 +203,20 @@ class BodyMassesTable extends AppTable
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
+        
+        $extraFields[] = [
+            'key' => 'Users.identity_type_id',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];  
+        
+        $extraFields[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
 
         $extraFields[] = [
             'key' => 'Users.age',
@@ -161,6 +224,13 @@ class BodyMassesTable extends AppTable
             'type' => 'string',
             'label' => __('Age')
         ];
+        
+        $extraFields[] = [
+                'key' => 'InstitutionClasses.name',
+                'field' => 'class_name',
+                'type' => 'string',
+                'label' => ''
+            ];
 
         $extraFields[] = [
             'key' => 'Users.gender',
@@ -191,8 +261,15 @@ class BodyMassesTable extends AppTable
         ];
 
         $extraFields[] = [
-            'key' => 'body_mass_index',
+            'key' => 'body_mass_ready',
             'field' => 'bm_body_mass_index',
+            'type' => 'string',
+            'label' => __('Body Mass Reading')
+        ];
+        
+        $extraFields[] = [
+            'key' => 'body_mass_index',
+            'field' => 'bmi',
             'type' => 'string',
             'label' => __('Body Mass Index')
         ];
