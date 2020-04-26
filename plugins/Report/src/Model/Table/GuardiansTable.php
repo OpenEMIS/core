@@ -42,10 +42,10 @@ class GuardiansTable extends AppTable  {
 	public function onExcelGetGuardianFatherName(Event $event, Entity $entity) {
    
         $guardianData = TableRegistry::get('security_users');
-        $fatherName = '';
+        $name = '';
 
             if (!is_null($entity->student_id)) {
-                $fatherDetails = $guardianData->find()
+                $getGuardian = $guardianData->find()
                             ->select(['security_users.first_name','security_users.last_name'])
                             ->leftJoin(['Guardians' => 'student_guardians'], [
                                 'security_users.id = ' . 'Guardians.guardian_id',
@@ -54,12 +54,12 @@ class GuardiansTable extends AppTable  {
                             ->where(['Guardians.student_id'=>$entity->student_id,'guardian_relation_id'=>self::RELATION_FATHER])
                             ->first();
 
-                    if(!empty($fatherDetails)){
-                        $fatherName = $fatherDetails->first_name.' '.$fatherDetails->last_name;
+                    if(!empty($getGuardian)){
+                        $name = $getGuardian->first_name.' '.$getGuardian->last_name;
                     }
 
             }
-        return $fatherName;
+        return $name;
     }
 
 
@@ -69,7 +69,7 @@ class GuardiansTable extends AppTable  {
         $fatherEmail = '';
 
             if (!is_null($entity->student_id)) {
-                $fatherDetails = $guardianData->find()
+                $getGuardian = $guardianData->find()
                             ->select(['security_users.email'])
                             ->leftJoin(['Guardians' => 'student_guardians'], [
                                 'security_users.id = ' . 'Guardians.guardian_id',
@@ -78,8 +78,8 @@ class GuardiansTable extends AppTable  {
                             ->where(['Guardians.student_id'=>$entity->student_id,'guardian_relation_id'=>self::RELATION_FATHER])
                             ->first();
 
-                    if(!empty($fatherDetails)){
-                        $fatherEmail = $fatherDetails->email;
+                    if(!empty($getGuardian)){
+                        $fatherEmail = $getGuardian->email;
                     }
 
             }
@@ -93,7 +93,7 @@ class GuardiansTable extends AppTable  {
         $fatherAddress = '';
 
             if (!is_null($entity->student_id)) {
-                $fatherDetails = $guardianData->find()
+                $getGuardian = $guardianData->find()
                             ->select(['security_users.address'])
                             ->leftJoin(['Guardians' => 'student_guardians'], [
                                 'security_users.id = ' . 'Guardians.guardian_id',
@@ -102,8 +102,8 @@ class GuardiansTable extends AppTable  {
                             ->where(['Guardians.student_id'=>$entity->student_id,'guardian_relation_id'=>self::RELATION_FATHER])
                             ->first();
 
-                    if(!empty($fatherDetails)){
-                        $fatherAddress = $fatherDetails->address;
+                    if(!empty($getGuardian)){
+                        $fatherAddress = $getGuardian->address;
                     }
 
             }
