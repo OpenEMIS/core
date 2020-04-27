@@ -13,6 +13,9 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Collection\Collection;
+use Cake\I18n\Date;
+use Cake\I18n\Time;
+
 
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
@@ -74,13 +77,26 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
+
+        if ($allowOutAcademicYear == 1) {
+            $validator
+            ->add('date_to', 'ruleDateToInRange', [
+                'rule' => ['DateToInRange'],
+                'message' => __('Date to is greater than number of year range')
+            ]);
+        } else {
+            $validator
+            ->add('date_to', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
+            ]);
+        }
+        
         return $validator
             ->add('date_to', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_from', true]
-            ])
-            ->add('date_to', 'ruleInAcademicPeriod', [
-                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
-            ])
+            ])  
             ->add('date_from', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
             ])
@@ -107,34 +123,45 @@ class StaffLeaveTable extends ControllerActionTable
         $entity = $this->getNumberOfDays($entity);
         
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $staffData = $InstitutionStaff
             ->find('all')
+            ->select([$StaffStatuses->aliasField('code')])
+            ->select($InstitutionStaff)
+            ->leftJoin(
+                [$StaffStatuses->alias() => $StaffStatuses->table()],
+                [
+                    $StaffStatuses->aliasField('id = ') . $InstitutionStaff->aliasField('staff_status_id')
+                ]
+            )
             ->where([
                         $InstitutionStaff->aliasField('institution_id = ') => $institutionId,
                         $InstitutionStaff->aliasField('staff_id = ') => $staffId
                     ])
-            ->order([$InstitutionStaff->aliasField('id') => 'DESC'])
+            ->order([
+                     $StaffStatuses->aliasField('code') => 'ASC'
+                   ])
             ->first();
-              
-        $startDate = $staffData->start_date->format('Y-m-d');
-            
-        if ($startDate > $dateFrom) {
+            $startDate = $staffData->start_date->format('Y-m-d');
+            if ($startDate > $dateFrom) {
             $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
-            return false;
+           return false;
         }
         
         if (!empty($staffData->end_date)) {
             $endDate = $staffData->end_date->format('Y-m-d');
-            
-            if ($dateFrom > $endDate) {
-                $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
+            if ($startDate > $dateFrom) {
+                $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
                 return false;
-            } else if ($dateTo > $endDate) {
-                $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDateTo', ['reset' => true]);
-                return false;
+            } 
+                if ($dateFrom > $endDate) {
+                    $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
+                    return false;
+                } else if ($dateTo > $endDate) {
+                    $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDateTo', ['reset' => true]);
+                    return false;
+                }
             }
-        }
-        
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
@@ -164,7 +191,7 @@ class StaffLeaveTable extends ControllerActionTable
         ]);
 
         $this->field('staff_id', ['type' => 'hidden']);
-
+        $this->field('end_academic_period_id', ['visible' => false]);
         $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'time', 'start_time', 'full_day', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
     }
 

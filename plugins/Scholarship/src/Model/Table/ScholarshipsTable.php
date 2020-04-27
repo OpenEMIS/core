@@ -540,6 +540,7 @@ class ScholarshipsTable extends ControllerActionTable
             } else {
                 $fieldOfStudyOptions = $this->FieldOfStudies->getList()->toArray();
                 $attr['options'] = $fieldOfStudyOptions;
+               
             }
         }
         return $attr;

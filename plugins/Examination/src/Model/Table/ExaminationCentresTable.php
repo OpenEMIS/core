@@ -215,7 +215,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-            ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedTypes']) 
+            ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedsTypes']) 
             ->contain('Examinations')
             ->matching('Areas')
             ->matching('AcademicPeriods');
@@ -249,7 +249,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         }
         
         // Get special need type ids POCOR-4231
-        $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedTypes;
+        $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedsTypes;
         $allSpecialNeeds = $SpecialNeedTypesTable->getVisibleNeedTypes();
         $allSpecialNeedsData = array_keys($allSpecialNeeds);
 
@@ -398,7 +398,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         $ADD_ALL = -1;
         $fieldKey = 'examination_centre_special_needs';
 
-        $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedTypes;
+        $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedsTypes;
         $allSpecialNeeds = $SpecialNeedTypesTable->getVisibleNeedTypes();
         $id = $data[$this->alias()]['special_need_type_id'];
 
@@ -457,14 +457,14 @@ class ExaminationCentresTable extends ControllerActionTable {
                 foreach ($associated[$fieldKey] as $key => $obj) {
                     if (in_array($obj->special_need_type_id, $associatedSpecialNeedsTemp)) {
                         $rowData = [];
-                        $rowData[] = $obj->special_need_type->name;
+                        $rowData[] = $obj->special_needs_type->name;
                         $tableCells[] = $rowData;
                     }
                 }
             }
         } else if ($action == 'edit') {
             // options for special needs types
-            $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedTypes;
+            $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedsTypes;
             $specialNeedsOptions = $SpecialNeedTypesTable->getVisibleNeedTypes();
 
             $tableHeaders[] = ''; // for delete column
@@ -485,7 +485,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                         if (in_array($obj->special_need_type_id, $associatedSpecialNeedsTemp)) {
                             $selectedSpecialNeeds[] = [
                                 'special_need_type_id' => $obj->special_need_type_id,
-                                'name' => $obj->special_need_type->name
+                                'name' => $obj->special_needs_type->name
                             ];
                         }
                     }

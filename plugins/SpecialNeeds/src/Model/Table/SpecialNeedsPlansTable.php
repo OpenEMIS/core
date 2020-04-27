@@ -13,6 +13,7 @@ use Cake\Validation\Validator;
 
 class SpecialNeedsPlansTable extends ControllerActionTable
 {
+    const COMMENT_MAX_LENGTH = 350;
     public function initialize(array $config)
     {
         $this->table('user_special_needs_plans');
@@ -29,6 +30,17 @@ class SpecialNeedsPlansTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+                ->add('comment', 'length', [
+                'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
+                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
+                ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)

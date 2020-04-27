@@ -46,7 +46,9 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         // Previous institution data
         $this->belongsTo('PreviousInstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'previous_institution_staff_id']);
         $this->belongsTo('PreviousStaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'previous_staff_type_id']);
-
+        
+        $this->belongsTo('InstitutionStaffShifts', ['className' => 'Institution.InstitutionStaffShifts','foreignKey' => 'staff_id']);
+        
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('OpenEmis.Section');
@@ -266,6 +268,13 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        foreach($entity->shifts_id['_ids'] as $shiftId)
+        {
+            $shiftData = array( 'staff_id'=> $entity->staff_id ,'shift_id'=> $shiftId);
+            $saveShift = $this->InstitutionStaffShifts->newEntity($shiftData);
+            $this->InstitutionStaffShifts->save($saveShift);
+        }
+        
         if (!$entity->isNew() && $entity->dirty('status_id')) {
             if (!$entity->all_visible) {
                 $currentInstitutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');

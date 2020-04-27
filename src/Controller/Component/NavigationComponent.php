@@ -656,6 +656,13 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution'],
                 ],
 
+                'Institutions.ReportCardStatuses' => [
+                    'title' => 'Report Cards',
+                    'parent' => 'Institution.Performance',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.ReportCardStatuses', 'Institutions.ReportCardStatusProgress'],
+                ],
+
                 'Institutions.Risks.index' => [
                 'title' => 'Risks',
                 'parent' => 'Institutions.Institutions.index',
@@ -700,12 +707,7 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.ReportCardComments','Institutions.Comments'],
                 ],
 
-                'Institutions.ReportCardStatuses' => [
-                    'title' => 'Statuses',
-                    'parent' => 'Institutions.ReportCards',
-                    'params' => ['plugin' => 'Institution'],
-                    'selected' => ['Institutions.ReportCardStatuses'],
-                ],
+                
 
             'Institutions.Positions' => [
                 'title' => 'Positions',
@@ -1691,6 +1693,13 @@ class NavigationComponent extends Component
                     'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
                 ],
 
+                'ReportCards.Templates' => [
+                'title' => 'Report Cards',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'ReportCard'],
+                'selected' => ['ReportCards.Templates', 'ReportCards.ReportCardEmail']
+                ],
+
             'StaffAppraisals.Criterias.index' => [
                 'title' => 'Appraisals',
                 'parent' => 'Administration',
@@ -1758,12 +1767,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Textbook'],
                 'selected' => ['Textbooks.Textbooks', 'Textbooks.ImportTextbooks']
             ],
-            'ReportCards.Templates' => [
-                'title' => 'Report Cards',
-                'parent' => 'Administration',
-                'params' => ['plugin' => 'ReportCard'],
-                'selected' => ['ReportCards.Templates', 'ReportCards.ReportCardEmail']
-            ],
+            
             'Workflows.Workflows' => [
                 'title' => 'Workflow',
                 'parent' => 'Administration',

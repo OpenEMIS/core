@@ -1,3 +1,47 @@
+### [3.50.1] - 2020-4-20
+- Bug Fixed Institutions > Performance > Report Cards: Left Navigation Menu collapsed when selecting the last filter on the page
+- Bug Fixed Institutions > Examinations > Students: 404 Error when assigning students into Examinations
+- Bug Fixed Administration > Workflow > Rules tab > Student Attendance: Missing post events
+- Bug Fixed Administration > Report Cards: Configuration for Template generation moved to Administration > Performance > Report Cards
+- Bug Fixed Administration > System Setup > Labels: Report Cards Labels
+- Bug Fixed Administration > Security> Roles: General Checkbox is not working in RTL Firefox browser
+- Bug Fixed Staff Leave: Unable to add leave that spans over multiple academic periods
+- Bug Fixed Textareas does not have validation for maximum number of characters resulting in error page
+- Bug Fixed General > Error 404 Page: No arabic version for RTL
+
+### [3.49.1] - 2020-4-15
+- Bug Fixed Administration > Security > Users: 404 error when clicking on View and Edit function
+- Bug Fixed Administration > System Setup > Localization > Translations: Added "Create New Student"
+- Bug Fixed Administration > Survey > Rules: Text in Dropdown boxes get cut off
+- Bug Fixed Institutions > Student > Transfer: Student not able to be transferred due to absence record
+- Bug Fixed Institutions > Students/Staff: Hide mini dashboard when user selects a non-current Academic Period
+- Bug Fixed Institutions > Survey > Forms: To allow at least 5 columns in one view
+- Bug Fixed Institutions > Performance > Assessments: If a student is transferred mid year the student's assessments result will not be removed
+- Bug Fixed Institutions > Performance > Assessments: Assessment Reports will inlcude students in all statuses
+- Bug Fixed Institutions > Classes: Total number of students should not include the count for Repeated students
+- Bug Fixed Institutions > Staff > Add: Academic period field removed
+
+### [3.49.0] - 2020-03-30
+- Implemented Year Acquired field in Institution > Infrastructure > Overview to be Mandatory
+- Implemented the Move of Institutions > Report Cards > Report Cards Statuses to Institution > Performance and rename it to Report Cards
+- Implemented a Requester field in Institution > Students > Counselling to record who requested for student counselling
+- Implemented a Academic Period filter to Staff > Subjects page
+- Implemented Import function for Administration > Performance > Competencies
+- Implemented Shifts field on Institution > Staff > Add Staff
+
+### [3.48.3] - 2020-03-12
+- Bug Fixed Institutions > Performance > Competencies/Outcomes : Staff unable to view competencies/outcomes of assigned classes/subjects
+- Bug Fixed Institutions/Directory > Add User : Unable to save when user enter identity number
+
+### [3.48.2] - 2020-03-07
+- Bug Fixed Institutions > Performance > Assessments : User is unable to view classes that have subjects assigned to them
+- Bug Fixed where staff with an End of Assignment position get a 'Date from is greater than end date of staff' error when applying for leave
+- Bug Fixed Administration > Workflow > Rules > Student Attendances: Missing options for post events assignments
+- Bug Fixed Support date plugin for multiple languages
+- Bug Fixed where Institutions > Students > Create New Student: Nationalities Order is Incorrect
+- Bug Fixed Administration > Textbook > Import: Error 404 when importing records 
+- Bug Fixed Institution > Cases > Student Attendance : Set All grades as Default
+
 ### [3.48.1] - 2020-03-02
 - Bug Fixed for Administration > Security > Roles > System Role: Enabled Delete permission for Student Attendance
 - Bug Fixed for Institution > Staff > Staff Release Configurations
