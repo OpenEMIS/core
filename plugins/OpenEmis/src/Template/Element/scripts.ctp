@@ -43,3 +43,5 @@ echo $this->Html->script('OpenEmis.../plugins/ag-grid-enterprise/dist/ag-grid-en
 //Tree Dropdown
 echo $this->Html->script('OpenEmis.../plugins/multi-select-tree/dist/angular-multi-select-tree-0.1.0');
 echo $this->Html->script('OpenEmis.../plugins/multi-select-tree/dist/angular-multi-select-tree-0.1.0.tpl');
+
+echo $this->Html->script('ControllerAction.../plugins/datepicker/locales/bootstrap-datepicker.'.$dateLanguage.'.min', ['block' => true]);

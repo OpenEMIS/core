@@ -60,10 +60,36 @@ class StaffSubjectsTable extends ControllerActionTable {
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-		$query->contain([
+                 
+                $query->contain([
 			'InstitutionSubjects'
 		]);
+                
+                // Academic Periods
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodId = $AcademicPeriods->getCurrent();
+                $academicPeriodOptions = $AcademicPeriods->getYearList();
+                
+                if(!empty($this->request->query('academic_period_id'))){
+                    $academicPeriodId = $this->request->query('academic_period_id');                     
+                }    
+                
+                $query->where(['InstitutionSubjects.academic_period_id' => $academicPeriodId]);
+                
+                $this->controller->set(compact('academicPeriodOptions','academicPeriodId'));
+               
+                
 	}
+        public function afterAction(Event $event, ArrayObject $extra)
+        {
+            
+            if ($this->action == 'index') {
+                
+                $indexElements[] = ['name' => 'Staff.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
+                $extra['elements'] = array_merge($extra['elements'], $indexElements);
+            }
+           
+        }
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);

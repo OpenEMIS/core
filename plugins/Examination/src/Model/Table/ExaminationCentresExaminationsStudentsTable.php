@@ -246,7 +246,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 $specialNeeds = $attr['entity']->special_needs;
 
                 foreach ($specialNeeds as $key => $need) {
-                    $needsArray[] = ['special_need' => $need->special_need_type->name, 'special_need_difficulty' => $need->special_need_difficulty->name];
+                    $needsArray[] = ['special_need' => $need->special_needs_type->name, 'special_need_difficulty' => $need->special_need_difficulty->name];
                 }
             }
 
@@ -385,7 +385,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 $query = $ExaminationCentreSpecialNeeds
                     ->find('list', [
                         'keyField' => 'special_need_type_id',
-                        'valueField' => 'special_need_type.name'
+                        'valueField' => 'special_needs_type.name'
                     ])
                     ->contain('SpecialNeedsTypes')
                     ->where([$ExaminationCentreSpecialNeeds->aliasField('examination_centre_id') => $selectedExamCentre])

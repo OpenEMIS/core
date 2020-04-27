@@ -6,6 +6,7 @@ $(function () {
 $datepickerScript = "var datepicker%s = $('#%s').datepicker(%s);\n";
 if (isset($datepicker)) {
 	foreach ($datepicker as $key => $obj) {
+                $obj['date_options']['language'] = $dateLanguage;
 		echo sprintf($datepickerScript, $key, $obj['id'], json_encode($obj['date_options']));
 	}
 

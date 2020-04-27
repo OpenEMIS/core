@@ -1,4 +1,4 @@
-/* CHECKBOX v.1.0.7 */
+/* CHECKBOX v.1.0.8 */
 
 
 /* BASE CHECKBOX & RADIOBUTTON STYLING */
@@ -695,6 +695,10 @@ td.center .check-input input {
 
 /* END OF RTL RADIOBUTTON */
 
+/* POCOR-4152 Administration> Security> Roles: General Checkbox is not working in RTL Firefox browser*/
+.rtl.gecko .security-permission-checkbox input[type="checkbox"]{opacity:0; right:0;}
+.rtl.gecko .section-header [type="checkbox"]:checked + label::after,.rtl.gecko td.center [type="checkbox"]:checked + label::after{transition:none;}
+.rtl.gecko .form-horizontal table .selection-wrapper .no-selection-label[type="checkbox"]{left:48%;}
 
 /*==========  Non-Mobile First Method  ==========*/
 
