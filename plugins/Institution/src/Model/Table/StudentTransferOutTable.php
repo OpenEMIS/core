@@ -178,7 +178,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $dataBetweenDate = [];
         foreach ($relatedModels as $model) {
             switch ($model->alias()) {
-                case 'InstitutionStudentAbsences':
+                /*case 'InstitutionStudentAbsences':
                     $absenceCount = $model->find()
                         ->where([
                             $model->aliasField('student_id') => $studentId,
@@ -191,7 +191,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         $dataBetweenDate[$model->alias()] = $absenceCount;
                     }
                     break;
-
+                */
+                
                 case 'StudentBehaviours':
                     $behaviourCount = $model->find()
                         ->where([

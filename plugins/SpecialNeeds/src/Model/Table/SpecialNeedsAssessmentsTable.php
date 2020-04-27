@@ -13,6 +13,7 @@ use Cake\Validation\Validator;
 
 class SpecialNeedsAssessmentsTable extends ControllerActionTable
 {
+    const COMMENT_MAX_LENGTH = 350;
     public function initialize(array $config)
     {
         $this->table('user_special_needs_assessments');
@@ -42,6 +43,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
+            ->add('comment', 'length', [
+                'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
+                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
+             ])
             ->allowEmpty('file_content');
     }
 
@@ -106,13 +111,13 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
     {
         $specialNeedList = $this->find()
-            ->contain(['SpecialNeedTypes', 'SpecialNeedDifficulties'])
+            ->contain(['SpecialNeedsTypes', 'SpecialNeedDifficulties'])
             ->where([$this->aliasField('security_user_id') => $studentId])
             ->all();
 
         $referenceDetails = [];
         foreach ($specialNeedList as $key => $obj) {
-            $specialNeedName = $obj->special_need_type->name;
+            $specialNeedName = $obj->special_needs_type->name;
             $specialNeedDifficulties = $obj->special_need_difficulty->name;
 
             $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';

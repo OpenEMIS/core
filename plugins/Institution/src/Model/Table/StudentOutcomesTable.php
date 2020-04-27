@@ -473,7 +473,7 @@ class StudentOutcomesTable extends ControllerActionTable
                         ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
                             'InstitutionClasses.id = '.$this->ClassGrades->aliasField('institution_class_id'),
                         ])
-                        ->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                        ->leftJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
                             'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
                         ])
                         ;

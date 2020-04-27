@@ -5,6 +5,7 @@ namespace Staff\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\I18n\Time;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
@@ -56,6 +57,28 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
                 $this->delete($entity);
             }
         }
+    }
+    
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        
+        $this->startUpdateStaffLateAttendance($entity->staff_id, $entity->date->format('Y-m-d'));
+        
+    }
+   
+    public function startUpdateStaffLateAttendance($staffId, $date) {
+            
+        
+        $cmd  = ROOT . DS . 'bin' . DS . 'cake UpdateStaffLateAttendance '.$staffId.' '.$date;
+        $logs = ROOT . DS . 'logs' . DS . 'UpdateStaffLateAttendance.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+//      shell_exec($cmd);
+//              try {
+//			shell_exec($shellCmd);
+//			Log::write('debug', $shellCmd);
+//		} catch(\Exception $ex) {
+//			Log::write('error', __METHOD__ . ' exception when removing inactive roles : '. $ex);
+//		}
     }
 
 }

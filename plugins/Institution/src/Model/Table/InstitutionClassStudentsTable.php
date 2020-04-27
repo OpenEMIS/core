@@ -320,8 +320,8 @@ class InstitutionClassStudentsTable extends AppTable
                 'StudentStatuses.id = '.$this->aliasField('student_status_id')
             ])
             ->select(['code' => 'Institutions.code', 'institution_id' => 'Institutions.name', 'openemis_number' => 'Users.openemis_no', 'birth_place_area' => 'BirthplaceAreas.name', 'dob' => 'Users.date_of_birth', 'class_name' => 'InstitutionClasses.name'])
-            ->where([$this->aliasField('institution_id') => $institutionId,
-                $StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']])
+            ->where([$this->aliasField('institution_id') => $institutionId/*,
+                $StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']*/])
             ->order(['class_name']);
 
         if (isset($sheet['classId'])) {
@@ -525,7 +525,7 @@ class InstitutionClassStudentsTable extends AppTable
             ->find()
             ->contain('Users')
             ->matching('StudentStatuses', function ($q) {
-                return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
+                return $q->where(['StudentStatuses.code' => 'CURRENT']);
             })
             ->where([$this->Users->aliasField('gender_id') => $gender_id])
             ->where([$this->aliasField('institution_class_id') => $classId])
@@ -541,7 +541,7 @@ class InstitutionClassStudentsTable extends AppTable
             ->find()
             ->contain('Users')
             ->matching('StudentStatuses', function ($q) {
-                return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
+                return $q->where(['StudentStatuses.code' => 'CURRENT']);
             })
             ->where([$this->Users->aliasField('gender_id') => $gender_id])
             ->where([$this->aliasField('institution_class_id') => $classId])

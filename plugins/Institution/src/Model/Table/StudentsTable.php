@@ -905,6 +905,10 @@ class StudentsTable extends ControllerActionTable
             $indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
 
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+                $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $currentYearId = $AcademicPeriod->getCurrent();
+                $periodId = $this->request->query['academic_period_id'];
+                if ($currentYearId == $periodId) {
                 $indexElements[] = [
                     'name' => $indexDashboard,
                     'data' => [
@@ -915,6 +919,7 @@ class StudentsTable extends ControllerActionTable
                     'options' => [],
                     'order' => 2
                 ];
+                }
             }
 
             foreach ($indexElements as $key => $value) {
@@ -1364,6 +1369,7 @@ class StudentsTable extends ControllerActionTable
         $academicPeriodList = array_reverse($academicPeriodList, true);
 
         foreach ($academicPeriodList as $periodId => $periodName) {
+            if ($periodId == $currentPeriodId) {
             foreach ($dataSet as $dkey => $dvalue) {
                 if (!array_key_exists($periodName, $dataSet[$dkey]['data'])) {
                     $dataSet[$dkey]['data'][$periodName] = 0;
@@ -1397,6 +1403,7 @@ class StudentsTable extends ControllerActionTable
                     $dataSet[$genderName]['data'][$periodName] = $studentsByYear[$genderName][$periodName];
                     $dataSet['Total']['data'][$periodName] += $studentsByYear[$genderName][$periodName];
                 }
+            }
             }
         }
         $params['dataSet'] = $dataSet->getArrayCopy();

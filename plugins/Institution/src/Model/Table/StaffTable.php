@@ -989,6 +989,10 @@ class StaffTable extends ControllerActionTable
             $indexDashboard = 'dashboard';
 
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+                $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $currentYearId = $AcademicPeriod->getCurrent();
+                $periodId = $this->request->query['academic_period_id'];
+                if ($currentYearId == $periodId) {
                 $indexElements['mini_dashboard'] = [
                     'name' => $indexDashboard,
                     'data' => [
@@ -999,6 +1003,7 @@ class StaffTable extends ControllerActionTable
                     'options' => [],
                     'order' => 2
                 ];
+                }
             }
             foreach ($indexElements as $key => $value) {
                 if ($value['name']=='OpenEmis.ControllerAction/index') {
@@ -1474,6 +1479,7 @@ class StaffTable extends ControllerActionTable
         $academicPeriodList = array_reverse($academicPeriodList, true);
 
         foreach ($academicPeriodList as $periodId => $periodName) {
+            if ($periodId == $currentPeriodId) {
             foreach ($dataSet as $dkey => $dvalue) {
                 if (!array_key_exists($periodName, $dataSet[$dkey]['data'])) {
                     $dataSet[$dkey]['data'][$periodName] = 0;
@@ -1504,6 +1510,7 @@ class StaffTable extends ControllerActionTable
                     $dataSet['Total']['data'][$periodName] += $staffByYear[$genderName];
                 }
             }
+        }
         }
 
         $params['dataSet'] = $dataSet->getArrayCopy();
@@ -2129,7 +2136,7 @@ class StaffTable extends ControllerActionTable
         }
 
         $allStaffAttendances = $InstitutionStaffAttendances
-            ->find()
+            ->find('all')
             ->where([
                 $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
                 $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
@@ -2217,6 +2224,7 @@ class StaffTable extends ControllerActionTable
                                     'time_in' => $this->formatTime($attendanceRecord['time_in']),
                                     'time_out' => $this->formatTime($attendanceRecord['time_out']),
                                     'comment' => $attendanceRecord['comment'],
+                                    'absence_type_id' => $attendanceRecord['absence_type_id'],
                                     'isNew' => false
                                 ];
                                 break;
@@ -2229,6 +2237,7 @@ class StaffTable extends ControllerActionTable
                                 'time_in' => null,
                                 'time_out' => null,
                                 'comment' => null,
+                                'absence_type_id' => null,
                                 'isNew' => true
                             ];
                         }

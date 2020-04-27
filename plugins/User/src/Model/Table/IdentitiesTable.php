@@ -137,24 +137,26 @@ class IdentitiesTable extends ControllerActionTable
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
 	{ 
-            $nationalitiesLookUp = TableRegistry::get('Nationalities')->get($entity->nationality_id);
-            if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
-                $user = TableRegistry::get('User.Users');
-                $preferredNationality = TableRegistry::get('User.UserNationalities')
-                        ->find()
-                        ->where(['nationality_id'=>$entity->nationality_id,
-                                'preferred' => self::ISPREFERRED
-                                ])
-                        ->first();
+            if(!empty($entity->nationality_id)){
+                $nationalitiesLookUp = TableRegistry::get('Nationalities')->get($entity->nationality_id);
+                if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
+                    $user = TableRegistry::get('User.Users');
+                    $preferredNationality = TableRegistry::get('User.UserNationalities')
+                            ->find()
+                            ->where(['nationality_id'=>$entity->nationality_id,
+                                    'preferred' => self::ISPREFERRED
+                                    ])
+                            ->first();
 
-                $userDetail = $user->get($entity->security_user_id);  
-                if (!empty($preferredNationality)) {
-                    $userDetail->nationality_id = $entity->nationality_id;
-                }
-                $userDetail->identity_type_id = $entity->identity_type_id;
-                $userDetail->identity_number = $entity->number;
-                $user->save($userDetail);  
-            }                
+                    $userDetail = $user->get($entity->security_user_id);  
+                    if (!empty($preferredNationality)) {
+                        $userDetail->nationality_id = $entity->nationality_id;
+                    }
+                    $userDetail->identity_type_id = $entity->identity_type_id;
+                    $userDetail->identity_number = $entity->number;
+                    $user->save($userDetail);  
+                }      
+            }
             
             $listeners = [
                 TableRegistry::get('User.Users')

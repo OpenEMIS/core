@@ -168,7 +168,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                         ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
                             'InstitutionClasses.id = ' . $ClassGrades->aliasField('institution_class_id')
                         ])
-                        ->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                        ->leftJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
                             'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
                         ])
                         ->where([
