@@ -55,7 +55,7 @@ class BodyMassesTable extends AppTable
     {
         // Calculate the age
         $age = '';
-        if (!is_null($entity->academic_period->start_year) && !is_null($entity->date_of_birth)) {
+        if (!empty($entity->academic_period->start_year) && !empty($entity->date_of_birth)) {
             $startYear = $entity->academic_period->start_year;
             $dob = $entity->date_of_birth->format('Y');
             $age = $startYear - $dob;
@@ -67,7 +67,7 @@ class BodyMassesTable extends AppTable
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
         $identityTypeName = '';
-        if (!is_null($entity->identity_type)) {
+        if (!empty($entity->identity_type)) {
             $identityType = TableRegistry::get('FieldOption.IdentityTypes')->find()->where(['id'=>$entity->identity_type])->first();
             $identityTypeName = $identityType->name;
         }
@@ -76,9 +76,9 @@ class BodyMassesTable extends AppTable
 
     public function onExcelGetBmi(Event $event, Entity $entity)
     {
-        $bodyMassIndex = 'Anand';
+        $bodyMassIndex = '';
         
-        if (!is_null($entity->bmi) ) {
+        if (!empty($entity->bmi) ) {
             if($entity->bmi <= 18.5){
                 $bodyMassIndex = "Underweight";
             }elseif($entity->bmi > 18.5 && $entity->bmi <= 24.9){
@@ -96,7 +96,7 @@ class BodyMassesTable extends AppTable
     public function onExcelGetGender(Event $event, Entity $entity)
     {
         $gender = '';
-        if (!is_null($entity->user->gender->name) ) {
+        if (!empty($entity->user->gender->name) ) {
             $gender = $entity->user->gender->name;
         }
 
