@@ -39,8 +39,6 @@ class InstitutionCommitteesTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $academic_period_id = $requestData->academic_period_id;
-        $institution_id = $requestData->institution_id;
 
         $query
             ->select([
@@ -73,8 +71,8 @@ class InstitutionCommitteesTable extends AppTable
                 ]
             ])
             ->where([
-                $this->aliasField('academic_period_id') => $academic_period_id,
-                $this->aliasField('institution_id') => $institution_id
+                $this->aliasField('academic_period_id') => $requestData->academic_period_id,
+                $this->aliasField('institution_id') => $requestData->institution_id
             ]);
     }
 
