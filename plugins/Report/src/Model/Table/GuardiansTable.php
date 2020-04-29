@@ -13,10 +13,7 @@ use Cake\Database\Expression\IdentifierExpression;
 
 class GuardiansTable extends AppTable  {
 
-    const RELATION_FATHER = 648;
-    const RELATION_MOTHER = 647;
-    
-	public function initialize(array $config) {
+   public function initialize(array $config) {
         
 		$this->table('student_guardians');
 		parent::initialize($config);
@@ -51,7 +48,10 @@ class GuardiansTable extends AppTable  {
                                 'security_users.id = ' . 'Guardians.guardian_id',
                                 
                             ])
-                            ->where(['Guardians.student_id'=>$entity->student_id,'guardian_relation_id'=>self::RELATION_FATHER])
+                            ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                                'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                            ])
+                            ->where(['Guardians.student_id'=>$entity->student_id,'GuardiansRelation.name'=>'Father'])
                             ->first();
 
                     if(!empty($getGuardian)){
@@ -59,6 +59,7 @@ class GuardiansTable extends AppTable  {
                     }
 
             }
+
         return $name;
     }
 
@@ -75,7 +76,10 @@ class GuardiansTable extends AppTable  {
                                 'security_users.id = ' . 'Guardians.guardian_id',
                                 
                             ])
-                            ->where(['Guardians.student_id'=>$entity->student_id,'guardian_relation_id'=>self::RELATION_FATHER])
+                            ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                                'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                            ])
+                            ->where(['Guardians.student_id'=>$entity->student_id, 'GuardiansRelation.name'=>'Father'])
                             ->first();
 
                     if(!empty($getGuardian)){
@@ -83,6 +87,7 @@ class GuardiansTable extends AppTable  {
                     }
 
             }
+
         return $fatherEmail;
     }
 
@@ -99,7 +104,10 @@ class GuardiansTable extends AppTable  {
                                 'security_users.id = ' . 'Guardians.guardian_id',
                                 
                             ])
-                            ->where(['Guardians.student_id'=>$entity->student_id,'guardian_relation_id'=>self::RELATION_FATHER])
+                            ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                                'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                            ])
+                            ->where(['Guardians.student_id'=>$entity->student_id, 'GuardiansRelation.name'=>'Father'])
                             ->first();
 
                     if(!empty($getGuardian)){
@@ -107,6 +115,7 @@ class GuardiansTable extends AppTable  {
                     }
 
             }
+
         return $fatherAddress;
     }
 
@@ -125,8 +134,12 @@ class GuardiansTable extends AppTable  {
                                 'security_users.id = ' . 'Guardians.guardian_id',
                                 
                             ])
-                            ->where(['Guardians.student_id'=>$entity->student_id,'guardian_relation_id'=>self::RELATION_MOTHER])
+                            ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                                'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                            ])
+                            ->where(['Guardians.student_id'=>$entity->student_id, 'GuardiansRelation.name'=>'Mother'])
                             ->first();
+
                     if(!empty($motherDetails)){
                         $motherName = $motherDetails->first_name.' '.$motherDetails->last_name;
                     }
@@ -148,7 +161,10 @@ class GuardiansTable extends AppTable  {
                                     'security_users.id = ' . 'Guardians.guardian_id',
                                     
                                 ])
-                                ->where(['Guardians.student_id'=>$entity->student_id,'guardian_relation_id'=>self::RELATION_MOTHER])
+                                ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                                    'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                                ])
+                                ->where(['Guardians.student_id'=>$entity->student_id, 'GuardiansRelation.name'=>'Mother'])
                                 ->first();
     
                         if(!empty($motherDetails)){
@@ -156,6 +172,7 @@ class GuardiansTable extends AppTable  {
                         }
     
                 }
+
             return $motherEmail;
         }
     
@@ -172,7 +189,10 @@ class GuardiansTable extends AppTable  {
                                     'security_users.id = ' . 'Guardians.guardian_id',
                                     
                                 ])
-                                ->where(['Guardians.student_id'=>$entity->student_id,'guardian_relation_id'=>self::RELATION_MOTHER])
+                                ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                                    'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                                ])
+                                ->where(['Guardians.student_id'=>$entity->student_id, 'GuardiansRelation.name'=>'Mother'])
                                 ->first();
     
                         if(!empty($motherDetails)){
@@ -180,6 +200,7 @@ class GuardiansTable extends AppTable  {
                         }
     
                 }
+
             return $motherAddress;
         }
     
@@ -211,18 +232,23 @@ class GuardiansTable extends AppTable  {
             ->leftJoin(['InstitutionStudents' => 'institution_students'], [
                             'Users.id = ' . 'InstitutionStudents.student_id'
                         ])
+
             ->leftJoin(['EducationGrades' => 'education_grades'], [
                             'InstitutionStudents.education_grade_id = ' . 'EducationGrades.id'
                         ])
+
             ->leftJoin(['Institutions' => 'institutions'], [
                 'InstitutionStudents.institution_id = ' . 'Institutions.id'
-            ])
+                        ])
+
            ->leftJoin(['InstitutionClassStudents' => 'institution_class_students'], [
                             'InstitutionClassStudents.student_id = ' . 'Users.id'
                         ])
+
             ->leftJoin(['InstitutionClasses' => 'institution_classes'], [
                             'InstitutionClasses.id = ' . 'InstitutionClassStudents.institution_class_id'
                         ])
+
             ->leftJoin(['StudentStatuses' => 'student_statuses'], [
                             'InstitutionStudents.student_status_id = ' . 'StudentStatuses.id'
                         ])
