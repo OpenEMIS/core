@@ -1,3 +1,6 @@
+### [3.50.2] - 2020-4-30
+- Develop all asociated APIs to add an Institution and Student
+
 ### [3.50.1] - 2020-4-20
 - Bug Fixed Institutions > Performance > Report Cards: Left Navigation Menu collapsed when selecting the last filter on the page
 - Bug Fixed Institutions > Examinations > Students: 404 Error when assigning students into Examinations
