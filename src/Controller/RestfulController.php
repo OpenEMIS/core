@@ -56,6 +56,7 @@ class RestfulController extends BaseController
     {
         parent::beforeFilter($event);
 
+        $isBearer = false;
         $queryDatasource = true;
         $authorisationHeader = $this->request->header('authorization');
         $token = '';
@@ -73,6 +74,8 @@ class RestfulController extends BaseController
                 if (property_exists($payload, 'scope')) {
                     $this->controllerAction = $payload->scope;
                 }
+                
+                $isBearer = true;
             }
         }
 
@@ -90,7 +93,9 @@ class RestfulController extends BaseController
             ]
         ]);
 
-
+        if (!empty($token) && true === $isBearer) {
+            $this->eventManager()->off($this->Csrf);
+        }
 
         if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {
             $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
