@@ -15,6 +15,7 @@ use App\Model\Traits\UserTrait;
 use Cake\I18n\Time;
 use Cake\Network\Session;
 use Cake\Datasource\ConnectionManager;
+use Cake\Network\Response;
 
 class UsersTable extends AppTable
 {
@@ -510,6 +511,13 @@ class UsersTable extends AppTable
 
         $fieldOrder = array_merge($this->fieldOrder1->getArrayCopy(), $this->fieldOrder2->getArrayCopy());
         $this->ControllerAction->setFieldOrder($fieldOrder);
+    }
+    
+    public function findUniqueOpenemisId(Query $query, array $options)
+    {
+        $openemisNo = $this->getUniqueOpenemisId();
+        echo json_encode(['openemisNo'=>$openemisNo]);
+        exit;
     }
 
     public function getUniqueOpenemisId($options = [])

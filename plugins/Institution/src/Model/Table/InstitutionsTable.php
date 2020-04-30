@@ -1381,4 +1381,20 @@ class InstitutionsTable extends ControllerActionTable
 
         return $value;
     }
+    
+    public function findSearchInstitution(Query $query, array $options)
+    {
+        $search = $options['_controller']->request->query['_searchByCodeOrName'];
+        if(!empty($search)){
+            $query->where([
+                'OR' => [
+                    $this->aliasField('name') . ' LIKE' => "%$search%",
+                    $this->aliasField('code') . ' LIKE' => $search
+                ]
+            ]);
+        }
+        
+        //echo $query; die;
+        return $query;
+    }
 }
