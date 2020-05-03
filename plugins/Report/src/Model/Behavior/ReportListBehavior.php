@@ -49,10 +49,8 @@ class ReportListBehavior extends Behavior {
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$query = $settings['query'];
-		//print_r($query);die;
 		$settings['pagination'] = false;
 		$fields = $this->_table->ControllerAction->getFields($this->ReportProgress);
-		//print_r($fields);die;
 		$fields['current_records']['visible'] = false;
 		$fields['total_records']['visible'] = false;
 		$fields['error_message']['visible'] = false;
@@ -74,6 +72,7 @@ class ReportListBehavior extends Behavior {
 		$conditions = [
 			$this->ReportProgress->aliasField('module') => $this->_table->alias()
 		];
+		
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$conditions[$this->ReportProgress->aliasField('created_user_id')] = $userId;
@@ -252,12 +251,10 @@ class ReportListBehavior extends Behavior {
 
 		$ReportProgress = TableRegistry::get('Report.ReportProgress');
 		$obj = ['name' => $name, 'module' => $alias, 'params' => $params];
-		
-		$fileFormat = $obj['params']['format'];
 		$id = $ReportProgress->addReport($obj);
 
 		if ($id !== false) {
-			$ReportProgress->generate($id, $fileFormat);
+			$ReportProgress->generate($id, $obj['params']['format']);
 		}
 	}
 
@@ -281,7 +278,9 @@ class ReportListBehavior extends Behavior {
 				'name' => $filename,
 				'download' => true
 			]);
+
 			return $response;
+
 		} else {
 			$this->ReportProgress->delete($entity);
 			$controller = $this->_table->controller->name;
