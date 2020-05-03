@@ -45,6 +45,7 @@ class StudentsTable extends AppTable
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
         return $events;
     }
+
     public function beforeAction(Event $event)
     {
         $this->fields = [];
@@ -87,7 +88,7 @@ class StudentsTable extends AppTable
                 'preferred_language' => 'Students.preferred_language',
              ])
             ->contain(['Genders', 'AddressAreas', 'BirthplaceAreas', 'MainNationalities', 'MainIdentityTypes'])
-            ->where([$this->aliasField('is_student') => 1, $this->aliasField('openemis_no') => 1548403405]);
+            ->where([$this->aliasField('is_student') => 1]);
             
     }
 
