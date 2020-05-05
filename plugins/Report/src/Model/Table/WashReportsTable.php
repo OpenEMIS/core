@@ -17,7 +17,7 @@ class WashReportsTable extends AppTable
     const FEMALE = 2;
     const MIXED = 3;
     const FUNCTIONAL = 1;
-    const NONFUNCTIONAL = 1;
+    const NONFUNCTIONAL = 0;
     
     public function initialize(array $config)
     {
