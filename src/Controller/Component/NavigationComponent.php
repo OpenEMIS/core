@@ -68,6 +68,7 @@ class NavigationComponent extends Component
         $controller = $this->controller;
         try {
             $navigations = $this->buildNavigation();
+           
             $this->checkSelectedLink($navigations);
             $this->checkPermissions($navigations);
             $controller->set('_navigations', $navigations);
@@ -510,7 +511,7 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution']
                 ],
                 
-                'Institution.Schedules' => [
+                'Institutions.Schedules' => [
                     'title' => 'Schedules',
                     'parent' => 'Institution.Academic',
                     'link' => false
@@ -518,19 +519,19 @@ class NavigationComponent extends Component
                 
                 'Institutions.ScheduleTimetableOverview' => [
                     'title' => 'Timetables',
-                    'parent' => 'Institution.Schedules',
+                    'parent' => 'Institutions.Schedules',
                     'selected' => ['Institutions.ScheduleTimetableOverview', 'Institutions.ScheduleTimetable'],
                     'params' => ['plugin' => 'Institution']
                 ],
                 'Institutions.ScheduleIntervals' => [
                     'title' => 'Intervals',
-                    'parent' => 'Institution.Schedules',
+                    'parent' => 'Institutions.Schedules',
                     'selected' => ['Institutions.ScheduleIntervals'],
                     'params' => ['plugin' => 'Institution']
                 ],
                 'Institutions.ScheduleTerms' => [
                     'title' => 'Terms',
-                    'parent' => 'Institution.Schedules',
+                    'parent' => 'Institutions.Schedules',
                     'selected' => ['Institutions.ScheduleTerms'],
                     'params' => ['plugin' => 'Institution']
                 ],
@@ -561,18 +562,7 @@ class NavigationComponent extends Component
                         'selected' => ['Institutions.FeederIncomingInstitutions'],
                         'params' => ['plugin' => 'Institution']
                     ],
-                // 'Institution.Schedules' => [
-                //     'title' => 'Schedules',
-                //     'parent' => 'Institution.Feeders',
-                //     'link' => false
-                // ],
-                // 'Institutions.ScheduleTerms' => [
-                //     'title' => 'Terms',
-                //     'parent' => 'Institution.Academic',
-                //     'selected' => ['Institutions.ScheduleTerms'],
-                //     'params' => ['plugin' => 'Institution']
-                // ],
-
+               
             'Institutions.Students.index' => [
                 'title' => 'Students',
                 'parent' => 'Institutions.Institutions.index',
