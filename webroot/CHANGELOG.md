@@ -1,3 +1,6 @@
+### [3.50.3] - 2020-5-08
+- Bug Fixed API: Fetch Institutions data on behalf of the user role.
+
 ### [3.50.2] - 2020-4-30
 - Develop all asociated APIs to add an Institution and Student
 
