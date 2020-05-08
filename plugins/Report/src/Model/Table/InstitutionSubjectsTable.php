@@ -36,8 +36,7 @@ class InstitutionSubjectsTable extends AppTable  {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
-        $educationSubjectId = $requestData->education_subject_id;
-
+        
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
@@ -46,8 +45,8 @@ class InstitutionSubjectsTable extends AppTable  {
             $conditions['Institutions.id'] = $institutionId;
         }
         
-        if (!empty($educationSubjectId)) {
-            $conditions[$this->aliasField('education_subject_id')] = $educationSubjectId;
+        if (!empty($requestData->education_subject_id)) {
+            $conditions[$this->aliasField('education_subject_id')] = $requestData->education_subject_id;
         }
         
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
