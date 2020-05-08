@@ -194,8 +194,7 @@ class InstitutionSubjectsTable extends AppTable  {
                     'label' => __('Total number of students')
                 ];
 
-            }
-            //$newFields[] = $value;
+            }            
         }
         
         $fields->exchangeArray($newFields); 
