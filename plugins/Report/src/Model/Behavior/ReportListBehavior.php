@@ -91,7 +91,7 @@ class ReportListBehavior extends Behavior {
 
 	public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request) {
 		
-		$attr['options'] = ['xlsx' => 'Excel', 'pdf' => 'abc','zip' => 'Photo'];
+		$attr['options'] = ['xlsx' => 'Excel', 'pdf' => 'abc','zip' => 'Zip'];
 		$attr['select'] = false;
 		return $attr;
 	}
@@ -344,7 +344,8 @@ class ReportListBehavior extends Behavior {
 			
 			// delete file after download
 			// unlink($filepath);
-			// die;
+			 die;
+
         } else {
 			$controller = $this->_table->controller->name;
 			$table = $this->_table->alias();
