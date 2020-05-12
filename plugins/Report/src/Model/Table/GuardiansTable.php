@@ -35,7 +35,33 @@ class GuardiansTable extends AppTable  {
         ];
        
     }
-	
+    
+    
+    public function onExcelGetStudentName(Event $event, Entity $entity) {
+   
+        $studentData = TableRegistry::get('security_users');
+        $name = '';
+
+            if (!is_null($entity->student_id)) {
+                $getStudent = $studentData->find()
+                            ->select(['security_users.first_name','security_users.last_name'])
+                            ->leftJoin(['Guardians' => 'student_guardians'], [
+                                'security_users.id = ' . 'Guardians.student_id',
+                                
+                            ])
+                            
+                            ->where(['Guardians.student_id'=>$entity->student_id])
+                            ->first();
+
+                    if(!empty($getStudent)){
+                        $name = $getStudent->first_name.' '.$getStudent->last_name;
+                    }
+
+            }
+
+        return $name;
+    }
+
 	public function onExcelGetGuardianFatherName(Event $event, Entity $entity) {
    
         $guardianData = TableRegistry::get('security_users');
@@ -216,7 +242,7 @@ class GuardiansTable extends AppTable  {
                 'institution_name' => 'Institutions.name',
                 'education_grade_name' => 'EducationGrades.name',
                 'institution_class_name' => 'InstitutionClasses.name',
-               
+                'institution_code' => 'Institutions.code'
              ])
              
 
@@ -269,24 +295,10 @@ class GuardiansTable extends AppTable  {
         $cloneFields = $fields->getArrayCopy();
 
         $extraFields[] = [
-            'key' => 'Users.first_name',
-            'field' => 'student_first_name',
+            'key' => 'Institutions.code',
+            'field' => 'institution_code',
             'type' => 'string',
-            'label' => __('Student First Name')
-        ];    
-
-        $extraFields[] = [
-            'key' => 'Users.last_name',
-            'field' => 'student_last_name',
-            'type' => 'string',
-            'label' => __('Student Last Name')
-        ];
-
-       $extraFields[] = [
-            'key' => 'Users.openemis_no',
-            'field' => 'openemis_no',
-            'type' => 'string',
-            'label' => __('OpenEMIS No')
+            'label' => __('Institution Code')
         ];
 
         $extraFields[] = [
@@ -295,7 +307,6 @@ class GuardiansTable extends AppTable  {
             'type' => 'string',
             'label' => __('Institution Name')
         ];
-
 
         $extraFields[] = [
             'key' => 'EducationGrades.name',
@@ -310,7 +321,23 @@ class GuardiansTable extends AppTable  {
             'type' => 'string',
             'label' => __('Class')
         ];
-       
+
+        $extraFields[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+
+        
+        $extraFields[] = [
+            'key' => 'student_name',
+            'field' => 'student_name',
+            'type' => 'string',
+            'label' => __('Student Name')
+        ];
+
+        
         $extraFields[] = [
             'key' => 'guardian_father_name',
             'field' => 'guardian_father_name',
