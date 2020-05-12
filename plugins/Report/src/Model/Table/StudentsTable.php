@@ -56,6 +56,7 @@ class StudentsTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+         $attr['onChangeReload'] = true;
         return $attr;
     }
 
