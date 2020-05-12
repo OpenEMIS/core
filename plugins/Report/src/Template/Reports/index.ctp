@@ -44,7 +44,7 @@ $this->start('panelBody');
 					 $fileFormat = json_decode($obj->params);
 				 ?>
 				<tr row-id="<?= $obj->id ?>">
-					<td><?= $obj->name ?><?php if($fileFormat->format == 'zip'){echo ' Photos';}?></td>
+					<td><?= $obj->name ?></td>
                     <td><?= $table->formatDateTime($obj->created) ?></td>
                     <td><?= $obj->has('created_user') ? $obj->created_user->name_with_id : '' ?></td>
 					<td class="modified"><?= !empty($obj->file_path) ? $table->formatDateTime($obj->modified) : '' ?></td>
