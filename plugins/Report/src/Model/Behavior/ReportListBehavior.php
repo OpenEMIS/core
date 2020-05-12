@@ -91,7 +91,14 @@ class ReportListBehavior extends Behavior {
 
 	public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request) {
 		
-		$attr['options'] = ['xlsx' => 'Excel', 'pdf' => 'abc','zip' => 'Zip'];
+		
+		if($request->data['Staff']['feature'] == 'Report.StaffPhoto' || $request->data['Students']['feature'] == 'Report.StudentsPhoto'){
+			$attr['options'] = ['zip' => 'Zip'];
+
+		} else {
+			$attr['options'] = ['xlsx' => 'Excel', 'pdf' => 'abc'];
+		}
+
 		$attr['select'] = false;
 		return $attr;
 	}
