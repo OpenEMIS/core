@@ -37,32 +37,28 @@ class GuardiansTable extends AppTable  {
     }
     
     
-    public function onExcelGetStudentName(Event $event, Entity $entity) {
-   
-        $studentData = TableRegistry::get('security_users');
-        $name = '';
+    public function onExcelGetStudentNameByGuardian(Event $event, Entity $entity) {
+        $securityUsers = TableRegistry::get('security_users');
 
-            if (!is_null($entity->student_id)) {
-                $getStudent = $studentData->find()
-                            ->select(['security_users.first_name','security_users.last_name'])
-                            ->leftJoin(['Guardians' => 'student_guardians'], [
-                                'security_users.id = ' . 'Guardians.student_id',
-                                
-                            ])
-                            
-                            ->where(['Guardians.student_id'=>$entity->student_id])
-                            ->first();
+        if (!is_null($entity->student_id)) {
+            $getStudent = $securityUsers->find()
+                ->select(['security_users.first_name','security_users.last_name'])
+                ->leftJoin(['Guardians' => 'student_guardians'], [
+                    'security_users.id = ' . 'Guardians.student_id'
+                ])
+                ->where(['Guardians.student_id'=>$entity->student_id])
+                ->first();
 
-                    if(!empty($getStudent)){
-                        $name = $getStudent->first_name.' '.$getStudent->last_name;
-                    }
-
+            if(!empty($getStudent)){
+                return $getStudent->first_name . ' ' . $getStudent->last_name;
             }
 
-        return $name;
+        }
+
+        return '';
     }
 
-	public function onExcelGetGuardianFatherName(Event $event, Entity $entity) {
+    public function onExcelGetGuardianFatherName(Event $event, Entity $entity) {
    
         $guardianData = TableRegistry::get('security_users');
         $name = '';
@@ -331,8 +327,8 @@ class GuardiansTable extends AppTable  {
 
         
         $extraFields[] = [
-            'key' => 'student_name',
-            'field' => 'student_name',
+            'key' => 'student_name_by_guardian',
+            'field' => 'student_name_by_guardian',
             'type' => 'string',
             'label' => __('Student Name')
         ];
