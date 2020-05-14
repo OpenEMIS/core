@@ -9,7 +9,6 @@ class SecurityAuthorize extends BaseAuthorize
 {
     public function authorize($user, Request $request)
     {
-        
         $controller = $this->_registry->getController();
         $action = $request->params['action'];
         $AccessControl = $controller->AccessControl;
@@ -27,7 +26,7 @@ class SecurityAuthorize extends BaseAuthorize
             if ($event->result == true) {
                 $authorized = true;
             }
-            if ($authorized || $user['super_admin'] == true || $user['username'] == true) {
+            if ($authorized || $user['super_admin'] == true || $user['username'] == 'superrole') {
                 $authorized = true;
             } elseif ($action == 'ComponentAction') { // actions from ControllerActionComponent
                 $model = $controller->ControllerAction->model();
