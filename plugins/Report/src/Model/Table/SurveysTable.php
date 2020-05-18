@@ -184,10 +184,10 @@ class SurveysTable extends AppTable
                 'keyField' => 'institution_id',
 		'valueField' => 'status_id',
                 ])->where([
-                    $this->aliasField('academic_period_id').' = '.$academicPeriodId,
-                    $this->aliasField('survey_form_id').' = '.$surveyFormId,
-                    $this->aliasField('institution_id').' = '.$record->institutionId,
-                    $this->aliasField('status_id').' = '.self::SURVEY_DISABLED
+                    $this->aliasField('academic_period_id') .' = '. $academicPeriodId,
+                    $this->aliasField('survey_form_id') .' = '. $surveyFormId,
+                    $this->aliasField('institution_id') .' = '. $record->institutionId,
+                    $this->aliasField('status_id') .' = '. self::SURVEY_DISABLED
                 ])->count();
                 
                 if($countDisabledSurveyInstitution > 0){
