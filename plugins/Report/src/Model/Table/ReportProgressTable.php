@@ -44,7 +44,6 @@ class ReportProgressTable extends AppTable  {
 		}
 		*/
 		$fileFormat = json_decode($obj['params']);
-		$module = $obj['module'];
 		
 		$obj['file_path'] = NULL;
 		$obj['current_records'] = 0;
@@ -58,7 +57,7 @@ class ReportProgressTable extends AppTable  {
 			$expiryDate = new Time();
 			$expiryDate->addDays(5);
 			$this->updateAll(
-			['status' => self::COMPLETED, 'file_path' => WWW_ROOT . 'downloads' . DS . $module.'-photo' . DS, 'expiry_date' => $expiryDate, 'modified' => new Time()],
+			['status' => self::COMPLETED, 'file_path' => WWW_ROOT . 'downloads' . DS . $obj['module'].'-photo' . DS, 'expiry_date' => $expiryDate, 'modified' => new Time()],
 			['id' => $result->id]
 		);
 		}
