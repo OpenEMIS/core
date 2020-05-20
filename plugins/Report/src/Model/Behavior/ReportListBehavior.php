@@ -324,11 +324,11 @@ class ReportListBehavior extends Behavior {
 				->toList();
 		
         if (!empty($files) ) {
-			
-            $path = WWW_ROOT . 'downloads' . DS . $module.'-photo' . DS;
+
+			$path = WWW_ROOT . 'downloads' . DS . lcfirst($module).'-photo' . DS;
 			$zipName = $module.'PhotoReport' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
 			$filepath = $path . $zipName;
-		
+			
 			$zip = new ZipArchive;
 			$zip->open($filepath, ZipArchive::CREATE);
             foreach ($files as $file) {
@@ -348,7 +348,6 @@ class ReportListBehavior extends Behavior {
 		    header("Content-Disposition: attachment; filename=".$zipName);
 		    
             readfile($filepath);
-			
 			// delete file after download
 			// unlink($filepath);
 			 die;
