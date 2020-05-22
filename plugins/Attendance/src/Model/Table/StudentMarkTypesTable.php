@@ -185,7 +185,9 @@ class StudentMarkTypesTable extends ControllerActionTable
         ])
         ->all()
         ->toArray();
-        if (!empty($entity->student_attendance_mark_types[0]->attendance_per_day)) {
+        if (!empty($entity->attendance_per_day)) {
+                $attendance_per_day = $entity->attendance_per_day;
+        } else if (!empty($entity->student_attendance_mark_types[0]->attendance_per_day) && empty($entity->attendance_per_day)) {
             $attendance_per_day = $entity->student_attendance_mark_types[0]->attendance_per_day;
         } else {
             $attendance_per_day = 1;
@@ -292,7 +294,9 @@ class StudentMarkTypesTable extends ControllerActionTable
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
-            if (!empty($entity->student_attendance_mark_types)) {
+            if (!empty($entity->attendance_per_day)) {
+               $attendancePerDay = $entity->attendance_per_day; 
+            } else if (!empty($entity->student_attendance_mark_types) && empty($entity->attendance_per_day)) {
                 $attendanceTypeEntity = $entity->student_attendance_mark_types[0];
                 $attendancePerDay = $attendanceTypeEntity->attendance_per_day;
             } else {
@@ -304,6 +308,7 @@ class StudentMarkTypesTable extends ControllerActionTable
             $attr['select'] = false;
             $attr['value'] = $attendancePerDay;
             $attr['attr']['value'] = $attendancePerDay;
+            $attr['onChangeReload'] = 'ChangeAttendancePerDay';
             
 
             return $attr;
@@ -371,7 +376,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
 
-        $this->field('attendance_per_day', ['entity' => $entity, 'attr' => ['required' => true]]);
+        $this->field('attendance_per_day', ['type' => 'select','entity' => $entity]);
         $this->field('student_attendance_type_id', ['entity' => $entity, 'attr' => ['label' => __('Type'), 'required' => true]]);
         $this->field('academic_period_id', ['visible' => [
             'index' => false, 'view' => true, 'edit' => true
@@ -414,5 +419,14 @@ class StudentMarkTypesTable extends ControllerActionTable
                 }
             }
         }
+    }
+
+    public function addEditOnChangeAttendancePerDay(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+
+        $request = $this->request;
+
+        $attendance_per_day = $request->data[$this->alias()]['attendance_per_day'];
+        $this->controller->set('attendance_per_day', $attendance_per_day);
     }
 }
