@@ -4,11 +4,8 @@
             <table class="table table-curved">
             <thead>
                 <th><?= __('Default Period Name') ?></th>
-                <th><?= __('Assigned Name') ?></th>
-                
-            </thead>
-
-            
+                <th><?= __('Assigned Name') ?></th>                
+            </thead>            
                 <tbody>
                     <?php 
                     $j = 1;
@@ -24,8 +21,7 @@
                              [
                                 'value' => (!empty($StudentAttendancePerDayPeriodsData[$i]['id'])) ? $StudentAttendancePerDayPeriodsData[$i]['id'] : ""
 
-                            ]); ?></td>
-                            
+                            ]); ?></td>                            
                         </tr>
                     <?php $j++; } ?>
                 </tbody>
@@ -38,19 +34,15 @@
             <table class="table table-curved">
             <thead>
                 <th><?= __('Default Period Name') ?></th>
-                <th><?= __('Assigned Name') ?></th>
-                
-            </thead>
-
-            
+                <th><?= __('Assigned Name') ?></th>                
+            </thead>            
                 <tbody>
                     <?php 
                     $j = 1;
                     for ($i=0; $i<$attendance_per_day; $i++) {  ?>
                         <tr>
                             <td>Period <?= $j;?></td>
-                            <td><?php echo (!empty($StudentAttendancePerDayPeriodsData[$i]['name'])) ? $StudentAttendancePerDayPeriodsData[$i]['name'] : "Period ".$j ?></td>
-                            
+                            <td><?php echo (!empty($StudentAttendancePerDayPeriodsData[$i]['name'])) ? $StudentAttendancePerDayPeriodsData[$i]['name'] : "Period ".$j ?></td> 
                         </tr>
                     <?php $j++; } ?>
                 </tbody>
