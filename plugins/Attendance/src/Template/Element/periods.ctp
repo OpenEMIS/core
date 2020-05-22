@@ -1,10 +1,10 @@
 <?php if ($ControllerAction['action'] == 'edit') {?>
-    <div class="toolbar-responsive panel-toolbar">
+    <div class="toolbar-responsive">
         <div class="toolbar-wrapper">
-            <table class="table">
+            <table class="table table-curved">
             <thead>
-                <th><?= __('Period') ?></th>
-                <th><?= __('Name') ?></th>
+                <th><?= __('Default Period Name') ?></th>
+                <th><?= __('Assigned Name') ?></th>
                 
             </thead>
 
@@ -14,7 +14,7 @@
                     $j = 1;
                     for ($i=0; $i<$attendance_per_day; $i++) {  ?>
                         <tr>
-                            <td>Period<?= $j;?></td>
+                            <td>Period <?= $j;?></td>
                             <td><?php echo $this->Form->input('period['.$j.']',
                              [ 
                                 'value' => (!empty($StudentAttendancePerDayPeriodsData[$i]['name'])) ? $StudentAttendancePerDayPeriodsData[$i]['name'] : "Period ".$j
@@ -33,12 +33,12 @@
         </div>
     </div>
 <?php } else if ($ControllerAction['action'] == 'view') {?>
-    <div class="toolbar-responsive panel-toolbar">
+    <div class="toolbar-responsive">
         <div class="toolbar-wrapper">
-            <table class="table">
+            <table class="table table-curved">
             <thead>
-                <th><?= __('Period') ?></th>
-                <th><?= __('Name') ?></th>
+                <th><?= __('Default Period Name') ?></th>
+                <th><?= __('Assigned Name') ?></th>
                 
             </thead>
 
@@ -48,7 +48,7 @@
                     $j = 1;
                     for ($i=0; $i<$attendance_per_day; $i++) {  ?>
                         <tr>
-                            <td>Period<?= $j;?></td>
+                            <td>Period <?= $j;?></td>
                             <td><?php echo (!empty($StudentAttendancePerDayPeriodsData[$i]['name'])) ? $StudentAttendancePerDayPeriodsData[$i]['name'] : "Period ".$j ?></td>
                             
                         </tr>
