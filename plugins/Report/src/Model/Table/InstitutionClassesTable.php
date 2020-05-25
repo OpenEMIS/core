@@ -102,8 +102,16 @@ class InstitutionClassesTable extends AppTable
                 'area_administrative_name' => 'AreaAdministratives.name',
                 'shift_name' => 'ShiftOptions.name',
                 'name' => 'InstitutionClasses.name',
-                'staff_id' => 'InstitutionClasses.staff_id',
+                'staff_name' => $query->func()->concat([
+                    'Staff.openemis_no' => 'literal',
+                    " - ",
+                    'Staff.first_name' => 'literal',
+                    " ",
+                    'Staff.last_name' => 'literal'
+                ]),
                 'secondary_staff_name' => $query->func()->concat([
+                    'SecurityUsers.openemis_no' => 'literal',
+                    " - ",
                     'SecurityUsers.first_name' => 'literal',
                     " ",
                     'SecurityUsers.last_name' => 'literal'
@@ -165,6 +173,7 @@ class InstitutionClassesTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
+        //echo "<pre>";print_r($event);die;
         //redeclare all for sorting purpose.
         $newFields[] = [
             'key' => 'InstitutionClasses.academic_period_id',
@@ -244,9 +253,9 @@ class InstitutionClassesTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionClasses.staff_id',
-            'field' => 'staff_id',
-            'type' => 'integer',
+            'key' => '',
+            'field' => 'staff_name',
+            'type' => 'string',
             'label' => self::CLASS_TEACHER
         ];
 
