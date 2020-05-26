@@ -245,6 +245,7 @@ class WashReportsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         
         $academicPeriodId = $requestData->academic_period_id;
+        $institutionId = $requestData->institution_id;
         $washType = $requestData->wash_type;
         $conditions = [];
         
@@ -252,6 +253,10 @@ class WashReportsTable extends AppTable
         
         if (!empty($academicPeriodId)) {
             $conditions['AcademicPeriods.id'] = $academicPeriodId;
+        }
+        
+        if (!empty($institutionId)) {
+            $conditions[$this->aliasField('id')] = $institutionId;
         }
         
         if($washType == 'Water'){
@@ -314,6 +319,7 @@ class WashReportsTable extends AppTable
                     ]
                 )
                 ->where($conditions);
+           
         }
         
         if($washType == 'Waste' || $washType == 'Sewage'){
@@ -459,19 +465,19 @@ class WashReportsTable extends AppTable
         $washType = $requestData->wash_type;
 
         $extraFields = [];
-        
+                
         $extraFields[] = [
             'key' => 'code',
             'field' => 'code',
             'type' => 'string',
-            'label' => __('Institution Code')
+            'label' => __('Code')
         ];
         
         $extraFields[] = [
             'key' => 'name',
             'field' => 'name',
             'type' => 'string',
-            'label' => __('Institution Name')
+            'label' => __('Name')
         ];
         
         $extraFields[] = [
