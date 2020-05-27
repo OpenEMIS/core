@@ -84,6 +84,9 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
         $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
         $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
+        $requestData = json_decode($settings['process']['params']);
+        //echo "<pre>";print_r($requestData);die;
+        $institution_id = $requestData->institution_id;
         $query
             ->select([
                 'institution_code' => 'Institutions.code',
@@ -97,7 +100,8 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                 'infrastructure_ownership' => 'InfrastructureOwnership.name',
                 'infrastructure_level' => $query->func()->concat([self::LAND])
             ])
-            ->where([$this->aliasField('accessibility') => 1])
+            ->where([$this->aliasField('accessibility') => 1,
+            $this->aliasField('institution_id') => $institution_id])
             ->contain(['InfrastructureConditions', 'LandStatuses', 'LandTypes', 'Institutions', 'InfrastructureOwnership'])
             ->union(
                 $InstitutionFloors->find()
@@ -113,7 +117,8 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                         'infrastructure_ownership' => $query->func()->concat([""]),
                         'infrastructure_level' => $query->func()->concat([self::FLOOR])
                     ])
-                    ->where([$InstitutionFloors->aliasField('accessibility') => 1])
+                    ->where([$InstitutionFloors->aliasField('accessibility') => 1,
+                    $InstitutionFloors->aliasField('institution_id') => $institution_id])
                     ->contain(['InfrastructureConditions', 'FloorStatuses', 'FloorTypes', 'Institutions'])
             )            
             ->union(
@@ -130,7 +135,8 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                         'infrastructure_ownership' => $query->func()->concat([""]),
                         'infrastructure_level' => $query->func()->concat([self::ROOM])
                     ])
-                    ->where([$InstitutionRooms->aliasField('accessibility') => 1])
+                    ->where([$InstitutionRooms->aliasField('accessibility') => 1,
+                    $InstitutionRooms->aliasField('institution_id') => $institution_id])
                     ->contain(['InfrastructureConditions', 'RoomStatuses', 'RoomTypes', 'Institutions'])
             )
             
@@ -148,7 +154,8 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                         'infrastructure_ownership' => 'InfrastructureOwnership.name',
                         'infrastructure_level' => $query->func()->concat([self::BUILDING])
                     ])
-                    ->where([$InstitutionBuildings->aliasField('accessibility') => 1])
+                    ->where([$InstitutionBuildings->aliasField('accessibility') => 1,
+                    $InstitutionBuildings->aliasField('institution_id') => $institution_id])
                     ->contain(['InfrastructureConditions', 'BuildingStatuses', 'BuildingTypes', 'Institutions', 'InfrastructureOwnership'])
 
             );
