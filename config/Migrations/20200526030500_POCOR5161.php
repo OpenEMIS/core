@@ -1,8 +1,9 @@
 <?php
+
 use Migrations\AbstractMigration;
 
-class POCOR5161 extends AbstractMigration
-{
+class POCOR5161 extends AbstractMigration {
+
     /**
      * Change Method.
      *
@@ -10,16 +11,15 @@ class POCOR5161 extends AbstractMigration
      * http://docs.phinx.org/en/latest/migrations.html#the-change-method
      * @return void
      */
-    public function up()
-    {
+    public function up() {
         // Backup locale_contents table
         $this->execute('CREATE TABLE `z_5161_locale_contents` LIKE `locale_contents`');
         $this->execute('INSERT INTO `z_5161_locale_contents` SELECT * FROM `locale_contents`');
         // End
-		
-		$localeContent = [
+
+        $localeContent = [
             [
-                'en' => 'Quailty',
+                'en' => 'Quality',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -33,9 +33,9 @@ class POCOR5161 extends AbstractMigration
     }
 
     // rollback
-    public function down()
-    {
+    public function down() {
         $this->execute('DROP TABLE IF EXISTS `locale_contents`');
         $this->execute('RENAME TABLE `z_5161_locale_contents` TO `locale_contents`');
     }
+
 }
