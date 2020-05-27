@@ -154,6 +154,15 @@ class InstitutionsTable extends AppTable
         return $validator;
     }
 
+    public function validationGuardians(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('institution_type_id')
+            ->notEmpty('institution_id');
+        return $validator;
+    }
+
     public function beforeAction(Event $event)
     { 
         $this->fields = [];
@@ -197,7 +206,9 @@ class InstitutionsTable extends AppTable
             $options['validate'] = 'staffAttendances';
         } elseif ($data[$this->alias()]['feature'] == 'Report.BodyMasses') {
             $options['validate'] = 'bodyMasses';
-        }
+        } elseif ($data[$this->alias()]['feature'] == 'Report.Guardians') {
+            $options['validate'] = 'guardians';
+        } 
     }
 
     public function addAfterAction(Event $event, Entity $entity)
@@ -565,7 +576,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses'])) {
+            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses','Report.Guardians'])) {
                 $TypesTable = TableRegistry::get('Institution.Types');
                 $typeOptions = $TypesTable
                     ->find('list')
@@ -586,7 +597,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses'])) {
+            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses','Report.Guardians'])) {
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
                     $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
