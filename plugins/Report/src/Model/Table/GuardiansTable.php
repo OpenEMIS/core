@@ -113,7 +113,6 @@ class GuardiansTable extends AppTable  {
         return $fatherEmail;
     }
 
-
     public function onExcelGetFatherAddress(Event $event, Entity $entity) {
    
         $guardianData = TableRegistry::get('security_users');
@@ -228,7 +227,11 @@ class GuardiansTable extends AppTable  {
     
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-      
+        
+        $requestData = json_decode($settings['process']['params']);
+        $institutionId = $requestData->institution_id;
+        $institutionsTable = TableRegistry::get('institutions');
+        
         $query
             ->select([   
                 'student_id' =>'Users.id',             
@@ -281,10 +284,11 @@ class GuardiansTable extends AppTable  {
           
             ->where(['StudentStatuses.code' => 'CURRENT',
                             'InstitutionClassStudents.student_status_id = ' . 'StudentStatuses.id',
-                            'Users.id = ' . 'Guardians.student_id'
+                            'Users.id = ' . 'Guardians.student_id',
+                            'institutions.id = ' . $institutionId
                     ])
            ;
-	}
+    }
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
