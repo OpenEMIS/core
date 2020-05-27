@@ -109,7 +109,7 @@ class InstitutionClassesTable extends AppTable
                     " ",
                     'Staff.last_name' => 'literal'
                 ]),
-                'secondary_staff_name' => $query->func()->concat([
+                'secondary_staff_name' => $query->func()->group_concat([
                     'SecurityUsers.openemis_no' => 'literal',
                     " - ",
                     'SecurityUsers.first_name' => 'literal',
@@ -164,6 +164,9 @@ class InstitutionClassesTable extends AppTable
                 'InstitutionClasses.academic_period_id' => $academic_period_id,
                 $where
             ])
+            ->group([
+                'InstitutionClasses.id'
+            ])
             ->order([
                 'AcademicPeriods.order',
                 'Institutions.code',
@@ -173,7 +176,6 @@ class InstitutionClassesTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        //echo "<pre>";print_r($event);die;
         //redeclare all for sorting purpose.
         $newFields[] = [
             'key' => 'InstitutionClasses.academic_period_id',
