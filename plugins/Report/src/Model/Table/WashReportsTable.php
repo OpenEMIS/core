@@ -601,7 +601,7 @@ class WashReportsTable extends AppTable
                 'key' => 'InfrastructureWashWaterQualities.name',
                 'field' => 'infrastructure_wash_quality',
                 'type' => 'string',
-                'label' => __('Quailty')
+                'label' => __('Quality')
             ];
 
             $extraFields[] = [
