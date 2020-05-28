@@ -24,7 +24,7 @@ class POCOR5161 extends AbstractMigration {
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'en' => 'Accessibity',
+                'en' => 'Accessibility',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ]
