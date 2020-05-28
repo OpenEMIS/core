@@ -154,6 +154,7 @@ class InstitutionInfrastructuresTable extends AppTable
         $infrastructureStatus = TableRegistry::get('infrastructure_statuses');
         $infrastructureOwnerships = TableRegistry::get('infrastructure_ownerships');
 
+       
 
         $conditions = [];
         if (!empty($infrastructureType)) {

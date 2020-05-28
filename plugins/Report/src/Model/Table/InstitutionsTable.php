@@ -153,6 +153,16 @@ class InstitutionsTable extends AppTable
             ->notEmpty('institution_id');
         return $validator;
     }
+   
+    public function validationInstitutionInfrastructures(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('institution_type_id')
+            ->notEmpty('institution_id')
+            ->notEmpty('infrastructure_level');
+        return $validator;
+    }
 
     public function beforeAction(Event $event)
     { 
@@ -199,6 +209,8 @@ class InstitutionsTable extends AppTable
             $options['validate'] = 'staffAttendances';
         } elseif ($data[$this->alias()]['feature'] == 'Report.BodyMasses') {
             $options['validate'] = 'bodyMasses';
+        } elseif ($data[$this->alias()]['feature'] == 'Report.InstitutionInfrastructures') {
+            $options['validate'] = 'institutionInfrastructures';
         }
     }
 
