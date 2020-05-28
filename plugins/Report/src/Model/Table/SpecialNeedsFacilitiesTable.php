@@ -85,7 +85,6 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
         $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
         $requestData = json_decode($settings['process']['params']);
-        //echo "<pre>";print_r($requestData);die;
         $institution_id = $requestData->institution_id;
         $query
             ->select([
