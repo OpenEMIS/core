@@ -2,6 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
@@ -64,9 +65,8 @@ class InstitutionSubjectsTable extends AppTable  {
                 'area_administrative_name' => 'AreaAdministratives.name',
                 'EducationGrades.name',
                 'class_name' => 'InstitutionClasses.name',
+                'institution_class_id' => 'InstitutionClasses.id',
                 'AcademicPeriods.name',
-                'staff_id' => 'InstitutionSubjectStaff.staff_id',
-                'staff_name' => $query->func()->concat(['Users.openemis_no' => 'literal', ' - ', 'Users.first_name' => 'literal', ' ', 'Users.last_name' => 'literal']),
                 'total_students' => $query
                     ->newExpr()
                     ->add($this->aliasField('total_male_students'))
@@ -79,6 +79,7 @@ class InstitutionSubjectsTable extends AppTable  {
                 $this->aliasField('institution_id'),
                 $this->aliasField('education_grade_id'),
                 $this->aliasField('education_subject_id'),
+                $this->aliasField('academic_period_id'),
                 $this->aliasField('academic_period_id'),
             ])
             ->contain([
@@ -94,12 +95,6 @@ class InstitutionSubjectsTable extends AppTable  {
             ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
                 $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
             ])
-            ->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()], [
-                $InstitutionSubjectStaff->aliasField('institution_subject_id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
-            ])
-            ->leftJoin([$Staff->alias() => $Staff->table()], [
-                $Staff->aliasField('id =') . $InstitutionSubjectStaff->aliasField('staff_id')
-            ])
             ->where($conditions);            
     }
 
@@ -107,7 +102,55 @@ class InstitutionSubjectsTable extends AppTable  {
             $attr['options'] = $this->controller->getFeatureOptions('Institutions');
             return $attr;
     }
-        
+     
+    public function onExcelGetStaffName(Event $event, Entity $entity)
+    {
+        $InstitutionSubjects = TableRegistry::get('Report.InstitutionSubjects');
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $Staff = TableRegistry::get('User.Users');
+        $conditions = [
+            $this->aliasField('education_subject_id') => $entity->education_subject_id,
+            $this->aliasField('institution_id') => $entity->institution_id,
+            $this->aliasField('education_grade_id') => $entity->education_grade_id,
+            $this->aliasField('academic_period_id') => $entity->academic_period_id,
+            $InstitutionClassSubjects->aliasField('institution_class_id =') => $entity->institution_class_id,
+            ];
+
+        $staffResult = $InstitutionSubjects
+                ->find()
+                ->select([                    
+                    'staff_id' => 'InstitutionSubjectStaff.staff_id',
+                    'Users.openemis_no',
+                    'Users.first_name',
+                    'Users.last_name'                    
+                ])
+                ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+                    $this->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
+                ])
+                ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                    $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
+                ])
+                ->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()], [
+                    $InstitutionSubjectStaff->aliasField('institution_subject_id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
+                ])
+                ->leftJoin([$Staff->alias() => $Staff->table()], [
+                    $Staff->aliasField('id =') . $InstitutionSubjectStaff->aliasField('staff_id')
+                ])
+                ->where($conditions)
+                ->hydrate(false)
+                ->toArray()
+                ;  
+        $staffName = [];
+        foreach($staffResult as $result){
+            if(!empty($result['Users']['openemis_no'])){
+                $staffName[] = $result['Users']['openemis_no'].' - '.$result['Users']['first_name'].' '.$result['Users']['last_name'];
+            }
+        }
+       
+        return implode(',', $staffName);
+    }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
     {   
@@ -135,7 +178,7 @@ class InstitutionSubjectsTable extends AppTable  {
                     'key' => 'institution_name',
                     'field' => 'institution_name',
                     'type' => 'string',
-                    'label' => 'Institution'
+                    'label' => __('Institution')
                 ];
                 
                 $newFields[] = [
@@ -177,21 +220,21 @@ class InstitutionSubjectsTable extends AppTable  {
                     'key' => 'InstitutionSubjects.total_male_students',
                     'field' => 'total_male_students',
                     'type' => 'integer',
-                    'label' => __('Number of Male students')
+                    'label' => __('Male students')
                 ];
                 
                 $newFields[] = [
                     'key' => 'InstitutionSubjects.total_female_students',
                     'field' => 'total_female_students',
                     'type' => 'integer',
-                    'label' => __('Number of Female students')
+                    'label' => __('Female students')
                 ];
                 
                 $newFields[] = [
                     'key' => 'total_students',
                     'field' => 'total_students',
                     'type' => 'integer',
-                    'label' => __('Total number of students')
+                    'label' => __('Total students')
                 ];
 
             }            
