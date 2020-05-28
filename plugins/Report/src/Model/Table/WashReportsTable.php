@@ -608,7 +608,7 @@ class WashReportsTable extends AppTable
                 'key' => 'InfrastructureWashWaterAccessibilities.name',
                 'field' => 'infrastructure_wash_accessibility',
                 'type' => 'string',
-                'label' => __('Accessibity')
+                'label' => __('Accessibility')
             ];
         }
         
