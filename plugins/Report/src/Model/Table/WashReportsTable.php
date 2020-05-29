@@ -160,6 +160,22 @@ class WashReportsTable extends AppTable
         return $mixedSanitationFunctional;
     }
     
+    public function onExcelGetMixedSanitationNonFunctional(Event $event, Entity $entity)
+    {
+        $mixedSanitationNonFunctional = '';
+        
+        if(!empty($entity->infrastructure_wash_id)){
+            $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
+            $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
+                    ->where(['gender_id' => self::MIXED, 'functional' => self::NONFUNCTIONAL, 
+                        'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id])
+                    ->first();
+            $mixedSanitationNonFunctional = $sanitationQuantitiesResult->value;
+        }
+            
+        return $mixedSanitationNonFunctional;
+    }
+    
     public function onExcelGetMaleHygieneFunctional(Event $event, Entity $entity)
     {
         $maleHygieneFunctional = '';
@@ -238,6 +254,22 @@ class WashReportsTable extends AppTable
         }
             
         return $mixedHygieneFunctional;
+    }
+    
+    public function onExcelGetMixedHygieneNonFunctional(Event $event, Entity $entity)
+    {
+        $mixedHygieneNonFunctional = '';
+        
+        if(!empty($entity->infrastructure_wash_id)){
+            $hygieneQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashHygieneQuantities');
+            $hygieneQuantitiesResult = $hygieneQuantitiesTable->find()
+                    ->where(['gender_id' => self::MIXED, 'functional' => self::NONFUNCTIONAL, 
+                        'infrastructure_wash_hygiene_id' => $entity->infrastructure_wash_id])
+                    ->first();
+            $mixedHygieneNonFunctional = $hygieneQuantitiesResult->value;
+        }
+            
+        return $mixedHygieneNonFunctional;
     }
     
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -593,6 +625,13 @@ class WashReportsTable extends AppTable
                 'field' => 'mixed'.$washType.'Functional',
                 'type' => 'string',
                 'label' => __('Mixed (Functional)')
+            ];
+            
+            $extraFields[] = [
+                'key' => 'mixed'.$washType.'NonFunctional',
+                'field' => 'mixed'.$washType.'NonFunctional',
+                'type' => 'string',
+                'label' => __('Mixed (Non-Functional)')
             ];
         }
         
