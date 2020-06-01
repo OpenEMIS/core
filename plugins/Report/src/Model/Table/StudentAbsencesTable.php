@@ -18,6 +18,7 @@ class StudentAbsencesTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' =>'institution_class_id']);
         // $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons', 'foreignKey' =>'student_absence_reason_id']);
         $this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
         $this->belongsTo('InstitutionStudentAbsenceDays', ['className' => 'Institution.InstitutionStudentAbsenceDays', 'foreignKey' =>'institution_student_absence_day_id']);
@@ -70,6 +71,8 @@ class StudentAbsencesTable extends AppTable
                 'absence_type' => 'AbsenceTypes.name',
                 // 'student_absence_reason' => 'StudentAbsenceReasons.name',
                 'date' => 'StudentAbsences.date',
+                'institution_class' => 'InstitutionClasses.name',
+                'education_grade' => 'ClassGrades.name'
                 // 'comment' => 'StudentAbsences.comment',
                 // 'full_day' => 'StudentAbsences.full_day',
                 // 'start_date' => 'StudentAbsences.start_date',
@@ -87,13 +90,15 @@ class StudentAbsencesTable extends AppTable
                 'Users',
                 'Institutions.Areas.AreaLevels',
                 'Institutions.AreaAdministratives',
-
+                'InstitutionClasses',
+                'InstitutionClasses.ClassGrades'
             ])
             ->order([
                 $this->aliasField('student_id'),
                 $this->aliasField('institution_id'),
                 $this->aliasField('date')
             ]);
+            echo "<pre>";print_r($query);die;
     }
 
     // To select another one more field from the containable data
@@ -180,6 +185,18 @@ class StudentAbsencesTable extends AppTable
             'field' => 'absence_type_id',
             'type' => 'integer',
             'label' => __('Absence Type'),
+        ];
+        $newArray[] = [
+            'key' => 'InstitutionClasses.name',
+            'field' => 'institution_class',
+            'type' => 'string',
+            'label' => __('Institution Class'),
+        ];
+        $newArray[] = [
+            'key' => 'EducationGrades.name',
+            'field' => 'education_grade',
+            'type' => 'string',
+            'label' => __('Education Grade'),
         ];
         // $newArray[] = [
         //     'key' => 'StudentAbsences.student_absence_reason_id',
