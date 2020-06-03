@@ -290,7 +290,7 @@ class GuardiansTable extends AppTable  {
            ;
     }
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 
