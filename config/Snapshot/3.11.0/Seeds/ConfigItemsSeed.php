@@ -1266,7 +1266,7 @@ class ConfigItemsSeed extends AbstractSeed
                 'code' => 'version_support_emails',
                 'type' => 'System',
                 'label' => 'Version Support Emails',
-                'value' => 'support@openemis.org,shasanuddin@kordit.com',
+                'value' => 'support@openemis.org' ,
                 'default_value' => 'support@openemis.org',
                 'editable' => '0',
                 'visible' => '0',

@@ -7,9 +7,12 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\ORM\TableRegistry;
 
 class InstitutionClassesTable extends AppTable
 {
+    public const CLASS_TEACHER = 'Home Room Teacher';
+    public const ASSISTANT_TEACHER = 'Secondary Teacher';
 
     public function initialize(array $config)
     {
@@ -74,6 +77,18 @@ class InstitutionClassesTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $requestData = json_decode($settings['process']['params']);
+        $institution_id = $requestData->institution_id;
+        $where = [];
+        if ($institution_id != 0) {
+            $where['Institutions.id'] = $institution_id;
+        }
+        $academic_period_id = $requestData->academic_period_id;
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
         $query
             ->select([
                 $this->aliasField('id'),
@@ -87,7 +102,23 @@ class InstitutionClassesTable extends AppTable
                 'area_administrative_name' => 'AreaAdministratives.name',
                 'shift_name' => 'ShiftOptions.name',
                 'name' => 'InstitutionClasses.name',
-                'staff_id' => 'InstitutionClasses.staff_id',
+                'staff_name' => $query->func()->concat([
+                    'Staff.openemis_no' => 'literal',
+                    " - ",
+                    'Staff.first_name' => 'literal',
+                    " ",
+                    'Staff.last_name' => 'literal'
+                ]),
+                'secondary_staff_name' => $query->func()->group_concat([
+                    'SecurityUsers.openemis_no' => 'literal',
+                    " - ",
+                    'SecurityUsers.first_name' => 'literal',
+                    " ",
+                    'SecurityUsers.last_name' => 'literal'
+                ]),
+                'total_male_students' => 'InstitutionClasses.total_male_students',
+                'total_female_students' => 'InstitutionClasses.total_female_students',
+                'total_students' => $query->newExpr('InstitutionClasses.total_male_students + InstitutionClasses.total_female_students')
             ])
             ->contain([
                 'AcademicPeriods' => [
@@ -117,9 +148,29 @@ class InstitutionClassesTable extends AppTable
                     ]
                 ]
             ])
+            ->leftJoin(
+            ['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'],
+            [
+                'InstitutionClassesSecondaryStaff.institution_class_id = '. $this->aliasField('id')
+            ]
+            )
+            ->leftJoin(
+            ['SecurityUsers' => 'security_users'],
+            [
+                'SecurityUsers.id = '. $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+            ]
+            )
+            ->where([
+                'InstitutionClasses.academic_period_id' => $academic_period_id,
+                $where
+            ])
+            ->group([
+                'InstitutionClasses.id'
+            ])
             ->order([
                 'AcademicPeriods.order',
-                'Institutions.code'
+                'Institutions.code',
+                'InstitutionClasses.id'
             ]);
     }
 
@@ -204,10 +255,38 @@ class InstitutionClassesTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionClasses.staff_id',
-            'field' => 'staff_id',
+            'key' => '',
+            'field' => 'staff_name',
+            'type' => 'string',
+            'label' => self::CLASS_TEACHER
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'secondary_staff_name',
+            'type' => 'string',
+            'label' => self::ASSISTANT_TEACHER
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.total_male_students',
+            'field' => 'total_male_students',
             'type' => 'integer',
             'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.total_female_students',
+            'field' => 'total_female_students',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'total_students',
+            'type' => 'integer',
+            'label' => 'Total Students'
         ];
 
         $fields->exchangeArray($newFields);

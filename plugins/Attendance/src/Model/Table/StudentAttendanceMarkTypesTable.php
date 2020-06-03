@@ -110,12 +110,25 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 $attendencePerDay = $marksEntity->attendance_per_day;
             }
 
+            $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+            $periodsData = $StudentAttendancePerDayPeriods
+                            ->find('all')
+                            ->where(
+                                [
+                                    $StudentAttendancePerDayPeriods->aliasField('education_grade_id IN ') => $gradeList,
+                                    $StudentAttendancePerDayPeriods->aliasField('academic_period_id') => $academicPeriodId
+                                ])
+                            ->all()
+                            ->toArray();
+
             $options = [];
+            $j = 0;
             for ($i = 1; $i <= $attendencePerDay; ++$i) {
                 $options[] = [
                     'id' => $i,
-                    'name' => __($prefix . $i)
+                    'name' => __((!empty($periodsData[$j]['name'])) ? $periodsData[$j]['name'] : "Period ".$i)
                 ];
+                $j++;
             }
 
             return $options;

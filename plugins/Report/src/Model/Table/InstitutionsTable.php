@@ -508,7 +508,9 @@ class InstitutionsTable extends AppTable
     {
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.StaffAttendances', 'Report.BodyMasses', 'Report.InstitutionSpecialNeedsStudents','Report.InstitutionStudentsWithSpecialNeeds', 'Report.WashReports']))
+			
+            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.StaffAttendances', 'Report.BodyMasses', 'Report.InstitutionSpecialNeedsStudents','Report.InstitutionStudentsWithSpecialNeeds',
+			'Report.WashReports', 'Report.InstitutionClasses', 'Report.InstitutionCommittees']))
                 ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -680,8 +682,8 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 			
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports', 'Report.Guardians'
-			      , 'Report.InstitutionInfrastructures'
+            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports', 'Report.Guardians',
+			      'Report.InstitutionInfrastructures', 'Report.InstitutionClasses', 'Report.SpecialNeedsFacilities', 'Report.InstitutionCommittees'
 				  ])) {
 
 
@@ -710,6 +712,26 @@ class InstitutionsTable extends AppTable
                     }
 
                     $institutionList = $institutionQuery->toArray();
+                } else {
+					
+                   $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                           'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->order([
+                           $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
                 }
 
                 if (empty($institutionList)) {
@@ -718,8 +740,8 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects'])) {
+					
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
