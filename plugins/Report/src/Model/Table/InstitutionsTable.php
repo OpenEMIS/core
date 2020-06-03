@@ -153,6 +153,25 @@ class InstitutionsTable extends AppTable
             ->notEmpty('institution_id');
         return $validator;
     }
+   
+    public function validationInstitutionInfrastructures(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('institution_type_id')
+            ->notEmpty('institution_id')
+            ->notEmpty('infrastructure_level');
+        return $validator;
+    }
+
+    public function validationGuardians(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('institution_type_id')
+            ->notEmpty('institution_id');
+        return $validator;
+    }
 
     public function beforeAction(Event $event)
     { 
@@ -183,7 +202,9 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
         $this->ControllerAction->field('wash_type', ['type' => 'hidden']);
         $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']);
-
+        $this->ControllerAction->field('infrastructure_level', ['type' => 'hidden']);
+        $this->ControllerAction->field('infrastructure_type', ['type' => 'hidden']);
+		
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -200,7 +221,12 @@ class InstitutionsTable extends AppTable
             $options['validate'] = 'staffAttendances';
         } elseif ($data[$this->alias()]['feature'] == 'Report.BodyMasses') {
             $options['validate'] = 'bodyMasses';
+        } elseif ($data[$this->alias()]['feature'] == 'Report.Guardians') {
+            $options['validate'] = 'guardians';
+        } elseif ($data[$this->alias()]['feature'] == 'Report.InstitutionInfrastructures') {
+            $options['validate'] = 'institutionInfrastructures';
         }
+
     }
 
     public function addAfterAction(Event $event, Entity $entity)
@@ -588,7 +614,12 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports'])) {
+			
+            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports',
+			'Report.Guardians',
+			 'Report.InstitutionInfrastructures'
+			])) {
+
                 $TypesTable = TableRegistry::get('Institution.Types');
                 $typeOptions = $TypesTable
                     ->find('list')
@@ -605,11 +636,55 @@ class InstitutionsTable extends AppTable
         }
     }
 
+    public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.InstitutionInfrastructures'])) {
+                $TypesTable = TableRegistry::get('infrastructure_levels');
+                $typeOptions = $TypesTable
+                    ->find('list')
+                    ->toArray();
+               
+                $attr['type'] = 'select';
+                $attr['onChangeReload'] = true;
+                $attr['options'] = $typeOptions;
+                $attr['attr']['required'] = true;
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldInfrastructureType(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.InstitutionInfrastructures'])) {
+                $TypesTable = TableRegistry::get('building_types');
+                $typeOptions = $TypesTable
+                    ->find('list')
+                    ->toArray();
+
+                $attr['type'] = 'select';
+                $attr['onChangeReload'] = true;
+                $attr['options'] = $typeOptions;
+                //$attr['attr']['required'] = true;
+            }
+            return $attr;
+        }
+    }
+
+
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports'])) {
+			
+            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports', 'Report.Guardians'
+			      , 'Report.InstitutionInfrastructures'
+				  ])) {
+
+
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
                     $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
