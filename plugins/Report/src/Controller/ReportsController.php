@@ -75,7 +75,8 @@ class ReportsController extends AppController
                 'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
                 'Report.WashReports' => __('Wash Report'),
                 'Report.Guardians' => __('Guardians'),
-                'Report.InstitutionInfrastructures' => __('Infrastructure')
+                'Report.InstitutionInfrastructures' => __('Infrastructure'),
+                'Report.SpecialNeedsFacilities' => __('Special Needs Facilities')
             ];
         } elseif ($module == 'Students') {
             $options = [

@@ -683,7 +683,7 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
 			
             if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports', 'Report.Guardians'
-			      , 'Report.InstitutionInfrastructures', 'Report.InstitutionClasses'
+			      , 'Report.InstitutionInfrastructures', 'Report.InstitutionClasses', , 'Report.SpecialNeedsFacilities'
 				  ])) {
 
 
@@ -713,14 +713,15 @@ class InstitutionsTable extends AppTable
 
                     $institutionList = $institutionQuery->toArray();
                 } else {
-                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+
+                   $InstitutionsTable = TableRegistry::get('Institution.Institutions');
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
-                            'keyField' => 'id',
+                           'keyField' => 'id',
                             'valueField' => 'code_name'
                         ])
                         ->order([
-                            $InstitutionsTable->aliasField('code') => 'ASC',
+                           $InstitutionsTable->aliasField('code') => 'ASC',
                             $InstitutionsTable->aliasField('name') => 'ASC'
                         ]);
 
