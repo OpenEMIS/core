@@ -290,39 +290,39 @@ class GuardiansTable extends AppTable  {
            ;
     }
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        $cloneFields = $fields->getArrayCopy();
+        $newFields = [];
 
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'Institutions.code',
             'field' => 'institution_code',
             'type' => 'string',
             'label' => __('Institution Code')
         ];
 
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'Institutions.name',
             'field' => 'institution_name',
             'type' => 'string',
             'label' => __('Institution Name')
         ];
 
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'EducationGrades.name',
             'field' => 'education_grade_name',
             'type' => 'string',
             'label' => __('Education Grade')
         ];
 
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'InstitutionClasses.name',
             'field' => 'institution_class_name',
             'type' => 'string',
             'label' => __('Class')
         ];
 
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
@@ -330,7 +330,7 @@ class GuardiansTable extends AppTable  {
         ];
 
         
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'student_name_by_guardian',
             'field' => 'student_name_by_guardian',
             'type' => 'string',
@@ -338,50 +338,48 @@ class GuardiansTable extends AppTable  {
         ];
 
         
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'guardian_father_name',
             'field' => 'guardian_father_name',
             'type' => 'string',
             'label' => __('Father Name')
         ];
 
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'father_email',
             'field' => 'father_email',
             'type' => 'string',
             'label' => __('Father Email')
         ];
 
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'father_address',
             'field' => 'father_address',
             'type' => 'string',
             'label' => __('Father Address')
         ];
 
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'guardian_mother_name',
             'field' => 'guardian_mother_name',
             'type' => 'string',
             'label' => __('Mother Name')
         ];
 
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'mother_email',
             'field' => 'mother_email',
             'type' => 'string',
             'label' => __('Mother Email')
         ];
 
-        $extraFields[] = [
+        $newFields[] = [
             'key' => 'mother_address',
             'field' => 'mother_address',
             'type' => 'string',
             'label' => __('Mother Address')
         ];
 
-        $newFields = $extraFields;
-        
         $fields->exchangeArray($newFields);
     }
 
