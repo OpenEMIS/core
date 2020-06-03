@@ -613,7 +613,7 @@ class InstitutionsTable extends AppTable
                     }
 
                     $institutionList = $institutionQuery->toArray();
-                }  else {
+                } else {
                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
