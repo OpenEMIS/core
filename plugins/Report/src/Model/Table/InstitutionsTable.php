@@ -181,6 +181,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
         $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('wash_type', ['type' => 'hidden']);
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -327,7 +328,27 @@ class InstitutionsTable extends AppTable
             }
         }
     }
-
+    
+    public function onUpdateFieldWashType(Event $event, array $attr, $action, Request $request){
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.WashReports'])) {
+                $options = [
+                    'Water' => __('Water'),
+                    'Sanitation' => __('Sanitation'),
+                    'Hygiene' => __('Hygiene'),
+                    'Waste' => __('Waste'),
+                    'Sewage' => __('Sewage'),
+                ];
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $options;
+            } else {
+                $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
     public function onUpdateFieldPositionFilter(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
@@ -459,7 +480,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.StaffAttendances', 'Report.BodyMasses', 'Report.InstitutionSpecialNeedsStudents','Report.InstitutionStudentsWithSpecialNeeds']))
+            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.StaffAttendances', 'Report.BodyMasses', 'Report.InstitutionSpecialNeedsStudents','Report.InstitutionStudentsWithSpecialNeeds', 'Report.WashReports']))
                 ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -565,7 +586,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses'])) {
+            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports'])) {
                 $TypesTable = TableRegistry::get('Institution.Types');
                 $typeOptions = $TypesTable
                     ->find('list')
@@ -586,7 +607,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses'])) {
+            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports'])) {
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
                     $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
