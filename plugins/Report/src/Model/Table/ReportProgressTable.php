@@ -22,6 +22,7 @@ class ReportProgressTable extends AppTable  {
 	}
 
 	public function addReport($obj) {
+		
 		if (isset($obj['params'])) {
 			$obj['params'] = json_encode($obj['params']);
 		}
@@ -42,20 +43,39 @@ class ReportProgressTable extends AppTable  {
 			}
 		}
 		*/
-
+		$fileFormat = json_decode($obj['params']);
+		
 		$obj['file_path'] = NULL;
 		$obj['current_records'] = 0;
 		$obj['total_records'] = 0;
 		$obj['status'] = self::PENDING;
-
+		
 		$newEntity = $this->newEntity($obj);
 		$result = $this->save($newEntity);
+
+		if($fileFormat->format == 'zip'){
+			$expiryDate = new Time();
+			$expiryDate->addDays(5);
+			$this->updateAll(
+			['status' => self::COMPLETED, 'file_path' => WWW_ROOT . 'downloads' . DS . $obj['module'].'-photo' . DS, 'expiry_date' => $expiryDate, 'modified' => new Time()],
+			['id' => $result->id]
+		);
+		}
 		return $result->id;
 	}
 
-	public function generate($id) {
-		$cmd = ROOT . DS . 'bin' . DS . 'cake Report ' . $id;
-		$logs = ROOT . DS . 'logs' . DS . 'reports.log & echo $!';
+	public function generate($id, $fileFormat) {
+		
+		if($fileFormat == 'zip'){
+			//$cmd = ROOT . DS . 'bin' . DS . 'cake StudentsPhotoDownload ' . $id;
+		    $logs = ROOT . DS . 'logs' . DS . 'student-photo-reports.log & echo $!';
+		} 
+
+		else {
+			$cmd = ROOT . DS . 'bin' . DS . 'cake Report ' . $id;
+			$logs = ROOT . DS . 'logs' . DS . 'reports.log & echo $!';
+		}
+		
 		$shellCmd = $cmd . ' >> ' . $logs;
 
 		try {
@@ -71,10 +91,11 @@ class ReportProgressTable extends AppTable  {
 
 	public function purge($userId=null, $now=false) {
 		$format = 'Y-m-d';
+
 		$conditions = [$this->aliasField('expiry_date') . ' < ' => date($format)];
 
 		$query = $this->find();
-
+		
 		if (!$now) {
 			$query->where($conditions);
 		}
