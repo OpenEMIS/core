@@ -136,6 +136,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             week_end_day: params.week_end_day,
             day_id: params.day_id,
             day_date: params.day_date,
+			own_attendance_view: params.own_attendance_view,
+            own_attendance_edit: params.own_attendance_edit,
+            other_attendance_view: params.other_attendance_view,
+            other_attendance_edit: params.other_attendance_edit,
         };
         var success = function(response, deferred) {
             var allStaffAttendances = response.data.data;
@@ -325,7 +329,21 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
          {staff_id: staffId})
                 .ajax({success: successInstitutionShifts, defer: true});
         
-        if (action == 'edit') {
+		var ownEdit = params.context.ownEdit;
+        var otherEdit = params.context.otherEdit;
+        var permissionStaffId = params.context.permissionStaffId;
+        var staffId = params.data.staff_id;
+       
+        var conditionStatus = 0
+        if(ownEdit == 0 && otherEdit == 1 && permissionStaffId != staffId){
+            conditionStatus = 1;
+        }else if(ownEdit == 1 && otherEdit == 0 && permissionStaffId == staffId){
+            conditionStatus = 1;
+        }else if(ownEdit == 1 && otherEdit == 1){
+            conditionStatus = 1;
+        }
+        
+        if (action == 'edit' && conditionStatus == 1) {
             var divElement = document.createElement('div');
             var timeInInputDivElement = createTimeElement(params, 'time_in', rowIndex);
             var timeOutInputDivElement = createTimeElement(params, 'time_out', rowIndex);
@@ -385,7 +403,19 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
     function getCommentElement(params) {
         var action = params.context.action;
         var divElement = '';
-        if (action == 'edit') {
+		var ownEdit = params.context.ownEdit;
+        var otherEdit = params.context.otherEdit;
+        var permissionStaffId = params.context.permissionStaffId;
+        var staffId = params.data.staff_id;
+        var conditionStatus = 0
+        if(ownEdit == 0 && otherEdit == 1 && permissionStaffId != staffId){
+            conditionStatus = 1;
+        }else if(ownEdit == 1 && otherEdit == 0 && permissionStaffId == staffId){
+            conditionStatus = 1;
+        }else if(ownEdit == 1 && otherEdit == 1){
+            conditionStatus = 1;
+        }
+        if (action == 'edit' && conditionStatus == 1) {
             divElement = getEditCommentElement(params);
         } else {
             divElement = getViewCommentElement(params.value);
@@ -455,6 +485,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     function createTimeElement(params, timeKey, rowIndex)
     {
+		var action = params.context.action;
         var data = params.data;
         var academicPeriodId = params.context.period;
         var timepickerId = (timeKey == 'time_in') ? 'time-in-' : 'time-out-';
