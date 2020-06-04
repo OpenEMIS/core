@@ -1,4 +1,5 @@
 <?php
+
 namespace Report\Model\Table;
 
 use ArrayObject;
@@ -11,287 +12,253 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Database\Expression\IdentifierExpression;
 
-class GuardiansTable extends AppTable  {
+class GuardiansTable extends AppTable {
 
-   public function initialize(array $config) {
-        
-		$this->table('student_guardians');
-		parent::initialize($config);
+    public function initialize(array $config) {
+
+        $this->table('student_guardians');
+        parent::initialize($config);
         $this->addBehavior('Report.ReportList');
-		$this->addBehavior('Excel', [
+        $this->addBehavior('Excel', [
             'pages' => false
         ]);
-        
-	}
+    }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
-    {
-        
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+
         $sheets[] = [
             'name' => $this->alias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
         ];
-       
     }
-    
-    
+
     public function onExcelGetStudentNameByGuardian(Event $event, Entity $entity) {
         $securityUsers = TableRegistry::get('security_users');
 
         if (!is_null($entity->student_id)) {
             $getStudent = $securityUsers->find()
-                ->select(['security_users.first_name','security_users.last_name'])
-                ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.student_id'
-                ])
-                ->where(['Guardians.student_id'=>$entity->student_id])
-                ->first();
+                    ->select(['security_users.first_name', 'security_users.last_name'])
+                    ->leftJoin(['Guardians' => 'student_guardians'], [
+                        'security_users.id = ' . 'Guardians.student_id'
+                    ])
+                    ->where(['Guardians.student_id' => $entity->student_id])
+                    ->first();
 
-            if(!empty($getStudent)){
+            if (!empty($getStudent)) {
                 return $getStudent->first_name . ' ' . $getStudent->last_name;
             }
-
         }
 
         return '';
     }
 
     public function onExcelGetGuardianFatherName(Event $event, Entity $entity) {
-   
+
         $guardianData = TableRegistry::get('security_users');
         $name = '';
 
-            if (!is_null($entity->student_id)) {
-                $getGuardian = $guardianData->find()
-                            ->select(['security_users.first_name','security_users.last_name'])
-                            ->leftJoin(['Guardians' => 'student_guardians'], [
-                                'security_users.id = ' . 'Guardians.guardian_id',
-                                
-                            ])
-                            ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
-                                'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
-                            ])
-                            ->where(['Guardians.student_id'=>$entity->student_id,'GuardiansRelation.name'=>'Father'])
-                            ->first();
+        if (!is_null($entity->student_id)) {
+            $getGuardian = $guardianData->find()
+                    ->select(['security_users.first_name', 'security_users.last_name'])
+                    ->leftJoin(['Guardians' => 'student_guardians'], [
+                        'security_users.id = ' . 'Guardians.guardian_id',
+                    ])
+                    ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                        'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                    ])
+                    ->where(['Guardians.student_id' => $entity->student_id, 'GuardiansRelation.name' => 'Father'])
+                    ->first();
 
-                    if(!empty($getGuardian)){
-                        $name = $getGuardian->first_name.' '.$getGuardian->last_name;
-                    }
-
+            if (!empty($getGuardian)) {
+                $name = $getGuardian->first_name . ' ' . $getGuardian->last_name;
             }
+        }
 
         return $name;
     }
 
-
     public function onExcelGetFatherEmail(Event $event, Entity $entity) {
-   
+
         $guardianData = TableRegistry::get('security_users');
         $fatherEmail = '';
 
-            if (!is_null($entity->student_id)) {
-                $getGuardian = $guardianData->find()
-                            ->select(['security_users.email'])
-                            ->leftJoin(['Guardians' => 'student_guardians'], [
-                                'security_users.id = ' . 'Guardians.guardian_id',
-                                
-                            ])
-                            ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
-                                'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
-                            ])
-                            ->where(['Guardians.student_id'=>$entity->student_id, 'GuardiansRelation.name'=>'Father'])
-                            ->first();
+        if (!is_null($entity->student_id)) {
+            $getGuardian = $guardianData->find()
+                    ->select(['security_users.email'])
+                    ->leftJoin(['Guardians' => 'student_guardians'], [
+                        'security_users.id = ' . 'Guardians.guardian_id',
+                    ])
+                    ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                        'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                    ])
+                    ->where(['Guardians.student_id' => $entity->student_id, 'GuardiansRelation.name' => 'Father'])
+                    ->first();
 
-                    if(!empty($getGuardian)){
-                        $fatherEmail = $getGuardian->email;
-                    }
-
+            if (!empty($getGuardian)) {
+                $fatherEmail = $getGuardian->email;
             }
+        }
 
         return $fatherEmail;
     }
 
     public function onExcelGetFatherAddress(Event $event, Entity $entity) {
-   
+
         $guardianData = TableRegistry::get('security_users');
         $fatherAddress = '';
 
-            if (!is_null($entity->student_id)) {
-                $getGuardian = $guardianData->find()
-                            ->select(['security_users.address'])
-                            ->leftJoin(['Guardians' => 'student_guardians'], [
-                                'security_users.id = ' . 'Guardians.guardian_id',
-                                
-                            ])
-                            ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
-                                'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
-                            ])
-                            ->where(['Guardians.student_id'=>$entity->student_id, 'GuardiansRelation.name'=>'Father'])
-                            ->first();
+        if (!is_null($entity->student_id)) {
+            $getGuardian = $guardianData->find()
+                    ->select(['security_users.address'])
+                    ->leftJoin(['Guardians' => 'student_guardians'], [
+                        'security_users.id = ' . 'Guardians.guardian_id',
+                    ])
+                    ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                        'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                    ])
+                    ->where(['Guardians.student_id' => $entity->student_id, 'GuardiansRelation.name' => 'Father'])
+                    ->first();
 
-                    if(!empty($getGuardian)){
-                        $fatherAddress = $getGuardian->address;
-                    }
-
+            if (!empty($getGuardian)) {
+                $fatherAddress = $getGuardian->address;
             }
+        }
 
         return $fatherAddress;
     }
 
+    public function onExcelGetGuardianMotherName(Event $event, Entity $entity) {
 
-
-     public function onExcelGetGuardianMotherName(Event $event, Entity $entity){
-   
         $guardianData = TableRegistry::get('security_users');
         $motherName = '';
-        
-            if (!is_null($entity->student_id)) {
-                
-                $motherDetails = $guardianData->find()
-                            ->select(['security_users.first_name','security_users.last_name'])
-                            ->leftJoin(['Guardians' => 'student_guardians'], [
-                                'security_users.id = ' . 'Guardians.guardian_id',
-                                
-                            ])
-                            ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
-                                'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
-                            ])
-                            ->where(['Guardians.student_id'=>$entity->student_id, 'GuardiansRelation.name'=>'Mother'])
-                            ->first();
 
-                    if(!empty($motherDetails)){
-                        $motherName = $motherDetails->first_name.' '.$motherDetails->last_name;
-                    }
+        if (!is_null($entity->student_id)) {
+
+            $motherDetails = $guardianData->find()
+                    ->select(['security_users.first_name', 'security_users.last_name'])
+                    ->leftJoin(['Guardians' => 'student_guardians'], [
+                        'security_users.id = ' . 'Guardians.guardian_id',
+                    ])
+                    ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                        'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                    ])
+                    ->where(['Guardians.student_id' => $entity->student_id, 'GuardiansRelation.name' => 'Mother'])
+                    ->first();
+
+            if (!empty($motherDetails)) {
+                $motherName = $motherDetails->first_name . ' ' . $motherDetails->last_name;
             }
+        }
 
         return $motherName;
-        
+    }
+
+    public function onExcelGetMotherEmail(Event $event, Entity $entity) {
+
+        $guardianData = TableRegistry::get('security_users');
+        $motherEmail = '';
+
+        if (!is_null($entity->student_id)) {
+            $motherDetails = $guardianData->find()
+                    ->select(['security_users.email'])
+                    ->leftJoin(['Guardians' => 'student_guardians'], [
+                        'security_users.id = ' . 'Guardians.guardian_id',
+                    ])
+                    ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                        'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                    ])
+                    ->where(['Guardians.student_id' => $entity->student_id, 'GuardiansRelation.name' => 'Mother'])
+                    ->first();
+
+            if (!empty($motherDetails)) {
+                $motherEmail = $motherDetails->email;
+            }
         }
 
-        public function onExcelGetMotherEmail(Event $event, Entity $entity) {
-   
-            $guardianData = TableRegistry::get('security_users');
-            $motherEmail = '';
-    
-                if (!is_null($entity->student_id)) {
-                    $motherDetails = $guardianData->find()
-                                ->select(['security_users.email'])
-                                ->leftJoin(['Guardians' => 'student_guardians'], [
-                                    'security_users.id = ' . 'Guardians.guardian_id',
-                                    
-                                ])
-                                ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
-                                    'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
-                                ])
-                                ->where(['Guardians.student_id'=>$entity->student_id, 'GuardiansRelation.name'=>'Mother'])
-                                ->first();
-    
-                        if(!empty($motherDetails)){
-                            $motherEmail = $motherDetails->email;
-                        }
-    
-                }
+        return $motherEmail;
+    }
 
-            return $motherEmail;
+    public function onExcelGetMotherAddress(Event $event, Entity $entity) {
+
+        $guardianData = TableRegistry::get('security_users');
+        $motherAddress = '';
+
+        if (!is_null($entity->student_id)) {
+            $motherDetails = $guardianData->find()
+                    ->select(['security_users.address'])
+                    ->leftJoin(['Guardians' => 'student_guardians'], [
+                        'security_users.id = ' . 'Guardians.guardian_id',
+                    ])
+                    ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
+                        'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
+                    ])
+                    ->where(['Guardians.student_id' => $entity->student_id, 'GuardiansRelation.name' => 'Mother'])
+                    ->first();
+
+            if (!empty($motherDetails)) {
+                $motherAddress = $motherDetails->address;
+            }
         }
-    
-    
-        public function onExcelGetMotherAddress(Event $event, Entity $entity) {
-       
-            $guardianData = TableRegistry::get('security_users');
-            $motherAddress = '';
-    
-                if (!is_null($entity->student_id)) {
-                    $motherDetails = $guardianData->find()
-                                ->select(['security_users.address'])
-                                ->leftJoin(['Guardians' => 'student_guardians'], [
-                                    'security_users.id = ' . 'Guardians.guardian_id',
-                                    
-                                ])
-                                ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
-                                    'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
-                                ])
-                                ->where(['Guardians.student_id'=>$entity->student_id, 'GuardiansRelation.name'=>'Mother'])
-                                ->first();
-    
-                        if(!empty($motherDetails)){
-                            $motherAddress = $motherDetails->address;
-                        }
-    
-                }
 
-            return $motherAddress;
-        }
-    
+        return $motherAddress;
+    }
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-        
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id;
         $institutionsTable = TableRegistry::get('institutions');
-        
+
         $query
-            ->select([   
-                'student_id' =>'Users.id',             
-                'student_first_name' => 'Users.first_name',
-                'student_last_name' => 'Users.last_name',
-                'openemis_no' => 'Users.openemis_no',
-                'institution_name' => 'Institutions.name',
-                'education_grade_name' => 'EducationGrades.name',
-                'institution_class_name' => 'InstitutionClasses.name',
-                'institution_code' => 'Institutions.code'
-             ])
-             
-
-           ->leftJoin(['Users' => 'security_users'], [
-                            'Users.id = ' . 'Guardians.student_id'
-                        ])
-            
-            ->leftJoin(['Guardian' => 'security_users'], [
-                            'Guardian.id = ' . 'Guardians.guardian_id',
-                            
-                        ])
-           
-            ->leftJoin(['InstitutionStudents' => 'institution_students'], [
-                            'Users.id = ' . 'InstitutionStudents.student_id'
-                        ])
-
-            ->leftJoin(['EducationGrades' => 'education_grades'], [
-                            'InstitutionStudents.education_grade_id = ' . 'EducationGrades.id'
-                        ])
-
-            ->leftJoin(['Institutions' => 'institutions'], [
-                'InstitutionStudents.institution_id = ' . 'Institutions.id'
-                        ])
-
-           ->leftJoin(['InstitutionClassStudents' => 'institution_class_students'], [
-                            'InstitutionClassStudents.student_id = ' . 'Users.id'
-                        ])
-
-            ->leftJoin(['InstitutionClasses' => 'institution_classes'], [
-                            'InstitutionClasses.id = ' . 'InstitutionClassStudents.institution_class_id'
-                        ])
-
-            ->leftJoin(['StudentStatuses' => 'student_statuses'], [
-                            'InstitutionStudents.student_status_id = ' . 'StudentStatuses.id'
-                        ])
-            ->leftJoin(['UserContacts' => 'user_contacts'], [
-                            'Guardian.id = ' . 'UserContacts.security_user_id'
-                        ])
-            ->group('Guardians.student_id')
-          
-            ->where(['StudentStatuses.code' => 'CURRENT',
-                            'InstitutionClassStudents.student_status_id = ' . 'StudentStatuses.id',
-                            'Users.id = ' . 'Guardians.student_id',
-                            'institutions.id = ' . $institutionId
-                    ])
-           ;
+                ->select([
+                    'student_id' => 'Users.id',
+                    'student_first_name' => 'Users.first_name',
+                    'student_last_name' => 'Users.last_name',
+                    'openemis_no' => 'Users.openemis_no',
+                    'institution_name' => 'Institutions.name',
+                    'education_grade_name' => 'EducationGrades.name',
+                    'institution_class_name' => 'InstitutionClasses.name',
+                    'institution_code' => 'Institutions.code'
+                ])
+                ->leftJoin(['Users' => 'security_users'], [
+                    'Users.id = ' . 'Guardians.student_id'
+                ])
+                ->leftJoin(['Guardian' => 'security_users'], [
+                    'Guardian.id = ' . 'Guardians.guardian_id',
+                ])
+                ->leftJoin(['InstitutionStudents' => 'institution_students'], [
+                    'Users.id = ' . 'InstitutionStudents.student_id'
+                ])
+                ->leftJoin(['EducationGrades' => 'education_grades'], [
+                    'InstitutionStudents.education_grade_id = ' . 'EducationGrades.id'
+                ])
+                ->leftJoin(['Institutions' => 'institutions'], [
+                    'InstitutionStudents.institution_id = ' . 'Institutions.id'
+                ])
+                ->leftJoin(['InstitutionClassStudents' => 'institution_class_students'], [
+                    'InstitutionClassStudents.student_id = ' . 'Users.id'
+                ])
+                ->leftJoin(['InstitutionClasses' => 'institution_classes'], [
+                    'InstitutionClasses.id = ' . 'InstitutionClassStudents.institution_class_id'
+                ])
+                ->leftJoin(['StudentStatuses' => 'student_statuses'], [
+                    'InstitutionStudents.student_status_id = ' . 'StudentStatuses.id'
+                ])
+                ->leftJoin(['UserContacts' => 'user_contacts'], [
+                    'Guardian.id = ' . 'UserContacts.security_user_id'
+                ])
+                ->group('Guardians.student_id')
+                ->where(['StudentStatuses.code' => 'CURRENT',
+                    'InstitutionClassStudents.student_status_id = ' . 'StudentStatuses.id',
+                    'Users.id = ' . 'Guardians.student_id',
+                    'Institutions.id = ' . $institutionId
+                ])
+        ;
     }
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
-    {
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
         $newFields = [];
 
         $newFields[] = [
@@ -329,7 +296,7 @@ class GuardiansTable extends AppTable  {
             'label' => __('OpenEMIS ID')
         ];
 
-        
+
         $newFields[] = [
             'key' => 'student_name_by_guardian',
             'field' => 'student_name_by_guardian',
@@ -337,7 +304,7 @@ class GuardiansTable extends AppTable  {
             'label' => __('Student Name')
         ];
 
-        
+
         $newFields[] = [
             'key' => 'guardian_father_name',
             'field' => 'guardian_father_name',
