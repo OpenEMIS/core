@@ -2,6 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
@@ -17,8 +18,8 @@ class InstitutionSubjectsTable extends AppTable  {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-
-		$this->addBehavior('Excel', [
+        
+	$this->addBehavior('Excel', [
             'autoFields' => false
         ]);
 		$this->addBehavior('Report.ReportList');
@@ -36,7 +37,7 @@ class InstitutionSubjectsTable extends AppTable  {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
-
+        
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
@@ -44,11 +45,33 @@ class InstitutionSubjectsTable extends AppTable  {
         if (!empty($institutionId)) {
             $conditions['Institutions.id'] = $institutionId;
         }
+        
+        if (!empty($requestData->education_subject_id)) {
+            $conditions[$this->aliasField('education_subject_id')] = $requestData->education_subject_id;
+        }
+        
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $Staff = TableRegistry::get('User.Users');
 
         $query
             ->select([
+                'institution_code' => 'Institutions.code',
+                'institution_name' => $query->func()->concat(['Institutions.code' => 'literal', ' - ', 'Institutions.name' => 'literal']),
+                'area_code' => 'Areas.code',
+                'area_name' => $query->func()->concat(['Areas.code' => 'literal', ' - ', 'Areas.name' => 'literal']),
+                'area_administrative_code' => 'AreaAdministratives.code',
+                'area_administrative_name' => 'AreaAdministratives.name',
+                'EducationGrades.name',
+                'class_name' => 'InstitutionClasses.name',
+                'institution_class_id' => 'InstitutionClasses.id',
+                'AcademicPeriods.name',
+                'total_students' => $query
+                    ->newExpr()
+                    ->add($this->aliasField('total_male_students'))
+                    ->add($this->aliasField('total_female_students'))
+                    ->tieWith('+'),
                 $this->aliasField('name'),
                 $this->aliasField('no_of_seats'),
                 $this->aliasField('total_male_students'),
@@ -57,16 +80,7 @@ class InstitutionSubjectsTable extends AppTable  {
                 $this->aliasField('education_grade_id'),
                 $this->aliasField('education_subject_id'),
                 $this->aliasField('academic_period_id'),
-                'institution_code' => 'Institutions.code',
-                'Institutions.name',
-                'area_code' => 'Areas.code',
-                'area_name' => 'Areas.name',
-                'area_administrative_code' => 'AreaAdministratives.code',
-                'area_administrative_name' => 'AreaAdministratives.name',
-                'EducationGrades.name',
-                'class_name' => 'InstitutionClasses.name',
-                'AcademicPeriods.name',
-                
+                $this->aliasField('academic_period_id'),
             ])
             ->contain([
                 'Institutions.Areas',
@@ -81,16 +95,65 @@ class InstitutionSubjectsTable extends AppTable  {
             ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
                 $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
             ])
-            ->where($conditions);
+            ->where($conditions);            
     }
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->controller->getFeatureOptions('Institutions');
-		return $attr;
-	}
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+            $attr['options'] = $this->controller->getFeatureOptions('Institutions');
+            return $attr;
+    }
+     
+    public function onExcelGetStaffName(Event $event, Entity $entity)
+    {
+        $InstitutionSubjects = TableRegistry::get('Report.InstitutionSubjects');
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $Staff = TableRegistry::get('User.Users');
+        $conditions = [
+            $this->aliasField('education_subject_id') => $entity->education_subject_id,
+            $this->aliasField('institution_id') => $entity->institution_id,
+            $this->aliasField('education_grade_id') => $entity->education_grade_id,
+            $this->aliasField('academic_period_id') => $entity->academic_period_id,
+            $InstitutionClassSubjects->aliasField('institution_class_id =') => $entity->institution_class_id,
+            ];
+
+        $staffResult = $InstitutionSubjects
+                ->find()
+                ->select([                    
+                    'staff_id' => 'InstitutionSubjectStaff.staff_id',
+                    'Users.openemis_no',
+                    'Users.first_name',
+                    'Users.last_name'                    
+                ])
+                ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+                    $this->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
+                ])
+                ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                    $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
+                ])
+                ->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()], [
+                    $InstitutionSubjectStaff->aliasField('institution_subject_id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
+                ])
+                ->leftJoin([$Staff->alias() => $Staff->table()], [
+                    $Staff->aliasField('id =') . $InstitutionSubjectStaff->aliasField('staff_id')
+                ])
+                ->where($conditions)
+                ->hydrate(false)
+                ->toArray()
+                ;  
+        $staffName = [];
+        foreach($staffResult as $result){
+            if(!empty($result['Users']['openemis_no'])){
+                $staffName[] = $result['Users']['openemis_no'].' - '.$result['Users']['first_name'].' '.$result['Users']['last_name'];
+            }
+        }
+       
+        return implode(',', $staffName);
+    }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
-    {        
+    {   
         foreach ($fields as $key => $value) {
             if ($value['field'] == 'education_subject_id') {
                 $fields[$key] = array('key' => 'InstitutionClasses.name',
@@ -99,51 +162,82 @@ class InstitutionSubjectsTable extends AppTable  {
                     'label' => __('Institution Class'));
             }
         }
-       
+        
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
         
         foreach ($cloneFields as $key => $value) {
             
-            $newFields[] = $value;
-            if ($value['field'] == 'institution_id') {
+            if (in_array($value['field'], ['academic_period_id'])) {
+                    unset($cloneFields[$key]);
+                    break;
+            }
+            
+            if ($value['field'] == 'class_name') {
                 $newFields[] = [
-                    'key' => 'Institutions.code',
-                    'field' => 'institution_code',
+                    'key' => 'institution_name',
+                    'field' => 'institution_name',
                     'type' => 'string',
-                    'label' => ''
+                    'label' => __('Institution')
                 ];
-
+                
                 $newFields[] = [
-                    'key' => 'Institutions.area_code',
-                    'field' => 'area_code',
-                    'type' => 'string',
-                    'label' => __('Area Education Code')
-                ];
-
-                $newFields[] = [
-                    'key' => 'Institutions.area',
+                    'key' => 'area_name',
                     'field' => 'area_name',
                     'type' => 'string',
                     'label' => __('Area Education')
                 ];
-
-                $newFields[] = [
-                    'key' => 'AreaAdministratives.code',
-                    'field' => 'area_administrative_code',
-                    'type' => 'string',
-                    'label' => __('Area Administrative Code')
-                ];
-
-                $newFields[] = [
-                    'key' => 'AreaAdministratives.name',
-                    'field' => 'area_administrative_name',
-                    'type' => 'string',
-                    'label' => __('Area Administrative')
-                ];
-
                 
-            }
+                $newFields[] = [
+                    'key' => 'InstitutionClasses.name',
+                    'field' => 'class_name',
+                    'type' => 'string',
+                    'label' => __('Institution Class')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'InstitutionSubjects.name',
+                    'field' => 'name',
+                    'type' => 'string',
+                    'label' => __('Subject Name')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'staff_name',
+                    'field' => 'staff_name',
+                    'type' => 'string',
+                    'label' => __('Subject Teacher')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'InstitutionSubjects.no_of_seats',
+                    'field' => 'no_of_seats',
+                    'type' => 'integer',
+                    'label' => __('Number of seats')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'InstitutionSubjects.total_male_students',
+                    'field' => 'total_male_students',
+                    'type' => 'integer',
+                    'label' => __('Male students')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'InstitutionSubjects.total_female_students',
+                    'field' => 'total_female_students',
+                    'type' => 'integer',
+                    'label' => __('Female students')
+                ];
+                
+                $newFields[] = [
+                    'key' => 'total_students',
+                    'field' => 'total_students',
+                    'type' => 'integer',
+                    'label' => __('Total students')
+                ];
+
+            }            
         }
         
         $fields->exchangeArray($newFields); 
