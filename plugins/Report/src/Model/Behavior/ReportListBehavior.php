@@ -2,6 +2,7 @@
 namespace Report\Model\Behavior;
 
 use ArrayObject;
+use ZipArchive;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -20,7 +21,10 @@ class ReportListBehavior extends Behavior {
 	public $ReportProgress;
 
 	public function initialize(array $config) {
+		
 		$this->ReportProgress = TableRegistry::get('Report.ReportProgress');
+		$this->SecurityUsers  = TableRegistry::get('Security.Users');
+		
 	}
 
 	public function implementedEvents() {
@@ -36,6 +40,7 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function afterAction(Event $event, $config) {
+		
 		if ($this->_table->action == 'index') {
 			$this->_table->controller->set('ControllerAction', $config);
 			$this->_table->ControllerAction->renderView('/Reports/index');
@@ -44,10 +49,8 @@ class ReportListBehavior extends Behavior {
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$query = $settings['query'];
-
 		$settings['pagination'] = false;
 		$fields = $this->_table->ControllerAction->getFields($this->ReportProgress);
-
 		$fields['current_records']['visible'] = false;
 		$fields['total_records']['visible'] = false;
 		$fields['error_message']['visible'] = false;
@@ -69,6 +72,7 @@ class ReportListBehavior extends Behavior {
 		$conditions = [
 			$this->ReportProgress->aliasField('module') => $this->_table->alias()
 		];
+		
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$conditions[$this->ReportProgress->aliasField('created_user_id')] = $userId;
@@ -86,12 +90,21 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = ['xlsx' => 'Excel', 'pdf' => 'abc'];
+		
+		
+		if($request->data['Staff']['feature'] == 'Report.StaffPhoto' || $request->data['Students']['feature'] == 'Report.StudentsPhoto'){
+			$attr['options'] = ['zip' => 'Zip'];
+
+		} else {
+			$attr['options'] = ['xlsx' => 'Excel', 'pdf' => 'abc'];
+		}
+
 		$attr['select'] = false;
 		return $attr;
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		
 		$data[$this->_table->alias()]['locale'] = I18n::locale();
 		$session = new Session();
 		$data[$this->_table->alias()]['user_id'] = $session->read('Auth.User.id');
@@ -105,6 +118,7 @@ class ReportListBehavior extends Behavior {
 				return false;
 			}
 		};
+		
 		return $process;
 	}
 
@@ -141,6 +155,7 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
+		
 		$process = $settings['process'];
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
@@ -160,6 +175,7 @@ class ReportListBehavior extends Behavior {
 
 	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
 	{
+		
 		$process = $extra['process'];
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
@@ -242,10 +258,10 @@ class ReportListBehavior extends Behavior {
 
 		$ReportProgress = TableRegistry::get('Report.ReportProgress');
 		$obj = ['name' => $name, 'module' => $alias, 'params' => $params];
-
 		$id = $ReportProgress->addReport($obj);
+
 		if ($id !== false) {
-			$ReportProgress->generate($id);
+			$ReportProgress->generate($id, $obj['params']['format']);
 		}
 	}
 
@@ -269,7 +285,9 @@ class ReportListBehavior extends Behavior {
 				'name' => $filename,
 				'download' => true
 			]);
+
 			return $response;
+
 		} else {
 			$this->ReportProgress->delete($entity);
 			$controller = $this->_table->controller->name;
@@ -279,4 +297,67 @@ class ReportListBehavior extends Behavior {
 			return $this->_table->controller->redirect($url);
 		}
 	}
+
+	private function getFile($phpResourceFile) {
+        $file = '';
+        while (!feof($phpResourceFile)) {
+            $file .= fread($phpResourceFile, 8192);
+        }
+        fclose($phpResourceFile);
+
+        return $file;
+	}
+	
+	public function zipArchievePhoto($id, $module)
+    { 
+		if($module == 'Students'){
+			$where	= ['is_student' =>1, 'photo_content !=' =>''];
+		}
+		if($module == 'Staff'){
+			$where  = ['is_staff' 	=>1, 'photo_content !=' =>''];
+		}
+		
+		$this->_table->controller->autoRender = false;
+		$files = $this->SecurityUsers->find()
+				->select(['id','openemis_no','photo_name','photo_content'])
+				->where($where)
+				->toList();
+		
+        if (!empty($files) ) {
+
+			$path = WWW_ROOT . 'downloads' . DS . lcfirst($module).'-photo' . DS;
+			$zipName = $module.'PhotoReport' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+			$filepath = $path . $zipName;
+			
+			$zip = new ZipArchive;
+			$zip->open($filepath, ZipArchive::CREATE);
+            foreach ($files as $file) {
+
+				  $target_file = basename($file->photo_name);
+                  $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+			      $zip->addFromString($file->openemis_no.'.'.$imageFileType,  $this->getFile($file->photo_content));
+            }
+            $zip->close();
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/zip");
+            header("Content-Length: ".filesize($filepath));
+		    header("Content-Disposition: attachment; filename=".$zipName);
+		    
+            readfile($filepath);
+			// delete file after download
+			// unlink($filepath);
+			 die;
+
+        } else {
+			$controller = $this->_table->controller->name;
+			$table = $this->_table->alias();
+			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
+			$url = ['controller' => $controller, 'action' => $table, 'index'];
+			return $this->_table->controller->redirect($url);
+        }
+    }
 }
