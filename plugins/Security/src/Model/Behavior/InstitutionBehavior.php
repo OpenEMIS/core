@@ -39,8 +39,8 @@ class InstitutionBehavior extends Behavior
 	public function findByAccess(Query $query, array $options)
 	{
 		$userId = $options['userId'];
-
-		if (isset($options["super_admin"]) && $options["super_admin"]) {
+		
+		if ((isset($options["super_admin"]) && $options["super_admin"]) || (isset($options['user']["super_admin"]) && $options['user']["super_admin"])) {
 			return $query;
 		}
 
