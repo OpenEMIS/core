@@ -39,7 +39,10 @@ $this->start('panelBody');
 		<table class="table table-curved" id="ReportList" url="<?= $url ?>" data-downloadtext="<?= $downloadText ?>">
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 			<tbody>
-				<?php foreach ($data as $obj) : ?>
+			
+				<?php foreach ($data as $obj) : 
+					 $fileFormat = json_decode($obj->params);
+				 ?>
 				<tr row-id="<?= $obj->id ?>">
 					<td><?= $obj->name ?></td>
                     <td><?= $table->formatDateTime($obj->created) ?></td>
@@ -73,7 +76,9 @@ $this->start('panelBody');
 							$downloadClass = 'none';
 							$errorClass = '';
 						}
-						echo $this->Html->link(__('Download'), ['action' => $ControllerAction['table']->alias(), 'download', $obj->id], ['class' => $downloadClass, 'target' => '_self'], []);
+						
+						$downloadOptions = ($fileFormat->format == 'zip')?'zipArchievePhoto':'download';
+						echo $this->Html->link(__('Download'), ['action' => $ControllerAction['table']->alias(), $downloadOptions, $obj->id, $ControllerAction['table']->alias()], ['class' => $downloadClass, 'target' => '_self'], []);
 						?>
 						<a href="#" data-toggle="tooltip" title="<?= __('Please contact the administrator for assistance.') ?>" class="<?php echo $errorClass ?>"><?php echo __('Error') ?></a>
 					</td>
