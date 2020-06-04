@@ -72,11 +72,17 @@ class ReportsController extends AppController
                 'Report.InstitutionCases' => __('Cases'),
                 'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
                 //'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
-                'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs')
+                'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
+                'Report.WashReports' => __('Wash Report'),
+                'Report.Guardians' => __('Guardians'),
+                'Report.InstitutionInfrastructures' => __('Infrastructure'),
+                'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
+                'Report.InstitutionCommittees' => __('Committees')
             ];
         } elseif ($module == 'Students') {
             $options = [
                 'Report.Students' => __('Students'),
+                'Report.StudentsPhoto' => __('Students Photo'), 
                 'Report.StudentIdentities' => __('Identities'),
                 'Report.StudentContacts' => __('Contacts'),
                 'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
@@ -85,6 +91,7 @@ class ReportsController extends AppController
         } elseif ($module == 'Staff') {
             $options = [
                 'Report.Staff' => __('Staff'),
+                'Report.StaffPhoto' => __('Staff Photo'),
                 'Report.StaffIdentities' => __('Identities'),
                 'Report.StaffContacts' => __('Contacts'),
                 'Report.StaffQualifications' => __('Qualifications'),
