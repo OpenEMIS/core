@@ -2,6 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use ZipArchive;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -24,7 +25,7 @@ class StudentsTable extends AppTable
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
         $this->addBehavior('Excel', [
-            'excludes' => ['is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status'],
+            'excludes' => ['is_student', 'photo_name', 'is_staff', 'is_guardian',  'super_admin', 'status'],
             'pages' => false,
             'autoFields' => false
         ]);
@@ -37,6 +38,14 @@ class StudentsTable extends AppTable
         ]);
     }
 
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
+        return $events;
+    }
+
     public function beforeAction(Event $event)
     {
         $this->fields = [];
@@ -47,11 +56,14 @@ class StudentsTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+         $attr['onChangeReload'] = true;
         return $attr;
     }
 
+   
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+      
         $query
             ->select([
                 'username' => 'Students.username',
@@ -74,14 +86,16 @@ class StudentsTable extends AppTable
                 'identity_number' => 'Students.identity_number',
                 'external_reference' => 'Students.external_reference',
                 'last_login' => 'Students.last_login',
-                'preferred_language' => 'Students.preferred_language'
-            ])
+                'preferred_language' => 'Students.preferred_language',
+             ])
             ->contain(['Genders', 'AddressAreas', 'BirthplaceAreas', 'MainNationalities', 'MainIdentityTypes'])
             ->where([$this->aliasField('is_student') => 1]);
+            
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
     {
+        
         foreach ($fields as $key => $field) { 
             if ($field['field'] == 'identity_type_id') { 
                 $fields[$key] = [
@@ -128,5 +142,12 @@ class StudentsTable extends AppTable
                 ];
             }
         }
+    }
+
+    public function startStudentsPhotoDownload() {
+            
+        $cmd  = ROOT . DS . 'bin' . DS . 'cake StudentsPhotoDownload';
+        $logs = ROOT . DS . 'logs' . DS . 'StudentsPhotoDownload.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
     }
 }
