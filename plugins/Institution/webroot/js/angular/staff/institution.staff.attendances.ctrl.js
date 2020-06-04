@@ -10,6 +10,11 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     vm.excelUrl = '';
     vm.staffId;
     vm.institutionId;
+	vm.ownView = 0;
+    vm.ownEdit = 0;
+    vm.otherView = 0;
+    vm.otherEdit = 0;
+    vm.permissionStaffId = 0;
     vm.history = false;
     vm.academicPeriodOptions = [];
     vm.selectedAcademicPeriod = '';
@@ -177,6 +182,10 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
             week_end_day: vm.selectedEndDate,
             day_id: vm.selectedDay,
             day_date: vm.selectedDayDate,
+			own_attendance_view: vm.ownView,
+            own_attendance_edit: vm.ownEdit,
+            other_attendance_view: vm.otherView,
+            other_attendance_edit: vm.otherEdit,
         };
     }
 
@@ -294,6 +303,9 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
 
     vm.onEditClick = function() {
         vm.action = 'edit';
+		vm.gridOptions.context.ownEdit = vm.ownEdit;
+        vm.gridOptions.context.otherEdit = vm.otherEdit;
+        vm.gridOptions.context.permissionStaffId = vm.permissionStaffId;  
         vm.gridOptions.context.action = vm.action;
         vm.setColumnDef();
         AlertSvc.info($scope, 'Attendance will be saved automatically.');
