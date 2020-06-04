@@ -1238,7 +1238,7 @@ class UsersTable extends AppTable
     
     public function beforeFind(Event $event, Query $query, ArrayObject $options) {
         $deviceRequest = $_REQUEST['_device'];
-        if(!empty($deviceRequest)){
+        if(!empty($deviceRequest) && $deviceRequest == true){
             $query->formatResults(function($results) {
                 return $results->map(function($row) {                
                     if (!empty($row->photo_name)) {                    
