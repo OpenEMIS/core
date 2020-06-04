@@ -2284,4 +2284,18 @@ class StaffTable extends ControllerActionTable
             });
         return $query;
     }
+    
+    public function beforeFind(Event $event, Query $query, ArrayObject $options) {
+        $deviceRequest = $_REQUEST['_device'];
+        if(!empty($deviceRequest)){
+            $query->formatResults(function($results) {
+                return $results->map(function($row) {               
+                    if (!empty($row['photo_name'])) {                    
+                        $row['user_avatar'] = base64_encode(stream_get_contents($row['photo_content']));
+                    }               
+                    return $row;
+                });
+            });
+        }
+    }
 }

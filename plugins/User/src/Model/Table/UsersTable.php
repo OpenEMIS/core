@@ -1235,4 +1235,32 @@ class UsersTable extends AppTable
         // update the user email with preferred email
         $this->updateAll(['email' => $email], ['id' => $securityUserId]);
     }
+    
+    public function beforeFind(Event $event, Query $query, ArrayObject $options) {
+        $deviceRequest = $_REQUEST['_device'];
+        if(!empty($deviceRequest)){
+            $query->formatResults(function($results) {
+                return $results->map(function($row) {                
+                    if (!empty($row->photo_name)) {                    
+                        $row->user_avatar = base64_encode(stream_get_contents($row->photo_content));
+                    }               
+                    return $row;
+                });
+            });
+        }
+    }
+    
+    public function findUserAvatar(Query $query, array $options)
+    {
+        $userAvatar = '';
+        $staffId = $options['staff_id'];
+        $userDetail = $query->where(['id'=>$staffId])->first();
+        if(!empty($userDetail->photo_content)){
+            $fileContent = $userDetail->photo_content;
+            $userAvatar = base64_encode(stream_get_contents($fileContent));
+        }
+        
+        echo json_encode(['status'=>200,'user_avatar' => $userAvatar]);
+        die;
+    }
 }
