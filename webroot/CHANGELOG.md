@@ -1,3 +1,15 @@
+### [3.51.0] - 2020-6-04
+- Implemented Administration > Attendance: Develop feature to rename Attendance periods	
+- Implemented Reports > Institution > WASH Report
+- Implemented Reports > Institution > Infrastructure Report
+- Implemented Reports > Institution > Special Needs Facilities
+- Implemented Reports > Institution > Guardians Report
+- Implemented Reports > Institution > Committees Report (PTA and School Board)
+- Implemented Reports > Institution > Body Mass Report
+- Implemented Reports > Institution > Subject Report
+- Implemented Reports > Institution > Classes Report
+- Implemented Reports > Student/Staff > Photo Report
+
 ### [3.50.3] - 2020-5-08
 - Bug Fixed API: Fetch Institutions data on behalf of the user role.
 
