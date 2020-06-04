@@ -2,6 +2,8 @@
 namespace Security\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 
 class SecurityRoleFunctionsTable extends AppTable
 {
@@ -10,5 +12,19 @@ class SecurityRoleFunctionsTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
         $this->belongsTo('SecurityFunctions', ['className' => 'Security.SecurityFunctions']);
+    }
+	
+	public function findAllSecurityRoleFunctions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $userId = $options['user']['id'];
+       
+        $userAccessRoles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
+        
+        $query  ->contain(['SecurityRoles', 'SecurityFunctions'])
+                ->where([
+                    $this->aliasField('security_role_id IN')=>$userAccessRoles
+                ]);
+        
     }
 }
