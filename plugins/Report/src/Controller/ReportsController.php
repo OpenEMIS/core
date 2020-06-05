@@ -80,7 +80,8 @@ class ReportsController extends AppController
                 'Report.StudentIdentities' => __('Identities'),
                 'Report.StudentContacts' => __('Contacts'),
                 'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
-                'Report.StudentGuardians' => __('Guardians') 
+                'Report.StudentGuardians' => __('Guardians'),
+                'Report.StudentNotAssignedClass' => __('Not Assigned to Class')
             ];
         } elseif ($module == 'Staff') {
             $options = [
