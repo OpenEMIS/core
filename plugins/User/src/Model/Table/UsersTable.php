@@ -1240,7 +1240,8 @@ class UsersTable extends AppTable
         $deviceRequest = $_REQUEST['_device'];
         if(!empty($deviceRequest) && $deviceRequest == true){
             $query->formatResults(function($results) {
-                return $results->map(function($row) {                
+                return $results->map(function($row) { 
+                    $row->user_avatar = '';
                     if (!empty($row->photo_name)) {                    
                         $row->user_avatar = base64_encode(stream_get_contents($row->photo_content));
                     }               
