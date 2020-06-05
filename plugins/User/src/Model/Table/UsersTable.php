@@ -1240,7 +1240,9 @@ class UsersTable extends AppTable
         $deviceRequest = $_REQUEST['_device'];
         if(!empty($deviceRequest) && $deviceRequest == true){
             $query->formatResults(function($results) {
-                return $results->map(function($row) {                
+                return $results->map(function($row) { 
+                    $row->user_avatar = null;
+					
                     if (!empty($row->photo_name)) {                    
                         $row->user_avatar = base64_encode(stream_get_contents($row->photo_content));
                     }               
@@ -1258,9 +1260,11 @@ class UsersTable extends AppTable
         if(!empty($userDetail->photo_content)){
             $fileContent = $userDetail->photo_content;
             $userAvatar = base64_encode(stream_get_contents($fileContent));
-        }
+			 echo json_encode(['status'=>200,'user_avatar' => $userAvatar]);
+        } else {
+			 echo json_encode(['status'=>404,'user_avatar' => null]);
+		}
         
-        echo json_encode(['status'=>200,'user_avatar' => $userAvatar]);
         die;
     }
 }
