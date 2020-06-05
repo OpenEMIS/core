@@ -619,7 +619,7 @@ class InstitutionsTable extends AppTable
 			
             if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports',
 			'Report.Guardians',
-			 'Report.InstitutionInfrastructures'
+			 'Report.InstitutionInfrastructures','Report.SubjectBookLists'
 			])) {
 
                 $TypesTable = TableRegistry::get('Institution.Types');
@@ -683,7 +683,8 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
 			
             if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports', 'Report.Guardians',
-			      'Report.InstitutionInfrastructures', 'Report.InstitutionClasses', 'Report.SpecialNeedsFacilities', 'Report.InstitutionCommittees'
+                  'Report.InstitutionInfrastructures', 'Report.InstitutionClasses', 'Report.SpecialNeedsFacilities', 'Report.InstitutionCommittees',
+                  'Report.SubjectBookList'
 				  ])) {
 
 
