@@ -1,3 +1,9 @@
+### [3.51.1] - 2020-6-05
+- Bug Fixed: API for Staff Photo > Not able to fetch staff photo
+- Bug Fixed: API for fetching of Staff List as per user authentication
+- Bug Fixed: API for fetching Institutions as per user login and role
+- Bug Fixed: API Staff can only see their own name on Attendance > Staff
+
 ### [3.51.0] - 2020-6-04
 - Implemented Administration > Attendance: Develop feature to rename Attendance periods	
 - Implemented Reports > Institution > WASH Report
