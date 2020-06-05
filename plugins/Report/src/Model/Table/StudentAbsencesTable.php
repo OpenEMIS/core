@@ -40,13 +40,16 @@ class StudentAbsencesTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
+        $institution_id = $requestData->institution_id;
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $Genders = TableRegistry::get('User.Genders');
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $Users = TableRegistry::get('User.Users');
+        $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
+        $Guardians = TableRegistry::get('Security.Users');
 
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -77,14 +80,20 @@ class StudentAbsencesTable extends AppTable
                 'education_grade' => $EducationGrades->aliasField('name'),
                 'gender' => $Genders->aliasField('name'),
                 'identity_type' => $IdentityTypes->aliasField('name'),
-                'identity_number' => 'Users.identity_number'
+                'identity_number' => 'Users.identity_number',
+                'addresss' => 'Users.address'
             ]) 
-            ->contain([
-                'Users',
+            ->contain([                
                 'Institutions.Areas.AreaLevels',
                 'Institutions.AreaAdministratives',
                 'InstitutionClasses'
-            ])           
+            ])     
+            ->leftJoin(
+                [$Users->alias() => $Users->table()],
+                    [
+                        $Users->aliasField('id = ') . $this->aliasField('student_id')
+                    ]
+            )      
             ->leftJoin(
                     [$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],
                     [
@@ -100,31 +109,25 @@ class StudentAbsencesTable extends AppTable
             ->leftJoin(
                     [$Genders->alias() => $Genders->table()],
                     [
-                        $Genders->aliasField('id = ') . 'Users.gender_id'
+                        $Genders->aliasField('id = ') . $Users->aliasField('gender_id')
                     ]
                 )
             ->leftJoin(
                     [$IdentityTypes->alias() => $IdentityTypes->table()],
                     [
-                        $IdentityTypes->aliasField('id = ') . 'Users.identity_type_id'
+                        $IdentityTypes->aliasField('id = ') . $Users->aliasField('identity_type_id')
                     ]
-                )
-            ->leftJoin(
-                    [$IdentityTypes->alias() => $IdentityTypes->table()],
-                    [
-                        $IdentityTypes->aliasField('id = ') . 'Users.identity_type_id'
-                    ]
-                )            
+                )     
             ->where([
                 $this->aliasField('date >= ') => $startDate,
-                $this->aliasField('date <= ') => $endDate
+                $this->aliasField('date <= ') => $endDate,
+                $this->aliasField('institution_id = ') => $institution_id
             ])
             ->order([
                 $this->aliasField('student_id'),
                 $this->aliasField('institution_id'),
                 $this->aliasField('date')
             ]);
-          echo "<pre>";print_r($query);die;
     }
 
     // To select another one more field from the containable data
@@ -194,18 +197,6 @@ class StudentAbsencesTable extends AppTable
             'type' => 'string',
             'label' => __('Date')
         ];
-        // $newArray[] = [
-        //     'key' => 'StudentAbsences.absences',
-        //     'field' => 'absences',
-        //     'type' => 'string',
-        //     'label' => __('Absences')
-        // ];
-        // $newArray[] = [
-        //     'key' => 'StudentAbsences.comment',
-        //     'field' => 'comment',
-        //     'type' => 'text',
-        //     'label' => __('Comment')
-        // ];
         $newArray[] = [
             'key' => 'StudentAbsences.absence_type_id',
             'field' => 'absence_type_id',
@@ -229,6 +220,24 @@ class StudentAbsencesTable extends AppTable
             'field' => 'gender',
             'type' => 'string',
             'label' => __('Gender'),
+        ];
+        $newArray[] = [
+            'key' => 'IdentityTypes.name',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Default Identity Type'),
+        ];
+        $newArray[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'identity_number',
+            'type' => 'integer',
+            'label' => __('Identity Number'),
+        ];
+        $newArray[] = [
+            'key' => 'Users.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => __('Address'),
         ];
         $fields->exchangeArray($newArray);
     }

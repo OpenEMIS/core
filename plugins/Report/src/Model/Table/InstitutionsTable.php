@@ -586,7 +586,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses'])) {
+            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.StudentAbsences'])) {
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
                     $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
@@ -599,6 +599,25 @@ class InstitutionsTable extends AppTable
                         ])
                         ->where([
                             $InstitutionsTable->aliasField('institution_type_id') => $institutionTypeId
+                        ])
+                        ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
+                } else {
+                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
                         ])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
