@@ -19,10 +19,11 @@ class SecurityRoleFunctionsTable extends AppTable
         $institutionId = $options['institution_id'];
         $userId = $options['user']['id'];
         $superAdmin = $options['user']['super_admin'];
-        
-        if($superAdmin == 0){  // if he is not super admin
+		
+        // if he is not super admin
+        if($superAdmin == 0){  
             $userAccessRoles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-            $query  ->contain(['SecurityRoles', 'SecurityFunctions'])
+            $query->contain(['SecurityRoles', 'SecurityFunctions'])
                 ->where([
                     $this->aliasField('security_role_id IN')=>$userAccessRoles
                 ]);
