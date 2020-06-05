@@ -1001,6 +1001,12 @@ class InstitutionsController extends AppController
             $_edit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'edit']);
             $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
             $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
+			$_ownView = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'ownview']);
+            $_ownEdit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'ownedit']);
+            $_otherView = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'otherview']);
+            $_otherEdit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'otheredit']);
+            $_permissionStaffId = $this->Auth->user('id');
+			
             if (!empty($this->request->param('institutionId'))) {
                 $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
             } else {
@@ -1027,6 +1033,11 @@ class InstitutionsController extends AppController
             $this->set('importUrl', Router::url($importUrl));
             $this->set('_import', $_import);
             $this->set('_edit', $_edit);
+			$this->set('_ownEdit', $_ownEdit);
+            $this->set('_ownView', $_ownView);
+            $this->set('_otherEdit', $_otherEdit);
+            $this->set('_otherView', $_otherView);
+            $this->set('_permissionStaffId', $_permissionStaffId);
             $this->set('_excel', $_excel);
             $this->set('_history', $_history);
             $this->set('institution_id', $institutionId);
