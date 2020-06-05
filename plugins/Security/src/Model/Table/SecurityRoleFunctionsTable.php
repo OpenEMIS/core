@@ -14,17 +14,20 @@ class SecurityRoleFunctionsTable extends AppTable
         $this->belongsTo('SecurityFunctions', ['className' => 'Security.SecurityFunctions']);
     }
 	
-	public function findAllSecurityRoleFunctions(Query $query, array $options)
+    public function findAllSecurityRoleFunctions(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $userId = $options['user']['id'];
-       
-        $userAccessRoles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
-        
-        $query  ->contain(['SecurityRoles', 'SecurityFunctions'])
+        $superAdmin = $options['user']['super_admin'];
+		
+        // if he is not super admin
+        if($superAdmin == 0){  
+            $userAccessRoles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+            $query->contain(['SecurityRoles', 'SecurityFunctions'])
                 ->where([
                     $this->aliasField('security_role_id IN')=>$userAccessRoles
                 ]);
+        }
         
     }
 }
