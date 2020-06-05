@@ -1262,7 +1262,7 @@ class UsersTable extends AppTable
             $userAvatar = base64_encode(stream_get_contents($fileContent));
 			 echo json_encode(['status'=>200,'user_avatar' => $userAvatar]);
         } else {
-			 echo json_encode(['status'=>200,'user_avatar' => null]);
+			 echo json_encode(['status'=>404,'user_avatar' => null]);
 		}
         
         die;
