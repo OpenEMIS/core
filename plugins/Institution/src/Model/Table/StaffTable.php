@@ -2081,6 +2081,8 @@ class StaffTable extends ControllerActionTable
         $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
+		$ownAttendanceView = $options['own_attendance_view'];
+        $otherAttendanceView = $options['other_attendance_view'];
 
         $weekStartDate = $options['week_start_day'];
         $weekEndDate = $options['week_end_day'];
@@ -2178,6 +2180,21 @@ class StaffTable extends ControllerActionTable
                 ]
             ];
         }
+		
+		if ($options['user']['super_admin'] == 0) {
+            if($ownAttendanceView == 1 && $otherAttendanceView == 0){
+                $staffId = $options['user']['id'];
+                $conditionQuery[$this->aliasField('staff_id')] = $options['user']['id'];
+            }elseif($ownAttendanceView == 0 && $otherAttendanceView == 1){
+                $staffId = $options['user']['id'];
+                $conditionQuery[$this->aliasField('staff_id != ')] = $options['user']['id'];
+            }elseif($ownAttendanceView == 0 && $otherAttendanceView == 0){
+				$staffId = "";
+                $conditionQuery[$this->aliasField('staff_id = ')] = "";
+            }
+         }
+		
+		
         $query = $query
             ->matching('Users')
             ->where(
@@ -2197,6 +2214,11 @@ class StaffTable extends ControllerActionTable
                     $staffId = $row->staff_id;
                     $staffRecords = [];
                     $staffLeaveRecords = [];
+					
+					if(!empty($row->_matchingData['Users']->photo_name)){
+                        $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                    } 
+					
                     if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
                         $staffRecords = $attendanceByStaffIdRecords[$staffId];
                     }
@@ -2283,5 +2305,21 @@ class StaffTable extends ControllerActionTable
                 });
             });
         return $query;
+    }
+    
+    public function beforeFind(Event $event, Query $query, ArrayObject $options) {
+        $deviceRequest = $_REQUEST['_device'];
+        if(!empty($deviceRequest) && $deviceRequest == true){
+            $query->formatResults(function($results) {
+                return $results->map(function($row) { 
+                    $row['user_avatar'] = null;
+					
+                    if (!empty($row->user->photo_name)) {                    
+                        $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
+                    }               
+                    return $row;
+                });
+            });
+        }
     }
 }
