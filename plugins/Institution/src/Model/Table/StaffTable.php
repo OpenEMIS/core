@@ -2290,8 +2290,8 @@ class StaffTable extends ControllerActionTable
         if(!empty($deviceRequest) && $deviceRequest == true){
             $query->formatResults(function($results) {
                 return $results->map(function($row) {               
-                    if (!empty($row['photo_name'])) {                    
-                        $row['user_avatar'] = base64_encode(stream_get_contents($row['photo_content']));
+                    if (!empty($row->user->photo_name)) {                    
+                        $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
                     }               
                     return $row;
                 });
