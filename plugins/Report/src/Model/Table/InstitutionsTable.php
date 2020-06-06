@@ -563,7 +563,7 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['academic_period_id'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords'])) {
+            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords','Report.SubjectsBookLists'])) {
                 $EducationGrades = TableRegistry::get('Education.EducationGrades');
                 $gradeOptions = $EducationGrades
                     ->find('list', [
@@ -619,7 +619,7 @@ class InstitutionsTable extends AppTable
 			
             if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports',
 			'Report.Guardians',
-			 'Report.InstitutionInfrastructures','Report.SubjectBookLists'
+			 'Report.InstitutionInfrastructures','Report.SubjectsBookLists'
 			])) {
 
                 $TypesTable = TableRegistry::get('Institution.Types');
@@ -684,7 +684,7 @@ class InstitutionsTable extends AppTable
 			
             if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports', 'Report.Guardians',
                   'Report.InstitutionInfrastructures', 'Report.InstitutionClasses', 'Report.SpecialNeedsFacilities', 'Report.InstitutionCommittees',
-                  'Report.SubjectBookList'
+                  'Report.SubjectsBookLists'
 				  ])) {
 
 
@@ -853,7 +853,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects'])) {
+            if (in_array($feature, ['Report.InstitutionSubjects','Report.SubjectsBookLists'])) {
                 $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
                 $subjectOptions = $EducationSubjects
                     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
