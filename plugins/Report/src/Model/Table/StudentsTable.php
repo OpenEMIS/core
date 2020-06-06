@@ -38,7 +38,7 @@ class StudentsTable extends AppTable
             'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
     }
-
+     
 
     public function implementedEvents()
     {
@@ -74,6 +74,32 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']); 
         $this->ControllerAction->field('health_report_type', ['type' => 'hidden']); 
     }
+
+    public function validationStudentsRiskAssessment(Validator $validator)
+   {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+        //->notEmpty('institution_type_id')
+        ->notEmpty('institution_id');
+        return $validator;
+   }
+
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+   {
+        if ($data[$this->alias()]['feature'] == 'Report.StudentsRiskAssessment') {
+        $options['validate'] = 'StudentsRiskAssessment';
+        }
+   }
+
+    public function addBeforeAction(Event $event)
+    {
+    $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
+    $this->ControllerAction->field('position_filter', ['type' => 'hidden']);
+    $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+    $this->ControllerAction->field('risk_type', ['type' => 'hidden']); 
+    $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
+    $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
+   }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
@@ -236,6 +262,142 @@ class StudentsTable extends AppTable
             return $attr;
         }
     }
+
+public function onUpdateFieldRiskType(Event $event, array $attr, $action, Request $request)
+{
+if (isset($request->data[$this->alias()]['feature'])) {
+$feature = $this->request->data[$this->alias()]['feature'];
+
+if ((in_array($feature, ['Report.StudentsRiskAssessment']))
+) {
+$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+$academicPeriodId = $AcademicPeriodTable->getCurrent();
+
+if (!empty($request->data[$this->alias()]['academic_period_id'])) {
+$academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+}
+
+$RiskTable = TableRegistry::get('Institution.Risks');
+$riskOptions = [];
+$riskOptions = $RiskTable->find('list', [
+'keyField' => 'id',
+'valueField' => 'name'
+])->where(['academic_period_id' => $academicPeriodId])->toArray();
+$attr['options'] = $riskOptions;
+$attr['type'] = 'select';
+$attr['select'] = false;
+$attr['onChangeReload'] = true;
+
+return $attr;
+}
+}
+}
+     
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+        $feature = $this->request->data[$this->alias()]['feature'];
+        if (in_array($feature, ['Report.StudentsRiskAssessment'])) {
+        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodOptions = $AcademicPeriodTable->getYearList();
+
+        $attr['options'] = $academicPeriodOptions;
+        $attr['type'] = 'select';
+        $attr['select'] = false;
+        $attr['onChangeReload'] = true;
+
+
+        if (empty($request->data[$this->alias()]['academic_period_id'])) {
+        reset($academicPeriodOptions);
+        $request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
+        }
+        return $attr;
+        }
+        }
+   }
+
+   public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+   {
+   if (isset($this->request->data[$this->alias()]['feature'])) {
+   $feature = $this->request->data[$this->alias()]['feature'];
+   
+   if (in_array($feature, ['Report.StudentsRiskAssessment',
+   'Report.HealthReports'
+   ])) {
+   
+   
+   $institutionList = [];
+   if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
+   $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
+   
+   $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+   $institutionQuery = $InstitutionsTable
+   ->find('list', [
+   'keyField' => 'id',
+   'valueField' => 'code_name'
+   ])
+   ->where([
+   $InstitutionsTable->aliasField('institution_type_id') => $institutionTypeId
+   ])
+   ->order([
+   $InstitutionsTable->aliasField('code') => 'ASC',
+   $InstitutionsTable->aliasField('name') => 'ASC'
+   ]);
+   
+   $superAdmin = $this->Auth->user('super_admin');
+   if (!$superAdmin) { // if user is not super admin, the list will be filtered
+   $userId = $this->Auth->user('id');
+   $institutionQuery->find('byAccess', ['userId' => $userId]);
+   }
+   
+   $institutionList = $institutionQuery->toArray();
+   } else {
+   
+   $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+   $institutionQuery = $InstitutionsTable
+   ->find('list', [
+   'keyField' => 'id',
+   'valueField' => 'code_name'
+   ])
+   ->order([
+   $InstitutionsTable->aliasField('code') => 'ASC',
+   $InstitutionsTable->aliasField('name') => 'ASC'
+   ]);
+   
+   $superAdmin = $this->Auth->user('super_admin');
+   if (!$superAdmin) { // if user is not super admin, the list will be filtered
+   $userId = $this->Auth->user('id');
+   $institutionQuery->find('byAccess', ['userId' => $userId]);
+   }
+   
+   $institutionList = $institutionQuery->toArray();
+   }
+   
+   if (empty($institutionList)) {
+   $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
+   $attr['type'] = 'select';
+   $attr['options'] = $institutionOptions;
+   $attr['attr']['required'] = true;
+   } else {
+   
+   if (in_array($feature, ['Report.BodyMassStatusReports'])) {
+   $institutionOptions = ['' => '-- ' . _('Select') . ' --', '0' => _('All Institutions')] + $institutionList;
+   }elseif (in_array($feature, ['Report.HealthReports'])) {
+   $institutionOptions = ['' => '-- ' . _('Select') . ' --', '0' => _('All Institutions'),'-1' => __('No Institutions')] + $institutionList;
+   } else {
+   $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+   }
+   
+   $attr['type'] = 'chosenSelect';
+   $attr['onChangeReload'] = true;
+   $attr['attr']['multiple'] = false;
+   $attr['options'] = $institutionOptions;
+   $attr['attr']['required'] = true;
+   }
+   }
+   return $attr;
+   }
+   }
 
    
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)

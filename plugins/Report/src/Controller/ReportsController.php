@@ -77,7 +77,8 @@ class ReportsController extends AppController
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
-                'Report.InstitutionCommittees' => __('Committees')
+                'Report.InstitutionCommittees' => __('Committees'),
+            
             ];
         } elseif ($module == 'Students') {
             $options = [
@@ -88,7 +89,8 @@ class ReportsController extends AppController
                 'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
                 'Report.StudentGuardians' => __('Guardians'),
                 'Report.HealthReports' => __('Student Health Report'),
-                'Report.BodyMassStatusReports' => __('BMI Status Report')
+                'Report.BodyMassStatusReports' => __('BMI Status Report'), 
+                'Report.StudentsRiskAssessment' => __('Risk Assessment Report') 
             ];
         } elseif ($module == 'Staff') {
             $options = [
