@@ -54,6 +54,7 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('format');
     }
     
+<<<<<<< HEAD
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if ($data[$this->alias()]['feature'] == 'Report.BodyMassStatusReports') {
@@ -64,14 +65,20 @@ class StudentsTable extends AppTable
 
     }
     
+=======
+>>>>>>> POCOR-5162
     public function addBeforeAction(Event $event)
     {
         $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('position_filter', ['type' => 'hidden']);       
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
+<<<<<<< HEAD
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']); 
         $this->ControllerAction->field('health_report_type', ['type' => 'hidden']); 
+=======
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden']);        
+>>>>>>> POCOR-5162
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -81,6 +88,7 @@ class StudentsTable extends AppTable
         return $attr;
     }
     
+<<<<<<< HEAD
     public function validationHealthReports(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
@@ -126,12 +134,18 @@ class StudentsTable extends AppTable
         }
     }
         
+=======
+>>>>>>> POCOR-5162
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 			
+<<<<<<< HEAD
             if ((in_array($feature, ['Report.BodyMassStatusReports','Report.HealthReports']))
+=======
+            if ((in_array($feature, ['Report.BodyMassStatusReports']))
+>>>>>>> POCOR-5162
                 ) {
 
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -158,6 +172,7 @@ class StudentsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 			
+<<<<<<< HEAD
             if (in_array($feature, ['Report.BodyMassStatusReports',
                                     'Report.HealthReports'
 				  ])) {
@@ -235,7 +250,82 @@ class StudentsTable extends AppTable
             return $attr;
         }
     }
+=======
+            if (in_array($feature, ['Report.BodyMassStatusReports'
+				  ])) {
 
+>>>>>>> POCOR-5162
+
+                $institutionList = [];
+                if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
+                    $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
+
+                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->where([
+                            $InstitutionsTable->aliasField('institution_type_id') => $institutionTypeId
+                        ])
+                        ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
+                } else {
+					
+                   $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                           'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->order([
+                           $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
+                }
+
+                if (empty($institutionList)) {
+                    $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    $attr['type'] = 'select';
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+					
+                    if (in_array($feature, ['Report.BodyMassStatusReports'])) {
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                    } else {
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                    }
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                }
+            }
+            return $attr;
+        }
+    }
    
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
