@@ -233,21 +233,21 @@ class StudentAbsencesTable extends AppTable
             'type' => 'integer',
             'label' => __('Identity Number'),
         ];
+        
         $newArray[] = [
             'key' => 'Users.address',
             'field' => 'address',
             'type' => 'string',
             'label' => __('Address'),
         ];
+
         $fields->exchangeArray($newArray);
     }
 
     public function onExcelGetDate(Event $event, Entity $entity)
     {
         return $this->formatDate($entity->date);
-    }
-
-    
+    }    
 
     public function onExcelGetAbsenceTypeId(Event $event, Entity $entity)
     {
