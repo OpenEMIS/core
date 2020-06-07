@@ -10,7 +10,6 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
 
 class StudentsTable extends AppTable
 {
