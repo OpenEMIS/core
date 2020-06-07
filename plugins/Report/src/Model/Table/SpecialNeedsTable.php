@@ -202,7 +202,7 @@ class SpecialNeedsTable extends AppTable
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => 'OpenEmisId',
+            'label' => 'OpenEmis Id',
         ];
         $newFields[] = [
             'key' => '',
@@ -233,19 +233,19 @@ class SpecialNeedsTable extends AppTable
             'key' => 'SpecialNeedsTypes.name',
             'field' => 'special_need_type',
             'type' => 'string',
-            'label' => 'Special Needs Type',
+            'label' => 'Disability Type',
         ];
         $newFields[] = [
             'key' => 'SpecialNeedsDifficulties.name',
             'field' => 'special_need_difficulty_type',
             'type' => 'string',
-            'label' => 'Special Needs Difficulty Type',
+            'label' => 'Difficulty Type',
         ];
         $newFields[] = [
             'key' => 'SpecialNeedsServiceTypes.name',
             'field' => 'special_need_service_type',
             'type' => 'string',
-            'label' => 'Special Needs Service Type',
+            'label' => 'Program Assigned',
         ];
         $newFields[] = [
             'key' => 'SpecialNeedsServices.organization',
@@ -257,7 +257,7 @@ class SpecialNeedsTable extends AppTable
             'key' => 'GuardianRelations.name',
             'field' => 'guardian_relation',
             'type' => 'string',
-            'label' => 'Guardian Relation',
+            'label' => 'Guardian Relations',
         ];
         $newFields[] = [
             'key' => 'GuardianRelations.openemis_no',
