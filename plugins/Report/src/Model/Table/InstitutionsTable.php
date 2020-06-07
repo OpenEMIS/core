@@ -734,23 +734,23 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-			
-            if (in_array($feature, 
-                        [
-                            'Report.InstitutionSubjects', 
-                            'Report.StudentAttendanceSummary',
-                            'Report.StaffAttendances', 
-                            'Report.BodyMasses', 
-                            'Report.WashReports', 
-                            'Report.Guardians',
-                            'Report.InstitutionInfrastructures',
-                            'Report.InstitutionClasses', 
-                            'Report.SpecialNeedsFacilities', 
-                            'Report.InstitutionCommittees',
-                            'Report.SubjectsBookLists'
-                        ])
-                  ) {
+			$reportModels = [
+                'Report.InstitutionSubjects', 
+                'Report.StudentAttendanceSummary',
+                'Report.StaffAttendances',
+                'Report.BodyMasses',
+				'Report.WashReports', 
+				'Report.Guardians',
+				'Report.InstitutionInfrastructures',
+				'Report.InstitutionClasses', 
+				'Report.SpecialNeedsFacilities', 
+				'Report.InstitutionCommittees',
+				'Report.SubjectsBookLists',
+                'Report.StudentAbsences'
+            ];
 
+            
+            if (in_array($feature, $reportModels)) {
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
                     $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
