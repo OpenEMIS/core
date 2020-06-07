@@ -13,6 +13,10 @@ use App\Model\Table\AppTable;;
 
 class StudentsTable extends AppTable
 {
+	const NO_FILTER = 0;
+    const NO_STUDENT = 1;
+    const NO_STAFF = 2;
+	
     public function initialize(array $config)
     {
         $this->table('security_users');
@@ -91,6 +95,8 @@ class StudentsTable extends AppTable
 			$options['validate'] = 'StudentsRiskAssessment';
         } else if ($data[$this->alias()]['feature'] == 'Report.SubjectsBookLists') {
             $options['validate'] = 'SubjectsBookLists';
+        } else if ($data[$this->alias()]['feature'] == 'Report.StudentNotAssignedClass') {
+            $options['validate'] = 'StudentNotAssignedClass';
         }
 
     }
@@ -106,12 +112,7 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('health_report_type', ['type' => 'hidden']); 
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        if ($data[$this->alias()]['feature'] == 'Report.StudentNotAssignedClass') {
-            $options['validate'] = 'StudentNotAssignedClass';
-        }
-    }
+   
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
