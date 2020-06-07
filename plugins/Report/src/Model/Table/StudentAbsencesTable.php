@@ -50,6 +50,8 @@ class StudentAbsencesTable extends AppTable
         $Users = TableRegistry::get('User.Users');
         $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
         $Guardians = TableRegistry::get('Security.Users');
+        $UserContacts = TableRegistry::get('UserContacts');
+        $GuardianUser = TableRegistry::get('Security.Users');
 
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -81,7 +83,13 @@ class StudentAbsencesTable extends AppTable
                 'gender' => $Genders->aliasField('name'),
                 'identity_type' => $IdentityTypes->aliasField('name'),
                 'identity_number' => 'Users.identity_number',
-                'addresss' => 'Users.address'
+                'addresss' => 'Users.address',
+                'contact' => 'UserContacts.value',
+                'guardian_name' => $GuardianUser->find()->func()->concat([
+                    'GuardianUser.first_name' => 'literal',
+                    " - ",
+                    'GuardianUser.last_name' => 'literal'
+                ])
             ]) 
             ->contain([                
                 'Institutions.Areas.AreaLevels',
@@ -117,7 +125,24 @@ class StudentAbsencesTable extends AppTable
                     [
                         $IdentityTypes->aliasField('id = ') . $Users->aliasField('identity_type_id')
                     ]
-                )     
+                )
+            ->leftJoin(
+                [$UserContacts->alias() => $UserContacts->table()],
+                    [
+                        $UserContacts->aliasField('security_user_id = ') . $Users->aliasField('id')
+                    ]
+            )
+            ->leftJoin(
+                [$StudentGuardians->alias() => $StudentGuardians->table()],
+                    [
+                        $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
+                    ]
+            )
+            ->leftJoin(['GuardianUser' => 'security_users'],
+                                [
+                                    'GuardianUser.id = '.$StudentGuardians->aliasField('student_id')
+                                ]
+            )        
             ->where([
                 $this->aliasField('date >= ') => $startDate,
                 $this->aliasField('date <= ') => $endDate,
@@ -239,6 +264,20 @@ class StudentAbsencesTable extends AppTable
             'field' => 'address',
             'type' => 'string',
             'label' => __('Address'),
+        ];
+
+        $newArray[] = [
+            'key' => 'UserContacts.value',
+            'field' => 'contact',
+            'type' => 'string',
+            'label' => __('Contact'),
+        ];
+
+        $newArray[] = [
+            'key' => '',
+            'field' => 'guardian_name',
+            'type' => 'string',
+            'label' => __('Parent Name'),
         ];
 
         $fields->exchangeArray($newArray);
