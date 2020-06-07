@@ -250,7 +250,7 @@ class StudentsTable extends AppTable
                     $attr['attr']['required'] = true;
                 } else {
 					
-                    if (in_array($feature, ['Report.BodyMassStatusReports','Report.StudentsRiskAssessment'])) {
+                    if (in_array($feature, ['Report.BodyMassStatusReports','Report.StudentsRiskAssessment','Report.SubjectsBookLists'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     }elseif (in_array($feature, ['Report.HealthReports'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions'),'-1' => __('No Institutions')] + $institutionList;
