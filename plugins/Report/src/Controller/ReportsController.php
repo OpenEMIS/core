@@ -93,7 +93,8 @@ class ReportsController extends AppController
                 'Report.StudentsRiskAssessment' => __('Risk Assessment Report') ,
 				'Report.SubjectsBookLists' => __('Subject and Book List'),
                 'Report.StudentNotAssignedClass' => __('Not Assigned to Class'),
-                'Report.StudentsEnrollmentSummary' => __('Enrollment Summary')
+                'Report.StudentsEnrollmentSummary' => __('Enrollment Summary'),
+                'Report.SpecialNeeds' => __('Special Needs')
 				
             ];
         } elseif ($module == 'Staff') {
