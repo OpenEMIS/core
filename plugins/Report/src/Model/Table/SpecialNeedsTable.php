@@ -81,6 +81,10 @@ class SpecialNeedsTable extends AppTable
                     " - ",
                     'Users.last_name' => 'literal']),
                 'gender' => 'Genders.name',
+                //'age' => 'Users.date_of_birth',
+                //'academic_period' => $this->aliasField('academic_period_id'),
+                'date_of_birth' => 'Users.date_of_birth',
+                'start_year' => 'AcademicPeriods.start_year',
                 'identity_type' => 'IdentityTypes.name',
                 'identity_number' => 'Users.identity_number',
                 'special_need_type' => 'SpecialNeedsTypes.name',
@@ -163,6 +167,18 @@ class SpecialNeedsTable extends AppTable
             ]);
     }
 
+    public function onExcelGetAge(Event $event, Entity $entity)
+    {
+        $age = '';
+        if (!empty($entity->start_year) && !empty($entity->date_of_birth)) {
+            $startYear = $entity->start_year;
+            $dob = $entity->date_of_birth->format('Y');
+            $age = $startYear - $dob;
+        }
+
+        return $age;
+    }
+
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
     {
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
@@ -210,7 +226,12 @@ class SpecialNeedsTable extends AppTable
             'type' => 'string',
             'label' => 'Name',
         ];
-        
+        $newFields[] = [
+            'key' => 'Users.age',
+            'field' => 'age',
+            'type' => 'string',
+            'label' => 'Age'
+        ];
         $newFields[] = [
             'key' => 'Genders.name',
             'field' => 'gender',
