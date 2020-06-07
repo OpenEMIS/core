@@ -323,7 +323,7 @@ class StudentsTable extends AppTable
                     $attr['attr']['required'] = true;
                 } else {
 					
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.SubjectsBookLists'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
