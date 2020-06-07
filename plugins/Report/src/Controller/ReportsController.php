@@ -92,7 +92,8 @@ class ReportsController extends AppController
                 'Report.BodyMassStatusReports' => __('BMI Status Report'), 
                 'Report.StudentsRiskAssessment' => __('Risk Assessment Report') ,
 				'Report.SubjectsBookLists' => __('Subject and Book List'),
-                'Report.StudentNotAssignedClass' => __('Not Assigned to Class')
+                'Report.StudentNotAssignedClass' => __('Not Assigned to Class'),
+                'Report.StudentsEnrollmentSummary' => __('Enrollment Summary')
 				
             ];
         } elseif ($module == 'Staff') {

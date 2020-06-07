@@ -78,6 +78,7 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+         $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
@@ -86,7 +87,10 @@ class StudentsTable extends AppTable
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
+    {   
+        if ($data[$this->alias()]['feature'] == 'Report.StudentsEnrollmentSummary') {
+            $options['validate'] = 'StudentsEnrollmentSummary';
+        }
         if ($data[$this->alias()]['feature'] == 'Report.BodyMassStatusReports') {
             $options['validate'] = 'BodyMassStatusReports';
         } else if ($data[$this->alias()]['feature'] == 'Report.HealthReports') {
@@ -106,6 +110,7 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('position_filter', ['type' => 'hidden']);       
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+         $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('risk_type', ['type' => 'hidden']); 
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']); 
@@ -122,7 +127,14 @@ class StudentsTable extends AppTable
 		return $attr;
     }
 
-    
+     public function validationStudentsEnrollmentSummary(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_education_id');
+        return $validator;
+    }
     
     public function validationHealthReports(Validator $validator)
     {
@@ -391,7 +403,8 @@ class StudentsTable extends AppTable
 			                          'Report.HealthReports', 
 									  'Report.StudentsRiskAssessment',
 									  'Report.SubjectsBookLists',
-									  'Report.StudentNotAssignedClass'
+									  'Report.StudentNotAssignedClass',
+                                      'Report.StudentsEnrollmentSummary'
 									  ])
 			)) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -406,7 +419,8 @@ class StudentsTable extends AppTable
 									   'Report.ClassAttendanceNotMarkedRecords', 
 									   'Report.InstitutionCases',
 									   'Report.StudentAttendanceSummary',
-									   'Report.StaffAttendances'])
+									   'Report.StaffAttendances',
+                                       'Report.StudentsEnrollmentSummary'])
 				) {
                     $attr['onChangeReload'] = true;
                 }
@@ -419,7 +433,27 @@ class StudentsTable extends AppTable
         }
     }
 
+    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.StudentsEnrollmentSummary'])) {
+                $TypesTable = TableRegistry::get('Area.Areas');
+                $typeOptions = $TypesTable
+                    ->find('list')
+                    ->find('visible')
+                    ->find('order')
+                    ->toArray();
 
+                $attr['type'] = 'select';
+                $attr['onChangeReload'] = true;
+                $attr['options'] = $typeOptions;
+                $attr['attr']['required'] = true;
+            }
+            return $attr;
+        }
+    }
+    
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['academic_period_id'])) {
