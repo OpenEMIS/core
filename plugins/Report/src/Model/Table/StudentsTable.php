@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
@@ -47,11 +48,33 @@ class StudentsTable extends AppTable
         return $events;
     }
 
+    public function validationSubjectsBookLists(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('institution_type_id')
+            ->notEmpty('institution_id');
+        return $validator;
+    }
+
     public function beforeAction(Event $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
+        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']);
+       
+    }
+
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data[$this->alias()]['feature'] == 'Report.SubjectsBookLists') {
+            $options['validate'] = 'SubjectsBookLists';
+        }
     }
     
 
@@ -81,7 +104,7 @@ class StudentsTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
-         $attr['onChangeReload'] = true;
+        $attr['onChangeReload'] = true;
         return $attr;
     }
     
@@ -362,6 +385,234 @@ class StudentsTable extends AppTable
             }
         }
     }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+			
+            if ((in_array($feature, ['Report.SubjectsBookLists']
+                    )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
+
+                $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodOptions = $AcademicPeriodTable->getYearList();
+                $currentPeriod = $AcademicPeriodTable->getCurrent();
+
+                $attr['options'] = $academicPeriodOptions;
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases', 'Report.StudentAttendanceSummary', 'Report.StaffAttendances'])) {
+                    $attr['onChangeReload'] = true;
+                }
+
+                if (empty($request->data[$this->alias()]['academic_period_id'])) {
+                    $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
+                }
+                return $attr;
+            }
+        }
+    }
+
+
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['academic_period_id'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+            if (in_array($feature, 
+                        [
+                            'Report.ClassAttendanceNotMarkedRecords',
+                            'Report.SubjectsBookLists'
+                        ])
+                ) {
+                
+                $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                $gradeOptions = $EducationGrades
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'name'
+                    ])
+                    ->select([
+                        'id' => $EducationGrades->aliasField('id'),
+                        'name' => $EducationGrades->aliasField('name'),
+                        'education_programme_name' => 'EducationProgrammes.name'
+                    ])
+                    ->contain(['EducationProgrammes'])
+                    ->order([
+                        'EducationProgrammes.order' => 'ASC',
+                        $EducationGrades->aliasField('name') => 'ASC'
+                    ])
+                    ->toArray();
+
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+            } elseif (in_array($feature,
+                               [
+                                   'Report.StudentAttendanceSummary'
+                               ])
+                      ) {
+                $gradeList = [];
+                if (array_key_exists('institution_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_id']) && array_key_exists('academic_period_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['academic_period_id'])) {
+                    $institutionId = $request->data[$this->alias()]['institution_id'];
+                    $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+
+                    $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
+                    $gradeList = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId);
+                }
+
+                if (empty($gradeList)) {
+                    $gradeOptions = ['' => $this->getMessage('general.select.noOptions')];
+                } else {
+                    $gradeOptions = ['-1' => __('All Grades')] + $gradeList;
+                }
+
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $gradeOptions;
+                $attr['attr']['required'] = true;
+            } else {
+                $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+			
+            if (in_array($feature,  [
+                                    'Report.SubjectsBookLists'
+                                    ])
+                  ) {
+
+                $institutionList = [];
+                if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
+                    $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
+
+                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->where([
+                            $InstitutionsTable->aliasField('institution_type_id') => $institutionTypeId
+                        ])
+                        ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
+                } else {
+					
+                   $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                           'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->order([
+                           $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
+                }
+
+                if (empty($institutionList)) {
+                    $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    $attr['type'] = 'select';
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+					
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.SubjectsBookLists'])) {
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                    } else {
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                    }
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                }
+            }
+            return $attr;
+        }
+    }
+
+
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+			
+            if (in_array($feature, ['Report.SubjectsBookLists'])) {
+                
+                $TypesTable = TableRegistry::get('Institution.Types');
+                $typeOptions = $TypesTable
+                    ->find('list')
+                    ->find('visible')
+                    ->find('order')
+                    ->toArray();
+
+                $attr['type'] = 'select';
+                $attr['onChangeReload'] = true;
+                $attr['options'] = $typeOptions;
+                $attr['attr']['required'] = true;
+            }
+            return $attr;
+        }
+    }
+
+   public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, 
+                        [
+                            'Report.InstitutionSubjects',
+                            'Report.SubjectsBookLists'
+                        ])
+                ) {
+
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                $subjectOptions = $EducationSubjects
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                    ->find('visible')
+                    ->order([
+                        $EducationSubjects->aliasField('order') => 'ASC'
+                    ])
+                    ->toArray();
+
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
+            } else {
+                $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
+
 
     public function startStudentsPhotoDownload() {
             
