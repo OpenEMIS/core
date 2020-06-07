@@ -9,7 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
+use App\Model\Table\AppTable;;
 
 class StudentsTable extends AppTable
 {
@@ -55,11 +55,23 @@ class StudentsTable extends AppTable
             ->notEmpty('institution_id');
         return $validator;
     }
+	
+   public function validationStudentNotAssignedClass(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('institution_type_id')
+            ->notEmpty('institution_id');
+        return $validator;
+    }
 
     public function beforeAction(Event $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
+        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
@@ -94,12 +106,22 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('health_report_type', ['type' => 'hidden']); 
     }
 
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data[$this->alias()]['feature'] == 'Report.StudentNotAssignedClass') {
+            $options['validate'] = 'StudentNotAssignedClass';
+        }
+    }
+
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         $attr['onChangeReload'] = true;
-        return $attr;
+		
+		return $attr;
     }
+
+    
     
     public function validationHealthReports(Validator $validator)
     {
@@ -192,7 +214,8 @@ class StudentsTable extends AppTable
             if (in_array($feature, ['Report.BodyMassStatusReports',
                                     'Report.HealthReports',
 									'Report.StudentsRiskAssessment',
-									'Report.SubjectsBookLists'
+									'Report.SubjectsBookLists',
+									'Report.StudentNotAssignedClass'
 				  ])) {
 
  
@@ -250,7 +273,12 @@ class StudentsTable extends AppTable
                     $attr['attr']['required'] = true;
                 } else {
 					
-                    if (in_array($feature, ['Report.BodyMassStatusReports','Report.StudentsRiskAssessment','Report.SubjectsBookLists'])) {
+                    if (in_array($feature, [
+						'Report.BodyMassStatusReports',
+						'Report.StudentsRiskAssessment',
+						'Report.SubjectsBookLists',
+						'Report.StudentNotAssignedClass'
+					])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     }elseif (in_array($feature, ['Report.HealthReports'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions'),'-1' => __('No Institutions')] + $institutionList;
@@ -361,7 +389,8 @@ class StudentsTable extends AppTable
             if ((in_array($feature, ['Report.BodyMassStatusReports',
 			                          'Report.HealthReports', 
 									  'Report.StudentsRiskAssessment',
-									  'Report.SubjectsBookLists'
+									  'Report.SubjectsBookLists',
+									  'Report.StudentNotAssignedClass'
 									  ])
 			)) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -460,7 +489,9 @@ class StudentsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 			
-            if (in_array($feature, ['Report.SubjectsBookLists'])) {
+            if (in_array($feature, ['Report.SubjectsBookLists',
+			  'Report.StudentNotAssignedClass'
+			])) {
                 
                 $TypesTable = TableRegistry::get('Institution.Types');
                 $typeOptions = $TypesTable
