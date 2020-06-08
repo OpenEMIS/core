@@ -13,9 +13,17 @@ class POCOR5149 extends AbstractMigration
         // End
 
         // For locale_contents table
-        $this->execute("INSERT INTO `locale_contents`
-            (`en`,`created`,`created_user_id`)
-            values ('Default Identity type',1,NOW())");
+        
+        $localeContent = [
+            [
+                'en' => 'Default Identity type',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+        $this->insert('locale_contents', $localeContent);
+        
+        
     }
 
     public function down()
