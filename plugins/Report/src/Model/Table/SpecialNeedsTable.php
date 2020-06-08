@@ -59,11 +59,12 @@ class SpecialNeedsTable extends AppTable {
         $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
         $InstitutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks');
         $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
+        
+        $where = '';
         if ($institution_id != 0) {
             $where = [$this->aliasField('institution_id') => $institution_id];
-        } else {
-            $where = [];
-        }
+        } 
+        
         $query
                 ->select([
                     'code' => 'Institutions.code',
