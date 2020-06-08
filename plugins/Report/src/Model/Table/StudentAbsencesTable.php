@@ -83,7 +83,7 @@ class StudentAbsencesTable extends AppTable
                 'gender' => $Genders->aliasField('name'),
                 'identity_type' => $IdentityTypes->aliasField('name'),
                 'identity_number' => 'Users.identity_number',
-                'addresss' => 'Users.address',
+                'address' => 'Users.address',
                 'contact' => 'UserContacts.value',
                 'guardian_name' => $GuardianUser->find()->func()->concat([
                     'GuardianUser.first_name' => 'literal',
@@ -140,7 +140,7 @@ class StudentAbsencesTable extends AppTable
             )
             ->leftJoin(['GuardianUser' => 'security_users'],
                                 [
-                                    'GuardianUser.id = '.$StudentGuardians->aliasField('student_id')
+                                    'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
                                 ]
             )        
             ->where([

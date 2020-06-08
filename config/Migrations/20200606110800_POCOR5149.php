@@ -12,17 +12,26 @@ class POCOR5149 extends AbstractMigration
         $this->execute('INSERT INTO `z_5149_locale_contents` SELECT * FROM `locale_contents`');
         // End
 
-        // For locale_contents table
         
         $localeContent = [
-            [
-                'en' => 'Default Identity type',
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ]
-        ];
+						[
+							'en' => 'Default Identity type',
+							'created_user_id' => 1,
+							'created' => date('Y-m-d H:i:s')
+						],
+						[
+							'en' => 'Student Absent',
+							'created_user_id' => 1,
+							'created' => date('Y-m-d H:i:s')
+						],
+						[
+							'en' => 'Parent Name',
+							'created_user_id' => 1,
+							'created' => date('Y-m-d H:i:s')
+						]
+		];
+		
         $this->insert('locale_contents', $localeContent);
-        
         
     }
 
