@@ -1,31 +1,33 @@
 <?php
-
 namespace Report\Model\Table;
 
 use ArrayObject;
+
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
-class SpecialNeedsTable extends AppTable {
+class SpecialNeedsTable extends AppTable
+{
+	use OptionsTrait;
 
-    use OptionsTrait;
-
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->table('institution_class_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'joinType' => 'LEFT']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'joinType' => 'LEFT']);
-
+       
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'joinType' => 'LEFT']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'joinType' => 'LEFT']);
-
+        
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
             'excludes' => ['start_year', 'end_year', 'security_group_user_id'],
@@ -35,7 +37,8 @@ class SpecialNeedsTable extends AppTable {
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
         $sheets[] = [
             'name' => $this->alias(),
             'table' => $this,
@@ -44,7 +47,8 @@ class SpecialNeedsTable extends AppTable {
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
         // Setting request data and modifying fetch condition
         $requestData = json_decode($settings['process']['params']);
         $academic_period_id = $requestData->academic_period_id;
@@ -59,106 +63,113 @@ class SpecialNeedsTable extends AppTable {
         $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
         $InstitutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks');
         $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
-        
-        $where = [];
-        
         if ($institution_id != 0) {
             $where = [$this->aliasField('institution_id') => $institution_id];
-        } 
-        
+        } else {
+            $where = [];
+        }
         $query
-                ->select([
-                    'code' => 'Institutions.code',
-                    'institution_name' => 'Institutions.name',
-                    'academic_period' => 'AcademicPeriods.name',
-                    'education_grade' => 'EducationGrades.name',
-                    'institution_class' => 'InstitutionClasses.name',
-                    'openemis_no' => 'Users.openemis_no',
-                    'student_name' => $Users->find()->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " - ",
-                        'Users.last_name' => 'literal']),
-                    'gender' => 'Genders.name',
-                    'date_of_birth' => 'Users.date_of_birth',
-                    'start_year' => 'AcademicPeriods.start_year',
-                    'identity_type' => 'IdentityTypes.name',
-                    'identity_number' => 'Users.identity_number',
-                    'special_need_type' => 'SpecialNeedsTypes.name',
-                    'special_need_difficulty_type' => 'SpecialNeedsDifficulties.name',
-                    'special_need_service_type' => 'SpecialNeedsServiceTypes.name',
-                    'organization' => 'SpecialNeedsServices.organization',
-                    'guardian_relation' => 'GuardianRelations.name',
-                    'guardian_openemis_no' => 'GuardianUser.openemis_no',
-                    'guardian_name' => $Users->find()->func()->concat([
-                        'GuardianUser.first_name' => 'literal',
-                        " - ",
-                        'GuardianUser.last_name' => 'literal']),
-                ])
-                ->innerJoin(
-                        [$SpecialNeedsAssessments->alias() => $SpecialNeedsAssessments->table()], [
-                    $SpecialNeedsAssessments->aliasField('security_user_id = ') . $this->aliasField('student_id')
-                        ]
+            ->select([
+                'code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',
+                'academic_period' => 'AcademicPeriods.name',
+                'education_grade' => 'EducationGrades.name',
+                'institution_class' => 'InstitutionClasses.name',
+                'openemis_no' => 'Users.openemis_no',
+                'student_name' => $Users->find()->func()->concat([
+                    'Users.first_name' => 'literal',
+                    " - ",
+                    'Users.last_name' => 'literal']),
+                'gender' => 'Genders.name',
+                'date_of_birth' => 'Users.date_of_birth',
+                'start_year' => 'AcademicPeriods.start_year',
+                'identity_type' => 'IdentityTypes.name',
+                'identity_number' => 'Users.identity_number',
+                'special_need_type' => 'SpecialNeedsTypes.name',
+                'special_need_difficulty_type' => 'SpecialNeedsDifficulties.name',
+                'special_need_service_type' => 'SpecialNeedsServiceTypes.name',
+                'organization' => 'SpecialNeedsServices.organization',
+                'guardian_relation' => 'GuardianRelations.name',
+                'guardian_openemis_no' => 'GuardianUser.openemis_no',
+                'guardian_name' => $Users->find()->func()->concat([
+                    'GuardianUser.first_name' => 'literal',
+                    " - ",
+                    'GuardianUser.last_name' => 'literal']),
+            ])
+            ->innerJoin(
+                    [$SpecialNeedsAssessments->alias() => $SpecialNeedsAssessments->table()],
+                    [
+                        $SpecialNeedsAssessments->aliasField('security_user_id = ') . $this->aliasField('student_id')
+                    ]
                 )
-                ->leftJoin(
-                        [$SpecialNeedsTypes->alias() => $SpecialNeedsTypes->table()], [
-                    $SpecialNeedsTypes->aliasField('id = ') . $SpecialNeedsAssessments->aliasField('special_need_type_id')
-                        ]
+            ->leftJoin(
+                    [$SpecialNeedsTypes->alias() => $SpecialNeedsTypes->table()],
+                    [
+                        $SpecialNeedsTypes->aliasField('id = ') . $SpecialNeedsAssessments->aliasField('special_need_type_id')
+                    ]
                 )
-                ->leftJoin(
-                        [$SpecialNeedsDifficulties->alias() => $SpecialNeedsDifficulties->table()], [
-                    $SpecialNeedsDifficulties->aliasField('id = ') . $SpecialNeedsAssessments->aliasField('special_need_difficulty_id')
-                        ]
+            ->leftJoin(
+                    [$SpecialNeedsDifficulties->alias() => $SpecialNeedsDifficulties->table()],
+                    [
+                        $SpecialNeedsDifficulties->aliasField('id = ') . $SpecialNeedsAssessments->aliasField('special_need_difficulty_id')
+                    ]
                 )
-                ->innerJoin(
-                        [$SpecialNeedsServices->alias() => $SpecialNeedsServices->table()], [
-                    $SpecialNeedsServices->aliasField('security_user_id = ') . $this->aliasField('student_id')
-                        ]
+            ->innerJoin(
+                    [$SpecialNeedsServices->alias() => $SpecialNeedsServices->table()],
+                    [
+                        $SpecialNeedsServices->aliasField('security_user_id = ') . $this->aliasField('student_id')
+                    ]
                 )
-                ->leftJoin(
-                        [$SpecialNeedsServiceTypes->alias() => $SpecialNeedsServiceTypes->table()], [
-                    $SpecialNeedsServiceTypes->aliasField('id = ') . $SpecialNeedsServices->aliasField('special_needs_service_type_id')
-                        ]
+            ->leftJoin(
+                    [$SpecialNeedsServiceTypes->alias() => $SpecialNeedsServiceTypes->table()],
+                    [
+                        $SpecialNeedsServiceTypes->aliasField('id = ') . $SpecialNeedsServices->aliasField('special_needs_service_type_id')
+                    ]
                 )
-                ->leftJoin(
-                        [$StudentGuardians->alias() => $StudentGuardians->table()], [
-                    $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
-                        ]
+            ->leftJoin(
+                    [$StudentGuardians->alias() => $StudentGuardians->table()],
+                    [
+                        $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
+                    ]
                 )
-                ->leftJoin(
-                        [$GuardianRelations->alias() => $GuardianRelations->table()], [
-                    $GuardianRelations->aliasField('id = ') . $StudentGuardians->aliasField('guardian_relation_id')
-                        ]
+            ->leftJoin(
+                    [$GuardianRelations->alias() => $GuardianRelations->table()],
+                    [
+                        $GuardianRelations->aliasField('id = ') . $StudentGuardians->aliasField('guardian_relation_id')
+                    ]
                 )
-                ->leftJoin(
-                        [$InstitutionStudentRisks->alias() => $InstitutionStudentRisks->table()], [
-                    $InstitutionStudentRisks->aliasField('student_id = ') . $this->aliasField('student_id')
-                        ]
+            ->leftJoin(
+                    [$InstitutionStudentRisks->alias() => $InstitutionStudentRisks->table()],
+                    [
+                        $InstitutionStudentRisks->aliasField('student_id = ') . $this->aliasField('student_id')
+                    ]
                 )
-                ->leftJoin(['GuardianUser' => 'security_users'], [
-                    'GuardianUser.id = ' . $StudentGuardians->aliasField('guardian_id')
-                ])
-                ->contain([
-                    'Institutions',
-                    'AcademicPeriods',
-                    'EducationGrades',
-                    'InstitutionClasses',
-                    'Users',
-                    'Users.Genders',
-                    'Users.IdentityTypes'
-                ])
-                ->group([
-                    'Users.id'
-                ])
-                ->where([
+            ->leftJoin(['GuardianUser' => 'security_users'], [
+                        'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
+                    ])
+            ->contain([
+                'Institutions',
+                'AcademicPeriods',
+                'EducationGrades',
+                'InstitutionClasses',
+                'Users',
+                'Users.Genders',
+                'Users.IdentityTypes'
+            ])
+            ->group([
+                'Users.id'
+            ])
+            ->where([
                     $this->aliasField('academic_period_id') => $academic_period_id,
                     $where
                 ])
-                ->order([
-                    'EducationGrades.name'
-        ]);
+            ->order([
+                'EducationGrades.name'
+            ]);
     }
 
-    public function onExcelGetAge(Event $event, Entity $entity) {
+    public function onExcelGetAge(Event $event, Entity $entity)
+    {
         $age = '';
         if (!empty($entity->start_year) && !empty($entity->date_of_birth)) {
             $startYear = $entity->start_year;
@@ -169,7 +180,8 @@ class SpecialNeedsTable extends AppTable {
         return $age;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    {
         $newFields[] = [
             'key' => 'Institutions.code',
             'field' => 'code',
@@ -279,5 +291,4 @@ class SpecialNeedsTable extends AppTable {
 
         $fields->exchangeArray($newFields);
     }
-
 }
