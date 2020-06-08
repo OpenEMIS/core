@@ -17,7 +17,7 @@ class POCOR5146 extends AbstractMigration
         $this->execute('INSERT INTO `z_5146_locale_contents` SELECT * FROM `locale_contents`');
         // End
 		
-		$localeContent = [
+	$localeContent = [
 
             [
                 'en' => 'Default identity type',
@@ -39,6 +39,11 @@ class POCOR5146 extends AbstractMigration
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
+            [
+                'en' => 'Subject and Book List',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]
            
         ];
         $this->insert('locale_contents', $localeContent);
