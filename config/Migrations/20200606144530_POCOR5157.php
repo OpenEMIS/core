@@ -12,6 +12,11 @@ class POCOR5157 extends AbstractMigration
                 'en' => 'Number of Students',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Enrollment Summary',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('locale_contents', $localeContent);
@@ -20,5 +25,6 @@ class POCOR5157 extends AbstractMigration
     public function down()
     {
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Number of Students'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Enrollment Summary'");
     }
 }
