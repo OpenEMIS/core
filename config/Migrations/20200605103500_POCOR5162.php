@@ -27,6 +27,11 @@ class POCOR5162 extends AbstractMigration {
                 'en' => 'BMI Status',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'BMI Status Report',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('locale_contents', $localeContent);
