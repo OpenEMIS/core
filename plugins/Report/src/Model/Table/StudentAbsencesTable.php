@@ -18,7 +18,7 @@ class StudentAbsencesTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
-        // $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons', 'foreignKey' =>'student_absence_reason_id']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' =>'institution_class_id']);
         $this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
         $this->belongsTo('InstitutionStudentAbsenceDays', ['className' => 'Institution.InstitutionStudentAbsenceDays', 'foreignKey' =>'institution_student_absence_day_id']);
         $this->addBehavior('Report.ReportList');
@@ -40,9 +40,18 @@ class StudentAbsencesTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
+        $institution_id = $requestData->institution_id;
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $Genders = TableRegistry::get('User.Genders');
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $Users = TableRegistry::get('User.Users');
+        $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
+        $Guardians = TableRegistry::get('Security.Users');
+        $UserContacts = TableRegistry::get('UserContacts');
+        $GuardianUser = TableRegistry::get('Security.Users');
 
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -68,26 +77,76 @@ class StudentAbsencesTable extends AppTable
                 'area_administrative_name' => 'AreaAdministratives.name',
                 'area_level_name' => 'AreaLevels.name',
                 'absence_type' => 'AbsenceTypes.name',
-                // 'student_absence_reason' => 'StudentAbsenceReasons.name',
                 'date' => 'StudentAbsences.date',
-                // 'comment' => 'StudentAbsences.comment',
-                // 'full_day' => 'StudentAbsences.full_day',
-                // 'start_date' => 'StudentAbsences.start_date',
-                // 'end_date' => 'StudentAbsences.end_date',
-                // 'start_time' => 'StudentAbsences.start_time',
-                // 'end_time' => 'StudentAbsences.end_time'
-            ])
-            ->where([
-                $this->aliasField('date >= ') => $startDate,
-                $this->aliasField('date <= ') => $endDate
-                // $this->aliasField('start_date >= ') => $startDate,
-                // $this->aliasField('end_date <= ') => $endDate
-            ])
-            ->contain([
-                'Users',
+                'institution_class' => 'InstitutionClasses.name',
+                'education_grade' => $EducationGrades->aliasField('name'),
+                'gender' => $Genders->aliasField('name'),
+                'identity_type' => $IdentityTypes->aliasField('name'),
+                'identity_number' => 'Users.identity_number',
+                'addresss' => 'Users.address',
+                'contact' => 'UserContacts.value',
+                'guardian_name' => $GuardianUser->find()->func()->concat([
+                    'GuardianUser.first_name' => 'literal',
+                    " - ",
+                    'GuardianUser.last_name' => 'literal'
+                ])
+            ]) 
+            ->contain([                
                 'Institutions.Areas.AreaLevels',
                 'Institutions.AreaAdministratives',
-
+                'InstitutionClasses'
+            ])     
+            ->leftJoin(
+                [$Users->alias() => $Users->table()],
+                    [
+                        $Users->aliasField('id = ') . $this->aliasField('student_id')
+                    ]
+            )      
+            ->leftJoin(
+                    [$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],
+                    [
+                        $InstitutionClassGrades->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
+                    ]
+                )
+            ->leftJoin(
+                    [$EducationGrades->alias() => $EducationGrades->table()],
+                    [
+                        $EducationGrades->aliasField('id = ') . $InstitutionClassGrades->aliasField('education_grade_id')
+                    ]
+                )
+            ->leftJoin(
+                    [$Genders->alias() => $Genders->table()],
+                    [
+                        $Genders->aliasField('id = ') . $Users->aliasField('gender_id')
+                    ]
+                )
+            ->leftJoin(
+                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                    [
+                        $IdentityTypes->aliasField('id = ') . $Users->aliasField('identity_type_id')
+                    ]
+                )
+            ->leftJoin(
+                [$UserContacts->alias() => $UserContacts->table()],
+                    [
+                        $UserContacts->aliasField('security_user_id = ') . $Users->aliasField('id')
+                    ]
+            )
+            ->leftJoin(
+                [$StudentGuardians->alias() => $StudentGuardians->table()],
+                    [
+                        $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
+                    ]
+            )
+            ->leftJoin(['GuardianUser' => 'security_users'],
+                                [
+                                    'GuardianUser.id = '.$StudentGuardians->aliasField('student_id')
+                                ]
+            )        
+            ->where([
+                $this->aliasField('date >= ') => $startDate,
+                $this->aliasField('date <= ') => $endDate,
+                $this->aliasField('institution_id = ') => $institution_id
             ])
             ->order([
                 $this->aliasField('student_id'),
@@ -163,79 +222,76 @@ class StudentAbsencesTable extends AppTable
             'type' => 'string',
             'label' => __('Date')
         ];
-        // $newArray[] = [
-        //     'key' => 'StudentAbsences.absences',
-        //     'field' => 'absences',
-        //     'type' => 'string',
-        //     'label' => __('Absences')
-        // ];
-        // $newArray[] = [
-        //     'key' => 'StudentAbsences.comment',
-        //     'field' => 'comment',
-        //     'type' => 'text',
-        //     'label' => __('Comment')
-        // ];
         $newArray[] = [
             'key' => 'StudentAbsences.absence_type_id',
             'field' => 'absence_type_id',
             'type' => 'integer',
             'label' => __('Absence Type'),
         ];
-        // $newArray[] = [
-        //     'key' => 'StudentAbsences.student_absence_reason_id',
-        //     'field' => 'student_absence_reason_id',
-        //     'type' => 'string',
-        //     'label' => __('Absence Reason')
-        // ];
+        $newArray[] = [
+            'key' => 'InstitutionClasses.name',
+            'field' => 'institution_class',
+            'type' => 'string',
+            'label' => __('Institution Class'),
+        ];
+        $newArray[] = [
+            'key' => 'EducationGrades.name',
+            'field' => 'education_grade',
+            'type' => 'string',
+            'label' => __('Education Grade'),
+        ];
+        $newArray[] = [
+            'key' => 'Genders.name',
+            'field' => 'gender',
+            'type' => 'string',
+            'label' => __('Gender'),
+        ];
+        $newArray[] = [
+            'key' => 'IdentityTypes.name',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Default Identity Type'),
+        ];
+        $newArray[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'identity_number',
+            'type' => 'integer',
+            'label' => __('Identity Number'),
+        ];
+        
+        $newArray[] = [
+            'key' => 'Users.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => __('Address'),
+        ];
 
-        // $newFields = array_merge($newArray, $fields->getArrayCopy());
+        $newArray[] = [
+            'key' => 'UserContacts.value',
+            'field' => 'contact',
+            'type' => 'string',
+            'label' => __('Contact'),
+        ];
+
+        $newArray[] = [
+            'key' => '',
+            'field' => 'guardian_name',
+            'type' => 'string',
+            'label' => __('Parent Name'),
+        ];
+
         $fields->exchangeArray($newArray);
     }
 
     public function onExcelGetDate(Event $event, Entity $entity)
     {
         return $this->formatDate($entity->date);
-    }
-
-    // public function onExcelGetAbsences(Event $event, Entity $entity)
-    // {
-    //     $startDate = "";
-    //     $endDate = "";
-
-    //     if (!empty($entity->start_date)) {
-    //         $startDate = $this->formatDate($entity->start_date);
-    //     } else {
-    //         $startDate = $entity->start_date;
-    //     }
-
-    //     if (!empty($entity->end_date)) {
-    //         $endDate = $this->formatDate($entity->end_date);
-    //     } else {
-    //         $endDate = $entity->end_date;
-    //     }
-
-    //     if ($entity->full_day) {
-    //         return sprintf('%s %s (%s - %s)', __('Full'), __('Day'), $startDate, $endDate);
-    //     } else {
-    //         $startTime = $entity->start_time;
-    //         $endTime = $entity->end_time;
-    //         return sprintf('%s (%s - %s) %s (%s - %s)', __('Non Full Day'), $startDate, $endDate, __('Time'), $startTime, $endTime);
-    //     }
-    // }
+    }    
 
     public function onExcelGetAbsenceTypeId(Event $event, Entity $entity)
     {
         return $entity->absence_type;
     }
-
-    // public function onExcelGetStudentAbsenceReasonId(Event $event, Entity $entity)
-    // {
-    //     if (empty($entity->student_absence_reason)) {
-    //         return __('Unexcused');
-    //     } else {
-    //         return $entity->student_absence_reason;
-    //     }
-    // }
 
     public function onExcelGetInstitutionName(Event $event, Entity $entity)
     {
