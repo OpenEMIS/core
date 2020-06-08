@@ -11,25 +11,6 @@ class POCOR5156 extends AbstractMigration
         $this->execute('CREATE TABLE `z_5156_locale_contents` LIKE `locale_contents`');
         $this->execute('INSERT INTO `z_5156_locale_contents` SELECT * FROM `locale_contents`');
         // End
-
-        // For locale_contents table
-//        $this->execute("INSERT INTO `locale_contents`
-//            (`en`,`created`,`created_user_id`)
-//            values ('Disability Type',1,NOW())");
-//        $this->execute("INSERT INTO `locale_contents`
-//            (`en`,`created`,`created_user_id`)
-//            values ('Difficulty Type',1,NOW())");
-//        $this->execute("INSERT INTO `locale_contents`
-//            (`en`,`created`,`created_user_id`)
-//            values ('Program Assigned',1,NOW())");
-//        $this->execute("INSERT INTO `locale_contents`
-//            (`en`,`created`,`created_user_id`)
-//            values ('Guardian OpenEmisId',1,NOW())");
-//        $this->execute("INSERT INTO `locale_contents`
-//            (`en`,`created`,`created_user_id`)
-//            values ('Guardian Name',1,NOW())");
-        
-        
         
         
         $localeContent = [
@@ -49,7 +30,7 @@ class POCOR5156 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'en' => 'Guardian OpenEmis Id',
+                'en' => 'Guardian OpenEMIS ID',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -60,9 +41,7 @@ class POCOR5156 extends AbstractMigration
             ]
         ];
         $this->insert('locale_contents', $localeContent);
-        
-        
-        
+
     }
 
     public function down()
