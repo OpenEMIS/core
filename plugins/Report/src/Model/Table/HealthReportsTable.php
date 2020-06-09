@@ -982,7 +982,7 @@ class HealthReportsTable extends AppTable
                 'key' => 'health_consultation_type_name',
                 'field' => 'health_consultation_type_name',
                 'type' => 'string',
-                'label' => __('Health Consultation type')
+                'label' => __('Health Consultation Type')
             ];
         }elseif($healthReportType == 'Families'){
             $extraFields[] = [
