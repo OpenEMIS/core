@@ -38,8 +38,19 @@ class POCOR5156 extends AbstractMigration
                 'en' => 'Guardian Name',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Organization',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Risk',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
+        
         $this->insert('locale_contents', $localeContent);
 
     }
