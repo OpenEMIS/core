@@ -35,6 +35,7 @@ class POCOR5149 extends AbstractMigration {
 
     public function down() {
         // For locale_contents
+        $this->execute('DROP TABLE IF EXISTS `locale_contents`');
         $this->execute("RENAME TABLE `z_5149_locale_contents` TO `locale_contents`");
     }
 
