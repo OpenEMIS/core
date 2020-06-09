@@ -204,107 +204,107 @@ class SpecialNeedsTable extends AppTable
             'key' => 'Institutions.code',
             'field' => 'code',
             'type' => 'string',
-            'label' => 'Institution Code'
+            'label' => __('Institution Code')
         ];
 
         $newFields[] = [
             'key' => 'Institutions.name',
             'field' => 'institution_name',
             'type' => 'string',
-            'label' => 'Institution Name'
+            'label' => __('Institution Name')
         ];
 
         $newFields[] = [
             'key' => 'AcademicPeriods.name',
             'field' => 'academic_period',
             'type' => 'string',
-            'label' => 'Academic Period'
+            'label' => __('Academic Period')
         ];
 
         $newFields[] = [
             'key' => 'EducationGrades.name',
             'field' => 'education_grade',
             'type' => 'string',
-            'label' => 'Education Grade'
+            'label' => __('Education Grade')
         ];
 
         $newFields[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => 'OpenEMIS ID'
+            'label' => __('OpenEMIS ID')
         ];
         $newFields[] = [
             'key' => '',
             'field' => 'student_name',
             'type' => 'string',
-            'label' => 'Name'
+            'label' => __('Name')
         ];
         $newFields[] = [
             'key' => 'Users.age',
             'field' => 'age',
             'type' => 'string',
-            'label' => 'Age'
+            'label' => __('Age')
         ];
         $newFields[] = [
             'key' => 'Genders.name',
             'field' => 'gender',
             'type' => 'string',
-            'label' => 'Gender'
+            'label' => __('Gender')
         ];
         $newFields[] = [
             'key' => 'IdentityTypes.name',
             'field' => 'identity_type',
             'type' => 'string',
-            'label' => 'Identity Type'
+            'label' => __('Identity Type')
         ];
         $newFields[] = [
             'key' => 'Users.identity_number',
             'field' => 'identity_number',
             'type' => 'integer',
-            'label' => 'Identity Number'
+            'label' => __('Identity Number')
         ];
         $newFields[] = [
             'key' => 'SpecialNeedsTypes.name',
             'field' => 'special_need_type',
             'type' => 'string',
-            'label' => 'Disability Type'
+            'label' => __('Disability Type')
         ];
         $newFields[] = [
             'key' => 'SpecialNeedsDifficulties.name',
             'field' => 'special_need_difficulty_type',
             'type' => 'string',
-            'label' => 'Difficulty Type'
+            'label' => __('Difficulty Type')
         ];
         $newFields[] = [
             'key' => 'SpecialNeedsServiceTypes.name',
             'field' => 'special_need_service_type',
             'type' => 'string',
-            'label' => 'Program Assigned'
+            'label' => __('Program Assigned')
         ];
         $newFields[] = [
             'key' => 'SpecialNeedsServices.organization',
             'field' => 'organization',
             'type' => 'string',
-            'label' => 'Organization'
+            'label' => __('Organization')
         ];
         $newFields[] = [
             'key' => 'GuardianRelations.name',
             'field' => 'guardian_relation',
             'type' => 'string',
-            'label' => 'Guardian Relations'
+            'label' => __('Guardian Relations')
         ];
         $newFields[] = [
             'key' => 'GuardianRelations.openemis_no',
             'field' => 'guardian_openemis_no',
             'type' => 'string',
-            'label' => 'Guardian OpenEMIS ID'
+            'label' => __('Guardian OpenEMIS ID')
         ];
         $newFields[] = [
             'key' => '',
             'field' => 'guardian_name',
             'type' => 'string',
-            'label' => 'Guardian Name'
+            'label' => __('Guardian Name')
         ];
 
         $fields->exchangeArray($newFields);
