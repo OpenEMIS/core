@@ -36,14 +36,17 @@ class StudentsRiskAssessmentTable extends AppTable  {
         $institutionId = $requestData->institution_id;
         $riskType = $requestData->risk_type;
         $conditions = [];
-        if (!empty($academicPeriodId)) {
-        $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+        
+         if (!empty($academicPeriodId)) {
+            $conditions['InstitutionStudents.academic_period_id'] = $academicPeriodId;
         }
+        
         if (!empty($institutionId) && $institutionId !='-1') {
-        $conditions['Institutions.id'] = $institutionId;
+         $conditions['Institutions.id'] = $institutionId;
         }
+        
         if (!empty($riskType)) {
-        $conditions['InstitutionRisks.risk_id'] = $riskType;
+          $conditions['InstitutionRisks.risk_id'] = $riskType;
         }
     
         $query
