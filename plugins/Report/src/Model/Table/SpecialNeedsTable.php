@@ -81,8 +81,6 @@ class SpecialNeedsTable extends AppTable
                     " - ",
                     'Users.last_name' => 'literal']),
                 'gender' => 'Genders.name',
-                //'age' => 'Users.date_of_birth',
-                //'academic_period' => $this->aliasField('academic_period_id'),
                 'date_of_birth' => 'Users.date_of_birth',
                 'start_year' => 'AcademicPeriods.start_year',
                 'identity_type' => 'IdentityTypes.name',
@@ -98,7 +96,7 @@ class SpecialNeedsTable extends AppTable
                     " - ",
                     'GuardianUser.last_name' => 'literal']),
             ])
-            ->leftJoin(
+            ->innerJoin(
                     [$SpecialNeedsAssessments->alias() => $SpecialNeedsAssessments->table()],
                     [
                         $SpecialNeedsAssessments->aliasField('security_user_id = ') . $this->aliasField('student_id')
@@ -116,7 +114,7 @@ class SpecialNeedsTable extends AppTable
                         $SpecialNeedsDifficulties->aliasField('id = ') . $SpecialNeedsAssessments->aliasField('special_need_difficulty_id')
                     ]
                 )
-            ->leftJoin(
+            ->innerJoin(
                     [$SpecialNeedsServices->alias() => $SpecialNeedsServices->table()],
                     [
                         $SpecialNeedsServices->aliasField('security_user_id = ') . $this->aliasField('student_id')
@@ -158,6 +156,9 @@ class SpecialNeedsTable extends AppTable
                 'Users.Genders',
                 'Users.IdentityTypes'
             ])
+            ->group([
+                'Users.id'
+            ])
             ->where([
                     $this->aliasField('academic_period_id') => $academic_period_id,
                     $where
@@ -181,11 +182,6 @@ class SpecialNeedsTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-        $identity = $IdentityType->getDefaultEntity();
-
-        $settings['identity'] = $identity;
-
         $newFields[] = [
             'key' => 'Institutions.code',
             'field' => 'code',
@@ -284,7 +280,7 @@ class SpecialNeedsTable extends AppTable
             'key' => 'GuardianRelations.openemis_no',
             'field' => 'guardian_openemis_no',
             'type' => 'string',
-            'label' => 'Guardian OpenEmisId',
+            'label' => 'Guardian OpenEMIS ID',
         ];
         $newFields[] = [
             'key' => '',
