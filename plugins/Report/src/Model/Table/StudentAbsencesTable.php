@@ -53,7 +53,7 @@ class StudentAbsencesTable extends AppTable
         $UserContacts = TableRegistry::get('UserContacts');
         $GuardianUser = TableRegistry::get('Security.Users');
         $UserIdentities = TableRegistry::get('User.Identities');
-        if (!empty($institution_id) && $institution_id > 0) {
+        if ( $institution_id > 0) {
             $where = [$this->aliasField('institution_id = ') => $institution_id];
         } else {
             $where = [];
