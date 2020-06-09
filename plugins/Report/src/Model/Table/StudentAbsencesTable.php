@@ -52,6 +52,12 @@ class StudentAbsencesTable extends AppTable
         $Guardians = TableRegistry::get('Security.Users');
         $UserContacts = TableRegistry::get('UserContacts');
         $GuardianUser = TableRegistry::get('Security.Users');
+		
+        if ($institution_id != 0) {
+            $where = [$this->aliasField('institution_id = ') => $institution_id];
+        } else {
+            $where = [];
+        }
 
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -146,7 +152,7 @@ class StudentAbsencesTable extends AppTable
             ->where([
                 $this->aliasField('date >= ') => $startDate,
                 $this->aliasField('date <= ') => $endDate,
-                $this->aliasField('institution_id = ') => $institution_id
+                $where
             ])
             ->order([
                 $this->aliasField('student_id'),
