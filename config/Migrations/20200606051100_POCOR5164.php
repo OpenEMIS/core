@@ -43,6 +43,11 @@ class POCOR5164 extends AbstractMigration
                 'en' => 'Risk Generated On',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Risk Assessment Report',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('locale_contents', $localeContent);
