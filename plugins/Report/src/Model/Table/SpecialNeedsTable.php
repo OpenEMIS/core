@@ -232,7 +232,7 @@ class SpecialNeedsTable extends AppTable
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => 'OpenEmis Id'
+            'label' => 'OpenEMIS ID'
         ];
         $newFields[] = [
             'key' => '',
