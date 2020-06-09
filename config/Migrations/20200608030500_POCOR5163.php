@@ -37,7 +37,21 @@ class POCOR5163 extends AbstractMigration
                 'en' => 'No Institutions',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+             [
+                'en' => 'Health Report Type',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Health Consultation type',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
+                    
+                    
+                    
+                    
         ];
         $this->insert('locale_contents', $localeContent);
     }
