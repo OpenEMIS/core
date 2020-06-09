@@ -63,6 +63,8 @@ class SpecialNeedsTable extends AppTable
         $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
         $InstitutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks');
         $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::get('User.Identities');
         if ($institution_id != 0) {
             $where = [$this->aliasField('institution_id') => $institution_id];
         } else {
@@ -83,8 +85,8 @@ class SpecialNeedsTable extends AppTable
                 'gender' => 'Genders.name',
                 'date_of_birth' => 'Users.date_of_birth',
                 'start_year' => 'AcademicPeriods.start_year',
-                'identity_type' => 'IdentityTypes.name',
-                'identity_number' => 'Users.identity_number',
+                'identity_type' => $IdentityTypes->aliasField('name'),
+                'identity_number' => $UserIdentities->aliasField('number'),
                 'special_need_type' => 'SpecialNeedsTypes.name',
                 'special_need_difficulty_type' => 'SpecialNeedsDifficulties.name',
                 'special_need_service_type' => 'SpecialNeedsServiceTypes.name',
@@ -96,6 +98,24 @@ class SpecialNeedsTable extends AppTable
                     " - ",
                     'GuardianUser.last_name' => 'literal']),
             ])
+            ->leftJoin(
+                    [$Users->alias() => $Users->table()],
+                    [
+                        $Users->aliasField('id = ') . $this->aliasField('student_id')
+                    ]
+                )
+            ->leftJoin(
+                    [$UserIdentities->alias() => $UserIdentities->table()],
+                    [
+                        $UserIdentities->aliasField('security_user_id = ') . $Users->aliasField('id')
+                    ]
+                )
+            ->leftJoin(
+                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                    [
+                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+                    ]
+                )
             ->innerJoin(
                     [$SpecialNeedsAssessments->alias() => $SpecialNeedsAssessments->table()],
                     [
@@ -152,9 +172,7 @@ class SpecialNeedsTable extends AppTable
                 'AcademicPeriods',
                 'EducationGrades',
                 'InstitutionClasses',
-                'Users',
-                'Users.Genders',
-                'Users.IdentityTypes'
+                'Users.Genders'
             ])
             ->group([
                 'Users.id'
