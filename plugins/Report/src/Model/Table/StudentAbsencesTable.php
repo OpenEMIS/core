@@ -52,8 +52,8 @@ class StudentAbsencesTable extends AppTable
         $Guardians = TableRegistry::get('Security.Users');
         $UserContacts = TableRegistry::get('UserContacts');
         $GuardianUser = TableRegistry::get('Security.Users');
-		
-        if ($institution_id != 0) {
+        $UserIdentities = TableRegistry::get('User.Identities');
+        if ( $institution_id > 0) {
             $where = [$this->aliasField('institution_id = ') => $institution_id];
         } else {
             $where = [];
@@ -88,7 +88,7 @@ class StudentAbsencesTable extends AppTable
                 'education_grade' => $EducationGrades->aliasField('name'),
                 'gender' => $Genders->aliasField('name'),
                 'identity_type' => $IdentityTypes->aliasField('name'),
-                'identity_number' => 'Users.identity_number',
+                'identity_number' => $UserIdentities->aliasField('number'),
                 'address' => 'Users.address',
                 'contact' => 'UserContacts.value',
                 'guardian_name' => $GuardianUser->find()->func()->concat([
@@ -127,9 +127,15 @@ class StudentAbsencesTable extends AppTable
                     ]
                 )
             ->leftJoin(
+                    [$UserIdentities->alias() => $UserIdentities->table()],
+                    [
+                        $UserIdentities->aliasField('security_user_id = ') . $Users->aliasField('id')
+                    ]
+                )
+            ->leftJoin(
                     [$IdentityTypes->alias() => $IdentityTypes->table()],
                     [
-                        $IdentityTypes->aliasField('id = ') . $Users->aliasField('identity_type_id')
+                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
                     ]
                 )
             ->leftJoin(
