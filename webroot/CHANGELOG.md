@@ -1,3 +1,13 @@
+### [3.52.0] - 2020-6-10
+- Implemented Reports > Students > Risk Assessment Report
+- Implemented Reports > Students > Health Report
+- Implemented Reports > Students > BMI Status Report
+- Implemented Reports > Students > Not Assigned to a Class
+- Implemented Reports > Students > Enrolment Summary Report
+- Implemented Reports > Students > Special Needs Report
+- Implemented Reports > Students > Absent Report
+- Implemented Reports > Students > Subject and Book List Report
+
 ### [3.51.1] - 2020-6-05
 - Bug Fixed: API for Staff Photo > Not able to fetch staff photo
 - Bug Fixed: API for fetching of Staff List as per user authentication
