@@ -467,7 +467,16 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionStudents', 'Report.InstitutionStudentEnrollments', 'Report.InstitutionStaff'])) {
+            if (in_array($feature, 
+                        [
+                            'Report.InstitutionStudents', 
+                            'Report.InstitutionStudentEnrollments', 
+                            'Report.InstitutionStaff'
+                        ])
+                ) {
+
+				
+				
                 // need to find all status
                 $statusOptions = [];
 
@@ -509,9 +518,24 @@ class InstitutionsTable extends AppTable
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 			
-            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionSubjects', 'Report.StudentAttendanceSummary', 'Report.StaffAttendances', 'Report.BodyMasses', 'Report.InstitutionSpecialNeedsStudents','Report.InstitutionStudentsWithSpecialNeeds',
-			'Report.WashReports', 'Report.InstitutionClasses', 'Report.InstitutionCommittees']))
-                ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
+            if ((in_array($feature,
+                         ['Report.InstitutionStudents',
+                          'Report.StudentAbsences', 
+                          'Report.StaffLeave', 
+                          'Report.InstitutionCases', 
+                          'Report.ClassAttendanceNotMarkedRecords', 
+                          'Report.InstitutionSubjects', 
+                          'Report.StudentAttendanceSummary', 
+                          'Report.StaffAttendances', 
+                          'Report.BodyMasses', 
+                          'Report.InstitutionSpecialNeedsStudents',
+                          'Report.InstitutionStudentsWithSpecialNeeds',
+                          'Report.WashReports', 
+                          'Report.InstitutionClasses',
+                          'Report.InstitutionCommittees'
+                        ]
+                    )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
+
 
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
@@ -520,7 +544,14 @@ class InstitutionsTable extends AppTable
                 $attr['options'] = $academicPeriodOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases', 'Report.StudentAttendanceSummary', 'Report.StaffAttendances'])) {
+                if (in_array($feature, 
+                            [
+                                'Report.ClassAttendanceNotMarkedRecords', 
+                                'Report.InstitutionCases', 
+                                'Report.StudentAttendanceSummary', 
+                                'Report.StaffAttendances'
+                            ])
+                    ) {
                     $attr['onChangeReload'] = true;
                 }
 
@@ -536,7 +567,12 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionStudents'])) {
+            if (in_array($feature, 
+                        [
+                            'Report.InstitutionStudents'
+                        ])
+                ) {
+                
                 $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
@@ -563,7 +599,13 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['academic_period_id'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords'])) {
+            if (in_array($feature, 
+                        [
+                            'Report.ClassAttendanceNotMarkedRecords',
+                            'Report.SubjectsBookLists'
+                        ])
+                ) {
+                
                 $EducationGrades = TableRegistry::get('Education.EducationGrades');
                 $gradeOptions = $EducationGrades
                     ->find('list', [
@@ -585,7 +627,11 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
-            } elseif (in_array($feature, ['Report.StudentAttendanceSummary'])) {
+            } elseif (in_array($feature,
+                               [
+                                   'Report.StudentAttendanceSummary'
+                               ])
+                      ) {
                 $gradeList = [];
                 if (array_key_exists('institution_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_id']) && array_key_exists('academic_period_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['academic_period_id'])) {
                     $institutionId = $request->data[$this->alias()]['institution_id'];
@@ -616,11 +662,20 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
+
 			
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports',
-			'Report.Guardians',
-			 'Report.InstitutionInfrastructures'
-			])) {
+            if (in_array($feature, 
+                        [
+                            'Report.InstitutionSubjects', 
+                            'Report.StudentAttendanceSummary',
+                            'Report.StaffAttendances',
+                            'Report.BodyMasses', 
+                            'Report.WashReports',
+                            'Report.Guardians',
+                            'Report.InstitutionInfrastructures','Report.SubjectsBookLists'
+                        ])
+                ) {
+                
 
                 $TypesTable = TableRegistry::get('Institution.Types');
                 $typeOptions = $TypesTable
@@ -642,7 +697,12 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionInfrastructures'])) {
+            if (in_array($feature, 
+                        [
+                            'Report.InstitutionInfrastructures'
+                        ])
+                ) {
+
                 $TypesTable = TableRegistry::get('infrastructure_levels');
                 $typeOptions = $TypesTable
                     ->find('list')
@@ -661,7 +721,12 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionInfrastructures'])) {
+            if (in_array($feature, 
+                        [
+                            'Report.InstitutionInfrastructures'
+                        ])
+                ) {
+
                 $TypesTable = TableRegistry::get('building_types');
                 $typeOptions = $TypesTable
                     ->find('list')
@@ -681,12 +746,25 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-			
-            if (in_array($feature, ['Report.InstitutionSubjects', 'Report.StudentAttendanceSummary','Report.StaffAttendances', 'Report.BodyMasses', 'Report.WashReports', 'Report.Guardians',
-			      'Report.InstitutionInfrastructures', 'Report.InstitutionClasses', 'Report.SpecialNeedsFacilities', 'Report.InstitutionCommittees'
-				  ])) {
 
+			$reportModels = [
+                'Report.InstitutionSubjects', 
+                'Report.StudentAttendanceSummary',
+                'Report.StaffAttendances',
+                'Report.BodyMasses',
+				'Report.WashReports', 
+				'Report.Guardians',
+				'Report.InstitutionInfrastructures',
+				'Report.InstitutionClasses', 
+				'Report.SpecialNeedsFacilities', 
+				'Report.InstitutionCommittees',
+				'Report.SubjectsBookLists',
+                'Report.StudentAbsences'
+            ];
 
+            
+            if (in_array($feature, $reportModels)) {
+				
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
                     $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
@@ -741,7 +819,7 @@ class InstitutionsTable extends AppTable
                     $attr['attr']['required'] = true;
                 } else {
 					
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
@@ -762,7 +840,12 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases','Report.StudentAttendanceSummary']) && isset($this->request->data[$this->alias()]['academic_period_id'])) {
+            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 
+									'Report.InstitutionCases',
+									'Report.StudentAttendanceSummary'
+				]) && isset($this->request->data[$this->alias()]['academic_period_id'])
+				) {
+
                 $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
@@ -782,7 +865,12 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases','Report.StudentAttendanceSummary'])) {
+            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 
+									'Report.InstitutionCases',
+									'Report.StudentAttendanceSummary'
+									])
+                ) {
+					
                 $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
@@ -852,7 +940,13 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.InstitutionSubjects'])) {
+            if (in_array($feature, 
+                        [
+                            'Report.InstitutionSubjects',
+                            'Report.SubjectsBookLists'
+                        ])
+                ) {
+
                 $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
                 $subjectOptions = $EducationSubjects
                     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
