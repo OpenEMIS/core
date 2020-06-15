@@ -108,7 +108,9 @@ class ReportsController extends AppController
                 'Report.StaffEmploymentStatuses' => __('Employment Statuses'),
                 'Report.StaffSalaries' => __('Salaries'),
                 'Report.StaffSystemUsage' => __('System Usage'),
-                'Report.StaffTrainingReports' => __('Training Courses Report')
+                'Report.StaffTrainingReports' => __('Training Courses Report'),
+                'Report.StaffLeaveReport' => __('Staff Leave')
+				
             ];
         } elseif ($module == 'Textbooks') {
             $options = [
