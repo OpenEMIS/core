@@ -22,6 +22,11 @@ class POCOR5165 extends AbstractMigration
                 'en' => 'Staff Name',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+			[
+                'en' => 'Training Courses Report',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('locale_contents', $localeContent);
