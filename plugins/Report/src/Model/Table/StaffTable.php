@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
 
 class StaffTable extends AppTable  {
 	public function initialize(array $config) {
@@ -30,6 +31,24 @@ class StaffTable extends AppTable  {
 			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
 		]);
 	}
+    
+    public function validationStaffLeaveReport(Validator $validator)
+
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('institution_id');
+        return $validator;
+    }
+
+     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data[$this->alias()]['feature'] == 'Report.StaffLeaveReport') {
+            $options['validate'] = 'StaffLeaveReport';
+        }
+    }
+
 
 	public function beforeAction(Event $event) 
 	{
@@ -40,6 +59,7 @@ class StaffTable extends AppTable  {
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('staff_leave_type_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('format');
 	}
 	
@@ -49,11 +69,36 @@ class StaffTable extends AppTable  {
 		return $attr;
 	}
 
+     public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.StaffLeaveReport'])) {
+                $staffLeaveTypeTable = TableRegistry::get('Staff.StaffLeaveTypes');
+                $staffLeaveTypeOptions = $staffLeaveTypeTable->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'name'
+                        ]);
+
+                $attr['options'] = $staffLeaveTypeOptions->toArray();
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+
+                if (empty($request->data[$this->alias()]['staff_leave_type_id'])) {
+                    reset($staffLeaveTypeOptions);
+                    $request->data[$this->alias()]['staff_leave_type_id'] = key($staffLeaveTypeOptions);
+                }
+                return $attr;
+            }
+        }
+    }
+
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.StaffSalaries'])) {
+            if (in_array($feature, ['Report.StaffSalaries',
+                                    'Report.StaffLeaveReport'])) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
 
@@ -161,7 +206,7 @@ class StaffTable extends AppTable  {
             $feature = $this->request->data[$this->alias()]['feature'];
 
             if (in_array($feature, ['Report.StaffPositions',
-                  ])) { 
+                                    'Report.StaffLeaveReport'])) { 
                 $area_id = $this->request->data[$this->alias()]['area_id'];
                 $institutionList = [];
 
@@ -234,4 +279,5 @@ class StaffTable extends AppTable  {
             }
             return $attr;
         }
+		
 }
