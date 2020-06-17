@@ -84,7 +84,8 @@ class InstitutionStudentsTable extends AppTable  {
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('start_date'),
                 $this->aliasField('end_date'),
-                'class_name' => 'InstitutionClasses.name'
+                'class_name' => 'InstitutionClasses.name',
+                'student_extracurriculars' => 'StudentExtracurriculars.name'
             ])
             ->contain([
                 'Users' => [
@@ -98,7 +99,8 @@ class InstitutionStudentsTable extends AppTable  {
                         'Users.preferred_name',
                         'date_of_birth' => 'Users.date_of_birth',
                         'username' => 'Users.username',
-                        'number' => 'Users.identity_number'
+                        'number' => 'Users.identity_number',
+                        'address' => 'Users.address'
                     ]
                 ],
                 'Users.Genders' => [
@@ -182,6 +184,9 @@ class InstitutionStudentsTable extends AppTable  {
             ->leftJoin([$Class->alias() => $Class->table()], [
                 $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ])
+            ->leftJoin(['StudentExtracurriculars' => 'student_extracurriculars'], [
+                    'StudentExtracurriculars.security_user_id = '.$this->aliasField('student_id')
+                ])
             ->formatResults(function (ResultSetInterface $results) use ($statusOptions, $statusId) {
                 return $results->map(function ($row) use ($statusOptions, $statusId) {
                     $statusCode = $statusOptions[$statusId];
@@ -256,6 +261,7 @@ class InstitutionStudentsTable extends AppTable  {
                     return $row;
                 });
             });
+//echo "<pre>";print_r($query);die;
     }
 
 	public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
@@ -447,6 +453,20 @@ class InstitutionStudentsTable extends AppTable  {
 			'type' => 'age',
 			'label' => 'Age',
 		];
+
+        $extraField[] = [
+            'key' => 'Users.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => 'Address',
+        ];
+
+        $extraField[] = [
+            'key' => 'StudentExtracurriculars.name',
+            'field' => 'student_extracurriculars',
+            'type' => 'string',
+            'label' => 'StudentExtracurriculars',
+        ];
 
         $newFields = array_merge($extraField, $fields->getArrayCopy());
 
