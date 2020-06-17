@@ -60,7 +60,8 @@ class StaffTable extends AppTable  {
         $this->ControllerAction->field('area_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('staff_leave_type_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('format');
+        $this->ControllerAction->field('format');
+        
 	}
 	
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -92,6 +93,7 @@ class StaffTable extends AppTable  {
             }
         }
     }
+
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
@@ -253,8 +255,8 @@ class StaffTable extends AppTable  {
 
                     $institutionList = $institutionQuery->toArray();
                     }
-                }
 
+               
                 if (empty($institutionList)) {
                     $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
                     $attr['type'] = 'select';
@@ -280,4 +282,6 @@ class StaffTable extends AppTable  {
             return $attr;
         }
 		
+
+}
 }

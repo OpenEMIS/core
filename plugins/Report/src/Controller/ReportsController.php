@@ -111,6 +111,7 @@ class ReportsController extends AppController
                 'Report.StaffTrainingReports' => __('Training Courses Report'),
                 'Report.StaffPositions' => __('Position Summary Report'),
                 'Report.StaffLeaveReport' => __('Staff Leave')
+
 				
             ];
         } elseif ($module == 'Textbooks') {
