@@ -41,9 +41,17 @@ class StaffLeaveReportTable extends AppTable {
         $query
             ->select([
                 'status' => 'WorkflowSteps.name',
-                'assignee' => 'Users.first_name',
+                'assignee' => $query->func()->concat([
+                    'Users.first_name' => 'literal',
+                    " ",
+                    'Users.last_name' => 'literal'
+                    ]),
                 'openemis_number' => 'Users.openemis_no',
-                'staff_name' => 'Staffs.first_name',
+                'staff_name' =>  $query->func()->concat([
+                    'Staffs.first_name' => 'literal',
+                    " ",
+                    'Staffs.last_name' => 'literal'
+                    ]),
                 'staff_leave_type' => 'StaffLeaveTypes.name',
                 'date_from' =>  $this->aliasfield('date_from'),
                 'date_to' =>  $this->aliasfield('date_to'),
@@ -85,30 +93,37 @@ class StaffLeaveReportTable extends AppTable {
     {
       $cloneFields = $fields->getArrayCopy();
 
-       
-
         $extraFields[] = [
-            'key' => 'Users.first_name',
-            'field' => 'assignee',
+            'key' => '',
+            'field' => 'academic_period',
             'type' => 'string',
-            'label' => __('Assignee')
-        ];
-
-        $extraFields[] = [
-            'key' => 'StaffLeaveTypes.name',
-            'field' => 'staff_leave_type',
+            'label' => __('Academic Period')
+        ];  
+        
+         $extraFields[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_number',
             'type' => 'string',
-            'label' => __('Staff leave Type')
-        ];
+            'label' => __('openEMIS ID')
+        ];  
 
-        $extraFields[] = [
+
+         $extraFields[] = [
+            'key' => '',
+            'field' => 'staff_name',
+            'type' => 'string',
+            'label' => __('Staff Name')
+        ];  
+
+         $extraFields[] = [
             'key' => 'Users.identity_type_id',
             'field' => 'identity_type',
             'type' => 'string',
             'label' => __('Identity Type')
         ];
+        
 
-        $extraFields[] = [
+         $extraFields[] = [
             'key' => 'Users.identity_number',
             'field' => 'identity_number',
             'type' => 'string',
@@ -116,37 +131,36 @@ class StaffLeaveReportTable extends AppTable {
         ];
         
 
-        $extraFields[] = [
+         $extraFields[] = [
+            'key' => 'StaffLeaveTypes.name',
+            'field' => 'staff_leave_type',
+            'type' => 'string',
+            'label' => __('Staff leave Type')
+        ];
+
+         $extraFields[] = [
             'key' => '',
             'field' => 'date_from',
             'type' => 'string',
             'label' => __('Date From')
         ];
 
-
-
-        $extraFields[] = [
+         $extraFields[] = [
             'key' => '',
             'field' => 'date_to',
             'type' => 'string',
             'label' => __('Date To')
         ];
 
-         $extraFields[] = [
+        $extraFields[] = [
             'key' => '',
-            'field' => 'start_time',
+            'field' => 'Number_of_days',
             'type' => 'string',
-            'label' => __('Start Time')
+            'label' => __('Number of days')
         ];  
 
-         $extraFields[] = [
-            'key' => '',
-            'field' => 'end_time',
-            'type' => 'string',
-            'label' => __('End Time')
-        ];  
+
         
-
          $extraFields[] = [
             'key' => '',
             'field' => 'full_day',
@@ -155,46 +169,44 @@ class StaffLeaveReportTable extends AppTable {
         ];  
 
          $extraFields[] = [
-            'key' => 'Users.openemis_no',
-            'field' => 'openemis_number',
-            'type' => 'string',
-            'label' => __('openEMIS ID')
-        ];  
-
-         $extraFields[] = [
-            'key' => 'Staffs.first_name',
+            'key' => '',
             'field' => 'start_time',
             'type' => 'string',
-            'label' => __('Staff Name')
+            'label' => __('Start Time')
         ];  
+        
 
 
          $extraFields[] = [
+            'key' => '',
+            'field' => 'end_time',
+            'type' => 'string',
+            'label' => __('End Time')
+        ];  
+        
+        $extraFields[] = [
+            'key' => '',
+            'field' => 'assignee',
+            'type' => 'string',
+            'label' => __('Assignee')
+        ];
+
+       
+        $extraFields[] = [
             'key' => 'WorkflowSteps.name',
             'field' => 'status',
             'type' => 'string',
             'label' => __('Status')
         ];  
-         
-         $extraFields[] = [
-            'key' => '',
-            'field' => 'Number_of_days',
-            'type' => 'string',
-            'label' => __('Number of days')
-        ];  
 
-         $extraFields[] = [
+       $extraFields[] = [
             'key' => '',
             'field' => 'comments',
             'type' => 'string',
             'label' => __('Comments')
         ];  
-         $extraFields[] = [
-            'key' => '',
-            'field' => 'academic_period',
-            'type' => 'string',
-            'label' => __('Academic Period')
-        ];  
+        
+        
 
         
         $newFields = $extraFields;
