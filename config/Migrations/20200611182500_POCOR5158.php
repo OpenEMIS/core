@@ -28,6 +28,16 @@ class POCOR5158 extends AbstractMigration
                 'en' => 'Homeroom Teacher',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'All Aread',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Position Summary Report',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
         

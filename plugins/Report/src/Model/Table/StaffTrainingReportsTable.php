@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
 class StaffTrainingReportsTable extends AppTable {
@@ -35,6 +36,16 @@ class StaffTrainingReportsTable extends AppTable {
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         return $attr;
+    }
+    
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $identityTypeName = '';
+        if (!empty($entity->identity_type)) {
+            $identityType = TableRegistry::get('FieldOption.IdentityTypes')->find()->where(['id'=>$entity->identity_type])->first();
+            $identityTypeName = $identityType->name;
+        }
+        return $identityTypeName;
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
