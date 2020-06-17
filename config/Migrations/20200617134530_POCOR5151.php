@@ -23,7 +23,13 @@ class POCOR5151 extends AbstractMigration
                 'en' => 'All Staff Leaves',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+             [
+                'en' => 'Full Time',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
+
             
         ];
         $this->insert('locale_contents', $localeContent);
