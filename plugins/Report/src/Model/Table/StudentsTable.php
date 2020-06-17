@@ -229,7 +229,8 @@ class StudentsTable extends AppTable
 									'Report.StudentsRiskAssessment',
 									'Report.SubjectsBookLists',
 									'Report.StudentNotAssignedClass',
-                                    'Report.SpecialNeeds'
+                                    'Report.SpecialNeeds',
+                                    'Report.StudentGuardians'
 				  ])) {
 
  
@@ -292,7 +293,8 @@ class StudentsTable extends AppTable
 						'Report.StudentsRiskAssessment',
 						'Report.SubjectsBookLists',
 						'Report.StudentNotAssignedClass',
-                        'Report.SpecialNeeds'
+                        'Report.SpecialNeeds',
+                        'Report.StudentGuardians'
 					])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     }elseif (in_array($feature, ['Report.HealthReports'])) {
