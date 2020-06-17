@@ -48,7 +48,8 @@ class StaffLeaveReportTable extends AppTable {
                 'time' =>  $this->aliasfield('start_time'),
                 'Number_of_days' =>  $this->aliasfield('number_of_days'),
                 'comments' =>  $this->aliasfield('comments'),
-                 'national_code' => 'StaffLeaveTypes.national_code',
+                'identity_number' => 'Users.identity_number',
+                'identity_type' => 'Users.identity_type_id',
                 'academic_period' => 'AcademicPeriods.name',
                 
                 
@@ -68,7 +69,7 @@ class StaffLeaveReportTable extends AppTable {
                         ])
              ->where(['AcademicPeriods.id='. $academicPeriodId, $this->aliasfield('institution_id'). '='. $institutionId,$this->aliasfield('staff_leave_type_id'). '='. $staffLeaveTypeId]);
 
-
+ echo $query;
           
           
     }
@@ -77,13 +78,7 @@ class StaffLeaveReportTable extends AppTable {
     {
       $cloneFields = $fields->getArrayCopy();
 
-        $extraFields[] = [
-            'key' => 'WorkflowSteps.name',
-            'field' => 'status',
-            'type' => 'string',
-            'label' => __('Status')
-        ];  
-         
+       
 
         $extraFields[] = [
             'key' => 'Users.first_name',
@@ -100,11 +95,19 @@ class StaffLeaveReportTable extends AppTable {
         ];
 
         $extraFields[] = [
-            'key' => 'StaffLeaveTypes.national_code',
-            'field' => 'national_code',
+            'key' => 'Users.identity_type_id',
+            'field' => 'identity_type',
             'type' => 'string',
-            'label' => __('National Code')
+            'label' => __('Identity Type')
         ];
+
+        $extraFields[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+        
 
         $extraFields[] = [
             'key' => '',
@@ -128,12 +131,21 @@ class StaffLeaveReportTable extends AppTable {
             'type' => 'string',
             'label' => __('Time')
         ];  
+
+         $extraFields[] = [
+            'key' => 'WorkflowSteps.name',
+            'field' => 'status',
+            'type' => 'string',
+            'label' => __('Status')
+        ];  
+         
          $extraFields[] = [
             'key' => '',
             'field' => 'Number_of_days',
             'type' => 'string',
             'label' => __('Number of days')
         ];  
+
          $extraFields[] = [
             'key' => '',
             'field' => 'comments',
