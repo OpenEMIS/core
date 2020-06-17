@@ -81,20 +81,36 @@ class StaffTable extends AppTable  {
                             'valueField' => 'name'
                         ]);
 
-                $attr['options'] = $staffLeaveTypeOptions->toArray();
-                $attr['type'] = 'select';
-                $attr['select'] = false;
+               $staffLeaveTypeList = $staffLeaveTypeOptions->toArray();
+                
+               if (empty($staffLeaveTypeList)) {
+                    $staffLeaveTypeOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    $attr['type'] = 'select';
+                    $attr['options'] = $staffLeaveTypeOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+                    
+                    if (in_array($feature, [
+                        'Report.StaffLeaveReport'
+                    ])) {
+                        $staffLeaveTypeOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Staff Leaves')] + $staffLeaveTypeList;
+                    }else {
+                        $staffLeaveTypeOptions = ['' => '-- ' . __('Select') . ' --'] + $staffLeaveTypeList;
+                    }
 
-                if (empty($request->data[$this->alias()]['staff_leave_type_id'])) {
-                    reset($staffLeaveTypeOptions);
-                    $request->data[$this->alias()]['staff_leave_type_id'] = key($staffLeaveTypeOptions);
+                    $attr['type'] = 'chosenSelect';
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $staffLeaveTypeOptions;
+                    $attr['attr']['required'] = true;
                 }
-                return $attr;
-            }
         }
-    }
-
+              return $attr;
+          }
+        }
     
+
+
 
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -268,6 +284,7 @@ class StaffTable extends AppTable  {
                     
                     if (in_array($feature, [
                         'Report.StaffPositions',
+                        'Report.StaffLeaveReport'
                     ])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     }else {
