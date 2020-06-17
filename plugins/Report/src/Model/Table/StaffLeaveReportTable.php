@@ -42,10 +42,14 @@ class StaffLeaveReportTable extends AppTable {
             ->select([
                 'status' => 'WorkflowSteps.name',
                 'assignee' => 'Users.first_name',
+                'openemis_number' => 'Users.openemis_no',
+                'staff_name' => 'Staffs.first_name',
                 'staff_leave_type' => 'StaffLeaveTypes.name',
                 'date_from' =>  $this->aliasfield('date_from'),
                 'date_to' =>  $this->aliasfield('date_to'),
-                'time' =>  $this->aliasfield('start_time'),
+                'start_time' =>  $this->aliasfield('start_time'),
+                'end_time' =>  $this->aliasfield('end_time'),
+                'full_day' =>  $this->aliasfield('full_day'),
                 'Number_of_days' =>  $this->aliasfield('number_of_days'),
                 'comments' =>  $this->aliasfield('comments'),
                 'identity_number' => 'Users.identity_number',
@@ -55,7 +59,10 @@ class StaffLeaveReportTable extends AppTable {
                 
              ])
             ->leftJoin(['Users' => 'security_users'], [
-                            'Users.id = ' . $this->aliasfield('assignee_id')
+                            'Users.id = ' . $this->aliasfield('assignee_id'),
+                        ])
+            ->leftJoin(['Staffs' => 'security_users'], [
+                            'Staffs.id = ' . $this->aliasfield('staff_id'),
                         ])
            
             ->leftJoin(['WorkFlowSteps' => 'workflow_steps'], [
@@ -127,10 +134,40 @@ class StaffLeaveReportTable extends AppTable {
 
          $extraFields[] = [
             'key' => '',
-            'field' => 'time',
+            'field' => 'start_time',
             'type' => 'string',
-            'label' => __('Time')
+            'label' => __('Start Time')
         ];  
+
+         $extraFields[] = [
+            'key' => '',
+            'field' => 'end_time',
+            'type' => 'string',
+            'label' => __('End Time')
+        ];  
+        
+
+         $extraFields[] = [
+            'key' => '',
+            'field' => 'full_day',
+            'type' => 'string',
+            'label' => __('Full Time')
+        ];  
+
+         $extraFields[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_number',
+            'type' => 'string',
+            'label' => __('openEMIS ID')
+        ];  
+
+         $extraFields[] = [
+            'key' => 'Staffs.first_name',
+            'field' => 'start_time',
+            'type' => 'string',
+            'label' => __('Staff Name')
+        ];  
+
 
          $extraFields[] = [
             'key' => 'WorkflowSteps.name',
