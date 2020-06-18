@@ -18,7 +18,7 @@ class StaffLeaveReportTable extends AppTable {
         parent::initialize($config);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
-            'pages' => false
+            'excludes' => ['end_academic_period_id']
         ]);
     }
 
@@ -92,17 +92,43 @@ class StaffLeaveReportTable extends AppTable {
              ->leftJoin(['StaffLeaveTypes' => 'staff_leave_types'], [
                            $this->aliasfield('staff_leave_type_id') . ' = StaffLeaveTypes.id'
                         ])
-            ->where([$where]);
+            ->where([$where]);          
+    }
 
- 
-          
-          
+    public function onExcelRenderDateFrom(Event $event, Entity $entity, $attr)
+    {
+        $date_from = $entity->date_from->format('Y-m-d');
+        $entity->date_from = $date_from;
+        return $entity->date_from;
+    }
+
+    public function onExcelRenderDateTo(Event $event, Entity $entity, $attr)
+    {
+        $date_to = $entity->date_to->format('Y-m-d');
+        $entity->date_to = $date_to;
+        return $entity->date_to;
+    }
+
+    public function onExcelRenderStartTime(Event $event, Entity $entity, $attr)
+    {
+        if (!empty($entity->start_time)) {
+        $start_time = $entity->start_time->format('h:i:s a');
+        $entity->start_time = $start_time;
+        }
+        return $entity->start_time;
+    }
+
+    public function onExcelRenderEndTime(Event $event, Entity $entity, $attr)
+    {
+        if (!empty($entity->end_time)) {
+        $end_time = $entity->end_time->format('h:i:s a');
+        $entity->end_time = $end_time;
+        }
+        return $entity->end_time;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-      $cloneFields = $fields->getArrayCopy();
-
         $extraFields[] = [
             'key' => '',
             'field' => 'academic_period',
@@ -151,21 +177,21 @@ class StaffLeaveReportTable extends AppTable {
          $extraFields[] = [
             'key' => '',
             'field' => 'date_from',
-            'type' => 'string',
+            'type' => 'date_from',
             'label' => __('Date From')
         ];
 
          $extraFields[] = [
             'key' => '',
             'field' => 'date_to',
-            'type' => 'string',
+            'type' => 'date_to',
             'label' => __('Date To')
         ];
 
         $extraFields[] = [
             'key' => '',
             'field' => 'Number_of_days',
-            'type' => 'string',
+            'type' => 'integer',
             'label' => __('Number of days')
         ];  
 
@@ -181,7 +207,7 @@ class StaffLeaveReportTable extends AppTable {
          $extraFields[] = [
             'key' => '',
             'field' => 'start_time',
-            'type' => 'string',
+            'type' => 'start_time',
             'label' => __('Start Time')
         ];  
         
@@ -190,7 +216,7 @@ class StaffLeaveReportTable extends AppTable {
          $extraFields[] = [
             'key' => '',
             'field' => 'end_time',
-            'type' => 'string',
+            'type' => 'end_time',
             'label' => __('End Time')
         ];  
         
