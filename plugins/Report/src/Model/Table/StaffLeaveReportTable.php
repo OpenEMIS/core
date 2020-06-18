@@ -37,7 +37,17 @@ class StaffLeaveReportTable extends AppTable {
          $academicPeriodId = $requestData->academic_period_id;
          $institutionId = $requestData->institution_id;
          $staffLeaveTypeId = $requestData->staff_leave_type_id;
-      
+         
+          if ($staffLeaveTypeId == 0 && $institutionId != 0) {
+            $where = [ 'AcademicPeriods.id='. $academicPeriodId , $this->aliasfield('institution_id').'='. $institutionId];
+        } else if ($staffLeaveTypeId != 0 && $institutionId != 0) {           
+            $where = [ 'AcademicPeriods.id='. $academicPeriodId , $this->aliasfield('institution_id').'='. $institutionId,$this->aliasfield('staff_leave_type_id').'='.$staffLeaveTypeId]; 
+        } else if ($staffLeaveTypeId !=0 && $institutionId == 0) {
+            $where = [ 'AcademicPeriods.id='. $academicPeriodId , $this->aliasfield('staff_leave_type_id').'='. $staffLeaveTypeId];
+        } else {
+            $where = [ 'AcademicPeriods.id='. $academicPeriodId];
+        }
+
         $query
             ->select([
                 'status' => 'WorkflowSteps.name',
@@ -82,7 +92,7 @@ class StaffLeaveReportTable extends AppTable {
              ->leftJoin(['StaffLeaveTypes' => 'staff_leave_types'], [
                            $this->aliasfield('staff_leave_type_id') . ' = StaffLeaveTypes.id'
                         ])
-             ->where(['AcademicPeriods.id='. $academicPeriodId, $this->aliasfield('institution_id'). '='. $institutionId,$this->aliasfield('staff_leave_type_id'). '='. $staffLeaveTypeId]);
+            ->where([$where]);
 
  echo $query;
           
