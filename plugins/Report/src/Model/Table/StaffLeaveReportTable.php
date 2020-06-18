@@ -76,10 +76,10 @@ class StaffLeaveReportTable extends AppTable {
                 
                 
              ])
-            ->leftJoin(['Users' => 'security_users'], [
+            ->innerJoin(['Users' => 'security_users'], [
                             'Users.id = ' . $this->aliasfield('assignee_id'),
                         ])
-            ->leftJoin(['Staffs' => 'security_users'], [
+            ->innerJoin(['Staffs' => 'security_users'], [
                             'Staffs.id = ' . $this->aliasfield('staff_id'),
                         ])
            
@@ -94,7 +94,7 @@ class StaffLeaveReportTable extends AppTable {
                         ])
             ->where([$where]);
 
- echo $query;
+ 
           
           
     }
