@@ -162,7 +162,7 @@ class StaffLeaveReportTable extends AppTable {
         ];  
 
          $extraFields[] = [
-            'key' => 'Users.identity_type_id',
+            'key' => 'identity_type',
             'field' => 'identity_type',
             'type' => 'string',
             'label' => __('Identity Type')
