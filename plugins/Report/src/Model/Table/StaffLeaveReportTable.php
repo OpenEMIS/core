@@ -50,7 +50,7 @@ class StaffLeaveReportTable extends AppTable {
 
         $query
             ->select([
-                'status' => 'WorkflowSteps.name',
+                'status' => 'WorkFlowSteps.name',
                 'assignee' => $query->func()->concat([
                     'Users.first_name' => 'literal',
                     " ",
