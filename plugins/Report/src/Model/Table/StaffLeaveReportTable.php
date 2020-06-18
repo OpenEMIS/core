@@ -92,11 +92,7 @@ class StaffLeaveReportTable extends AppTable {
              ->leftJoin(['StaffLeaveTypes' => 'staff_leave_types'], [
                            $this->aliasfield('staff_leave_type_id') . ' = StaffLeaveTypes.id'
                         ])
-            ->where([$where]);
-           // echo "<pre>";print_r($query);die;
- 
-          
-          
+            ->where([$where]);          
     }
 
     public function onExcelRenderDateFrom(Event $event, Entity $entity, $attr)
@@ -113,11 +109,26 @@ class StaffLeaveReportTable extends AppTable {
         return $entity->date_to;
     }
 
+    public function onExcelRenderStartTime(Event $event, Entity $entity, $attr)
+    {
+        if (!empty($entity->start_time)) {
+        $start_time = $entity->start_time->format('h:i:s a');
+        $entity->start_time = $start_time;
+        }
+        return $entity->start_time;
+    }
+
+    public function onExcelRenderEndTime(Event $event, Entity $entity, $attr)
+    {
+        if (!empty($entity->end_time)) {
+        $end_time = $entity->end_time->format('h:i:s a');
+        $entity->end_time = $end_time;
+        }
+        return $entity->end_time;
+    }
+
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        //echo "<pre>";print_r($fields);die;
-      //$cloneFields = $fields->getArrayCopy();
-
         $extraFields[] = [
             'key' => '',
             'field' => 'academic_period',
@@ -196,7 +207,7 @@ class StaffLeaveReportTable extends AppTable {
          $extraFields[] = [
             'key' => '',
             'field' => 'start_time',
-            'type' => 'string',
+            'type' => 'start_time',
             'label' => __('Start Time')
         ];  
         
@@ -205,7 +216,7 @@ class StaffLeaveReportTable extends AppTable {
          $extraFields[] = [
             'key' => '',
             'field' => 'end_time',
-            'type' => 'string',
+            'type' => 'end_time',
             'label' => __('End Time')
         ];  
         
