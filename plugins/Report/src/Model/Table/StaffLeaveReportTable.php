@@ -126,6 +126,16 @@ class StaffLeaveReportTable extends AppTable {
         }
         return $entity->end_time;
     }
+    
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $identityTypeName = '';
+        if (!empty($entity->identity_type)) {
+            $identityType = TableRegistry::get('FieldOption.IdentityTypes')->find()->where(['id'=>$entity->identity_type])->first();
+            $identityTypeName = $identityType->name;
+        }
+        return $identityTypeName;
+    }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
