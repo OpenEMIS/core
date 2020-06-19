@@ -55,7 +55,7 @@ class StaffLeaveReportTable extends AppTable {
         
         
 
-     echo   $query
+        $query
             ->select([
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',  
@@ -65,7 +65,7 @@ class StaffLeaveReportTable extends AppTable {
                     " ",
                     'Users.last_name' => 'literal'
                     ]),
-                'openemis_number' => 'Users.openemis_no',
+                'openemis_number' => 'Staffs.openemis_no',
                 'staff_name' =>  $query->func()->concat([
                     'Staffs.first_name' => 'literal',
                     " ",
@@ -96,18 +96,13 @@ class StaffLeaveReportTable extends AppTable {
             ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                            $this->aliasfield('academic_period_id') . ' = AcademicPeriods.id'
                         ])
-                ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
-                           $this->aliasfield('staff_id') . ' = Staffs.id'
-                        ])
             ->leftJoin(['Institutions' => 'institutions'], [
-                           $this->aliasfield('id') . ' = InstitutionStaff.institution_id'
+                           $this->aliasfield('institution_id') . ' = '.'Institutions.id'
                         ])
              ->leftJoin(['StaffLeaveTypes' => 'staff_leave_types'], [
                            $this->aliasfield('staff_leave_type_id') . ' = StaffLeaveTypes.id'
                         ])
-            ->where($conditions);   
-     
-     die;
+            ->where($conditions); 
     }
 
     public function onExcelRenderDateFrom(Event $event, Entity $entity, $attr)
@@ -176,7 +171,7 @@ class StaffLeaveReportTable extends AppTable {
         ];
         
          $extraFields[] = [
-            'key' => 'Users.openemis_no',
+            'key' => 'Staffs.openemis_no',
             'field' => 'openemis_number',
             'type' => 'string',
             'label' => __('OpenEMIS ID')
@@ -279,11 +274,7 @@ class StaffLeaveReportTable extends AppTable {
             'field' => 'comments',
             'type' => 'string',
             'label' => __('Comments')
-        ];  
-        
-        
-
-        
+        ];     
         $newFields = $extraFields;
         
         $fields->exchangeArray($newFields);
