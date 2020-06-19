@@ -20,6 +20,8 @@ class StaffLeaveReportTable extends AppTable {
         $this->addBehavior('Excel', [
             'excludes' => ['end_academic_period_id']
         ]);
+        
+       
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -38,25 +40,32 @@ class StaffLeaveReportTable extends AppTable {
          $institutionId = $requestData->institution_id;
          $staffLeaveTypeId = $requestData->staff_leave_type_id;
          
-          if ($staffLeaveTypeId == 0 && $institutionId != 0) {
-            $where = [ 'AcademicPeriods.id='. $academicPeriodId , $this->aliasfield('institution_id').'='. $institutionId];
-        } else if ($staffLeaveTypeId != 0 && $institutionId != 0) {           
-            $where = [ 'AcademicPeriods.id='. $academicPeriodId , $this->aliasfield('institution_id').'='. $institutionId,$this->aliasfield('staff_leave_type_id').'='.$staffLeaveTypeId]; 
-        } else if ($staffLeaveTypeId !=0 && $institutionId == 0) {
-            $where = [ 'AcademicPeriods.id='. $academicPeriodId , $this->aliasfield('staff_leave_type_id').'='. $staffLeaveTypeId];
-        } else {
-            $where = [ 'AcademicPeriods.id='. $academicPeriodId];
+        $conditions = [];
+         
+        if (!empty($academicPeriodId)) {
+            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
+        if (!empty($institutionId)) {
+            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        }
+
+        if (!empty($staffLeaveTypeId)) {
+            $conditions[$this->aliasField('staff_leave_type_id')] = $staffLeaveTypeId;
+        }
+        
+        
 
         $query
             ->select([
+                'institution_code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',  
                 'status' => 'WorkFlowSteps.name',
                 'assignee' => $query->func()->concat([
                     'Users.first_name' => 'literal',
                     " ",
                     'Users.last_name' => 'literal'
                     ]),
-                'openemis_number' => 'Users.openemis_no',
+                'openemis_number' => 'Staffs.openemis_no',
                 'staff_name' =>  $query->func()->concat([
                     'Staffs.first_name' => 'literal',
                     " ",
@@ -72,9 +81,7 @@ class StaffLeaveReportTable extends AppTable {
                 'comments' =>  $this->aliasfield('comments'),
                 'identity_number' => 'Users.identity_number',
                 'identity_type' => 'Users.identity_type_id',
-                'academic_period' => 'AcademicPeriods.name',
-                
-                
+                'academic_period' => 'AcademicPeriods.name'
              ])
             ->innerJoin(['Users' => 'security_users'], [
                             'Users.id = ' . $this->aliasfield('assignee_id'),
@@ -89,10 +96,13 @@ class StaffLeaveReportTable extends AppTable {
             ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                            $this->aliasfield('academic_period_id') . ' = AcademicPeriods.id'
                         ])
+            ->leftJoin(['Institutions' => 'institutions'], [
+                           $this->aliasfield('institution_id') . ' = '.'Institutions.id'
+                        ])
              ->leftJoin(['StaffLeaveTypes' => 'staff_leave_types'], [
                            $this->aliasfield('staff_leave_type_id') . ' = StaffLeaveTypes.id'
                         ])
-            ->where([$where]);          
+            ->where($conditions); 
     }
 
     public function onExcelRenderDateFrom(Event $event, Entity $entity, $attr)
@@ -141,16 +151,30 @@ class StaffLeaveReportTable extends AppTable {
     {
         $extraFields[] = [
             'key' => '',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
+        
+        $extraFields[] = [
+            'key' => '',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution Name')
+        ];
+        
+        $extraFields[] = [
+            'key' => '',
             'field' => 'academic_period',
             'type' => 'string',
             'label' => __('Academic Period')
-        ];  
+        ];
         
          $extraFields[] = [
-            'key' => 'Users.openemis_no',
+            'key' => 'Staffs.openemis_no',
             'field' => 'openemis_number',
             'type' => 'string',
-            'label' => __('openEMIS ID')
+            'label' => __('OpenEMIS ID')
         ];  
 
 
@@ -250,11 +274,7 @@ class StaffLeaveReportTable extends AppTable {
             'field' => 'comments',
             'type' => 'string',
             'label' => __('Comments')
-        ];  
-        
-        
-
-        
+        ];     
         $newFields = $extraFields;
         
         $fields->exchangeArray($newFields);
