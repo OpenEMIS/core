@@ -28,6 +28,16 @@ class POCOR5151 extends AbstractMigration
                 'en' => 'Full Time',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Number of days',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Staff leave Type',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
 
             
