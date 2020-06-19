@@ -20,6 +20,8 @@ class StaffLeaveReportTable extends AppTable {
         $this->addBehavior('Excel', [
             'excludes' => ['end_academic_period_id']
         ]);
+        
+       
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -53,7 +55,7 @@ class StaffLeaveReportTable extends AppTable {
         
         
 
-        $query
+     echo   $query
             ->select([
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',  
@@ -79,18 +81,8 @@ class StaffLeaveReportTable extends AppTable {
                 'comments' =>  $this->aliasfield('comments'),
                 'identity_number' => 'Users.identity_number',
                 'identity_type' => 'Users.identity_type_id',
-                'academic_period' => 'AcademicPeriods.name',
-                
-                
-             ]) ->contain([
-                'Institutions' => [
-                    'fields' => [
-                        'Institutions.id',
-                        'Institutions.name',
-                        'Institutions.code'
-                    ]
-                ]
-            ])
+                'academic_period' => 'AcademicPeriods.name'
+             ])
             ->innerJoin(['Users' => 'security_users'], [
                             'Users.id = ' . $this->aliasfield('assignee_id'),
                         ])
@@ -104,10 +96,18 @@ class StaffLeaveReportTable extends AppTable {
             ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                            $this->aliasfield('academic_period_id') . ' = AcademicPeriods.id'
                         ])
+                ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
+                           $this->aliasfield('staff_id') . ' = Staffs.id'
+                        ])
+            ->leftJoin(['Institutions' => 'institutions'], [
+                           $this->aliasfield('id') . ' = InstitutionStaff.institution_id'
+                        ])
              ->leftJoin(['StaffLeaveTypes' => 'staff_leave_types'], [
                            $this->aliasfield('staff_leave_type_id') . ' = StaffLeaveTypes.id'
                         ])
-            ->where($conditions);         
+            ->where($conditions);   
+     
+     die;
     }
 
     public function onExcelRenderDateFrom(Event $event, Entity $entity, $attr)
