@@ -222,6 +222,7 @@ class InstitutionStudentsTable extends AppTable  {
                 'FatherRelations.name = ' => 'Father'
             ])*/
             ->group([$this->aliasField('student_id')])
+            ->order([$this->aliasField('education_grade_id')])
             /*->leftJoin([$Risks->alias() => $Risks->table()], [
                 $Risks->aliasField('id = ') . $InstitutionStudentRisks->aliasField('risk_id')
             ])*/
@@ -313,14 +314,15 @@ class InstitutionStudentsTable extends AppTable  {
 	}
 
     public function onExcelRenderOpenemisNo(Event $event, Entity $entity, $attr) {
-        echo "<pre>";
         $student_id = $entity->student_id;
         $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
         $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
+        $MotherUser = TableRegistry::get('Security.Users');
+        $FatherUser = TableRegistry::get('Security.Users');
          $StudentGuardiansData = $StudentGuardians
                                 ->find()
                                 ->where([
-                                    $StudentGuardians->aliasField('student_id') => 10593])
+                                    $StudentGuardians->aliasField('student_id') => $student_id])
                                 ->toArray();
         foreach ($StudentGuardiansData as $data) {
             $GuardianRelationsData = $GuardianRelations
@@ -328,15 +330,25 @@ class InstitutionStudentsTable extends AppTable  {
                                      ->where([$GuardianRelations->aliasField('id') => $data->guardian_relation_id])
                                      ->toArray();
 
-            echo "<pre>";print_r($GuardianRelationsData);
+            if ($GuardianRelationsData[0]->name == 'Mother') {
+                $MotherData = $MotherUser
+                                ->find()
+                                ->where([ $MotherUser->aliasField('id') => $data->guardian_id])
+                                ->toArray();
+                $entity->MotherData = $MotherData;
+            } else if ($GuardianRelationsData[0]->name == 'Father') {
+                $FatherData = $FatherUser
+                                ->find()
+                                ->where([ $FatherUser->aliasField('id') => $data->guardian_id])
+                                ->toArray();
+                $entity->FatherData = $FatherData;
+            }
         }
-        die;
-
-        
     }
 
 
     public function onExcelRenderMotherOpenemisNo(Event $event, Entity $entity, $attr) {
+        echo "<pre>";print_r($entity);die;
         $mother_openemis_no = '';
         $student_id = $entity->student_id;
         $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
