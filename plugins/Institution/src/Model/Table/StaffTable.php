@@ -2308,8 +2308,8 @@ class StaffTable extends ControllerActionTable
     }
     
     public function beforeFind(Event $event, Query $query, ArrayObject $options) {
-        $deviceRequest = $_REQUEST['_device'];
-        if(!empty($deviceRequest) && $deviceRequest == true){
+       
+        if(!empty($_REQUEST['_device']) && $_REQUEST['_device'] == true){
             $query->formatResults(function($results) {
                 return $results->map(function($row) { 
                     $row['user_avatar'] = null;
