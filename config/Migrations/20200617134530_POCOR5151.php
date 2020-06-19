@@ -38,11 +38,6 @@ class POCOR5151 extends AbstractMigration
                 'en' => 'Staff leave Type',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Staff Leaves',
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
             ]
 
             
