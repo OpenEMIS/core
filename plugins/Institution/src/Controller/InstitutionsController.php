@@ -172,7 +172,8 @@ class InstitutionsController extends AppController
             'ImportStaffLeave'          => ['className' => 'Institution.ImportStaffLeave', 'actions' => ['add']],
             'ImportInstitutionPositions'=> ['className' => 'Institution.ImportInstitutionPositions', 'actions' => ['add']],
             'ImportStudentBodyMasses'   => ['className' => 'Institution.ImportStudentBodyMasses', 'actions' => ['add']],
-            'ImportStudentGuardians'   => ['className' => 'Institution.ImportStudentGuardians', 'actions' => ['add']]
+            'ImportStudentGuardians'   => ['className' => 'Institution.ImportStudentGuardians', 'actions' => ['add']],
+            'ImportStudentExtracurriculars'   => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
