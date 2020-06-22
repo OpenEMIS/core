@@ -7,6 +7,7 @@ use Cake\Event\Event;
 
 class ExtracurricularsTable extends AppTable {
 	public function initialize(array $config) {
+	
 		$this->table('student_extracurriculars');
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -15,6 +16,7 @@ class ExtracurricularsTable extends AppTable {
 	}
 
 	public function beforeAction() {
+		
 		$this->fields['academic_period_id']['type'] = 'select';
 		$this->fields['extracurricular_type_id']['type'] = 'select';
 
@@ -24,6 +26,7 @@ class ExtracurricularsTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
+	
 		$this->fields['end_date']['visible'] = false;
 		$this->fields['hours']['visible'] = false;
 		$this->fields['points']['visible'] = false;
@@ -35,6 +38,7 @@ class ExtracurricularsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('start_date', $order++);
 		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
 		$this->ControllerAction->setFieldOrder('name', $order++);
+	
 	}
 
 	public function addEditBeforeAction(Event $event) {
