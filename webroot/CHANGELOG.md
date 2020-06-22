@@ -1,3 +1,8 @@
+### [3.53.0] - 2020-6-19
+- Implemented Reports > Staff Leave Report
+- Implemented Reports > Staff > Training Report
+- Implemented Reports > Staff > Position Summary Report
+- Implemented Reports > Staff Attendance and Leave Reports
 ### [3.52.0] - 2020-6-10
 - Implemented Reports > Students > Risk Assessment Report
 - Implemented Reports > Students > Health Report
