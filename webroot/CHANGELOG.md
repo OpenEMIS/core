@@ -1,3 +1,15 @@
+### [3.53.1] - 2020-6-23
+- Bug Fixed: Reports > Remove abc option from format options
+- Bug Fixed: API > Gender not working
+- Bug Fixed: Institution > Attendance > Student > Comment box for Reason/Comment not placed accurately in the cell box
+- Bug Fixed: Reports > Survey > Status in report is still showing Open when Date Disabled for the survey is changed to a past date
+
+### [3.53.0] - 2020-6-19
+- Implemented Reports > Staff Leave Report
+- Implemented Reports > Staff > Training Report
+- Implemented Reports > Staff > Position Summary Report
+- Implemented Reports > Staff Attendance and Leave Reports
+
 ### [3.52.0] - 2020-6-10
 - Implemented Reports > Students > Risk Assessment Report
 - Implemented Reports > Students > Health Report
