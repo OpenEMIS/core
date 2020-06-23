@@ -55,7 +55,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         columnDefs: [],
         rowData: [],
         headerHeight: 38,
-        rowHeight: 71,
+        rowHeight: 125,
         minColWidth: 200,
         enableColResize: true,
         enableSorting: true,
