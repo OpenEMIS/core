@@ -75,7 +75,7 @@ class POCOR5174 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'en' => 'Guardian Date of birth',
+                'en' => 'Guardian Date of Birth',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ]
