@@ -31,9 +31,34 @@ class InstitutionExpendituresTable extends ControllerActionTable
 
     public function beforeAction($event) {
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-        $this->field('budget_type_id', 'label' => __('Budget'),'type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-        $this->field('expenditure_type_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+        $this->field('budget_type_id', ['attr' => ['label' => __('Budget')],'type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+        $this->field('expenditure_type_id', ['attr' => ['label' => __('Type')], 'type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
         $this->field('attachment', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setFieldOrder(['academic_period_id', 'date', 'budget_type_id', 'expenditure_type_id', 'amount', 'attachment', 'description']);
+    }
+
+    public function indexBeforeAction($event) { 
+        unset($this->fields['academic_period_id']);
+        unset($this->fields['description']);
+        $this->setFieldOrder(['date', 'budget_type_id', 'expenditure_type_id', 'amount']);
+    }
+
+    public function viewBeforeAction($event) { 
+        unset($this->fields['attachment']);
+        unset($this->fields['description']);
+        $this->setFieldOrder(['date', 'budget_type_id', 'expenditure_type_id', 'amount']);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'budget_type_id') {
+            return __('Budget');
+        } else if ($field == 'expenditure_type_id') {
+            return  __('Type');
+        } else if ($field == 'amount' && $this->action == 'index') {
+            return  __('Amount (PM)');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
