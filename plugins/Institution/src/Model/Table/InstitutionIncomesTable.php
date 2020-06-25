@@ -16,28 +16,24 @@ use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 
-class InstitutionBudgetsTable extends ControllerActionTable
+class InstitutionIncomesTable extends ControllerActionTable
 {
     use MessagesTrait;
 
     public function initialize(array $config)
     {
-        $this->table('institution_budgets');
+        $this->table('institution_incomes');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
-        $this->belongsTo('BudgetTypes', ['className' => 'FieldOption.BudgetTypes', 'foreignKey' => 'budget_type_id']);
+        $this->belongsTo('IncomeSources', ['className' => 'FieldOption.IncomeSources', 'foreignKey' => 'income_source_id']);
+        $this->belongsTo('IncomeTypes', ['className' => 'FieldOption.IncomeTypes', 'foreignKey' => 'income_type_id']);
     }
 
     public function beforeAction($event) {
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-        $this->field('budget_type_id', ['attr' => ['label' => __('Type')],'type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+        $this->field('income_source_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+        $this->field('income_type_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
         $this->field('attachment', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-        $this->setFieldOrder(['academic_period_id', 'budget_type_id', 'amount', 'attachment', 'description']);
-    }
-
-    public function indexAfterAction($event) {
-        
-        $this->fields['budget_type_id']['label'] = 'Type';
-        unset($this->fields['academic_period_id']);
+        $this->setFieldOrder(['academic_period_id', 'income_source_id', 'income_type_id', 'amount', 'attachment', 'description']);
     }
 }

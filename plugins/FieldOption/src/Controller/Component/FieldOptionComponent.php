@@ -57,6 +57,7 @@ class FieldOptionComponent extends Component
         'BudgetTypes' => ['className' => 'FieldOption.BudgetTypes', 'parent' => 'Finance'],
         'IncomeSources' => ['className' => 'FieldOption.IncomeSources', 'parent' => 'Finance'],
         'IncomeTypes' => ['className' => 'FieldOption.IncomeTypes', 'parent' => 'Finance'],
+        'ExpenditureTypes' => ['className' => 'FieldOption.ExpenditureTypes', 'parent' => 'Finance'],
 
     // Guardian
         'GuardianRelations' => ['className' => 'Student.GuardianRelations', 'parent' => 'Guardian'],
