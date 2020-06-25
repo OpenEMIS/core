@@ -99,6 +99,16 @@ class InstitutionsTable extends AppTable
         return $validator;
     }
 
+    public function validationSubjectsClasses(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('institution_id')
+            ->notEmpty('education_grade_id');
+        return $validator;
+    }
+
     public function validationSubjects(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
@@ -202,13 +212,17 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
         $this->ControllerAction->field('wash_type', ['type' => 'hidden']);
         $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('infrastructure_level', ['type' => 'hidden']);
         $this->ControllerAction->field('infrastructure_type', ['type' => 'hidden']);
 		
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
+    {    
+        if ($data[$this->alias()]['feature'] == 'Report.InstitutionSubjectsClasses') {
+            $options['validate'] = 'subjectsClasses';
+        } 
         if ($data[$this->alias()]['feature'] == 'Report.InstitutionSubjects') {
             $options['validate'] = 'subjects';
         } elseif ($data[$this->alias()]['feature'] == 'Report.InstitutionStudents') {
@@ -520,6 +534,7 @@ class InstitutionsTable extends AppTable
 			
             if ((in_array($feature,
                          ['Report.InstitutionStudents',
+                          'Report.InstitutionSubjectsClasses',
                           'Report.StudentAbsences', 
                           'Report.StaffLeave', 
                           'Report.InstitutionCases', 
@@ -602,7 +617,8 @@ class InstitutionsTable extends AppTable
             if (in_array($feature, 
                         [
                             'Report.ClassAttendanceNotMarkedRecords',
-                            'Report.SubjectsBookLists'
+                            'Report.SubjectsBookLists',
+                            'Report.InstitutionSubjectsClasses'
                         ])
                 ) {
                 
@@ -629,7 +645,8 @@ class InstitutionsTable extends AppTable
                 $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
             } elseif (in_array($feature,
                                [
-                                   'Report.StudentAttendanceSummary'
+                                   'Report.StudentAttendanceSummary',
+                                   'Report.InstitutionSubjectsClasses'
                                ])
                       ) {
                 $gradeList = [];
@@ -749,6 +766,7 @@ class InstitutionsTable extends AppTable
 
 			$reportModels = [
                 'Report.InstitutionSubjects', 
+                'Report.InstitutionSubjectsClasses',
                 'Report.StudentAttendanceSummary',
                 'Report.StaffAttendances',
                 'Report.BodyMasses',
@@ -819,7 +837,7 @@ class InstitutionsTable extends AppTable
                     $attr['attr']['required'] = true;
                 } else {
 					
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
