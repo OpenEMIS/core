@@ -77,7 +77,8 @@ class ReportsController extends AppController
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
-                'Report.InstitutionCommittees' => __('Committees')
+                'Report.InstitutionCommittees' => __('Committees'),
+                'Report.InstitutionSubjectsClasses' => __('Subjects/Classes')
 				
             ];
         } elseif ($module == 'Students') {
