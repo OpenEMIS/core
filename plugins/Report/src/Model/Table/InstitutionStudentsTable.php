@@ -837,7 +837,7 @@ class InstitutionStudentsTable extends AppTable  {
             'key' => '',
             'field' => 'guardian_date_of_birth',
             'type' => 'guardian_date_of_birth',
-            'label' => __('Guardian Date of birth')
+            'label' => __('Guardian Date of Birth')
         ];
 
         $fields_new = array_merge($fields->getArrayCopy(),$DataField);
