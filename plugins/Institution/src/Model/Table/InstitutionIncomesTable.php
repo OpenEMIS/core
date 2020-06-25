@@ -36,4 +36,29 @@ class InstitutionIncomesTable extends ControllerActionTable
         $this->field('attachment', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setFieldOrder(['academic_period_id', 'income_source_id', 'income_type_id', 'amount', 'attachment', 'description']);
     }
+
+    public function indexBeforeAction($event) { 
+        unset($this->fields['academic_period_id']);
+        unset($this->fields['description']);
+        $this->setFieldOrder(['date', 'income_source_id', 'income_type_id', 'amount']);
+    }
+
+    public function viewBeforeAction($event) { 
+        unset($this->fields['attachment']);
+        unset($this->fields['description']);
+        $this->setFieldOrder(['date', 'income_source_id', 'income_type_id', 'amount']);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'income_source_id') {
+            return __('Source');
+        } else if ($field == 'income_type_id') {
+            return  __('Type');
+        } else if ($field == 'amount' && $this->action == 'index') {
+            return  __('Amount (PM)');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }
