@@ -35,9 +35,19 @@ class InstitutionBudgetsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'budget_type_id', 'amount', 'attachment', 'description']);
     }
 
-    public function indexAfterAction($event) {
-        
-        $this->fields['budget_type_id']['label'] = 'Type';
+    public function indexBeforeAction($event) { 
         unset($this->fields['academic_period_id']);
+        unset($this->fields['description']);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'budget_type_id') {
+            return __('Type');
+        } else if ($field == 'amount' && $this->action == 'index') {
+            return  __('Amount (PM)');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
