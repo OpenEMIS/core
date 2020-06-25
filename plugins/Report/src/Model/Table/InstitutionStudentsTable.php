@@ -57,6 +57,11 @@ class InstitutionStudentsTable extends AppTable  {
 
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks');
+        $Risks = TableRegistry::get('Institution.Risks');
+        $UserIdentities = TableRegistry::get('User.UserIdentities');
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        
 
 		if ($academicPeriodId!=0) {
 			$query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
@@ -84,7 +89,11 @@ class InstitutionStudentsTable extends AppTable  {
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('start_date'),
                 $this->aliasField('end_date'),
-                'class_name' => 'InstitutionClasses.name'
+                'class_name' => 'InstitutionClasses.name',
+                'student_extracurriculars' => 'StudentExtracurriculars.name',
+                'total_risk' => $InstitutionStudentRisks->aliasField('total_risk'),
+                'identity_type' => $IdentityType->aliasField('name'),
+                'identity_number' => $UserIdentities->aliasField('number')
             ])
             ->contain([
                 'Users' => [
@@ -98,7 +107,7 @@ class InstitutionStudentsTable extends AppTable  {
                         'Users.preferred_name',
                         'date_of_birth' => 'Users.date_of_birth',
                         'username' => 'Users.username',
-                        'number' => 'Users.identity_number'
+                        'address' => 'Users.address'
                     ]
                 ],
                 'Users.Genders' => [
@@ -182,6 +191,20 @@ class InstitutionStudentsTable extends AppTable  {
             ->leftJoin([$Class->alias() => $Class->table()], [
                 $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ])
+            ->leftJoin(['StudentExtracurriculars' => 'student_extracurriculars'], [
+                    'StudentExtracurriculars.security_user_id = '.$this->aliasField('student_id')
+                ])
+            ->leftJoin([$InstitutionStudentRisks->alias() => $InstitutionStudentRisks->table()], [
+                $InstitutionStudentRisks->aliasField('student_id = ') . $this->aliasField('student_id')
+            ])
+            ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()], [
+                $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('student_id')
+            ])
+            ->leftJoin([$IdentityType->alias() => $IdentityType->table()], [
+                $IdentityType->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+            ])
+            ->group([$this->aliasField('student_id')])
+            ->order([$this->aliasField('education_grade_id')])
             ->formatResults(function (ResultSetInterface $results) use ($statusOptions, $statusId) {
                 return $results->map(function ($row) use ($statusOptions, $statusId) {
                     $statusCode = $statusOptions[$statusId];
@@ -268,6 +291,163 @@ class InstitutionStudentsTable extends AppTable  {
 		return $age;
 	}
 
+    public function onExcelRenderOpenemisNo(Event $event, Entity $entity, $attr) {
+        $student_id = $entity->student_id;
+        $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
+        $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
+        $MotherUser = TableRegistry::get('Security.Users');
+        $FatherUser = TableRegistry::get('Security.Users');
+        $GuardianUser = TableRegistry::get('Security.Users');
+         $StudentGuardiansData = $StudentGuardians
+                                ->find()
+                                ->where([
+                                    $StudentGuardians->aliasField('student_id') => $student_id])
+                                ->toArray();
+        foreach ($StudentGuardiansData as $data) {
+            $GuardianRelationsData = $GuardianRelations
+                                     ->find()
+                                     ->where([$GuardianRelations->aliasField('id') => $data->guardian_relation_id])
+                                     ->toArray();
+
+            if ($GuardianRelationsData[0]->name == 'Mother') {
+                $MotherData = $MotherUser
+                                ->find()
+                                ->where([ $MotherUser->aliasField('id') => $data->guardian_id])
+                                ->toArray();
+                $entity->MotherData = $MotherData;
+            } else if ($GuardianRelationsData[0]->name == 'Father') {
+                $FatherData = $FatherUser
+                                ->find()
+                                ->where([ $FatherUser->aliasField('id') => $data->guardian_id])
+                                ->toArray();
+                $entity->FatherData = $FatherData;
+            }  else {
+                $GuardianData = $GuardianUser
+                                ->find()
+                                ->where([ $GuardianUser->aliasField('id') => $data->guardian_id])
+                                ->toArray();
+                $entity->GuardianData = $GuardianData;
+            } 
+        }
+
+        return $entity->openemis_no;
+    }
+
+
+    public function onExcelRenderMotherOpenemisNo(Event $event, Entity $entity, $attr) {
+        $entity->mother_openemis_no = '';
+        if (!empty($entity->MotherData[0])) {
+        $entity->mother_openemis_no = $entity->MotherData[0]->openemis_no;
+        }
+
+        return $entity->mother_openemis_no;
+    }
+
+    public function onExcelRenderMotherName(Event $event, Entity $entity, $attr) {
+        $entity->mother_name = '';
+        if (!empty($entity->MotherData[0])) {
+        $entity->mother_name = $entity->MotherData[0]->first_name.' '.$entity->MotherData[0]->last_name;
+        } 
+
+        return $entity->mother_name;
+    }
+
+    public function onExcelRenderMotherContact(Event $event, Entity $entity, $attr) {
+        $UserContacts = TableRegistry::get('User.Contacts');
+        $entity->mother_contact = '';
+        if (!empty($entity->MotherData[0])) {
+            $motherContactData = $UserContacts
+                                    ->find()
+                                    ->where([
+                                       $UserContacts->aliasField('security_user_id') => $entity->MotherData[0]->id  
+                                    ])
+                                    ->toArray();
+            if (!empty($motherContactData[0])) {
+                $entity->mother_contact = $motherContactData[0]->value;
+            }
+        } 
+
+        return $entity->mother_contact;
+    }
+
+    public function onExcelRenderFatherOpenemisNo(Event $event, Entity $entity, $attr) {
+        $entity->father_openemis_no = '';
+         if (!empty($entity->FatherData[0])) {
+        $entity->father_openemis_no = $entity->FatherData[0]->openemis_no;
+        }
+
+        return $entity->father_openemis_no;
+    }
+
+    public function onExcelRenderFatherName(Event $event, Entity $entity, $attr) {
+        $entity->father_name = '';
+        if (!empty($entity->FatherData[0])) {
+        $entity->father_name = $entity->FatherData[0]->first_name.' '.$entity->FatherData[0]->last_name;
+                }
+
+        return $entity->father_name;
+    }
+
+    public function onExcelRenderFatherContact(Event $event, Entity $entity, $attr) {
+        $UserContacts = TableRegistry::get('User.Contacts');
+        $entity->father_contact = '';
+        if (!empty($entity->FatherData[0])) {
+            $fatherContactData = $UserContacts
+                                    ->find()
+                                    ->where([
+                                       $UserContacts->aliasField('security_user_id') => $entity->FatherData[0]->id  
+                                    ])
+                                    ->toArray();
+            if (!empty($fatherContactData[0])) {
+                $entity->father_contact = $fatherContactData[0]->value;
+            }
+        } 
+
+        return $entity->father_contact;
+    }
+
+    public function onExcelRenderGuardianOpenemisNo(Event $event, Entity $entity, $attr) {
+        $entity->guardian_openemis_no = '';
+         if (!empty($entity->GuardianData[0])) {
+        $entity->guardian_openemis_no = $entity->GuardianData[0]->openemis_no;
+        }
+
+        return $entity->guardian_openemis_no;
+    }
+
+    public function onExcelRenderGuardianName(Event $event, Entity $entity, $attr) {
+        $entity->guardian_name = '';
+        if (!empty($entity->GuardianData[0])) {
+        $entity->guardian_name = $entity->GuardianData[0]->first_name.' '.$entity->GuardianData[0]->last_name;
+                }
+
+        return $entity->guardian_name;
+    }
+
+    public function onExcelRenderGuardianGender(Event $event, Entity $entity, $attr) {
+        $Genders = TableRegistry::get('User.Genders');
+        $entity->guardian_gender = '';
+         if (!empty($entity->GuardianData[0])) {
+        $gender = $Genders
+                  ->find()
+                  ->where([
+                    $Genders->aliasField('id') => $entity->GuardianData[0]->gender_id])
+                  ->toArray();
+        $entity->guardian_gender = $gender[0]->name;
+        }
+
+        return $entity->guardian_gender;
+    }
+
+    public function onExcelRenderGuardianDateOfBirth(Event $event, Entity $entity, $attr) {
+        $entity->guardian_date_of_birth = '';
+        if (!empty($entity->GuardianData[0])) {
+        $entity->guardian_date_of_birth = $entity->GuardianData[0]->date_of_birth->format('F d, Y');
+                }
+
+        return $entity->guardian_date_of_birth;
+    }
+
     public function onExcelGetAllNationalities(Event $event, Entity $entity)
     {
         $return = [];
@@ -287,10 +467,6 @@ class InstitutionStudentsTable extends AppTable  {
     }
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
-		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-		$identity = $IdentityType->getDefaultEntity();
-
-		$settings['identity'] = $identity;
 
         $requestData = json_decode($settings['process']['params']);
         $statusId = $requestData->status;
@@ -302,108 +478,72 @@ class InstitutionStudentsTable extends AppTable  {
 			if ($field['field'] == 'institution_id') {
 				unset($fields[$key]);
 				// break;
-			}
+			} 
 		}
 		
-		$extraField[] = [
+		$PrimaryField[] = [
 			'key' => 'Institutions.code',
 			'field' => 'code',
 			'type' => 'string',
-			'label' => ''
+			'label' => 'Institution Code'
 		];
 
         if ($statusId == $this->statuses['TRANSFERRED']) {
-    		$extraField[] = [
+    		$PrimaryField[] = [
     			'key' => 'Students.institution_id',
     			'field' => 'institution_id',
     			'type' => 'integer',
     			'label' => __('Institution Transferred From')
     		];
         } else {
-            $extraField[] = [
+            $PrimaryField[] = [
                 'key' => 'Students.institution_id',
                 'field' => 'institution_id',
                 'type' => 'integer',
-                'label' => ''
+                'label' => __('Institution Name')
             ];
         }
 
-		$extraField[] = [
+		$PrimaryField[] = [
 			'key' => 'Institutions.institution_type_id',
 			'field' => 'institution_type',
 			'type' => 'integer',
-			'label' => '',
+			'label' => __('Type'),
 		];
 
 
-        $extraField[] = [
+        $PrimaryField[] = [
             'key' => 'Institutions.institution_provider_id',
             'field' => 'institution_provider',
             'type' => 'integer',
-            'label' => '',
+            'label' => __('Provider'),
         ];
 
-        $extraField[] = [
-            'key' => 'Users.openemis_no',
-            'field' => 'openemis_no',
-            'type' => 'string',
-            'label' => '',
-            'formatting' => 'string'
-        ];
-
-        $extraField[] = [
-            'key' => 'Users.username',
-            'field' => 'username',
-            'type' => 'string',
-            'label' => __('Username'),
-            'formatting' => 'string'
-        ];
-
-        $extraField[] = [
-            'key' => 'Users.identity_number',
-            'field' => 'number',
-            'type' => 'string',
-            'label' => __($identity->name),
-            'formatting' => 'string'
-        ];
-
-		$extraField[] = [
-			'key' => 'Users.gender_id',
-			'field' => 'gender_name',
-			'type' => 'string',
-			'label' => ''
-		];
-
-        $extraField[] = [
-            'key' => 'Users.date_of_birth',
-            'field' => 'date_of_birth',
-            'type' => 'date',
-            'label' => ''
-        ];
+        
 
         if ($statusId == $this->statuses['TRANSFERRED']) {
-            $extraField[] = [
+            $PrimaryField[] = [
                 'key' => 'Institutions.area_code',
                 'field' => 'area_code',
                 'type' => 'string',
                 'label' => __('Area Education Code Transferred From')
             ];
 
-    		$extraField[] = [
+    		$PrimaryField[] = [
     			'key' => 'Institutions.area_name',
     			'field' => 'area_name',
     			'type' => 'string',
     			'label' => __('Area Education Transferred From')
     		];
 
-            $extraField[] = [
+            $PrimaryField[] = [
                 'key' => 'Institutions.area_administrative_code',
                 'field' => 'area_administrative_code',
                 'type' => 'string',
                 'label' => __('Area Administrative Code Transferred From')
             ];
 
-    		$extraField[] = [
+    		$PrimaryField[] = [
                 'key' => 'Institutions.area_administrative_name',
                 'field' => 'area_administrative_name',
                 'type' => 'string',
@@ -412,52 +552,97 @@ class InstitutionStudentsTable extends AppTable  {
 
 
         } else {
-            $extraField[] = [
+            $PrimaryField[] = [
                 'key' => 'Institutions.area_code',
                 'field' => 'area_code',
                 'type' => 'string',
                 'label' => __('Area Education Code')
             ];
 
-            $extraField[] = [
+            $PrimaryField[] = [
                 'key' => 'Institutions.area_name',
                 'field' => 'area_name',
                 'type' => 'string',
                 'label' => __('Area Education')
             ];
 
-            $extraField[] = [
+            $PrimaryField[] = [
                 'key' => 'Institutions.area_administrative_code',
                 'field' => 'area_administrative_code',
                 'type' => 'string',
                 'label' => __('Area Administrative Code')
             ];
 
-            $extraField[] = [
+            $PrimaryField[] = [
                 'key' => 'Institutions.area_administrative_name',
                 'field' => 'area_administrative_name',
                 'type' => 'string',
                 'label' => __('Area Administrative')
             ];
-        } 
-
-		$extraField[] = [
-			'key' => 'Age',
-			'field' => 'age',
-			'type' => 'age',
-			'label' => 'Age',
-		];
-
-        $newFields = array_merge($extraField, $fields->getArrayCopy());
-
+        }
         if ($statusId == $this->statuses['CURRENT']) {
-            $enrolledExtraField[] = [
+            $extraField[] = [
                 'key' => 'InstitutionClasses.name',
                 'field' => 'class_name',
                 'type' => 'string',
-                'label' => ''
+                'label' => __('Class Name')
             ];
         }
+        $extraField[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'openemis_no',
+            'label' => __('Student OpenEMIS ID'),
+            'formatting' => 'string'
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudents.student_id',
+            'field' => 'student_id',
+            'type' => 'integer',
+            'label' => __('Student Name'),
+            'formatting' => 'string'
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionStudents.student_status_id',
+            'field' => 'student_status_id',
+            'type' => 'integer',
+            'label' => __('Student Status'),
+            'formatting' => 'string'
+        ];
+
+        $extraField[] = [
+            'key' => 'Users.gender_id',
+            'field' => 'gender_name',
+            'type' => 'string',
+            'label' => __('Gender')
+        ];
+
+        $extraField[] = [
+            'key' => 'Users.date_of_birth',
+            'field' => 'date_of_birth',
+            'type' => 'date',
+            'label' => __('Date Of Birth')
+        ]; 
+
+        $extraField[] = [
+            'key' => 'Age',
+            'field' => 'age',
+            'type' => 'age',
+            'label' => __('Age')
+        ]; 
+       
+        $studentData = array();
+        $remove = ['student_status_id', 'student_id'];
+
+        for ($i=0 ;$i<count($fields); $i++) {
+            if (($fields[$i]['field'] == 'student_status_id') || ($fields[$i]['field'] == 'student_id')) {
+                unset($fields[$i]);
+            }
+        }
+        
+        $newFields = array_merge($PrimaryField, $fields->getArrayCopy(),$extraField);        
 
         $enrolledExtraField[] = [
             'key' => 'MainNationalities.name',
@@ -548,6 +733,114 @@ class InstitutionStudentsTable extends AppTable  {
 
         } else {
             $fields->exchangeArray($newFields);
-        }
+        } 
+
+        $DataField[] = [
+            'key' => 'IdentityType.name',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Default Identity type')
+        ];
+
+        $DataField[] = [
+            'key' => 'UserIdentities.number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+
+        $DataField[] = [
+            'key' => 'InstitutionStudentRisks.total_risk',
+            'field' => 'total_risk',
+            'type' => 'string',
+            'label' => __('Risk Index')
+        ];
+
+        $DataField[] = [
+            'key' => 'StudentExtracurriculars.name',
+            'field' => 'student_extracurriculars',
+            'type' => 'string',
+            'label' => __('Extra Activities')
+        ];
+
+        $DataField[] = [
+            'key' => 'Users.address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => __('Address')
+        ];
+
+        $DataField[] = [
+            'key' => '',
+            'field' => 'mother_openemis_no',
+            'type' => 'mother_openemis_no',
+            'label' => __('Mother OpenEMIS ID')
+        ];
+
+        $DataField[] = [
+            'key' => '',
+            'field' => 'mother_name',
+            'type' => 'mother_name',
+            'label' => __('Mother Name')
+        ];
+
+        $DataField[] = [
+            'key' => '',
+            'field' => 'mother_contact',
+            'type' => 'mother_contact',
+            'label' => __('Mother Contact')
+        ];
+
+        $DataField[] = [
+            'key' => '',
+            'field' => 'father_openemis_no',
+            'type' => 'father_openemis_no',
+            'label' => __('Father OpenEMIS ID')
+        ];
+
+        $DataField[] = [
+            'key' => '',
+            'field' => 'father_name',
+            'type' => 'father_name',
+            'label' => __('Father Name')
+        ];
+
+        $DataField[] = [
+            'key' => '',
+            'field' => 'father_contact',
+            'type' => 'father_contact',
+            'label' => __('Father Contact')
+        ];
+
+        $DataField[] = [
+            'key' => '',
+            'field' => 'guardian_openemis_no',
+            'type' => 'guardian_openemis_no',
+            'label' => __('Guardian OpenEMIS ID')
+        ];
+
+        $DataField[] = [
+            'key' => '',
+            'field' => 'guardian_name',
+            'type' => 'guardian_name',
+            'label' => __('Guardian Name')
+        ];
+
+        $DataField[] = [
+            'key' => '',
+            'field' => 'guardian_gender',
+            'type' => 'guardian_gender',
+            'label' => __('Guardian Gender')
+        ];
+
+        $DataField[] = [
+            'key' => '',
+            'field' => 'guardian_date_of_birth',
+            'type' => 'guardian_date_of_birth',
+            'label' => __('Guardian Date of Birth')
+        ];
+
+        $fields_new = array_merge($fields->getArrayCopy(),$DataField);
+        $fields->exchangeArray($fields_new);
 	}
 }
