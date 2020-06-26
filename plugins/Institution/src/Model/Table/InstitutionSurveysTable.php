@@ -24,6 +24,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     // Default Status
     const EXPIRED = -1;
+    const IS_MANDATORY = 1;
 
     public $module = 'Institution.Institutions';
     public $attachWorkflow = true;  // indicate whether the model require workflow
@@ -31,7 +32,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public $openStatusId = null;
     public $closedStatusId = null;
-
+    
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -78,7 +79,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['Workflow.getFilterOptions'] = 'getWorkflowFilterOptions';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
-
+        $events['Workflow.beforeTransition'] = 'workflowBeforeTransition';
         return $events;
     }
 
@@ -775,5 +776,34 @@ class InstitutionSurveysTable extends ControllerActionTable
             });
 
         return $query;
+    }
+    
+    public function workflowBeforeTransition(Event $event, $requestData)
+    {
+        $errors = false;
+        $modelId = $this->request->pass[1]; // id of the sub model
+        $ids = $this->ControllerAction->paramsDecode($modelId);
+       
+        $institutionServery = $this->get($ids['id']);
+        //print_r($data);
+        $SurveyFormQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $SurveyFormsQuestionDatas = $SurveyFormQuestions->find()
+                ->innerJoin(
+                    ['SurveyQuestions' => 'survey_questions'],
+                    ['SurveyQuestions.id = '.$SurveyFormQuestions->aliasField('survey_question_id')]
+                )
+                ->where(['survey_form_id' => $institutionServery->survey_form_id, 'SurveyQuestions.is_mandatory' => self::IS_MANDATORY])
+                ->count();
+        
+        if($SurveyFormsQuestionDatas > 0){
+          $errors = true; 
+          $this->Alert->error('InstitutionSurveys.mandatoryFieldFill', ['reset'=>true]);
+        }
+        
+        if ($errors) {
+            $event->stopPropagation();
+            $url = $this->url('view');
+            return $this->controller->redirect($url);
+        }        
     }
 }

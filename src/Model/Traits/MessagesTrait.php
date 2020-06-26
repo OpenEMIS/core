@@ -331,7 +331,8 @@ trait MessagesTrait
                 'failed' => 'The record is not rejected due to errors encountered.'
             ],
             'class' => 'Class',
-            'noAccess' => 'You do not have access to this Class.'
+            'noAccess' => 'You do not have access to this Class.',
+            'mandatoryFieldFill' => "Please fill up mandatory fields before submitting for approval"
         ],
         'InstitutionRubrics' => [
             'noRubrics' => 'No Available Rubrics'
