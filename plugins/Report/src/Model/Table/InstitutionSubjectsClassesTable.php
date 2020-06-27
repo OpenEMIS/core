@@ -11,12 +11,12 @@ use App\Model\Table\AppTable;
 
 class InstitutionSubjectsClassesTable extends AppTable  {
 	public function initialize(array $config) {
-		 $this->table('institution_subjects');
-        parent::initialize($config);
-        $this->addBehavior('Report.ReportList');
-        $this->addBehavior('Excel', [
-            'pages' => false
-        ]);
+            $this->table('institution_subjects');
+            parent::initialize($config);
+            $this->addBehavior('Report.ReportList');
+            $this->addBehavior('Excel', [
+                'pages' => false
+            ]);
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -43,9 +43,7 @@ class InstitutionSubjectsClassesTable extends AppTable  {
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        // // if (!empty($institutionId)) {
-        // //     $conditions['Institutions.id'] = $institutionId;
-        // // }
+        
         if (!empty($institutionId)) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
@@ -53,175 +51,148 @@ class InstitutionSubjectsClassesTable extends AppTable  {
         if (!empty($education_grade_id)) {
             $conditions[$this->aliasField('education_grade_id')] = $education_grade_id;
         }
-        // // if (!empty($institutionId)) {
-        // //     $conditions['InstitutionStudents.institution_id'] = $institutionId;
-        // // }
         
-         $query
-            ->select([
-                'institution_code' => 'Institutions.code',
-                'institution_name' => 'Institutions.name' ,
-                'status' => 'Users.status',
-                'Student_name' => $query->func()->concat([
-                    'Users.first_name' => 'literal',
-                    " ",
-                    'Users.last_name' => 'literal'
-                    ]),
-                'openemis_number' => 'Users.openemis_no',
-               
-                'subjects' => 'EducationSubjects.name',
-                
-                'identity_number' => 'Users.identity_number',
-                'identity_type' => 'IdentityTypes.name',
-                'academic_period' => 'AcademicPeriods.name',
-                'education_grade' => 'EducationGrades.name',
-                'class' => 'InstitutionClasses.name'
-             ])
-            ->innerJoin(['InstitutionStudents' => 'institution_students'], [
-                            $this->aliasfield('institution_id') . ' = '.'InstitutionStudents.institution_id',
-                        ])
-             ->innerJoin(['Users' => 'security_users'], [
-                            'Users.id = ' . 'InstitutionStudents.student_id',
-                        ])
-             ->leftJoin(['Institutions' => 'institutions'], [
-                           $this->aliasfield('institution_id') . ' = '.'Institutions.id'
-                        ])
-             ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
-                           $this->aliasfield('academic_period_id') . ' = AcademicPeriods.id'
-                        ])
-             ->leftJoin(['EducationGrades' => 'education_grades'], [
-                           $this->aliasfield('education_grade_id') . ' = EducationGrades.id'
-                        ])
-             ->leftJoin(['IdentityTypes' => 'identity_types'], [
-                           'Users.identity_type_id' . ' = IdentityTypes.id'
-                        ])
-              ->innerJoin(['EducationSubjects' => 'education_subjects'], [
-                           $this->aliasfield('education_subject_id') . ' = EducationSubjects.id'
-                        ])
-               ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
-                           $this->aliasfield('id') . ' = InstitutionClassSubjects.institution_subject_id'
-                        ])
-              ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
-                           'InstitutionClassSubjects.institution_class_id' . ' = InstitutionClasses.id'
-                        ])
-            ->where($conditions); 
-           echo $query;
+        $query
+        ->select([
+            'institution_code' => 'Institutions.code',
+            'institution_name' => 'Institutions.name',
+            'status' => 'Users.status',
+            'Student_name' => $query->func()->concat([
+                'Users.first_name' => 'literal',
+                " ",
+                'Users.last_name' => 'literal'
+            ]),
+            'openemis_number' => 'Users.openemis_no',
+            'subjects' => 'EducationSubjects.name',
+            'identity_number' => 'Users.identity_number',
+            'identity_type' => 'IdentityTypes.name',
+            'academic_period' => 'AcademicPeriods.name',
+            'education_grade' => 'EducationGrades.name',
+            'class' => 'InstitutionClasses.name'
+        ])
+        ->innerJoin(['InstitutionStudents' => 'institution_students'], [
+            $this->aliasfield('institution_id') . ' = ' . 'InstitutionStudents.institution_id',
+        ])
+        ->innerJoin(['Users' => 'security_users'], [
+            'Users.id = ' . 'InstitutionStudents.student_id',
+        ])
+        ->leftJoin(['Institutions' => 'institutions'], [
+            $this->aliasfield('institution_id') . ' = ' . 'Institutions.id'
+        ])
+        ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
+            $this->aliasfield('academic_period_id') . ' = AcademicPeriods.id'
+        ])
+        ->leftJoin(['EducationGrades' => 'education_grades'], [
+            $this->aliasfield('education_grade_id') . ' = EducationGrades.id'
+        ])
+        ->leftJoin(['IdentityTypes' => 'identity_types'], [
+            'Users.identity_type_id' . ' = IdentityTypes.id'
+        ])
+        ->innerJoin(['EducationSubjects' => 'education_subjects'], [
+            $this->aliasfield('education_subject_id') . ' = EducationSubjects.id'
+        ])
+        ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+            $this->aliasfield('id') . ' = InstitutionClassSubjects.institution_subject_id'
+        ])
+        ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
+            'InstitutionClassSubjects.institution_class_id' . ' = InstitutionClasses.id'
+        ])
+        ->where($conditions);
+        
     }
 
   
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
     {   
-          $cloneFields = $fields->getArrayCopy();
+        $cloneFields = $fields->getArrayCopy();
 
-                
-               
-                
-                $extraFields[] = [
-                    'key' => 'Institutions.code',
-                    'field' => 'institution_code',
-                    'type' => 'string',
-                    'label' => __('Institution Code')
-                ];
+        $extraFields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
 
-                $extraFields[] = [
-                    'key' => 'Institutions.name',
-                    'field' => 'institution_name',
-                    'type' => 'string',
-                    'label' => __('Institution Name')
-                ];
-                
-                 $extraFields[] = [
-                    'key' => 'AcademicPeriods.name',
-                    'field' => 'academic_period',
-                    'type' => 'integer',
-                    'label' => __('Academic Period')
-                ];
+        $extraFields[] = [
+            'key' => 'Institutions.name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution Name')
+        ];
 
-                 $extraFields[] = [
-                    'key' => 'EducationGrades.name',
-                    'field' => 'education_grade',
-                    'type' => 'string',
-                    'label' => __('Area Education')
-                ];
+        $extraFields[] = [
+            'key' => 'AcademicPeriods.name',
+            'field' => 'academic_period',
+            'type' => 'integer',
+            'label' => __('Academic Period')
+        ];
 
-                
-
-                $extraFields[] = [
-                    'key' => 'Users.status',
-                    'field' => 'status',
-                    'type' => 'string',
-                    'label' => __('Student Status')
-                ];
-                
-                $extraFields[] = [
-                    'key' => 'Users.openemis_no',
-                    'field' => 'openemis_number',
-                    'type' => 'integer',
-                    'label' => __('openEMIS ID')
-                ];
-
-               
-
-                 $extraFields[] = [
-                    'key' => '',
-                    'field' => 'Student_name',
-                    'type' => 'string',
-                    'label' => __('Student Name')
-                ];
-                   
-                 $extraFields[] = [
-                    'key' => 'IdentityTypes.name',
-                    'field' => 'identity_type',
-                    'type' => 'string',
-                    'label' => __('Default Identity Type')
-                ];
-
-                 $extraFields[] = [
-                    'key' => 'Users.identity_number',
-                    'field' => 'identity_number',
-                    'type' => 'string',
-                    'label' => __('Identity Number')
-                ];
-
-
-                 $extraFields[] = [
-                    'key' => 'InstitutionClasses.name',
-                    'field' => 'class',
-                    'type' => 'string',
-                    'label' => __('Class Name')
-                ];
-
-                 $extraFields[] = [
-                    'key' => 'EducationSubjects.name',
-                    'field' => 'subjects',
-                    'type' => 'string',
-                    'label' => __('Subjects')
-                ];
+        $extraFields[] = [
+            'key' => 'EducationGrades.name',
+            'field' => 'education_grade',
+            'type' => 'string',
+            'label' => __('Education Grade')
+        ];
 
 
 
+        $extraFields[] = [
+            'key' => 'Users.status',
+            'field' => 'status',
+            'type' => 'string',
+            'label' => __('Student Status')
+        ];
 
-                
-                // $newFields[] = [
-                //     'key' => 'InstitutionSubjects.total_female_students',
-                //     'field' => 'total_female_students',
-                //     'type' => 'integer',
-                //     'label' => __('Female students')
-                // ];
-                
-                // $newFields[] = [
-                //     'key' => 'total_students',
-                //     'field' => 'total_students',
-                //     'type' => 'integer',
-                //     'label' => __('Total students')
-                // ];
+        $extraFields[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_number',
+            'type' => 'integer',
+            'label' => __('OpenEMIS ID')
+        ];
 
-                      
+
+
+        $extraFields[] = [
+            'key' => '',
+            'field' => 'Student_name',
+            'type' => 'string',
+            'label' => __('Student Name')
+        ];
+
+        $extraFields[] = [
+            'key' => 'IdentityTypes.name',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Default Identity Type')
+        ];
+
+        $extraFields[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+
+
+        $extraFields[] = [
+            'key' => 'InstitutionClasses.name',
+            'field' => 'class',
+            'type' => 'string',
+            'label' => __('Class Name')
+        ];
+
+        $extraFields[] = [
+            'key' => 'EducationSubjects.name',
+            'field' => 'subjects',
+            'type' => 'string',
+            'label' => __('Subjects')
+        ];
+
         
         
        $newFields = $extraFields;
-        
-        $fields->exchangeArray($newFields);
+       $fields->exchangeArray($newFields);
+       
    }
 }
