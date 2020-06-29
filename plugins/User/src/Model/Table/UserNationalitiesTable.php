@@ -202,9 +202,9 @@ class UserNationalitiesTable extends ControllerActionTable {
                                             'id' => $this->NationalitiesLookUp->aliasfield('id')
                                         ])
                                         ->toArray();
-
-                $nationalities = $this->NationalitiesLookUp->find('visible')->find('list');
-
+               
+                $nationalities = $this->NationalitiesLookUp->find('all')->find('list')->order('name');
+                                           
                 if (!empty($currentNationalities)) {
                     $nationalities = $nationalities
                                     ->where([
