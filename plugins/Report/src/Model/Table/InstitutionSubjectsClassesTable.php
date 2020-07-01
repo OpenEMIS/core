@@ -52,53 +52,60 @@ class InstitutionSubjectsClassesTable extends AppTable  {
             $conditions[$this->aliasField('education_grade_id')] = $education_grade_id;
         }
         
-        $query
-        ->select([
-            'institution_code' => 'Institutions.code',
-            'institution_name' => 'Institutions.name',
-            'status' => 'Users.status',
-            'Student_name' => $query->func()->concat([
-                'Users.first_name' => 'literal',
-                " ",
-                'Users.last_name' => 'literal'
-            ]),
-            'openemis_number' => 'Users.openemis_no',
-            'subjects' => 'EducationSubjects.name',
-            'identity_number' => 'Users.identity_number',
-            'identity_type' => 'IdentityTypes.name',
-            'academic_period' => 'AcademicPeriods.name',
-            'education_grade' => 'EducationGrades.name',
-            'class' => 'InstitutionClasses.name'
-        ])
-        ->innerJoin(['InstitutionStudents' => 'institution_students'], [
-            $this->aliasfield('institution_id') . ' = ' . 'InstitutionStudents.institution_id',
-        ])
-        ->innerJoin(['Users' => 'security_users'], [
-            'Users.id = ' . 'InstitutionStudents.student_id',
-        ])
-        ->leftJoin(['Institutions' => 'institutions'], [
-            $this->aliasfield('institution_id') . ' = ' . 'Institutions.id'
-        ])
-        ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
-            $this->aliasfield('academic_period_id') . ' = AcademicPeriods.id'
-        ])
-        ->leftJoin(['EducationGrades' => 'education_grades'], [
-            $this->aliasfield('education_grade_id') . ' = EducationGrades.id'
-        ])
-        ->leftJoin(['IdentityTypes' => 'identity_types'], [
-            'Users.identity_type_id' . ' = IdentityTypes.id'
-        ])
-        ->innerJoin(['EducationSubjects' => 'education_subjects'], [
-            $this->aliasfield('education_subject_id') . ' = EducationSubjects.id'
-        ])
-        ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
-            $this->aliasfield('id') . ' = InstitutionClassSubjects.institution_subject_id'
-        ])
-        ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
-            'InstitutionClassSubjects.institution_class_id' . ' = InstitutionClasses.id'
-        ])
-        ->where($conditions);
-        
+
+         $query
+            ->select([
+                'institution_code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name' ,
+                'status' => 'Users.status',
+                'Student_name' => $query->func()->concat([
+                    'Users.first_name' => 'literal',
+                    " ",
+                    'Users.last_name' => 'literal'
+                    ]),
+                'openemis_number' => 'Users.openemis_no',
+               
+                'subjects' => $query->func()->group_concat(['DISTINCT EducationSubjects.name' => 'literal',
+                    " "
+                ]),
+              
+                
+                'identity_number' => 'Users.identity_number',
+                'identity_type' => 'IdentityTypes.name',
+                'academic_period' => 'AcademicPeriods.name',
+                'education_grade' => 'EducationGrades.name',
+                'class' => 'InstitutionClasses.name'
+             ])
+            ->innerJoin(['InstitutionStudents' => 'institution_students'], [
+                            $this->aliasfield('institution_id') . ' = '.'InstitutionStudents.institution_id',
+                        ])
+             ->innerJoin(['Users' => 'security_users'], [
+                            'Users.id = ' . 'InstitutionStudents.student_id',
+                        ])
+             ->leftJoin(['Institutions' => 'institutions'], [
+                           $this->aliasfield('institution_id') . ' = '.'Institutions.id'
+                        ])
+             ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
+                           $this->aliasfield('academic_period_id') . ' = AcademicPeriods.id'
+                        ])
+             ->leftJoin(['EducationGrades' => 'education_grades'], [
+                           $this->aliasfield('education_grade_id') . ' = EducationGrades.id'
+                        ])
+             ->leftJoin(['IdentityTypes' => 'identity_types'], [
+                           'Users.identity_type_id' . ' = IdentityTypes.id'
+                        ])
+              ->leftJoin(['EducationSubjects' => 'education_subjects'], [
+                           $this->aliasfield('education_subject_id') . ' = EducationSubjects.id'
+                        ])
+               ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                           $this->aliasfield('id') . ' = InstitutionClassSubjects.institution_subject_id'
+                        ])
+              ->leftJoin(['InstitutionClasses' => 'institution_classes'], [
+                           'InstitutionClassSubjects.institution_class_id' . ' = InstitutionClasses.id'
+                        ])
+               ->where($conditions)
+              ->group(['Users.id']);
+			  
     }
 
   
