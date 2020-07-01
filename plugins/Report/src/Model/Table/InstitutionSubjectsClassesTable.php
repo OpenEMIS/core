@@ -105,14 +105,13 @@ class InstitutionSubjectsClassesTable extends AppTable  {
                         ])
                ->where($conditions)
               ->group(['Users.id']);
-			  
     }
 
   
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
     {   
-        $cloneFields = $fields->getArrayCopy();
+         $cloneFields = $fields->getArrayCopy();
 
         $extraFields[] = [
             'key' => 'Institutions.code',
@@ -195,8 +194,6 @@ class InstitutionSubjectsClassesTable extends AppTable  {
             'type' => 'string',
             'label' => __('Subjects')
         ];
-
-        
         
        $newFields = $extraFields;
        $fields->exchangeArray($newFields);
