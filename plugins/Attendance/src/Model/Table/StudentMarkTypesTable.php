@@ -213,6 +213,9 @@ class StudentMarkTypesTable extends ControllerActionTable
         if ($student_attendance_type_id == 2) {
             $this->fields['attendance_per_day']['visible'] = false;
             $this->fields['periods']['visible'] = false;
+        } else {
+            /*$this->fields['attendance_per_day']['visible'] = true;
+            $this->fields['periods']['visible'] = true;*/
         }
         $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
         $StudentAttendancePerDayPeriodsData = $StudentAttendancePerDayPeriods

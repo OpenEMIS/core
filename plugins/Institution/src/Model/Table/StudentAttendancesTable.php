@@ -599,5 +599,10 @@ class StudentAttendancesTable extends ControllerActionTable
         }
     }
 
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        echo "<pre>";print_r($data);die;
+    }
+
     
 }
