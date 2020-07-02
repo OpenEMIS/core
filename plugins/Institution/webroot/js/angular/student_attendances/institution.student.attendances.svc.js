@@ -65,6 +65,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         StudentAttendances: 'Institution.StudentAttendances',
         InstitutionClasses: 'Institution.InstitutionClasses',
+        InstitutionClassSubjects: 'Institution.InstitutionClassSubjects',
         AbsenceTypes: 'Institution.AbsenceTypes',
         StudentAbsenceReasons: 'Institution.StudentAbsenceReasons',
         StudentAbsencesPeriodDetails: 'Institution.StudentAbsencesPeriodDetails',
@@ -85,6 +86,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getWeekListOptions: getWeekListOptions,
         getDayListOptions: getDayListOptions,
         getClassOptions: getClassOptions,
+        getSubjectOptions: getSubjectOptions,
         getPeriodOptions: getPeriodOptions,
         getIsMarked: getIsMarked,
         getClassStudent: getClassStudent,
@@ -245,6 +247,32 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             .find('classesByInstitutionAndAcademicPeriod', {
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
+            })
+            .ajax({success: success, defer: true});
+
+        return [];
+    }
+
+    function getSubjectOptions(institutionClassId,day_id) {
+        //console.log(institutionId);return;
+        var success = function(response, deferred) {
+            var subjectList = response.data.data;
+            if (angular.isObject(subjectList)) {
+                if (subjectList.length > 0) {
+                    deferred.resolve(subjectList);
+                } else {
+                    AlertSvc.warning(controllerScope, 'You do not have any classes');
+                    deferred.reject('You do not have any classess');
+                }
+            } else {
+                deferred.reject('There was an error when retrieving the class list');
+            }
+        };
+
+        return InstitutionClassSubjects
+            .find('allSubjectsByClass', {
+                institution_class_id: institutionClassId,
+                day_id: day_id
             })
             .ajax({success: success, defer: true});
 

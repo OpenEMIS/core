@@ -42,6 +42,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.selectedDay = '';
 
     vm.classListOptions = [];
+    vm.subjectListOptions = [];
     vm.selectedClass = '';
 
     vm.attendancePeriodOptions = [];
@@ -126,7 +127,12 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             }, vm.error)
             .then(function(classListOptions) {
                 vm.updateClassList(classListOptions);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
+                return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.selectedClass, vm.selectedDay);
+            }, vm.error)
+            .then(function(subjectListOptions) {
+                //console.log(subjectListOptions);return;
+                vm.updateSubjectList(subjectListOptions);
+                return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
             .then(function(attendancePeriodOptions) {
                 vm.updateAttendancePeriodList(attendancePeriodOptions);
@@ -210,6 +216,20 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         vm.classListOptions = classListOptions;
         if (classListOptions.length > 0) {
             vm.selectedClass = classListOptions[0].id;
+        }
+    }
+
+    vm.updateSubjectList = function(subjectListOptions) {
+        vm.subjectListOptions = subjectListOptions;
+        if (subjectListOptions.length > 0) {
+            vm.selectedSubject = subjectListOptions[0].id;
+        }
+    }
+
+    vm.subjectListOptions = function(subjectListOptions) {
+        vm.subjectListOptions = subjectListOptions;
+        if (subjectListOptions.length > 0) {
+            vm.selectedSubject = subjectListOptions[0].id;
         }
     }
 
