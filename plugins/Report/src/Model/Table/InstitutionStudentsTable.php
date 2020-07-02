@@ -485,7 +485,7 @@ class InstitutionStudentsTable extends AppTable  {
 			'key' => 'Institutions.code',
 			'field' => 'code',
 			'type' => 'string',
-			'label' => 'Institution Code'
+			'label' => __('Institution Code')
 		];
 
         if ($statusId == $this->statuses['TRANSFERRED']) {
