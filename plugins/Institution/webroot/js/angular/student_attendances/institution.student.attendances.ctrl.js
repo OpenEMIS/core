@@ -49,6 +49,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.selectedAttendancePeriod = '';
 
     vm.classStudentList = [];
+    vm.attendanceTypeName = '';
 
     // gridOptions
     vm.gridReady = false;
@@ -127,7 +128,13 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             }, vm.error)
             .then(function(classListOptions) {
                 vm.updateClassList(classListOptions);
-                return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.selectedClass, vm.selectedDay);
+                InstitutionStudentAttendancesSvc.getAttendanceTypeName(vm.selectedClass).then(function(response) {
+                    vm.attendanceTypeName = response;
+                });                  
+            }, vm.error)
+            .then(function(classListOptions) {
+                //vm.updateClassList(classListOptions);
+               return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.selectedClass, vm.selectedDay);
             }, vm.error)
             .then(function(subjectListOptions) {
                 //console.log(subjectListOptions);return;
@@ -219,6 +226,11 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }
     }
 
+    /*vm.getAttendanceTypeName = function(selectedClass) {
+        return 
+        {attendanceTypeName: InstitutionStudentAttendancesSvc.getAttendanceTypeName(selectedClass)};
+    }*/
+
     vm.updateSubjectList = function(subjectListOptions) {
         vm.subjectListOptions = subjectListOptions;
         if (subjectListOptions.length > 0) {
@@ -228,6 +240,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.subjectListOptions = function(subjectListOptions) {
         vm.subjectListOptions = subjectListOptions;
+        //console.log(subjectListOptions+"zknvskdf");return;
         if (subjectListOptions.length > 0) {
             vm.selectedSubject = subjectListOptions[0].id;
         }
@@ -581,4 +594,6 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         window.location.href = excelUrlWithQuery;
         return;
     }
+
+
 }

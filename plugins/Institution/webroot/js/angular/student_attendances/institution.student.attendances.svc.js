@@ -95,7 +95,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getAllDayColumnDefs: getAllDayColumnDefs,
 
         saveAbsences: saveAbsences,
-        savePeriodMarked: savePeriodMarked
+        savePeriodMarked: savePeriodMarked,
+        getAttendanceTypeName: getAttendanceTypeName
     };
 
     return service;
@@ -918,5 +919,31 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 break;
         }
         return html;
+    }
+
+    function getAttendanceTypeName(selectedClass) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data[0].attendanceTypeName);
+            //return attendanceTypeName;            
+            /*if (angular.isObject(attendanceTypeName)) {
+                if (attendanceTypeName.length > 0) {
+                    deferred.resolve(attendanceTypeName);
+                } else {
+                    AlertSvc.warning(controllerScope, 'You do not have any classes');
+                    deferred.reject('You do not have any classess');
+                }
+            } else {
+                deferred.reject('There was an error when retrieving the class list');
+            }*/
+        };
+
+        return InstitutionClassSubjects
+            .find('attendanceTypeName', {
+                institution_class_id: selectedClass
+                
+            })
+            .ajax({success: success, defer: true});
+
+            return [];
     }
 };
