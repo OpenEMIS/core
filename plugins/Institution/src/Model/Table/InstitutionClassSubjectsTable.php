@@ -9,6 +9,7 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
+use Cake\I18n\Time;
 
 class InstitutionClassSubjectsTable extends AppTable
 {
@@ -39,6 +40,75 @@ class InstitutionClassSubjectsTable extends AppTable
                  $this->aliasField('id'),
                  'institution_subject_id'=>$InstitutionSubjects->aliasField('id'),
                  'institution_subject_name'=>$InstitutionSubjects->aliasField('name'),
+            ])
+            ->contain(['InstitutionSubjects'])
+            ->where([
+                $this->aliasField('institution_class_id') => $institutionClassId
+            ])
+            ->order([
+                $InstitutionSubjects->aliasField('name')=>'DESC'
+            ]);
+        
+        return $query;
+    }
+
+    public function findAllSubjectsByClass(Query $query, array $options)
+    {       
+        $institutionClassId = $options['institution_class_id'];
+        $day_id = (new Time($options['day_id']))->format('w');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables');
+        $ScheduleCurriculumLessons = TableRegistry::get('Schedule.ScheduleCurriculumLessons');
+        $ScheduleNonCurriculumLessons = TableRegistry::get('Schedule.ScheduleNonCurriculumLessons');
+        $ScheduleLessonDetails = TableRegistry::get('Schedule.ScheduleLessonDetails');
+                $query
+                    ->select([
+                        'id' => $InstitutionSubjects->aliasField('id'),
+                        'name' => $InstitutionSubjects->aliasField('name')
+                ])
+                    
+                    ->leftJoin(
+                        [$ScheduleTimetables->alias() => $ScheduleTimetables->table()],
+                        [
+                            $ScheduleTimetables->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
+                        ]
+                    )
+                    ->innerJoin(
+                        [$ScheduleLessonDetails->alias() => $ScheduleLessonDetails->table()],
+                        [
+                            $ScheduleLessonDetails->aliasField('institution_schedule_timetable_id = ') . $ScheduleTimetables->aliasField('id')
+                        ]
+                    )
+                    ->innerJoin(
+                        [$ScheduleCurriculumLessons->alias() => $ScheduleCurriculumLessons->table()],
+                        [
+                            $ScheduleCurriculumLessons->aliasField('institution_schedule_lesson_detail_id = ') . $ScheduleLessonDetails->aliasField('id')
+                        ]
+                    )
+                    ->innerJoin(
+                        [$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
+                        [
+                            $InstitutionSubjects->aliasField('id = ') . $ScheduleCurriculumLessons->aliasField('institution_subject_id')
+                        ]
+                    )
+                    ->leftJoin(
+                        [$ScheduleNonCurriculumLessons->alias() => $ScheduleNonCurriculumLessons->table()],
+                        [
+                            $ScheduleNonCurriculumLessons->aliasField('institution_schedule_lesson_detail_id = ') . $ScheduleLessonDetails->aliasField('id')
+                        ]
+                    )
+                    ->where([$ScheduleTimetables->aliasField('institution_class_id') => $institutionClassId,
+                        $ScheduleLessonDetails->aliasField('day_of_week') => $day_id
+                    ])
+                    ->group([
+                        $InstitutionSubjects->aliasField('id')
+                    ]);
+        return $query;
+
+        $query
+            ->select([
+                 'id'=>$InstitutionSubjects->aliasField('id'),
+                 'name'=>$InstitutionSubjects->aliasField('name'),
             ])
             ->contain(['InstitutionSubjects'])
             ->where([

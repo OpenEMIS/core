@@ -293,6 +293,12 @@ $panelHeader = $this->fetch('panelHeader');
                             <option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
+                    <h5><?= __('Subjects') ?>: </h5>
+                    <div class="input-select-wrapper">
+                        <select ng-disabled="$ctrl.action=='edit'" name="subject" ng-options="subject.id as subject.name for subject in $ctrl.subjectListOptions" ng-model="$ctrl.selectedSubject" ng-change="$ctrl.changeSubject();">
+                            <option value="" ng-if="$ctrl.subjectListOptions.length == 0"><?= __('No Options') ?></option>
+                        </select>
+                    </div>
                     <h5><?= __('Attendance per day') ?>: </h5>
                     <div class="input">
                         <div class="input-selection attendance" ng-class="{'disabled': $ctrl.action=='edit' || $ctrl.selectedDay==-1}">
