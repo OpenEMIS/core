@@ -128,18 +128,21 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             }, vm.error)
             .then(function(classListOptions) {
                 vm.updateClassList(classListOptions);
+
                 InstitutionStudentAttendancesSvc.getAttendanceTypeName(vm.selectedClass).then(function(response) {
                     vm.attendanceTypeName = response;
-                });                  
+                });  
+                 return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.selectedClass, vm.selectedDay);               
             }, vm.error)
-            .then(function(classListOptions) {
-                //vm.updateClassList(classListOptions);
-               return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.selectedClass, vm.selectedDay);
-            }, vm.error)
+            /*.then(function(classListOptions) {
+                vm.updateClassList(classListOptions);
+                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.getClassStudentParams());
+              // return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.selectedClass, vm.selectedDay);
+            }, vm.error)*/
             .then(function(subjectListOptions) {
                 //console.log(subjectListOptions);return;
                 vm.updateSubjectList(subjectListOptions);
-                return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
+                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
             }, vm.error)
             .then(function(attendancePeriodOptions) {
                 vm.updateAttendancePeriodList(attendancePeriodOptions);
@@ -248,6 +251,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.updateAttendancePeriodList = function(attendancePeriodOptions) {
         vm.attendancePeriodOptions = attendancePeriodOptions;
+       // console.log(attendancePeriodOptions);return;
         if (attendancePeriodOptions.length > 0) {
             vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
             vm.gridOptions.context.period = vm.selectedAttendancePeriod;
