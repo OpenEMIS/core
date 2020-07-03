@@ -1,3 +1,8 @@
+### [3.54.0] - 2020-07-03
+- Implemented Student Extracurricular Activities Import
+- Implemented Dhivehi translations to Student Report
+- Implemented Download and Export of Class list and Subject list
+
 ### [3.53.1] - 2020-6-23
 - Bug Fixed: Reports > Remove abc option from format options
 - Bug Fixed: API > Gender not working
