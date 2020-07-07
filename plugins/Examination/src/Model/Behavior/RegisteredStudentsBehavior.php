@@ -282,7 +282,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
         $query
             ->contain([
-                'Users.SpecialNeeds.SpecialNeedTypes', 
+                'Users.SpecialNeeds.SpecialNeedsTypes', 
                 'Users.Genders', 
                 'Institutions', 
                 'Users.Nationalities.NationalitiesLookUp',
