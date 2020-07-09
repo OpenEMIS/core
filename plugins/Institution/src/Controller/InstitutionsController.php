@@ -943,7 +943,6 @@ class InstitutionsController extends AppController
     public function Students($pass = 'index')
     {
         if ($pass == 'add') {
-            echo "ccc"; die;
             $session = $this->request->session();
             $roles = [];
 
