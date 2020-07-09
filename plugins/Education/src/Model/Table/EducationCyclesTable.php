@@ -55,9 +55,10 @@ class EducationCyclesTable extends ControllerActionTable
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
 		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
-        $this->controller->set(compact('levelOptions', 'selectedLevel'));
+                $this->controller->set(compact('levelOptions', 'selectedLevel'));
 		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
-		$query->where([$this->aliasField('education_level_id') => $selectedLevel]);
+		$query->where([$this->aliasField('education_level_id') => $selectedLevel])
+                        ->order([$this->aliasField('order') => 'ASC']); 
 		
 		$sortList = ['name','EducationLevels.name'];
 		if (array_key_exists('sortWhitelist', $extra['options'])) {
