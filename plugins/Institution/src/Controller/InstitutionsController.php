@@ -943,6 +943,7 @@ class InstitutionsController extends AppController
     public function Students($pass = 'index')
     {
         if ($pass == 'add') {
+            echo "ccc"; die;
             $session = $this->request->session();
             $roles = [];
 
@@ -1590,7 +1591,7 @@ class InstitutionsController extends AppController
             //Students By Year, excludes transferred withdrawn,promoted,repeated students
             $params = [
                 'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
-                    $statuses['PROMOTED'], $statuses['REPEATED']]]
+                    $statuses['PROMOTED'], $statuses['REPEATED'], $statuses['GRADUATED']]]
             ];
 
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
