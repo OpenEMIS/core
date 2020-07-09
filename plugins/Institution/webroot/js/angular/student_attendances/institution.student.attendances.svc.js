@@ -65,6 +65,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         StudentAttendances: 'Institution.StudentAttendances',
         InstitutionClasses: 'Institution.InstitutionClasses',
+        StudentAttendanceTypes: 'Attendance.StudentAttendanceTypes',
         InstitutionClassSubjects: 'Institution.InstitutionClassSubjects',
         AbsenceTypes: 'Institution.AbsenceTypes',
         StudentAbsenceReasons: 'Institution.StudentAbsenceReasons',
@@ -96,7 +97,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         saveAbsences: saveAbsences,
         savePeriodMarked: savePeriodMarked,
-        getAttendanceTypeName: getAttendanceTypeName
+        getAttendanceTypeCode: getAttendanceTypeCode,
+        getRecord: getRecord
     };
 
     return service;
@@ -254,7 +256,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return [];
     }
 
-    function getSubjectOptions(institutionClassId,day_id) {
+    function getSubjectOptions(institutionClassId,academicPeriodId,day_id) {
         //console.log(institutionId);return;
         var success = function(response, deferred) {
             var subjectList = response.data.data;
@@ -273,6 +275,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return InstitutionClassSubjects
             .find('allSubjectsByClass', {
                 institution_class_id: institutionClassId,
+                academic_period_id: academicPeriodId,
                 day_id: day_id
             })
             .ajax({success: success, defer: true});
@@ -299,6 +302,16 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     }
 
     function getClassStudent(params) {
+        if (params.subject_id != '') {
+            var sub = params.subject_id;
+        } else {
+            var sub = '';
+        }
+        if (params.attendance_type_id != '') {
+            var attendance_type_id = params.attendance_type_id;
+        } else {
+            var attendance_type_id = '';
+        }
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
@@ -308,6 +321,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             week_id: params.week_id,
             week_start_day: params.week_start_day,
             week_end_day: params.week_end_day,
+            subject_id : sub,
+            attendance_type_id : attendance_type_id
         };
 
         if (extra.attendance_period_id == '' || extra.institution_class_id == '' || extra.academic_period_id == '') {
@@ -316,6 +331,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         var success = function(response, deferred) {
             var classStudents = response.data.data;
+            //console.log(classStudents);
             if (angular.isObject(classStudents)) {
                 deferred.resolve(classStudents);
             } else {
@@ -334,14 +350,18 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             institution_class_id: params.institution_class_id,
             academic_period_id: params.academic_period_id,
             day_id: params.day_id,
-            attendance_period_id: params.attendance_period_id
+            attendance_period_id: params.attendance_period_id,
+            subject_id: params.subject_id,
+            attendance_type_id: params.attendance_type_id
         };
+        //console.log(extra);
 
         if (extra.day_id == ALL_DAY_VALUE) {
             return $q.resolve(false);
         }
 
         var success = function(response, deferred) {
+            //console.log(response.data);
             var count = response.data.total;
             if (angular.isDefined(count)) {
                 var isMarked = count > 0;
@@ -391,18 +411,39 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     }
 
     function savePeriodMarked(params, scope) {
+        if (params.subject_id != '') {
+            var sub = params.subject_id;
+        } else {
+            var sub = '';
+        }
+        if (params.attendance_type_id != '') {
+            var attendance_type_id = params.attendance_type_id;
+        } else {
+            var attendance_type_id = '';
+        }
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
             academic_period_id: params.academic_period_id,
             date: params.day_id,
-            period: params.attendance_period_id
+            period: params.attendance_period_id,
+            subject_id: params.subject_id,
+            attendance_type_id: params.attendance_type_id
         };
+        //console.log(extra);
 
         UtilsSvc.isAppendSpinner(true, 'institution-student-attendances-table');
-        StudentAttendanceMarkedRecords.save(extra)
-        .then(
+
+        
+        //var a = getIsMarked(extra);
+        //console.log(a);
+        /*getRecord(extra).then(function(response){
+            var record_count = response.data[0].count;*/
+            /*if (record_count > 0) {            
+            StudentAttendanceMarkedRecords.edit(extra)
+            .then(
             function(response) {
+                console.log(response);
                 AlertSvc.info(scope, 'Attendances will be automatically saved.');
             },
             function(error) {
@@ -412,6 +453,27 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         .finally(function() {
             UtilsSvc.isAppendSpinner(false, 'institution-student-attendances-table');
         });
+            
+        } else {
+            console.log("hello");*/
+        StudentAttendanceMarkedRecords.save(extra)
+        .then(
+            function(response) {
+                console.log(response);
+                AlertSvc.info(scope, 'Attendances will be automatically saved.');
+            },
+            function(error) {
+                AlertSvc.error(scope, 'There was an error when saving the record');
+            }
+        )
+        .finally(function() {
+            UtilsSvc.isAppendSpinner(false, 'institution-student-attendances-table');
+        });
+            /*}
+        });*/
+        //console.log(data);
+
+        
     }
 
     // column definitions
@@ -921,9 +983,9 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return html;
     }
 
-    function getAttendanceTypeName(selectedClass) {
-        var success = function(response, deferred) {
-            deferred.resolve(response.data.data[0].attendanceTypeName);
+    function getAttendanceTypeCode(institutionId,academicPeriodId,selectedClass) {
+        var success = function(response, deferred) { 
+            deferred.resolve(response.data.data);
             //return attendanceTypeName;            
             /*if (angular.isObject(attendanceTypeName)) {
                 if (attendanceTypeName.length > 0) {
@@ -937,13 +999,27 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             }*/
         };
 
-        return InstitutionClassSubjects
-            .find('attendanceTypeName', {
-                institution_class_id: selectedClass
-                
+        return StudentAttendanceTypes
+            .find('attendanceTypeCode', {
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId,
+                institution_class_id: selectedClass                
             })
             .ajax({success: success, defer: true});
 
             return [];
+    }
+
+    function getRecord(extra) {
+        var success = function(response, deferred) {
+            //console.log(response.data.data[0].count);
+           deferred.resolve(response.data);
+            
+        };
+
+        
+        return StudentAttendanceMarkedRecords
+                .find('record', extra) 
+                .ajax({success: success, defer: true});
     }
 };
