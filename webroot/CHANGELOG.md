@@ -1,3 +1,7 @@
+### [3.54.1] - 2020-07-09
+- Bug Fixed: Institutions > Examinations > Results > View: 404 error 
+- Bug Fixed: Institution > Academics > Programmes > Edit: 404 Error encountered
+
 ### [3.54.0] - 2020-07-03
 - Implemented Student Extracurricular Activities Import
 - Implemented Dhivehi translations to Student Report
