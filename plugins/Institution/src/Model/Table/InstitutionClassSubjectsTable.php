@@ -55,6 +55,7 @@ class InstitutionClassSubjectsTable extends AppTable
     public function findAllSubjectsByClass(Query $query, array $options)
     {       
         $institutionClassId = $options['institution_class_id'];
+        $academicPeriodId = $options['academic_period_id'];
         $day_id = (new Time($options['day_id']))->format('w');
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables');
@@ -62,13 +63,21 @@ class InstitutionClassSubjectsTable extends AppTable
         $ScheduleNonCurriculumLessons = TableRegistry::get('Schedule.ScheduleNonCurriculumLessons');
         $ScheduleLessonDetails = TableRegistry::get('Schedule.ScheduleLessonDetails');
 
-
-                $query
+        $scheduleTimetablesData = $ScheduleTimetables->find()
+                                    ->where([
+                                        $ScheduleTimetables->aliasField('institution_class_id') => $institutionClassId,
+                                        $ScheduleTimetables->aliasField('academic_period_id') => $academicPeriodId
+                                    ])
+                                    ->toArray();
+                                   
+                             /*echo "<pre>";       
+                             print_r($scheduleTimetablesData);die;*/
+        if (count($scheduleTimetablesData) > 0) {
+                    $query
                     ->select([
                         'id' => $InstitutionSubjects->aliasField('id'),
                         'name' => $InstitutionSubjects->aliasField('name')
-                ])
-                    
+                    ])                    
                     ->leftJoin(
                         [$ScheduleTimetables->alias() => $ScheduleTimetables->table()],
                         [
@@ -105,9 +114,8 @@ class InstitutionClassSubjectsTable extends AppTable
                     ->group([
                         $InstitutionSubjects->aliasField('id')
                     ]);
-        return $query;
-
-        $query
+                } else {
+                    $query
             ->select([
                  'id'=>$InstitutionSubjects->aliasField('id'),
                  'name'=>$InstitutionSubjects->aliasField('name'),
@@ -119,44 +127,11 @@ class InstitutionClassSubjectsTable extends AppTable
             ->order([
                 $InstitutionSubjects->aliasField('name')=>'DESC'
             ]);
+                }
+        return $query;       
         
-        return $query;
+        //return $query;
     }
 
-    public function findAttendanceTypeName(Query $query, array $options)
-    {
-       $institution_class_id = $options['institution_class_id'];
-       $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-       $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
-       $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
-                $query
-                ->select([
-                    'attendanceTypeName' => $StudentAttendanceTypes->aliasField('name')
-                ])
-                ->leftJoin(
-                        [$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],
-                        [
-                            $InstitutionClassGrades->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
-                        ]
-                    )
-                ->leftJoin(
-                        [$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()],
-                        [
-                            $StudentAttendanceMarkTypes->aliasField('education_grade_id = ') . $InstitutionClassGrades->aliasField('education_grade_id')
-                        ]
-                    )
-                ->leftJoin(
-                        [$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()],
-                        [
-                            $StudentAttendanceTypes->aliasField('id = ') . $StudentAttendanceMarkTypes->aliasField('student_attendance_type_id')
-                        ]
-                    )
-                ->where([
-                    $InstitutionClassGrades->aliasField('institution_class_id') => $institution_class_id
-                ])
-                ->group([$this->aliasField('institution_class_id')]);
-               
-                return $query;
-
-    }
+    
 }
