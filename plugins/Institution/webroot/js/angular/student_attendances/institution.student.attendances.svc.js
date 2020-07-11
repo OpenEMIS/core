@@ -846,10 +846,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed) {
         if (angular.isDefined(data.institution_student_absences)) {
-            console.log(data.institution_student_absences);
             var html = '';
             if (isMarked) {
-                //console.log(data.institution_student_absences);return;
                 var id = (data.absence_type_id === null) ? 0 : data.institution_student_absences.absence_type_id;
                 var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
                 switch (absenceTypeObj.code) {

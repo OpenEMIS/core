@@ -158,11 +158,11 @@ class StudentAttendancesTable extends ControllerActionTable
         if ($day != -1) {
             // single day
             $query
-                ->formatResults(function (ResultSetInterface $results) use ($findDay, $attendancePeriodId) {
+                ->formatResults(function (ResultSetInterface $results) use ($findDay, $attendancePeriodId, $subjectId) {
 
                     $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
                     
-                    return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId) {
+                    return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId, $subjectId) {
 
                         $academicPeriodId = $row->academic_period_id;
                         $institutionClassId = $row->institution_class_id;
@@ -177,6 +177,7 @@ class StudentAttendancesTable extends ControllerActionTable
                             $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
                             $StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId,
                             $StudentAbsencesPeriodDetails->aliasField('date = ') => $findDay,
+                            $StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId,
                         ];
 
                         $absenceReason = array();
