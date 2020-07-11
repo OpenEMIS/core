@@ -62,19 +62,21 @@ class StudentAttendanceTypesTable extends AppTable
                 ]
             )
         ->where([
-            $InstitutionClassGrades->aliasField('institution_class_id') => $institution_class_id
+            $InstitutionClassGrades->aliasField('institution_class_id') => $institution_class_id,
+            $StudentAttendanceMarkTypes->aliasField('academic_period_id') => $academic_period_id
         ])
         ->group([$InstitutionClassGrades->aliasField('institution_class_id')]);
-    	} else {
-    		 $query
-	        ->select([
+    	   return $query;
+        } else {
+            $query
+            ->select([
                 'id' => $this->aliasField('id'),
-	            'code' => $this->aliasField('code')
-	        ])
-	        ->where([
-	        	$this->aliasField('name') => 'Day'
-	        ]);	        
-    	}
-    	return $query;
+                'code' => $this->aliasField('code')
+            ])
+            ->where([
+                $this->aliasField('code') => 'DAY'
+            ]);
+            return $query;
+        }
     }
 }
