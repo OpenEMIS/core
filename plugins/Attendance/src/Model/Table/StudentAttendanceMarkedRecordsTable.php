@@ -42,6 +42,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 $this->aliasField('period') => $period,
                 $this->aliasField('subject_id = ') => $subjectId
             ]);
+            
     }
 
     public function afterSaveCommit(Event $event, Entity $entity)
