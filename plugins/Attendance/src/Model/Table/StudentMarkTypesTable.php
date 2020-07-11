@@ -210,13 +210,13 @@ class StudentMarkTypesTable extends ControllerActionTable
         $entity->academic_period_id = $selectedAcademicPeriod;
         $education_grade_id = $entity->id;
 
-        if ($student_attendance_type_id == 2) {
+        /*if ($student_attendance_type_id == 2) {
             $this->fields['attendance_per_day']['visible'] = false;
             $this->fields['periods']['visible'] = false;
         } else {
             /*$this->fields['attendance_per_day']['visible'] = true;
             $this->fields['periods']['visible'] = true;*/
-        }
+        //////}*/
         $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
         $StudentAttendancePerDayPeriodsData = $StudentAttendancePerDayPeriods
         ->find('all')
@@ -486,9 +486,14 @@ class StudentMarkTypesTable extends ControllerActionTable
 
     public function addEditOnChangeAttendanceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+      ////  print_r($data[$this->alias()]['student_attendance_type_id']);die;
         if ($data[$this->alias()]['student_attendance_type_id']==2) {
-        $this->fields['attendance_per_day']['visible'] = false;
-        $this->fields['periods']['visible'] = false;
+            $this->fields['attendance_per_day']['visible'] = false;
+            $this->fields['periods']['visible'] = false;
+        } else {
+            // //echo "hello";exit();
+            $this->fields['attendance_per_day']['visible'] = true;
+            $this->fields['periods']['visible'] = true;
         }
     }
 }
