@@ -293,14 +293,14 @@ $panelHeader = $this->fetch('panelHeader');
                             <option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
-                    <h5 ng-if="$ctrl.attendanceTypeCode=='SUBJECT'"><?= __('Subjects') ?>: </h5>
-                    <div class="input-select-wrapper" ng-if="$ctrl.attendanceTypeCode=='SUBJECT'">
+                    <h5 ng-if="$ctrl.isMarkableSubjectAttendance==true"><?= __('Subjects') ?>: </h5>
+                    <div class="input-select-wrapper" ng-if="$ctrl.isMarkableSubjectAttendance==true">
                         <select ng-disabled="$ctrl.action=='edit'" name="subject" ng-options="subject.id as subject.name for subject in $ctrl.subjectListOptions" ng-model="$ctrl.selectedSubject" ng-change="$ctrl.changeSubject();">
                             <option value="" ng-if="$ctrl.subjectListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
-                    <h5 ng-if="$ctrl.attendanceTypeCode=='DAY'"><?= __('Attendance per day') ?>: </h5>
-                    <div class="input" ng-if="$ctrl.attendanceTypeCode=='DAY'">
+                    <h5 ng-if="$ctrl.isMarkableSubjectAttendance==''"><?= __('Attendance per day') ?>: </h5>
+                    <div class="input" ng-if="$ctrl.isMarkableSubjectAttendance==''">
                         <div class="input-selection attendance" ng-class="{'disabled': $ctrl.action=='edit' || $ctrl.selectedDay==-1}">
                             <div class="input" ng-repeat="attendance_period in $ctrl.attendancePeriodOptions">
                                 <input ng-disabled="$ctrl.action=='edit' || $ctrl.selectedDay==-1" kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
