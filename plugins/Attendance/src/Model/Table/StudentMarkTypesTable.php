@@ -465,7 +465,14 @@ class StudentMarkTypesTable extends ControllerActionTable
                           ->select([$StudentAttendanceTypes->aliasField('code')])
                           ->where([$StudentAttendanceTypes->aliasField('id') => $attendanceTypeId])
                           ->toArray();
+        $isMarkableSubjectAttendance = false;
         if ($attendanceType[0]->code == 'SUBJECT') {
+            $isMarkableSubjectAttendance = true;            
+        } else {
+            $isMarkableSubjectAttendance = false;            
+        }
+
+        if ($isMarkableSubjectAttendance == true) {
             $this->fields['attendance_per_day']['visible'] = false;
             $this->fields['periods']['visible'] = false;
         } else {
