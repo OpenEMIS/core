@@ -16,9 +16,13 @@ class POCOR5336 extends AbstractMigration
         $this->execute('CREATE TABLE `z_5336_api_securities` LIKE `api_securities`');
 		$this->execute('INSERT INTO `z_5336_api_securities` SELECT * FROM `api_securities`');	
 
+        //insert api security for InstitutionClassSubjects and StudentAttendanceTypes
+
         $this->execute("INSERT INTO `api_securities` (`name`, `model`, `index`, `view`, `add`, `edit`, `delete`, `execute`) values('Subjects','Institution.InstitutionClassSubjects','1','1','1','1','0','0')");	
 		$this->execute("INSERT INTO `api_securities` (`name`, `model`, `index`, `view`, `add`, `edit`, `delete`, `execute`) values('StudentAttendanceTypes','Attendance.StudentAttendanceTypes','1','1','1','1','0','0')");
 
+        // Add subject column to student_attendance_marked_records and institution_student_absence_details table
+        
         $this->execute('ALTER TABLE `student_attendance_marked_records` ADD COLUMN `subject_id` int(11) AFTER `period`');
         $this->execute("ALTER TABLE `student_attendance_marked_records` DROP PRIMARY KEY, ADD primary key (`institution_id`,`academic_period_id`,`institution_class_id`,`date`,`period`,`subject_id`)");
         $this->execute('ALTER TABLE `institution_student_absence_details` ADD COLUMN `subject_id` int(11) AFTER `student_absence_reason_id`');
