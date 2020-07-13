@@ -367,7 +367,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
-                rowHeight: 380,
+                rowHeight: 38,
                 rowModelType: 'infinite',
                 // Removed options - Issues in ag-Grid AG-828
                 // suppressCellSelection: true,
