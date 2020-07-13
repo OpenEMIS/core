@@ -1,3 +1,7 @@
+### [3.54.2] - 2020-07-13
+- Bug Fixed: Pages where reordering of items do not save when refreshed
+- Bug Fixed: Administration > Survey > Forms: Mandatory Fields are empty but can be Approved
+
 ### [3.54.1] - 2020-07-09
 - Bug Fixed: Institutions > Examinations > Results > View: 404 error 
 - Bug Fixed: Institution > Academics > Programmes > Edit: 404 Error encountered
@@ -164,7 +168,7 @@
 - Implemented lesson timetable feature: Institution > Academic > Schedules
 
 ### [3.44.1] - 2019-11-01
-- Bug fix on Attendance: Changes made in Attendace not reflected in individual student profile.
+- Bug fix on Attendance: Changes made in Attendance not reflected in individual student profile.
 - Bug Fix on Competencies: Not availabe in student profile > academic
 - Bug Fix on Competencies: Crate permissions for users to grant access for Competencies
 - Bug Fix on student status after Promotion and Repeat
