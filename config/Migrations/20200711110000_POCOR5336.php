@@ -16,10 +16,48 @@ class POCOR5336 extends AbstractMigration
         $this->execute('CREATE TABLE `z_5336_api_securities` LIKE `api_securities`');
 		$this->execute('INSERT INTO `z_5336_api_securities` SELECT * FROM `api_securities`');	
 
+
         //insert api security for InstitutionClassSubjects and StudentAttendanceTypes
 
-        $this->execute("INSERT INTO `api_securities` (`name`, `model`, `index`, `view`, `add`, `edit`, `delete`, `execute`) values('Subjects','Institution.InstitutionClassSubjects','1','1','1','1','0','0')");	
-		$this->execute("INSERT INTO `api_securities` (`name`, `model`, `index`, `view`, `add`, `edit`, `delete`, `execute`) values('StudentAttendanceTypes','Attendance.StudentAttendanceTypes','1','1','1','1','0','0')");
+        $stmt = $this->query('SELECT * FROM api_securities ORDER BY id DESC limit 1');
+        $rows = $stmt->fetchAll();
+        $uniqueId = $rows[0]['id'];
+        
+        $apiSecuritiesData = [
+            [
+                'id' => $uniqueId + 1,
+                'name' => 'Subjects',
+                'model' => 'Institution.InstitutionClassSubjects',
+                'index' => 1,
+                'view' => 1,
+                'add' => 1,
+                'edit' => 1,
+                'delete' => 0,
+                'execute' => 0 
+            ]
+        ];
+
+        $apiSecuritiesTable = $this->table('api_securities');
+        $apiSecuritiesTable->insert($apiSecuritiesData);
+        $apiSecuritiesTable->saveData();
+
+        $apiSecuritiesData = [
+            [
+                'id' => $uniqueId + 2,
+                'name' => 'StudentAttendanceTypes',
+                'model' => 'Attendance.StudentAttendanceTypes',
+                'index' => 1,
+                'view' => 1,
+                'add' => 1,
+                'edit' => 1,
+                'delete' => 0,
+                'execute' => 0 
+            ]
+        ];
+
+        $apiSecuritiesTable = $this->table('api_securities');
+        $apiSecuritiesTable->insert($apiSecuritiesData);
+        $apiSecuritiesTable->saveData();
 
         // Add subject column to student_attendance_marked_records and institution_student_absence_details table
         
