@@ -262,16 +262,16 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 if (subjectList.length > 0) {
                     deferred.resolve(subjectList);
                 } else {
-                    AlertSvc.warning(controllerScope, 'You do not have any classes');
-                    deferred.reject('You do not have any classess');
+                    AlertSvc.warning(controllerScope, 'You do not have any subjects');
+                    deferred.reject('You do not have any subjects');
                 }
             } else {
-                deferred.reject('There was an error when retrieving the class list');
+                deferred.reject('There was an error when retrieving the subject list');
             }
         };
 
         return InstitutionClassSubjects
-            .find('allSubjectsByClassAndAcademicPeriod', {
+            .find('allSubjectsByClassPerAcademicPeriod', {
                 institution_class_id: institutionClassId,
                 academic_period_id: academicPeriodId,
                 day_id: day_id
@@ -928,12 +928,12 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     function isMarkableSubjectAttendance(institutionId,academicPeriodId,selectedClass) {
         var success = function(response, deferred) {
-            var subject_type = response.data.data[0].code;
-            if (angular.isDefined(subject_type)) {
-                if (subject_type == 'SUBJECT') {
-                    var isMarkableSubjectAttendance = true;
+            if (angular.isDefined(response.data.data[0].code)) {
+                var isMarkableSubjectAttendance = false;
+                if (response.data.data[0].code == 'SUBJECT') {
+                    isMarkableSubjectAttendance = true;
                 } else {
-                    var isMarkableSubjectAttendance = false;
+                    isMarkableSubjectAttendance = false;
                 }
                 deferred.resolve(isMarkableSubjectAttendance);
             } else {
