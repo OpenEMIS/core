@@ -52,7 +52,7 @@ class InstitutionClassSubjectsTable extends AppTable
         return $query;
     }
 
-    public function findAllSubjectsByClassAndAcademicPeriod(Query $query, array $options)
+    public function findAllSubjectsByClassPerAcademicPeriod(Query $query, array $options)
     {       
         $institutionClassId = $options['institution_class_id'];
         $academicPeriodId = $options['academic_period_id'];
