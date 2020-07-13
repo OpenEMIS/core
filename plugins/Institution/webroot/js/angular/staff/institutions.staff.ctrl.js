@@ -360,14 +360,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     {headerName: StaffController.translatedTexts.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
-                enableColResize: false,
+                enableColResize: true,
                 enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
                 enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
-                rowHeight: 38,
+                rowHeight: 380,
                 rowModelType: 'infinite',
                 // Removed options - Issues in ag-Grid AG-828
                 // suppressCellSelection: true,
