@@ -54,6 +54,10 @@ class FieldOptionComponent extends Component
         'Banks' => ['className' => 'FieldOption.Banks', 'parent' => 'Finance'],
         'BankBranches' => ['className' => 'FieldOption.BankBranches', 'parent' => 'Finance'],
         'FeeTypes' => ['className' => 'FieldOption.FeeTypes', 'parent' => 'Finance'],
+        'BudgetTypes' => ['className' => 'FieldOption.BudgetTypes', 'parent' => 'Finance'],
+        'IncomeSources' => ['className' => 'FieldOption.IncomeSources', 'parent' => 'Finance'],
+        'IncomeTypes' => ['className' => 'FieldOption.IncomeTypes', 'parent' => 'Finance'],
+        'ExpenditureTypes' => ['className' => 'FieldOption.ExpenditureTypes', 'parent' => 'Finance'],
 
     // Guardian
         'GuardianRelations' => ['className' => 'Student.GuardianRelations', 'parent' => 'Guardian'],
