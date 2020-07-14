@@ -108,9 +108,7 @@ class StudentMarkTypesTable extends ControllerActionTable
             }
 
             $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
-            for ($i=1;$i<=$attendancePerDay;$i++) {
-
-               
+            for ($i=1;$i<=$attendancePerDay;$i++) {               
                 $id = $requestData['p'.$i];
                 
                 $PeriodsData = $StudentAttendancePerDayPeriods
@@ -171,12 +169,20 @@ class StudentMarkTypesTable extends ControllerActionTable
                           ->select([$StudentAttendanceTypes->aliasField('code')])
                           ->where([$StudentAttendanceTypes->aliasField('id') => $attendanceTypeId])
                           ->toArray();
+
+        $isMarkableSubjectAttendance = false;
         if ($attendanceType[0]->code == 'SUBJECT')
-        {            
+        { 
+            $isMarkableSubjectAttendance = true;
+        } else {
+            $isMarkableSubjectAttendance = false;
+        }
+
+            if ($isMarkableSubjectAttendance == true) {           
             $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');       
            
-                $StudentAttendancePerDayPeriods->deleteAll(['education_grade_id' => $educationGradeId, 'academic_period_id' => $academicPeriodId]);            
-        }        
+                $StudentAttendancePerDayPeriods->deleteAll(['education_grade_id' => $educationGradeId, 'academic_period_id' => $academicPeriodId]);
+            }                  
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
