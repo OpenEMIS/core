@@ -155,11 +155,17 @@ class StudentMarkTypesTable extends ControllerActionTable
             if (!empty($resultSet)) {
                 $this->StudentAttendanceMarkTypes
                 ->updateAll(['student_attendance_type_id' => $attendanceTypeId], ['education_grade_id' => $requestData[$this->alias()]['id'], 'academic_period_id' => $requestData[$this->alias()]['academic_period_id']]);
-            }
-                    
-                  }
+            } else {
+                    $studentMarkTypeData = [
+                    'student_attendance_type_id' => $attendanceTypeId,
+                    'education_grade_id' => $educationGradeId,
+                    'academic_period_id' => $academicPeriodId
+                ];
 
-        
+                $entity = $this->StudentAttendanceMarkTypes->newEntity($studentMarkTypeData);
+                $this->StudentAttendanceMarkTypes->save($entity);             
+            }                    
+        }        
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
