@@ -73,6 +73,10 @@ class StudentAttendancesTable extends ControllerActionTable
         $weekStartDay = $options['week_start_day'];
         $weekEndDay = $options['week_end_day'];
         $day = $options['day_id'];
+        $subjectId = $options['subject_id'];      
+
+        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $this->Users = TableRegistry::get('Security.Users');
 
         if ($day == -1) {
             $findDay[] = $weekStartDay;
@@ -81,6 +85,46 @@ class StudentAttendancesTable extends ControllerActionTable
             $findDay = $day;
         }
 
+        if ($subjectId != 0) {
+            $query
+            ->select([
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('institution_class_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('student_id'),
+                $this->Users->aliasField('id'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name')
+            ])
+            ->contain([$this->Users->alias()])
+            ->matching($this->StudentStatuses->alias(), function($q) {
+                return $q->where([
+                    $this->StudentStatuses->aliasField('code') => 'CURRENT'
+                ]);
+            })
+            ->leftJoin(
+                    [$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()],
+                    [
+                        $InstitutionSubjectStudents->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                        $InstitutionSubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    ]
+                )
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('institution_class_id') => $institutionClassId,
+                $InstitutionSubjectStudents->aliasField('institution_subject_id') => $subjectId
+            ])
+            ->group([
+                $InstitutionSubjectStudents->aliasField('student_id')
+            ])
+            ->order([
+                $this->Users->aliasField('id')
+            ]);
+        } else {
         $query
             ->select([
                 $this->aliasField('academic_period_id'),
@@ -108,15 +152,17 @@ class StudentAttendancesTable extends ControllerActionTable
             ->order([
                 $this->Users->aliasField('first_name')
             ]);
+        }
 
 
         if ($day != -1) {
             // single day
             $query
-                ->formatResults(function (ResultSetInterface $results) use ($findDay, $attendancePeriodId) {
+                ->formatResults(function (ResultSetInterface $results) use ($findDay, $attendancePeriodId, $subjectId) {
 
                     $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-                    return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId) {
+                    
+                    return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId, $subjectId) {
 
                         $academicPeriodId = $row->academic_period_id;
                         $institutionClassId = $row->institution_class_id;
@@ -131,6 +177,7 @@ class StudentAttendancesTable extends ControllerActionTable
                             $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
                             $StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId,
                             $StudentAbsencesPeriodDetails->aliasField('date = ') => $findDay,
+                            $StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId,
                         ];
 
                         $absenceReason = array();
@@ -207,7 +254,8 @@ class StudentAttendancesTable extends ControllerActionTable
                                         $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
                                         $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
                                         $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
-                                        $StudentAttendanceMarkedRecords->aliasField('date = ') => $findDay
+                                        $StudentAttendanceMarkedRecords->aliasField('date = ') => $findDay,
+                                        $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId
                                     ])
                                     ->toArray();
 
@@ -597,6 +645,11 @@ class StudentAttendancesTable extends ControllerActionTable
         } else {
             return '';
         }
+    }
+
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        echo "<pre>";print_r($data);die;
     }
 
     
