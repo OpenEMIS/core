@@ -170,19 +170,12 @@ class StudentMarkTypesTable extends ControllerActionTable
                           ->where([$StudentAttendanceTypes->aliasField('id') => $attendanceTypeId])
                           ->toArray();
 
-        $isMarkableSubjectAttendance = false;
-        if ($attendanceType[0]->code == 'SUBJECT')
-        { 
-            $isMarkableSubjectAttendance = true;
-        } else {
-            $isMarkableSubjectAttendance = false;
+       
+        if ($attendanceType[0]->code == 'SUBJECT') {
+            $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+            $StudentAttendancePerDayPeriods->deleteAll(['education_grade_id' => $educationGradeId, 'academic_period_id' => $academicPeriodId]);
         }
-
-            if ($isMarkableSubjectAttendance == true) {           
-            $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');       
-           
-                $StudentAttendancePerDayPeriods->deleteAll(['education_grade_id' => $educationGradeId, 'academic_period_id' => $academicPeriodId]);
-            }                  
+        
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
