@@ -61,10 +61,10 @@ class POCOR5336 extends AbstractMigration
 
         // Add subject column to student_attendance_marked_records and institution_student_absence_details table
         
-        $this->execute('ALTER TABLE `student_attendance_marked_records` ADD COLUMN `subject_id` int(11) AFTER `period`');
+        $this->execute('ALTER TABLE `student_attendance_marked_records` ADD COLUMN `subject_id` int(11) NOT NULL DEFAULT 0 AFTER `period`');
         $this->execute("ALTER TABLE `student_attendance_marked_records` DROP PRIMARY KEY, ADD primary key (`institution_id`,`academic_period_id`,`institution_class_id`,`date`,`period`,`subject_id`)");
-        $this->execute('ALTER TABLE `institution_student_absence_details` ADD COLUMN `subject_id` int(11) AFTER `student_absence_reason_id`');
-        $this->execute("ALTER TABLE `institution_student_absence_details` DROP PRIMARY KEY, ADD primary key (`student_id`,`institution_id`,`academic_period_id`,`institution_class_id`,`date`,`period`,`subject_id`)");
+        $this->execute('ALTER TABLE `institution_student_absence_details` ADD COLUMN `subject_id` int(11) NOT NULL DEFAULT 0 AFTER `student_absence_reason_id`');
+        $this->execute("ALTER TABLE `institution_student_absence_details` DROP PRIMARY KEY, ADD primary key (`student_id`,`institution_id`,`academic_period_id`,`institution_class_id`,`date`,`period`,`subject_id`)");  
     }
 
     // rollback
