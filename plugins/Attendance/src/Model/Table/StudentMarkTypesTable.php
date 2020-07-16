@@ -205,6 +205,23 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->controller->set('StudentAttendancePerDayPeriodsData', $StudentAttendancePerDayPeriodsData);
         $this->controller->set('attendance_per_day', $attendance_per_day);
         $this->setupField($entity);
+        $student_attendance_type_id = $entity->student_attendance_mark_types[0]->student_attendance_type_id;
+        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $attendanceType = $StudentAttendanceTypes
+                          ->find()
+                          ->select([$StudentAttendanceTypes->aliasField('code')])
+                          ->where([$StudentAttendanceTypes->aliasField('id') => $student_attendance_type_id])
+                          ->toArray();
+        $isMarkableSubjectAttendance = false;
+        if ($attendanceType[0]->code == 'SUBJECT') {
+            $isMarkableSubjectAttendance = true;            
+        } else {
+            $isMarkableSubjectAttendance = false;            
+        }
+        if ($isMarkableSubjectAttendance == true) {
+            $this->fields['attendance_per_day']['visible'] = false;
+            $this->fields['periods']['visible'] = false;
+        }
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -406,7 +423,6 @@ class StudentMarkTypesTable extends ControllerActionTable
 
     private function setupField(Entity $entity = null)
     {
-        $student_attendance_type_id = $entity->student_attendance_mark_types[0]->student_attendance_type_id;
         $this->field('visible', ['visible' => false]);
         $this->field('code', ['visible' => false]);
         $this->field('admission_age', ['visible' => false]);
