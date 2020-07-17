@@ -138,7 +138,6 @@ class StudentMarkTypesTable extends ControllerActionTable
                 }
             }
         } else {
-            //echo "ksdfkfd";die;
             $educationGradeId = $requestData[$this->alias()]['id'];
             $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
             $attendancePerDay = 0;
@@ -286,12 +285,6 @@ class StudentMarkTypesTable extends ControllerActionTable
                 $this->fields['periods']['visible'] = false;
             }
         }
-        //echo $entity->attendance_per_day;die;
-        //echo "<pre>";print_r($entity);die;
-        /*if (!empty($entity->attendance_per_day)) {
-            $this->fields['attendance_per_day']['visible'] = true;
-            $this->fields['periods']['visible'] = true;
-        }*/
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
