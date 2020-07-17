@@ -138,9 +138,10 @@ class StudentMarkTypesTable extends ControllerActionTable
                 }
             }
         } else {
+            //echo "ksdfkfd";die;
             $educationGradeId = $requestData[$this->alias()]['id'];
             $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
-            
+            $attendancePerDay = 0;
             $attendanceTypeId = $requestData[$this->alias()]['student_attendance_type_id'];
             $resultSet = $this->StudentAttendanceMarkTypes
                     ->find()
@@ -154,6 +155,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                 ->updateAll(['student_attendance_type_id' => $attendanceTypeId], ['education_grade_id' => $requestData[$this->alias()]['id'], 'academic_period_id' => $requestData[$this->alias()]['academic_period_id']]);
             } else {
                     $studentMarkTypeData = [
+                    'attendance_per_day' => $attendancePerDay,
                     'student_attendance_type_id' => $attendanceTypeId,
                     'education_grade_id' => $educationGradeId,
                     'academic_period_id' => $academicPeriodId
@@ -251,6 +253,45 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->controller->set('StudentAttendancePerDayPeriodsData', $StudentAttendancePerDayPeriodsData);
         $this->controller->set('attendance_per_day', $attendance_per_day);
         $this->setupField($entity);
+
+        if (!empty($student_attendance_type_id)) {
+            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $attendanceType = $StudentAttendanceTypes
+                              ->find()
+                              ->select([$StudentAttendanceTypes->aliasField('code')])
+                              ->where([$StudentAttendanceTypes->aliasField('id') => $student_attendance_type_id])
+                              ->toArray();
+
+            if ($attendanceType[0]->code == 'SUBJECT') {
+                $this->fields['attendance_per_day']['visible'] = false;
+                $this->fields['periods']['visible'] = false;
+            } else {
+                $this->fields['attendance_per_day']['visible'] = true;
+                $this->fields['periods']['visible'] = true;
+            }
+        }
+
+        if (!empty($entity->attendanceTypeId)) {
+            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $attendanceTypeEntity = $StudentAttendanceTypes
+                              ->find()
+                              ->select([$StudentAttendanceTypes->aliasField('code')])
+                              ->where([$StudentAttendanceTypes->aliasField('id') => $entity->attendanceTypeId])
+                              ->toArray();
+            if ($attendanceTypeEntity[0]->code == 'DAY') {
+            $this->fields['attendance_per_day']['visible'] = true;
+            $this->fields['periods']['visible'] = true;
+            } else if ($attendanceTypeEntity[0]->code == 'SUBJECT') {
+                $this->fields['attendance_per_day']['visible'] = false;
+                $this->fields['periods']['visible'] = false;
+            }
+        }
+        //echo $entity->attendance_per_day;die;
+        //echo "<pre>";print_r($entity);die;
+        /*if (!empty($entity->attendance_per_day)) {
+            $this->fields['attendance_per_day']['visible'] = true;
+            $this->fields['periods']['visible'] = true;
+        }*/
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -485,12 +526,15 @@ class StudentMarkTypesTable extends ControllerActionTable
 
         $attendance_per_day = $request->data[$this->alias()]['attendance_per_day'];
         $this->controller->set('attendance_per_day', $attendance_per_day);
+
+        $entity->attendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
     }
 
     public function addEditOnChangeAttendanceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $attendanceTypeId = $data[$this->alias()]['student_attendance_type_id'];
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $entity->attendanceTypeId = $attendanceTypeId;
         $attendanceType = $StudentAttendanceTypes
                           ->find()
                           ->select([$StudentAttendanceTypes->aliasField('code')])
