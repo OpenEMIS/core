@@ -126,7 +126,7 @@ class SurveysTable extends AppTable
 
             foreach ($notCompleteRecords->all() as $record) {
                 
-                $surveyFormDetails = $this->SurveyForms->find()
+                $surveyFormCount = $this->SurveyForms->find()
                     ->select([
                         'SurveyForms.id',
                         'SurveyForms.code',
@@ -145,12 +145,11 @@ class SurveysTable extends AppTable
                         'SurveyStatusPeriods.academic_period_id' => $academicPeriodId,
                         'DATE(SurveyStatuses.date_disabled) >= ' => date('Y-m-d')
                         ])
-                    ->count()
-                    ;
+                    ->count();
                 
                 $record->status_id = __('Not Completed');
                 
-                if( $surveyFormDetails > 0){
+                if( $surveyFormCount > 0){
                     $record->status_id = __('Open');
                 }
                 
