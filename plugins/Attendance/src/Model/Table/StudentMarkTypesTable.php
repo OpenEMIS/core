@@ -450,25 +450,15 @@ class StudentMarkTypesTable extends ControllerActionTable
         if (!empty($entity->student_attendance_mark_types)) {
             $attendanceTypeEntity = $entity->student_attendance_mark_types[0];
             $attendanceTypeId = $attendanceTypeEntity->student_attendance_type_id;
-        } else {
-            $attendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
-        }
-
-        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
-        $markTypeEntity = $StudentAttendanceTypes
-            ->find()
-            ->select([$StudentAttendanceTypes->aliasField('code')])
-            ->where([$StudentAttendanceTypes->aliasField('id') => $attendanceTypeId])
-            ->first();
-        if ($markTypeEntity->code != 'SUBJECT') {
-            if (!empty($entity->student_attendance_mark_types)) {
-                $attendanceTypeEntity = $entity->student_attendance_mark_types[0];
+            $defaultattendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
+            if ($attendanceTypeId == $defaultattendanceTypeId) {
                 return $attendanceTypeEntity->attendance_per_day;
             } else {
-                return $this->defaultMarkType['attendance_per_day'];
+                return '-';
             }
         } else {
-                return '-';
+            $attendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
+            return $this->defaultMarkType['attendance_per_day'];
         }
     }
 
