@@ -38,7 +38,8 @@ class StudentAttendanceTypesTable extends AppTable
 		                				]
 		            				)
 		        					->where([
-		           				 		$InstitutionClassGrades->aliasField('institution_class_id') => $institution_class_id
+		           				 		$InstitutionClassGrades->aliasField('institution_class_id') => $institution_class_id,
+                                        $StudentAttendanceMarkTypes->aliasField('academic_period_id') => $academic_period_id
 		        						])
 		        					->toArray();
 
