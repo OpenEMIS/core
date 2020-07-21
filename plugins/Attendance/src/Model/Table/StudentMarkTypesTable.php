@@ -140,7 +140,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         } else {
             $educationGradeId = $requestData[$this->alias()]['id'];
             $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
-            $attendancePerDay = 0;
+            $attendancePerDay = 1;
             $attendanceTypeId = $requestData[$this->alias()]['student_attendance_type_id'];
             $resultSet = $this->StudentAttendanceMarkTypes
                     ->find()
@@ -151,7 +151,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                     ->toArray();
             if (!empty($resultSet)) {
                 $this->StudentAttendanceMarkTypes
-                ->updateAll(['student_attendance_type_id' => $attendanceTypeId], ['education_grade_id' => $requestData[$this->alias()]['id'], 'academic_period_id' => $requestData[$this->alias()]['academic_period_id']]);
+                ->updateAll(['student_attendance_type_id' => $attendanceTypeId,'attendance_per_day' => $attendancePerDay], ['education_grade_id' => $requestData[$this->alias()]['id'], 'academic_period_id' => $requestData[$this->alias()]['academic_period_id']]);
             } else {
                     $studentMarkTypeData = [
                     'attendance_per_day' => $attendancePerDay,
