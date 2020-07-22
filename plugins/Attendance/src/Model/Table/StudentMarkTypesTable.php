@@ -140,7 +140,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         } else {
             $educationGradeId = $requestData[$this->alias()]['id'];
             $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
-            $attendancePerDay = 1;
+            $attendancePerDay = $this->defaultMarkType['attendance_per_day'];
             $attendanceTypeId = $requestData[$this->alias()]['student_attendance_type_id'];
             $resultSet = $this->StudentAttendanceMarkTypes
                     ->find()
@@ -201,7 +201,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         if (!empty($entity->student_attendance_mark_types[0]->attendance_per_day)) {
             $attendance_per_day = $entity->student_attendance_mark_types[0]->attendance_per_day;
         } else {
-            $attendance_per_day = 1;
+            $attendance_per_day = $this->defaultMarkType['attendance_per_day'];
         }
         $this->controller->set('StudentAttendancePerDayPeriodsData', $StudentAttendancePerDayPeriodsData);
         $this->controller->set('attendance_per_day', $attendance_per_day);
@@ -252,6 +252,9 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->controller->set('StudentAttendancePerDayPeriodsData', $StudentAttendancePerDayPeriodsData);
         $this->controller->set('attendance_per_day', $attendance_per_day);
         $this->setupField($entity);
+        $this->fields['academic_period_id']['type'] = 'readonly';
+        $this->fields['name']['type'] = 'readonly';
+        //$this->field('name', ['type' => 'readonly']);
 
         if (!empty($student_attendance_type_id)) {
             $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
