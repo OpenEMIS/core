@@ -252,9 +252,6 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->controller->set('StudentAttendancePerDayPeriodsData', $StudentAttendancePerDayPeriodsData);
         $this->controller->set('attendance_per_day', $attendance_per_day);
         $this->setupField($entity);
-        $this->fields['academic_period_id']['type'] = 'readonly';
-        $this->fields['name']['type'] = 'readonly';
-        //$this->field('name', ['type' => 'readonly']);
 
         if (!empty($student_attendance_type_id)) {
             $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
@@ -332,7 +329,7 @@ class StudentMarkTypesTable extends ControllerActionTable
     public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
-            //$attr['type'] = 'readonly';
+            $attr['type'] = 'readonly';
             return $attr;
         }
     }
@@ -352,7 +349,8 @@ class StudentMarkTypesTable extends ControllerActionTable
 
             $attr['options'] = $academicPeriodOptions;
             if (!is_null($periodEntity->name)) {
-                $attr['attr']['value'] = $periodEntity->id;
+                $attr['type'] = 'readonly';
+                $attr['attr']['value'] = $periodEntity->name;
                 $attr['attr']['required'] = true;
             }
             return $attr;
