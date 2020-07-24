@@ -140,7 +140,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         } else {
             $educationGradeId = $requestData[$this->alias()]['id'];
             $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
-            $attendancePerDay = 1;
+            $attendancePerDay = $this->defaultMarkType['attendance_per_day'];
             $attendanceTypeId = $requestData[$this->alias()]['student_attendance_type_id'];
             $resultSet = $this->StudentAttendanceMarkTypes
                     ->find()
@@ -201,7 +201,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         if (!empty($entity->student_attendance_mark_types[0]->attendance_per_day)) {
             $attendance_per_day = $entity->student_attendance_mark_types[0]->attendance_per_day;
         } else {
-            $attendance_per_day = 1;
+            $attendance_per_day = $this->defaultMarkType['attendance_per_day'];
         }
         $this->controller->set('StudentAttendancePerDayPeriodsData', $StudentAttendancePerDayPeriodsData);
         $this->controller->set('attendance_per_day', $attendance_per_day);
@@ -329,7 +329,7 @@ class StudentMarkTypesTable extends ControllerActionTable
     public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
-            //$attr['type'] = 'readonly';
+            $attr['type'] = 'readonly';
             return $attr;
         }
     }
@@ -349,7 +349,8 @@ class StudentMarkTypesTable extends ControllerActionTable
 
             $attr['options'] = $academicPeriodOptions;
             if (!is_null($periodEntity->name)) {
-                $attr['attr']['value'] = $periodEntity->id;
+                $attr['type'] = 'readonly';
+                $attr['attr']['value'] = $periodEntity->name;
                 $attr['attr']['required'] = true;
             }
             return $attr;
