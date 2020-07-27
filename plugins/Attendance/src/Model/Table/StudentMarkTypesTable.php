@@ -131,7 +131,8 @@ class StudentMarkTypesTable extends ControllerActionTable
                    $StudentAttendancePerDayPeriodsData = [
                         'academic_period_id' => $requestData[$this->alias()]['academic_period_id'],
                         'education_grade_id' => $requestData[$this->alias()]['id'],
-                        'name' => $requestData['period'][$i]
+                        'name' => $requestData['period'][$i],
+                        'period' => $i
                     ];
                     $entity1 = $StudentAttendancePerDayPeriods->newEntity($StudentAttendancePerDayPeriodsData);
                     $StudentAttendancePerDayPeriods->save($entity1);
