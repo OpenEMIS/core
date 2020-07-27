@@ -121,7 +121,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                 if (!empty($PeriodsData)) {
 
                     $StudentAttendancePerDayPeriods->updateAll(
-                        ['name' => $requestData['period'][$i]],
+                        ['name' => $requestData['period'][$i], 'period' => $i],
                     [
                         'id' => $id
                     ]
