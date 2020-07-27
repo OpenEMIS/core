@@ -65,6 +65,7 @@ class POCOR5336 extends AbstractMigration
         $this->execute("ALTER TABLE `student_attendance_marked_records` DROP PRIMARY KEY, ADD primary key (`institution_id`,`academic_period_id`,`institution_class_id`,`date`,`period`,`subject_id`)");
         $this->execute('ALTER TABLE `institution_student_absence_details` ADD COLUMN `subject_id` int(11) NOT NULL DEFAULT 0 AFTER `student_absence_reason_id`');
         $this->execute("ALTER TABLE `institution_student_absence_details` DROP PRIMARY KEY, ADD primary key (`student_id`,`institution_id`,`academic_period_id`,`institution_class_id`,`date`,`period`,`subject_id`)");  
+        $this->execute('ALTER TABLE `student_attendance_per_day_periods` ADD COLUMN `period` int(11) AFTER `academic_period_id`');
     }
 
     // rollback
@@ -74,5 +75,6 @@ class POCOR5336 extends AbstractMigration
         $this->execute('RENAME TABLE `z_5336_api_securities` TO `api_securities`');
         $this->execute('ALTER TABLE `student_attendance_marked_records` DROP COLUMN `subject_id`');
         $this->execute('ALTER TABLE `institution_student_absence_details` DROP COLUMN `subject_id`');
+        $this->execute('ALTER TABLE `student_attendance_per_day_periods` DROP COLUMN `period`');
     }
 }
