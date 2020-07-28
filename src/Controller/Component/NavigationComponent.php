@@ -729,6 +729,27 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.BankAccounts'],
                 ],
 
+                'Institutions.Budget' => [
+                    'title' => 'Budget',
+                    'parent' => 'Institution.Finance',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.Budget'],
+                ],
+
+                'Institutions.Income' => [
+                    'title' => 'Income',
+                    'parent' => 'Institution.Finance',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.Income'],
+                ],
+
+                'Institutions.Expenditure' => [
+                    'title' => 'Expenditure',
+                    'parent' => 'Institution.Finance',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.Expenditure'],
+                ],
+
                 'Institutions.Fees' => [
                     'title' => 'Institution Fees',
                     'parent' => 'Institution.Finance',

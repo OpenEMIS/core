@@ -122,7 +122,8 @@ class POCOR5009 extends AbstractMigration
                 $newStamp = $currentStamp;
             }
 
-        return $prefix.$newStamp+$flag;
+            $newStamp = $newStamp + $flag;
+        return $prefix . $newStamp;
 	}
 		
 	public function down()
