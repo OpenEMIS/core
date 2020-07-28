@@ -1,3 +1,7 @@
+### [3.57.0] - 2020-07-28
+- Implemented feature to mark student attendance by subject
+- Implemented institution Finance (Income/Expenditure) feature
+
 ### [3.54.2] - 2020-07-13
 - Bug Fixed: Pages where reordering of items do not save when refreshed
 - Bug Fixed: Administration > Survey > Forms: Mandatory Fields are empty but can be Approved

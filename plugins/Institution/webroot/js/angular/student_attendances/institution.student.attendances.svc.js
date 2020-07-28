@@ -65,6 +65,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         StudentAttendances: 'Institution.StudentAttendances',
         InstitutionClasses: 'Institution.InstitutionClasses',
+        StudentAttendanceTypes: 'Attendance.StudentAttendanceTypes',
+        InstitutionClassSubjects: 'Institution.InstitutionClassSubjects',
         AbsenceTypes: 'Institution.AbsenceTypes',
         StudentAbsenceReasons: 'Institution.StudentAbsenceReasons',
         StudentAbsencesPeriodDetails: 'Institution.StudentAbsencesPeriodDetails',
@@ -85,6 +87,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getWeekListOptions: getWeekListOptions,
         getDayListOptions: getDayListOptions,
         getClassOptions: getClassOptions,
+        getSubjectOptions: getSubjectOptions,
         getPeriodOptions: getPeriodOptions,
         getIsMarked: getIsMarked,
         getClassStudent: getClassStudent,
@@ -93,7 +96,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getAllDayColumnDefs: getAllDayColumnDefs,
 
         saveAbsences: saveAbsences,
-        savePeriodMarked: savePeriodMarked
+        savePeriodMarked: savePeriodMarked,
+        isMarkableSubjectAttendance: isMarkableSubjectAttendance
     };
 
     return service;
@@ -251,6 +255,32 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return [];
     }
 
+    function getSubjectOptions(institutionClassId,academicPeriodId,day_id) {
+        var success = function(response, deferred) {
+            var subjectList = response.data.data;
+            if (angular.isObject(subjectList)) {
+                if (subjectList.length > 0) {
+                    deferred.resolve(subjectList);
+                } else {
+                    AlertSvc.warning(controllerScope, 'You do not have any subjects');
+                    deferred.reject('You do not have any subjects');
+                }
+            } else {
+                deferred.reject('There was an error when retrieving the subject list');
+            }
+        };
+
+        return InstitutionClassSubjects
+            .find('allSubjectsByClassPerAcademicPeriod', {
+                institution_class_id: institutionClassId,
+                academic_period_id: academicPeriodId,
+                day_id: day_id
+            })
+            .ajax({success: success, defer: true});
+
+        return [];
+    }
+
     function getPeriodOptions(institutionClassId, academicPeriodId) {
         var success = function(response, deferred) {
             var attendancePeriodList = response.data.data;
@@ -279,6 +309,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             week_id: params.week_id,
             week_start_day: params.week_start_day,
             week_end_day: params.week_end_day,
+            subject_id : params.subject_id
         };
 
         if (extra.attendance_period_id == '' || extra.institution_class_id == '' || extra.academic_period_id == '') {
@@ -305,7 +336,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             institution_class_id: params.institution_class_id,
             academic_period_id: params.academic_period_id,
             day_id: params.day_id,
-            attendance_period_id: params.attendance_period_id
+            attendance_period_id: params.attendance_period_id,
+            subject_id: params.subject_id
         };
 
         if (extra.day_id == ALL_DAY_VALUE) {
@@ -355,7 +387,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             student_absence_reason_id: data.institution_student_absences.student_absence_reason_id,
             comment: data.institution_student_absences.comment,
             period: context.period,
-            date: context.date
+            date: context.date,
+            subject_id: context.subject_id
         };
 
         return StudentAbsencesPeriodDetails.save(studentAbsenceData);
@@ -367,7 +400,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             institution_class_id: params.institution_class_id,
             academic_period_id: params.academic_period_id,
             date: params.day_id,
-            period: params.attendance_period_id
+            period: params.attendance_period_id,
+            subject_id: params.subject_id
         };
 
         UtilsSvc.isAppendSpinner(true, 'institution-student-attendances-table');
@@ -382,7 +416,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         )
         .finally(function() {
             UtilsSvc.isAppendSpinner(false, 'institution-student-attendances-table');
-        });
+        });        
     }
 
     // column definitions
@@ -890,5 +924,31 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 break;
         }
         return html;
+    }
+
+    function isMarkableSubjectAttendance(institutionId,academicPeriodId,selectedClass) {
+        var success = function(response, deferred) {
+            if (angular.isDefined(response.data.data[0].code)) {
+                var isMarkableSubjectAttendance = false;
+                if (response.data.data[0].code == 'SUBJECT') {
+                    isMarkableSubjectAttendance = true;
+                } else {
+                    isMarkableSubjectAttendance = false;
+                }
+                deferred.resolve(isMarkableSubjectAttendance);
+            } else {
+                deferred.reject('There was an error when retrieving the isMarkableSubjectAttendance record');
+            }
+        };
+
+        return StudentAttendanceTypes
+            .find('attendanceTypeCode', {
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId,
+                institution_class_id: selectedClass                
+            })
+            .ajax({success: success, defer: true});
+
+            return [];
     }
 };
