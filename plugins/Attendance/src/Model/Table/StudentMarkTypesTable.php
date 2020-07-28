@@ -80,7 +80,7 @@ class StudentMarkTypesTable extends ControllerActionTable
             $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
             $attendancePerDay = $requestData[$this->alias()]['attendance_per_day'];
             $attendanceTypeId = $requestData[$this->alias()]['student_attendance_type_id'];
-
+           
             if ($this->StudentAttendanceMarkTypes->isDefaultType($attendancePerDay, $attendanceTypeId)) {
                 $resultSet = $this->StudentAttendanceMarkTypes
                     ->find()
@@ -108,9 +108,7 @@ class StudentMarkTypesTable extends ControllerActionTable
             }
 
             $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
-            for ($i=1;$i<=$attendancePerDay;$i++) {
-
-               
+            for ($i=1;$i<=$attendancePerDay;$i++) {               
                 $id = $requestData['p'.$i];
                 
                 $PeriodsData = $StudentAttendancePerDayPeriods
@@ -123,7 +121,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                 if (!empty($PeriodsData)) {
 
                     $StudentAttendancePerDayPeriods->updateAll(
-                        ['name' => $requestData['period'][$i]],
+                        ['name' => $requestData['period'][$i], 'period' => $i],
                     [
                         'id' => $id
                     ]
@@ -133,13 +131,53 @@ class StudentMarkTypesTable extends ControllerActionTable
                    $StudentAttendancePerDayPeriodsData = [
                         'academic_period_id' => $requestData[$this->alias()]['academic_period_id'],
                         'education_grade_id' => $requestData[$this->alias()]['id'],
-                        'name' => $requestData['period'][$i]
+                        'name' => $requestData['period'][$i],
+                        'period' => $i
                     ];
                     $entity1 = $StudentAttendancePerDayPeriods->newEntity($StudentAttendancePerDayPeriodsData);
                     $StudentAttendancePerDayPeriods->save($entity1);
                 }
             }
+        } else {
+            $educationGradeId = $requestData[$this->alias()]['id'];
+            $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
+            $attendancePerDay = $this->defaultMarkType['attendance_per_day'];
+            $attendanceTypeId = $requestData[$this->alias()]['student_attendance_type_id'];
+            $resultSet = $this->StudentAttendanceMarkTypes
+                    ->find()
+                    ->where([
+                        $this->StudentAttendanceMarkTypes->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->StudentAttendanceMarkTypes->aliasField('education_grade_id') => $educationGradeId
+                    ])
+                    ->toArray();
+            if (!empty($resultSet)) {
+                $this->StudentAttendanceMarkTypes
+                ->updateAll(['student_attendance_type_id' => $attendanceTypeId,'attendance_per_day' => $attendancePerDay], ['education_grade_id' => $requestData[$this->alias()]['id'], 'academic_period_id' => $requestData[$this->alias()]['academic_period_id']]);
+            } else {
+                    $studentMarkTypeData = [
+                    'attendance_per_day' => $attendancePerDay,
+                    'student_attendance_type_id' => $attendanceTypeId,
+                    'education_grade_id' => $educationGradeId,
+                    'academic_period_id' => $academicPeriodId
+                ];
+
+                $entity = $this->StudentAttendanceMarkTypes->newEntity($studentMarkTypeData);
+                $this->StudentAttendanceMarkTypes->save($entity);             
+            }                    
         }
+        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $attendanceType = $StudentAttendanceTypes
+                          ->find()
+                          ->select([$StudentAttendanceTypes->aliasField('code')])
+                          ->where([$StudentAttendanceTypes->aliasField('id') => $attendanceTypeId])
+                          ->toArray();
+
+       
+        if ($attendanceType[0]->code == 'SUBJECT') {
+            $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+            $StudentAttendancePerDayPeriods->deleteAll(['education_grade_id' => $educationGradeId, 'academic_period_id' => $academicPeriodId]);
+        }
+        
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -164,18 +202,38 @@ class StudentMarkTypesTable extends ControllerActionTable
         if (!empty($entity->student_attendance_mark_types[0]->attendance_per_day)) {
             $attendance_per_day = $entity->student_attendance_mark_types[0]->attendance_per_day;
         } else {
-            $attendance_per_day = 1;
+            $attendance_per_day = $this->defaultMarkType['attendance_per_day'];
         }
         $this->controller->set('StudentAttendancePerDayPeriodsData', $StudentAttendancePerDayPeriodsData);
         $this->controller->set('attendance_per_day', $attendance_per_day);
         $this->setupField($entity);
+        $student_attendance_type_id = $entity->student_attendance_mark_types[0]->student_attendance_type_id;
+        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $attendanceType = $StudentAttendanceTypes
+                          ->find()
+                          ->select([$StudentAttendanceTypes->aliasField('code')])
+                          ->where([$StudentAttendanceTypes->aliasField('id') => $student_attendance_type_id])
+                          ->toArray();
+        $isMarkableSubjectAttendance = false;
+        if ($attendanceType[0]->code == 'SUBJECT') {
+            $isMarkableSubjectAttendance = true;            
+        } else {
+            $isMarkableSubjectAttendance = false;            
+        }
+        if ($isMarkableSubjectAttendance == true) {
+            $this->fields['attendance_per_day']['visible'] = false;
+            $this->fields['periods']['visible'] = false;
+        }
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $student_attendance_type_id = $entity->student_attendance_mark_types[0]->student_attendance_type_id;
+        $entity->student_attendance_type_id = $student_attendance_type_id;
         $selectedAcademicPeriod = $this->getSelectedAcademicPeriod();
         $entity->academic_period_id = $selectedAcademicPeriod;
         $education_grade_id = $entity->id;
+
         $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
         $StudentAttendancePerDayPeriodsData = $StudentAttendancePerDayPeriods
         ->find('all')
@@ -195,6 +253,39 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->controller->set('StudentAttendancePerDayPeriodsData', $StudentAttendancePerDayPeriodsData);
         $this->controller->set('attendance_per_day', $attendance_per_day);
         $this->setupField($entity);
+
+        if (!empty($student_attendance_type_id)) {
+            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $attendanceType = $StudentAttendanceTypes
+                              ->find()
+                              ->select([$StudentAttendanceTypes->aliasField('code')])
+                              ->where([$StudentAttendanceTypes->aliasField('id') => $student_attendance_type_id])
+                              ->toArray();
+
+            if ($attendanceType[0]->code == 'SUBJECT') {
+                $this->fields['attendance_per_day']['visible'] = false;
+                $this->fields['periods']['visible'] = false;
+            } else {
+                $this->fields['attendance_per_day']['visible'] = true;
+                $this->fields['periods']['visible'] = true;
+            }
+        }
+
+        if (!empty($entity->attendanceTypeId)) {
+            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $attendanceTypeEntity = $StudentAttendanceTypes
+                              ->find()
+                              ->select([$StudentAttendanceTypes->aliasField('code')])
+                              ->where([$StudentAttendanceTypes->aliasField('id') => $entity->attendanceTypeId])
+                              ->toArray();
+            if ($attendanceTypeEntity[0]->code == 'DAY') {
+            $this->fields['attendance_per_day']['visible'] = true;
+            $this->fields['periods']['visible'] = true;
+            } else if ($attendanceTypeEntity[0]->code == 'SUBJECT') {
+                $this->fields['attendance_per_day']['visible'] = false;
+                $this->fields['periods']['visible'] = false;
+            }
+        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -249,12 +340,15 @@ class StudentMarkTypesTable extends ControllerActionTable
         if ($action == 'edit') {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $selectedAcademicPeriod = $this->getSelectedAcademicPeriod();
+
             $periodEntity = $AcademicPeriods
                 ->find()
-                ->select([$AcademicPeriods->aliasField('name')])
                 ->where([$AcademicPeriods->aliasField('id') => $selectedAcademicPeriod])
                 ->first();
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $academicPeriodOptions =  $AcademicPeriods->getYearList();
 
+            $attr['options'] = $academicPeriodOptions;
             if (!is_null($periodEntity->name)) {
                 $attr['type'] = 'readonly';
                 $attr['attr']['value'] = $periodEntity->name;
@@ -281,9 +375,10 @@ class StudentMarkTypesTable extends ControllerActionTable
                 ->find('list')
                 ->toArray();
 
-            $attr['type'] = 'readonly';
+            $attr['type'] = 'select';
+            $attr['attr']['options'] = $attendanceOptions;
             $attr['value'] = $markTypeId;
-            $attr['attr']['value'] = $attendanceOptions[$markTypeId];
+            $attr['onChangeReload'] = 'ChangeAttendanceType';
            
             return $attr;
         }
@@ -356,8 +451,15 @@ class StudentMarkTypesTable extends ControllerActionTable
     {
         if (!empty($entity->student_attendance_mark_types)) {
             $attendanceTypeEntity = $entity->student_attendance_mark_types[0];
-            return $attendanceTypeEntity->attendance_per_day;
+            $attendanceTypeId = $attendanceTypeEntity->student_attendance_type_id;
+            $defaultattendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
+            if ($attendanceTypeId == $defaultattendanceTypeId) {
+                return $attendanceTypeEntity->attendance_per_day;
+            } else {
+                return '-';
+            }
         } else {
+            $attendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
             return $this->defaultMarkType['attendance_per_day'];
         }
     }
@@ -377,11 +479,9 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->field('modified', ['visible' => false]);
 
         $this->field('attendance_per_day', ['type' => 'select','entity' => $entity]);
-        $this->field('student_attendance_type_id', ['entity' => $entity, 'attr' => ['label' => __('Type'), 'required' => true]]);
-        $this->field('academic_period_id', ['visible' => [
-            'index' => false, 'view' => true, 'edit' => true
-        ]]);
-        
+        $this->field('student_attendance_type_id', ['attr' => ['label' => __('Type'), 'required' => true,'entity' => $entity]]);
+        $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity
+        ]);        
         
         if ($this->action == 'edit' || $this->action == 'view') {
         $this->field('periods', [
@@ -428,5 +528,33 @@ class StudentMarkTypesTable extends ControllerActionTable
 
         $attendance_per_day = $request->data[$this->alias()]['attendance_per_day'];
         $this->controller->set('attendance_per_day', $attendance_per_day);
+
+        $entity->attendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
+    }
+
+    public function addEditOnChangeAttendanceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $attendanceTypeId = $data[$this->alias()]['student_attendance_type_id'];
+        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $entity->attendanceTypeId = $attendanceTypeId;
+        $attendanceType = $StudentAttendanceTypes
+                          ->find()
+                          ->select([$StudentAttendanceTypes->aliasField('code')])
+                          ->where([$StudentAttendanceTypes->aliasField('id') => $attendanceTypeId])
+                          ->toArray();
+        $isMarkableSubjectAttendance = false;
+        if ($attendanceType[0]->code == 'SUBJECT') {
+            $isMarkableSubjectAttendance = true;            
+        } else {
+            $isMarkableSubjectAttendance = false;            
+        }
+
+        if ($isMarkableSubjectAttendance == true) {
+            $this->fields['attendance_per_day']['visible'] = false;
+            $this->fields['periods']['visible'] = false;
+        } else {
+            $this->fields['attendance_per_day']['visible'] = true;
+            $this->fields['periods']['visible'] = true;
+        }
     }
 }
