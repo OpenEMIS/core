@@ -279,6 +279,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        //echo '<pre>'; print_r($event); die;
         list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->query('period')));
         $extra['selectedPeriod'] = $selectedPeriod;
 
@@ -311,6 +312,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+       // echo '<pre>'; print_r($event); die;
         $query->where([$this->aliasField('assessment_id') => $extra['selectedTemplate']]); //show assessment period based on the selected assessment.
         if ($extra['selectedTemplate'] != 'empty') {
             $extra['toolbarButtons']['editAcademicTerm'] = [
@@ -337,8 +339,17 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['EducationSubjects']);
+         $query->contain(['EducationSubjects']);
     }
+
+    public function editAfterAction(Event $event, Entity $entity)
+    {
+        $dateEnabled =  $entity->date_enabled;
+        $dateEnabled->format('d-m-Y');  
+        $dateDisabled = $entity->date_disabled;
+        $dateDisabled->format('d-m-Y');
+    }
+
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
@@ -350,7 +361,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('education_subjects', [
+       $this->field('education_subjects', [
             'type' => 'element',
             'element' => 'Assessment.assessment_periods',
             'attr' => [
@@ -567,7 +578,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         if ($action == 'edit') {
             $attr['type'] = 'readonly';
         }
-
+        
         return $attr;
     }
 
