@@ -876,7 +876,7 @@ class DirectoriesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if (!$entity->isNew() && $entity->dirty('gender_id')) {
+        if (!$entity->isNew() && $entity->dirty('gender_id') && !$entity->is_student) {
             $entity->errors('gender_id', __('Gender is not editable in Directories'));
             return false;
         }
