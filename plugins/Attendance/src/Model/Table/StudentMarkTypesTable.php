@@ -359,7 +359,7 @@ class StudentMarkTypesTable extends ControllerActionTable
 
     public function onGetStudentAttendanceTypeId(Event $event, Entity $entity)
     {
-        if (!empty($entity->student_attendance_mark_types)) {
+        if (!empty($entity)) {
             $attendanceTypeEntity = $entity;
             $attendanceTypeId = $entity->student_attendance_type_id;
         } else {
@@ -380,7 +380,7 @@ class StudentMarkTypesTable extends ControllerActionTable
 
     public function onGetAttendancePerDay(Event $event, Entity $entity)
     {
-        /*if (!empty($entity)) {
+        if (!empty($entity)) {
             $attendanceTypeId = $entity->student_attendance_type_id;
             $defaultattendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
             if ($attendanceTypeId == $defaultattendanceTypeId) {
@@ -391,16 +391,16 @@ class StudentMarkTypesTable extends ControllerActionTable
         } else {
             $attendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
             return $this->defaultMarkType['attendance_per_day'];
-        }*/
+        }
     }
 
     private function setupField(Entity $entity = null)
     {    
-
+        $this->field('code');
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
-        $this->field('modified', ['visible' => false]);
+        $this->field('modified', ['visible' => false]);       
 
         $this->field('attendance_per_day', ['type' => 'select','entity' => $entity]);
         $this->field('student_attendance_type_id', ['attr' => ['label' => __('Type'), 'required' => true,'entity' => $entity]]);
@@ -411,6 +411,10 @@ class StudentMarkTypesTable extends ControllerActionTable
                         'element' => 'Attendance.periods',
                         
                     ]);
+        if ($this->action == 'index') {
+            $this->field('code', ['visible' => false]);
+            $this->field('periods', ['visible' => false]);
+        }
         $this->setFieldOrder(['name', 'code', 'student_attendance_type_id', 'attendance_per_day']);
     }
 
