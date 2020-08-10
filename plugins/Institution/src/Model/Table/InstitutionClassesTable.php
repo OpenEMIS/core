@@ -993,22 +993,27 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function onGetSubjects(Event $event, Entity $entity)
     {
-       if (!empty($entity->education_stage_order) && !empty($entity->institution_id)) {
-            $table = TableRegistry::get('Institution.InstitutionProgramGradeSubjects');
-            $count = $table
-                    ->find()
-                    ->where([$table->aliasField('education_grade_id') => $entity->education_stage_order,
-                             $table->aliasField('institution_id') => $entity->institution_id])
-                    ->count();
-            return $count;
-        }
-
-        if (!empty($entity->id)) {
+        if (!empty($entity->id) ) {
             $table = TableRegistry::get('Institution.InstitutionClassSubjects');
             $count = $table
                     ->find()
                     ->where([$table->aliasField('institution_class_id') => $entity->id])
                     ->count();
+
+            $institutionClass = $table
+                    ->find('all')
+                    ->where([$table->aliasField('institution_class_id') => $entity->id])
+                    ->toArray();
+
+            if($institutionClass[0]->institution_class_id != $entity->id) {
+                $ProgGradeSubjects = TableRegistry::get('Institution.InstitutionProgramGradeSubjects');
+                $count = $ProgGradeSubjects
+                        ->find()
+                        ->where([$ProgGradeSubjects->aliasField('education_grade_id') => $entity->education_stage_order,
+                                $ProgGradeSubjects->aliasField('institution_id') => $entity->institution_id])
+                        ->count();
+            }
+
             return $count;
         } 
     }
