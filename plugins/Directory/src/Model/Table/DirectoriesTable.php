@@ -841,9 +841,9 @@ class DirectoriesTable extends ControllerActionTable
         $this->setupTabElements($entity);
 
         if ($entity->is_student) {
-            $this->fields['gender_id']['type'] = 'readonly';
+            /*$this->fields['gender_id']['type'] = 'readonly';
             $this->fields['gender_id']['attr']['value'] = $entity->has('gender') ? $entity->gender->name : '';
-            $this->fields['gender_id']['value'] = $entity->has('gender') ? $entity->gender->id : '';
+            $this->fields['gender_id']['value'] = $entity->has('gender') ? $entity->gender->id : '';*/
         }
 
         $this->fields['nationality_id']['type'] = 'readonly';
@@ -876,7 +876,7 @@ class DirectoriesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if (!$entity->isNew() && $entity->dirty('gender_id')) {
+        if (!$entity->isNew() && $entity->dirty('gender_id') && !$entity->is_student) {
             $entity->errors('gender_id', __('Gender is not editable in Directories'));
             return false;
         }
