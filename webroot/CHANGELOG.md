@@ -1,3 +1,7 @@
+### [3.57.2] - 2020-08-12
+- Bug Fixed: Institutions > Attendance > Students: Period Names are in the wrong order
+- Bug Fixed: Institutions > Attendance > Students: Teachers are able to view/mark attendance of other classes and grades that they are not assigned to
+
 ### [3.57.1] - 2020-08-12
 - Bug Fixed: Institutions > Academics > Classes: Number of Subjects not reflected
 - Bug Fixed: Institution > Attendance > Students: Periods are not displaying accordingly
