@@ -121,6 +121,9 @@ class StudentAttendanceMarkTypesTable extends AppTable
                             ->group([
                                 $StudentAttendancePerDayPeriods->aliasField('name')
                             ])
+                            ->order([
+                                $StudentAttendancePerDayPeriods->aliasField('id')
+                            ])
                             ->all()
                             ->toArray();
 
