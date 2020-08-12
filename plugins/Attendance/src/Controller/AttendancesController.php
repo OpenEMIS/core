@@ -28,6 +28,13 @@ class AttendancesController extends AppController
 
     public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
+        $selectedAction = $this->request->action;
+        
+        if ($selectedAction == 'StudentMarkTypes') {
+            $setupTab = 'Attendances';
+        } else if ($selectedAction == 'StudentMarkTypeStatuses') {
+            $setupTab = 'Status';
+        }
         $tabElements = [
             'Attendances' => [
                 'url' => ['plugin' => 'Attendance', 'controller' => 'Attendances', 'action' => 'StudentMarkTypes'],
@@ -36,19 +43,22 @@ class AttendancesController extends AppController
             'Status' => [
                 'url' => ['plugin' => 'Attendance', 'controller' => 'Attendances', 'action' => 'StudentMarkTypeStatuses'],
                 'text' => __('Status')
-            ]
+            ] 
         ];
 
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $setupTab);
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-        $header = __('Attendances');
-
-        $header .= ' - ' . $model->getHeader($model->alias);
+        if ($model->alias == 'StudentMarkTypes') {
+            $header = 'Attendances';
+        } else if ($model->alias == 'StudentMarkTypeStatuses') {
+            $header = 'Status';
+        }
+        
         $this->Navigation->addCrumb('Attendances', ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
