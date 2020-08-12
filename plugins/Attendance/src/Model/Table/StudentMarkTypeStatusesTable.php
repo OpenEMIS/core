@@ -32,6 +32,16 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         ]);
     }
 
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->add('date_enabled', 'ruleCompareDate', [
+            'rule' => ['compareDate', 'date_disabled', true]
+        ]);
+
+        return $validator;
+    } 
+
     public function beforeAction(Event $event)
     {
 
