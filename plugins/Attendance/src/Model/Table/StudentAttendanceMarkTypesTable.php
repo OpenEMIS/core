@@ -118,6 +118,9 @@ class StudentAttendanceMarkTypesTable extends AppTable
                                     $StudentAttendancePerDayPeriods->aliasField('education_grade_id IN ') => $gradeList,
                                     $StudentAttendancePerDayPeriods->aliasField('academic_period_id') => $academicPeriodId
                                 ])
+                            ->group([
+                                $StudentAttendancePerDayPeriods->aliasField('name')
+                            ])
                             ->all()
                             ->toArray();
 
