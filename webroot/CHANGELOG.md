@@ -1,3 +1,13 @@
+### [3.57.1] - 2020-08-12
+- Bug Fixed: Institutions > Academics > Classes: Number of Subjects not reflected
+- Bug Fixed: Institution > Attendance > Students: Periods are not displaying accordingly
+- Bug Fixed: Administrations > Performance > Assessments > Assessment Periods: Encountered 404 error when editing record
+- Bug Fixed: Institutions > Dashboard: Total Number of students should only consist of students with Enrolled Status
+- Bug Fixed: Translation : Reports > Institution > Subject Report : Report headers is not translated
+- Bug Fixed: Directory > Student > Overview tab: Gender field unable to edit
+- Bug Fixed: Institutions > Attendance > Students > All Days filter: Error Encountered
+- Bug Fixed: Institutions > Student/Staff > Internal Search: Columns are not resizable
+
 ### [3.57.0] - 2020-07-28
 - Implemented feature to mark student attendance by subject
 - Implemented institution Finance (Income/Expenditure) feature
