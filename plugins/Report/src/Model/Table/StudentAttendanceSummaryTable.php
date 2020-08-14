@@ -95,6 +95,7 @@ class StudentAttendanceSummaryTable extends AppTable
                         'AcademicPeriods.name'
                     ]
                 ],
+        
                 'InstitutionClassStudents' => function ($q) use ($enrolledStatus) {
                     return $q
                         ->select([
@@ -108,6 +109,7 @@ class StudentAttendanceSummaryTable extends AppTable
                         ->where(['InstitutionClassStudents.student_status_id' => $enrolledStatus]);
                 }
             ])
+        
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('name'),
@@ -115,7 +117,9 @@ class StudentAttendanceSummaryTable extends AppTable
                 $this->aliasField('academic_period_id')
             ]);
 
-            $results = $query->toArray();
+            
+            $results = $query->toArray(); 
+            
 
             // To get a list of dates based on user's input start and end dates
             $begin = $reportStartDate;
@@ -184,6 +188,92 @@ class StudentAttendanceSummaryTable extends AppTable
                 $rowData[] = $formattedDateResult;
             }
 
+
+             // To get the female student absent count for each date
+             $InstitutionFemaleAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+             $institutionFemaleAbsencesRecords = $InstitutionFemaleAbsences
+             ->find();
+             $institutionFemaleAbsencesRecords->innerJoin(['Users' => 'security_users'], [
+                'Users.id = ' . $InstitutionFemaleAbsences->aliasfield('student_id')
+                ])
+            ->where([
+                'Users.gender_id IS NOT NULL','Users.gender_id = 2',
+                $InstitutionFemaleAbsences->aliasField('date >=') => $reportStartDate->format("Y-m-d"),
+                $InstitutionFemaleAbsences->aliasField('date <=') => $reportEndDate->format("Y-m-d"),
+                $InstitutionFemaleAbsences->aliasField('institution_id') => $institutionId
+                 ]);
+ 
+             $rowData = [];
+             foreach ($formattedDateResults as $k => $formattedDateResult) {
+                 $femaleAbsenceCount = 0;
+                 $femaleLateCount = 0;
+                 $currentDate = $this->formatDate($formattedDateResult->date);
+ 
+                 if (count($institutionFemaleAbsencesRecords) > 0) {
+                     foreach ($institutionFemaleAbsencesRecords as $key => $value) {
+                         $absenceDate = $this->formatDate($value->date);
+ 
+                         if (($absenceDate == $currentDate) && $value->institution_id == $formattedDateResult->institution_id) {
+                             $institutionClassStudents = $formattedDateResult->institution_class_students;
+                             foreach ($institutionClassStudents as $key => $institutionClassStudent) {
+                                 if ($institutionClassStudent->student_id == $value->student_id) {
+                                     if ($value->absence_type_id == 3) {
+                                         $femaleLateCount++;
+                                     } else {
+                                         $femaleAbsenceCount++;
+                                     }
+                                 }
+                             }
+                         }
+                     }
+                 }
+                 $formattedDateResult['female_absence_count'] = $femaleAbsenceCount;
+                 $formattedDateResult['female_late_count'] = $femaleLateCount;
+                 $rowData[] = $formattedDateResult;
+             }
+
+               // To get the male student absent count for each date
+               $InstitutionMaleAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+               $institutionMaleAbsencesRecords = $InstitutionMaleAbsences
+               ->find();
+               $institutionMaleAbsencesRecords->innerJoin(['Users' => 'security_users'], [
+                  'Users.id = ' . $InstitutionMaleAbsences->aliasfield('student_id')
+                  ])
+              ->where([
+                  'Users.gender_id IS NOT NULL','Users.gender_id = 1',
+                  $InstitutionMaleAbsences->aliasField('date >=') => $reportStartDate->format("Y-m-d"),
+                  $InstitutionMaleAbsences->aliasField('date <=') => $reportEndDate->format("Y-m-d"),
+                  $InstitutionMaleAbsences->aliasField('institution_id') => $institutionId
+                   ]);
+   
+               $rowData = [];
+               foreach ($formattedDateResults as $k => $formattedDateResult) {
+                   $maleAbsenceCount = 0;
+                   $maleLateCount = 0;
+                   $currentDate = $this->formatDate($formattedDateResult->date);
+   
+                   if (count($institutionMaleAbsencesRecords) > 0) {
+                       foreach ($institutionMaleAbsencesRecords as $key => $value) {
+                           $absenceDate = $this->formatDate($value->date);
+   
+                           if (($absenceDate == $currentDate) && $value->institution_id == $formattedDateResult->institution_id) {
+                               $institutionClassStudents = $formattedDateResult->institution_class_students;
+                               foreach ($institutionClassStudents as $key => $institutionClassStudent) {
+                                   if ($institutionClassStudent->student_id == $value->student_id) {
+                                       if ($value->absence_type_id == 3) {
+                                           $maleLateCount++;
+                                       } else {
+                                           $maleAbsenceCount++;
+                                       }
+                                   }
+                               }
+                           }
+                       }
+                   }
+                   $formattedDateResult['male_absence_count'] = $maleAbsenceCount;
+                   $formattedDateResult['male_late_count'] = $maleLateCount;
+                   $rowData[] = $formattedDateResult;
+               }
             //To get the attendance mark status for each date
             $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
             $classAttendanceRecords = $ClassAttendanceRecords
@@ -225,19 +315,117 @@ class StudentAttendanceSummaryTable extends AppTable
         return $totalStudents;
     }
 
-
-    public function onExcelRenderTotalStudentsAbsent(Event $event, Entity $entity, $attr)
+    public function onExcelRenderTotalFemaleStudents(Event $event, Entity $entity, $attr)
     {
+        $totalFemaleStudents = 0;
+        if ($entity->has('institution_classes')) {
+            $totalFemaleStudents = count($entity->institution_classes);
+        }
+
+        if ($totalFemaleStudents == 0) {
+            $totalFemaleStudents = '-';
+        }
+        return $totalFemaleStudents;
+    }
+
+    public function onExcelRenderTotalMaleStudents(Event $event, Entity $entity, $attr)
+    {
+        $totalMaleStudents = 0;
+        if ($entity->has('institution_classes')) {
+            $totalMaleStudents = count($entity->institution_classes);
+        }
+
+        if ($totalMaleStudents == 0) {
+            $totalMaleStudents = '-';
+        }
+        return $totalMaleStudents;
+    }
+    
+    public function onExcelRenderTotalStudentsAbsent(Event $event, Entity $entity, $attr)
+    {   
         $totalStudentsAbsent = 0;
 
         if ($entity->has('absence_count')) {
             $totalStudentsAbsent = $entity->absence_count;
         }
-
+        
         if ($totalStudentsAbsent == 0) {
             $totalStudentsAbsent = '-';
         }
         return $totalStudentsAbsent;
+    }
+    
+    public function onExcelRenderTotalFemaleStudentsAbsent(Event $event, Entity $entity, $attr)
+    {   
+     
+        $totalFemaleStudentsAbsent = 0;
+
+        if ($entity->has('female_absence_count')) {
+            $totalFemaleStudentsAbsent = $entity->female_absence_count;
+        }
+        
+        if ($totalFemaleStudentsAbsent == 0) {
+            $totalFemaleStudentsAbsent = '-';
+        }
+        return $totalFemaleStudentsAbsent;
+    }
+
+    public function onExcelRenderTotalMaleStudentsAbsent(Event $event, Entity $entity, $attr)
+    {   
+     
+        $totalMaleStudentsAbsent = 0;
+
+        if ($entity->has('male_absence_count')) {
+            $totalMaleStudentsAbsent = $entity->male_absence_count;
+        }
+        
+        if ($totalMaleStudentsAbsent == 0) {
+            $totalMaleStudentsAbsent = '-';
+        }
+        return $totalMaleStudentsAbsent;
+    }
+    
+    public function onExcelRenderTotalFemaleStudentsPresent(Event $event, Entity $entity, $attr)
+    {
+        $totalFemaleStudentsPresent = 0;
+        $totalFemaleStudentsAbsent = 0;
+        $totalFemaleStudents = 0;
+
+        if ($entity->has('female_absence_count')) {
+            $totalFemaleStudentsAbsent = $entity->female_absence_count;
+        }
+        if ($entity->has('institution_class_students')) {
+            $totalFemaleStudents = count($entity->institution_class_students);
+        }
+
+        $totalFemaleStudentsPresent = $totalFemaleStudents - $totalFemaleStudentsAbsent;
+
+        if ($totalFemaleStudentsPresent == 0) {
+            $totalFemaleStudentsPresent = '-';
+        }
+        return $totalFemaleStudentsPresent;
+    }
+
+     
+    public function onExcelRenderTotalMaleStudentsPresent(Event $event, Entity $entity, $attr)
+    {
+        $totalMaleStudentsPresent = 0;
+        $totalMaleStudentsAbsent = 0;
+        $totalMaleStudents = 0;
+
+        if ($entity->has('male_absence_count')) {
+            $totalMaleStudentsAbsent = $entity->male_absence_count;
+        }
+        if ($entity->has('institution_class_students')) {
+            $totalMaleStudents = count($entity->institution_class_students);
+        }
+
+        $totalMaleStudentsPresent = $totalmaleStudents - $totalMaleStudentsAbsent;
+
+        if ($totalMaleStudentsPresent == 0) {
+            $totalMaleStudentsPresent = '-';
+        }
+        return $totalMaleStudentsPresent;
     }
 
     public function onExcelRenderTotalStudentsPresent(Event $event, Entity $entity, $attr)
@@ -260,6 +448,36 @@ class StudentAttendanceSummaryTable extends AppTable
         }
         return $totalStudentsPresent;
     }
+    public function onExcelRenderTotalFemaleStudentsLate(Event $event, Entity $entity, $attr)
+    {
+        $totalFemaleStudentsLate = 0;
+
+        if ($entity->has('female_late_count')) {
+            $totalFemaleStudentsLate = $entity->female_late_count;
+        }
+
+        if ($totalFemaleStudentsLate == 0) {
+            $totalFemaleStudentsLate = '-';
+        }
+
+        return $totalFemaleStudentsLate;
+    }
+
+    public function onExcelRenderTotalMaleStudentsLate(Event $event, Entity $entity, $attr)
+    {
+        $totalMaleStudentsLate = 0;
+
+        if ($entity->has('male_late_count')) {
+            $totalMaleStudentsLate = $entity->male_late_count;
+        }
+
+        if ($totalMaleStudentsLate == 0) {
+            $totalMaleStudentsLate = '-';
+        }
+
+        return $totalMaleStudentsLate;
+    }
+
 
     public function onExcelRenderTotalStudentsLate(Event $event, Entity $entity, $attr)
     {
@@ -324,10 +542,34 @@ class StudentAttendanceSummaryTable extends AppTable
             'label' => 'Mark Status',
         ];
         $extraField[] = [
+            'key' => 'TotalFemaleStudents',
+            'field' => 'TotalFemaleStudents',
+            'type' => 'TotalFemaleStudents',
+            'label' => 'No. of Female Students',
+        ];
+        $extraField[] = [
+            'key' => 'TotalMaleStudents',
+            'field' => 'TotalMaleStudents',
+            'type' => 'TotalMaleStudents',
+            'label' => __('No. of Male Students'),
+        ];
+        $extraField[] = [
             'key' => 'TotalStudents',
             'field' => 'TotalStudents',
             'type' => 'TotalStudents',
             'label' => 'Total No. Students',
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'TotalFemaleStudentsPresent',
+            'type' => 'TotalFemaleStudentsPresent',
+            'label' => 'No. of Female Students Present',
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'TotalMaleStudentsPresent',
+            'type' => 'TotalMaleStudentsPresent',
+            'label' => 'No. of Male Students Present',
         ];
         $extraField[] = [
             'key' => 'TotalStudentsPresent',
@@ -336,10 +578,34 @@ class StudentAttendanceSummaryTable extends AppTable
             'label' => 'Total No. Students Present',
         ];
         $extraField[] = [
+            'key' => '',
+            'field' => 'TotalFemaleStudentsAbsent',
+            'type' => 'TotalFemaleStudentsAbsent',
+            'label' => 'No. of Female Students Absent',
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'TotalMaleStudentsAbsent',
+            'type' => 'TotalMaleStudentsAbsent',
+            'label' => 'No. of Male Students Absent',
+        ];
+        $extraField[] = [
             'key' => 'TotalStudentsAbsent',
             'field' => 'TotalStudentsAbsent',
             'type' => 'TotalStudentsAbsent',
             'label' => 'Total No. Students Absent',
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'TotalFemaleStudentsLate',
+            'type' => 'TotalFemaleStudentsLate',
+            'label' => 'No. of Female Students Late',
+        ];
+        $extraField[] = [
+            'key' => '',
+            'field' => 'TotalMaleStudentsLate',
+            'type' => 'TotalMaleStudentsLate',
+            'label' => 'No. of Male Students Late',
         ];
         $extraField[] = [
             'key' => 'TotalStudentsLate',
