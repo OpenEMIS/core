@@ -203,8 +203,8 @@ class UserNationalitiesTable extends ControllerActionTable {
                                         ])
                                         ->toArray();
                
-                $nationalities = $this->NationalitiesLookUp->find('all')->find('list')->order('name');
-                                           
+                $nationalities = $this->NationalitiesLookUp->find('all')->find('list')->order(['order','name']);
+                              
                 if (!empty($currentNationalities)) {
                     $nationalities = $nationalities
                                     ->where([
