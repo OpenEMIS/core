@@ -226,7 +226,7 @@ class EducationGradesTable extends ControllerActionTable
                           $this->aliasField('modified') => 'DESC'
                         ]); 
 
-        $sortList = ['name', 'code', 'EducationProgrammes.name', 'EducationStages.name'];
+        $sortList = ['order', 'name', 'code', 'EducationProgrammes.name', 'EducationStages.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
