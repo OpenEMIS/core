@@ -1429,6 +1429,30 @@ class InstitutionClassesTable extends ControllerActionTable
         $academicPeriodId = $options['academic_period_id'];
         $staffId = $options['user']['id'];
         $isStaff = $options['user']['is_staff'];
+
+        $SecurityUsers = TableRegistry::get('Security.Users');
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+
+        if (!empty($staffId)) {
+        $roleName = $SecurityUsers
+                                ->find()
+                                ->select([
+                                    'SecurityRoles.code'
+                                ])
+                                ->leftJoin([
+                                'SecurityGroupUsers' => 'security_group_users'], [
+                                    'SecurityGroupUsers.security_user_id = ' . $SecurityUsers->aliasfield('id')
+                                ])
+                                ->leftJoin([
+                                'SecurityRoles' => 'security_roles'], [
+                                    'SecurityRoles.id = ' . $SecurityGroupUsers->aliasfield('security_role_id')
+                                ])
+                                ->where([
+                                    $SecurityUsers->aliasfield('id') => $staffId
+                                ])
+                                ->toArray();
+                            }
+        $staffRole = $roleName[0]->SecurityRoles['code'];
         
         $query
             ->select([
@@ -1440,7 +1464,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $academicPeriodId
             ])
             ->order([$this->aliasField('name')]);
-        if($isStaff){
+        if($isStaff && $staffRole != 'PRINCIPAL'){
             $query->where([
                 $this->aliasField('staff_id') => $staffId
             ]);
