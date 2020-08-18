@@ -289,13 +289,16 @@ class AppTable extends Table
                 ->select(['name'])
                 ->where(['module' => $event->data['module'],'field'=>'openemis_no'])
                 ->first();
-        
+       
         if ($field == 'openemis_no' && !empty($fieldLabel['name'])) {
              return $fieldLabel['name'];
              
         } else if ($field == 'openemis_no') {
-		    return self::OpenEMIS;
-		}
+            return self::OpenEMIS;
+            
+		} else if ($field == 'fax' && !empty($fieldLabel['name'])) {
+		    return $fieldLabel['name'];
+        }
         
         return $this->getFieldLabel($module, $field, $language, $autoHumanize);
     }
