@@ -1,3 +1,9 @@
+### [3.57.3] - 2020-08-18
+- Bug Fixed: Institutions > Attendance > Students: Unable to view/mark attendance even though permission for All Classes and All Subjects have been given
+- Bug FIxed: Institutions > General > Overview: Fax is not reflecting as Mobile after it has been updated in Labels
+- Bug Fixed: User > Nationalities : Ordering of nationalities should be the same as ordering of nationalities in Field Options>Nationalities
+- Bug Fixed: Administration > System Setup > Education Structure > Grades: Reorder function is not working
+
 ### [3.57.2] - 2020-08-12
 - Bug Fixed: Institutions > Attendance > Students: Period Names are in the wrong order
 - Bug Fixed: Institutions > Attendance > Students: Teachers are able to view/mark attendance of other classes and grades that they are not assigned to
