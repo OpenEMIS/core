@@ -21,6 +21,9 @@ class StudentAttendanceSummaryTable extends AppTable
     private $workingDays = [];
     private $schoolClosedDays = [];
 
+    const MALE = 'M';
+    const FEMALE = 'F';
+
     public function initialize(array $config)
     {
         $this->table('institution_classes');
@@ -193,15 +196,20 @@ class StudentAttendanceSummaryTable extends AppTable
              $InstitutionFemaleAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
              $institutionFemaleAbsencesRecords = $InstitutionFemaleAbsences
              ->find();
+             $institutionFemaleAbsencesRecords->leftJoin(['Gender' => 'genders'], [
+                'Gender.id' => 'Users.gender_id'
+                ]);
              $institutionFemaleAbsencesRecords->innerJoin(['Users' => 'security_users'], [
                 'Users.id = ' . $InstitutionFemaleAbsences->aliasfield('student_id')
                 ])
+               
             ->where([
-                'Users.gender_id IS NOT NULL','Users.gender_id = 2',
+                'Gender.code' => self::FEMALE ,
                 $InstitutionFemaleAbsences->aliasField('date >=') => $reportStartDate->format("Y-m-d"),
                 $InstitutionFemaleAbsences->aliasField('date <=') => $reportEndDate->format("Y-m-d"),
                 $InstitutionFemaleAbsences->aliasField('institution_id') => $institutionId
                  ]);
+                
  
              $rowData = [];
              foreach ($formattedDateResults as $k => $formattedDateResult) {
@@ -236,11 +244,14 @@ class StudentAttendanceSummaryTable extends AppTable
                $InstitutionMaleAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
                $institutionMaleAbsencesRecords = $InstitutionMaleAbsences
                ->find();
+               $institutionMaleAbsencesRecords->leftJoin(['Gender' => 'genders'], [
+                'Gender.id' => 'Users.gender_id'
+                ]);
                $institutionMaleAbsencesRecords->innerJoin(['Users' => 'security_users'], [
                   'Users.id = ' . $InstitutionMaleAbsences->aliasfield('student_id')
                   ])
               ->where([
-                  'Users.gender_id IS NOT NULL','Users.gender_id = 1',
+                  'Gender.code' => self::MALE ,
                   $InstitutionMaleAbsences->aliasField('date >=') => $reportStartDate->format("Y-m-d"),
                   $InstitutionMaleAbsences->aliasField('date <=') => $reportEndDate->format("Y-m-d"),
                   $InstitutionMaleAbsences->aliasField('institution_id') => $institutionId
