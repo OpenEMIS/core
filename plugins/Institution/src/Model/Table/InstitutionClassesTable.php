@@ -1477,21 +1477,6 @@ class InstitutionClassesTable extends ControllerActionTable
         return $tooltipMessage;
     }
 
-    public function triggerClassSubjectsShell($params)
-    {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake ClassSubjects ' . $params . $args;
-        $logs = ROOT . DS . 'logs' . DS . 'ClassSubjects.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-        echo exec($shellCmd);die;
-        try {
-            $pid = exec($shellCmd);
-
-            Log::write('debug', $shellCmd);
-        } catch (\Exception $ex) {
-            Log::write('error', __METHOD__ . ' exception when update assignee : ' . $ex);
-        }
-    }
-
     function updateClassSubjects($entity) {
          
          $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
