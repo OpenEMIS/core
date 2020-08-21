@@ -93,15 +93,12 @@ class DashboardController extends AppController
 
     private function triggerInstitutionClassSubjectsShell()
     {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake InstitutionClassSubjects';
-        $logs = ROOT . DS . 'logs' . DS . 'InstitutionClassSubjects.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-
-        try {
-            $pid = exec($shellCmd);
-            Log::write('debug', $shellCmd);
-        } catch(\Exception $ex) {
-            Log::write('error', __METHOD__ . ' exception : '. $ex);
-        }
+        $script = 'InstitutionClassSubjects';
+        $consoleDir = ROOT . DS . 'bin' . DS;
+        $cmd = sprintf("%scake %s %s", $consoleDir, $script);
+        $nohup = '%s > %slogs/'.$script.'.log & echo $!';
+        $shellCmd = sprintf($nohup, $cmd, ROOT.DS);
+        \Cake\Log\Log::write('debug', $shellCmd);
+        exec($shellCmd);
     }
 }
