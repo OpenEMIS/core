@@ -7,6 +7,8 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use App\Controller\AppController;
+use Cake\Log\Log;
+
 
 class DashboardController extends AppController
 {
@@ -18,6 +20,8 @@ class DashboardController extends AppController
         // $this->loadComponent('Paginator');
 
         $this->attachAngularModules();
+
+        $this->triggerInstitutionClassSubjectsShell();
     }
 
     // CAv4
@@ -84,6 +88,20 @@ class DashboardController extends AppController
                     'dashboard.svc'
                 ]);
                 break;
+        }
+    }
+
+    private function triggerInstitutionClassSubjectsShell()
+    {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake InstitutionClassSubjects';
+        $logs = ROOT . DS . 'logs' . DS . 'InstitutionClassSubjects.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+
+        try {
+            $pid = exec($shellCmd);
+            Log::write('debug', $shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception : '. $ex);
         }
     }
 }
