@@ -1453,7 +1453,7 @@ class InstitutionClassesTable extends ControllerActionTable
                                 ->toArray();
                             }
         $staffRole = $roleName[0]->SecurityRoles['code'];
-        
+        //echo $staffRole;die;
         $query
             ->select([
                 $this->aliasField('id'),
@@ -1464,7 +1464,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $academicPeriodId
             ])
             ->order([$this->aliasField('name')]);
-        if($isStaff && $staffRole != 'PRINCIPAL'){
+        if($isStaff && $staffRole != 'SUPERROLE') {
             $query->where([
                 $this->aliasField('staff_id') => $staffId
             ]);
