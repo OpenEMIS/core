@@ -323,32 +323,43 @@ class StudentAttendanceSummaryTable extends AppTable
         if ($totalStudents == 0) {
             $totalStudents = '-';
         }
+
         return $totalStudents;
     }
 
     public function onExcelRenderTotalFemaleStudents(Event $event, Entity $entity, $attr)
     {
         $totalFemaleStudents = 0;
-        if ($entity->has('institution_classes')) {
-            $totalFemaleStudents = count($entity->institution_classes);
+        $InstitutionClasses = $this->find('all')
+                            ->where(['id' => $entity->id])
+                            ->first();
+      
+        ;if ($entity->has('id')) {
+            $totalFemaleStudents = $InstitutionClasses->total_female_students;
         }
 
         if ($totalFemaleStudents == 0) {
             $totalFemaleStudents = '-';
         }
+
         return $totalFemaleStudents;
     }
 
     public function onExcelRenderTotalMaleStudents(Event $event, Entity $entity, $attr)
     {
         $totalMaleStudents = 0;
-        if ($entity->has('institution_classes')) {
-            $totalMaleStudents = count($entity->institution_classes);
+        $InstitutionClasses = $this->find('all')
+                            ->where(['id' => $entity->id])
+                            ->first();
+
+        if ($entity->has('id')) {
+            $totalMaleStudents = $InstitutionClasses->total_male_students;
         }
 
         if ($totalMaleStudents == 0) {
             $totalMaleStudents = '-';
         }
+
         return $totalMaleStudents;
     }
     
@@ -398,15 +409,20 @@ class StudentAttendanceSummaryTable extends AppTable
     
     public function onExcelRenderTotalFemaleStudentsPresent(Event $event, Entity $entity, $attr)
     {
+        
         $totalFemaleStudentsPresent = 0;
         $totalFemaleStudentsAbsent = 0;
         $totalFemaleStudents = 0;
 
+        $institutionClasses = $this->find('all')
+                            ->where(['id' => $entity->id])
+                            ->first();
+
         if ($entity->has('female_absence_count')) {
             $totalFemaleStudentsAbsent = $entity->female_absence_count;
         }
-        if ($entity->has('institution_class_students')) {
-            $totalFemaleStudents = count($entity->institution_class_students);
+        if ($entity->has('id')) {
+            $totalFemaleStudents = $institutionClasses->total_female_students;
         }
 
         $totalFemaleStudentsPresent = $totalFemaleStudents - $totalFemaleStudentsAbsent;
@@ -424,18 +440,23 @@ class StudentAttendanceSummaryTable extends AppTable
         $totalMaleStudentsAbsent = 0;
         $totalMaleStudents = 0;
 
+        $institutionClasses = $this->find('all')
+                            ->where(['id' => $entity->id])
+                            ->first();
+        
         if ($entity->has('male_absence_count')) {
             $totalMaleStudentsAbsent = $entity->male_absence_count;
         }
-        if ($entity->has('institution_class_students')) {
-            $totalMaleStudents = count($entity->institution_class_students);
+
+        if ($entity->has('id')) {
+            $totalMaleStudents = $institutionClasses->total_male_students;
+            $totalMaleStudentsPresent = $totalMaleStudents - $totalMaleStudentsAbsent;
         }
-
-        $totalMaleStudentsPresent = $totalmaleStudents - $totalMaleStudentsAbsent;
-
+       
         if ($totalMaleStudentsPresent == 0) {
             $totalMaleStudentsPresent = '-';
         }
+        
         return $totalMaleStudentsPresent;
     }
 
@@ -571,13 +592,13 @@ class StudentAttendanceSummaryTable extends AppTable
             'label' => 'Total No. Students',
         ];
         $extraField[] = [
-            'key' => '',
+            'key' => 'TotalFemaleStudentsPresent',
             'field' => 'TotalFemaleStudentsPresent',
             'type' => 'TotalFemaleStudentsPresent',
             'label' => 'No. of Female Students Present',
         ];
         $extraField[] = [
-            'key' => '',
+            'key' => 'TotalMaleStudentsPresent',
             'field' => 'TotalMaleStudentsPresent',
             'type' => 'TotalMaleStudentsPresent',
             'label' => 'No. of Male Students Present',
