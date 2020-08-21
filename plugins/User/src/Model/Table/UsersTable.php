@@ -76,8 +76,6 @@ class UsersTable extends AppTable
 
         $this->displayField('first_name');
 
-        $this->triggerInstitutionClassSubjectsShell();
-
     }
 
     public function implementedEvents()
@@ -1271,19 +1269,5 @@ class UsersTable extends AppTable
 		}
         
         die;
-    }
-
-    private function triggerInstitutionClassSubjectsShell()
-    {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake InstitutionClassSubjects';
-        $logs = ROOT . DS . 'logs' . DS . 'InstitutionClassSubjects.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-
-        try {
-            $pid = exec($shellCmd);
-            Log::write('debug', $shellCmd);
-        } catch(\Exception $ex) {
-            Log::write('error', __METHOD__ . ' exception : '. $ex);
-        }
     }
 }
