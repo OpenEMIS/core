@@ -85,6 +85,8 @@ class StudentAttendanceSummaryTable extends AppTable
         $reportStartDate = new DateTime($requestData->report_start_date);
         $reportEndDate = new DateTime($requestData->report_end_date);
 
+        $conditions = [];
+
         $query
             ->contain([
                 'Institutions' => [
@@ -153,15 +155,19 @@ class StudentAttendanceSummaryTable extends AppTable
 
             // To get the student absent count for each date
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            
+            if (!empty($institutionId)) {
+                $conditions[$InstitutionStudentAbsences->aliasField('institution_id')] = $institutionId;
+            }
             $institutionStudentAbsencesRecords = $InstitutionStudentAbsences
                 ->find()
                 ->where([
                     $InstitutionStudentAbsences->aliasField('date >=') => $reportStartDate->format("Y-m-d"),
                     $InstitutionStudentAbsences->aliasField('date <=') => $reportEndDate->format("Y-m-d"),
-                    $InstitutionStudentAbsences->aliasField('institution_id') => $institutionId
+                    $conditions
                 ])
                 ->toArray();
-
+         
             $rowData = [];
             foreach ($formattedDateResults as $k => $formattedDateResult) {
                 $absenceCount = 0;
@@ -194,23 +200,27 @@ class StudentAttendanceSummaryTable extends AppTable
 
              // To get the female student absent count for each date
              $InstitutionFemaleAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+
+             if (!empty($institutionId)) {
+                $conditions[$InstitutionFemaleAbsences->aliasField('institution_id')] = $institutionId;
+             }
+
              $institutionFemaleAbsencesRecords = $InstitutionFemaleAbsences
              ->find();
-             $institutionFemaleAbsencesRecords->leftJoin(['Gender' => 'genders'], [
-                'Gender.id' => 'Users.gender_id'
-                ]);
+            //  $institutionFemaleAbsencesRecords->leftJoin(['Gender' => 'genders'], [
+            //     'Gender.id' => 'Users.gender_id'
+            //     ]);
              $institutionFemaleAbsencesRecords->innerJoin(['Users' => 'security_users'], [
                 'Users.id = ' . $InstitutionFemaleAbsences->aliasfield('student_id')
                 ])
                
             ->where([
-                'Gender.code' => self::FEMALE ,
+                 'Users.gender_id IS NOT NULL','Users.gender_id = 2',
                 $InstitutionFemaleAbsences->aliasField('date >=') => $reportStartDate->format("Y-m-d"),
                 $InstitutionFemaleAbsences->aliasField('date <=') => $reportEndDate->format("Y-m-d"),
-                $InstitutionFemaleAbsences->aliasField('institution_id') => $institutionId
+                $conditions
                  ]);
-                
- 
+          
              $rowData = [];
              foreach ($formattedDateResults as $k => $formattedDateResult) {
                  $femaleAbsenceCount = 0;
@@ -242,19 +252,24 @@ class StudentAttendanceSummaryTable extends AppTable
 
                // To get the male student absent count for each date
                $InstitutionMaleAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+               
+               if (!empty($institutionId)) {
+                $conditions[$InstitutionMaleAbsences->aliasField('institution_id')] = $institutionId;
+               }
+
                $institutionMaleAbsencesRecords = $InstitutionMaleAbsences
                ->find();
-               $institutionMaleAbsencesRecords->leftJoin(['Gender' => 'genders'], [
-                'Gender.id' => 'Users.gender_id'
-                ]);
+            //    $institutionMaleAbsencesRecords->leftJoin(['Gender' => 'genders'], [
+            //     'Gender.id' => 'Users.gender_id'
+            //     ]);
                $institutionMaleAbsencesRecords->innerJoin(['Users' => 'security_users'], [
                   'Users.id = ' . $InstitutionMaleAbsences->aliasfield('student_id')
                   ])
               ->where([
-                  'Gender.code' => self::MALE ,
+                 'Users.gender_id IS NOT NULL','Users.gender_id = 1',
                   $InstitutionMaleAbsences->aliasField('date >=') => $reportStartDate->format("Y-m-d"),
                   $InstitutionMaleAbsences->aliasField('date <=') => $reportEndDate->format("Y-m-d"),
-                  $InstitutionMaleAbsences->aliasField('institution_id') => $institutionId
+                  $conditions
                    ]);
    
                $rowData = [];
@@ -306,10 +321,10 @@ class StudentAttendanceSummaryTable extends AppTable
                 }
                 $rowResults[] = $value;
             }
-
+        
         $query
             ->formatResults(function (ResultSetInterface $results) use ($rowResults) {
-                return $rowResults;
+                 return $rowResults;
             });
     }
 
@@ -669,7 +684,7 @@ class StudentAttendanceSummaryTable extends AppTable
 
         $gradeOptions = [];
         if ($educationGradeId != -1) {
-            $gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
+            @$gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
         } else {
             $gradeOptions = $institutionGradeResults;
         }
