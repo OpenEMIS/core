@@ -618,8 +618,9 @@ class InstitutionsTable extends AppTable
                         [
                             'Report.ClassAttendanceNotMarkedRecords',
                             'Report.SubjectsBookLists',
-                            'Report.InstitutionSubjectsClasses'
-                        ])
+                            'Report.InstitutionSubjectsClasses',
+                            'Report.StudentAttendanceSummary'
+                         ])
                 ) {
                 
                 $EducationGrades = TableRegistry::get('Education.EducationGrades');
@@ -656,12 +657,13 @@ class InstitutionsTable extends AppTable
 
                     $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
                     $gradeList = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId);
+                   
                 }
 
                 if (empty($gradeList)) {
                     $gradeOptions = ['' => $this->getMessage('general.select.noOptions')];
                 } else {
-                    $gradeOptions = ['-1' => __('All Grades')] + $gradeList;
+                    $gradeOptions = ['' => __('All Grades')] + $gradeList;
                 }
 
                 $attr['type'] = 'select';
@@ -837,7 +839,7 @@ class InstitutionsTable extends AppTable
                     $attr['attr']['required'] = true;
                 } else {
 					
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
