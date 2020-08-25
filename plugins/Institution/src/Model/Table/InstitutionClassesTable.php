@@ -1430,33 +1430,6 @@ class InstitutionClassesTable extends ControllerActionTable
         $staffId = $options['user']['id'];
         $isStaff = $options['user']['is_staff'];
 
-       
-        //getRoleEditPermissionAccessForAllSubjects
-
-        $SecurityUsers = TableRegistry::get('Security.Users');
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-
-        if (!empty($staffId)) {
-        $roleName = $SecurityUsers
-                                ->find()
-                                ->select([
-                                    'SecurityRoles.code'
-                                ])
-                                ->leftJoin([
-                                'SecurityGroupUsers' => 'security_group_users'], [
-                                    'SecurityGroupUsers.security_user_id = ' . $SecurityUsers->aliasfield('id')
-                                ])
-                                ->leftJoin([
-                                'SecurityRoles' => 'security_roles'], [
-                                    'SecurityRoles.id = ' . $SecurityGroupUsers->aliasfield('security_role_id')
-                                ])
-                                ->where([
-                                    $SecurityUsers->aliasfield('id') => $staffId
-                                ])
-                                ->toArray();
-                            }
-        $staffRole = $roleName[0]->SecurityRoles['code'];
-        //echo $staffRole;die;
         $query
             ->select([
                 $this->aliasField('id'),
@@ -1477,11 +1450,6 @@ class InstitutionClassesTable extends ControllerActionTable
                     ]);
                 }
             }
-        /*if($isStaff && $staffRole != 'SUPERROLE') {
-            $query->where([
-                $this->aliasField('staff_id') => $staffId
-            ]);
-        }*/
 
         return $query;
     }
