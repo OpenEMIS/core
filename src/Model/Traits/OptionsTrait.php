@@ -125,6 +125,14 @@ trait OptionsTrait
                             'action' => 'StudentAbsences'
                         ]
                     ],
+                    'StudentUnmarkedAttendances' => [
+                        'className' => 'Institution.InstitutionStudentUnmarkedAttendances',
+                        'url' => [
+                            'plugin' => 'Institution',
+                            'controller' => 'Institutions',
+                            'action' => 'StudentUnmarkedAttendances'
+                        ]
+                    ],
                     'StaffBehaviours' => [
                         'className' => 'Institution.StaffBehaviours',
                         'url' => [
