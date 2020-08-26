@@ -255,22 +255,17 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return [];
     }
 
-    function getSubjectOptions(institutionId,institutionClassId,academicPeriodId,day_id, isMarkableSubjectAttendance) {
+    function getSubjectOptions(institutionId,institutionClassId,academicPeriodId,day_id) {
         var success = function(response, deferred) {
             var subjectList = response.data.data;
-            console.log(isMarkableSubjectAttendance);
-            
+            console.log(context.isMarkableSubjectAttendance);
             if (angular.isObject(subjectList)) {
-                if (isMarkableSubjectAttendance == true) {
-                if (subjectList.length == 0) {
+                //if (subjectList.length > 0) {
+                    deferred.resolve(subjectList);
+               /* } else {
                     AlertSvc.warning(controllerScope, 'You do not have any subjects');
                     deferred.reject('You do not have any subjects');
-                } else {
-                     deferred.resolve(subjectList);
-                }
-            } else {
-                deferred.resolve(subjectList);
-            }
+                }*/
             } else {
                 deferred.reject('There was an error when retrieving the subject list');
             }
