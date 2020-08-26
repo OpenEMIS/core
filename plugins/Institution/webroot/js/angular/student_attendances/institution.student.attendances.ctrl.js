@@ -148,6 +148,9 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                 return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
             .then(function(classStudents) {
+                if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
+                    classStudents = [];
+                }
                 vm.updateClassStudentList(classStudents);
             }, vm.error)
             .finally(function() {
@@ -563,6 +566,9 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
         }, vm.error)
         .then(function(classStudents) {
+            if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
+                    classStudents = [];
+                }
             vm.updateClassStudentList(classStudents);
         }, vm.error)
         .finally(function() {
