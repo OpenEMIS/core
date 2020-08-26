@@ -20,8 +20,6 @@ class DashboardController extends AppController
         // $this->loadComponent('Paginator');
 
         $this->attachAngularModules();
-
-        $this->triggerInstitutionClassSubjectsShell();
     }
 
     // CAv4
@@ -89,16 +87,5 @@ class DashboardController extends AppController
                 ]);
                 break;
         }
-    }
-
-    private function triggerInstitutionClassSubjectsShell()
-    {
-        $script = 'InstitutionClassSubjects';
-        $consoleDir = ROOT . DS . 'bin' . DS;
-        $cmd = sprintf("%scake %s %s", $consoleDir, $script);
-        $nohup = '%s > %slogs/'.$script.'.log & echo $!';
-        $shellCmd = sprintf($nohup, $cmd, ROOT.DS);
-        \Cake\Log\Log::write('debug', $shellCmd);
-        exec($shellCmd);
     }
 }
