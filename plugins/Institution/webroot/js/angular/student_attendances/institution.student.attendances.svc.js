@@ -258,15 +258,12 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     function getSubjectOptions(institutionId,institutionClassId,academicPeriodId,day_id, isMarkableSubjectAttendance) {
         var success = function(response, deferred) {
             var subjectList = response.data.data;
-            console.log(isMarkableSubjectAttendance);
             
             if (angular.isObject(subjectList)) {
                 if (isMarkableSubjectAttendance == true) {
                 if (subjectList.length == 0) {
                     AlertSvc.warning(controllerScope, 'You do not have any subjects');
                     deferred.reject('You do not have any subjects');
-                } else {
-                     deferred.resolve(subjectList);
                 }
             } else {
                 deferred.resolve(subjectList);
