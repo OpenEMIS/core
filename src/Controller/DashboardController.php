@@ -20,6 +20,7 @@ class DashboardController extends AppController
         // $this->loadComponent('Paginator');
 
         $this->attachAngularModules();
+        $this->triggerInstitutionClassSubjectsShell();
     }
 
     // CAv4
@@ -87,5 +88,19 @@ class DashboardController extends AppController
                 ]);
                 break;
         }
+    }
+
+    private function triggerInstitutionClassSubjectsShell()
+    {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake InstitutionClassSubjects';
+        $logs = ROOT . DS . 'logs' . DS . 'InstitutionClassSubjects.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+
+        try {
+            $pid = exec($shellCmd);
+                Log::write('debug', $shellCmd);
+            } catch(\Exception $ex) {
+                Log::write('error', __METHOD__ . ' exception : '. $ex);
+            }
     }
 }
