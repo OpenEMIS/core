@@ -112,7 +112,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
 
         if (!$gradesResultSet->isEmpty()) {
             $gradeList = $gradesResultSet->toArray();
-            $attendencePerDay = self::DEFAULT_ATTENDANCE_PER_DAY;
+            $attendencePerDay = 1;
 
             $markResultSet = $this
                 ->find()
@@ -147,7 +147,9 @@ class StudentAttendanceMarkTypesTable extends AppTable
 
             $attendanceType = $markResultSet->StudentAttendanceTypes['code'];
             if ($attendanceType != 'SUBJECT') {
+                if (!empty($markResultSet->attendance_per_day)) {
                 $attendencePerDay = $markResultSet->attendance_per_day;
+                }
             }
 
             $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
