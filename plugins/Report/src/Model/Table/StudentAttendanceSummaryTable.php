@@ -74,12 +74,14 @@ class StudentAttendanceSummaryTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
+       // echo '<pre>'; print_r($requestData); die;
         $sheetData = $settings['sheet']['sheetData'];
         $gradeId = $sheetData['education_grade_id'];
 
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
         $institutionId = $requestData->institution_id;
+        $institutionTypeId = $requestData->institution_type_id;
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
 
         $reportStartDate = new DateTime($requestData->report_start_date);
@@ -125,7 +127,7 @@ class StudentAttendanceSummaryTable extends AppTable
             
             $results = $query->toArray(); 
             
-
+            //echo '<pre>'; print_r($results); die;
             // To get a list of dates based on user's input start and end dates
             $begin = $reportStartDate;
             $end = $reportEndDate;
@@ -155,19 +157,28 @@ class StudentAttendanceSummaryTable extends AppTable
 
             // To get the student absent count for each date
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-            
+            $institutions = TableRegistry::get('Institution.Institutions');
+
             if (!empty($institutionId)) {
                 $conditions[$InstitutionStudentAbsences->aliasField('institution_id')] = $institutionId;
             }
+
+            if (!empty($institutionTypeId)) {
+                $conditions['institutions.institution_type_id'] = $institutionTypeId;
+            }
+
             $institutionStudentAbsencesRecords = $InstitutionStudentAbsences
                 ->find()
+                ->leftJoin(['institutions' => 'institutions'], [
+                    'institutions.id' => $InstitutionStudentAbsences->aliasField('institution_id')
+                    ])
                 ->where([
                     $InstitutionStudentAbsences->aliasField('date >=') => $reportStartDate->format("Y-m-d"),
                     $InstitutionStudentAbsences->aliasField('date <=') => $reportEndDate->format("Y-m-d"),
                     $conditions
-                ])
-                ->toArray();
-         
+                ]);
+               // ->toArray();
+            //echo '<pre>'; print_r($institutionStudentAbsencesRecords); die;
             $rowData = [];
             foreach ($formattedDateResults as $k => $formattedDateResult) {
                 $absenceCount = 0;
@@ -205,11 +216,16 @@ class StudentAttendanceSummaryTable extends AppTable
                 $conditions[$InstitutionFemaleAbsences->aliasField('institution_id')] = $institutionId;
              }
 
+             if (!empty($institutionTypeId)) {
+                $conditions['institutions.institution_type_id'] = $institutionTypeId;
+             }
+
              $institutionFemaleAbsencesRecords = $InstitutionFemaleAbsences
-             ->find();
-            //  $institutionFemaleAbsencesRecords->leftJoin(['Gender' => 'genders'], [
-            //     'Gender.id' => 'Users.gender_id'
-            //     ]);
+             ->find()
+             ->leftJoin(['institutions' => 'institutions'], [
+                'institutions.id' => $InstitutionFemaleAbsences->aliasField('institution_id')
+                ]);
+          
              $institutionFemaleAbsencesRecords->innerJoin(['Users' => 'security_users'], [
                 'Users.id = ' . $InstitutionFemaleAbsences->aliasfield('student_id')
                 ])
@@ -257,11 +273,15 @@ class StudentAttendanceSummaryTable extends AppTable
                 $conditions[$InstitutionMaleAbsences->aliasField('institution_id')] = $institutionId;
                }
 
+               if (!empty($institutionTypeId)) {
+                $conditions['institutions.institution_type_id'] = $institutionTypeId;
+               }
+
                $institutionMaleAbsencesRecords = $InstitutionMaleAbsences
-               ->find();
-            //    $institutionMaleAbsencesRecords->leftJoin(['Gender' => 'genders'], [
-            //     'Gender.id' => 'Users.gender_id'
-            //     ]);
+               ->find()
+               ->leftJoin(['institutions' => 'institutions'], [
+                'institutions.id' => $InstitutionMaleAbsences->aliasField('institution_id')
+                ]);
                $institutionMaleAbsencesRecords->innerJoin(['Users' => 'security_users'], [
                   'Users.id = ' . $InstitutionMaleAbsences->aliasfield('student_id')
                   ])
@@ -271,7 +291,7 @@ class StudentAttendanceSummaryTable extends AppTable
                   $InstitutionMaleAbsences->aliasField('date <=') => $reportEndDate->format("Y-m-d"),
                   $conditions
                    ]);
-   
+           
                $rowData = [];
                foreach ($formattedDateResults as $k => $formattedDateResult) {
                    $maleAbsenceCount = 0;
@@ -684,7 +704,7 @@ class StudentAttendanceSummaryTable extends AppTable
 
         $gradeOptions = [];
         if ($educationGradeId != -1) {
-            @$gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
+            $gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
         } else {
             $gradeOptions = $institutionGradeResults;
         }
