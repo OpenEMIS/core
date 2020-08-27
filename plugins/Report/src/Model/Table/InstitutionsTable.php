@@ -682,8 +682,7 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 
-			
-            if (in_array($feature, 
+			if (in_array($feature, 
                         [
                             'Report.InstitutionSubjects', 
                             'Report.StudentAttendanceSummary',
@@ -705,7 +704,13 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
-                $attr['options'] = $typeOptions;
+
+                if($feature == 'Report.StudentAttendanceSummary') {
+                    $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
+                } else {
+                    $attr['options'] = $typeOptions;
+                }
+              
                 $attr['attr']['required'] = true;
             }
             return $attr;
@@ -912,7 +917,9 @@ class InstitutionsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+
         $requestData = json_decode($settings['process']['params']);
+       
         $filter = $requestData->institution_filter;
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
