@@ -14,10 +14,12 @@ $this->start('panelBody');
 ?>
 <style type="text/css">
     .ag-body-container {
-        max-height: 380px;
+        max-height: 680px;
+        width:auto !important;
     }
     .ag-floating-bottom-viewport 
     .ag-floating-bottom-container .ag-row{min-height:110px;}
+    .sg-theme .ag-cell{border-bottom: 1px solid #DDD;}
 </style>
 <form accept-charset="utf-8" id="content-main-form" class="ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionStudentOutcomesCtrl as InstitutionStudentOutcomesController" ng-init="InstitutionStudentOutcomesController.classId=<?= $classId ?>; InstitutionStudentOutcomesController.outcomeTemplateId=<?= $outcomeTemplateId ?>;">
     <div class="form-horizontal">
