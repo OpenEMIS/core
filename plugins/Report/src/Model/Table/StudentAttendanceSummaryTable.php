@@ -700,12 +700,12 @@ class StudentAttendanceSummaryTable extends AppTable
                 ->where([
                     $this->aliasField('institution_id') => $institutionId,
                     $this->aliasField('academic_period_id') => $academicPeriodId
-                ]);
-                // ->matching('EducationGrades', function ($q) use ($gradeId) {
-                //     return $q->where([
-                //         'EducationGrades.id' => $gradeId
-                //     ]);
-                // });
+                ])
+                ->matching('EducationGrades', function ($q) use ($gradeId) {
+                    return $q->where([
+                        'EducationGrades.id' => $gradeId
+                    ]);
+                });
 
             $sheets[] = [
                 'sheetData' => [
