@@ -99,6 +99,10 @@ class StudentAttendanceSummaryTable extends AppTable
             $conditions['StudentAttendanceSummary.institution_id IN'] = $institutionIds;
         }
 
+        if (!empty($academicPeriodId)) {
+            $conditions['StudentAttendanceSummary.academic_period_id'] = $academicPeriodId;
+        }
+
         $query
             ->contain([
                 'Institutions' => [
@@ -134,9 +138,9 @@ class StudentAttendanceSummaryTable extends AppTable
                 $this->aliasField('academic_period_id')
             ])
             ->where([$conditions]);
-
+            //echo '<pre>'; print_r($query); die;
             $results = $query->toArray(); 
-          
+           // echo '<pre>'; print_r($results); die;
             // To get a list of dates based on user's input start and end dates
             $begin = $reportStartDate;
             $end = $reportEndDate;
@@ -682,6 +686,15 @@ class StudentAttendanceSummaryTable extends AppTable
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
+
+        $ids ='';
+        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutionIds = $institutions->find('list', [
+                                                    'keyField' => 'id',
+                                                    'valueField' => 'id'
+                                                ])
+                        ->where(['institution_type_id' => $institutionTypeId])
+                        ->toArray();
 
         $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
         $institutionGradeResults = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId, true);
