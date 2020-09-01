@@ -16,6 +16,8 @@ use Cake\I18n\Time;
 use Cake\Network\Session;
 use Cake\Datasource\ConnectionManager;
 use Cake\Network\Response;
+use Cake\Log\Log;
+
 
 class UsersTable extends AppTable
 {
@@ -73,6 +75,7 @@ class UsersTable extends AppTable
         ]);
 
         $this->displayField('first_name');
+
     }
 
     public function implementedEvents()
