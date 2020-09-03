@@ -10,6 +10,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
+use DateTime;
 
 class ClassAttendanceMarkedSummaryReportTable extends AppTable
 {
@@ -17,6 +18,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
     public const ASSISTANT_TEACHER = 'Secondary Teacher';
     public $reportStartDate;
     public $reportEndDate;
+    public $schoolClosedDays;
 
     public function initialize(array $config)
     {
@@ -37,6 +39,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             'dependent' => true
         ]);
 
+        $this->addBehavior('Institution.Calendar');
         $this->addBehavior('Excel', [
             'excludes' => [
                 'class_number',
@@ -62,6 +65,15 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         return $attr;
     }
 
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
+        $requestData = json_decode($settings['process']['params']);
+        //$sheetsData = $this->generateSheetsData($requestData);
+        //$sheets->exchangeArray($sheetsData);
+        $this->schoolClosedDays = $this->getSchoolClosedDate($requestData);
+       // echo "<pre>";print_r($this->schoolClosedDays);die;
+    }
+
     public function onExcelGetInstitutionShiftId(Event $event, Entity $entity)
     {
         return $entity->shift_name;
@@ -79,12 +91,87 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         return implode(', ', $classGrades); //display as comma seperated
     }
 
+    public function onExcelRenderPeriodName(Event $event, Entity $entity)
+    {
+        $education_grade_id = $entity->education_grades[0]->id;
+        $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
+        $data = $StudentMarkTypeStatusGrades
+                ->find()
+                ->select([
+                    'StudentAttendanceMarkTypes.id',
+                    'StudentAttendanceMarkTypes.student_attendance_type_id',
+                    'StudentAttendanceMarkTypes.attendance_per_day',
+                ])
+                ->leftJoin(
+                ['StudentMarkTypeStatuses' => 'student_mark_type_statuses'],
+                [
+                    'StudentMarkTypeStatuses.id = '. $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id')
+                ]
+                )
+                ->leftJoin(
+                ['StudentAttendanceMarkTypes' => 'student_attendance_mark_types'],
+                [
+                    'StudentAttendanceMarkTypes.id = StudentMarkTypeStatuses.student_attendance_mark_type_id'
+                ]
+                )
+                ->where([
+                    $StudentMarkTypeStatusGrades->aliasField('education_grade_id') => $education_grade_id
+                ])
+                ->toArray();
+
+        if (!empty($data)) {
+            $period = $entity->period;
+            $student_attendance_mark_type_id = $data[0]->StudentAttendanceMarkTypes['id'];
+            $student_attendance_type_id = $data[0]->StudentAttendanceMarkTypes['student_attendance_type_id'];
+            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $attendancetype = $StudentAttendanceTypes
+                                ->find()
+                                ->select([
+                                    $StudentAttendanceTypes->aliasField('code')
+                                ])
+                                ->where([
+                                    $StudentAttendanceTypes->aliasField('id') => $student_attendance_type_id
+                                ])
+                                ->toArray();
+            $attendancecode = $attendancetype[0]->code;
+
+            if ($attendancecode == 'DAY') {
+                $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+                $periodData = $StudentAttendancePerDayPeriods
+                                ->find()
+                                ->select([
+                                    $StudentAttendancePerDayPeriods->aliasField('name')])
+                                ->where([
+                                    $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id') => $student_attendance_mark_type_id,
+                                     $StudentAttendancePerDayPeriods->aliasField('period') => $period,
+                                ])
+                                ->toArray();
+                $period_name = $periodData[0]->name;
+            } 
+        } else {
+            $period_name = 'Period 1';
+        }
+        return $period_name;
+       /* $classGrades = [];
+        if ($entity->education_grades) {
+            foreach ($entity->education_grades as $key => $value) {
+                $classGrades[] = $value->name;
+            }
+        }
+
+        return implode(', ', $classGrades); //display as comma seperated*/
+    }
+
     public function onExcelGetTotalUnmarked(Event $event, Entity $entity)
     {  
-        $reportStartDate = (new Date($this->reportStartDate))->format('Y-m-d');
-        $reportEndDate = (new Date($this->reportEndDate))->format('Y-m-d');
-        return 10;
-        //echo $reportStartDate;die;
+        $reportStartDate = (new DateTime($this->reportStartDate));
+        $reportEndDate = (new DateTime($this->reportEndDate));
+        $diff=date_diff($reportStartDate,$reportEndDate);
+        $days = $diff->format("%a");
+        $notworkingdays = $this->getNotWorkingDays($this->reportStartDate, $this->reportEndDate);
+        $schoolDays = $days - $notworkingdays;
+        $totalunmarked =($schoolDays-$entity->total_marked);
+        return $totalunmarked;
     }
 
     public function onExcelGetTotalDaysToBeMarked(Event $event, Entity $entity)
@@ -104,7 +191,6 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $attendance_type = $requestData->attendance_type;  
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
         if (!empty($attendance_type)) {
-
                 $attendanceTypeCode = $StudentAttendanceTypes
                                         ->find()
                                         ->where([
@@ -171,7 +257,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 'total_male_students' => 'ClassAttendanceMarkedSummaryReport.total_male_students',
                 'total_female_students' => 'ClassAttendanceMarkedSummaryReport.total_female_students',
                 'total_students' => $query->newExpr('ClassAttendanceMarkedSummaryReport.total_male_students + ClassAttendanceMarkedSummaryReport.total_female_students'),
-                'period_name' => 'StudentAttendanceMarkedRecords.period',
+                'period' => 'StudentAttendanceMarkedRecords.period',
                 'total_marked' => $query->func()->count('StudentAttendanceMarkedRecords.period')
             ])
             ->contain([
@@ -243,7 +329,6 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 'ClassAttendanceMarkedSummaryReport.id'
             ]);
         } else {
-
         $query
             ->select([
                 $this->aliasField('id'),
@@ -354,19 +439,11 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        //redeclare all for sorting purpose.
-        /*$newFields[] = [
-            'key' => 'ClassAttendanceMarkedSummaryReport.academic_period_id',
-            'field' => 'academic_period_id',
-            'type' => 'integer',
-            'label' => ''
-        ];*/
-
         $newFields[] = [
             'key' => 'Institutions.institution_code',
             'field' => 'institution_code',
             'type' => 'string',
-            'label' => 'GS code'
+            'label' => __('GS code')
         ];
 
         $newFields[] = [
@@ -380,122 +457,118 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             'key' => 'Institutions.institution_name',
             'field' => 'institution_name',
             'type' => 'string',
-            'label' => 'School'
+            'label' => __('School')
         ];
         $newFields[] = [
             'key' => 'ClassAttendanceMarkedSummaryReport.institution_shift_id',
             'field' => 'institution_shift_id',
             'type' => 'integer',
-            'label' => 'Shift'
+            'label' => __('Shift')
         ];
         $newFields[] = [
             'key' => 'Education.education_grades',
             'field' => 'education_grades',
             'type' => 'string',
-            'label' => 'Grade'
+            'label' => __('Grade')
         ];
         $newFields[] = [
             'key' => 'ClassAttendanceMarkedSummaryReport.name',
             'field' => 'name',
             'type' => 'string',
-            'label' => 'Class'
+            'label' => __('Class')
         ];
         $newFields[] = [
             'key' => '',
             'field' => 'staff_name',
             'type' => 'string',
-            'label' => self::CLASS_TEACHER
+            'label' => __(self::CLASS_TEACHER)
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'secondary_staff_name',
             'type' => 'string',
-            'label' => self::ASSISTANT_TEACHER
+            'label' => __(self::ASSISTANT_TEACHER)
         ];
 
-        /*$newFields[] = [
+        $newFields[] = [
             'key' => 'InstitutionSubjects.name',
             'field' => 'subject_name',
             'type' => 'string',
             'label' => 'Subject'
-        ];*/
+        ];
 
         $newFields[] = [
-            'key' => 'StudentAttendanceMarkedRecords.period',
+            'key' => 'period_name',
             'field' => 'period_name',
-            'type' => 'string',
-            'label' => 'Period'
+            'type' => 'period_name',
+            'label' => __('Period')
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'total_marked',
             'type' => 'integer',
-            'label' => 'Total Marked'
+            'label' => __('Total Marked')
         ];
 
         $newFields[] = [
             'key' => 'total_unmarked',
             'field' => 'total_unmarked',
             'type' => 'integer',
-            'label' => 'Total Unmarked'
+            'label' => __('Total Unmarked')
         ];
 
         $newFields[] = [
             'key' => 'total_days_to_be_marked',
             'field' => 'total_days_to_be_marked',
             'type' => 'integer',
-            'label' => 'Total No days to be marked'
+            'label' => __('Total No days to be marked')
         ];
-        /*$newFields[] = [
-            'key' => 'Types.institution_type',
-            'field' => 'institution_type',
-            'type' => 'string',
-            'label' => ''
-        ];*/
-
-        /*$newFields[] = [
-            'key' => 'Areas.code',
-            'field' => 'area_code',
-            'type' => 'string',
-            'label' => __('Area Code')
-        ];*/       
-
-        /*$newFields[] = [
-            'key' => 'AreaAdministratives.code',
-            'field' => 'area_administrative_code',
-            'type' => 'string',
-            'label' => __('Area Administrative Code')
-        ];
-
-        $newFields[] = [
-            'key' => 'AreaAdministratives.name',
-            'field' => 'area_administrative_name',
-            'type' => 'string',
-            'label' => __('Area Administrative')
-        ];*/        
-        /*$newFields[] = [
-            'key' => 'ClassAttendanceMarkedSummaryReport.total_male_students',
-            'field' => 'total_male_students',
-            'type' => 'integer',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'ClassAttendanceMarkedSummaryReport.total_female_students',
-            'field' => 'total_female_students',
-            'type' => 'integer',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => '',
-            'field' => 'total_students',
-            'type' => 'integer',
-            'label' => 'Total Students'
-        ];*/
-
         $fields->exchangeArray($newFields);
     }
+
+    private function getSchoolClosedDate($requestData)
+    {
+        $superAdmin = $requestData->super_admin;
+        $userId = $requestData->user_id;
+        $startDate = new DateTime($requestData->report_start_date);
+        $endDate = new DateTime($requestData->report_end_date);
+
+        $query = $this->find();
+
+        if (!$superAdmin) {
+            $query->find('byAccess', [
+                'user_id' => $userId,
+                'institution_field_alias' => $this->aliasField($this->association('Institutions')->foreignKey())
+            ]);
+        }
+            
+        $institutionList = $query
+            ->group('institution_id')
+            ->extract('institution_id')
+            ->toArray();
+
+        return $this->getInstitutionClosedDates($startDate, $endDate, $institutionList);
+    }
+
+    public function getNotWorkingDays($startDate, $endDate)
+        {
+            $begin = strtotime($startDate);
+            $end   = strtotime($endDate);
+            if ($begin > $end) {
+
+                return 0;
+            } else {
+                $no_days  = 0;
+                while ($begin <= $end) {
+                    $what_day = date("N", $begin);
+                    if (in_array($what_day, [6,7]) ) // 6 and 7 are weekend
+                        $no_days++;
+                    $begin += 86400; // +1 day
+                };
+
+                return $no_days;
+            }
+        }
 }
