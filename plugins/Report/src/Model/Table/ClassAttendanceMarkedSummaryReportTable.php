@@ -68,10 +68,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $requestData = json_decode($settings['process']['params']);
-        //$sheetsData = $this->generateSheetsData($requestData);
-        //$sheets->exchangeArray($sheetsData);
         $this->schoolClosedDays = $this->getSchoolClosedDate($requestData);
-       // echo "<pre>";print_r($this->schoolClosedDays);die;
     }
 
     public function onExcelGetInstitutionShiftId(Event $event, Entity $entity)
@@ -93,6 +90,8 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
 
     public function onExcelRenderPeriodName(Event $event, Entity $entity)
     {
+        $period_name = '';
+        if ($entity->has('period')) {
         $education_grade_id = $entity->education_grades[0]->id;
         $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
         $data = $StudentMarkTypeStatusGrades
@@ -146,20 +145,58 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                                      $StudentAttendancePerDayPeriods->aliasField('period') => $period,
                                 ])
                                 ->toArray();
-                $period_name = $periodData[0]->name;
+                if (!empty($periodData)) {
+                    $period_name = $periodData[0]->name;
+                }
             } 
         } else {
             $period_name = 'Period 1';
         }
-        return $period_name;
-       /* $classGrades = [];
-        if ($entity->education_grades) {
-            foreach ($entity->education_grades as $key => $value) {
-                $classGrades[] = $value->name;
-            }
-        }
 
-        return implode(', ', $classGrades); //display as comma seperated*/
+    } else {
+        $period_name = '-';
+    }
+        return $period_name;
+    }
+
+    public function onExcelGetSubjectName(Event $event, Entity $entity)
+    { 
+        if (!$entity->has('subject_name')) {
+            return '-';
+        }
+    }
+
+    public function onExcelRenderSubjectStaff(Event $event, Entity $entity)
+    { 
+        $subject_id = $entity->subject_id;
+        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $staffSubjectData = $InstitutionSubjectStaff
+                            ->find()
+                            ->select([
+                                'staff_subject_name' => $InstitutionSubjectStaff->find()->func()->concat([
+                                'SecurityUsers.openemis_no' => 'literal',
+                                " - ",
+                                'SecurityUsers.first_name' => 'literal',
+                                " ",
+                                'SecurityUsers.last_name' => 'literal'
+                                ])
+                            ])
+                            ->leftJoin(
+                                ['SecurityUsers' => 'security_users'],
+                                [
+                                    'SecurityUsers.id = '. $InstitutionSubjectStaff->aliasField('staff_id')
+                                ]
+                                )
+                            ->where([
+                                $InstitutionSubjectStaff->aliasField('institution_subject_id') => $subject_id
+                            ])
+                            ->toArray();
+        if (!empty($staffSubjectData)) {
+        $staff_subject_name = $staffSubjectData[0]->staff_subject_name;
+        } else {
+            $staff_subject_name = '-';
+        }
+        return $staff_subject_name;
     }
 
     public function onExcelGetTotalUnmarked(Event $event, Entity $entity)
@@ -169,17 +206,25 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $diff=date_diff($reportStartDate,$reportEndDate);
         $days = $diff->format("%a");
         $notworkingdays = $this->getNotWorkingDays($this->reportStartDate, $this->reportEndDate);
-        $schoolDays = $days - $notworkingdays;
+        $schoolClosedDays = count($this->schoolClosedDays[-1]);
+        $notworkingdaysschool = $notworkingdays + $schoolClosedDays;
+        $schoolDays = $days - $notworkingdaysschool;
         $totalunmarked =($schoolDays-$entity->total_marked);
         return $totalunmarked;
     }
 
     public function onExcelGetTotalDaysToBeMarked(Event $event, Entity $entity)
     {  
-        $reportStartDate = (new Date($this->reportStartDate))->format('Y-m-d');
-        $reportEndDate = (new Date($this->reportEndDate))->format('Y-m-d');
-        return 10;
-        //echo $reportStartDate;die;
+        $reportStartDate = (new DateTime($this->reportStartDate));
+        $reportEndDate = (new DateTime($this->reportEndDate));
+        $diff=date_diff($reportStartDate,$reportEndDate);
+        $days = $diff->format("%a");
+        $notworkingdays = $this->getNotWorkingDays($this->reportStartDate, $this->reportEndDate);
+        $schoolClosedDays = count($this->schoolClosedDays[-1]);
+        $notworkingdaysschool = $notworkingdays + $schoolClosedDays;
+        $schoolDays = $days - $notworkingdaysschool;
+        $totalunmarked =($schoolDays-$entity->total_marked);
+        return $totalunmarked;
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -191,13 +236,13 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $attendance_type = $requestData->attendance_type;  
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
         if (!empty($attendance_type)) {
-                $attendanceTypeCode = $StudentAttendanceTypes
+                $attendanceTypeData = $StudentAttendanceTypes
                                         ->find()
                                         ->where([
                                             $StudentAttendanceTypes->aliasField('id') => $attendance_type
                                         ])
                                         ->toArray();
-                $attendanceTypeCodeName = $attendanceTypeCode[0]->code;
+                $attendanceTypeCode = $attendanceTypeData[0]->code;
             }
         $this->reportStartDate = (new Date($requestData->report_start_date))->format('Y-m-d');
         $this->reportEndDate = (new Date($requestData->report_end_date))->format('Y-m-d');
@@ -211,7 +256,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             $where['InstitutionSubjects.id'] = $subjects;
         }
         if ($education_grade_id != -1) {
-        if ($attendanceTypeCodeName == 'DAY') {
+        if ($attendanceTypeCode == 'DAY') {
             $where['InstitutionClassGrades.education_grade_id'] = $education_grade_id;            
         } else {
             $where['InstitutionSubjects.education_grade_id'] = $education_grade_id;
@@ -226,7 +271,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
         $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');       
 
-        if ($attendanceTypeCodeName == 'DAY') {
+        if ($attendanceTypeCode == 'DAY') {
             $query
             ->select([
                 $this->aliasField('id'),
@@ -359,6 +404,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 'total_male_students' => 'ClassAttendanceMarkedSummaryReport.total_male_students',
                 'total_female_students' => 'ClassAttendanceMarkedSummaryReport.total_female_students',
                 'total_students' => $query->newExpr('ClassAttendanceMarkedSummaryReport.total_male_students + ClassAttendanceMarkedSummaryReport.total_female_students'),
+                'subject_id' => 'InstitutionSubjects.id',
                 'subject_name' => 'InstitutionSubjects.name',
                 'total_marked' => $query->func()->count('StudentAttendanceMarkedRecords.subject_id')
             ])
@@ -382,6 +428,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 ],
                 'Staff' => [
                     'fields' => [
+                        'Staff.id',
                         'Staff.openemis_no',
                         'Staff.first_name',
                         'Staff.middle_name',
@@ -443,27 +490,27 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             'key' => 'Institutions.institution_code',
             'field' => 'institution_code',
             'type' => 'string',
-            'label' => __('GS code')
+            'label' => __('Institution Code')
         ];
 
         $newFields[] = [
             'key' => 'Areas.name',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('Atoll')
+            'label' => __('Area')
         ];
 
         $newFields[] = [
             'key' => 'Institutions.institution_name',
             'field' => 'institution_name',
             'type' => 'string',
-            'label' => __('School')
+            'label' => __('Institution Name')
         ];
         $newFields[] = [
             'key' => 'ClassAttendanceMarkedSummaryReport.institution_shift_id',
             'field' => 'institution_shift_id',
             'type' => 'integer',
-            'label' => __('Shift')
+            'label' => __('Institution Shift')
         ];
         $newFields[] = [
             'key' => 'Education.education_grades',
@@ -481,21 +528,28 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             'key' => '',
             'field' => 'staff_name',
             'type' => 'string',
-            'label' => __(self::CLASS_TEACHER)
+            'label' => __('HOMEROOM TEACHER')
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'secondary_staff_name',
             'type' => 'string',
-            'label' => __(self::ASSISTANT_TEACHER)
+            'label' => __('SECONDARY TEACHER')
+        ];
+
+        $newFields[] = [
+            'key' => 'subject_staff',
+            'field' => 'subject_staff',
+            'type' => 'subject_staff',
+            'label' => __('Subject Teacher')
         ];
 
         $newFields[] = [
             'key' => 'InstitutionSubjects.name',
             'field' => 'subject_name',
             'type' => 'string',
-            'label' => 'Subject'
+            'label' => __('Subject')
         ];
 
         $newFields[] = [
@@ -549,7 +603,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             ->extract('institution_id')
             ->toArray();
 
-        return $this->getInstitutionClosedDates($startDate, $endDate, $institutionList);
+        return $this->getInstitutionClosedDates($startDate, $endDate, -1);
     }
 
     public function getNotWorkingDays($startDate, $endDate)

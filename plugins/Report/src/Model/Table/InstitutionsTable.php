@@ -926,7 +926,7 @@ class InstitutionsTable extends AppTable
                 ) {
 
                 $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
-            $attendanceOptions = $StudentAttendanceTypes
+                $attendanceOptions = $StudentAttendanceTypes
                 ->find('list')
                 ->toArray();
 
@@ -934,18 +934,6 @@ class InstitutionsTable extends AppTable
 
             $attr['attr']['options'] = $attendanceOptions;
             $attr['onChangeReload'] = true;
-
-
-               /* $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
-
-                $attr['type'] = 'date';
-                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
-                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
-                $attr['value'] = $selectedPeriod->start_date;*/
-            } else {
-                //$attr['value'] = self::NO_FILTER;
             }
             return $attr;
         }
@@ -963,10 +951,21 @@ class InstitutionsTable extends AppTable
                 $academic_period_id = $this->request->data[$this->alias()]['academic_period_id'];                
                 $education_grade_id = $this->request->data[$this->alias()]['education_grade_id'];
                 $attendance_type = $this->request->data[$this->alias()]['attendance_type'];
+                $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+                if (!empty($attendance_type)) {
+
+                $attendanceTypeData = $StudentAttendanceTypes
+                                        ->find()
+                                        ->where([
+                                            $StudentAttendanceTypes->aliasField('id') => $attendance_type
+                                        ])
+                                        ->toArray();
+                $attendanceTypeCode = $attendanceTypeData[0]->code;
+            }
 
                 $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
                 $gradeCondition = [];
-                if ($attendance_type == 2) {
+                if ($attendanceTypeCode == 'SUBJECT') {
 
                     if ($education_grade_id != -1) {
                         $gradeCondition = [
@@ -982,9 +981,6 @@ class InstitutionsTable extends AppTable
                                         ->find('list', 
                                             ['keyField' => 'id', 
                                             'valueField' => 'name'])
-                                        /*->select([
-                                            $InstitutionSubjects->aliasField('education_subject_id')
-                                        ])*/
                                         ->where(
                                             $gradeCondition
                                         )
@@ -1020,13 +1016,13 @@ class InstitutionsTable extends AppTable
                 $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
                 if (!empty($attendance_type)) {
 
-                $attendanceTypeCode = $StudentAttendanceTypes
+                $attendanceTypeData = $StudentAttendanceTypes
                                         ->find()
                                         ->where([
                                             $StudentAttendanceTypes->aliasField('id') => $attendance_type
                                         ])
                                         ->toArray();
-                $attendanceTypeCodeName = $attendanceTypeCode[0]->code;
+                $attendanceTypeCode = $attendanceTypeData[0]->code;
             }
 
                 $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
@@ -1035,7 +1031,7 @@ class InstitutionsTable extends AppTable
 
 
                 $gradeCondition = [];
-                if ($attendanceTypeCodeName == 'DAY' || $attendance_type == '') {
+                if ($attendanceTypeCode == 'DAY' || $attendance_type == '') {
                     if ($education_grade_id != -1) {
                         $gradeCondition = [
                             $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academic_period_id,
