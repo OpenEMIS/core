@@ -14,7 +14,7 @@ $this->start('panelBody');
 ?>
 <style type="text/css">
     .ag-body-container {
-        max-height: 680px;
+        max-height:400px;
         width:auto !important;
     }
     .ag-floating-bottom-viewport 
