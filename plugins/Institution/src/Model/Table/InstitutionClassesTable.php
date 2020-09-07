@@ -1430,30 +1430,6 @@ class InstitutionClassesTable extends ControllerActionTable
         $staffId = $options['user']['id'];
         $isStaff = $options['user']['is_staff'];
 
-        $SecurityUsers = TableRegistry::get('Security.Users');
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-
-        if (!empty($staffId)) {
-        $roleName = $SecurityUsers
-                                ->find()
-                                ->select([
-                                    'SecurityRoles.code'
-                                ])
-                                ->leftJoin([
-                                'SecurityGroupUsers' => 'security_group_users'], [
-                                    'SecurityGroupUsers.security_user_id = ' . $SecurityUsers->aliasfield('id')
-                                ])
-                                ->leftJoin([
-                                'SecurityRoles' => 'security_roles'], [
-                                    'SecurityRoles.id = ' . $SecurityGroupUsers->aliasfield('security_role_id')
-                                ])
-                                ->where([
-                                    $SecurityUsers->aliasfield('id') => $staffId
-                                ])
-                                ->toArray();
-                            }
-        $staffRole = $roleName[0]->SecurityRoles['code'];
-        
         $query
             ->select([
                 $this->aliasField('id'),
@@ -1464,11 +1440,16 @@ class InstitutionClassesTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $academicPeriodId
             ])
             ->order([$this->aliasField('name')]);
-        if($isStaff && $staffRole != 'PRINCIPAL'){
-            $query->where([
-                $this->aliasField('staff_id') => $staffId
-            ]);
-        }
+
+             if ($options['user']['super_admin'] == 0) { 
+                $allClassesPermission = $this->getRolePermissionAccessForAllClasses($staffId, $institutionId);
+                
+                if (!$allClassesPermission) {
+                $query->where([
+                        $this->aliasField('staff_id') => $staffId
+                    ]);
+                }
+            }
 
         return $query;
     }
@@ -1497,5 +1478,34 @@ class InstitutionClassesTable extends ControllerActionTable
         $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
 
         return $tooltipMessage;
+    }
+
+    public function getRolePermissionAccessForAllClasses($userId, $institutionId)
+    {
+        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
+        //$userAccessRoles = implode(', ', $roles);        
+        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
+                    'AND' => [ 'OR' => [ 
+                                        "SecurityFunctions.`_view` LIKE '%AllClasses.index%'",
+                                        "SecurityFunctions.`_view` LIKE '%AllClasses.view%'"
+                                    ]
+                              ],
+                    'SecurityRoleFunctions._view' => 1,
+                    'SecurityRoleFunctions._edit' => 1
+                ])
+                ->toArray();
+        if(!empty($QueryResult)){
+            return true;
+        }
+          
+        return false;
     }
 }
