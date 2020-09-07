@@ -223,8 +223,8 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $schoolClosedDays = count($this->schoolClosedDays[-1]);
         $notworkingdaysschool = $notworkingdays + $schoolClosedDays;
         $schoolDays = $days - $notworkingdaysschool;
-        $totalunmarked =($schoolDays-$entity->total_marked);
-        return $totalunmarked;
+        $totalDaysToBeMarked =$schoolDays;
+        return $totalDaysToBeMarked;
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
