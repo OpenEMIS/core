@@ -1,3 +1,7 @@
+### [3.57.5] - 2020-09-07
+- Bug Fixed: Institutions > Attendance > Students: Unable to view/mark attendance even though permission for All Classes and All Subjects have been given
+- Bug FIxed: Institutions > Performance > Outcomes: Problems viewing all outcomes when editing
+
 ### [3.57.4] - 2020-09-01
 - Bug Fixed: Report > Institutions > Student Attendance Summary report : Include gender columns
 - Bug Fixed: Institutions > Academic > Subjects: Subjects are not automatically created
