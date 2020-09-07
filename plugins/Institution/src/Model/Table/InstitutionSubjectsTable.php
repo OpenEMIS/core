@@ -1312,6 +1312,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
                     foreach ($newSchoolSubjects as $subject) {
                         $InstitutionSubjects->save($subject);
+                        
                         //POCOR 5001
                         /*$institutionProgramGradeSubjects = 
                             TableRegistry::get('InstitutionProgramGradeSubjects')
