@@ -20,6 +20,8 @@ class DashboardController extends AppController
 
         $this->attachAngularModules();
         $this->triggerUnmarkedAttendanceShell();
+        $this->triggerInstitutionClassSubjectsShell();
+		
     }
 
     // CAv4
@@ -88,6 +90,7 @@ class DashboardController extends AppController
                 break;
         }
     }
+
     
     private function triggerUnmarkedAttendanceShell()
     {
@@ -95,6 +98,18 @@ class DashboardController extends AppController
         $logs = ROOT . DS . 'logs' . DS . 'GenerateStudentUnmarkedAttendances.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         $pid = exec($shellCmd);
-        Log::write('debug', $shellCmd);        
+        Log::write('debug', $shellCmd); 
+    
     }
-}
+
+    private function triggerInstitutionClassSubjectsShell()
+    {
+        $script = 'InstitutionClassSubjects';
+        $consoleDir = ROOT . DS . 'bin' . DS;
+        $cmd = sprintf("%scake %s %s", $consoleDir, $script);
+        $nohup = '%s > %slogs/'.$script.'.log & echo $!';
+        $shellCmd = sprintf($nohup, $cmd, ROOT.DS);
+        //\Cake\Log\Log::write('debug', $shellCmd);
+        exec($shellCmd);
+		Log::write('debug', $shellCmd); 
+    }

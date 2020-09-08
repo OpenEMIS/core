@@ -53,7 +53,8 @@ class InstitutionClassSubjectsTable extends AppTable
     }
 
     public function findAllSubjectsByClassPerAcademicPeriod(Query $query, array $options)
-    {       
+    {
+        $institutionId = $options['institution_id'];       
         $institutionClassId = $options['institution_class_id'];
         $academicPeriodId = $options['academic_period_id'];
         $day_id = (new Time($options['day_id']))->format('w');
@@ -62,6 +63,7 @@ class InstitutionClassSubjectsTable extends AppTable
         $ScheduleCurriculumLessons = TableRegistry::get('Schedule.ScheduleCurriculumLessons');
         $ScheduleNonCurriculumLessons = TableRegistry::get('Schedule.ScheduleNonCurriculumLessons');
         $ScheduleLessonDetails = TableRegistry::get('Schedule.ScheduleLessonDetails');
+        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 
         $scheduleTimetablesData = $ScheduleTimetables->find()
                                     ->where([
@@ -70,8 +72,6 @@ class InstitutionClassSubjectsTable extends AppTable
                                     ])
                                     ->toArray();
                                    
-                             /*echo "<pre>";       
-                             print_r($scheduleTimetablesData);die;*/
         if (count($scheduleTimetablesData) > 0) {
                     $query
                     ->select([
@@ -116,21 +116,73 @@ class InstitutionClassSubjectsTable extends AppTable
                     ]);
                 } else {
                     $query
-            ->select([
-                 'id'=>$InstitutionSubjects->aliasField('id'),
-                 'name'=>$InstitutionSubjects->aliasField('name'),
-            ])
-            ->contain(['InstitutionSubjects'])
-            ->where([
-                $this->aliasField('institution_class_id') => $institutionClassId
-            ])
-            ->order([
-                $InstitutionSubjects->aliasField('name')=>'DESC'
-            ]);
-                }
-        return $query;       
+                        ->select([
+                             'id'=>$InstitutionSubjects->aliasField('id'),
+                             'name'=>$InstitutionSubjects->aliasField('name'),
+                        ])
+                        ->innerJoin(
+                        [$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
+                            [
+                                $InstitutionSubjects->aliasField('id = ') . $this->aliasField('institution_subject_id')
+                            ]
+                        )
+                        ->where([
+                            $this->aliasField('institution_class_id') => $institutionClassId
+                        ])
+                        ->order([
+                            $InstitutionSubjects->aliasField('name')=>'DESC'
+                        ]);
+                    }
+
+
+                    $staffId = $options['user']['id'];
+                        $isStaff = $options['user']['is_staff'];
+                        if ($options['user']['super_admin'] == 0) { 
+                            $allSubjectsPermission = $this->getRolePermissionAccessForAllSubjects($staffId, $institutionId);
+                            if (!$allSubjectsPermission) {
+                                $query
+                                ->innerJoin(
+                                [$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()],
+                                        [
+                                    $InstitutionSubjectStaff->aliasField('staff_id = ') . $staffId,
+                                    $InstitutionSubjectStaff->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id')
+                                ]
+                                );
+                            }
+                        }
+                            
+        return $query;
+    }
+
+    public function getRolePermissionAccessForAllSubjects($userId, $institutionId)
+    {
+        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
+        //$userAccessRoles = implode(', ', $roles);    
         
-        //return $query;
+        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityRoleFunctions.security_role_id IN'=> $roles,
+                    'AND' => [ 'OR' => [ 
+                                        "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
+                                        "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
+                                    ]
+                              ],
+                    'SecurityRoleFunctions._view' => 1,
+                    'SecurityRoleFunctions._edit' => 1
+                ])
+                ->toArray();
+                
+        if(!empty($QueryResult)){
+            return true;
+        }
+          
+        return false;
     }
 
     
