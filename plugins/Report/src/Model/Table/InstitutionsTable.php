@@ -618,8 +618,9 @@ class InstitutionsTable extends AppTable
                         [
                             'Report.ClassAttendanceNotMarkedRecords',
                             'Report.SubjectsBookLists',
-                            'Report.InstitutionSubjectsClasses'
-                        ])
+                            'Report.InstitutionSubjectsClasses',
+                            'Report.StudentAttendanceSummary'
+                         ])
                 ) {
                 
                 $EducationGrades = TableRegistry::get('Education.EducationGrades');
@@ -656,12 +657,13 @@ class InstitutionsTable extends AppTable
 
                     $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
                     $gradeList = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId);
+                   
                 }
 
                 if (empty($gradeList)) {
                     $gradeOptions = ['' => $this->getMessage('general.select.noOptions')];
                 } else {
-                    $gradeOptions = ['-1' => __('All Grades')] + $gradeList;
+                    $gradeOptions = ['' => __('All Grades')] + $gradeList;
                 }
 
                 $attr['type'] = 'select';
@@ -680,8 +682,7 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 
-			
-            if (in_array($feature, 
+			if (in_array($feature, 
                         [
                             'Report.InstitutionSubjects', 
                             'Report.StudentAttendanceSummary',
@@ -703,7 +704,13 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
-                $attr['options'] = $typeOptions;
+
+                if($feature == 'Report.StudentAttendanceSummary') {
+                    $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
+                } else {
+                    $attr['options'] = $typeOptions;
+                }
+              
                 $attr['attr']['required'] = true;
             }
             return $attr;
@@ -837,7 +844,7 @@ class InstitutionsTable extends AppTable
                     $attr['attr']['required'] = true;
                 } else {
 					
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
@@ -910,7 +917,9 @@ class InstitutionsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+
         $requestData = json_decode($settings['process']['params']);
+       
         $filter = $requestData->institution_filter;
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
