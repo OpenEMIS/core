@@ -1443,11 +1443,26 @@ class InstitutionClassesTable extends ControllerActionTable
 
              if ($options['user']['super_admin'] == 0) { 
                 $allClassesPermission = $this->getRolePermissionAccessForAllClasses($staffId, $institutionId);
+                $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+                $secondary_staff = $InstitutionClassesSecondaryStaff
+                                    ->find()
+                                    ->where([$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId])
+                                    ->toArray();
+                $secondary_staff_count = count($secondary_staff);
                 
                 if (!$allClassesPermission) {
-                $query->where([
+                    if ($secondary_staff_count == 0) {
+                        $query->where([
                         $this->aliasField('staff_id') => $staffId
-                    ]);
+                        ]);
+                    } else {
+                        $query
+                        ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                            [
+                                'InstitutionClassesSecondaryStaff.institution_class_id = '.$this->aliasField('id')
+                            ]
+                        ]);
+                    }
                 }
             }
 
