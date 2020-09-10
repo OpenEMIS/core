@@ -487,6 +487,8 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        // set action for webhook
+        $this->newAction = $this->action;
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Institutions', 'index'];
         $this->field('security_group_id', ['visible' => false]);
         // $this->field('institution_site_area_id', ['visible' => false]);
@@ -577,6 +579,12 @@ class InstitutionsTable extends ControllerActionTable
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
         }
+        // Webhook institution update -- start
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('institutions_update', ['username' => $username]);
+            }
+       
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
@@ -586,6 +594,12 @@ class InstitutionsTable extends ControllerActionTable
 
         $groupEntity = $SecurityGroup->get($securityGroupId);
         $SecurityGroup->delete($groupEntity);
+
+        //webhook event
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('institutions_delete', ['username' => $username]);
+        }
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
