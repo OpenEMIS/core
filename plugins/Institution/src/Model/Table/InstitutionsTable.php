@@ -488,7 +488,7 @@ class InstitutionsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     { 
 		// set action for webhook
-		$this->newAction = $this->action;
+		$this->webhookAction = $this->action;
 		
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Institutions', 'index'];
         $this->field('security_group_id', ['visible' => false]);
@@ -577,7 +577,7 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
 		
-		if($this->newAction == 'add') {
+		if($this->webhookAction == 'add') {
 			// Webhook institution create -- start	
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
 			if ($this->Auth->user()) {
