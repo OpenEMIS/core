@@ -138,9 +138,9 @@ class StudentAttendanceSummaryTable extends AppTable
                 $this->aliasField('academic_period_id')
             ])
             ->where([$conditions]);
-            //echo '<pre>'; print_r($query); die;
+           
             $results = $query->toArray(); 
-           // echo '<pre>'; print_r($results); die;
+         
             // To get a list of dates based on user's input start and end dates
             $begin = $reportStartDate;
             $end = $reportEndDate;
@@ -390,13 +390,17 @@ class StudentAttendanceSummaryTable extends AppTable
     {   
         $totalStudentsAbsent = 0;
 
-        if ($entity->has('absence_count')) {
-            $totalStudentsAbsent = $entity->absence_count;
-        }
+        $dateFormatted = $entity->date->format('Y-m-d');
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()
+                        ->where(['academic_period_id' => $entity->academic_period_id, 'institution_id' => $entity->institution_id,
+                        'institution_class_id' => $entity->id, 'date' =>  $dateFormatted, 'absence_type_id' => 1])
+                        ->count();
         
         if ($totalStudentsAbsent == 0) {
             $totalStudentsAbsent = '-';
         }
+
         return $totalStudentsAbsent;
     }
     
@@ -430,6 +434,42 @@ class StudentAttendanceSummaryTable extends AppTable
         return $totalMaleStudentsAbsent;
     }
     
+    
+ 
+    public function onExcelRenderTotalStudentsPresent(Event $event, Entity $entity, $attr)
+    {
+       
+        $dateFormatted = $entity->date->format('Y-m-d');
+        $totalStudentsPresent = 0;
+        $totalStudentsAbsent = 0;
+        $totalStudents = 0;
+
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()
+                        ->where(['academic_period_id' => $entity->academic_period_id, 'institution_id' => $entity->institution_id,
+                        'institution_class_id' => $entity->id, 'date' =>  $dateFormatted, 'absence_type_id' => 1])
+                        ->count();
+        
+        if (!empty($totalStudentsAbsent)) {
+           
+            if ($entity->has('institution_class_students')) {
+                $totalStudents = count($entity->institution_class_students);
+               
+            }
+            $totalStudentsPresent = $totalStudents - $totalStudentsAbsent;
+
+        } else {
+            $totalStudentsPresent == '-';
+        }
+       
+      
+        if ($totalStudentsPresent == 0) {
+            $totalStudentsPresent = '-';
+        }
+       
+        return $totalStudentsPresent;
+    }   
+
     public function onExcelRenderTotalFemaleStudentsPresent(Event $event, Entity $entity, $attr)
     {
         
@@ -440,23 +480,17 @@ class StudentAttendanceSummaryTable extends AppTable
         $institutionClasses = $this->find('all')
                             ->where(['id' => $entity->id])
                             ->first();
-
-        if ($entity->has('female_absence_count')) {
+                            
+        if ($entity->class_attendance_records == RecordMarkedType::MARKED) {
             $totalFemaleStudentsAbsent = $entity->female_absence_count;
-        }
-        if ($entity->has('id')) {
             $totalFemaleStudents = $institutionClasses->total_female_students;
-        }
-
-        $totalFemaleStudentsPresent = $totalFemaleStudents - $totalFemaleStudentsAbsent;
-
-        if ($totalFemaleStudentsPresent == 0) {
+            $totalFemaleStudentsPresent = $totalFemaleStudents - $totalFemaleStudentsAbsent;
+        } else {
             $totalFemaleStudentsPresent = '-';
         }
         return $totalFemaleStudentsPresent;
     }
-
-     
+        
     public function onExcelRenderTotalMaleStudentsPresent(Event $event, Entity $entity, $attr)
     {
         $totalMaleStudentsPresent = 0;
@@ -467,42 +501,18 @@ class StudentAttendanceSummaryTable extends AppTable
                             ->where(['id' => $entity->id])
                             ->first();
         
-        if ($entity->has('male_absence_count')) {
+        if ($entity->class_attendance_records == RecordMarkedType::MARKED) {
             $totalMaleStudentsAbsent = $entity->male_absence_count;
-        }
-
-        if ($entity->has('id')) {
             $totalMaleStudents = $institutionClasses->total_male_students;
             $totalMaleStudentsPresent = $totalMaleStudents - $totalMaleStudentsAbsent;
         }
-       
-        if ($totalMaleStudentsPresent == 0) {
+        else{
             $totalMaleStudentsPresent = '-';
         }
-        
         return $totalMaleStudentsPresent;
     }
 
-    public function onExcelRenderTotalStudentsPresent(Event $event, Entity $entity, $attr)
-    {
-        $totalStudentsPresent = 0;
-        $totalStudentsAbsent = 0;
-        $totalStudents = 0;
-
-        if ($entity->has('absence_count')) {
-            $totalStudentsAbsent = $entity->absence_count;
-        }
-        if ($entity->has('institution_class_students')) {
-            $totalStudents = count($entity->institution_class_students);
-        }
-
-        $totalStudentsPresent = $totalStudents - $totalStudentsAbsent;
-
-        if ($totalStudentsPresent == 0) {
-            $totalStudentsPresent = '-';
-        }
-        return $totalStudentsPresent;
-    }
+   
     public function onExcelRenderTotalFemaleStudentsLate(Event $event, Entity $entity, $attr)
     {
         $totalFemaleStudentsLate = 0;
@@ -537,11 +547,14 @@ class StudentAttendanceSummaryTable extends AppTable
     public function onExcelRenderTotalStudentsLate(Event $event, Entity $entity, $attr)
     {
         $totalStudentsLate = 0;
+        $dateFormatted = $entity->date->format('Y-m-d');
 
-        if ($entity->has('late_count')) {
-            $totalStudentsLate = $entity->late_count;
-        }
-
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $totalStudentsLate = $StudentAbsencesPeriodDetails->find()
+                        ->where(['academic_period_id' => $entity->academic_period_id, 'institution_id' => $entity->institution_id,
+                        'institution_class_id' => $entity->id, 'date' =>  $dateFormatted, 'absence_type_id' => 3])
+                        ->count();
+        
         if ($totalStudentsLate == 0) {
             $totalStudentsLate = '-';
         }
