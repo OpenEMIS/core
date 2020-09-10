@@ -1,3 +1,7 @@
+### [3.57.6] - 2020-09-10
+- Bug Fixed: Institution > Attendance > Students : Access for Secondary Teacher/ Subject Teacher
+- Bug Fixed: Institutions > Academic > Subjects: System does not create subjects based on configuration in National Level
+
 ### [3.57.5] - 2020-09-07
 - Bug Fixed: Institutions > Attendance > Students: Unable to view/mark attendance even though permission for All Classes and All Subjects have been given
 - Bug FIxed: Institutions > Performance > Outcomes: Problems viewing all outcomes when editing
