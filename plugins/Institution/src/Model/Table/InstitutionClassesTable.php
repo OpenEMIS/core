@@ -1442,6 +1442,7 @@ class InstitutionClassesTable extends ControllerActionTable
             ->order([$this->aliasField('name')]);
 
              if ($options['user']['super_admin'] == 0) { 
+                $mySubjectsPermission = $this->getRolePermissionAccessForMySubjects($staffId, $institutionId);
                 $allClassesPermission = $this->getRolePermissionAccessForAllClasses($staffId, $institutionId);
                 $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
                 $secondary_staff = $InstitutionClassesSecondaryStaff
@@ -1511,6 +1512,35 @@ class InstitutionClassesTable extends ControllerActionTable
                     'AND' => [ 'OR' => [ 
                                         "SecurityFunctions.`_view` LIKE '%AllClasses.index%'",
                                         "SecurityFunctions.`_view` LIKE '%AllClasses.view%'"
+                                    ]
+                              ],
+                    'SecurityRoleFunctions._view' => 1,
+                    'SecurityRoleFunctions._edit' => 1
+                ])
+                ->toArray();
+        if(!empty($QueryResult)){
+            return true;
+        }
+          
+        return false;
+    }
+
+    public function getRolePermissionAccessForMySubjects($userId, $institutionId)
+    {
+        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
+        //$userAccessRoles = implode(', ', $roles);        
+        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
+                    'AND' => [ 'OR' => [ 
+                                        "SecurityFunctions.`_view` LIKE '%MySubjects.index%'",
+                                        "SecurityFunctions.`_view` LIKE '%MySubjects.view%'"
                                     ]
                               ],
                     'SecurityRoleFunctions._view' => 1,
