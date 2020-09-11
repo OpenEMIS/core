@@ -585,10 +585,7 @@ class InstitutionsTable extends ControllerActionTable
 			}
 			// Webhook institution create -- end
 		}
-			
-        foreach ($dispatchTable as $model) {
-            $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
-        }
+
         // Webhook institution update -- start
         if($this->webhookAction == 'edit') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
@@ -596,6 +593,11 @@ class InstitutionsTable extends ControllerActionTable
                 $Webhooks->triggerShell('institutions_update', ['username' => $username]);
             }
         }
+			
+        foreach ($dispatchTable as $model) {
+            $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
+        }
+        
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
