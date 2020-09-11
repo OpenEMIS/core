@@ -85,7 +85,25 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
         $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
         $requestData = json_decode($settings['process']['params']);
+        $institutionTypeId = $requestData->institution_type_id;
         $institution_id = $requestData->institution_id;
+
+        $conditions = [];
+
+        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutionIds = $institutions->find('list', [
+                                                    'keyField' => 'id',
+                                                    'valueField' => 'id'
+                                                ])
+                        ->where(['institution_type_id' => $institutionTypeId])
+                        ->toArray();
+
+        if (!empty($institutionTypeId)) {
+            $conditions['SpecialNeedsFacilities.institution_id IN'] = $institutionIds;
+        }
+
+       
+
         $query
             ->select([
                 'institution_code' => 'Institutions.code',
