@@ -611,9 +611,9 @@ class InstitutionsTable extends ControllerActionTable
 
         //webhook event
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('institutions_delete', ['username' => $username]);
-        }
+		if ($this->Auth->user()) {
+			$Webhooks->triggerShell('institutions_delete', ['username' => $username]);
+		}
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
