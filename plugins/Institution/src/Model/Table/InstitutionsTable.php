@@ -577,23 +577,24 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
 		
-		if($this->webhookAction == 'add') {
-			// Webhook institution create -- start	
+		// Webhook institution create -- start
+		if($this->webhookAction == 'add') {	
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
 			if ($this->Auth->user()) {
 				$Webhooks->triggerShell('institutions_create', ['username' => $username]);
-			}
-			// Webhook institution create -- end
+			}	
 		}
-
-        // Webhook institution update -- start
+		// Webhook institution create -- end
+		
+		// Webhook institution update -- start
         if($this->webhookAction == 'edit') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('institutions_update', ['username' => $username]);
             }
         }
-			
+        // Webhook institution update -- end
+        
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
         }
@@ -610,9 +611,9 @@ class InstitutionsTable extends ControllerActionTable
 
         //webhook event
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('institutions_delete', ['username' => $username]);
-        }
+		if ($this->Auth->user()) {
+			$Webhooks->triggerShell('institutions_delete', ['username' => $username]);
+		}
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -670,6 +671,7 @@ class InstitutionsTable extends ControllerActionTable
             $institutionTypesCount = $institutionRecords
                 ->contain([$modelName])
                 ->select([
+					//'modelId' => $modelId,
                     'count' => $institutionRecords->func()->count($modelId),
                     'name' => $selectString
                 ])
@@ -684,7 +686,15 @@ class InstitutionsTable extends ControllerActionTable
                 // Compile the dataset
                 $dataSet[] = [0 => $value['name'], 1 =>$value['count']];
             }
-            $params['dataSet'] = $dataSet;
+			
+			/*$dataSet = [
+				['Lower Secondary', 7],
+				['Upper  Secondary', 4],
+				['Pre-primary', 6],
+				['Primary', 15]
+			];*/			
+			
+			$params['dataSet'] = $dataSet;
         }
         unset($institutionRecords);
         return $params;
