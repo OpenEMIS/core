@@ -568,7 +568,7 @@ class InstitutionsTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    { 
+    {   
         $SecurityGroup = TableRegistry::get('Security.SystemGroups');
         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
@@ -578,14 +578,14 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $SecurityGroupAreas;
 		
 		// Webhook institution create -- start
-		if($this->webhookAction == 'add') {	
+		if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
 			if ($this->Auth->user()) {
 				$Webhooks->triggerShell('institutions_create', ['username' => $username]);
 			}	
 		}
 		// Webhook institution create -- end
-		
+	
 		// Webhook institution update -- start
         if($this->webhookAction == 'edit') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
@@ -598,7 +598,6 @@ class InstitutionsTable extends ControllerActionTable
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
         }
-        
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
