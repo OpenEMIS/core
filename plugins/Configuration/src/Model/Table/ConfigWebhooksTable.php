@@ -19,7 +19,8 @@ class ConfigWebhooksTable extends ControllerActionTable
         'logout' => 'Logout',
         'institutions_update' => 'Institution Update',
         'institutions_create' => 'Institution Create',
-        'institutions_delete' => 'Institution Delete'
+        'institutions_delete' => 'Institution Delete',
+        'programme_create'    => 'Programme Create',
     ];
 
     public function initialize(array $config)
