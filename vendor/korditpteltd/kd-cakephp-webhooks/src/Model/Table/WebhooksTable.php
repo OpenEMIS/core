@@ -74,13 +74,16 @@ class WebhooksTable extends Table
                 $this->aliasField('status') => self::ACTIVE
             ])
             ->toArray();
-
+		
+		$data = array('name' => 'Ankit', 'email' => 'abc.com');
+		$data = serialize($data);
+		
         $username = isset($params['username']) ? $params['username'] : null;
         foreach ($webhooks as $key => $value) {
             $webhooks[$key]->url = str_replace('{username}', $username, $value->url);
         }
         foreach ($webhooks as $webhook) {
-            $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method;
+            $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method . ' ' . $data;
             $logs = ROOT . DS . 'logs' . DS . 'Webhook.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
             try {
