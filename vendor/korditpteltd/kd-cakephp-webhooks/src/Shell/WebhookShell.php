@@ -17,8 +17,8 @@ class WebhookShell extends Shell {
 			$http = new Client();
 			$url = $this->args[0];
 			$method = strtolower($this->args[1]);
-			$body = unserialize($this->args[2]);
-			$response = $http->$method($url, array(['_content' => $body]));
+			$body = $this->args[2];
+			$response = $http->$method($url, $body, ['type' => 'json']);
 			$this->out('End Processing Webhook Shell');
 		} catch (\Exception $e) {
 			$this->out('Logout Shell > Exception : ');

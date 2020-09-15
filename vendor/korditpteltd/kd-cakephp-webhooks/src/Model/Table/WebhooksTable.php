@@ -65,7 +65,7 @@ class WebhooksTable extends Table
             ->select([$this->aliasField('url'), $this->aliasField('method')]);
     }
 
-    public function triggerShell($eventKey, $params = [])
+    public function triggerShell($eventKey, $params = [], $body = [])
     {
         $webhooks = $this->find()
             ->innerJoinWith('WebhookEvents')
@@ -75,15 +75,16 @@ class WebhooksTable extends Table
             ])
             ->toArray();
 		
-		$data = array('name' => 'Ankit', 'email' => 'abc.com');
-		$data = serialize($data);
+		if(!empty($body)) { 
+            $body = json_encode($body);
+        }
 		
         $username = isset($params['username']) ? $params['username'] : null;
         foreach ($webhooks as $key => $value) {
             $webhooks[$key]->url = str_replace('{username}', $username, $value->url);
         }
         foreach ($webhooks as $webhook) {
-            $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method . ' ' . $data;
+            $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method . ' ' . $body ;
             $logs = ROOT . DS . 'logs' . DS . 'Webhook.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
             try {
