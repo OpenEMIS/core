@@ -582,7 +582,7 @@ class InstitutionsTable extends ControllerActionTable
             'Institution  Name' => $entity->name,
             'Institution  Code' => $entity->code,
             'Institution  Address' => $entity->address
-            ];
+        ];
        
 		// Webhook institution create -- start
 		if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
