@@ -297,7 +297,7 @@ class InstitutionClassesTable extends ControllerActionTable
 				
 				$Webhooks = TableRegistry::get('Webhook.Webhooks');
 				if ($this->Auth->user()) {
-					$Webhooks->triggerShell('institutions_class', ['username' => $username], $body);
+					$Webhooks->triggerShell('class_create', ['username' => $username], $body);
 				}
 			}
 			// Webhook class create -- end
