@@ -581,7 +581,16 @@ class InstitutionsTable extends ControllerActionTable
         $body = [
             'Institution  Name' => $entity->name,
             'Institution  Code' => $entity->code,
-            'Institution  Address' => $entity->address
+            'Classification' => $entity->classification,
+            'Sector' => $entity->institution_sector_id,
+            'Provider' => $entity->institution_provider_id,
+            'Type' => $entity->institution_type_id,
+            'Ownership' =>$entity->institution_ownership_id,
+            'Gender' =>$entity->institution_gender_id,
+            'Date Opened' => date("d-m-Y", strtotime($entity->date_opened)),
+            'Institution  Address' => $entity->address,
+            'Locality' => $entity->institution_locality_id,
+            'Area Education' =>$entity->area_id
         ];
        
 		// Webhook institution create -- start
