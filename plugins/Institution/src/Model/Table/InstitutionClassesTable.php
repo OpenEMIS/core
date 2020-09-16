@@ -253,7 +253,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $action = $this->action;
-	$institutionShiftId = $extra['entity']->institution_shift_id;
+	    $institutionShiftId = $extra['entity']->institution_shift_id;
         if ($action != 'add') {
             $staffOptions = [];
             $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
@@ -315,7 +315,17 @@ class InstitutionClassesTable extends ControllerActionTable
                         unset($newStudents[$classStudentEntity->student_id]);
                     }
                 }
-
+                /*webhook class update*/
+                $body = array();
+                $body = [
+                    'Class  Name' => $entity->name,
+                    'class_number_id' => $entity->class_number,
+                    'capacity' => $entity->capacity,
+                    'academic_period_id' => $entity->academic_period_id
+                ];
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                $Webhooks->triggerShell('class_update', ['username' => 'Test'], $body);
+               
                 foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $this->ClassStudents->save($newClassStudentEntity);
