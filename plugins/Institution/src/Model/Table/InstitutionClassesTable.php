@@ -281,9 +281,26 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-		echo '<pre>';print_r($entity);die;
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
+			
+			// Webhook class create -- start
+			if($this->action == 'add') {
+			   
+			   $body = array();
+			   
+			   $body = [
+					'Academic Period ID' => $entity->academic_period_id,
+					'Institution Shift ID' => $entity->institution_shift_id,
+					'Class Capacity' => $entity->capacity
+				];
+				
+				$Webhooks = TableRegistry::get('Webhook.Webhooks');
+				if ($this->Auth->user()) {
+					$Webhooks->triggerShell('institutions_class', ['username' => $username], $body);
+				}
+			}
+			// Webhook class create -- end
         } else {
             //empty class student is handled by beforeMarshal
             //in another case, it will be save manually to avoid unecessary queries during save by association
@@ -323,24 +340,6 @@ class InstitutionClassesTable extends ControllerActionTable
                 }
             }
         }
-		
-		$body = array();
-
-        $body = [
-            'Academic Period ID' => $entity->academic_period_id,
-            'Institution Shift ID' => $entity->institution_shift_id,
-            'Class Capacity' => $entity->capacity
-        ];
-       
-		// Webhook institution create -- start
-		//if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
-			$Webhooks = TableRegistry::get('Webhook.Webhooks');
-			if ($this->Auth->user()) {
-				$Webhooks->triggerShell('institutions_class', ['username' => $username], $body);
-			}	
-		//}
-		// Webhook institution create -- end
-		
     }
 
 
