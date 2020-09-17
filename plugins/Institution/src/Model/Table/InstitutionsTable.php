@@ -69,11 +69,7 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
-		
-		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSectors', ['className' => 'Institution.InstitutionSectors', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_sector_id']);
-		$this->hasMany('InstitutionAreas', ['className' => 'Institution.InstitutionAreas', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'area_id']);
-        
+
 		$this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionAttachments', ['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
 
@@ -581,9 +577,7 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
 		
-		$Institutions = TableRegistry::get('Institutions.Institutions');
-		
-		$bodyData = $this->Institutions->find()
+		$bodyData = $this->find()
                     ->innerJoinWith('Ownerships')
                     ->innerJoinWith('Sectors')
                     ->innerJoinWith('Areas')
@@ -605,14 +599,16 @@ class InstitutionsTable extends ControllerActionTable
                         'GendersId' => 'Genders.id'
                     ])
                     ->where([
-                        $this->Institutions->aliasField('id') => $entity->id
+                        $this->aliasField('id') => $entity->id
                     ])->first();
+					
         $classificationId = $entity->classification;
         if($classificationId == 1 ){
             $clss= 'Academic Institution';
         } else {
             $clss = 'Non-academic institution';
-        }		
+        }
+		
         $body = array();
 
         $body = [
