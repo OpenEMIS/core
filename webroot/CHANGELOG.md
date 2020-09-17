@@ -1,3 +1,7 @@
+### [3.57.7] - 2020-09-17
+- Bug Fixed: System Configurations > Authentication > Other Identity Providers > SAML: Increase the input length of the fields from 50 to 100
+- Bug Fixed: Reports > Institution > Student Attendance Summary Report: Report generated is inaccurate
+
 ### [3.57.6] - 2020-09-10
 - Bug Fixed: Institution > Attendance > Students : Access for Secondary Teacher/ Subject Teacher
 - Bug Fixed: Institutions > Academic > Subjects: System does not create subjects based on configuration in National Level
