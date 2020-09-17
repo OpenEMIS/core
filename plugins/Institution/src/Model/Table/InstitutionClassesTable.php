@@ -253,7 +253,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $action = $this->action;
-	$institutionShiftId = $extra['entity']->institution_shift_id;
+	    $institutionShiftId = $extra['entity']->institution_shift_id;
         if ($action != 'add') {
             $staffOptions = [];
             $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
@@ -318,6 +318,9 @@ class InstitutionClassesTable extends ControllerActionTable
 			}
 			// Webhook class create -- end
         } else {
+            $editAction  = json_decode(json_encode($options), true);
+            $webhook_action = $editAction['extra']['action'];
+            
             //empty class student is handled by beforeMarshal
             //in another case, it will be save manually to avoid unecessary queries during save by association
             if ($entity->has('classStudents') && !empty($entity->classStudents)) {
@@ -349,7 +352,20 @@ class InstitutionClassesTable extends ControllerActionTable
                         unset($newStudents[$classStudentEntity->student_id]);
                     }
                 }
-
+                /*webhook class update*/
+                $body = array();
+                $body = [
+                    'Class Name' => $entity->name,
+                    'Class Number Id' => $entity->class_number,
+                    'Capacity' => $entity->capacity,
+                    'Academic Period Id' => $entity->academic_period_id
+                ];
+                if($webhook_action == 'edit') {
+                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                    $Webhooks->triggerShell('class_update', ['username' => 'username'], $body);
+                }
+                
+               
                 foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $this->ClassStudents->save($newClassStudentEntity);
