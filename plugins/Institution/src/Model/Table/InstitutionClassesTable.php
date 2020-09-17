@@ -290,6 +290,7 @@ class InstitutionClassesTable extends ControllerActionTable
 			   $body = array();
 			   
 			   $body = [
+					'Class  Name' => $entity->name,
 					'Academic Period ID' => $entity->academic_period_id,
 					'Institution Shift ID' => $entity->institution_shift_id,
 					'Class Capacity' => $entity->capacity
