@@ -287,13 +287,28 @@ class InstitutionClassesTable extends ControllerActionTable
 			// Webhook class create -- start
 			if($this->action == 'add') {
 			   
+			   $bodyData = $this->find()
+                ->innerJoinWith('AcademicPeriods')
+                ->innerJoinWith('InstitutionShifts')
+                ->innerJoinWith('InstitutionShifts.ShiftOptions')
+                ->innerJoinWith('EducationGrades')
+				->select([
+                    'AcademicPeriod' => 'AcademicPeriods.name',
+					'Shift' => 'ShiftOptions.name',
+					'EducationGrade' => 'EducationGrades.name',
+                ])
+                ->where([
+                    $this->aliasField('id') => $entity->id
+                ])
+                ->first();
+				
 			   $body = array();
 			   
-			   $body = [
+			   $body = [	
 					'Class Name' => $entity->name,
-					'Academic Period ID' => $entity->academic_period_id,
-					'Institution Shift ID' => $entity->institution_shift_id,
-					'Class Capacity' => $entity->capacity
+					'Academic Period' => !empty($bodyData->AcademicPeriod) ? $bodyData->AcademicPeriod : NULL,
+					'Shift' => !empty($bodyData->Shift) ? $bodyData->Shift : NULL,
+					'Capacity' => $entity->capacity
 				];
 				
 				$Webhooks = TableRegistry::get('Webhook.Webhooks');
