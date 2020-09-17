@@ -302,6 +302,9 @@ class InstitutionClassesTable extends ControllerActionTable
 			}
 			// Webhook class create -- end
         } else {
+            $editAction  = json_decode(json_encode($options), true);
+            $webhook_action = $editAction['extra']['action'];
+            
             //empty class student is handled by beforeMarshal
             //in another case, it will be save manually to avoid unecessary queries during save by association
             if ($entity->has('classStudents') && !empty($entity->classStudents)) {
@@ -336,13 +339,16 @@ class InstitutionClassesTable extends ControllerActionTable
                 /*webhook class update*/
                 $body = array();
                 $body = [
-                    'Class  Name' => $entity->name,
-                    'class_number_id' => $entity->class_number,
-                    'capacity' => $entity->capacity,
-                    'academic_period_id' => $entity->academic_period_id
+                    'Class Name' => $entity->name,
+                    'Class Number Id' => $entity->class_number,
+                    'Capacity' => $entity->capacity,
+                    'Academic Period Id' => $entity->academic_period_id
                 ];
-                $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                $Webhooks->triggerShell('class_update', ['username' => 'Test'], $body);
+                if($webhook_action == 'edit') {
+                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                    $Webhooks->triggerShell('class_update', ['username' => 'username'], $body);
+                }
+                
                
                 foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
