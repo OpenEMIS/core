@@ -69,8 +69,12 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
-
-        $this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
+		
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSectors', ['className' => 'Institution.InstitutionSectors', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_sector_id']);
+		$this->hasMany('InstitutionAreas', ['className' => 'Institution.InstitutionAreas', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'area_id']);
+        
+		$this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionAttachments', ['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -576,22 +580,56 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $SecurityGroup;
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
+		
+		$Institutions = TableRegistry::get('Institutions.Institutions');
+		
+		$bodyData = $this->Institutions->find()
+                    ->innerJoinWith('Ownerships')
+                    ->innerJoinWith('Sectors')
+                    ->innerJoinWith('Areas')
+                    ->innerJoinWith('Genders')
+                    ->innerJoinWith('Providers')
+                    ->innerJoinWith('Types')
+                    ->innerJoinWith('Localities')
+                    ->select([
+                        'Owner' => 'Ownerships.name',
+                        'OwnerId' => 'Ownerships.id',
+                        'Sector' => 'Sectors.name',
+                        'Providers' => 'Providers.name',
+                        'ProvidersId' => 'Providers.id',
+                        'Type' => 'Types.name',
+                        'Area' => 'Areas.name',
+                        'Localities' => 'Localities.name',
+                        'LocalitiesId' => 'Localities.id',
+                        'Genders' => 'Genders.name',
+                        'GendersId' => 'Genders.id'
+                    ])
+                    ->where([
+                        $this->Institutions->aliasField('id') => $entity->id
+                    ])->first();
+        $classificationId = $entity->classification;
+        if($classificationId == 1 ){
+            $clss= 'Academic Institution';
+        } else {
+            $clss = 'Non-academic institution';
+        }		
         $body = array();
 
         $body = [
-            'Institution  Name' => $entity->name,
-            'Institution  Code' => $entity->code,
-            'Classification' => $entity->classification,
-            'Sector' => $entity->institution_sector_id,
-            'Provider' => $entity->institution_provider_id,
-            'Type' => $entity->institution_type_id,
-            'Ownership' =>$entity->institution_ownership_id,
-            'Gender' =>$entity->institution_gender_id,
+            'Institution Name' => $entity->name,
+            'Institution Code' => $entity->code,
+            'Classification' => $clss,
+            'Sector' => !empty($bodyData->Sector) ? $bodyData->Sector : NULL,
+            'Provider' => !empty($bodyData->Providers) ? $bodyData->Providers : NULL,
+            'Type' => !empty($bodyData->Type) ? $bodyData->Type : NULL,
+            'Ownership' => !empty($bodyData->Owner) ? $bodyData->Owner : NULL,
+            'Gender' => !empty($bodyData->Genders) ? $bodyData->Genders : NULL,
             'Date Opened' => date("d-m-Y", strtotime($entity->date_opened)),
-            'Institution  Address' => $entity->address,
-            'Locality' => $entity->institution_locality_id,
-            'Area Education' =>$entity->area_id
+            'Institution Address' => $entity->address,
+            'Locality' => !empty($bodyData->Localities) ? $bodyData->Localities : NULL,
+            'Area Education' => !empty($bodyData->Area) ? $bodyData->Area : NULL
         ];
+        //echo '<pre>';print_r($body);die;
        
 		// Webhook institution create -- start
 		if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
