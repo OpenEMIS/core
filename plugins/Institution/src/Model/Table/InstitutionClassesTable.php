@@ -1555,8 +1555,7 @@ class InstitutionClassesTable extends ControllerActionTable
                                         "SecurityFunctions.`_view` LIKE '%Classes.view%'"
                                     ]
                               ],
-                    'SecurityRoleFunctions._view' => 1,
-                    'SecurityRoleFunctions._edit' => 1
+                    'SecurityRoleFunctions._view' => 1
                 ])
                 ->toArray();
         if(!empty($QueryResult)){
@@ -1584,7 +1583,60 @@ class InstitutionClassesTable extends ControllerActionTable
                                         "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
                                     ]
                               ],
-                    'SecurityRoleFunctions._view' => 1,
+                    'SecurityRoleFunctions._view' => 1
+                ])
+                ->toArray();
+        if(!empty($QueryResult)){
+            return true;
+        }
+          
+        return false;
+    }
+
+    public function getClassEditPermissionAttendance($userId, $institutionId) {
+        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
+        //$userAccessRoles = implode(', ', $roles);        
+        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
+                    'AND' => [ 'OR' => [ 
+                                        "SecurityFunctions.`_view` LIKE '%Classes.index%'",
+                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'"
+                                    ]
+                              ],
+                    'SecurityRoleFunctions._edit' => 1
+                ])
+                ->toArray();
+        if(!empty($QueryResult)){
+            return true;
+        }
+          
+        return false;
+    }
+
+    public function getSubjectEditPermissionAttendance($userId, $institutionId) {
+        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
+        //$userAccessRoles = implode(', ', $roles);        
+        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
+                    'AND' => [ 'OR' => [ 
+                                        "SecurityFunctions.`_view` LIKE '%Subjects.index%'",
+                                        "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
+                                    ]
+                              ],
                     'SecurityRoleFunctions._edit' => 1
                 ])
                 ->toArray();

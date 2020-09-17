@@ -529,8 +529,20 @@ class InstitutionsController extends AppController
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
         }else{
 
+        if (!$this->AccessControl->isAdmin()) {
+            $userId = $this->Auth->user('id');
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            $getClassEditPermissionAttendance = TableRegistry::get('Institution.InstitutionClasses')->getClassEditPermissionAttendance($userId, $institutionId);
+            $getSubjectEditPermissionAttendance = TableRegistry::get('Institution.InstitutionClasses')->getSubjectEditPermissionAttendance($userId, $institutionId);
+        }
 
         $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
+
+        if ($getClassEditPermissionAttendance == 1 && $getSubjectEditPermissionAttendance == 1) {
+            $_edit = true;
+        } else {
+            $_edit = false;
+        }
         $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
         $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
 
