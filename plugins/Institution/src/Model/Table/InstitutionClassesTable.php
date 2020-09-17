@@ -1450,7 +1450,6 @@ class InstitutionClassesTable extends ControllerActionTable
 
              if ($options['user']['super_admin'] == 0) { 
                 $mySubjectsPermission = $this->getRolePermissionAccessForMySubjects($staffId, $institutionId);
-                //echo $mySubjectsPermission;die;
                 $myClassesPermission = $this->getRolePermissionAccessForMyClasses($staffId, $institutionId);
 
                 if ($mySubjectsPermission && !$myClassesPermission) {
@@ -1467,6 +1466,17 @@ class InstitutionClassesTable extends ControllerActionTable
                                 'InstitutionSubjectStaff.staff_id' => $staffId
                             ]
                         ]);
+                    if ($secondary_staff_count == 0) {
+                        $query->where([                            
+                        $this->aliasField('staff_id') => $staffId         ]);
+                    } else {
+                        $query
+                        ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                            [
+                                'InstitutionClassesSecondaryStaff.institution_class_id = '.$this->aliasField('id')
+                            ]
+                        ]);
+                    }
                 } else if ($myClassesPermission && !$mySubjectsPermission) {                           
                 if ($secondary_staff_count == 0) {
                         $query->where([
@@ -1494,7 +1504,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             ]
                         ]);
                     if ($secondary_staff_count == 0) {
-                        $query->orWhere([                            
+                        $query->where([                            
                         $this->aliasField('staff_id') => $staffId                          
                         ]);
                     } else {
