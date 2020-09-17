@@ -69,8 +69,12 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
-
-        $this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
+		
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSectors', ['className' => 'Institution.InstitutionSectors', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_sector_id']);
+		$this->hasMany('InstitutionAreas', ['className' => 'Institution.InstitutionAreas', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'area_id']);
+        
+		$this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionAttachments', ['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -576,13 +580,36 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $SecurityGroup;
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
+		
+		$Institutions = TableRegistry::get('Institutions.Institutions');
+		
+		$bodyData = $this->Institutions->find()
+                ->innerJoinWith('Sectors')
+                ->innerJoinWith('Areas')
+                ->innerJoinWith('Genders')
+                ->innerJoinWith('Providers')
+                ->innerJoinWith('Types')
+                ->select([
+                    'Owner' => 'Institutions.name',
+                    'OwnerId' => 'Institutions.id',
+                    'Sector' => 'Sectors.name',
+                    'Providers' => 'Providers.name',
+                    'Providers' => 'Providers.name',
+                    'Type' => 'Types.name',
+                    'Area' => 'Areas.name'
+                ])
+                ->where([
+                    $this->Institutions->aliasField('id') => $entity->id
+                ])
+                ->first();
+		echo '<pre>';print_r($bodyData);die;		
         $body = array();
 
         $body = [
             'Institution  Name' => $entity->name,
             'Institution  Code' => $entity->code,
             'Classification' => $entity->classification,
-            'Sector' => $entity->institution_sector_id,
+            'Sector' => !empty($bodyData->sector) ? $bodyData->sector : NULL,
             'Provider' => $entity->institution_provider_id,
             'Type' => $entity->institution_type_id,
             'Ownership' =>$entity->institution_ownership_id,
