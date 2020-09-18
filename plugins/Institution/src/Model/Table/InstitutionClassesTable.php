@@ -280,44 +280,45 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    { 
+		// POCOR-5435 ->Webhook Feature class (create)
+		$bodyData = $this->find()
+					->innerJoinWith('AcademicPeriods')
+					->innerJoinWith('InstitutionShifts')
+					->innerJoinWith('InstitutionShifts.ShiftOptions')
+					->innerJoinWith('EducationGrades')
+					->select([
+						'AcademicPeriod' => 'AcademicPeriods.name',
+						'Shift' => 'ShiftOptions.name',
+						'EducationGrade' => 'EducationGrades.name',
+					])
+					->where([
+						$this->aliasField('id') => $entity->id
+					])
+					->first();
+					
+	    $body = array();
+	   
+	    $body = [	
+			'Class Name' => $entity->name,
+			'Academic Period' => !empty($bodyData->AcademicPeriod) ? $bodyData->AcademicPeriod : NULL,
+			'Shift' => !empty($bodyData->Shift) ? $bodyData->Shift : NULL,
+			'Capacity' => $entity->capacity
+		];
+				
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
 			
-			// Webhook class create -- start
+			// POCOR-5435 ->Webhook Feature class (create) -- start
 			if($this->action == 'add') {
 			   
-			   $bodyData = $this->find()
-                ->innerJoinWith('AcademicPeriods')
-                ->innerJoinWith('InstitutionShifts')
-                ->innerJoinWith('InstitutionShifts.ShiftOptions')
-                ->innerJoinWith('EducationGrades')
-				->select([
-                    'AcademicPeriod' => 'AcademicPeriods.name',
-					'Shift' => 'ShiftOptions.name',
-					'EducationGrade' => 'EducationGrades.name',
-                ])
-                ->where([
-                    $this->aliasField('id') => $entity->id
-                ])
-                ->first();
-				
-			   $body = array();
-			   
-			   $body = [	
-					'Class Name' => $entity->name,
-					'Academic Period' => !empty($bodyData->AcademicPeriod) ? $bodyData->AcademicPeriod : NULL,
-					'Shift' => !empty($bodyData->Shift) ? $bodyData->Shift : NULL,
-					'Capacity' => $entity->capacity
-				];
-				
 				$Webhooks = TableRegistry::get('Webhook.Webhooks');
-				if ($this->Auth->user()) {
+				if ($this->Auth->user()) { 
 					$Webhooks->triggerShell('class_create', ['username' => $username], $body);
 				}
 			}
-			// Webhook class create -- end
-        } else {
+			// POCOR-5435 ->Webhook Feature class (create) -- end
+        } else { 
             $editAction  = json_decode(json_encode($options), true);
             $webhook_action = $editAction['extra']['action'];
             
@@ -352,20 +353,15 @@ class InstitutionClassesTable extends ControllerActionTable
                         unset($newStudents[$classStudentEntity->student_id]);
                     }
                 }
+				
                 /*webhook class update*/
-                $body = array();
-                $body = [
-                    'Class Name' => $entity->name,
-                    'Class Number Id' => $entity->class_number,
-                    'Capacity' => $entity->capacity,
-                    'Academic Period Id' => $entity->academic_period_id
-                ];
                 if($webhook_action == 'edit') {
                     $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                    $Webhooks->triggerShell('class_update', ['username' => 'username'], $body);
+                    if (!empty($entity->modified_user_id)) { 
+						$Webhooks->triggerShell('class_update', ['username' => ''], $body);
+					}
                 }
-                
-               
+                     
                 foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $this->ClassStudents->save($newClassStudentEntity);
