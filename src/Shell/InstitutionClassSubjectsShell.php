@@ -49,7 +49,8 @@ class InstitutionClassSubjectsShell extends Shell {
                                    $InstitutionClassGrades->aliasField('institution_class_id') => $arr->id
                                 ])
                                 ->toArray();
-                                
+          
+        if (!empty($educationGradesData)) {                      
         $grade = $educationGradesData[0]->education_grade_id;
         $grades = array($grade);
       
@@ -177,6 +178,7 @@ class InstitutionClassSubjectsShell extends Shell {
                 unset($newSchoolSubjects);
                 unset($InstitutionSubjects);
                 unset($InstitutionClassSubjects);
+            }
             }
         }	
 	}	
