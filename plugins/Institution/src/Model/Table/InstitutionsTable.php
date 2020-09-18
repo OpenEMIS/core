@@ -577,6 +577,8 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
 		
+		// Webhook institution create -- start
+		
 		$bodyData = $this->find()
                     ->innerJoinWith('Ownerships')
                     ->innerJoinWith('Sectors')
@@ -625,12 +627,10 @@ class InstitutionsTable extends ControllerActionTable
             'Locality' => !empty($bodyData->Localities) ? $bodyData->Localities : NULL,
             'Area Education' => !empty($bodyData->Area) ? $bodyData->Area : NULL
         ];
-        //echo '<pre>';print_r($body);die;
-       
-		// Webhook institution create -- start
+		
 		if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
-			if ($this->Auth->user()) {
+			if ($this->Auth->user()) { 
 				$Webhooks->triggerShell('institutions_create', ['username' => $username], $body);
 			}	
 		}
@@ -639,7 +639,7 @@ class InstitutionsTable extends ControllerActionTable
 		// Webhook institution update -- start
         if($this->webhookAction == 'edit') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
+            if ($this->Auth->user()) { 
                 $Webhooks->triggerShell('institutions_update', ['username' => $username], $body);
             }
         }
