@@ -1504,7 +1504,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             ]
                         ]);
                     if ($secondary_staff_count == 0) {
-                        $query->where([                            
+                        $query->orWhere([                            
                         $this->aliasField('staff_id') => $staffId                          
                         ]);
                     } else {
