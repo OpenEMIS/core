@@ -353,20 +353,21 @@ class InstitutionClassesTable extends ControllerActionTable
                         unset($newStudents[$classStudentEntity->student_id]);
                     }
                 }
-				
-                /*webhook class update*/
-                if($webhook_action == 'edit') {
-                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                    if (!empty($entity->modified_user_id)) { 
-						$Webhooks->triggerShell('class_update', ['username' => ''], $body);
-					}
-                }
-                     
+				    
                 foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $this->ClassStudents->save($newClassStudentEntity);
                 }
             }
+
+			/*webhook class update*/
+			if($webhook_action == 'edit') {
+				$Webhooks = TableRegistry::get('Webhook.Webhooks');
+				if (!empty($entity->modified_user_id)) {
+					$Webhooks->triggerShell('class_update', ['username' => ''], $body);
+				}
+			}
+				
         }
     }
 
