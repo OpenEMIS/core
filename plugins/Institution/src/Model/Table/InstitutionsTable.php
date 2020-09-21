@@ -583,6 +583,7 @@ class InstitutionsTable extends ControllerActionTable
                     ->innerJoinWith('Ownerships')
                     ->innerJoinWith('Sectors')
                     ->innerJoinWith('Areas')
+                    ->innerJoinWith('AreaAdministratives')
                     ->innerJoinWith('Genders')
                     ->innerJoinWith('Providers')
                     ->innerJoinWith('Types')
@@ -595,6 +596,7 @@ class InstitutionsTable extends ControllerActionTable
                         'ProvidersId' => 'Providers.id',
                         'Type' => 'Types.name',
                         'Area' => 'Areas.name',
+                        'AreaAdministratives' => 'AreaAdministratives.name',
                         'Localities' => 'Localities.name',
                         'LocalitiesId' => 'Localities.id',
                         'Genders' => 'Genders.name',
@@ -612,22 +614,28 @@ class InstitutionsTable extends ControllerActionTable
         }
 		
         $body = array();
-
         $body = [
             'Institution Name' => $entity->name,
+            'Institution Alternative Name' => $entity->alternative_name,
             'Institution Code' => $entity->code,
-            'Classification' => $clss,
-            'Sector' => !empty($bodyData->Sector) ? $bodyData->Sector : NULL,
-            'Provider' => !empty($bodyData->Providers) ? $bodyData->Providers : NULL,
-            'Type' => !empty($bodyData->Type) ? $bodyData->Type : NULL,
-            'Ownership' => !empty($bodyData->Owner) ? $bodyData->Owner : NULL,
-            'Gender' => !empty($bodyData->Genders) ? $bodyData->Genders : NULL,
-            'Date Opened' => date("d-m-Y", strtotime($entity->date_opened)),
+            'Institution Classification' => $clss,
+            'Institution Sector' => !empty($bodyData->Sector) ? $bodyData->Sector : NULL,
+            'Institution Type' =>  !empty($bodyData->Type) ? $bodyData->Type : NULL,
+            'Institution Gender' => !empty($bodyData->Genders) ? $bodyData->Genders : NULL,
+            'Institution Date Opened' => date("d-m-Y", strtotime($entity->date_opened)),
             'Institution Address' => $entity->address,
-            'Locality' => !empty($bodyData->Localities) ? $bodyData->Localities : NULL,
-            'Area Education' => !empty($bodyData->Area) ? $bodyData->Area : NULL
+            'Institution Postal Code' => $entity->postal_code,
+            'Institution Locality' => !empty($bodyData->Localities) ? $bodyData->Localities : NULL,
+            'Institution Latitude' => $entity->latitude,
+            'Institution Longitude' => $entity->longitude,
+            'Institution Area Education' =>  !empty($bodyData->Area) ? $bodyData->Area : NULL,
+            'Institution Area Administrative' => !empty($bodyData->AreaAdministratives) ? $bodyData->AreaAdministratives : NULL,
+            'Institution Contact Person' => $entity->contact_person,
+            'Institution Telephone' => $entity->telephone,
+            'Institution Mobile' => $entity->fax,
+            'Institution Email' => $entity->email,
+            'Institution Website' => $entity->website,
         ];
-		
 		if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
 			if ($this->Auth->user()) { 
