@@ -281,20 +281,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     { 
-		// POCOR-5435 ->Webhook Feature class (create)
-		/*$bodyData = $this->find()
-					->innerJoinWith('AcademicPeriods')
-					->innerJoinWith('InstitutionShifts')
-					->innerJoinWith('InstitutionShifts.ShiftOptions')
-					->leftJoinWith('EducationGrades')
-                    ->leftJoinWith('Staff')
-                    ->leftJoinWith('ClassesSecondaryStaff')
-                    ->leftJoinWith('ClassStudents')
-					->where([
-						$this->aliasField('id') => $entity->id
-					])
-					->toArray();*/
-                    $bodyData = $this->find('all',
+        $bodyData = $this->find('all',
                                 [ 'contain' => [
                                     'EducationGrades',
                                     'Staff', 
@@ -307,39 +294,28 @@ class InstitutionClassesTable extends ControllerActionTable
                     ])->where([
                         $this->aliasField('id') => $entity->id
                     ]);
-                    $arr = [];
+                    $body = [];
                     $count = 0;
                     if ($bodyData ) {
                       foreach ($bodyData as $key => $value) {
-                            $arr['AcademicPeriod'] = $value->academic_period->name;
-                            $arr['Shift'] = $value->institution_shift->shift_option->name;
-                            $arr['Home Staff OpenEMIS Id'] = !empty($value->staff) ? $value->staff->openemis_no : NULL;
+                            $body['AcademicPeriod'] = $value->academic_period->name;
+                            $body['Shift'] = $value->institution_shift->shift_option->name;
+                            $body['Home Staff OpenEMIS Id'] = !empty($value->staff) ? $value->staff->openemis_no : NULL;
                             
                             foreach ($value->classes_secondary_staff as $keys => $data) {
-                                $arr['Secondary Staff '][$count]['Secondary Staff OpenEMIS Id'] = $data->secondary_staff->openemis_no;
+                                $body['Secondary Staff '][$count]['Secondary Staff OpenEMIS Id'] = $data->secondary_staff->openemis_no;
                                 $count++;
                             }
                             foreach ($value->education_grades as $k => $val) {
-                                $arr['Grades'][$count]['EducationGrade'] = $val->name;
+                                $body['Grades'][$count]['EducationGrade'] = $val->name;
                                 $count++;
                             }
                             foreach ($value->students as $kk => $vv) {
-                                $arr['Students'][$count]['Students'] = $vv->openemis_no;
+                                $body['Students'][$count]['Students'] = $vv->openemis_no;
                                 $count++;
                             }
                         }
                     }
-                    //echo "<pre>";print_r($arr);die();
-        
-					
-	    $body = array();
-	   
-	    $body = [	
-			'Class Name' => $entity->name,
-			'Academic Period' => !empty($bodyData->AcademicPeriod) ? $bodyData->AcademicPeriod : NULL,
-			'Shift' => !empty($bodyData->Shift) ? $bodyData->Shift : NULL,
-			'Capacity' => $entity->capacity
-		];
 				
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
