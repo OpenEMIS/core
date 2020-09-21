@@ -253,7 +253,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $action = $this->action;
-	$institutionShiftId = $extra['entity']->institution_shift_id;
+        $institutionShiftId = $extra['entity']->institution_shift_id;
         if ($action != 'add') {
             $staffOptions = [];
             $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
@@ -280,10 +280,82 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    { 
+                
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
-        } else {
+            
+            // POCOR-5435 ->Webhook Feature class (create)
+        
+            $bodyData = $this->find('all',
+                        [ 'contain' => [
+                            'EducationGrades',
+                            'Staff', 
+                            'AcademicPeriods', 
+                            'InstitutionShifts', 
+                            'InstitutionShifts.ShiftOptions', 
+                            'ClassesSecondaryStaff.SecondaryStaff', 
+                            'Students'
+                        ],
+            ])->where([
+                $this->aliasField('id') => $entity->id
+            ]);
+            
+            $grades = $secondaryTeachers = $students = [];
+
+            if (!empty($bodyData)) { 
+                foreach ($bodyData as $key => $value) { 
+                    $capacity = $value->capacity;
+                    $shift = $value->institution_shift->shift_option->name;
+                    $academicPeriod = $value->academic_period->name;
+                    $homeRoomteacher = $value->staff->openemis_no;
+                    
+                    if(!empty($value->education_grades)) {
+                        foreach ($value->education_grades as $key => $gradeOptions) {
+                            $grades[] = $gradeOptions->name;
+                        }
+                    }
+                    
+                    if(!empty($value->classes_secondary_staff)) {
+                        foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
+                            $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
+                        }
+                    }
+
+                    if(!empty($value->students)) {
+                        foreach ($value->students as $key => $studentsData) {
+                            $students[] = $studentsData->openemis_no;
+                        }
+                    }
+                    
+                }
+            }
+
+            $body = array();
+           
+            $body = [   
+                'Class Name' => $entity->name,
+                'Academic Period' => !empty($academicPeriod) ? $academicPeriod : NULL,
+                'Shift' => !empty($shift) ? $shift : NULL,
+                'Capacity' => !empty($capacity) ? $capacity : NULL,
+                'Class Grades' => !empty($grades) ? $grades : NULL,
+                'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+                'Secondary Teachers(OpenEMIS ID)' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
+                'Students data(OpenEMIS ID)' => !empty($students) ? $students : NULL
+            ];
+        
+            if($this->action == 'add') {
+               
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if ($this->Auth->user()) { 
+                    $Webhooks->triggerShell('class_create', ['username' => $username], $body);
+                }
+            }
+            // POCOR-5435 ->Webhook Feature class (create) -- end
+        } else { 
+            $editAction  = json_decode(json_encode($options), true);
+            $webhook_action = $editAction['extra']['action'];
+            
             //empty class student is handled by beforeMarshal
             //in another case, it will be save manually to avoid unecessary queries during save by association
             if ($entity->has('classStudents') && !empty($entity->classStudents)) {
@@ -315,12 +387,78 @@ class InstitutionClassesTable extends ControllerActionTable
                         unset($newStudents[$classStudentEntity->student_id]);
                     }
                 }
-
+                    
                 foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $this->ClassStudents->save($newClassStudentEntity);
                 }
             }
+            
+            // POCOR-5436 ->Webhook Feature class (update) -- start
+            $bodyData = $this->find('all',
+                        [ 'contain' => [
+                            'EducationGrades',
+                            'Staff', 
+                            'AcademicPeriods', 
+                            'InstitutionShifts', 
+                            'InstitutionShifts.ShiftOptions', 
+                            'ClassesSecondaryStaff.SecondaryStaff', 
+                            'Students'
+                        ],
+                        ])->where([
+                            $this->aliasField('id') => $entity->id
+                        ]);
+        
+            $grades = $secondaryTeachers = $students = [];
+
+            if (!empty($bodyData)) { 
+                foreach ($bodyData as $key => $value) { 
+                    $capacity = $value->capacity;
+                    $shift = $value->institution_shift->shift_option->name;
+                    $academicPeriod = $value->academic_period->name;
+                    $homeRoomteacher = $value->staff->openemis_no;
+                    
+                    if(!empty($value->education_grades)) {
+                        foreach ($value->education_grades as $key => $gradeOptions) {
+                            $grades[] = $gradeOptions->name;
+                        }
+                    }
+                    
+                    if(!empty($value->classes_secondary_staff)) {
+                        foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
+                            $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
+                        }
+                    }
+
+                    if(!empty($value->students)) {
+                        foreach ($value->students as $key => $studentsData) {
+                            $students[] = $studentsData->openemis_no;
+                        }
+                    }
+                    
+                }
+            }
+
+            $body = array();
+           
+            $body = [   
+                'Class Name' => $entity->name,
+                'Academic Period' => !empty($academicPeriod) ? $academicPeriod : NULL,
+                'Shift' => !empty($shift) ? $shift : NULL,
+                'Capacity' => !empty($capacity) ? $capacity : NULL,
+                'Class Grades' => !empty($grades) ? $grades : NULL,
+                'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+                'Secondary Teachers(OpenEMIS ID)' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
+                'Students data(OpenEMIS ID)' => !empty($students) ? $students : NULL
+            ];
+
+            if($webhook_action == 'edit') {
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if (!empty($entity->modified_user_id)) {
+                    $Webhooks->triggerShell('class_update', ['username' => ''], $body);
+                }
+            }
+            // POCOR-5436 ->Webhook Feature class (update) -- end   
         }
     }
 
@@ -897,7 +1035,7 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         $this->fields['institution_shift_id']['options'] = $shiftOptions;
-	$this->fields['institution_shift_id']['onChangeReload'] = true;
+    $this->fields['institution_shift_id']['onChangeReload'] = true;
 
         if (empty($shiftOptions)) {
             $this->Alert->warning($this->aliasField('noShift'));
@@ -1195,10 +1333,10 @@ class InstitutionClassesTable extends ControllerActionTable
                                 ['InstitutionStaffShifts' => 'institution_staff_shifts'],
                                 ['InstitutionStaffShifts.staff_id = ' . $Staff->aliasField('staff_id')]
                             )
-			    ->where([
+                ->where([
                                 $Staff->aliasField('staff_id NOT IN') => $staffIds,
                                 $Staff->aliasField('start_date <= ') => $todayDate,
-				 'InstitutionStaffShifts.shift_id' => $institutionShiftId,
+                 'InstitutionStaffShifts.shift_id' => $institutionShiftId,
                                 'OR' => [
                                     [$Staff->aliasField('end_date >= ') => $todayDate],
                                     [$Staff->aliasField('end_date IS NULL')]
