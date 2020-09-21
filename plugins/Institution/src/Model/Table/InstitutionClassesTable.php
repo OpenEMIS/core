@@ -281,46 +281,68 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     { 
+
         $bodyData = $this->find('all',
-                                [ 'contain' => [
-                                    'EducationGrades',
-                                    'Staff', 
-                                    'AcademicPeriods', 
-                                    'InstitutionShifts', 
-                                    'InstitutionShifts.ShiftOptions', 
-                                    'ClassesSecondaryStaff.SecondaryStaff', 
-                                    'Students'
-                                ],
-                    ])->where([
-                        $this->aliasField('id') => $entity->id
-                    ]);
-                    $body = [];
-                    $count = 0;
-                    if ($bodyData ) {
-                      foreach ($bodyData as $key => $value) {
-                            $body['AcademicPeriod'] = $value->academic_period->name;
-                            $body['Shift'] = $value->institution_shift->shift_option->name;
-                            $body['Home Staff OpenEMIS Id'] = !empty($value->staff) ? $value->staff->openemis_no : NULL;
-                            
-                            foreach ($value->classes_secondary_staff as $keys => $data) {
-                                $body['Secondary Staff '][$count]['Secondary Staff OpenEMIS Id'] = $data->secondary_staff->openemis_no;
-                                $count++;
-                            }
-                            foreach ($value->education_grades as $k => $val) {
-                                $body['Grades'][$count]['EducationGrade'] = $val->name;
-                                $count++;
-                            }
-                            foreach ($value->students as $kk => $vv) {
-                                $body['Students'][$count]['Students'] = $vv->openemis_no;
-                                $count++;
-                            }
-                        }
-                    }
+					[ 'contain' => [
+						'EducationGrades',
+						'Staff', 
+						'AcademicPeriods', 
+						'InstitutionShifts', 
+						'InstitutionShifts.ShiftOptions', 
+						'ClassesSecondaryStaff.SecondaryStaff', 
+						'Students'
+					],
+		])->where([
+			$this->aliasField('id') => $entity->id
+		]);
+		
+		$grades = $secondaryTeachers = $students = [];
+
+		if (!empty($bodyData)) { 
+			foreach ($bodyData as $key => $value) { 
+				$capacity = $value->capacity;
+				$shift = $value->institution_shift->shift_option->name;
+				$academicPeriod = $value->academic_period->name;
+				$homeRoomteacher = $value->staff->openemis_no;
+				
+				if(!empty($value->education_grades)) {
+					foreach ($value->education_grades as $key => $gradeOptions) {
+						$grades[] = $gradeOptions->name;
+					}
+				}
+				
+				if(!empty($value->classes_secondary_staff)) {
+					foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
+						$secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
+					}
+				}
+
+				if(!empty($value->students)) {
+					foreach ($value->students as $key => $studentsData) {
+						$students[] = $studentsData->openemis_no;
+					}
+				}
+				
+			}
+		}
+
+	    $body = array();
+	   
+	    $body = [	
+			'Class Name' => $entity->name,
+			'Academic Period' => !empty($academicPeriod) ? $academicPeriod : NULL,
+			'Shift' => !empty($shift) ? $shift : NULL,
+			'Capacity' => !empty($capacity) ? $capacity : NULL,
+			'Class Grades' => !empty($grades) ? $grades : NULL,
+			'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+			'Secondary Teachers(OpenEMIS ID)' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
+			'Students data(OpenEMIS ID)' => !empty($students) ? $students : NULL
+		];
+
 				
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
 			
-			// POCOR-5435 ->Webhook Feature class (create) -- start
 			if($this->action == 'add') {
 			   
 				$Webhooks = TableRegistry::get('Webhook.Webhooks');
