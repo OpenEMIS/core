@@ -70,7 +70,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
 
-        $this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionAttachments', ['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -487,6 +487,9 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        // set action for webhook
+        $this->webhookAction = $this->action;
+
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Institutions', 'index'];
         $this->field('security_group_id', ['visible' => false]);
         // $this->field('institution_site_area_id', ['visible' => false]);
@@ -565,7 +568,7 @@ class InstitutionsTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    {   
         $SecurityGroup = TableRegistry::get('Security.SystemGroups');
         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
@@ -573,7 +576,83 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $SecurityGroup;
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
-
+		
+		// Webhook institution create -- start
+		
+		$bodyData = $this->find()
+                    ->innerJoinWith('Ownerships')
+                    ->innerJoinWith('Sectors')
+                    ->innerJoinWith('Areas')
+                    ->innerJoinWith('AreaAdministratives')
+                    ->innerJoinWith('Genders')
+                    ->innerJoinWith('Providers')
+                    ->innerJoinWith('Types')
+                    ->innerJoinWith('Localities')
+                    ->select([
+                        'Owner' => 'Ownerships.name',
+                        'OwnerId' => 'Ownerships.id',
+                        'Sector' => 'Sectors.name',
+                        'Providers' => 'Providers.name',
+                        'ProvidersId' => 'Providers.id',
+                        'Type' => 'Types.name',
+                        'Area' => 'Areas.name',
+                        'AreaAdministratives' => 'AreaAdministratives.name',
+                        'Localities' => 'Localities.name',
+                        'LocalitiesId' => 'Localities.id',
+                        'Genders' => 'Genders.name',
+                        'GendersId' => 'Genders.id'
+                    ])
+                    ->where([
+                        $this->aliasField('id') => $entity->id
+                    ])->first();
+					
+        $classificationId = $entity->classification;
+        if($classificationId == 1 ){
+            $clss= 'Academic Institution';
+        } else {
+            $clss = 'Non-academic institution';
+        }
+		
+        $body = array();
+        $body = [
+            'Institution Name' => $entity->name,
+            'Institution Alternative Name' => $entity->alternative_name,
+            'Institution Code' => $entity->code,
+            'Institution Classification' => $clss,
+            'Institution Sector' => !empty($bodyData->Sector) ? $bodyData->Sector : NULL,
+            'Institution Type' =>  !empty($bodyData->Type) ? $bodyData->Type : NULL,
+            'Institution Gender' => !empty($bodyData->Genders) ? $bodyData->Genders : NULL,
+            'Institution Date Opened' => date("d-m-Y", strtotime($entity->date_opened)),
+            'Institution Address' => $entity->address,
+            'Institution Postal Code' => $entity->postal_code,
+            'Institution Locality' => !empty($bodyData->Localities) ? $bodyData->Localities : NULL,
+            'Institution Latitude' => $entity->latitude,
+            'Institution Longitude' => $entity->longitude,
+            'Institution Area Education' =>  !empty($bodyData->Area) ? $bodyData->Area : NULL,
+            'Institution Area Administrative' => !empty($bodyData->AreaAdministratives) ? $bodyData->AreaAdministratives : NULL,
+            'Institution Contact Person' => $entity->contact_person,
+            'Institution Telephone' => $entity->telephone,
+            'Institution Mobile' => $entity->fax,
+            'Institution Email' => $entity->email,
+            'Institution Website' => $entity->website,
+        ];
+		if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
+			$Webhooks = TableRegistry::get('Webhook.Webhooks');
+			if ($this->Auth->user()) { 
+				$Webhooks->triggerShell('institutions_create', ['username' => $username], $body);
+			}	
+		}
+		// Webhook institution create -- end
+	
+		// Webhook institution update -- start
+        if($this->webhookAction == 'edit') {
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) { 
+                $Webhooks->triggerShell('institutions_update', ['username' => $username], $body);
+            }
+        }
+        // Webhook institution update -- end
+        
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
         }
@@ -586,6 +665,12 @@ class InstitutionsTable extends ControllerActionTable
 
         $groupEntity = $SecurityGroup->get($securityGroupId);
         $SecurityGroup->delete($groupEntity);
+
+        //webhook event
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+		if ($this->Auth->user()) {
+			$Webhooks->triggerShell('institutions_delete', ['username' => $username]);
+		}
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -643,6 +728,7 @@ class InstitutionsTable extends ControllerActionTable
             $institutionTypesCount = $institutionRecords
                 ->contain([$modelName])
                 ->select([
+					//'modelId' => $modelId,
                     'count' => $institutionRecords->func()->count($modelId),
                     'name' => $selectString
                 ])
@@ -657,7 +743,15 @@ class InstitutionsTable extends ControllerActionTable
                 // Compile the dataset
                 $dataSet[] = [0 => $value['name'], 1 =>$value['count']];
             }
-            $params['dataSet'] = $dataSet;
+			
+			/*$dataSet = [
+				['Lower Secondary', 7],
+				['Upper  Secondary', 4],
+				['Pre-primary', 6],
+				['Primary', 15]
+			];*/			
+			
+			$params['dataSet'] = $dataSet;
         }
         unset($institutionRecords);
         return $params;
