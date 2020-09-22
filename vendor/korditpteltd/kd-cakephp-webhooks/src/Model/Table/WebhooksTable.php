@@ -66,7 +66,7 @@ class WebhooksTable extends Table
     }
 
     public function triggerShell($eventKey, $params = [], $body = [])
-    {
+    { 
         $webhooks = $this->find()
             ->innerJoinWith('WebhookEvents')
             ->where([
@@ -76,7 +76,7 @@ class WebhooksTable extends Table
             ->toArray();
 		
 		if(!empty($body)) { 
-            $body = json_encode($body);
+            $body = serialize($body);
         }
 		
         $username = isset($params['username']) ? $params['username'] : null;
