@@ -280,8 +280,7 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    { 
-                
+    {      
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
             
@@ -338,8 +337,11 @@ class InstitutionClassesTable extends ControllerActionTable
                 'Academic Period' => !empty($academicPeriod) ? $academicPeriod : NULL,
                 'Shift' => !empty($shift) ? $shift : NULL,
                 'Capacity' => !empty($capacity) ? $capacity : NULL,
-                'Class Grades' => !empty($grades) ? $grades : NULL,
-                'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+                'Class Grades' => !empty($grades) ? $grades : NULL, 
+                'Male Students' => !empty($entity->total_male_students) ? $entity->total_male_students : NULL,
+                'Female Students' => !empty($entity->total_female_students) ? $entity->total_female_students : NULL,
+                'Total Students' => !empty($students) ? count($students) : 0,
+				'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
                 'Secondary Teachers(OpenEMIS ID)' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
                 'Students data(OpenEMIS ID)' => !empty($students) ? $students : NULL
             ];
@@ -403,6 +405,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             'InstitutionShifts', 
                             'InstitutionShifts.ShiftOptions', 
                             'ClassesSecondaryStaff.SecondaryStaff', 
+                            'Students',
                             'Students'
                         ],
                         ])->where([
@@ -438,7 +441,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     
                 }
             }
-
+			//echo '<pre>';print_r($students);die;
             $body = array();
            
             $body = [   
@@ -447,6 +450,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 'Shift' => !empty($shift) ? $shift : NULL,
                 'Capacity' => !empty($capacity) ? $capacity : NULL,
                 'Class Grades' => !empty($grades) ? $grades : NULL,
+				'Male Students' => !empty($entity->total_male_students) ? $entity->total_male_students : 0,
+                'Female Students' => !empty($entity->total_female_students) ? $entity->total_female_students : 0,
+                'Total Students' => !empty($students) ? count($students) : 0,
                 'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
                 'Secondary Teachers(OpenEMIS ID)' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
                 'Students data(OpenEMIS ID)' => !empty($students) ? $students : NULL
