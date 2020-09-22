@@ -288,6 +288,7 @@ class InstitutionClassesTable extends ControllerActionTable
         
             $bodyData = $this->find('all',
                         [ 'contain' => [
+                            'Institutions',
                             'EducationGrades',
                             'Staff', 
                             'AcademicPeriods', 
@@ -308,6 +309,8 @@ class InstitutionClassesTable extends ControllerActionTable
                     $shift = $value->institution_shift->shift_option->name;
                     $academicPeriod = $value->academic_period->name;
                     $homeRoomteacher = $value->staff->openemis_no;
+					$institutionName = $value->institution->name;
+                    $institutionCode = $value->institution->code;
                     
                     if(!empty($value->education_grades)) {
                         foreach ($value->education_grades as $key => $gradeOptions) {
@@ -333,13 +336,13 @@ class InstitutionClassesTable extends ControllerActionTable
             $body = array();
            
             $body = [   
+				'Institution Name' => !empty($institutionName) ? $institutionName : NULL,
+                'Institution Code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'Class Name' => $entity->name,
                 'Academic Period' => !empty($academicPeriod) ? $academicPeriod : NULL,
                 'Shift' => !empty($shift) ? $shift : NULL,
                 'Capacity' => !empty($capacity) ? $capacity : NULL,
                 'Class Grades' => !empty($grades) ? $grades : NULL, 
-                'Male Students' => !empty($entity->total_male_students) ? $entity->total_male_students : NULL,
-                'Female Students' => !empty($entity->total_female_students) ? $entity->total_female_students : NULL,
                 'Total Students' => !empty($students) ? count($students) : 0,
 				'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
                 'Secondary Teachers(OpenEMIS ID)' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
@@ -399,6 +402,7 @@ class InstitutionClassesTable extends ControllerActionTable
             // POCOR-5436 ->Webhook Feature class (update) -- start
             $bodyData = $this->find('all',
                         [ 'contain' => [
+                            'Institutions',
                             'EducationGrades',
                             'Staff', 
                             'AcademicPeriods', 
@@ -406,7 +410,6 @@ class InstitutionClassesTable extends ControllerActionTable
                             'InstitutionShifts.ShiftOptions', 
                             'ClassesSecondaryStaff.SecondaryStaff', 
                             'Students',
-                            'Students'
                         ],
                         ])->where([
                             $this->aliasField('id') => $entity->id
@@ -420,6 +423,8 @@ class InstitutionClassesTable extends ControllerActionTable
                     $shift = $value->institution_shift->shift_option->name;
                     $academicPeriod = $value->academic_period->name;
                     $homeRoomteacher = $value->staff->openemis_no;
+                    $institutionName = $value->institution->name;
+                    $institutionCode = $value->institution->code;
                     
                     if(!empty($value->education_grades)) {
                         foreach ($value->education_grades as $key => $gradeOptions) {
@@ -432,7 +437,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
                         }
                     }
-
+					
                     if(!empty($value->students)) {
                         foreach ($value->students as $key => $studentsData) {
                             $students[] = $studentsData->openemis_no;
@@ -441,17 +446,17 @@ class InstitutionClassesTable extends ControllerActionTable
                     
                 }
             }
-			//echo '<pre>';print_r($students);die;
+
             $body = array();
            
             $body = [   
+                'Institution Name' => !empty($institutionName) ? $institutionName : NULL,
+                'Institution Code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'Class Name' => $entity->name,
                 'Academic Period' => !empty($academicPeriod) ? $academicPeriod : NULL,
                 'Shift' => !empty($shift) ? $shift : NULL,
                 'Capacity' => !empty($capacity) ? $capacity : NULL,
                 'Class Grades' => !empty($grades) ? $grades : NULL,
-				'Male Students' => !empty($entity->total_male_students) ? $entity->total_male_students : 0,
-                'Female Students' => !empty($entity->total_female_students) ? $entity->total_female_students : 0,
                 'Total Students' => !empty($students) ? count($students) : 0,
                 'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
                 'Secondary Teachers(OpenEMIS ID)' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
