@@ -76,9 +76,11 @@ class WebhooksTable extends Table
             ->toArray();
 		
 		if(!empty($body)) { 
-            $body = serialize($body);
+            $body = json_encode($body);
+			$body = str_replace("{","",$body);
+			$body = str_replace("}","",$body);
         }
-		
+	
         $username = isset($params['username']) ? $params['username'] : null;
         foreach ($webhooks as $key => $value) {
             $webhooks[$key]->url = str_replace('{username}', $username, $value->url);
