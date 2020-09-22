@@ -106,6 +106,8 @@ class InstitutionAssetsController extends PageController
     public function add()
     {
         $page = $this->Page;
+        /*print_r($page);
+        exit();*/
         parent::add();
         $this->addEdit();
 
