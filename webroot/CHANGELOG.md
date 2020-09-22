@@ -1,3 +1,11 @@
+### [3.57.8] - 2020-09-22
+- Bug Fixed: Institutions > Academic > Subjects: Subjects are not automatically created
+- Bug Fixed: System Configurations > Authentication > Other Identity Providers > SAML: Increase the input length of the below fields from 50 to 100
+- Bug Fixed: Reports > Institution > Student Attendance Summary Report: Report generated is inaccurate
+- Implemented: Webhook Feature institution (create)
+- Implemented: Webhook Feature class (update)
+- Implemented: Webhook Feature class (create)
+
 ### [3.57.7] - 2020-09-17
 - Bug Fixed: System Configurations > Authentication > Other Identity Providers > SAML: Increase the input length of the fields from 50 to 100
 - Bug Fixed: Reports > Institution > Student Attendance Summary Report: Report generated is inaccurate
