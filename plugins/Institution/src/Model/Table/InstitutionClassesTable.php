@@ -295,7 +295,8 @@ class InstitutionClassesTable extends ControllerActionTable
                             'InstitutionShifts', 
                             'InstitutionShifts.ShiftOptions', 
                             'ClassesSecondaryStaff.SecondaryStaff', 
-                            'Students'
+                            'Students',
+							'Students.Genders'
                         ],
             ])->where([
                 $this->aliasField('id') => $entity->id
