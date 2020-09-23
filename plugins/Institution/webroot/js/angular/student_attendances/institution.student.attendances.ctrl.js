@@ -51,6 +51,12 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.classStudentList = [];
     vm.isMarkableSubjectAttendance = false;
 
+    vm.superAdmin = 1;
+    vm.classesView = '';
+    vm.classesEdit = '';
+    vm.subjectsView = '';
+    vm.subjectsEdit = '';
+
     // gridOptions
     vm.gridReady = false;
     vm.gridOptions = {
@@ -224,7 +230,30 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         vm.classListOptions = classListOptions;
         if (classListOptions.length > 0) {
             vm.selectedClass = classListOptions[0].id;
-        }
+
+            console.log(classListOptions[0].ClassSecurityRoleFunctions);
+            if (classListOptions[0].ClassSecurityRoleFunctions > 0) {
+                //if (classListOptions[0].ClassSecurityRoleFunctions._view != '' && classListOptions[0].ClassSecurityRoleFunctions._edit != '') {
+                    vm.superAdmin = 0;
+                    vm.classesView = classListOptions[0].ClassSecurityRoleFunctions._view;
+                    vm.classesEdit = classListOptions[0].ClassSecurityRoleFunctions._edit;
+                    console.log(vm.classesEdit);
+                //}
+            }
+
+            /*if (classListOptions[0].SubjectSecurityRoleFunctions > 0) {
+                //if (classListOptions[0].SubjectSecurityRoleFunctions._view != '' && classListOptions[0].SubjectSecurityRoleFunctions._edit != '') {
+                    vm.superAdmin = 0;
+                    vm.subjectsView = classListOptions[0].SubjectSecurityRoleFunctions._view;
+                    vm.subjectsEdit = classListOptions[0].SubjectSecurityRoleFunctions._edit;
+                //}
+            }*/
+            }
+
+            /*if (classListOptions[0].ClassSecurityRoleFunctions._edit != '') {
+                vm.classesView = classListOptions[0].ClassSecurityRoleFunctions._view;
+            }*/
+        
     }
 
     /*vm.isMarkableSubjectAttendance = function(selectedClass) {
