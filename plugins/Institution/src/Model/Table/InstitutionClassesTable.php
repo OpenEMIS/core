@@ -324,9 +324,17 @@ class InstitutionClassesTable extends ControllerActionTable
                         }
                     }
 
+                    $maleStudents = 0;
+					$femaleStudents = 0;
                     if(!empty($value->students)) {
                         foreach ($value->students as $key => $studentsData) {
                             $students[] = $studentsData->openemis_no;
+                            if($studentsData->gender->code == 'M') {
+								$maleStudents = $maleStudents + 1;
+							}
+							if($studentsData->gender->code == 'F') {
+								$femaleStudents = $femaleStudents + 1;
+							}
                         }
                     }
                     
@@ -336,15 +344,17 @@ class InstitutionClassesTable extends ControllerActionTable
             $body = array();
            
             $body = [   
-				'Institution Name' => !empty($institutionName) ? $institutionName : NULL,
+                'Institution Name' => !empty($institutionName) ? $institutionName : NULL,
                 'Institution Code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'Class Name' => $entity->name,
                 'Academic Period' => !empty($academicPeriod) ? $academicPeriod : NULL,
                 'Shift' => !empty($shift) ? $shift : NULL,
                 'Capacity' => !empty($capacity) ? $capacity : NULL,
-                'Class Grades' => !empty($grades) ? $grades : NULL, 
+                'Education Grades' => !empty($grades) ? $grades : NULL,
+                'Male Students' => !empty($maleStudents) ? $maleStudents : 0,
+                'Female Students' => !empty($femaleStudents) ? $femaleStudents : 0,
                 'Total Students' => !empty($students) ? count($students) : 0,
-				'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+                'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
                 'Secondary Teachers(OpenEMIS ID)' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
                 'Students data(OpenEMIS ID)' => !empty($students) ? $students : NULL
             ];
