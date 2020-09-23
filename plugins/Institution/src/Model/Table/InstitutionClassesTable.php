@@ -1425,6 +1425,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function findClassesByInstitutionAndAcademicPeriod(Query $query, array $options)
     {
+        //echo "<pre>";print_r($query);die;
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
         $staffId = $options['user']['id'];
@@ -1449,6 +1450,11 @@ class InstitutionClassesTable extends ControllerActionTable
             ->order([$this->aliasField('name')]);
 
              if ($options['user']['super_admin'] == 0) { 
+                $query                 
+                    ->select([
+                            'SecurityRoleFunctions._view',
+                            'SecurityRoleFunctions._edit'
+                        ]);
                 $mySubjectsPermission = $this->getRolePermissionAccessForMySubjects($staffId, $institutionId);
                 //echo $mySubjectsPermission;die;
                 $myClassesPermission = $this->getRolePermissionAccessForMyClasses($staffId, $institutionId);
@@ -1506,51 +1512,6 @@ class InstitutionClassesTable extends ControllerActionTable
                         ]);
                     }
                 }
-
-                $SecurityGroupClasses = TableRegistry::get('Security.SecurityGroupClasses');
-                $query                 
-                    ->select([
-                            'ClassSecurityRoleFunctions._view',
-                            'ClassSecurityRoleFunctions._edit'
-                        ])
-                    ->leftJoin(['SecurityGroupUsers' => 'security_group_users'], [
-                        [
-                            'SecurityGroupUsers.security_user_id = '.$this->aliasField('staff_id')
-                        ]
-                    ])     
-                    ->leftJoin(['SecurityRoles' => 'security_roles'], [
-                        [
-                            'SecurityRoles.id = SecurityGroupUsers.security_role_id'
-                        ]
-                    ])               
-                    ->leftJoin(['ClassSecurityRoleFunctions' => 'security_role_functions'], [
-                        [
-                            'ClassSecurityRoleFunctions.security_role_id = SecurityGroupUsers.security_role_id'
-                        ]
-                    ])
-                    ->leftJoin(['ClassSecurityFunctions' => 'security_functions'], [
-                    [
-                        'ClassSecurityFunctions.id = ClassSecurityRoleFunctions.security_function_id',
-                        'OR' => [ 
-                                        "ClassSecurityFunctions.`_view` LIKE '%Classes.index%'",
-                                        "ClassSecurityFunctions.`_view` LIKE '%Classes.view%'"
-                                    ]
-                    ]
-                    ])
-                    ->innerJoin(['SecurityGroupClasses' => 'security_group_classes'], [
-                        [
-                            'SecurityGroupClasses.institution_class_id = '.$this->aliasField('id')
-                        ]
-                    ])                    
-                ->where([
-                    $SecurityGroupClasses->aliasField('security_group_id') => $institutionId,
-                    $SecurityGroupClasses->aliasField('security_user_id') => $staffId,
-                    'SecurityRoles.code' => 'HOMEROOM_TEACHER'
-                ])
-                ->group([
-                    $SecurityGroupClasses->aliasField('institution_class_id') 
-                ]);
-                //echo "<pre>";print_r($query);die;
             }
 
         return $query;
@@ -1629,60 +1590,6 @@ class InstitutionClassesTable extends ControllerActionTable
                                     ]
                               ],
                     'SecurityRoleFunctions._view' => 1
-                ])
-                ->toArray();
-        if(!empty($QueryResult)){
-            return true;
-        }
-          
-        return false;
-    }
-
-    public function getClassEditPermissionAttendance($userId, $institutionId) {
-        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
-        //$userAccessRoles = implode(', ', $roles);        
-        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
-                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
-                    [
-                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                    ]
-                ])
-                ->where([
-                    'SecurityFunctions.controller' => 'Institutions',
-                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
-                    'AND' => [ 'OR' => [ 
-                                        "SecurityFunctions.`_view` LIKE '%Classes.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'"
-                                    ]
-                              ],
-                    'SecurityRoleFunctions._edit' => 1
-                ])
-                ->toArray();
-        if(!empty($QueryResult)){
-            return true;
-        }
-          
-        return false;
-    }
-
-    public function getSubjectEditPermissionAttendance($userId, $institutionId) {
-        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
-        //$userAccessRoles = implode(', ', $roles);        
-        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
-                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
-                    [
-                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                    ]
-                ])
-                ->where([
-                    'SecurityFunctions.controller' => 'Institutions',
-                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
-                    'AND' => [ 'OR' => [ 
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
-                                    ]
-                              ],
-                    'SecurityRoleFunctions._edit' => 1
                 ])
                 ->toArray();
         if(!empty($QueryResult)){

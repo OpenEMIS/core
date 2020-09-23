@@ -18,16 +18,18 @@ $this->start('toolbar');
     </a>
 </button>
 <?php endif; ?>
-<div ngIf="$ctrl.superAdmin == 0" style="display: none;">
+<div ng-if="$ctrl.superAdmin == 0" style="display: none;">
    
-<div ngIf="$ctrl.classesEdit == 1" style="display: none;">
-    <?php $_edit = true;?>
+<div ng-if="$ctrl.classesEdit == 0">
+    <?php $_edit = false;?>
+</div>
+<div ng-if="$ctrl.classesEdit == 1">
+    <?php $_edit = true;?> 
 </div>
 
 </div>
 
-<?php  
-if ($_edit) : ?>
+<?php if ($_edit) : ?>
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
     </button>
