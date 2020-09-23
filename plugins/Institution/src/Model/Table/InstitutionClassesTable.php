@@ -1506,6 +1506,51 @@ class InstitutionClassesTable extends ControllerActionTable
                         ]);
                     }
                 }
+
+                $SecurityGroupClasses = TableRegistry::get('Security.SecurityGroupClasses');
+                $query                 
+                    ->select([
+                            'ClassSecurityRoleFunctions._view',
+                            'ClassSecurityRoleFunctions._edit'
+                        ])
+                    ->leftJoin(['SecurityGroupUsers' => 'security_group_users'], [
+                        [
+                            'SecurityGroupUsers.security_user_id = '.$this->aliasField('staff_id')
+                        ]
+                    ])     
+                    ->leftJoin(['SecurityRoles' => 'security_roles'], [
+                        [
+                            'SecurityRoles.id = SecurityGroupUsers.security_role_id'
+                        ]
+                    ])               
+                    ->leftJoin(['ClassSecurityRoleFunctions' => 'security_role_functions'], [
+                        [
+                            'ClassSecurityRoleFunctions.security_role_id = SecurityGroupUsers.security_role_id'
+                        ]
+                    ])
+                    ->leftJoin(['ClassSecurityFunctions' => 'security_functions'], [
+                    [
+                        'ClassSecurityFunctions.id = ClassSecurityRoleFunctions.security_function_id',
+                        'OR' => [ 
+                                        "ClassSecurityFunctions.`_view` LIKE '%Classes.index%'",
+                                        "ClassSecurityFunctions.`_view` LIKE '%Classes.view%'"
+                                    ]
+                    ]
+                    ])
+                    ->innerJoin(['SecurityGroupClasses' => 'security_group_classes'], [
+                        [
+                            'SecurityGroupClasses.institution_class_id = '.$this->aliasField('id')
+                        ]
+                    ])                    
+                ->where([
+                    $SecurityGroupClasses->aliasField('security_group_id') => $institutionId,
+                    $SecurityGroupClasses->aliasField('security_user_id') => $staffId,
+                    'SecurityRoles.code' => 'HOMEROOM_TEACHER'
+                ])
+                ->group([
+                    $SecurityGroupClasses->aliasField('institution_class_id') 
+                ]);
+                //echo "<pre>";print_r($query);die;
             }
 
         return $query;
