@@ -51,8 +51,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.classStudentList = [];
     vm.isMarkableSubjectAttendance = false;
 
-    vm.classesView = 1;
-    vm.classesEdit = 1;
+    vm.permissionView = 1;
+    vm.permissionEdit = 1;
 
     // gridOptions
     vm.gridReady = false;
@@ -228,10 +228,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         if (classListOptions.length > 0) {
             vm.selectedClass = classListOptions[0].id;
             if (classListOptions[0].SecurityRoleFunctions) {
-                    //vm.superAdmin = 0;
-                    vm.classesView = classListOptions[0].SecurityRoleFunctions._view;
-                    vm.classesEdit = classListOptions[0].SecurityRoleFunctions._edit;
-                    console.log(vm.classesEdit);
+                    vm.permissionView = classListOptions[0].SecurityRoleFunctions._view;
+                    vm.permissionEdit = classListOptions[0].SecurityRoleFunctions._edit;
             }
             }
     }
