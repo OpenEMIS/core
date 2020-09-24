@@ -357,7 +357,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 }
             }
             // POCOR-5435 ->Webhook Feature class (create) -- end
-        } else { 
+        } else {
             $editAction  = json_decode(json_encode($options), true);
             $webhook_action = $editAction['extra']['action'];
             
@@ -425,6 +425,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     $homeRoomteacher = $value->staff->openemis_no;
                     $institutionName = $value->institution->name;
                     $institutionCode = $value->institution->code;
+                    $institutionId = $value->institution->id;
                     
                     if(!empty($value->education_grades)) {
                         foreach ($value->education_grades as $key => $gradeOptions) {
@@ -450,6 +451,7 @@ class InstitutionClassesTable extends ControllerActionTable
             $body = array();
            
             $body = [   
+                'Institution id' => !empty($institutionId) ? $institutionId : NULL,
                 'Institution Name' => !empty($institutionName) ? $institutionName : NULL,
                 'Institution Code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'Class Name' => $entity->name,
@@ -457,6 +459,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'Shift' => !empty($shift) ? $shift : NULL,
                 'Capacity' => !empty($capacity) ? $capacity : NULL,
                 'Class Grades' => !empty($grades) ? $grades : NULL,
+                'Class id' => $entity->id,
                 'Total Students' => !empty($students) ? count($students) : 0,
                 'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
                 'Secondary Teachers(OpenEMIS ID)' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
