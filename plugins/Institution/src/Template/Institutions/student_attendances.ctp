@@ -18,7 +18,7 @@ $this->start('toolbar');
     </a>
 </button>
 <?php endif; ?>
-<div ng-if="$ctrl.superAdmin == 0" style="display: none;">
+<!-- <div ng-if="$ctrl.superAdmin == 0" style="display: none;">
    
 <div ng-if="$ctrl.classesEdit == 0">
     <?php $_edit = false;?>
@@ -27,10 +27,10 @@ $this->start('toolbar');
     <?php $_edit = true;?> 
 </div>
 
-</div>
+</div> -->
 
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onEditClick()">
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.classesEdit == 1" ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
     </button>
 
