@@ -29,7 +29,7 @@ class StudentsTable extends ControllerActionTable
     private $dashboardQuery = null;
 
     public function initialize(array $config)
-    {
+    { 
         $this->table('institution_students');
         parent::initialize($config);
 
@@ -551,7 +551,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
-    {
+    { 
         $this->field('previous_institution_student_id', ['type' => 'hidden']);
     }
 
@@ -566,7 +566,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
+    { 
         // permission checking for import button
         $hasImportAdmissionPermission = $this->AccessControl->check(['Institutions', 'ImportStudentAdmission', 'add']);
         $hasImportBodyMassPermission = $this->AccessControl->check(['Institutions', 'ImportStudentBodyMasses', 'add']);
@@ -795,7 +795,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
-    {
+    { 
         $this->dashboardQuery = clone $query;
     }
 
@@ -808,7 +808,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
+    { 
         $studentStatusId = $entity->student_status_id;
         $statuses = $this->StudentStatuses->findCodeList();
         $code = array_search($studentStatusId, $statuses);
@@ -838,7 +838,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     public function editAfterAction(Event $event, Entity $entity)
-    {
+    { 
         // Start PHPOE-1897
         $statuses = $this->StudentStatuses->findCodeList();
         if ($entity->student_status_id != $statuses['CURRENT']) {
@@ -935,7 +935,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    { 	
         $listeners = [
             TableRegistry::get('Institution.StudentAdmission'),
             TableRegistry::get('Institution.StudentTransferIn'),
@@ -968,6 +968,110 @@ class StudentsTable extends ControllerActionTable
                 );
             }
         }
+	
+		$bodyData = $this->find('all',
+					[ 'contain' => [
+						'Institutions',
+						'EducationGrades',
+						'AcademicPeriods',
+						'StudentStatuses',
+						'Users',
+						'Users.Genders',
+						'Users.MainNationalities',
+						'Users.IdentityTypes',
+						'Users.AddressAreas',
+						'Users.BirthplaceAreas',
+						'Users.Contacts'
+					],
+		])->where([
+			$this->aliasField('student_id') => $entity->student_id
+		]);
+		
+		
+		if (!empty($bodyData)) { 
+			foreach ($bodyData as $key => $value) { 
+				$openemis_no = $value->user->openemis_no;
+				$first_name = $value->user->first_name;
+				$middle_name = $value->user->middle_name;
+				$third_name = $value->user->third_name;
+				$last_name = $value->user->last_name;
+				$preferred_name = $value->user->preferred_name;
+				$gender = $value->user->gender->name;
+				$nationality = $value->user->main_nationality->name;
+				
+				if(!empty($value->user->date_of_birth)) {
+					foreach ($value->user->date_of_birth as $key => $date) {
+						$dateOfBirth = $date;
+					}
+				}
+				
+				$address = $value->user->address;
+				$postalCode = $value->user->postal_code;
+				$addressArea = $value->user->address_area->name;
+				$birthplaceArea = $value->user->birthplace_area->name;
+				//$contactType = 
+				//$contactValue =
+				$identityType = $value->user->identity_type->name;
+				$identityNumber = $value->user->identity_number;
+				$username = $value->user->username;
+				$institutionName = $value->institution->name;
+				$institutionCode = $value->institution->code;
+				$educationGrade = $value->education_grade->name;
+				$academicGrade = $value->academic_period->name;
+				$studentStatus = $value->student_status->name;
+				
+				if(!empty($value->start_date)) {
+					foreach ($value->start_date as $key => $date) {
+						$startDate = $date;
+					}
+				}
+				
+				if(!empty($value->end_date)) {
+					foreach ($value->end_date as $key => $date) {
+						$endDate = $date;
+					}
+				}
+				
+			}
+		}
+		$body = array();
+			   
+		$body = [   
+			'OpenEMIS ID' => !empty($openemis_no) ? $openemis_no : NULL,
+			'First Name' =>	!empty($first_name) ? $first_name : NULL,
+			'Middle Name' => !empty($middle_name) ? $middle_name : NULL,
+			'Third Name' => !empty($third_name) ? $third_name : NULL,
+			'Last Name' => !empty($last_name) ? $last_name : NULL,
+			'Preferred Name' => !empty($preferred_name) ? $preferred_name : NULL,
+			'Gender' => !empty($gender) ? $gender : NULL,
+			'Date of Birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
+			'Address' => !empty($openemis_no) ? $openemis_no : NULL,
+			'Postal Code' => !empty($postalCode) ? $postalCode : NULL,
+			'Address Area' => !empty($addressArea) ? $addressArea : NULL,
+			'Birthplace Area' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
+			//'Contact Type' => !empty($openemis_no) ? $openemis_no : NULL,
+			//'Contact Value' => !empty($openemis_no) ? $openemis_no : NULL,
+			'Nationality' => !empty($nationality) ? $nationality : NULL,
+			'Identity Type' => !empty($identityType) ? $identityType : NULL,
+			'Identity Number' => !empty($identityNumber) ? $identityNumber : NULL,
+			'Username' => !empty($username) ? $username : NULL,
+			'Institution Code' => !empty($institutionCode) ? $institutionCode : NULL,
+			'Institution Name' => !empty($institutionName) ? $institutionName : NULL,
+			'Academic Period' => !empty($academicGrade) ? $academicGrade : NULL,
+			'Education Grade' => !empty($educationGrade) ? $educationGrade : NULL,
+			//'Class Name' => !empty($openemis_no) ? $openemis_no : NULL,
+			'Student Status' => !empty($studentStatus) ? $studentStatus : NULL,
+			'Start Date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
+			'End Date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,	
+		];
+		
+		if($entity->isNew()) {
+			$Webhooks = TableRegistry::get('Webhook.Webhooks');
+			if (!empty($entity->created_user_id)) {
+				$Webhooks->triggerShell('student_create', ['username' => ''], $body);
+			}
+		}
+
     }
 
     public function onGetStudentId(Event $event, Entity $entity)
