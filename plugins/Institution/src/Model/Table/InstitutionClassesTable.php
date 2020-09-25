@@ -1425,7 +1425,6 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function findClassesByInstitutionAndAcademicPeriod(Query $query, array $options)
     {
-        //echo "<pre>";print_r($query);die;
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
         $staffId = $options['user']['id'];
@@ -1456,7 +1455,6 @@ class InstitutionClassesTable extends ControllerActionTable
                             'SecurityRoleFunctions._edit'
                         ]);
                 $mySubjectsPermission = $this->getRolePermissionAccessForMySubjects($staffId, $institutionId);
-                //echo $mySubjectsPermission;die;
                 $myClassesPermission = $this->getRolePermissionAccessForMyClasses($staffId, $institutionId);
 
                 if ($mySubjectsPermission && !$myClassesPermission) {
@@ -1513,7 +1511,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     }
                 }
             }
-
+            
         return $query;
     }
 
