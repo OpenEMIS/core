@@ -486,7 +486,8 @@ class InstitutionsTable extends ControllerActionTable
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
-    {
+    {   
+        $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         // set action for webhook
         $this->webhookAction = $this->action;
 
@@ -576,10 +577,11 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $SecurityGroup;
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
-		
-		// Webhook institution create -- start
-		
-		$bodyData = $this->find()
+        
+		if(!empty($this->controllerAction) && ($this->controllerAction == 'Institutions')) {
+            // Webhook institution create -- start
+        
+        $bodyData = $this->find()
                     ->innerJoinWith('Ownerships')
                     ->innerJoinWith('Sectors')
                     ->innerJoinWith('Areas')
@@ -605,14 +607,14 @@ class InstitutionsTable extends ControllerActionTable
                     ->where([
                         $this->aliasField('id') => $entity->id
                     ])->first();
-					
+                    
         $classificationId = $entity->classification;
         if($classificationId == 1 ){
             $clss= 'Academic Institution';
         } else {
             $clss = 'Non-academic institution';
         }
-		
+        
         $body = array();
         $body = [
             'Institution Name' => $entity->name,
@@ -636,15 +638,15 @@ class InstitutionsTable extends ControllerActionTable
             'Institution Email' => $entity->email,
             'Institution Website' => $entity->website,
         ];
-		if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
-			$Webhooks = TableRegistry::get('Webhook.Webhooks');
-			if ($this->Auth->user()) { 
-				$Webhooks->triggerShell('institutions_create', ['username' => $username], $body);
-			}	
-		}
-		// Webhook institution create -- end
-	
-		// Webhook institution update -- start
+        if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) { 
+                $Webhooks->triggerShell('institutions_create', ['username' => $username], $body);
+            }   
+        }
+        // Webhook institution create -- end
+    
+        // Webhook institution update -- start
         if($this->webhookAction == 'edit') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) { 
@@ -652,6 +654,7 @@ class InstitutionsTable extends ControllerActionTable
             }
         }
         // Webhook institution update -- end
+        }
         
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
