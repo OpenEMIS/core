@@ -20,7 +20,7 @@ $this->start('toolbar');
 <?php endif; ?>
 
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onEditClick()">
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
     </button>
 
@@ -262,7 +262,7 @@ $panelHeader = $this->fetch('panelHeader');
                 <div id="institution-student-attendances-table" class="table-wrapper">
                     <div ng-if="$ctrl.gridReady" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
                 </div>
-            </bg-pane>
+            </bg-pane>z
 
             <bg-pane class="split-content splitter-slide-out splitter-filter" min-size-p="20" max-size-p="30" size-p="20">
                 <div class="split-content-header">
@@ -289,6 +289,7 @@ $panelHeader = $this->fetch('panelHeader');
                     </div>
                     <h5><?= __('Class') ?>: </h5>
                     <div class="input-select-wrapper">
+
                         <select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="class.id as class.name for class in $ctrl.classListOptions" ng-model="$ctrl.selectedClass" ng-change="$ctrl.changeClass();">
                             <option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
