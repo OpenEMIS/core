@@ -1,3 +1,7 @@
+### [3.57.9] - 2020-09-25
+- Bug Fixed: Webhooks Output for Update Class: Missing fields in Webhooks Output
+- Bug Fixed: Administration > Security > Groups : 404 error when creating group that is linked to an institution
+
 ### [3.57.8] - 2020-09-22
 - Bug Fixed: Institutions > Academic > Subjects: Subjects are not automatically created
 - Bug Fixed: System Configurations > Authentication > Other Identity Providers > SAML: Increase the input length of the below fields from 50 to 100
