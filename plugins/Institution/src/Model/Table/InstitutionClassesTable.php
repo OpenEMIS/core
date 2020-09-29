@@ -1590,13 +1590,6 @@ class InstitutionClassesTable extends ControllerActionTable
         $staffId = $options['user']['id'];
         $isStaff = $options['user']['is_staff'];
 
-        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
-                $secondary_staff = $InstitutionClassesSecondaryStaff
-                                    ->find()
-                                    ->where([$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId])
-                                    ->toArray();
-        $secondary_staff_count = count($secondary_staff);
-
         $query
             ->select([
                 $this->aliasField('id'),
@@ -1631,30 +1624,20 @@ class InstitutionClassesTable extends ControllerActionTable
                                 'InstitutionSubjectStaff.staff_id' => $staffId
                             ]
                         ]);
-                    if ($secondary_staff_count == 0) {
-                        $query->where([                            
-                        $this->aliasField('staff_id') => $staffId         ]);
-                    } else {
+                } else if ($myClassesPermission && !$mySubjectsPermission) {
                         $query
                         ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
                             [
                                 'InstitutionClassesSecondaryStaff.institution_class_id = '.$this->aliasField('id')
                             ]
+                        ])
+                        ->where([
+                        'OR' => [
+                                    $this->aliasField('staff_id') => $staffId,
+                                    'InstitutionClassesSecondaryStaff.secondary_staff_id' => $staffId
+                                ]
                         ]);
-                    }
-                } else if ($myClassesPermission && !$mySubjectsPermission) {                           
-                if ($secondary_staff_count == 0) {
-                        $query->where([
-                        $this->aliasField('staff_id') => $staffId
-                        ]);
-                    } else {
-                        $query
-                        ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                            [
-                                'InstitutionClassesSecondaryStaff.institution_class_id = '.$this->aliasField('id')
-                            ]
-                        ]);
-                    }
+                    
                 } else if ($myClassesPermission && $mySubjectsPermission) {
                     $query
                     ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
@@ -1667,20 +1650,20 @@ class InstitutionClassesTable extends ControllerActionTable
                                 'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id',
                                 'InstitutionSubjectStaff.staff_id' => $staffId
                             ]
-                        ]);
-                    if ($secondary_staff_count == 0) {
-                        $query->orWhere([                            
-                        $this->aliasField('staff_id') => $staffId                          
-                        ]);
-                    } else {
-                        $query
+                        ])
                         ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
                             [
                                 'InstitutionClassesSecondaryStaff.institution_class_id = '.$this->aliasField('id')
                             ]
+                        ])
+                        ->where([
+                        'OR' => [
+                                $this->aliasField('staff_id') => $staffId,
+                                'InstitutionClassesSecondaryStaff.secondary_staff_id' => $staffId,
+                                'InstitutionSubjectStaff.staff_id' => $staffId
+                                ]
                         ]);
-                    }
-                }
+                    }                
             }
             
         return $query;
@@ -1726,8 +1709,8 @@ class InstitutionClassesTable extends ControllerActionTable
                     'SecurityFunctions.controller' => 'Institutions',
                     'SecurityRoleFunctions.security_role_id IN'=>$roles,
                     'AND' => [ 'OR' => [ 
-                                        "SecurityFunctions.`_view` LIKE '%Classes.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'"
+                                        "SecurityFunctions.`_view` LIKE 'Classes.index%'",
+                                        "SecurityFunctions.`_view` LIKE 'Classes.view%'"
                                     ]
                               ],
                     'SecurityRoleFunctions._view' => 1
@@ -1754,8 +1737,8 @@ class InstitutionClassesTable extends ControllerActionTable
                     'SecurityFunctions.controller' => 'Institutions',
                     'SecurityRoleFunctions.security_role_id IN'=>$roles,
                     'AND' => [ 'OR' => [ 
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
+                                        "SecurityFunctions.`_view` LIKE 'Subjects.index%'",
+                                        "SecurityFunctions.`_view` LIKE 'Subjects.view%'"
                                     ]
                               ],
                     'SecurityRoleFunctions._view' => 1
