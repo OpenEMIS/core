@@ -971,26 +971,27 @@ class StudentsTable extends ControllerActionTable
 		
 		if($entity->isNew()) {
 			$bodyData = $this->find('all',
-						[ 'contain' => [
-							'Institutions',
-							'EducationGrades',
-							'AcademicPeriods',
-							'StudentStatuses',
-							'Users',
-							'Users.Genders',
-							'Users.MainNationalities',
-							'Users.IdentityTypes',
-							'Users.AddressAreas',
-							'Users.BirthplaceAreas',
-							'Users.Contacts'
-						],
-			])->where([
-				$this->aliasField('student_id') => $entity->student_id
-			]);
-			
+									[ 'contain' => [
+										'Institutions',
+										'EducationGrades',
+										'AcademicPeriods',
+										'StudentStatuses',
+										'Users',
+										'Users.Genders',
+										'Users.MainNationalities',
+										'Users.Identities.IdentityTypes',
+										'Users.AddressAreas',
+										'Users.BirthplaceAreas',
+										'Users.Contacts.ContactTypes'
+									],
+						])->where([
+							$this->aliasField('student_id') => $entity->student_id
+						]);
+
 			
 			if (!empty($bodyData)) { 
 				foreach ($bodyData as $key => $value) { 
+					$user_id = $value->user->id;
 					$openemis_no = $value->user->openemis_no;
 					$first_name = $value->user->first_name;
 					$middle_name = $value->user->middle_name;
@@ -1010,14 +1011,31 @@ class StudentsTable extends ControllerActionTable
 					$postalCode = $value->user->postal_code;
 					$addressArea = $value->user->address_area->name;
 					$birthplaceArea = $value->user->birthplace_area->name;
-					//$contactType = 
-					//$contactValue =
-					$identityType = $value->user->identity_type->name;
-					$identityNumber = $value->user->identity_number;
+					
+					$contactValue = [];
+					$contactType = [];
+					if(!empty($value->user['contacts'])) {
+						foreach ($value->user['contacts'] as $key => $contact) {
+							$contactValue[] = $contact->value;
+							$contactType[] = $contact->contact_type->name;
+						}
+					}
+					
+					$identityNumber = [];
+					$identityType = [];
+					if(!empty($value->user['identities'])) {
+						foreach ($value->user['identities'] as $key => $identity) {
+							$identityNumber[] = $identity->number;
+							$identityType[] = $identity->identity_type->name;
+						}
+					}
+					
 					$username = $value->user->username;
+					$institution_id = $value->institution->id;
 					$institutionName = $value->institution->name;
 					$institutionCode = $value->institution->code;
 					$educationGrade = $value->education_grade->name;
+					$academicCode = $value->academic_period->code;
 					$academicGrade = $value->academic_period->name;
 					$studentStatus = $value->student_status->name;
 					
@@ -1038,32 +1056,34 @@ class StudentsTable extends ControllerActionTable
 			$body = array();
 				   
 			$body = [   
-				'OpenEMIS ID' => !empty($openemis_no) ? $openemis_no : NULL,
-				'First Name' =>	!empty($first_name) ? $first_name : NULL,
-				'Middle Name' => !empty($middle_name) ? $middle_name : NULL,
-				'Third Name' => !empty($third_name) ? $third_name : NULL,
-				'Last Name' => !empty($last_name) ? $last_name : NULL,
-				'Preferred Name' => !empty($preferred_name) ? $preferred_name : NULL,
-				'Gender' => !empty($gender) ? $gender : NULL,
-				'Date of Birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
-				'Address' => !empty($openemis_no) ? $openemis_no : NULL,
-				'Postal Code' => !empty($postalCode) ? $postalCode : NULL,
-				'Address Area' => !empty($addressArea) ? $addressArea : NULL,
-				'Birthplace Area' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
-				//'Contact Type' => !empty($openemis_no) ? $openemis_no : NULL,
-				//'Contact Value' => !empty($openemis_no) ? $openemis_no : NULL,
-				'Nationality' => !empty($nationality) ? $nationality : NULL,
-				'Identity Type' => !empty($identityType) ? $identityType : NULL,
-				'Identity Number' => !empty($identityNumber) ? $identityNumber : NULL,
-				'Username' => !empty($username) ? $username : NULL,
-				'Institution Code' => !empty($institutionCode) ? $institutionCode : NULL,
-				'Institution Name' => !empty($institutionName) ? $institutionName : NULL,
-				'Academic Period' => !empty($academicGrade) ? $academicGrade : NULL,
-				'Education Grade' => !empty($educationGrade) ? $educationGrade : NULL,
-				//'Class Name' => !empty($openemis_no) ? $openemis_no : NULL,
-				'Student Status' => !empty($studentStatus) ? $studentStatus : NULL,
-				'Start Date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
-				'End Date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,	
+				'security_users_id' => !empty($user_id) ? $user_id : NULL,
+				'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
+				'security_users_first_name' =>	!empty($first_name) ? $first_name : NULL,
+				'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
+				'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
+				'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
+				'security_users_preferred_name' => !empty($preferred_name) ? $preferred_name : NULL,
+				'security_users_gender' => !empty($gender) ? $gender : NULL,
+				'security_users_date_of_birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
+				'security_users_address' => !empty($address) ? $address : NULL,
+				'security_users_postal_code' => !empty($postalCode) ? $postalCode : NULL,
+				'area_administrative_name_birthplace' => !empty($addressArea) ? $addressArea : NULL,
+				'area_administrative_name_address' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
+				'contact_type_name' => !empty($contactType) ? $contactType : NULL,
+				'user_contact_type_value' => !empty($contactValue) ? $contactValue : NULL,
+				'nationality_name' => !empty($nationality) ? $nationality : NULL,
+				'identity_type_name' => !empty($identityType) ? $identityType : NULL,
+				'user_identities_number' => !empty($identityNumber) ? $identityNumber : NULL,
+				'security_user_username' => !empty($username) ? $username : NULL,
+				'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
+				'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+				'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+				'academic_period_code' => !empty($academicCode) ? $academicCode : NULL,
+				'academic_period_name' => !empty($academicGrade) ? $academicGrade : NULL,
+				'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
+				'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
+				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
+				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,	
 			];
 		
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
