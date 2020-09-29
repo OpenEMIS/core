@@ -91,7 +91,8 @@ class InstitutionClassBehavior extends Behavior
                                     'InstitutionSubjectStaff.end_date IS NULL',
                                     'InstitutionSubjectStaff.end_date >= ' => $today->format('Y-m-d')
                                 ],
-                                'SecurityRoles.code' => 'TEACHER'
+                                'SecurityRoles.code' => 'TEACHER',
+                                "InstitutionClasses.staff_id != " => $userId  
                             ]
                         ]
                     ]
