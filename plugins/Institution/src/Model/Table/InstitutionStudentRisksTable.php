@@ -584,7 +584,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,	
 			];
 			
-			if(empty($afterSaveOrDeleteEntity->isNew())) {
+			if (!$afterSaveOrDeleteEntity->isNew()) {
 				$Webhooks = TableRegistry::get('Webhook.Webhooks');
 				if (!empty($afterSaveOrDeleteEntity->modified_user_id)) {
 					$Webhooks->triggerShell('student_update', ['username' => ''], $body);
