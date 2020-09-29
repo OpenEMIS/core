@@ -88,6 +88,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                         $this->StudentAttendanceMarkTypes->aliasField('academic_period_id') => $academicPeriodId,
                         $this->StudentAttendanceMarkTypes->aliasField('education_grade_id') => $educationGradeId
                     ])
+                    ->order(['period'=>'DESC'])
                     ->all();
 
                 if (!$resultSet->isEmpty()) {
