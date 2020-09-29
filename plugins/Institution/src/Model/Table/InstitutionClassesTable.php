@@ -309,6 +309,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     $shift = $value->institution_shift->shift_option->name;
                     $academicPeriod = $value->academic_period->name;
                     $homeRoomteacher = $value->staff->openemis_no;
+                    $institutionId = $value->institution->id;
 					$institutionName = $value->institution->name;
                     $institutionCode = $value->institution->code;
                     
@@ -335,9 +336,11 @@ class InstitutionClassesTable extends ControllerActionTable
 
             $body = array();
            
-            $body = [   
+            $body = [ 
+                'Institution Id' => !empty($institutionId) ? $institutionId : NULL,
 				'Institution Name' => !empty($institutionName) ? $institutionName : NULL,
                 'Institution Code' => !empty($institutionCode) ? $institutionCode : NULL,
+                'Class Id' => $entity->id,
                 'Class Name' => $entity->name,
                 'Academic Period' => !empty($academicPeriod) ? $academicPeriod : NULL,
                 'Shift' => !empty($shift) ? $shift : NULL,
@@ -348,7 +351,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'Secondary Teachers(OpenEMIS ID)' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
                 'Students data(OpenEMIS ID)' => !empty($students) ? $students : NULL
             ];
-        
+            
             if($this->action == 'add') {
                
                 $Webhooks = TableRegistry::get('Webhook.Webhooks');
@@ -357,7 +360,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 }
             }
             // POCOR-5435 ->Webhook Feature class (create) -- end
-        } else { 
+        } else {
             $editAction  = json_decode(json_encode($options), true);
             $webhook_action = $editAction['extra']['action'];
             
@@ -426,6 +429,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     $homeRoomteacher = $value->staff->openemis_no;
                     $institutionName = $value->institution->name;
                     $institutionCode = $value->institution->code;
+                    $institutionId = $value->institution->id;
                     
                     if(!empty($value->education_grades)) {
                         foreach ($value->education_grades as $key => $gradeOptions) {
@@ -459,9 +463,11 @@ class InstitutionClassesTable extends ControllerActionTable
             $body = array();
            
             $body = [   
+                'Institution id' => !empty($institutionId) ? $institutionId : NULL,
                 'Institution Name' => !empty($institutionName) ? $institutionName : NULL,
                 'Institution Code' => !empty($institutionCode) ? $institutionCode : NULL,
-                'Class Name' => $entity->name,
+                'Class id' => $entity->id,
+				'Class Name' => $entity->name,
                 'Academic Period' => !empty($academicPeriod) ? $academicPeriod : NULL,
                 'Shift' => !empty($shift) ? $shift : NULL,
                 'Capacity' => !empty($capacity) ? $capacity : NULL,
