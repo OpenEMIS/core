@@ -20,7 +20,9 @@ class ConfigWebhooksTable extends ControllerActionTable
         'institutions_create' => 'Institution Create',
         'class_create'  	  => 'Class Create',
         'class_update'    	  => 'Class Update',
-        'subject_create'      => 'Subject Create'
+        'subject_create'      => 'Subject Create',
+        'student_create'      => 'Student Create',
+        'student_update'      => 'Student Update'
     ];
 
     public function initialize(array $config)
