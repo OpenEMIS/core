@@ -284,7 +284,7 @@ class InstitutionClassesTable extends ControllerActionTable
     {      
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
-            
+
 			 if(!empty($this->controllerAction) && ($this->controllerAction == 'Classes')) {
 				// POCOR-5435 ->Webhook Feature class (create)
 			
@@ -374,6 +374,7 @@ class InstitutionClassesTable extends ControllerActionTable
 				// POCOR-5435 ->Webhook Feature class (create) -- end
 			}
         } else { 
+
             $editAction  = json_decode(json_encode($options), true);
             $webhook_action = $editAction['extra']['action'];
             
@@ -440,7 +441,8 @@ class InstitutionClassesTable extends ControllerActionTable
                     $shift = $value->institution_shift->shift_option->name;
                     $academicPeriod = $value->academic_period->name;
                     $homeRoomteacher = $value->staff->openemis_no;
-                    $institutionName = $value->institution->name;
+					$institutionId = $value->institution->id;
+					$institutionName = $value->institution->name;
                     $institutionCode = $value->institution->code;
                     
                     if(!empty($value->education_grades)) {
@@ -475,19 +477,21 @@ class InstitutionClassesTable extends ControllerActionTable
             $body = array();
     
             $body = [   
-                'Institution Name' => !empty($institutionName) ? $institutionName : NULL,
-                'Institution Code' => !empty($institutionCode) ? $institutionCode : NULL,
-                'Class Name' => $entity->name,
-                'Academic Period' => !empty($academicPeriod) ? $academicPeriod : NULL,
-                'Shift' => !empty($shift) ? $shift : NULL,
-                'Capacity' => !empty($capacity) ? $capacity : NULL,
-                'Education Grades' => !empty($grades) ? $grades : NULL,
-                'Male Students' => !empty($maleStudents) ? $maleStudents : 0,
-                'Female Students' => !empty($femaleStudents) ? $femaleStudents : 0,
-                'Total Students' => !empty($students) ? count($students) : 0,
-                'Homeroom Teacher(OpenEMIS ID)' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
-                'Secondary Teachers(OpenEMIS ID)' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
-                'Students data(OpenEMIS ID)' => !empty($students) ? $students : NULL
+                'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
+				'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+                'institutions_classes_id' => $entity->id,
+                'institutions_classes_name' => $entity->name,
+                'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
+                'shift_options_name' => !empty($shift) ? $shift : NULL,
+                'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
+                'education_grades_name' => !empty($grades) ? $grades : NULL, 
+                'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
+                'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
+                'total_students' => !empty($students) ? count($students) : 0,
+                'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+                'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
+                'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
             ];
 			
             if($webhook_action == 'edit') {
