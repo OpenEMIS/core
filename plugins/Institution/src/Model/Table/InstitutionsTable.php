@@ -487,6 +487,7 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         // set action for webhook
         $this->webhookAction = $this->action;
 
@@ -576,10 +577,11 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $SecurityGroup;
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
-		
-		// Webhook institution create -- start
-		
-		$bodyData = $this->find()
+        
+        if(!empty($this->controllerAction) && ($this->controllerAction == 'Institutions')) {
+            // Webhook institution create -- start
+        
+        $bodyData = $this->find()
                     ->innerJoinWith('Ownerships')
                     ->innerJoinWith('Sectors')
                     ->innerJoinWith('Areas')
@@ -605,60 +607,52 @@ class InstitutionsTable extends ControllerActionTable
                     ->where([
                         $this->aliasField('id') => $entity->id
                     ])->first();
-					
+                    
         $classificationId = $entity->classification;
         if($classificationId == 1 ){
             $clss= 'Academic Institution';
         } else {
             $clss = 'Non-academic institution';
         }
-		
+        
         $body = array();
         $body = [
-            'Institution Id' => $entity->id,
-            'Institution Name' => $entity->name,
-            'Institution Alternative Name' => $entity->alternative_name,
-            'Institution Code' => $entity->code,
-            'Institution Classification' => $clss,
-            'Institution Sector' => !empty($bodyData->Sector) ? $bodyData->Sector : NULL,
-            'Institution Type' =>  !empty($bodyData->Type) ? $bodyData->Type : NULL,
-            'Institution Gender' => !empty($bodyData->Genders) ? $bodyData->Genders : NULL,
-            'Institution Date Opened' => date("d-m-Y", strtotime($entity->date_opened)),
-            'Institution Address' => $entity->address,
-            'Institution Postal Code' => $entity->postal_code,
-            'Institution Locality' => !empty($bodyData->Localities) ? $bodyData->Localities : NULL,
-            'Institution Latitude' => $entity->latitude,
-            'Institution Longitude' => $entity->longitude,
-            'Institution Area Education' =>  !empty($bodyData->Area) ? $bodyData->Area : NULL,
-            'Institution Area Administrative' => !empty($bodyData->AreaAdministratives) ? $bodyData->AreaAdministratives : NULL,
-            'Institution Contact Person' => $entity->contact_person,
-            'Institution Telephone' => $entity->telephone,
-            'Institution Mobile' => $entity->fax,
-            'Institution Email' => $entity->email,
-            'Institution Website' => $entity->website,
+            'institution_id' => $entity->id,
+            'institution_name' => $entity->name,
+            'institution_alternative_name' => $entity->alternative_name,
+            'institution_code' => $entity->code,
+            'institution_classification' => $clss,
+            'institution_sector' => !empty($bodyData->Sector) ? $bodyData->Sector : NULL,
+            'institution_type' =>  !empty($bodyData->Type) ? $bodyData->Type : NULL,
+            'institution_gender' => !empty($bodyData->Genders) ? $bodyData->Genders : NULL,
+            'institution_date_opened' => date("d-m-Y", strtotime($entity->date_opened)),
+            'institution_address' => $entity->address,
+            'institution_postal_code' => $entity->postal_code,
+            'institution_locality' => !empty($bodyData->Localities) ? $bodyData->Localities : NULL,
+            'institution_latitude' => $entity->latitude,
+            'institution_longitude' => $entity->longitude,
+            'institution_area_education' =>  !empty($bodyData->Area) ? $bodyData->Area : NULL,
+            'institution_area_administrative' => !empty($bodyData->AreaAdministratives) ? $bodyData->AreaAdministratives : NULL,
+            'institution_contact_person' => $entity->contact_person,
+            'institution_telephone' => $entity->telephone,
+            'institution_mobile' => $entity->fax,
+            'institution_email' => $entity->email,
+            'institution_website' => $entity->website,
         ];
-        
-		if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
-			$Webhooks = TableRegistry::get('Webhook.Webhooks');
-			if ($this->Auth->user()) { 
-				$Webhooks->triggerShell('institutions_create', ['username' => $username], $body);
-			}	
-		}
-		// Webhook institution create -- end
-	
-		// Webhook institution update -- start
-        if($this->webhookAction == 'edit') {
+        if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) { 
-                $Webhooks->triggerShell('institutions_update', ['username' => $username], $body);
-            }
+                $Webhooks->triggerShell('institutions_create', ['username' => $username], $body);
+            }   
         }
-        // Webhook institution update -- end
+        // Webhook institution create -- end
+        }
         
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
         }
     }
+
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
