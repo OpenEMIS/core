@@ -1309,25 +1309,30 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
                 
                 if (!empty($newSchoolSubjects)) {
+                    $programsubjects = 0;
                     $newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
-                    foreach ($newSchoolSubjects as $subject) {
-                        $InstitutionSubjects->save($subject);
-                        
-                        //POCOR 5001
-                        /*$institutionProgramGradeSubjects = 
+                    foreach ($newSchoolSubjects as $subject) {     //POCOR 5001
+                        $institutionProgramGradeSubjects = 
                             TableRegistry::get('InstitutionProgramGradeSubjects')
                             ->find('list')
                             ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $subject->education_grade_id,
                                 'InstitutionProgramGradeSubjects.education_grade_subject_id' => $subject->education_subject_id,
                                 'InstitutionProgramGradeSubjects.institution_id' => $subject->institution_id
                                 ])
-                            ->count(); */
+                            ->count(); 
                         
-                        //if($institutionProgramGradeSubjects > 0){
-                            //$InstitutionSubjects->save($subject);
-                        //}
+                        if($institutionProgramGradeSubjects > 0){
+                            $programsubjects++;
+                            $InstitutionSubjects->save($subject);
+                        }
                     }
                     unset($subject);
+
+                    if ($programsubjects == 0) {
+                        foreach ($newSchoolSubjects as $subject) {
+                        $InstitutionSubjects->save($subject);
+                        }
+                    }
                 }
                 unset($newSchoolSubjects);
                 unset($InstitutionSubjects);
