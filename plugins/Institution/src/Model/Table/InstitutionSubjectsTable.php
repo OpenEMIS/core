@@ -846,7 +846,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ];
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if (!empty($entity->modified_user_id)) {
-                $Webhooks->triggerShell('subject_update', ['username' => $username], $body);
+                $Webhooks->triggerShell('subject_update', ['username' => ''], $body);
             }
                     //POCOR-5439 subject update webhook end
         } else {
@@ -930,7 +930,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ];
             if($this->action == 'add') {
                 $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                if ($this->Auth->user()) { 
+                if ($this->Auth->user()) {
                     $Webhooks->triggerShell('subject_create', ['username' => $username], $body);
                 }
             }
