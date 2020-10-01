@@ -70,7 +70,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             .ajax({success: success, defer: true});          
     }
     
-    function getInstitutionRooms(institutionId){
+    function getInstitutionRooms(institutionId, academicPeriodId){
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
@@ -82,8 +82,9 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         return InstitutionRoomsTable
             .where({
                 institution_id: institutionId,
+                academic_period_id: academicPeriodId
                 //accessibility: 1,
-                end_year:new Date().getFullYear()
+                //end_year:new Date().getFullYear()
             })
             .ajax({success: success, defer: true});          
     }
