@@ -108,6 +108,7 @@ class BodyMassesTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
+        $institutionTypeId = $requestData->institution_type_id;
 
         $conditions = [];
         if (!empty($academicPeriodId)) {
@@ -116,25 +117,43 @@ class BodyMassesTable extends AppTable
         if (!empty($institutionId)) {
             $conditions['Institutions.id'] = $institutionId;
         }
+
+        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutionIds = $institutions->find('list', [
+                                                    'keyField' => 'id',
+                                                    'valueField' => 'id'
+                                                ])
+                        ->where(['institution_type_id' => $institutionTypeId])
+                        ->toArray();
+
+        if (!empty($institutionTypeId)) {
+            $conditions['BodyMasses.institution_id IN'] = $institutionIds;
+        }
+        
+
         
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
         
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        
+        $areas = TableRegistry::get('Area.Areas');
+        $institutionsTable = TableRegistry::get('institutions');
+        //echo '<pre>'; print_r($area); die;
         $query
             ->select([
                 $this->aliasField('student_id'),
                 $this->aliasField('education_grade_id'),
                 $this->aliasField('institution_id'),
                 $this->aliasField('academic_period_id'),
+                'institution_code' => 'Institutions.code',
                 'bm_date' => 'UserBodyMasses.date',
                 'bm_height' => 'UserBodyMasses.height',
                 'bm_weight' => 'UserBodyMasses.weight',
                 'bm_body_mass_index' => 'UserBodyMasses.body_mass_index',
                 'bmi' => 'UserBodyMasses.body_mass_index',
                 'bm_comment' => 'UserBodyMasses.comment',
-                'class_name' => 'InstitutionClasses.name'
+                'class_name' => 'InstitutionClasses.name',
+                'area_code' => 'Areas.code'
             ])
             ->contain([
                 'Users' => [
@@ -161,7 +180,7 @@ class BodyMassesTable extends AppTable
                 ],
                 'Institutions' => [
                     'fields' => [
-                        'name'
+                        'name','code','area_id'
                     ]
                 ],
                 'AcademicPeriods' => [
@@ -188,14 +207,27 @@ class BodyMassesTable extends AppTable
             ->leftJoin([$Class->alias() => $Class->table()], [
                 $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ])
+            ->leftJoin([$areas->alias() => $areas->table()], [
+                 $areas->aliasField('id')=>$areas->aliasField('area_id')
+            ])
+
              ->where($conditions);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+      //  echo '<pre>'; print_r($fields); 
         $cloneFields = $fields->getArrayCopy();
-
+      //  echo '<pre>'; print_r($cloneFields); die;
         $extraFields = [];
+
+        $extraFieldsFirst[] = [
+            'key' => 'area_code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Code')
+        ];
+
 
         $extraFieldsFirst[] = [
             'key' => 'openemis_no',
@@ -203,6 +235,13 @@ class BodyMassesTable extends AppTable
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
+
+        $extraFields[] = [
+            'key' => 'institution_code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];  
         
         $extraFields[] = [
             'key' => 'Users.identity_type_id',
@@ -264,14 +303,14 @@ class BodyMassesTable extends AppTable
             'key' => 'body_mass_ready',
             'field' => 'bm_body_mass_index',
             'type' => 'string',
-            'label' => __('Body Mass Reading')
+            'label' => __('Body Mass Index')
         ];
         
         $extraFields[] = [
             'key' => 'body_mass_index',
             'field' => 'bmi',
             'type' => 'string',
-            'label' => __('Body Mass Index')
+            'label' => __('BMI Category')
         ];
 
         $extraFields[] = [
