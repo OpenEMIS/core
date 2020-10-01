@@ -1609,13 +1609,6 @@ class InstitutionClassesTable extends ControllerActionTable
         $staffId = $options['user']['id'];
         $isStaff = $options['user']['is_staff'];
 
-        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
-                $secondary_staff = $InstitutionClassesSecondaryStaff
-                                    ->find()
-                                    ->where([$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId])
-                                    ->toArray();
-        $secondary_staff_count = count($secondary_staff);
-
         $query
             ->select([
                 $this->aliasField('id'),
@@ -1628,9 +1621,15 @@ class InstitutionClassesTable extends ControllerActionTable
             ->order([$this->aliasField('name')]);
 
              if ($options['user']['super_admin'] == 0) { 
+                $query                 
+                    ->select([
+                            'SecurityRoleFunctions._view',
+                            'SecurityRoleFunctions._edit'
+                        ]);
+                $allclassesPermission = $this->getRolePermissionAccessForAllClasses($staffId, $institutionId);
                 $mySubjectsPermission = $this->getRolePermissionAccessForMySubjects($staffId, $institutionId);
                 $myClassesPermission = $this->getRolePermissionAccessForMyClasses($staffId, $institutionId);
-
+                if (!$allclassesPermission) {
                 if ($mySubjectsPermission && !$myClassesPermission) {
                     $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
                     $query
@@ -1645,30 +1644,20 @@ class InstitutionClassesTable extends ControllerActionTable
                                 'InstitutionSubjectStaff.staff_id' => $staffId
                             ]
                         ]);
-                    if ($secondary_staff_count == 0) {
-                        $query->where([                            
-                        $this->aliasField('staff_id') => $staffId         ]);
-                    } else {
+                } else if ($myClassesPermission && !$mySubjectsPermission) {
                         $query
                         ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
                             [
                                 'InstitutionClassesSecondaryStaff.institution_class_id = '.$this->aliasField('id')
                             ]
+                        ])
+                        ->where([
+                        'OR' => [
+                                    $this->aliasField('staff_id') => $staffId,
+                                    'InstitutionClassesSecondaryStaff.secondary_staff_id' => $staffId
+                                ]
                         ]);
-                    }
-                } else if ($myClassesPermission && !$mySubjectsPermission) {                           
-                if ($secondary_staff_count == 0) {
-                        $query->where([
-                        $this->aliasField('staff_id') => $staffId
-                        ]);
-                    } else {
-                        $query
-                        ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                            [
-                                'InstitutionClassesSecondaryStaff.institution_class_id = '.$this->aliasField('id')
-                            ]
-                        ]);
-                    }
+                    
                 } else if ($myClassesPermission && $mySubjectsPermission) {
                     $query
                     ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
@@ -1681,22 +1670,23 @@ class InstitutionClassesTable extends ControllerActionTable
                                 'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id',
                                 'InstitutionSubjectStaff.staff_id' => $staffId
                             ]
-                        ]);
-                    if ($secondary_staff_count == 0) {
-                        $query->orWhere([                            
-                        $this->aliasField('staff_id') => $staffId                          
-                        ]);
-                    } else {
-                        $query
+                        ])
                         ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
                             [
                                 'InstitutionClassesSecondaryStaff.institution_class_id = '.$this->aliasField('id')
                             ]
+                        ])
+                        ->where([
+                        'OR' => [
+                                $this->aliasField('staff_id') => $staffId,
+                                'InstitutionClassesSecondaryStaff.secondary_staff_id' => $staffId,
+                                'InstitutionSubjectStaff.staff_id' => $staffId
+                                ]
                         ]);
                     }
-                }
+                }                
             }
-
+            
         return $query;
     }
 
@@ -1729,7 +1719,6 @@ class InstitutionClassesTable extends ControllerActionTable
     public function getRolePermissionAccessForMyClasses($userId, $institutionId)
     {
         $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
-        //$userAccessRoles = implode(', ', $roles);        
         $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
@@ -1740,8 +1729,8 @@ class InstitutionClassesTable extends ControllerActionTable
                     'SecurityFunctions.controller' => 'Institutions',
                     'SecurityRoleFunctions.security_role_id IN'=>$roles,
                     'AND' => [ 'OR' => [ 
-                                        "SecurityFunctions.`_view` LIKE '%Classes.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'"
+                                        "SecurityFunctions.`_view` LIKE 'Classes.index%'",
+                                        "SecurityFunctions.`_view` LIKE 'Classes.view%'"
                                     ]
                               ],
                     'SecurityRoleFunctions._view' => 1
@@ -1757,7 +1746,6 @@ class InstitutionClassesTable extends ControllerActionTable
     public function getRolePermissionAccessForMySubjects($userId, $institutionId)
     {
         $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
-        //$userAccessRoles = implode(', ', $roles);        
         $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
@@ -1768,8 +1756,8 @@ class InstitutionClassesTable extends ControllerActionTable
                     'SecurityFunctions.controller' => 'Institutions',
                     'SecurityRoleFunctions.security_role_id IN'=>$roles,
                     'AND' => [ 'OR' => [ 
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
+                                        "SecurityFunctions.`_view` LIKE 'Subjects.index%'",
+                                        "SecurityFunctions.`_view` LIKE 'Subjects.view%'"
                                     ]
                               ],
                     'SecurityRoleFunctions._view' => 1
@@ -1782,9 +1770,9 @@ class InstitutionClassesTable extends ControllerActionTable
         return false;
     }
 
-    public function getClassEditPermissionAttendance($userId, $institutionId) {
+    public function getRolePermissionAccessForAllClasses($userId, $institutionId)
+    {
         $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
-        //$userAccessRoles = implode(', ', $roles);        
         $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
@@ -1795,38 +1783,11 @@ class InstitutionClassesTable extends ControllerActionTable
                     'SecurityFunctions.controller' => 'Institutions',
                     'SecurityRoleFunctions.security_role_id IN'=>$roles,
                     'AND' => [ 'OR' => [ 
-                                        "SecurityFunctions.`_view` LIKE '%Classes.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'"
+                                        "SecurityFunctions.`_view` LIKE 'AllClasses.index%'",
+                                        "SecurityFunctions.`_view` LIKE 'AllClasses.view%'"
                                     ]
                               ],
-                    'SecurityRoleFunctions._edit' => 1
-                ])
-                ->toArray();
-        if(!empty($QueryResult)){
-            return true;
-        }
-          
-        return false;
-    }
-
-    public function getSubjectEditPermissionAttendance($userId, $institutionId) {
-        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
-        //$userAccessRoles = implode(', ', $roles);        
-        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
-                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
-                    [
-                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                    ]
-                ])
-                ->where([
-                    'SecurityFunctions.controller' => 'Institutions',
-                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
-                    'AND' => [ 'OR' => [ 
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
-                                    ]
-                              ],
-                    'SecurityRoleFunctions._edit' => 1
+                    'SecurityRoleFunctions._view' => 1
                 ])
                 ->toArray();
         if(!empty($QueryResult)){
