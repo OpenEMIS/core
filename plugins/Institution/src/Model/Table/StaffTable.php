@@ -818,6 +818,7 @@ class StaffTable extends ControllerActionTable
                 $this->updateStaffStatus($entity, $this->endOfAssignment);
             }
 			
+			//POCOR-5444 - start
 			$bodyData = $this->find('all',
 								[ 'contain' => [
 									'Institutions',
@@ -882,9 +883,7 @@ class StaffTable extends ControllerActionTable
 					$position_no = $value->position->position_no;
 					$staff_position_titles_type = $value->position->staff_position_title->type;
 					$staff_types_name = $value->staff_type->name;
-					//$shift_options_name = $value->staff_type->name;
-
-
+					
 					if($staff_position_titles_type == 1 ){
 						$class= 'Teaching';
 					} else {
@@ -927,8 +926,7 @@ class StaffTable extends ControllerActionTable
 				'institution_positions_position_no'=>!empty($position_no) ? $position_no : NULL,
 				'staff_position_titles_type'=>!empty($class) ? $class : NULL,
 				'staff_position_titles_name'=>!empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
-				'staff_types_name'=>!empty($staff_types_name) ? $staff_types_name : NULL,
-				//'shift_options_name'=>   !empty($institutionName) ? $institutionName : NULL,
+				'staff_types_name'=>!empty($staff_types_name) ? $staff_types_name : NULL
 			];
 		
 			$Webhooks = TableRegistry::get('Webhook.Webhooks');
@@ -936,6 +934,7 @@ class StaffTable extends ControllerActionTable
 				$Webhooks->triggerShell('staff_create', ['username' => ''], $body);
 
 			}
+			//POCOR-5444 - End
 		
         }
 
