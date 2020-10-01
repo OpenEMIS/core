@@ -933,7 +933,7 @@ class StaffTable extends ControllerActionTable
 	
 		$Webhooks = TableRegistry::get('Webhook.Webhooks');
 		if (!empty($entity->created_user_id)) {
-			$Webhooks->triggerShell('student_create', ['username' => ''], $body);
+			$Webhooks->triggerShell('staff_create', ['username' => ''], $body);
 
 		}
 		
