@@ -154,7 +154,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                 //console.log('getLessonType', lessonType);
                 vm.lessonType = lessonType;
                
-                return TimetableSvc.getInstitutionRooms(vm.timetableData.institution_id);
+                return TimetableSvc.getInstitutionRooms(vm.timetableData.institution_id, vm.timetableData.academic_period_id);
             }, vm.error)
             
             .then(function(institutionRooms) {
