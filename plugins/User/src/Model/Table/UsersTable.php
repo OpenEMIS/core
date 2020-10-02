@@ -534,7 +534,7 @@ class UsersTable extends AppTable
         $latest = $this->find()
             ->order($this->aliasField('id').' DESC')
             ->first();
-
+        
         if (is_array($latest)) {
             $latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
         } else {
@@ -545,9 +545,11 @@ class UsersTable extends AppTable
         } else {
             $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
         }
-
+        
+        $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
+        
         $currentStamp = time();
-        if ($latestDbStamp <= $currentStamp) {
+        if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
             $newStamp = $latestDbStamp + 1;
         } else {
             $newStamp = $currentStamp;
@@ -564,8 +566,8 @@ class UsersTable extends AppTable
            $resultOpenemisTemp = $openemisTemps->find('all')                
                 ->order(['id' => 'DESC'])
                 ->first();
-           
-           $newOpenemisNo = $resultOpenemisTemp->openemis_no + 1;
+           $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
+           $newOpenemisNo = $resultOpenemisNoTemp + 1;
         }       
         
         $openemisTemp = $openemisTemps->newEntity();
