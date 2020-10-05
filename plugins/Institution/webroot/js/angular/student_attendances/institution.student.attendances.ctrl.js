@@ -51,6 +51,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.classStudentList = [];
     vm.isMarkableSubjectAttendance = false;
 
+    vm.superAdmin = 1;
     vm.permissionView = 1;
     vm.permissionEdit = 1;
 
@@ -228,6 +229,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         if (classListOptions.length > 0) {
             vm.selectedClass = classListOptions[0].id;
             if (classListOptions[0].SecurityRoleFunctions) {
+                    vm.superAdmin = 0;
                     vm.permissionView = classListOptions[0].SecurityRoleFunctions._view;
                     vm.permissionEdit = classListOptions[0].SecurityRoleFunctions._edit;
             }
@@ -555,7 +557,9 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.changeClass = function() {
         UtilsSvc.isAppendLoader(true);
-        vm.updateClassRoles(vm.selectedClass);
+        if (vm.superAdmin == 0) {
+            vm.updateClassRoles(vm.selectedClass);
+        }
         InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass)
         .then(function(attendanceType) { 
                 vm.isMarkableSubjectAttendance = attendanceType;              
@@ -664,10 +668,12 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         var classListOptions = vm.classListOptions;
         if (classListOptions.length > 0) {
             angular.forEach(classListOptions, function(value, key) {
-               if (value.id == selectedClass) {
-                    vm.permissionView = value.SecurityRoleFunctions._view;
-                    vm.permissionEdit = value.SecurityRoleFunctions._edit;
-               }
+                if (value.SecurityRoleFunctions) {
+                   if (value.id == selectedClass) {
+                        vm.permissionView = value.SecurityRoleFunctions._view;
+                        vm.permissionEdit = value.SecurityRoleFunctions._edit;
+                   }
+                }
             });
             }
     }
