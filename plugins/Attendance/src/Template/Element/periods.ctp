@@ -1,4 +1,4 @@
-<?php if ($ControllerAction['action'] == 'edit') {?>
+<?php if ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') {?>
     <div class="toolbar-responsive">
         <div class="toolbar-wrapper">
             <table class="table table-curved">

@@ -9,7 +9,6 @@ use Cake\ORM\Table;
 use App\Controller\AppController;
 use Cake\Log\Log;
 
-
 class DashboardController extends AppController
 {
     public function initialize()
@@ -20,7 +19,9 @@ class DashboardController extends AppController
         // $this->loadComponent('Paginator');
 
         $this->attachAngularModules();
+        $this->triggerUnmarkedAttendanceShell();
         $this->triggerInstitutionClassSubjectsShell();
+		
     }
 
     // CAv4
@@ -90,6 +91,17 @@ class DashboardController extends AppController
         }
     }
 
+    
+    private function triggerUnmarkedAttendanceShell()
+    {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateStudentUnmarkedAttendances';
+        $logs = ROOT . DS . 'logs' . DS . 'GenerateStudentUnmarkedAttendances.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        $pid = exec($shellCmd);
+        Log::write('debug', $shellCmd); 
+    
+    }
+
     private function triggerInstitutionClassSubjectsShell()
     {
         $script = 'InstitutionClassSubjects';
@@ -97,7 +109,7 @@ class DashboardController extends AppController
         $cmd = sprintf("%scake %s %s", $consoleDir, $script);
         $nohup = '%s > %slogs/'.$script.'.log & echo $!';
         $shellCmd = sprintf($nohup, $cmd, ROOT.DS);
-        \Cake\Log\Log::write('debug', $shellCmd);
+        //\Cake\Log\Log::write('debug', $shellCmd);
         exec($shellCmd);
+		Log::write('debug', $shellCmd); 
     }
-}

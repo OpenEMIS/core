@@ -210,6 +210,9 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
         $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('attendance_type', ['type' => 'hidden']);
+        $this->ControllerAction->field('periods', ['type' => 'hidden']);
+        $this->ControllerAction->field('subjects', ['type' => 'hidden']);
         $this->ControllerAction->field('wash_type', ['type' => 'hidden']);
         $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
@@ -547,7 +550,8 @@ class InstitutionsTable extends AppTable
                           'Report.InstitutionStudentsWithSpecialNeeds',
                           'Report.WashReports', 
                           'Report.InstitutionClasses',
-                          'Report.InstitutionCommittees'
+                          'Report.InstitutionCommittees',
+                          'Report.ClassAttendanceMarkedSummaryReport'
                         ]
                     )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
@@ -614,13 +618,13 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['academic_period_id'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-            if (in_array($feature, 
-                        [
+            if (in_array($feature, [
                             'Report.ClassAttendanceNotMarkedRecords',
                             'Report.SubjectsBookLists',
                             'Report.InstitutionSubjectsClasses',
-                            'Report.StudentAttendanceSummary'
-                         ])
+                            'Report.StudentAttendanceSummary',
+							'Report.ClassAttendanceMarkedSummaryReport'
+                        ])
                 ) {
                 
                 $EducationGrades = TableRegistry::get('Education.EducationGrades');
@@ -644,6 +648,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+                $attr['onChangeReload'] = true;
             } elseif (in_array($feature,
                                [
                                    'Report.StudentAttendanceSummary',
@@ -867,7 +872,8 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 
 									'Report.InstitutionCases',
-									'Report.StudentAttendanceSummary'
+									'Report.StudentAttendanceSummary',
+                                    'Report.ClassAttendanceMarkedSummaryReport'
 				]) && isset($this->request->data[$this->alias()]['academic_period_id'])
 				) {
 
@@ -892,7 +898,8 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 
 									'Report.InstitutionCases',
-									'Report.StudentAttendanceSummary'
+									'Report.StudentAttendanceSummary',
+                                    'Report.ClassAttendanceMarkedSummaryReport'
 									])
                 ) {
 					
@@ -912,6 +919,160 @@ class InstitutionsTable extends AppTable
                 $attr['value'] = self::NO_FILTER;
             }
             return $attr;
+        }
+    }
+
+    public function onUpdateFieldAttendanceType(Event $event, array $attr, $action, Request $request)
+    {
+
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.ClassAttendanceMarkedSummaryReport'
+                ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
+                ) {
+
+                $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+                $attendanceOptions = $StudentAttendanceTypes
+                ->find('list')
+                ->toArray();
+
+            $attr['type'] = 'select';
+
+            $attr['attr']['options'] = $attendanceOptions;
+            $attr['onChangeReload'] = true;
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldSubjects(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.ClassAttendanceMarkedSummaryReport', 
+                                    'Report.InstitutionCases',
+                                    'Report.StudentAttendanceSummary'
+                ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
+                ) {
+                $academic_period_id = $this->request->data[$this->alias()]['academic_period_id'];                
+                $education_grade_id = $this->request->data[$this->alias()]['education_grade_id'];
+                $attendance_type = $this->request->data[$this->alias()]['attendance_type'];
+                $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+                if (!empty($attendance_type)) {
+
+                $attendanceTypeData = $StudentAttendanceTypes
+                                        ->find()
+                                        ->where([
+                                            $StudentAttendanceTypes->aliasField('id') => $attendance_type
+                                        ])
+                                        ->toArray();
+                $attendanceTypeCode = $attendanceTypeData[0]->code;
+            }
+
+                $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+                $gradeCondition = [];
+                if ($attendanceTypeCode == 'SUBJECT') {
+
+                    if ($education_grade_id != -1) {
+                        $gradeCondition = [
+                            $InstitutionSubjects->aliasField('academic_period_id') => $academic_period_id,
+                            $InstitutionSubjects->aliasField('education_grade_id') => $education_grade_id];
+                    } else {
+                        $gradeCondition = [$InstitutionSubjects->aliasField('academic_period_id') => $academic_period_id];
+                    }
+
+                
+
+                $institutionSubjects = $InstitutionSubjects
+                                        ->find('list', 
+                                            ['keyField' => 'id', 
+                                            'valueField' => 'name'])
+                                        ->where(
+                                            $gradeCondition
+                                        )
+                                        ->group([
+                                            $InstitutionSubjects->aliasField('name')
+                                        ])
+                                        ->toArray();
+
+                
+                $attr['type'] = 'select';
+                $attr['options'] = ['0' => __('All Subjects')] + $institutionSubjects;
+        
+            return $attr;
+            }
+        }
+        }
+    }
+
+    public function onUpdateFieldPeriods(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.ClassAttendanceMarkedSummaryReport', 
+                                    'Report.InstitutionCases',
+                                    'Report.StudentAttendanceSummary'
+                ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
+                ) {
+
+                $academic_period_id = $this->request->data[$this->alias()]['academic_period_id'];                
+                $education_grade_id = $this->request->data[$this->alias()]['education_grade_id'];
+                $attendance_type = $this->request->data[$this->alias()]['attendance_type'];
+
+                $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+                if (!empty($attendance_type)) {
+
+                $attendanceTypeData = $StudentAttendanceTypes
+                                        ->find()
+                                        ->where([
+                                            $StudentAttendanceTypes->aliasField('id') => $attendance_type
+                                        ])
+                                        ->toArray();
+                $attendanceTypeCode = $attendanceTypeData[0]->code;
+            }
+
+                $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
+                $StudentMarkTypeStatuses = TableRegistry::get('Attendance.StudentMarkTypeStatuses');
+                $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+
+
+                $gradeCondition = [];
+                if ($attendanceTypeCode == 'DAY' || $attendance_type == '') {
+                    if ($education_grade_id != -1) {
+                        $gradeCondition = [
+                            $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academic_period_id,
+                            $StudentMarkTypeStatusGrades->aliasField('education_grade_id') => $education_grade_id];
+                    } else {
+                        $gradeCondition = [$StudentMarkTypeStatuses->aliasField('academic_period_id') => $academic_period_id];
+                    }
+
+               $periods = $StudentAttendancePerDayPeriods
+                                        ->find('list', 
+                                            ['keyField' => 'id', 
+                                            'valueField' => 'name'
+                                        ])
+                                        ->leftJoin(
+                                            [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                                            [
+                                                $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id') . ' = '. $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id')
+                                            ]
+                                        )
+                                        ->leftJoin(
+                                            [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                                            [
+                                                $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id') . ' = '. $StudentMarkTypeStatuses->aliasField('id')
+                                            ]
+                                        )
+                                        ->where(
+                                            $gradeCondition
+                                        )
+                                        ->toArray();
+                $attr['type'] = 'select';
+                $attr['options'] = ['0' => __('All Periods')] + $periods;
+        
+            return $attr;
+            }
+        }
         }
     }
 
