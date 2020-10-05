@@ -4,7 +4,8 @@
             <table class="table table-curved">
             <thead>
                 <th><?= __('Default Period Name') ?></th>
-                <th><?= __('Assigned Name') ?></th>                
+                <th><?= __('Assigned Name') ?></th> 
+                <th><?= __('Reorder') ?></th>                
             </thead>            
                 <tbody>
                     <?php 
@@ -21,7 +22,12 @@
                              [
                                 'value' => (!empty($StudentAttendancePerDayPeriodsData[$i]['id'])) ? $StudentAttendancePerDayPeriodsData[$i]['id'] : ""
 
-                            ]); ?></td>                            
+                            ]); ?></td>    
+                            <td class="sorter">  
+                                <div class="reorder-icon">
+                                <a href="#"><i class="fa fa-arrows-alt"></i></a>
+                                </div>
+                            </td>                        
                         </tr>
                     <?php $j++; } ?>
                 </tbody>
@@ -50,4 +56,5 @@
         </div>
     </div>
 <?php }?>
+<script src="/pocor-openemis-core/controller_action/js/reorder.js"></script>
 
