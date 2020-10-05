@@ -664,10 +664,12 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         var classListOptions = vm.classListOptions;
         if (classListOptions.length > 0) {
             angular.forEach(classListOptions, function(value, key) {
-               if (value.id == selectedClass) {
-                    vm.permissionView = value.SecurityRoleFunctions._view;
-                    vm.permissionEdit = value.SecurityRoleFunctions._edit;
-               }
+                if (value.SecurityRoleFunctions) {
+                   if (value.id == selectedClass) {
+                        vm.permissionView = value.SecurityRoleFunctions._view;
+                        vm.permissionEdit = value.SecurityRoleFunctions._edit;
+                   }
+                }
             });
             }
     }
