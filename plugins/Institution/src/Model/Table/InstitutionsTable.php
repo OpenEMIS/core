@@ -70,7 +70,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
 
-        $this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionActivities', ['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionAttachments', ['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -487,6 +487,10 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
+        // set action for webhook
+        $this->webhookAction = $this->action;
+
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Institutions', 'index'];
         $this->field('security_group_id', ['visible' => false]);
         // $this->field('institution_site_area_id', ['visible' => false]);
@@ -565,7 +569,7 @@ class InstitutionsTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    {   
         $SecurityGroup = TableRegistry::get('Security.SystemGroups');
         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
@@ -573,11 +577,82 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $SecurityGroup;
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
-
+        
+        if(!empty($this->controllerAction) && ($this->controllerAction == 'Institutions')) {
+            // Webhook institution create -- start
+        
+        $bodyData = $this->find()
+                    ->innerJoinWith('Ownerships')
+                    ->innerJoinWith('Sectors')
+                    ->innerJoinWith('Areas')
+                    ->innerJoinWith('AreaAdministratives')
+                    ->innerJoinWith('Genders')
+                    ->innerJoinWith('Providers')
+                    ->innerJoinWith('Types')
+                    ->innerJoinWith('Localities')
+                    ->select([
+                        'Owner' => 'Ownerships.name',
+                        'OwnerId' => 'Ownerships.id',
+                        'Sector' => 'Sectors.name',
+                        'Providers' => 'Providers.name',
+                        'ProvidersId' => 'Providers.id',
+                        'Type' => 'Types.name',
+                        'Area' => 'Areas.name',
+                        'AreaAdministratives' => 'AreaAdministratives.name',
+                        'Localities' => 'Localities.name',
+                        'LocalitiesId' => 'Localities.id',
+                        'Genders' => 'Genders.name',
+                        'GendersId' => 'Genders.id'
+                    ])
+                    ->where([
+                        $this->aliasField('id') => $entity->id
+                    ])->first();
+                    
+        $classificationId = $entity->classification;
+        if($classificationId == 1 ){
+            $clss= 'Academic Institution';
+        } else {
+            $clss = 'Non-academic institution';
+        }
+        
+        $body = array();
+        $body = [
+            'institution_id' => $entity->id,
+            'institution_name' => $entity->name,
+            'institution_alternative_name' => $entity->alternative_name,
+            'institution_code' => $entity->code,
+            'institution_classification' => $clss,
+            'institution_sector' => !empty($bodyData->Sector) ? $bodyData->Sector : NULL,
+            'institution_type' =>  !empty($bodyData->Type) ? $bodyData->Type : NULL,
+            'institution_gender' => !empty($bodyData->Genders) ? $bodyData->Genders : NULL,
+            'institution_date_opened' => date("d-m-Y", strtotime($entity->date_opened)),
+            'institution_address' => $entity->address,
+            'institution_postal_code' => $entity->postal_code,
+            'institution_locality' => !empty($bodyData->Localities) ? $bodyData->Localities : NULL,
+            'institution_latitude' => $entity->latitude,
+            'institution_longitude' => $entity->longitude,
+            'institution_area_education' =>  !empty($bodyData->Area) ? $bodyData->Area : NULL,
+            'institution_area_administrative' => !empty($bodyData->AreaAdministratives) ? $bodyData->AreaAdministratives : NULL,
+            'institution_contact_person' => $entity->contact_person,
+            'institution_telephone' => $entity->telephone,
+            'institution_mobile' => $entity->fax,
+            'institution_email' => $entity->email,
+            'institution_website' => $entity->website,
+        ];
+        if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) { 
+                $Webhooks->triggerShell('institutions_create', ['username' => $username], $body);
+            }   
+        }
+        // Webhook institution create -- end
+        }
+        
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
         }
     }
+
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -586,6 +661,12 @@ class InstitutionsTable extends ControllerActionTable
 
         $groupEntity = $SecurityGroup->get($securityGroupId);
         $SecurityGroup->delete($groupEntity);
+
+        //webhook event
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+		if ($this->Auth->user()) {
+			$Webhooks->triggerShell('institutions_delete', ['username' => $username]);
+		}
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -643,6 +724,7 @@ class InstitutionsTable extends ControllerActionTable
             $institutionTypesCount = $institutionRecords
                 ->contain([$modelName])
                 ->select([
+					//'modelId' => $modelId,
                     'count' => $institutionRecords->func()->count($modelId),
                     'name' => $selectString
                 ])
@@ -657,7 +739,15 @@ class InstitutionsTable extends ControllerActionTable
                 // Compile the dataset
                 $dataSet[] = [0 => $value['name'], 1 =>$value['count']];
             }
-            $params['dataSet'] = $dataSet;
+			
+			/*$dataSet = [
+				['Lower Secondary', 7],
+				['Upper  Secondary', 4],
+				['Pre-primary', 6],
+				['Primary', 15]
+			];*/			
+			
+			$params['dataSet'] = $dataSet;
         }
         unset($institutionRecords);
         return $params;

@@ -199,7 +199,7 @@ class InstitutionsController extends AppController
     }
 
     public function Institutions()
-    {
+    { 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Institutions']);
     }
 
@@ -527,10 +527,10 @@ class InstitutionsController extends AppController
     {
         if($pass=='excel'){
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
-        }else{
-
+        }else{       
 
         $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
+        
         $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
         $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
 
@@ -1112,7 +1112,7 @@ class InstitutionsController extends AppController
     }
 
     public function beforeFilter(Event $event)
-    {
+    { 
         parent::beforeFilter($event);
         $session = $this->request->session();
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);

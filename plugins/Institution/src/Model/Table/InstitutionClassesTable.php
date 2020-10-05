@@ -154,6 +154,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $query = $this->request->query;
         
         if(!empty($this->request->data['InstitutionClasses']['institution_shift_id'])){
@@ -253,7 +254,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $action = $this->action;
-	$institutionShiftId = $extra['entity']->institution_shift_id;
+        $institutionShiftId = $extra['entity']->institution_shift_id;
         if ($action != 'add') {
             $staffOptions = [];
             $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
@@ -280,10 +281,103 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    {      
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
-        } else {
+
+             if(!empty($this->controllerAction) && ($this->controllerAction == 'Classes')) {
+                // POCOR-5435 ->Webhook Feature class (create)
+            
+                $bodyData = $this->find('all',
+                            [ 'contain' => [
+                                'Institutions',
+                                'EducationGrades',
+                                'Staff', 
+                                'AcademicPeriods', 
+                                'InstitutionShifts', 
+                                'InstitutionShifts.ShiftOptions', 
+                                'ClassesSecondaryStaff.SecondaryStaff', 
+                                'Students'
+                            ],
+                ])->where([
+                    $this->aliasField('id') => $entity->id
+                ]);
+                
+                $grades = $secondaryTeachers = $students = [];
+
+                if (!empty($bodyData)) { 
+                    foreach ($bodyData as $key => $value) { 
+                        $capacity = $value->capacity;
+                        $shift = $value->institution_shift->shift_option->name;
+                        $academicPeriod = $value->academic_period->name;
+                        $homeRoomteacher = $value->staff->openemis_no;
+                        $institutionId = $value->institution->id;
+                        $institutionName = $value->institution->name;
+                        $institutionCode = $value->institution->code;
+                        
+                        if(!empty($value->education_grades)) {
+                            foreach ($value->education_grades as $key => $gradeOptions) {
+                                $grades[] = $gradeOptions->name;
+                            }
+                        }
+                        
+                        if(!empty($value->classes_secondary_staff)) {
+                            foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
+                                $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
+                            }
+                        }
+
+                        $maleStudents = 0;
+                        $femaleStudents = 0;
+                        if(!empty($value->students)) {
+                            foreach ($value->students as $key => $studentsData) {
+                                $students[] = $studentsData->openemis_no;
+                                if($studentsData->gender->code == 'M') {
+                                    $maleStudents = $maleStudents + 1;
+                                }
+                                if($studentsData->gender->code == 'F') {
+                                    $femaleStudents = $femaleStudents + 1;
+                                }
+                            }
+                        }
+                        
+                    }
+                }
+
+                $body = array();
+               
+                $body = [   
+                    'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
+                    'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                    'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+                    'institutions_classes_id' => $entity->id,
+                    'institutions_classes_name' => $entity->name,
+                    'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
+                    'shift_options_name' => !empty($shift) ? $shift : NULL,
+                    'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
+                    'education_grades_name' => !empty($grades) ? $grades : NULL, 
+                    'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
+                    'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
+                    'total_students' => !empty($students) ? count($students) : 0,
+                    'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+                    'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
+                    'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
+                ];
+                
+                if($this->action == 'add') {
+                   
+                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                    if ($this->Auth->user()) { 
+                        $Webhooks->triggerShell('class_create', ['username' => $username], $body);
+                    }
+                }
+                // POCOR-5435 ->Webhook Feature class (create) -- end
+            }
+        } else { 
+
+            $editAction  = json_decode(json_encode($options), true);
+            $webhook_action = $editAction['extra']['action'];
+            
             //empty class student is handled by beforeMarshal
             //in another case, it will be save manually to avoid unecessary queries during save by association
             if ($entity->has('classStudents') && !empty($entity->classStudents)) {
@@ -315,15 +409,100 @@ class InstitutionClassesTable extends ControllerActionTable
                         unset($newStudents[$classStudentEntity->student_id]);
                     }
                 }
-
+                    
                 foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $this->ClassStudents->save($newClassStudentEntity);
                 }
             }
+            
+            // POCOR-5436 ->Webhook Feature class (update) -- start
+            $bodyData = $this->find('all',
+                        [ 'contain' => [
+                            'Institutions',
+                            'EducationGrades',
+                            'Staff', 
+                            'AcademicPeriods', 
+                            'InstitutionShifts', 
+                            'InstitutionShifts.ShiftOptions', 
+                            'ClassesSecondaryStaff.SecondaryStaff', 
+                            'Students',
+                            'Students.Genders'
+                        ],
+                        ])->where([
+                            $this->aliasField('id') => $entity->id
+                        ]);
+        
+            $grades = $secondaryTeachers = $students = [];
+
+            if (!empty($bodyData)) { 
+                foreach ($bodyData as $key => $value) { 
+                    $capacity = $value->capacity;
+                    $shift = $value->institution_shift->shift_option->name;
+                    $academicPeriod = $value->academic_period->name;
+                    $homeRoomteacher = $value->staff->openemis_no;
+                    $institutionId = $value->institution->id;
+                    $institutionName = $value->institution->name;
+                    $institutionCode = $value->institution->code;
+                    
+                    if(!empty($value->education_grades)) {
+                        foreach ($value->education_grades as $key => $gradeOptions) {
+                            $grades[] = $gradeOptions->name;
+                        }
+                    }
+                    
+                    if(!empty($value->classes_secondary_staff)) {
+                        foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
+                            $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
+                        }
+                    }
+
+                    $maleStudents = 0;
+                    $femaleStudents = 0;
+                    if(!empty($value->students)) {
+                        foreach ($value->students as $key => $studentsData) {
+                            $students[] = $studentsData->openemis_no;
+                            if($studentsData->gender->code == 'M') {
+                                $maleStudents = $maleStudents + 1;
+                            }
+                            if($studentsData->gender->code == 'F') {
+                                $femaleStudents = $femaleStudents + 1;
+                            }
+                        }
+                    }
+                    
+                }
+            }
+    
+            $body = array();
+    
+            $body = [   
+                'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
+                'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+                'institutions_classes_id' => $entity->id,
+                'institutions_classes_name' => $entity->name,
+                'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
+                'shift_options_name' => !empty($shift) ? $shift : NULL,
+                'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
+                'education_grades_name' => !empty($grades) ? $grades : NULL, 
+                'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
+                'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
+                'total_students' => !empty($students) ? count($students) : 0,
+                'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+                'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
+                'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
+            ];
+            
+            if($webhook_action == 'edit') {
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if (!empty($entity->modified_user_id)) {
+                    $Webhooks->triggerShell('class_update', ['username' => ''], $body);
+                }
+            }
+            // POCOR-5436 ->Webhook Feature class (update) -- end   
         }
     }
-
 
     /******************************************************************************************************************
     **
@@ -897,7 +1076,7 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         $this->fields['institution_shift_id']['options'] = $shiftOptions;
-	$this->fields['institution_shift_id']['onChangeReload'] = true;
+    $this->fields['institution_shift_id']['onChangeReload'] = true;
 
         if (empty($shiftOptions)) {
             $this->Alert->warning($this->aliasField('noShift'));
@@ -1195,10 +1374,10 @@ class InstitutionClassesTable extends ControllerActionTable
                                 ['InstitutionStaffShifts' => 'institution_staff_shifts'],
                                 ['InstitutionStaffShifts.staff_id = ' . $Staff->aliasField('staff_id')]
                             )
-			    ->where([
+                ->where([
                                 $Staff->aliasField('staff_id NOT IN') => $staffIds,
                                 $Staff->aliasField('start_date <= ') => $todayDate,
-				 'InstitutionStaffShifts.shift_id' => $institutionShiftId,
+                 'InstitutionStaffShifts.shift_id' => $institutionShiftId,
                                 'OR' => [
                                     [$Staff->aliasField('end_date >= ') => $todayDate],
                                     [$Staff->aliasField('end_date IS NULL')]
@@ -1442,15 +1621,72 @@ class InstitutionClassesTable extends ControllerActionTable
             ->order([$this->aliasField('name')]);
 
              if ($options['user']['super_admin'] == 0) { 
-                $allClassesPermission = $this->getRolePermissionAccessForAllClasses($staffId, $institutionId);
-                
-                if (!$allClassesPermission) {
-                $query->where([
-                        $this->aliasField('staff_id') => $staffId
-                    ]);
-                }
+                $query                 
+                    ->select([
+                            'SecurityRoleFunctions._view',
+                            'SecurityRoleFunctions._edit'
+                        ]);
+                $allclassesPermission = $this->getRolePermissionAccessForAllClasses($staffId, $institutionId);
+                $mySubjectsPermission = $this->getRolePermissionAccessForMySubjects($staffId, $institutionId);
+                $myClassesPermission = $this->getRolePermissionAccessForMyClasses($staffId, $institutionId);
+                if (!$allclassesPermission) {
+                if ($mySubjectsPermission && !$myClassesPermission) {
+                    $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+                    $query
+                    ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                            [
+                                'InstitutionClassSubjects.institution_class_id = '.$this->aliasField('id')
+                            ]
+                        ])
+                    ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+                            [
+                                'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id',
+                                'InstitutionSubjectStaff.staff_id' => $staffId
+                            ]
+                        ]);
+                } else if ($myClassesPermission && !$mySubjectsPermission) {
+                        $query
+                        ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                            [
+                                'InstitutionClassesSecondaryStaff.institution_class_id = '.$this->aliasField('id')
+                            ]
+                        ])
+                        ->where([
+                        'OR' => [
+                                    $this->aliasField('staff_id') => $staffId,
+                                    'InstitutionClassesSecondaryStaff.secondary_staff_id' => $staffId
+                                ]
+                        ]);
+                    
+                } else if ($myClassesPermission && $mySubjectsPermission) {
+                    $query
+                    ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                            [
+                                'InstitutionClassSubjects.institution_class_id = '.$this->aliasField('id')
+                            ]
+                        ])
+                    ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+                            [
+                                'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id',
+                                'InstitutionSubjectStaff.staff_id' => $staffId
+                            ]
+                        ])
+                        ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                            [
+                                'InstitutionClassesSecondaryStaff.institution_class_id = '.$this->aliasField('id')
+                            ]
+                        ])
+                        ->where([
+                        'OR' => [
+                                $this->aliasField('staff_id') => $staffId,
+                                'InstitutionClassesSecondaryStaff.secondary_staff_id' => $staffId,
+                                'InstitutionSubjectStaff.staff_id' => $staffId
+                                ]
+                        ]);
+                    }
+                }                
             }
-
+            
         return $query;
     }
 
@@ -1480,10 +1716,9 @@ class InstitutionClassesTable extends ControllerActionTable
         return $tooltipMessage;
     }
 
-    public function getRolePermissionAccessForAllClasses($userId, $institutionId)
+    public function getRolePermissionAccessForMyClasses($userId, $institutionId)
     {
         $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
-        //$userAccessRoles = implode(', ', $roles);        
         $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
@@ -1494,12 +1729,65 @@ class InstitutionClassesTable extends ControllerActionTable
                     'SecurityFunctions.controller' => 'Institutions',
                     'SecurityRoleFunctions.security_role_id IN'=>$roles,
                     'AND' => [ 'OR' => [ 
-                                        "SecurityFunctions.`_view` LIKE '%AllClasses.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%AllClasses.view%'"
+                                        "SecurityFunctions.`_view` LIKE 'Classes.index%'",
+                                        "SecurityFunctions.`_view` LIKE 'Classes.view%'"
                                     ]
                               ],
-                    'SecurityRoleFunctions._view' => 1,
-                    'SecurityRoleFunctions._edit' => 1
+                    'SecurityRoleFunctions._view' => 1
+                ])
+                ->toArray();
+        if(!empty($QueryResult)){
+            return true;
+        }
+          
+        return false;
+    }
+
+    public function getRolePermissionAccessForMySubjects($userId, $institutionId)
+    {
+        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
+        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
+                    'AND' => [ 'OR' => [ 
+                                        "SecurityFunctions.`_view` LIKE 'Subjects.index%'",
+                                        "SecurityFunctions.`_view` LIKE 'Subjects.view%'"
+                                    ]
+                              ],
+                    'SecurityRoleFunctions._view' => 1
+                ])
+                ->toArray();
+        if(!empty($QueryResult)){
+            return true;
+        }
+          
+        return false;
+    }
+
+    public function getRolePermissionAccessForAllClasses($userId, $institutionId)
+    {
+        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
+        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
+                    'AND' => [ 'OR' => [ 
+                                        "SecurityFunctions.`_view` LIKE 'AllClasses.index%'",
+                                        "SecurityFunctions.`_view` LIKE 'AllClasses.view%'"
+                                    ]
+                              ],
+                    'SecurityRoleFunctions._view' => 1
                 ])
                 ->toArray();
         if(!empty($QueryResult)){

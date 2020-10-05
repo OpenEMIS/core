@@ -1,3 +1,38 @@
+### [3.57.10] - 2020-10-02
+- Implemented: Webhook Feature student (update)
+- Implemented: Webhook Feature student (create)
+- Implemented: Webhook Feature subject (update)
+- Implemented: Webhook Feature subject (create)
+- Implemented: Webhook Feature staff (create)
+- Bug Fixed: Institution > Academic > Schedules > Timetable > Timetable tab: Rooms field has no option
+- Bug Fixed: Administration > System Configuration > Webhooks : Add id to Class Create output
+- Bug Fixed: Webhooks Output for Create Class: Missing fields in Webhooks Output
+- Bug Fixed: Administration > System Configuration > Webhooks : Add institution id to Institutions Create output
+- Bug Fixed: Administration > System Configuration > Webhooks : Add id to Class Update output
+- Bug Fixed: Institutions > Attendance > Students: View and Edit permissions
+- Bug Fixed: Institutions > Students/Staff > Add : Unable to create users as OpenEMIS ID is showing 1 or 2 digits.
+- Bug Fixed: Institutions > Academic > Subjects : Subject list should follow Institution > Programme subject list
+
+### [3.57.9] - 2020-09-25
+- Bug Fixed: Webhooks Output for Update Class: Missing fields in Webhooks Output
+- Bug Fixed: Administration > Security > Groups : 404 error when creating group that is linked to an institution
+
+### [3.57.8] - 2020-09-22
+- Bug Fixed: Institutions > Academic > Subjects: Subjects are not automatically created
+- Bug Fixed: System Configurations > Authentication > Other Identity Providers > SAML: Increase the input length of the below fields from 50 to 100
+- Bug Fixed: Reports > Institution > Student Attendance Summary Report: Report generated is inaccurate
+- Implemented: Webhook Feature institution (create)
+- Implemented: Webhook Feature class (update)
+- Implemented: Webhook Feature class (create)
+
+### [3.57.7] - 2020-09-17
+- Bug Fixed: System Configurations > Authentication > Other Identity Providers > SAML: Increase the input length of the fields from 50 to 100
+- Bug Fixed: Reports > Institution > Student Attendance Summary Report: Report generated is inaccurate
+
+### [3.57.6] - 2020-09-10
+- Bug Fixed: Institution > Attendance > Students : Access for Secondary Teacher/ Subject Teacher
+- Bug Fixed: Institutions > Academic > Subjects: System does not create subjects based on configuration in National Level
+
 ### [3.57.5] - 2020-09-07
 - Bug Fixed: Institutions > Attendance > Students: Unable to view/mark attendance even though permission for All Classes and All Subjects have been given
 - Bug FIxed: Institutions > Performance > Outcomes: Problems viewing all outcomes when editing

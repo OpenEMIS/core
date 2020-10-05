@@ -36,6 +36,9 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
             $value = Inflector::underscore($value);
         }
         $this->authenticationTypeOptions = $authenticationTypeOptions;
+        $this->fields['mapped_username']['length'] = 100;
+        $this->fields['mapped_first_name']['length'] = 100;
+        $this->fields['mapped_last_name']['length'] = 100;
     }
 
     public function validationDefault(Validator $validator)
@@ -58,6 +61,12 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
             ->add('name', 'ruleUnique', [
                 'rule' => ['validateUnique'],
                 'provider' => 'table'
+            ])
+            ->add('mapped_first_name', 'ruleMaxLength', [
+                'rule' => ['maxLength', 100]
+            ])
+            ->add('mapped_last_name', 'ruleMaxLength', [
+                'rule' => ['maxLength', 100]
             ]);
     }
 
