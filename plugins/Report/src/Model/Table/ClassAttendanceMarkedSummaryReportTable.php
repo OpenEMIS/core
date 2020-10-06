@@ -510,32 +510,32 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             'key' => 'ClassAttendanceMarkedSummaryReport.institution_shift_id',
             'field' => 'institution_shift_id',
             'type' => 'integer',
-            'label' => __('Institution Shift')
+            'label' => __('Shift')
         ];
         $newFields[] = [
             'key' => 'Education.education_grades',
             'field' => 'education_grades',
             'type' => 'string',
-            'label' => __('Grade')
+            'label' => __('Education Grade')
         ];
         $newFields[] = [
             'key' => 'ClassAttendanceMarkedSummaryReport.name',
             'field' => 'name',
             'type' => 'string',
-            'label' => __('Class')
+            'label' => __('Class Name')
         ];
         $newFields[] = [
             'key' => '',
             'field' => 'staff_name',
             'type' => 'string',
-            'label' => __('HOMEROOM TEACHER')
+            'label' => __('HomeRoom Teacher')
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'secondary_staff_name',
             'type' => 'string',
-            'label' => __('SECONDARY TEACHER')
+            'label' => __('Secondary Teacher')
         ];
 
         $newFields[] = [
@@ -563,21 +563,21 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             'key' => '',
             'field' => 'total_marked',
             'type' => 'integer',
-            'label' => __('Total Marked')
+            'label' => __('Total No. of days Marked')
         ];
 
         $newFields[] = [
             'key' => 'total_unmarked',
             'field' => 'total_unmarked',
             'type' => 'integer',
-            'label' => __('Total Unmarked')
+            'label' => __('Total No. of days Unmarked')
         ];
 
         $newFields[] = [
             'key' => 'total_days_to_be_marked',
             'field' => 'total_days_to_be_marked',
             'type' => 'integer',
-            'label' => __('Total No days to be marked')
+            'label' => __('Total No. of days to be marked')
         ];
         $fields->exchangeArray($newFields);
     }

@@ -251,13 +251,24 @@ class InstitutionsTable extends AppTable
         if ($entity->has('feature')) {
             $feature = $entity->feature;
 
-            $fieldsOrder = ['feature', 'format'];
+            $fieldsOrder = ['feature'];
             switch ($feature) {
                 case 'Report.StudentAttendanceSummary':
+                    $fieldsOrder[] = 'format';
                     $fieldsOrder[] = 'institution_type_id';
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'academic_period_id';
                     $fieldsOrder[] = 'education_grade_id';
+                    break;
+                case 'Report.ClassAttendanceMarkedSummaryReport':
+                    $fieldsOrder[] = 'education_grade_id';
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'attendance_type';
+                    $fieldsOrder[] = 'periods';
+                    $fieldsOrder[] = 'subjects';
+                    $fieldsOrder[] = 'format';
                     break;                
                 
                 default:
