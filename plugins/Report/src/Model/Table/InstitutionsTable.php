@@ -71,7 +71,8 @@ class InstitutionsTable extends AppTable
                     'rule' => ['compareDate', 'report_end_date', true],
                     'on' => function ($context) {
                         $feature = $context['data']['feature'];
-                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases', 'Report.StudentAttendanceSummary']);
+                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases', 'Report.StudentAttendanceSummary',
+                            'Report.ClassAttendanceMarkedSummaryReport']);
                     }
                 ],
                 'ruleInAcademicPeriod' => [
@@ -210,7 +211,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
         $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
-        $this->ControllerAction->field('attendance_type', ['type' => 'hidden']);
+        $this->ControllerAction->field('attendance_type', ['type' => 'hidden', 'label' => 'Type']);
         $this->ControllerAction->field('periods', ['type' => 'hidden']);
         $this->ControllerAction->field('subjects', ['type' => 'hidden']);
         $this->ControllerAction->field('wash_type', ['type' => 'hidden']);
@@ -251,13 +252,24 @@ class InstitutionsTable extends AppTable
         if ($entity->has('feature')) {
             $feature = $entity->feature;
 
-            $fieldsOrder = ['feature', 'format'];
+            $fieldsOrder = ['feature'];
             switch ($feature) {
                 case 'Report.StudentAttendanceSummary':
+                    $fieldsOrder[] = 'format';
                     $fieldsOrder[] = 'institution_type_id';
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'academic_period_id';
                     $fieldsOrder[] = 'education_grade_id';
+                    break;
+                case 'Report.ClassAttendanceMarkedSummaryReport':
+                    $fieldsOrder[] = 'education_grade_id';
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'attendance_type';
+                    $fieldsOrder[] = 'periods';
+                    $fieldsOrder[] = 'subjects';
+                    $fieldsOrder[] = 'format';
                     break;                
                 
                 default:
@@ -949,9 +961,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.ClassAttendanceMarkedSummaryReport', 
-                                    'Report.InstitutionCases',
-                                    'Report.StudentAttendanceSummary'
+            if (in_array($feature, ['Report.ClassAttendanceMarkedSummaryReport'
                 ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
                 ) {
                 $academic_period_id = $this->request->data[$this->alias()]['academic_period_id'];                
@@ -979,9 +989,7 @@ class InstitutionsTable extends AppTable
                             $InstitutionSubjects->aliasField('education_grade_id') => $education_grade_id];
                     } else {
                         $gradeCondition = [$InstitutionSubjects->aliasField('academic_period_id') => $academic_period_id];
-                    }
-
-                
+                    }                
 
                 $institutionSubjects = $InstitutionSubjects
                                         ->find('list', 
@@ -994,7 +1002,6 @@ class InstitutionsTable extends AppTable
                                             $InstitutionSubjects->aliasField('name')
                                         ])
                                         ->toArray();
-
                 
                 $attr['type'] = 'select';
                 $attr['options'] = ['0' => __('All Subjects')] + $institutionSubjects;
@@ -1009,9 +1016,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.ClassAttendanceMarkedSummaryReport', 
-                                    'Report.InstitutionCases',
-                                    'Report.StudentAttendanceSummary'
+            if (in_array($feature, ['Report.ClassAttendanceMarkedSummaryReport'
                 ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
                 ) {
 
@@ -1034,7 +1039,6 @@ class InstitutionsTable extends AppTable
                 $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
                 $StudentMarkTypeStatuses = TableRegistry::get('Attendance.StudentMarkTypeStatuses');
                 $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
-
 
                 $gradeCondition = [];
                 if ($attendanceTypeCode == 'DAY' || $attendance_type == '') {
