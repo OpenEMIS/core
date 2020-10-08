@@ -227,13 +227,47 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         return $totalDaysToBeMarked;
     }
 
+    public function onExcelGetSecondaryStaffName(Event $event, Entity $entity)
+    {
+        $institution_class_id = $entity->id;
+        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+        $data = $InstitutionClassesSecondaryStaff
+                ->find()
+                ->select([
+                'secondary_staff_name' => $InstitutionClassesSecondaryStaff->find()->func()->concat([
+                    'SecurityUsers.openemis_no' => 'literal',
+                    " - ",
+                    'SecurityUsers.first_name' => 'literal',
+                    " ",
+                    'SecurityUsers.last_name' => 'literal'
+                ])
+            ])
+                ->leftJoin(
+                    ['SecurityUsers' => 'security_users'],
+                    [
+                        'SecurityUsers.id = '. $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                    ]
+                    )
+                ->where([
+                    $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $institution_class_id
+                ])
+                ->toArray();
+                $a = array();
+        foreach($data as $key => $value) {
+            $a[$key] = $value->secondary_staff_name;
+        }
+        $secondary_staff_name = implode(",", $a);
+        return $secondary_staff_name;
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
         $subjects = $requestData->subjects;
         $education_grade_id = $requestData->education_grade_id;
-        $attendance_type = $requestData->attendance_type;  
+        $attendance_type = $requestData->attendance_type; 
+        $periods = $requestData->periods; 
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
         if (!empty($attendance_type)) {
                 $attendanceTypeData = $StudentAttendanceTypes
@@ -261,6 +295,10 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         } else {
             $where['InstitutionSubjects.education_grade_id'] = $education_grade_id;
         }
+        }
+
+        if ($periods != 0) {
+            $where['StudentAttendanceMarkedRecords.period'] = $periods;
         }
         $academic_period_id = $requestData->academic_period_id;
 
@@ -291,13 +329,6 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                     'Staff.first_name' => 'literal',
                     " ",
                     'Staff.last_name' => 'literal'
-                ]),
-                'secondary_staff_name' => $query->func()->concat([
-                    'SecurityUsers.openemis_no' => 'literal',
-                    " - ",
-                    'SecurityUsers.first_name' => 'literal',
-                    " ",
-                    'SecurityUsers.last_name' => 'literal'
                 ]),
                 'total_male_students' => 'ClassAttendanceMarkedSummaryReport.total_male_students',
                 'total_female_students' => 'ClassAttendanceMarkedSummaryReport.total_female_students',
@@ -333,18 +364,6 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                     ]
                 ]
             ])
-            ->leftJoin(
-            ['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'],
-            [
-                'InstitutionClassesSecondaryStaff.institution_class_id = '. $this->aliasField('id')
-            ]
-            )
-            ->leftJoin(
-            ['SecurityUsers' => 'security_users'],
-            [
-                'SecurityUsers.id = '. $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
-            ]
-            )
             ->innerJoin(
             ['StudentAttendanceMarkedRecords' => 'student_attendance_marked_records'],
             [
@@ -371,7 +390,8 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             ->order([
                 'AcademicPeriods.order',
                 'Institutions.code',
-                'ClassAttendanceMarkedSummaryReport.id'
+                'ClassAttendanceMarkedSummaryReport.id',
+                'StudentAttendanceMarkedRecords.period'
             ]);
         } else {
         $query
@@ -393,13 +413,6 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                     'Staff.first_name' => 'literal',
                     " ",
                     'Staff.last_name' => 'literal'
-                ]),
-                'secondary_staff_name' => $query->func()->concat([
-                    'SecurityUsers.openemis_no' => 'literal',
-                    " - ",
-                    'SecurityUsers.first_name' => 'literal',
-                    " ",
-                    'SecurityUsers.last_name' => 'literal'
                 ]),
                 'total_male_students' => 'ClassAttendanceMarkedSummaryReport.total_male_students',
                 'total_female_students' => 'ClassAttendanceMarkedSummaryReport.total_female_students',
@@ -437,18 +450,6 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                     ]
                 ]
             ])
-            ->leftJoin(
-            ['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'],
-            [
-                'InstitutionClassesSecondaryStaff.institution_class_id = '. $this->aliasField('id')
-            ]
-            )
-            ->leftJoin(
-            ['SecurityUsers' => 'security_users'],
-            [
-                'SecurityUsers.id = '. $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
-            ]
-            )
             ->leftJoin(
             ['InstitutionClassSubjects' => 'institution_class_subjects'],
             [
@@ -510,32 +511,32 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             'key' => 'ClassAttendanceMarkedSummaryReport.institution_shift_id',
             'field' => 'institution_shift_id',
             'type' => 'integer',
-            'label' => __('Institution Shift')
+            'label' => __('Shift')
         ];
         $newFields[] = [
             'key' => 'Education.education_grades',
             'field' => 'education_grades',
             'type' => 'string',
-            'label' => __('Grade')
+            'label' => __('Education Grade')
         ];
         $newFields[] = [
             'key' => 'ClassAttendanceMarkedSummaryReport.name',
             'field' => 'name',
             'type' => 'string',
-            'label' => __('Class')
+            'label' => __('Class Name')
         ];
         $newFields[] = [
             'key' => '',
             'field' => 'staff_name',
             'type' => 'string',
-            'label' => __('HOMEROOM TEACHER')
+            'label' => __('HomeRoom Teacher')
         ];
 
         $newFields[] = [
-            'key' => '',
+            'key' => 'secondary_staff_name',
             'field' => 'secondary_staff_name',
             'type' => 'string',
-            'label' => __('SECONDARY TEACHER')
+            'label' => __('Secondary Teacher')
         ];
 
         $newFields[] = [
@@ -563,21 +564,21 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             'key' => '',
             'field' => 'total_marked',
             'type' => 'integer',
-            'label' => __('Total Marked')
+            'label' => __('Total No. of days Marked')
         ];
 
         $newFields[] = [
             'key' => 'total_unmarked',
             'field' => 'total_unmarked',
             'type' => 'integer',
-            'label' => __('Total Unmarked')
+            'label' => __('Total No. of days Unmarked')
         ];
 
         $newFields[] = [
             'key' => 'total_days_to_be_marked',
             'field' => 'total_days_to_be_marked',
             'type' => 'integer',
-            'label' => __('Total No days to be marked')
+            'label' => __('Total No. of days to be marked')
         ];
         $fields->exchangeArray($newFields);
     }
