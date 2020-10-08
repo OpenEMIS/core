@@ -26,7 +26,8 @@ class ConfigWebhooksTable extends ControllerActionTable
         'subject_update'      => 'Subject Update',
         'staff_create'    	  => 'Staff Create',
         'staff_update'        => 'Staff Update',
-        'institutions_update' => 'Institution Update'
+        'institutions_update' => 'Institution Update',
+        'institutions_delete' => 'Institutions Delete'
 
     ];
 
