@@ -662,10 +662,16 @@ class InstitutionsTable extends ControllerActionTable
         $groupEntity = $SecurityGroup->get($securityGroupId);
         $SecurityGroup->delete($groupEntity);
 
+        $body = array();
+        $body = [
+            'institution_id' => $entity->id,
+            'institution_name' => $entity->name,
+        ];
+
         //webhook event
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
 		if ($this->Auth->user()) {
-			$Webhooks->triggerShell('institutions_delete', ['username' => $username]);
+			$Webhooks->triggerShell('institutions_delete', ['username' => $username],$body);
 		}
     }
 
