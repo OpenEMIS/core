@@ -56,6 +56,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                     ->where([
                         $this->aliasField('code') => $code
                     ])
+                    ->order(['period'=>'DESC'])
                     ->all();
 
                 if (!$resultSet->isEmpty()) {
