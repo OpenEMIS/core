@@ -11,22 +11,22 @@ class POCOR5352 extends AbstractMigration
         // locale_contents
         $localeContent = [
             [
-                'en' => 'Period',
+                'en' => 'Subject',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'en' => 'Total Marked',
+                'en' => 'Total No. of days Marked',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'en' => 'Total Unmarked',
+                'en' => 'Total No. of days Unmarked',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],            
             [
-                'en' => 'Total No days to be marked',
+                'en' => 'Total No. of days to be marked',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
