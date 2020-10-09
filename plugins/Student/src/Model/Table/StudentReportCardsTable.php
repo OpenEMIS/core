@@ -82,9 +82,9 @@ class StudentReportCardsTable extends ControllerActionTable
                 'education_grade_id' => $entity->education_grade_id
             ];
 
-            $url = $this->url('download');
+            $url = $this->url('downloadPdf');
             $url[1] = $this->paramsEncode($params);
-            $buttons['download'] = [
+            $buttons['downloadPdf'] = [
                 'label' => '<i class="fa kd-download"></i>'.__('Download'),
                 'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false],
                 'url' => $url
