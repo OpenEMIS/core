@@ -317,10 +317,9 @@ trait PdfReportTrait
     }
     //  ================ END REMOVE COLUMN AND ROW ================
 
-    private function savePDF($objSpreadsheet, $filepath)
+    private function savePDF($objSpreadsheet, $filepath, $student_id)
     {
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
-
         // Convert spreadsheet object into html
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
 
@@ -351,12 +350,12 @@ trait PdfReportTrait
             unset($mdpf);
         }
         // Merge all the pdf that belongs to one report
-        $fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
+        $fileName = $this->config('filename') . '_' . $student_id;
 
         Log::write('debug', '----------------------fileName---------------------: ');
         Log::write('debug', $fileName);
 
-        $this->mergePDFFiles($filePaths, $fileName, $fileName);
+        $finalPDF_file = $this->mergePDFFiles($filePaths, $fileName, $fileName);
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
         if ($this->config('purge')) {
             foreach ($filePaths as $filepath) {
@@ -364,6 +363,7 @@ trait PdfReportTrait
                 $this->deleteFile($filepath);
             }
         }
+		return $finalPDF_file;
     }
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
@@ -400,11 +400,11 @@ trait PdfReportTrait
                 }
             }
         }
-
-        $finalPDF_file = $outFile.'final.pdf';
-
-        $mpdf->Output($finalPDF_file, "D");
+		
+        $finalPDF_file = $outFile.'.pdf';
+        $mpdf->Output($finalPDF_file, "F");
         unset($mpdf);
+		return $finalPDF_file;
     }
 
 }
