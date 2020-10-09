@@ -229,10 +229,10 @@ class InstitutionsTable extends ControllerActionTable
         ])
 
             // ->add('address', 'ruleMaximum255', [
-            // 		'rule' => ['maxLength', 255],
-            // 		'message' => 'Maximum allowable character is 255',
-            // 		'last' => true
-            // 	])
+            //      'rule' => ['maxLength', 255],
+            //      'message' => 'Maximum allowable character is 255',
+            //      'last' => true
+            //  ])
 
         ->add('code', 'ruleCustomCode', [
             'rule' => ['validateCustomPattern', 'institution_code'],
@@ -670,11 +670,16 @@ class InstitutionsTable extends ControllerActionTable
 
         $groupEntity = $SecurityGroup->get($securityGroupId);
         $SecurityGroup->delete($groupEntity);
+        $body = array();
+        $body = [
+            'institution_id' => $entity->id,
+            'institution_name' => $entity->name,
+        ];
 
         //webhook event
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
         if ($this->Auth->user()) {
-         $Webhooks->triggerShell('institutions_delete', ['username' => $username]);
+         $Webhooks->triggerShell('institutions_delete', ['username' => $username],$body);
      }
  }
 
@@ -733,7 +738,7 @@ class InstitutionsTable extends ControllerActionTable
             $institutionTypesCount = $institutionRecords
             ->contain([$modelName])
             ->select([
-					//'modelId' => $modelId,
+                    //'modelId' => $modelId,
                 'count' => $institutionRecords->func()->count($modelId),
                 'name' => $selectString
             ])
@@ -749,14 +754,14 @@ class InstitutionsTable extends ControllerActionTable
                 $dataSet[] = [0 => $value['name'], 1 =>$value['count']];
             }
             
-			/*$dataSet = [
-				['Lower Secondary', 7],
-				['Upper  Secondary', 4],
-				['Pre-primary', 6],
-				['Primary', 15]
-			];*/			
-			
-			$params['dataSet'] = $dataSet;
+            /*$dataSet = [
+                ['Lower Secondary', 7],
+                ['Upper  Secondary', 4],
+                ['Pre-primary', 6],
+                ['Primary', 15]
+            ];*/            
+            
+            $params['dataSet'] = $dataSet;
         }
         unset($institutionRecords);
         return $params;
