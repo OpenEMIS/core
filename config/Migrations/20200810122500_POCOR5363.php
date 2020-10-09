@@ -35,7 +35,39 @@ class POCOR5363 extends AbstractMigration
          $this->execute('TRUNCATE `student_attendance_per_day_periods`');
          $this->execute('ALTER TABLE `student_attendance_per_day_periods` DROP COLUMN `education_grade_id`');
          $this->execute('ALTER TABLE `student_attendance_per_day_periods` DROP COLUMN `academic_period_id`');
-         $this->execute("ALTER TABLE `student_attendance_per_day_periods` ADD COLUMN `student_attendance_mark_type_id` int(11) AFTER `name`");  
+         $this->execute("ALTER TABLE `student_attendance_per_day_periods` ADD COLUMN `student_attendance_mark_type_id` int(11) AFTER `name`");
+
+         $this->execute('CREATE TABLE `z_5363_locale_contents` LIKE `locale_contents`');
+        $this->execute('INSERT INTO `z_5363_locale_contents` SELECT * FROM `locale_contents`');
+        // locale_contents
+        $localeContent = [
+            [
+                'en' => 'Student Attendance Mark Type',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Attendance Type',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Student Attendance Type',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],            
+            [
+                'en' => 'Attendance Per Day',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Attendances',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+        ];
+        $this->insert('locale_contents', $localeContent);  
     }
 
     public function down()
@@ -51,6 +83,10 @@ class POCOR5363 extends AbstractMigration
        $this->execute('TRUNCATE `student_attendance_per_day_periods`');
        $this->execute("ALTER TABLE `student_attendance_per_day_periods` DROP COLUMN `student_attendance_mark_type_id`");
        $this->execute('ALTER TABLE `student_attendance_per_day_periods` ADD COLUMN `education_grade_id` int(11) PRIMARY KEY NOT NULL AFTER `name`');
-        $this->execute('ALTER TABLE `student_attendance_per_day_periods` ADD COLUMN `academic_period_id`  int(11) PRIMARY KEY NOT NULL AFTER `education_grade_id`');        
+
+        $this->execute('ALTER TABLE `student_attendance_per_day_periods` ADD COLUMN `academic_period_id`  int(11) PRIMARY KEY NOT NULL AFTER `education_grade_id`');  
+        $this->execute('DROP TABLE IF EXISTS `locale_contents`');
+        $this->execute('RENAME TABLE `z_5363_locale_contents` TO `locale_contents`');      
+
     }
 }
