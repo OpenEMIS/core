@@ -102,9 +102,21 @@ class ReportCardStatusesTable extends ControllerActionTable
                     '1' => $this->paramsEncode($params)
                 ];
                 $buttons['download'] = [
-                    'label' => '<i class="fa kd-download"></i>'.__('Download'),
+                    'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
                     'attr' => $indexAttr,
                     'url' => $downloadUrl
+                ];
+				$downloadPdfUrl = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'InstitutionStudentsReportCards',
+                    '0' => 'downloadPdf',
+                    '1' => $this->paramsEncode($params)
+                ];
+                $buttons['downloadPdf'] = [
+                    'label' => '<i class="fa kd-download"></i>'.__('Download Pdf'),
+                    'attr' => $indexAttr,
+                    'url' => $downloadPdfUrl
                 ];
             }
 

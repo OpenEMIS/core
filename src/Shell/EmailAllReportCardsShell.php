@@ -145,7 +145,6 @@ class EmailAllReportCardsShell extends Shell
                         $this->setAttachments($studentsReportCardEntity, $emailProcessesObj);
 
                         $emailProcessesData = $emailProcessesObj->getArrayCopy();
-
                         // default email status is error
                         $emailStatus = $this->ReportCardEmailProcesses::ERROR;
                         $errorMsg = NULL;
