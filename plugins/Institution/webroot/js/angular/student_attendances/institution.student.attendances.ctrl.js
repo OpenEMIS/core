@@ -140,7 +140,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             }, vm.error)
             .then(function(subjectListOptions) {
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
+                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
                 }, vm.error)
             .then(function(attendancePeriodOptions) {
                 vm.updateAttendancePeriodList(attendancePeriodOptions);
@@ -477,7 +477,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(subjectListOptions) {
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
+                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
         }, vm.error)
         .then(function(attendancePeriodOptions) {
             var markedParams = vm.getIsMarkedParams();
@@ -533,7 +533,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay)
         .then(function(subjectListOptions) {
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
+                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
         }, vm.error)
         .then(function(attendancePeriodOptions) {
             vm.updateAttendancePeriodList(attendancePeriodOptions);
@@ -563,7 +563,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(subjectListOptions) {
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
+                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
         }, vm.error)
         .then(function(attendancePeriodOptions) {
             vm.updateAttendancePeriodList(attendancePeriodOptions);
