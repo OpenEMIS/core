@@ -93,7 +93,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
         }
     }
 
-    public function getAttendancePerDayOptionsByClass($classId, $academicPeriodId)
+    public function getAttendancePerDayOptionsByClass($classId, $academicPeriodId, $dayId)
     {
         $prefix = 'Period ';
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
