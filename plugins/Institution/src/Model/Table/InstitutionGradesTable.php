@@ -56,6 +56,7 @@ class InstitutionGradesTable extends ControllerActionTable
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
+        $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $this->institutionId = $this->Session->read('Institution.Institutions.id');
         $this->field('start_date', ['visible' => ['index'=>true, 'view'=>true, 'edit'=>true],'onChangeReload' => true,'sort' => ['field' => 'InstitutionGrades.start_date']]);
         $this->field('end_date', ['onChangeReload' => true,'sort' => ['field' => 'InstitutionGrades.end_date']]);
@@ -134,8 +135,7 @@ class InstitutionGradesTable extends ControllerActionTable
 **
 ******************************************************************************************************************/
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
-    {
-        
+    {        
         $errors = $entity->errors();
         $process = function($model, $entity) use ($data, $errors) {
             /**
@@ -238,14 +238,77 @@ class InstitutionGradesTable extends ControllerActionTable
                 $event->stopPropagation();
                 return $this->controller->redirect($this->url('index'));
             } else {
-				
-				// Webhook institution create -- start
-				$Webhooks = TableRegistry::get('Webhook.Webhooks');
-				if ($this->Auth->user()) {
-					$Webhooks->triggerShell('programme_create', ['username' => $username]);
-				}	
-				// Webhook institution create -- end
-		
+                if(!empty($this->controllerAction) && ($this->controllerAction == 'Programmes')) {
+                 $educationGrades = TableRegistry::get('Education.EducationGrades');
+
+                 $bodyData = $educationGrades->find('all',
+                    [ 'contain' => [
+                        'EducationProgrammes',
+                        'EducationProgrammes.EducationCycles.EducationLevels',
+                        'EducationProgrammes.EducationCycles',
+                        'EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'
+
+                    ],
+                ])->where([
+                    $educationGrades->aliasField('education_programme_id') => $entity->programme
+                ]);
+
+                $institution = $this->find('all',
+                    [ 'contain' => [
+                        'Institutions',
+                        'Institutions.InstitutionClasses',
+                    ],
+                ])->where([
+                    $this->aliasField('institution_id') => $entity->institution_id
+                ]);
+
+                if (!empty($bodyData)) { 
+                    foreach ($bodyData as $key => $value) {
+                        $education_system_name = $value->education_programme->education_cycle->education_level->education_system->name;
+                        $education_level_name = $value->education_programme->education_cycle->education_level->name;
+                        $education_cycle_name = $value->education_programme->education_cycle->name;
+                        $education_programme_code = $value->education_programme->code;
+                        $education_programme_name = $value->education_programme->name;
+                        $education_programme_name = $value->education_programme->name;
+                        $start_date = $entity->start_date;
+                    }
+                }
+
+                if (!empty($institution)) { 
+                    foreach ($institution as $key => $value) {
+                        $institution_name = $value->institution->name;
+                        $institution_code = $value->institution->code;
+                        $institution_classes = [];
+                        if(!empty($value->institution['institution_classes'])) {
+                            foreach ($value->institution['institution_classes'] as $key => $classes) {
+                                $institution_classes[] = $classes->name;
+                            }
+                        }
+                    }
+                }
+
+                $body = array();
+
+                $body = [   
+                    'education_system_name' => !empty($education_system_name) ? $education_system_name : NULL,
+                    'education_level_name' => !empty($education_level_name) ? $education_level_name : NULL,
+                    'education_cycle_name' => !empty($education_cycle_name) ? $education_cycle_name : NULL,
+                    'education_programme_code' => !empty($education_programme_code) ? $education_programme_code : NULL,
+                    'education_programme_name' => !empty($education_programme_name) ? $education_programme_name : NULL,
+                    'institution_name' => !empty($institution_name) ? $institution_name : NULL,
+                    'institution_code' => !empty($institution_code) ? $institution_code : NULL,
+                    'institution_classe_name' => !empty($institution_classes) ? $institution_classes : NULL,
+                    'start_date' => !empty($start_date) ? date("d-m-Y", strtotime($start_date)) : NULL
+                ];
+                
+                //Webhook institution create -- start
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if ($this->Auth->user()) {
+                    $Webhooks->triggerShell('programme_create', ['username' => $username],$body);
+                }   
+                // Webhook institution create -- end
+                }
+
                 return $process;
             }
         }
