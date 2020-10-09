@@ -127,7 +127,7 @@ class ExcelReportBehavior extends Behavior
         Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
 
 
-        $this->saveFile($objSpreadsheet, $temppath, $format);
+        $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id']);
 
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
@@ -362,15 +362,16 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    public function saveFile($objSpreadsheet, $filepath, $format)
+    public function saveFile($objSpreadsheet, $filepath, $format, $student_id)
     {
         Log::write('debug', 'ExcelReportBehavior >>> saveFile: '.$format);
         $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
 
         if ($format == 'pdf') {
-            $this->savePDF($objSpreadsheet, $filepath);
+            $this->savePDF($objSpreadsheet, $filepath, $student_id);
         } else {
             // xlsx
+			$this->savePDF($objSpreadsheet, $filepath, $student_id);
             $objWriter->save($filepath);
         }
 

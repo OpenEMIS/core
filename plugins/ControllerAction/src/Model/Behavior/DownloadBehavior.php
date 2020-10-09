@@ -41,10 +41,41 @@ class DownloadBehavior extends Behavior
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.download'] = 'download';
+		$events['ControllerAction.Model.downloadPdf'] = 'downloadPdf';
         return $events;
     }
 
-    public function download(Event $mainEvent, ArrayObject $extra)
+    public function downloadPdf(Event $mainEvent, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        $ids = $model->paramsDecode($model->paramsPass(0));
+
+        if ($model->exists($ids)) {
+            $data = $model->get($ids);
+			$fileName = $data->{$this->config('name')};
+			$fileNameData = explode(".",$fileName);
+			$fileName = $fileNameData[0].'.pdf';
+			$path = WWW_ROOT . $this->config('folder').'ReportCards_' . $ids['student_id'].'.pdf';
+		
+			if(fopen($path, 'r')) {
+				header('Content-Description: File Transfer');
+				header('Content-Type: application/octet-stream');
+				header('Content-Disposition: attachment; filename='.basename($fileName));
+				header('Expires: 0');
+				header('Cache-Control: must-revalidate');
+				header('Pragma: public');
+				header('Content-Length: ' . filesize($path));
+				ob_clean();
+				flush();
+				readfile($path);
+				exit;
+			}
+            
+        }
+        exit();
+    }
+	
+	 public function download(Event $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
         $ids = $model->paramsDecode($model->paramsPass(0));
