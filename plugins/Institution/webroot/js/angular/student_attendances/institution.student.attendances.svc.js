@@ -277,7 +277,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return [];
     }
 
-    function getPeriodOptions(institutionClassId, academicPeriodId) {
+    function getPeriodOptions(institutionClassId, academicPeriodId,day_id) {
         var success = function(response, deferred) {
             var attendancePeriodList = response.data.data;
             if (angular.isObject(attendancePeriodList) && attendancePeriodList.length > 0) {
@@ -290,7 +290,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return StudentAttendanceMarkTypes
             .find('periodByClass', {
                 institution_class_id: institutionClassId,
-                academic_period_id: academicPeriodId
+                academic_period_id: academicPeriodId,
+                day_id: day_id
             })
             .ajax({success: success, defer: true});
     }

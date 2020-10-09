@@ -21,7 +21,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         parent::initialize($config);
 
         //$this->toggle('add', false);
-        $this->toggle('remove', false);
+        //$this->toggle('remove', false);
         $this->toggle('reorder', false);
 
         $this->removeBehavior('Reorder');
@@ -119,6 +119,19 @@ class StudentMarkTypesTable extends ControllerActionTable
             $StudentAttendancePerDayPeriods->deleteAll(['student_attendance_mark_type_id' => $student_attendance_mark_type_id]);
         }
         }         
+    }
+
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+        $student_attendance_type_id = $entity->student_attendance_type_id; 
+        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $attendanceType = $StudentAttendanceTypes
+                      ->find()
+                      ->select([$StudentAttendanceTypes->aliasField('code')])
+                      ->where([$StudentAttendanceTypes->aliasField('id') => $student_attendance_type_id])
+                      ->toArray();
+        if ($attendanceType[0]->code == 'SUBJECT') {
+            $entity->attendance_per_day = 0;
+        }
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
