@@ -121,6 +121,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         $educationGradeOptions = $EducationGrades
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->find('visible')
+            ->find('order')
             ->toArray();
         $selectedEducationGrade = key($educationGradeOptions);
 
