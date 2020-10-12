@@ -332,7 +332,7 @@ class InstitutionGradesTable extends ControllerActionTable
                         'InstitutionClasses.institution_id'
                     ])
                     ->innerJoin(['InstitutionClasses' => 'institution_classes'],
-                        [	                            
+                        [                               
                             'InstitutionClasses.id = InstitutionClassGrades.institution_class_id',
                         ])
                     ->where([
@@ -517,6 +517,62 @@ class InstitutionGradesTable extends ControllerActionTable
         }
            
         }
+        //POCOR-5433-- start
+    if(!empty($this->controllerAction) && ($this->controllerAction == 'Programmes')) {
+        $bodyData = $this->find('all',
+            [ 'contain' => [
+                'Institutions',
+                'Institutions.InstitutionClasses',
+                'EducationGrades',
+                'EducationGrades.EducationProgrammes',
+                'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
+                'EducationGrades.EducationProgrammes.EducationCycles',
+                'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'
+            ],
+        ])->where([
+            $this->aliasField('id') => $entity->id
+        ]);
+        $institution_classes = [];
+
+        if (!empty($bodyData)) { 
+            foreach ($bodyData as $key => $value) {
+                $education_system_name = $value->education_grade->education_programme->education_cycle->education_level->education_system->name;
+                $education_level_name = $value->education_grade->education_programme->education_cycle->education_level->name;
+                $education_cycle_name = $value->education_grade->education_programme->education_cycle->name;
+                $education_programme_code = $value->education_grade->education_programme->code;
+                $education_programme_name = $value->education_grade->education_programme->name;
+                $education_programme_name = $value->education_grade->education_programme->name;
+                $start_date = $entity->start_date;
+                $institution_name = $value->institution->name;
+                $institution_code = $value->institution->code;
+
+                if(!empty($value->institution['institution_classes'])) {
+                    foreach ($value->institution['institution_classes'] as $key => $classes) {
+                        $institution_classes[] = $classes->name;
+                    }
+                }
+            }
+        }
+        $body = array();
+
+        $body = [   
+            'education_system_name' => !empty($education_system_name) ? $education_system_name : NULL,
+            'education_level_name' => !empty($education_level_name) ? $education_level_name : NULL,
+            'education_cycle_name' => !empty($education_cycle_name) ? $education_cycle_name : NULL,
+            'education_programme_code' => !empty($education_programme_code) ? $education_programme_code : NULL,
+            'education_programme_name' => !empty($education_programme_name) ? $education_programme_name : NULL,
+            'institution_name' => !empty($institution_name) ? $institution_name : NULL,
+            'institution_code' => !empty($institution_code) ? $institution_code : NULL,
+            'institution_class_name' => !empty($institution_classes) ? $institution_classes : NULL,
+            'start_date' => !empty($start_date) ? date("d-m-Y", strtotime($start_date)) : NULL
+        ];
+
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if ($this->Auth->user()) {
+            $Webhooks->triggerShell('programme_update', ['username' => $username], $body);
+        }   
+        //POCOR-5433-- end
+    }
     }
     
     // POCOR 5001
