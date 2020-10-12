@@ -14,7 +14,9 @@ class DownloadBehavior extends Behavior
     protected $_defaultConfig = [
         'show' => true,
         'name' => 'file_name',
-        'content' => 'file_content'
+        'content' => 'file_content',
+		'folder' => 'export',
+        'subfolder' => 'customexcel',
     ];
 
     public $fileTypes = [
@@ -36,7 +38,7 @@ class DownloadBehavior extends Behavior
         'xlsx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'zip'   => 'application/zip'
     ];
-
+	
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -55,7 +57,7 @@ class DownloadBehavior extends Behavior
 			$fileName = $data->{$this->config('name')};
 			$fileNameData = explode(".",$fileName);
 			$fileName = $fileNameData[0].'.pdf';
-			$path = WWW_ROOT . $this->config('folder').'ReportCards_' . $ids['student_id'].'.pdf';
+			$path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . 'ReportCards_' . $ids['student_id'].'.pdf';
 			if(fopen($path, 'r')) {
 				header('Content-Description: File Transfer');
 				header('Content-Type: application/octet-stream');

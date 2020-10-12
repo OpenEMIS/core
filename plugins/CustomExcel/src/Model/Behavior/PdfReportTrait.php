@@ -350,8 +350,12 @@ trait PdfReportTrait
             unset($mdpf);
         }
         // Merge all the pdf that belongs to one report
-        $fileName = $this->config('filename') . '_' . $student_id;
-
+		if(!empty($student_id)) {
+			$fileName = $this->config('filename') . '_' . $student_id;
+		} else {
+			$fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
+		}
+       
         Log::write('debug', '----------------------fileName---------------------: ');
         Log::write('debug', $fileName);
 
@@ -401,7 +405,7 @@ trait PdfReportTrait
             }
         }
 		
-        $finalPDF_file = $outFile.'.pdf';
+        $finalPDF_file = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $outFile.'.pdf';
         $mpdf->Output($finalPDF_file, "F");
         unset($mpdf);
 		return $finalPDF_file;
