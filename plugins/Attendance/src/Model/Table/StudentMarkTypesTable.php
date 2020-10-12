@@ -21,7 +21,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         parent::initialize($config);
 
         //$this->toggle('add', false);
-        //$this->toggle('remove', false);
+        $this->toggle('remove', false);
         $this->toggle('reorder', false);
 
         $this->removeBehavior('Reorder');
@@ -56,7 +56,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                     ->where([
                         $this->aliasField('code') => $code
                     ])
-                    ->order(['period'=>'DESC'])
+                  
                     ->all();
 
                 if (!$resultSet->isEmpty()) {
@@ -120,6 +120,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
         }         
     }
+
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
         $student_attendance_type_id = $entity->student_attendance_type_id; 
