@@ -481,6 +481,7 @@ public function editBeforeSave(Event $event, Entity $entity,
                 $education_programme_name = $value->education_grade->education_programme->name;
                 $education_programme_name = $value->education_grade->education_programme->name;
                 $start_date = $entity->start_date;
+                $institution_name = $value->institution->name;
                 $institution_code = $value->institution->code;
 
                 if(!empty($value->institution['institution_classes'])) {
@@ -500,7 +501,7 @@ public function editBeforeSave(Event $event, Entity $entity,
             'education_programme_name' => !empty($education_programme_name) ? $education_programme_name : NULL,
             'institution_name' => !empty($institution_name) ? $institution_name : NULL,
             'institution_code' => !empty($institution_code) ? $institution_code : NULL,
-            'institution_classes_name' => !empty($institution_classes) ? $institution_classes : NULL,
+            'institution_class_name' => !empty($institution_classes) ? $institution_classes : NULL,
             'start_date' => !empty($start_date) ? date("d-m-Y", strtotime($start_date)) : NULL
         ];
 
