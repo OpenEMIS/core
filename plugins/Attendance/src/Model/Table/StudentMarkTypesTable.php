@@ -44,19 +44,18 @@ class StudentMarkTypesTable extends ControllerActionTable
     }    
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
-    {       
+    {    
         if (!is_null($requestData[$this->alias()]['student_attendance_type_id']) && !is_null($requestData[$this->alias()]['code'])
         ) {
             $code = $requestData[$this->alias()]['code'];
             $attendancePerDay = $requestData[$this->alias()]['attendance_per_day'];
             $attendanceTypeId = $requestData[$this->alias()]['student_attendance_type_id'];
-           
+            
             $resultSet = $this
                     ->find()
                     ->where([
                         $this->aliasField('code') => $code
                     ])
-                  
                     ->all();
 
                 if (!$resultSet->isEmpty()) {
@@ -77,34 +76,40 @@ class StudentMarkTypesTable extends ControllerActionTable
             $student_attendance_mark_type_id = $studentMarkData[0]->id;
             
             $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+            $dataWithOrder = array_keys($requestData['period']);
+            $orderData = array_flip($dataWithOrder);
+
             for ($i=1;$i<=$attendancePerDay;$i++) { 
+                $key= $orderData[$i];
                 $id = $requestData['p'.$i];                
                 $PeriodsData = $StudentAttendancePerDayPeriods
                 ->find('all')
                 ->where([
                     $StudentAttendancePerDayPeriods->aliasField('id = ') => $id
                 ])
+                    
                 ->all()
                 ->toArray();
-                
-                if (!empty($PeriodsData)) {
 
-                    $StudentAttendancePerDayPeriods->updateAll(
+               if (!empty($PeriodsData)) {
+                   
+                   $StudentAttendancePerDayPeriods->updateAll(
                         ['name' => $requestData['period'][$i],
-                         'student_attendance_mark_type_id' => $student_attendance_mark_type_id, 'period' => $i],
+                         'student_attendance_mark_type_id' => $student_attendance_mark_type_id, 'period' => $i,'order' =>$key],
                     [
                         'id' => $id
                     ]
                     );
-                } else {                    
+                
+            } else {                    
                    $StudentAttendancePerDayPeriodsData = [
                         'name' => $requestData['period'][$i],
                         'student_attendance_mark_type_id' => $student_attendance_mark_type_id,
-                        'period' => $i
+                        'period' => $i,
                     ];
                     $entity1 = $StudentAttendancePerDayPeriods->newEntity($StudentAttendancePerDayPeriodsData);
                     $StudentAttendancePerDayPeriods->save($entity1);
-                }            
+                }        
         } 
 
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
@@ -136,11 +141,16 @@ class StudentMarkTypesTable extends ControllerActionTable
 
             $student_attendance_mark_type_id = $studentMarkData[0]->id;
             $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
-            for ($i=1;$i<=$attendancePerDay;$i++) {                   
+            $dataWithOrder = array_keys($requestData['period']);
+            $orderData = array_flip($dataWithOrder);
+
+            for ($i=1;$i<=$attendancePerDay;$i++) {         
+                   $key= $orderData[$i];
                    $StudentAttendancePerDayPeriodsData = [
                         'name' => $requestData['period'][$i],
                         'student_attendance_mark_type_id' => $student_attendance_mark_type_id,
-                        'period' => $i
+                        'period' =>  $i,
+                        'order' =>  $key
                     ];
                     $entity1 = $StudentAttendancePerDayPeriods->newEntity($StudentAttendancePerDayPeriodsData);
                     $StudentAttendancePerDayPeriods->save($entity1);
@@ -168,8 +178,11 @@ class StudentMarkTypesTable extends ControllerActionTable
         ->where([
             $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id = ') => $id
         ])
+        
+        ->order(['order'=>'asc'])         
         ->all()
-        ->toArray();
+       ->toArray();
+
         $this->controller->set('StudentAttendancePerDayPeriodsData', $StudentAttendancePerDayPeriodsData);
         $this->controller->set('attendance_per_day', $attendance_per_day);
         $this->setupField($entity);
@@ -251,6 +264,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         ->where([
             $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id = ') => $id
         ])
+        ->order(['order'=>'asc']) 
         ->all()
         ->toArray();
         if (!empty($entity->attendance_per_day)) {
