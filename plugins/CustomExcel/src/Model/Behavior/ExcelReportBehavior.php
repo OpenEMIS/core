@@ -370,8 +370,11 @@ class ExcelReportBehavior extends Behavior
         if ($format == 'pdf') {
             $this->savePDF($objSpreadsheet, $filepath, $student_id);
         } else {
+			// pdf
+			if(!empty($student_id)) {
+				$this->savePDF($objSpreadsheet, $filepath, $student_id);
+			}
             // xlsx
-			$this->savePDF($objSpreadsheet, $filepath, $student_id);
             $objWriter->save($filepath);
         }
 
