@@ -101,6 +101,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                     
                 ->all()
                 ->toArray();
+				
 
                if (!empty($PeriodsData)) {
                    
@@ -120,7 +121,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                     ];
                     $entity1 = $StudentAttendancePerDayPeriods->newEntity($StudentAttendancePerDayPeriodsData);
                     $StudentAttendancePerDayPeriods->save($entity1);
-                }        
+                }  
         } 
        
         if ($attendanceType[0]->code == 'SUBJECT') {
@@ -129,7 +130,6 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
         }         
     }
-
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
         $student_attendance_type_id = $entity->student_attendance_type_id; 
