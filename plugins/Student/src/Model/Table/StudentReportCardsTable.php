@@ -65,12 +65,14 @@ class StudentReportCardsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
+   
         $downloadAccess = false;
         if ($this->controller->name == 'Students') {
             $downloadAccess = $this->AccessControl->check(['Students', 'ReportCards', 'download']);
         } else if ($this->controller->name == 'Directories') {
             $downloadAccess = $this->AccessControl->check(['Directories', 'StudentReportCards', 'download']);
+        } else if ($this->controller->name == 'Profiles') {
+            $downloadAccess = $this->AccessControl->check(['Profiles', 'StudentReportCards', 'download']);
         }
 
         if ($downloadAccess) {
