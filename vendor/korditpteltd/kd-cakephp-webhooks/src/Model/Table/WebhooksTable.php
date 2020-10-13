@@ -76,9 +76,7 @@ class WebhooksTable extends Table
             ->toArray();
 		
 		if(!empty($body)) { 
-            $body = json_encode($body);
-			$body = str_replace("{","",$body);
-			$body = str_replace("}","",$body);
+            $body = "'".json_encode($body)."'";
         }
 	
         $username = isset($params['username']) ? $params['username'] : null;
