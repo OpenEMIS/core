@@ -247,14 +247,26 @@ class EmailAllReportCardsShell extends Shell
     }
 
     private function setAttachments(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
-    {
-        $attachments = [];
-
+    {        
+		$attachments = [];
         if ($studentsReportCardEntity->has('file_name') && !empty($studentsReportCardEntity->file_name) && $studentsReportCardEntity->has('file_content') && !empty($studentsReportCardEntity->file_content)) {
-            $attachments[] = [
-                'file_name' => $studentsReportCardEntity->file_name,
-                'file_content' => $studentsReportCardEntity->file_content
-            ];
+            
+			if(!empty($studentsReportCardEntity->student_id)) {
+				$fileNameData = explode(".",$studentsReportCardEntity->file_name);
+				$pdfFileName = $fileNameData[0].'.pdf';
+				$pdfFilePath = WWW_ROOT . 'export' . DS . 'customexcel' . DS . 'ReportCards_' . $studentsReportCardEntity->student_id.'.txt';
+				$file_content = NULL;
+				$file_content = file_get_contents($pdfFilePath);
+				$attachments[] = [
+					'file_name' => $pdfFileName,
+					'file_content' => $file_content
+				];
+			} else {
+				$attachments[] = [
+					'file_name' => $studentsReportCardEntity->file_name,
+					'file_content' => $studentsReportCardEntity->file_content
+				];
+			}
         }
 
         if (!empty($attachments)) {
