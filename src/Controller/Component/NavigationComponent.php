@@ -1469,6 +1469,7 @@ class NavigationComponent extends Component
     {
         $queryString = $this->request->query('queryString');
         $navigation = [
+            
             'SystemSetup' => [
                 'title' => 'System Setup',
                 'parent' => 'Administration',
@@ -1815,7 +1816,24 @@ class NavigationComponent extends Component
                     'parent' => 'Administration.MoodleApi',
                     'selected' => ['MoodleApiLog.index'],
                     'params' => ['plugin' => 'MoodleApi', 'controller' => 'MoodleApiLog', 'action' => 'index']
-                ]
+                ],
+            'Archive' => [
+                'title' => 'Archive',
+                'parent' => 'Administration',
+                'link' => false,
+            ],
+                'Archive.Backup' => [
+                    'title' => 'Backup',
+                    'parent' => 'Archive',
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'index'],
+                    'selected' => ['Archive.Backup'],
+                ],
+                'Archive.Delete' => [
+                    'title' => 'Delete',
+                    'parent' => 'Archive',
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'deleteList'],
+                    'selected' => ['Archive.Delete'],
+                ],
         ];
         return $navigation;
     }
