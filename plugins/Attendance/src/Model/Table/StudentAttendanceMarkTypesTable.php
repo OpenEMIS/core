@@ -144,6 +144,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                     $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
                     $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
                 ])
+                
                 ->all()
                 ->first();
 
@@ -176,6 +177,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                                     $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
                                     $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
                                 ])
+                            ->order(['order'=>'asc'])
                             ->all()
                             ->toArray();
 
