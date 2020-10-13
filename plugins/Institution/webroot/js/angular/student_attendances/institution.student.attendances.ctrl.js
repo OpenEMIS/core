@@ -51,6 +51,10 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.classStudentList = [];
     vm.isMarkableSubjectAttendance = false;
 
+    vm.superAdmin = 1;
+    vm.permissionView = 1;
+    vm.permissionEdit = 1;
+
     // gridOptions
     vm.gridReady = false;
     vm.gridOptions = {
@@ -129,7 +133,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             }, vm.error)
             .then(function(classListOptions) {
                 vm.updateClassList(classListOptions);                
-                return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass);
+                return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay);
             }, vm.error)
             .then(function(attendanceType) { 
                 vm.isMarkableSubjectAttendance = attendanceType;                     
@@ -137,7 +141,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             }, vm.error)
             .then(function(subjectListOptions) {
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
+                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
                 }, vm.error)
             .then(function(attendancePeriodOptions) {
                 vm.updateAttendancePeriodList(attendancePeriodOptions);
@@ -224,7 +228,12 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         vm.classListOptions = classListOptions;
         if (classListOptions.length > 0) {
             vm.selectedClass = classListOptions[0].id;
-        }
+            if (classListOptions[0].SecurityRoleFunctions) {
+                    vm.superAdmin = 0;
+                    vm.permissionView = classListOptions[0].SecurityRoleFunctions._view;
+                    vm.permissionEdit = classListOptions[0].SecurityRoleFunctions._edit;
+            }
+            }
     }
 
     /*vm.isMarkableSubjectAttendance = function(selectedClass) {
@@ -462,7 +471,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(classListOptions) {
             vm.updateClassList(classListOptions);
-                return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass);
+                return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay);
             }, vm.error)
         .then(function(attendanceType) { 
                 vm.isMarkableSubjectAttendance = attendanceType;                 
@@ -470,7 +479,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(subjectListOptions) {
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
+                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
         }, vm.error)
         .then(function(attendancePeriodOptions) {
             var markedParams = vm.getIsMarkedParams();
@@ -501,6 +510,18 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId)
         .then(function(dayListOptions) {
             vm.updateDayList(dayListOptions);
+            return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay);
+        }, vm.error)
+        .then(function(attendanceType) { 
+                vm.isMarkableSubjectAttendance = attendanceType;
+            return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
+        }, vm.error)
+        .then(function(subjectListOptions) {
+                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
+                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
+        }, vm.error)
+        .then(function(attendancePeriodOptions) {
+            vm.updateAttendancePeriodList(attendancePeriodOptions); 
             return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
         }, vm.error)
         .then(function(isMarked) {
@@ -526,7 +547,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay)
         .then(function(subjectListOptions) {
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
+                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
         }, vm.error)
         .then(function(attendancePeriodOptions) {
             vm.updateAttendancePeriodList(attendancePeriodOptions);
@@ -548,14 +569,17 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.changeClass = function() {
         UtilsSvc.isAppendLoader(true);
-        InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass)
+        if (vm.superAdmin == 0) {
+            vm.updateClassRoles(vm.selectedClass);
+        }
+        InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay)
         .then(function(attendanceType) { 
                 vm.isMarkableSubjectAttendance = attendanceType;              
                 return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
         }, vm.error)
         .then(function(subjectListOptions) {
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod);
+                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
         }, vm.error)
         .then(function(attendancePeriodOptions) {
             vm.updateAttendancePeriodList(attendancePeriodOptions);
@@ -651,5 +675,18 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         return;
     }
 
-
+    vm.updateClassRoles = function(selectedClass) {
+        var selectedClass = selectedClass;
+        var classListOptions = vm.classListOptions;
+        if (classListOptions.length > 0) {
+            angular.forEach(classListOptions, function(value, key) {
+                if (value.SecurityRoleFunctions) {
+                   if (value.id == selectedClass) {
+                        vm.permissionView = value.SecurityRoleFunctions._view;
+                        vm.permissionEdit = value.SecurityRoleFunctions._edit;
+                   }
+                }
+            });
+            }
+    }
 }
