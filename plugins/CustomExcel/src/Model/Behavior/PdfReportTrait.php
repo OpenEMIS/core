@@ -359,7 +359,7 @@ trait PdfReportTrait
         Log::write('debug', '----------------------fileName---------------------: ');
         Log::write('debug', $fileName);
 
-        $finalPDF_file = $this->mergePDFFiles($filePaths, $fileName, $fileName);
+        $this->mergePDFFiles($filePaths, $fileName, $fileName);
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
         if ($this->config('purge')) {
             foreach ($filePaths as $filepath) {
@@ -406,9 +406,13 @@ trait PdfReportTrait
         }
 		
         $finalPDF_file = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $outFile.'.pdf';
-        $mpdf->Output($finalPDF_file, "F");
+        $emailPDF_file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
+        $content = $mpdf->Output($finalPDF_file, "S");
+		$mpdf->Output($finalPDF_file, "F");
+		$fp = fopen($emailPDF_file_path . $outFile . ".txt","wb");
+		fwrite($fp,$content);
+		fclose($fp);
         unset($mpdf);
-		return $finalPDF_file;
     }
 
 }
