@@ -252,7 +252,7 @@ class InstitutionGradesTable extends ControllerActionTable
                 ])->where([
                     $educationGrades->aliasField('education_programme_id') => $entity->programme
                 ]);
-
+            
                 $institution = $this->find('all',
                     [ 'contain' => [
                         'Institutions',
@@ -261,7 +261,19 @@ class InstitutionGradesTable extends ControllerActionTable
                 ])->where([
                     $this->aliasField('institution_id') => $entity->institution_id
                 ]);
+                
+                $institutionProgramGradeSubject = TableRegistry::get('Education.EducationSubjects');
+                $sub = $institutionProgramGradeSubject->find()
+                        ->where([
+                                'id IN' => $data['grades']['education_grade_subject_id']
+                        ]);
 
+                $subject = [];
+                if (!empty($sub)) {
+                   foreach ($sub as $key => $value) {
+                       $subject[] = $value['code'] . " - " . $value['name'];
+                   }
+                }
                 if (!empty($bodyData)) { 
                     foreach ($bodyData as $key => $value) {
                         $education_system_name = $value->education_programme->education_cycle->education_level->education_system->name;
@@ -279,11 +291,6 @@ class InstitutionGradesTable extends ControllerActionTable
                         $institution_name = $value->institution->name;
                         $institution_code = $value->institution->code;
                         $institution_classes = [];
-                        if(!empty($value->institution['institution_classes'])) {
-                            foreach ($value->institution['institution_classes'] as $key => $classes) {
-                                $institution_classes[] = $classes->name;
-                            }
-                        }
                     }
                 }
 
@@ -297,7 +304,7 @@ class InstitutionGradesTable extends ControllerActionTable
                     'education_programme_name' => !empty($education_programme_name) ? $education_programme_name : NULL,
                     'institution_name' => !empty($institution_name) ? $institution_name : NULL,
                     'institution_code' => !empty($institution_code) ? $institution_code : NULL,
-                    'institution_classe_name' => !empty($institution_classes) ? $institution_classes : NULL,
+                    'institution_subject_name' => !empty($subject) ? $subject : NULL,
                     'start_date' => !empty($start_date) ? date("d-m-Y", strtotime($start_date)) : NULL
                 ];
                 
