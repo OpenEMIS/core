@@ -50,7 +50,18 @@ class StudentMarkTypesTable extends ControllerActionTable
             $code = $requestData[$this->alias()]['code'];
             $attendancePerDay = $requestData[$this->alias()]['attendance_per_day'];
             $attendanceTypeId = $requestData[$this->alias()]['student_attendance_type_id'];
-            
+
+            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $attendanceType = $StudentAttendanceTypes
+                              ->find()
+                              ->select([$StudentAttendanceTypes->aliasField('code')])
+                              ->where([$StudentAttendanceTypes->aliasField('id') => $attendanceTypeId])
+                              ->toArray();
+
+            if ($attendanceType[0]->code == 'SUBJECT') {
+                $attendancePerDay = 0;
+            }
+           
             $resultSet = $this
                     ->find()
                     ->where([
@@ -111,13 +122,6 @@ class StudentMarkTypesTable extends ControllerActionTable
                     $StudentAttendancePerDayPeriods->save($entity1);
                 }        
         } 
-
-        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
-        $attendanceType = $StudentAttendanceTypes
-                          ->find()
-                          ->select([$StudentAttendanceTypes->aliasField('code')])
-                          ->where([$StudentAttendanceTypes->aliasField('id') => $attendanceTypeId])
-                          ->toArray();
        
         if ($attendanceType[0]->code == 'SUBJECT') {
             $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
