@@ -154,6 +154,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $extra['institution_id'] = $this->Session->read('Institution.Institutions.id');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $this->enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
@@ -765,6 +766,176 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $this->SubjectStudents->save($subjectStudentEntity);
                 }
             }
+
+            //POCOR-5439 subject update webhook start
+            $bodyData = $this->find('all',
+                [ 'contain' => [
+                    'EducationGrades',
+                    'EducationGrades.EducationProgrammes',
+                    'EducationGrades.EducationProgrammes.EducationCycles',
+                    'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
+                    'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems',
+                    'AcademicPeriods',
+                    'EducationSubjects',
+                    'Institutions',
+                    'Teachers',
+                    'Students',
+                    'Classes'
+                ],
+            ])->where([
+                $this->aliasField('id') => $entity->id
+            ]);
+
+            $studentData = $teacherData = $className = [];
+
+            if(isset($bodyData)) {
+                foreach ($bodyData as $key => $value) {
+                    $academic_period_code = $value->academic_period->code;
+                    $academic_period_name = $value->academic_period->name;
+                    $institutionId = $value->institution->id;
+                    $institutionName = $value->institution->name;
+                    $institutionCode = $value->institution->code;
+                    $edSubCode = $value->education_subject->code;
+                    $edSubName = $value->education_subject->name;
+                    $educationGradeCode =  $value->education_grade->code;
+                    $educationGradeName =  $value->education_grade->name;
+                    $programmeCode = $value->education_grade->education_programme->code;
+                    $programmeName = $value->education_grade->education_programme->name;
+                    $edCycleName  = $value->education_grade->education_programme->education_cycle->name;
+                    $edLvlName = $value->education_grade->education_programme->education_cycle->education_level->name;
+                    $edSysName = $value->education_grade->education_programme->education_cycle->education_level->education_system->name;
+                    if(!empty($value->students)) {
+                        foreach ($value->students as $key => $students) {
+                            $studentData[] = $students->openemis_no;
+                        }
+                    }
+                    if(!empty($value->teachers)) {
+                        foreach ($value->teachers as $key => $teachers) {
+                            $teacherData[] = $teachers->openemis_no;
+                        }
+                    }
+                    if(!empty($value->classes)) {
+                        foreach ($value->classes as $key => $class) {
+                            $className[] = $class->name;
+                        }
+                    }
+                }
+            }
+            $body = array();
+            
+            $body = [   
+                'education_systems_name' => !empty($edSysName) ? $edSysName : NULL,
+                'education_levels_name' => !empty($edLvlName) ? $edLvlName : NULL,
+                'education_cycles_name' => !empty($edCycleName) ? $edCycleName : NULL,
+                'education_programmes_code' => !empty($programmeCode) ? $programmeCode : NULL,
+                'education_programmes_name' => !empty($programmeName) ? $programmeName : NULL,
+                'education_grades_code' => !empty($educationGradeCode) ? $educationGradeCode : NULL,
+                'education_grades_name' => !empty($educationGradeName) ? $educationGradeName : NULL,
+                'education_subjects_code' => !empty($edSubCode) ? $edSubCode : NULL,
+                'education_subjects_name' => !empty($edSubName) ? $edSubName : NULL,
+                'institutions_id' =>  !empty($institutionId) ? $institutionId : NULL,
+                'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+                'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                'institution_classes_name' => !empty($className) ? $className : NULL,
+                'academic_periods_code' => !empty($academic_period_code) ? $academic_period_code : NULL,
+                'academic_periods_name' => !empty($academic_period_name) ? $academic_period_name : NULL,
+                'institution_subjects_id' => $entity->id,
+                'institution_subjects_name' => $entity->name,
+                'security_users_openemis_no_subject_teachers' => !empty($teacherData) ? $teacherData : NULL,
+                'security_users_openemis_no_students' =>  !empty($studentData) ? $studentData : NULL,
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if (!empty($entity->modified_user_id)) {
+                $Webhooks->triggerShell('subject_update', ['username' => ''], $body);
+            }
+                    //POCOR-5439 subject update webhook end
+        } else {
+                if(!empty($this->controllerAction) && ($this->controllerAction == 'Subjects')) {    
+                // POCOR-5438 ->Webhook Feature subject (create) -- start
+                $bodyData = $this->find('all',
+                            [ 'contain' => [
+                                'EducationGrades',
+                                'EducationGrades.EducationProgrammes',
+                                'EducationGrades.EducationProgrammes.EducationCycles',
+                                'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
+                                'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems',
+                                'AcademicPeriods',
+                                'EducationSubjects',
+                                'Institutions',
+                                'Teachers',
+                                'Students',
+                                'Classes'
+                            ],
+                    ])->where([
+                        $this->aliasField('id') => $entity->id
+                    ]);
+
+            $studentData = $teacherData = $className = [];
+
+            if(isset($bodyData)) {
+                foreach ($bodyData as $key => $value) {
+                    $academic_period_code = $value->academic_period->code;
+                    $academic_period_name = $value->academic_period->name;
+                    $institutionId = $value->institution->id;
+                    $institutionName = $value->institution->name;
+                    $institutionCode = $value->institution->code;
+                    $edSubCode = $value->education_subject->code;
+                    $edSubName = $value->education_subject->name;
+                    $educationGradeCode =  $value->education_grade->code;
+                    $educationGradeName =  $value->education_grade->name;
+                    $programmeCode = $value->education_grade->education_programme->code;
+                    $programmeName = $value->education_grade->education_programme->name;
+                    $edCycleName  = $value->education_grade->education_programme->education_cycle->name;
+                    $edLvlName = $value->education_grade->education_programme->education_cycle->education_level->name;
+                    $edSysName = $value->education_grade->education_programme->education_cycle->education_level->education_system->name;
+                    if(!empty($value->students)) {
+                            foreach ($value->students as $key => $students) {
+                                $studentData[] = $students->openemis_no;
+                        }
+                    }
+                    if(!empty($value->teachers)) {
+                            foreach ($value->teachers as $key => $teachers) {
+                                $teacherData[] = $teachers->openemis_no;
+                        }
+                    }
+                    if(!empty($value->classes)) {
+                            foreach ($value->classes as $key => $class) {
+                                $className[] = $class->name;
+                        }
+                    }
+                }
+            }
+            $body = array();
+           
+            $body = [   
+                'education_systems_name' => !empty($edSysName) ? $edSysName : NULL,
+                'education_levels_name' => !empty($edLvlName) ? $edLvlName : NULL,
+                'education_cycles_name' => !empty($edCycleName) ? $edCycleName : NULL,
+                'education_programmes_code' => !empty($programmeCode) ? $programmeCode : NULL,
+                'education_programmes_name' => !empty($programmeName) ? $programmeName : NULL,
+                'education_grades_code' => !empty($educationGradeCode) ? $educationGradeCode : NULL,
+                'education_grades_name' => !empty($educationGradeName) ? $educationGradeName : NULL,
+                'education_subjects_code' => !empty($edSubCode) ? $edSubCode : NULL,
+                'education_subjects_name' => !empty($edSubName) ? $edSubName : NULL,
+                'institutions_id' =>  !empty($institutionId) ? $institutionId : NULL,
+                'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+                'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                'institution_classes_name' => !empty($className) ? $className : NULL,
+                'academic_periods_code' => !empty($academic_period_code) ? $academic_period_code : NULL,
+                'academic_periods_name' => !empty($academic_period_name) ? $academic_period_name : NULL,
+                'institution_subjects_id' => $entity->id,
+                'institution_subjects_name' => $entity->name,
+                'security_users_openemis_no_subject_teachers' => !empty($teacherData) ? $teacherData : NULL,
+                'security_users_openemis_no_students' =>  !empty($studentData) ? $studentData : NULL,
+            ];
+            if($this->action == 'add') {
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if ($this->Auth->user()) {
+                    $Webhooks->triggerShell('subject_create', ['username' => $username], $body);
+                }
+            }
+            // POCOR-5438 ->Webhook Feature subject (create) -- end
+            }
         }
     }
 
@@ -1309,25 +1480,30 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
                 
                 if (!empty($newSchoolSubjects)) {
+                    $programsubjects = 0;
                     $newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
-                    foreach ($newSchoolSubjects as $subject) {
-                        $InstitutionSubjects->save($subject);
-                        
-                        //POCOR 5001
-                        /*$institutionProgramGradeSubjects = 
+                    foreach ($newSchoolSubjects as $subject) {     //POCOR 5001
+                        $institutionProgramGradeSubjects = 
                             TableRegistry::get('InstitutionProgramGradeSubjects')
                             ->find('list')
                             ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $subject->education_grade_id,
                                 'InstitutionProgramGradeSubjects.education_grade_subject_id' => $subject->education_subject_id,
                                 'InstitutionProgramGradeSubjects.institution_id' => $subject->institution_id
                                 ])
-                            ->count(); */
+                            ->count(); 
                         
-                        //if($institutionProgramGradeSubjects > 0){
-                            //$InstitutionSubjects->save($subject);
-                        //}
+                        if($institutionProgramGradeSubjects > 0){
+                            $programsubjects++;
+                            $InstitutionSubjects->save($subject);
+                        }
                     }
                     unset($subject);
+
+                    if ($programsubjects == 0) {
+                        foreach ($newSchoolSubjects as $subject) {
+                        $InstitutionSubjects->save($subject);
+                        }
+                    }
                 }
                 unset($newSchoolSubjects);
                 unset($InstitutionSubjects);
