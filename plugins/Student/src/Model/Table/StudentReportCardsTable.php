@@ -73,8 +73,9 @@ class StudentReportCardsTable extends ControllerActionTable
             $downloadAccess = $this->AccessControl->check(['Directories', 'StudentReportCards', 'download']);
         } else if ($this->controller->name == 'Profiles') {
             $downloadAccess = $this->AccessControl->check(['Profiles', 'StudentReportCards', 'download']);
+            unset($buttons['view']);
         }
-
+    
         if ($downloadAccess) {
             $params = [
                 'report_card_id' => $entity->report_card_id,
@@ -92,7 +93,6 @@ class StudentReportCardsTable extends ControllerActionTable
                 'url' => $url
             ];
         }
-
         return $buttons;
     }
 
