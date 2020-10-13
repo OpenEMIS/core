@@ -25,6 +25,7 @@ class StudentAttendanceTypesTable extends AppTable
 		$institution_id = $options['institution_id'];
 		$academic_period_id = $options['academic_period_id'];
        $institution_class_id = $options['institution_class_id'];
+       $day_id = $options['day_id'];
        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
        //$StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
@@ -53,10 +54,12 @@ class StudentAttendanceTypesTable extends AppTable
 		            				)
 		        					->where([
 		           				 		$InstitutionClassGrades->aliasField('institution_class_id') => $institution_class_id,
-                                        $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academic_period_id
+                                        $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academic_period_id,
+                                        $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $day_id,
+                                        $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $day_id
 		        						])
 		        					->toArray();
-                            //echo "<pre>";print_r($studentAttendanceMarkTypesData);die;
+                            
 
 		if (count($studentAttendanceMarkTypesData) > 0) {
 
@@ -91,7 +94,10 @@ class StudentAttendanceTypesTable extends AppTable
             )
         ->where([
             $InstitutionClassGrades->aliasField('institution_class_id') => $institution_class_id,
-            $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academic_period_id
+            $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academic_period_id,
+            $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $day_id,
+            $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $day_id
+
         ])
         ->group([$InstitutionClassGrades->aliasField('institution_class_id')]);
     	   return $query;
