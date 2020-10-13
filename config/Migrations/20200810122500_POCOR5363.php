@@ -23,6 +23,11 @@ class POCOR5363 extends AbstractMigration
           KEY `education_grade_id` (`education_grade_id`),
           KEY `student_mark_type_status_id` (`student_mark_type_status_id`)
         )");
+
+        $this->execute('CREATE TABLE `z_5363_student_attendance_mark_types` LIKE `student_attendance_mark_types`');
+        $this->execute('INSERT INTO `z_5363_student_attendance_mark_types` SELECT * FROM `student_attendance_mark_types`');
+        $this->execute('CREATE TABLE `z_5363_student_attendance_per_day_periods` LIKE `student_attendance_per_day_periods`');
+        $this->execute('INSERT INTO `z_5363_student_attendance_per_day_periods` SELECT * FROM `student_attendance_per_day_periods`');
         $this->execute('TRUNCATE `student_attendance_mark_types`');
         $this->execute('ALTER TABLE `student_attendance_mark_types` DROP PRIMARY KEY');
         $this->execute('ALTER TABLE `student_attendance_mark_types` DROP COLUMN `education_grade_id`');
@@ -75,16 +80,11 @@ class POCOR5363 extends AbstractMigration
         // For tables
         $this->execute('DROP TABLE IF EXISTS `student_mark_type_statuses`');
         $this->execute('DROP TABLE IF EXISTS `student_mark_type_status_grades`');
-        $this->execute('TRUNCATE `student_attendance_mark_types`');
-        $this->execute('ALTER TABLE `student_attendance_mark_types` ADD COLUMN `education_grade_id` int(11) PRIMARY KEY NOT NULL FIRST');
-        $this->execute('ALTER TABLE `student_attendance_mark_types` ADD COLUMN `academic_period_id` int(11) PRIMARY KEY NOT NULL AFTER `education_grade_id`');
-        $this->execute("ALTER TABLE `student_attendance_mark_types` DROP COLUMN `id`");
-       $this->execute("ALTER TABLE `student_attendance_mark_types` DROP COLUMN `name`");
-       $this->execute('TRUNCATE `student_attendance_per_day_periods`');
-       $this->execute("ALTER TABLE `student_attendance_per_day_periods` DROP COLUMN `student_attendance_mark_type_id`");
-       $this->execute('ALTER TABLE `student_attendance_per_day_periods` ADD COLUMN `education_grade_id` int(11) PRIMARY KEY NOT NULL AFTER `name`');
+        $this->execute('DROP TABLE IF EXISTS `student_attendance_mark_types`');
+        $this->execute('RENAME TABLE `z_5363_student_attendance_mark_types` TO `student_attendance_mark_types`'); 
+        $this->execute('DROP TABLE IF EXISTS `student_attendance_per_day_periods`');
+        $this->execute('RENAME TABLE `z_5363_student_attendance_per_day_periods` TO `student_attendance_per_day_periods`'); 
 
-        $this->execute('ALTER TABLE `student_attendance_per_day_periods` ADD COLUMN `academic_period_id`  int(11) PRIMARY KEY NOT NULL AFTER `education_grade_id`');  
         $this->execute('DROP TABLE IF EXISTS `locale_contents`');
         $this->execute('RENAME TABLE `z_5363_locale_contents` TO `locale_contents`');      
 
