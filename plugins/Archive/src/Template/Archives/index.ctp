@@ -3,16 +3,49 @@ echo $this->Html->css('OpenEmis.../plugins/progressbar/css/bootstrap-progressbar
 echo $this->Html->script('OpenEmis.../plugins/progressbar/bootstrap-progressbar.min', ['block' => true]);
 echo $this->Html->script('Report.report.list', ['block' => true]);
 
-$this->extend('OpenEmis./Layout/Panel');
-$this->start('toolbar');
-//echo '<pre>'; print_r($toolbarButtons);
-    foreach ($toolbarButtons as $key => $btn) {
-        if (!array_key_exists('type', $btn) || $btn['type'] == 'button') {
-            echo $this->Html->link($btn['label'], $btn['url'], $btn['attr']);
-        } else if ($btn['type'] == 'element') {
-            echo $this->element($btn['element'], $btn['data'], $btn['options']);
-        }
-    }
+$this->extend('OpenEmis./Layout/Panel'); ?>
+
+<?php $this->start('toolbar');
+
+    $addUrl = [
+            'plugin' => 'Archive',
+            'controller' => 'Archives',
+            'action' => 'add'
+        ];
+    
+    echo $this->Html->link('<i class="fa kd-add"></i>', $addUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Add'), 'escapeTitle' => false, 'id' => 'add_url']);
+
+    /*$url = $this->Url->build([
+		'plugin' => $this->request->params['plugin'],
+	    'controller' => $this->request->params['controller'],
+	    'action' => $this->request->params['action'],
+	    'ajaxUserAutocomplete'
+    ]);
+    
+	echo $this->Form->input('user_search', [
+		//'label' => __('Add User'),
+		'type' => 'text',
+		'class' => 'autocomplete',
+		'autocomplete-url' => $url,
+		'autocomplete-no-results' => __('No User found.'),
+		'autocomplete-class' => 'error-message',
+		'autocomplete-target' => 'user_id',
+		'autocomplete-submit' => "$('#reload').val('addUser').click();"
+	]);
+	echo $this->Form->hidden('user_id', ['autocomplete-value' => 'user_id']); */?>
+
+    <div class="search" style="margin-right: -235px;">
+        <div class="input-group">
+            <div class="input text"><input type="text" name="Search[searchField]" class="form-control search-input focus" data-input-name="Search[searchField]" placeholder="Search" onkeypress="if (event.keyCode == 13) jsForm.submit()" id="search-searchfield" value=""></div>		
+            <span class="input-group-btn" style="margin-left: 210px;">
+                <button class="btn btn-xs btn-reset" type="button" onclick="$('.search-input').val('');jsForm.submit()"><i class="fa fa-close"></i></button>
+                <button class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="bottom" title="" type="button" onclick="jsForm.submit()" data-original-title="Search">
+                    <i class="fa fa-search"></i>
+                </button>
+            </span>
+        </div>
+    </div>
+    <?php //echo $this->Html->link('<i class="fa kd-lists"></i>', '', ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('List'), 'escapeTitle' => false]);
 $this->end(); ?>
 
 <?php $this->start('panelBody'); ?>
