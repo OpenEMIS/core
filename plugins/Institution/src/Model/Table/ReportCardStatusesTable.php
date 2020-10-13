@@ -114,7 +114,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     '1' => $this->paramsEncode($params)
                 ];
                 $buttons['downloadPdf'] = [
-                    'label' => '<i class="fa kd-download"></i>'.__('Download Pdf'),
+                    'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
                     'attr' => $indexAttr,
                     'url' => $downloadPdfUrl
                 ];
