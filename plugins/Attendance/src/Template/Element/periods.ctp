@@ -1,7 +1,7 @@
 <?php if ($ControllerAction['action'] == 'edit') {  ?>
     <div class="toolbar-responsive">
         <div class="toolbar-wrapper">
-            <table class="table table-curved">
+            <table  id="table-reorder" class="table table-curved">
             <thead>
                 <th><?= __('Default Period Name') ?></th>
                 <th><?= __('Assigned Name') ?></th> 
@@ -40,7 +40,8 @@
             <table class="table table-curved">
             <thead>
                 <th><?= __('Default Period Name') ?></th>
-                <th><?= __('Assigned Name') ?></th>                
+                <th><?= __('Assigned Name') ?></th>    
+                <th><?= __('Reorder') ?></th>         
             </thead>            
                 <tbody>
                     <?php 
@@ -49,6 +50,11 @@
                         <tr>
                             <td>Period <?= $j;?></td>
                             <td><?php echo (!empty($StudentAttendancePerDayPeriodsData[$i]['name'])) ? $StudentAttendancePerDayPeriodsData[$i]['name'] : "Period ".$j ?></td> 
+                            <td class="sorter">  
+                                    <div class="reorder-icon">
+                                    <i class="fa fa-arrows-alt"></i>
+                                    </div>
+                            </td>
                         </tr>
                     <?php $j++; } ?>
                 </tbody>
@@ -56,5 +62,11 @@
         </div>
     </div>
 <?php }?>
-<script src="/pocor-openemis-core/controller_action/js/reorder.js"></script>
+<?php echo $this->Html->script('/controller_action/js/reorder.js');?>
+
+
+
+
+
+
 
