@@ -117,14 +117,11 @@ class ArchivesController extends AppController
         //$archive = $this->Archives->newEntity();
         if ($this->request->is('post')) {
 
-            $fileName = 'Backup_SQL_'. date("d-M-Y_h:i:s_") . time();
-            if(shell_exec("mysqldump openemis_core > localhost/pocor-openemis-core/webroot/export/backup/'.$fileName.'.sql")){
-            //if (exec('mysqldump --user=root --password= --host=localhost openemis_core > ' . 'localhost/pocor-openemis-core/webroot/export/backup/' . $fileName . '.sql')) {
-                echo "Success";
-            } else {
-                echo "Failed";
-            }
-            die;
+            $fileName = 'Backup_SQL_' . time();
+            //if(shell_exec("mysqldump openemis_core > localhost/pocor-openemis-core/webroot/export/backup/'.$fileName.'.sql")){
+            exec('C:\xampp7.1\mysql\bin\mysqldump --user=root --password= --host=localhost openemis_core > ' . WWW_ROOT . 'export' . DS . 'backup' . DS . $fileName .'.sql');
+          
+            die('ankit');
 
             $session = $this->request->session();
             $firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : 'System';
