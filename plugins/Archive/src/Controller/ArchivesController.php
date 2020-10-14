@@ -20,6 +20,7 @@ use Archive\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Cake\Datasource\ConnectionManager;
 
+
 /**
  * Archives Controller
  *
@@ -33,12 +34,16 @@ class ArchivesController extends AppController
     public function initialize(){
 
         parent::initialize();
+        Configure::write('debug', 2);
 
     }
 
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
+
+        $this->Security->config('unlockedActions', 'add');
+
         $header = 'Archive';
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
         $this->Navigation->addCrumb($this->request->action);
@@ -91,8 +96,8 @@ class ArchivesController extends AppController
      * @return \Cake\Network\Response|null Redirects on successful add, renders view otherwise.
      */
     public function add()
-    {
-        
+    { 
+
         //get database size
         $connection = ConnectionManager::get('default');
         $results = $connection->execute('SELECT table_schema AS "Database",  ROUND(SUM(data_length + index_length) / 1024 / 1024 / 1024, 2) AS "Size" FROM information_schema.TABLES WHERE table_schema = "openemis_core" ORDER BY (data_length + index_length) DESC')->fetch('assoc');
@@ -106,12 +111,31 @@ class ArchivesController extends AppController
         if($dbsize >= $available_disksize){
             $sizerror = true;
         }
+        //echo '<pre>'; print_r($this->request->data); die;
         
         //post add archive log
         //$archive = $this->Archives->newEntity();
         if ($this->request->is('post')) {
 
-            echo '<pre>'; print_r($this->request->data); die;
+            $fileName = 'Backup_SQL_'. date("d-M-Y_h:i:s_") . time();
+            if(shell_exec("mysqldump openemis_core > localhost/pocor-openemis-core/webroot/export/backup/'.$fileName.'.sql")){
+            //if (exec('mysqldump --user=root --password= --host=localhost openemis_core > ' . 'localhost/pocor-openemis-core/webroot/export/backup/' . $fileName . '.sql')) {
+                echo "Success";
+            } else {
+                echo "Failed";
+            }
+            die;
+
+            $session = $this->request->session();
+            $firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : 'System';
+            $lastName = $session->check('Auth.User.last_name') ? $session->read('Auth.User.last_name') : 'Administrator';
+            
+            $this->request->data['name'] = "Backup_".time();
+            $this->request->data['path'] = "/webroot/export/backup/";
+            $this->request->data['generated_on'] = date("Y-m-d H:i:s");
+            $this->request->data['generated_by'] = $firstName.' '.$lastName;
+
+            //echo '<pre>'; print_r($this->request->data); die;
 
             /*$archive = $this->Archives->patchEntity($archive, $this->request->data);
             if ($this->Archives->save($archive)) {
