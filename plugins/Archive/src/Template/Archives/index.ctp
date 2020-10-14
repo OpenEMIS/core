@@ -66,7 +66,7 @@ $this->end(); ?>
                 <td><?= h(date('Y-m-d H:i:s', strtotime($archive->generated_on))) ?></td>
                 <td><?= h($archive->generated_by) ?></td>
                 <td class="actions">
-                    <?= $this->Html->link(__('Download'), ['action' => 'exportDB', $archive->id]) ?>
+                    <?= $this->Html->link(__('Download'), ['action' => 'downloadExportDB', $archive->id]) ?>
                     
                 </td>
             </tr>
