@@ -442,7 +442,10 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
-        $this->field('modified', ['visible' => false]);       
+        $this->field('modified', ['visible' => false]);   
+        
+        $this->field('education_grade_id', ['visible' => false]);
+        $this->field('academic_period_id', ['visible' => false]);
 
         $this->field('attendance_per_day', ['type' => 'select','entity' => $entity]);
         $this->field('student_attendance_type_id', ['type' => 'select','attr' => ['label' => __('Type'), 'required' => true,'entity' => $entity]]);
