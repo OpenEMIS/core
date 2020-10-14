@@ -118,12 +118,13 @@ class ArchivesController extends AppController
         if ($this->request->is('post')) {
 
             $fileName = 'Backup_SQL_'. date("d-M-Y_h:i:s_") . time();
-            if(shell_exec("mysqldump openemis_core > localhost/pocor-openemis-core/webroot/export/backup/'.$fileName.'.sql")){
-            //if (exec('mysqldump --user=root --password= --host=localhost openemis_core > ' . 'localhost/pocor-openemis-core/webroot/export/backup/' . $fileName . '.sql')) {
+            shell_exec("mysqldump --user=root --password= --host=localhost openemis_core > C:/xampp/htdocs/pocor-openemis-core/webroot/export/backup/'.$fileName.'.sql");
+            //if(shell_exec("mysqldump openemis_core > C:/xampp/htdocs/pocor-openemis-core/webroot/export/backup/'.$fileName.'.sql")){
+            /*if (exec('mysqldump --user=root --password= --host=localhost openemis_core > ' . 'localhost/pocor-openemis-core/webroot/export/backup/' . $fileName . '.sql')) {
                 echo "Success";
             } else {
                 echo "Failed";
-            }
+            }*/
             die;
 
             $session = $this->request->session();
@@ -147,6 +148,19 @@ class ArchivesController extends AppController
         }
         $this->set(compact('archive','available_disksize','dbsize','sizerror'));
         $this->set('_serialize', ['archive']);
+    }
+
+    public function downloadExportDB($archiveId = null){
+
+        $archiveData = $this->Archives->get($id);
+        echo '<pre>'; print_r($archiveData); die;
+
+        $this->response->file($archiveData['path'], array(
+            'download' => true,
+            'name' => $data['name']
+        ));
+        return $this->response;
+
     }
 
     /**
