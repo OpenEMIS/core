@@ -672,8 +672,7 @@ class InstitutionsTable extends ControllerActionTable
         $SecurityGroup->delete($groupEntity);
         $body = array();
         $body = [
-            'institution_id' => $entity->id,
-            'institution_name' => $entity->name,
+            'institution_id' => $entity->id
         ];
 
         //webhook event
