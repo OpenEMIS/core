@@ -320,14 +320,6 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'edit') {
-            $attr['type'] = 'readonly';
-            return $attr;
-        }
-    }
-
     public function onUpdateFieldStudentAttendanceTypeId(Event $event, array $attr, $action, Request $request)
     {
             $entity = $attr['entity'];
