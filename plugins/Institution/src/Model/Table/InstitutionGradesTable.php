@@ -605,16 +605,10 @@ public function beforeDelete(Event $event, Entity $entity) {
             $this->aliasField('id') => $entity->id
         ]);
 
-        if (!empty($bodyData)) { 
-            foreach ($bodyData as $key => $value) {
-                $educationGardeId = $value->education_grade->id;
-            }
-        }
-
         $body = array();
 
         $body = [  
-            'education_grade_id' => !empty($educationGardeId) ? $educationGardeId : NULL,
+            'institution_grades_id' => !empty($entity->id) ? $entity->id : NULL,
         ];
         if($this->action == 'remove') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
