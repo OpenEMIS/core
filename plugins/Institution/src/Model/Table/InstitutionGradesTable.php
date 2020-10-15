@@ -599,10 +599,7 @@ public function beforeDelete(Event $event, Entity $entity) {
     if(!empty($this->controllerAction) && ($this->controllerAction == 'Programmes')) {
         $bodyData = $this->find('all',
             [ 'contain' => [
-                'Institutions',
-                'Institutions.InstitutionClasses',
-                'EducationGrades',
-                'EducationGrades.EducationProgrammes',
+                'EducationGrades'
             ],
         ])->where([
             $this->aliasField('id') => $entity->id
@@ -611,23 +608,18 @@ public function beforeDelete(Event $event, Entity $entity) {
         if (!empty($bodyData)) { 
             foreach ($bodyData as $key => $value) {
                 $educationGardeId = $value->education_grade->id;
-                $educationGardeName = $value->education_grade->name;
-                $education_programme_id = $value->education_grade->education_programme->id;
-                $education_programme_name = $value->education_grade->education_programme->name;
-
             }
         }
+
         $body = array();
 
         $body = [  
             'education_grade_id' => !empty($educationGardeId) ? $educationGardeId : NULL,
-            'education_grade_name' => !empty($educationGardeName) ? $educationGardeName : NULL, 
-            'education_programme_id' => !empty($education_programme_id) ? $education_programme_id : NULL,
-            'education_programme_name' => !empty($education_programme_name) ? $education_programme_name : NULL,
         ];
         if($this->action == 'remove') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
+                $username = $this->Auth->user()['username']; 
                 $Webhooks->triggerShell('programme_delete', ['username' => $username], $body);
             } 
         }
