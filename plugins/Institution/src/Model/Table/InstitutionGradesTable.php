@@ -191,6 +191,7 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                     ) {
                             $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
                         $createdUserId = $this->Session->read('Auth.User.id');
+                        $institutionProgramGradeSubjectID = [];
                         foreach($gradeSubjectEntities as $gradeSubjectId){ 
                             if($gradeSubjectId > 0){
                                 $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
@@ -202,7 +203,8 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                                 $gradeSubject->created_user_id = $createdUserId;
                                 $today = new DateTime();
                                 $gradeSubject->created = $today->format('Y-m-d H:i:s');
-                                $institutionProgramGradeSubject->save($gradeSubject);   
+                                $institutionProgramGradeSubject->save($gradeSubject);
+                                array_push($institutionProgramGradeSubjectID,$gradeSubject->id);   
                             }
                         }
 
@@ -273,7 +275,7 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                             'institution_name' => !empty($institution_name) ? $institution_name : NULL,
                             'institution_code' => !empty($institution_code) ? $institution_code : NULL,
                             'institution_grade_id' => !empty($lastInsertId) ? $lastInsertId : NULL,
-                            'institution_programme_grade_subjects_id' => !empty($gradeSubject) ? $gradeSubject : NULL,
+                            'institution_programme_grade_subjects_id' => !empty($institutionProgramGradeSubjectID) ? $institutionProgramGradeSubjectID : NULL,
                             'institution_subject_name' => !empty($subject) ? $subject : NULL,
                             'start_date' => !empty($start_date) ? date("d-m-Y", strtotime($start_date)) : NULL
                         ];
