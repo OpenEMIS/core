@@ -55,9 +55,10 @@ class InstitutionStaffShiftsTable extends ControllerActionTable
                         $staff->aliasField('staff_id') => $entity->staff_id
                     ]);
 
-        
+
             if (!empty($bodyData)) { 
-                foreach ($bodyData as $key => $value) { 
+                foreach ($bodyData as $key => $value) {
+                    $institutionStaffId = $value->id; 
                     $user_id = $value->user->id;
                     $openemis_no = $value->user->openemis_no;
                     $first_name = $value->user->first_name;
@@ -151,6 +152,7 @@ class InstitutionStaffShiftsTable extends ControllerActionTable
                 'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
                 'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
                 'institution_staff_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
                 'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL, 
                 'institution_positions_position_no'=>!empty($position_no) ? $position_no : NULL,
