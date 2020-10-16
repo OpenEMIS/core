@@ -24,10 +24,8 @@
 							$educationGradeId = intval($obj->education_grade_id);
 							$selected = (array_key_exists('existedSubjects', $attr['data']) && array_key_exists($n, $attr['data']['existedSubjects'])) ? 'checked' : '';
 							if ($selected) {
-								$selected = '';
 								$attrValue = $attr['data']['existedSubjects'][$n]['name'];
-								$attr['data']['existedSubjects'][$n]['name'] = '';
-								$disabled = '';
+								$disabled = 'disabled';
 								$teachers = $attr['data']['existedSubjects'][$n]['teachers'];
 								unset($attr['data']['existedSubjects'][$n]);
 							} else {
