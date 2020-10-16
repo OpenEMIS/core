@@ -35,9 +35,19 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
         $validator
-            ->add('date_enabled', 'ruleCompareDate', [
-            'rule' => ['compareDate', 'date_disabled', true]
-        ]);
+            ->add('date_enabled', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'message' => __('Date enabled should be in academic period')
+                ],
+                'ruleCompareDate' => [
+                    'rule' => ['compareDate', 'date_disabled', false]
+                ]
+            ])
+            ->add('date_disabled', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                'message' => __('Date disabled should be in academic period')
+            ]);
 
         return $validator;
     } 
