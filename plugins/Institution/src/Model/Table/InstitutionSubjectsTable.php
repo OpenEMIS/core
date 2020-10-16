@@ -113,8 +113,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $validator
             ->requirePresence('name')
             ->requirePresence('class_subjects')
-            ->notEmpty('class_subjects')
-            ->add('class_subjects', 'ruleCheckDuplicateClassSubjects', [
+            ->notEmpty('class_subjects');
+            /*->add('class_subjects', 'ruleCheckDuplicateClassSubjects', [
                 'rule' => function ($check, $global) {
                     if ($global['newRecord']) {
                         return true;
@@ -148,7 +148,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     return $recordFound == 0;
                 },
                 'message' => __('Institution Subject has already been added to one of the classes.')
-            ]);
+            ]);*/
         return $validator;
     }
 
@@ -1011,10 +1011,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $error = false;
         $subjects = false;
         $subjectOptions = $this->getSubjectOptions($extra['selectedClassId']);
-        $existedSubjects = $this->getExistedSubjects($extra['selectedClassId'], true);
-        if (count($subjectOptions) == count($existedSubjects)) {
+        //$existedSubjects = $this->getExistedSubjects($extra['selectedClassId'], true);
+        /*if (count($subjectOptions) == count($existedSubjects)) {
             $error = $this->aliasField('allSubjectsAlreadyAdded');
-        } elseif (isset($data['MultiSubjects']) && count($data['MultiSubjects'])>0) {
+        } else*/
+        if (isset($data['MultiSubjects']) && count($data['MultiSubjects'])>0) {
             foreach ($data['MultiSubjects'] as $key => $row) {
                 if (isset($row['education_subject_id']) && isset($row['subject_staff'])) {
                     $subjectSelected = true;
