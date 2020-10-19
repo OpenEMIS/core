@@ -37,6 +37,7 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->fields['started_on']['visible'] = false;
         $this->fields['completed_on']['visible'] = false;
         $this->fields['status']['visible'] = false;
+        $this->fields['pdf_file_content']['visible'] = false;
         $this->fields['report_card_id']['type'] = 'integer';
         $this->fields['education_grade_id']['type'] = 'integer';
         $this->fields['institution_id']['type'] = 'integer';
