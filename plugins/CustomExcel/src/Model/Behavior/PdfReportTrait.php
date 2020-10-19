@@ -367,7 +367,6 @@ trait PdfReportTrait
                 $this->deleteFile($filepath);
             }
         }
-		return $finalPDF_file;
     }
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
@@ -405,11 +404,10 @@ trait PdfReportTrait
             }
         }
 		
-        $finalPDF_file = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $outFile.'.pdf';
-        $emailPDF_file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
-        $content = $mpdf->Output($finalPDF_file, "S");
-		$mpdf->Output($finalPDF_file, "F");
-		$fp = fopen($emailPDF_file_path . $outFile . ".txt","wb");
+        $file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $outFile.'.pdf';
+        $pdf_file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
+        $content = $mpdf->Output($file_path, "S");
+		$fp = fopen($pdf_file_path . $outFile . ".txt","wb");
 		fwrite($fp,$content);
 		fclose($fp);
         unset($mpdf);
