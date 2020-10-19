@@ -60,6 +60,7 @@ class EmailAllReportCardsShell extends Shell
                         ->select([
                             $this->InstitutionStudentsReportCards->aliasField('file_name'),
                             $this->InstitutionStudentsReportCards->aliasField('file_content'),
+                            $this->InstitutionStudentsReportCards->aliasField('pdf_file_content'),
                             $this->InstitutionStudentsReportCards->aliasField('student_id'),
                             $this->InstitutionStudentsReportCards->aliasField('institution_id'),
                             $this->InstitutionStudentsReportCards->aliasField('report_card_id'),
@@ -249,14 +250,12 @@ class EmailAllReportCardsShell extends Shell
     private function setAttachments(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
     {        
 		$attachments = [];
-        if ($studentsReportCardEntity->has('file_name') && !empty($studentsReportCardEntity->file_name) && $studentsReportCardEntity->has('file_content') && !empty($studentsReportCardEntity->file_content)) {
-            
+        if ($studentsReportCardEntity->has('file_name') && !empty($studentsReportCardEntity->file_name) && $studentsReportCardEntity->has('pdf_file_content') && !empty($studentsReportCardEntity->pdf_file_content)) {
 			if(!empty($studentsReportCardEntity->student_id)) {
 				$fileNameData = explode(".",$studentsReportCardEntity->file_name);
 				$pdfFileName = $fileNameData[0].'.pdf';
-				$pdfFilePath = WWW_ROOT . 'export' . DS . 'customexcel' . DS . 'ReportCards_' . $studentsReportCardEntity->student_id.'.txt';
 				$file_content = NULL;
-				$file_content = file_get_contents($pdfFilePath);
+				$file_content = $studentsReportCardEntity->pdf_file_content;
 				$attachments[] = [
 					'file_name' => $pdfFileName,
 					'file_content' => $file_content
