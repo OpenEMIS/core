@@ -128,7 +128,7 @@ class ExcelReportBehavior extends Behavior
 
 
         $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id']);
-
+		
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
             $this->deleteFile($extra['temp_logo']);
@@ -145,7 +145,20 @@ class ExcelReportBehavior extends Behavior
 
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
 
-        if ($this->config('download')) {
+        if (!empty($params['student_id'])) {
+			$pdfFilePath = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $this->config('filename') . '_' . $params['student_id'].'.txt';
+            $pdfFileContent = file_get_contents($pdfFilePath);
+			
+			$StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+			// save Pdf file
+			$StudentsReportCards->updateAll([
+				'pdf_file_content' => $pdfFileContent
+			], $params);
+			
+			$this->deleteFile($pdfFilePath);
+        }
+		
+		if ($this->config('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();

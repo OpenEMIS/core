@@ -57,20 +57,24 @@ class DownloadBehavior extends Behavior
 			$fileName = $data->{$this->config('name')};
 			$fileNameData = explode(".",$fileName);
 			$fileName = $fileNameData[0].'.pdf';
-			$path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . 'ReportCards_' . $ids['student_id'].'.pdf';
-			if(fopen($path, 'r')) {
-				header('Content-Description: File Transfer');
-				header('Content-Type: application/octet-stream');
-				header('Content-Disposition: attachment; filename='.basename($fileName));
-				header('Expires: 0');
-				header('Cache-Control: must-revalidate');
-				header('Pragma: public');
-				header('Content-Length: ' . filesize($path));
-				ob_clean();
-				flush();
-				readfile($path);
-				exit;
-			}
+			$pathInfo['extension'] = 'pdf';
+            $file = $this->getFile($data->pdf_file_content);
+            $fileType = 'image/jpg';
+            if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+                $fileType = $this->fileTypes[$pathInfo['extension']];
+            }
+
+            // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: " . $fileType);
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+
+            echo $file;
             
         }
         exit();
@@ -80,12 +84,11 @@ class DownloadBehavior extends Behavior
     {
         $model = $this->_table;
         $ids = $model->paramsDecode($model->paramsPass(0));
-
+		
         if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->{$this->config('name')};
             $pathInfo = pathinfo($fileName);
-
             $file = $this->getFile($data->{$this->config('content')});
             $fileType = 'image/jpg';
             if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
