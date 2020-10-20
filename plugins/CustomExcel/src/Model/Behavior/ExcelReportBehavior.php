@@ -152,7 +152,7 @@ class ExcelReportBehavior extends Behavior
 			$StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
 			// save Pdf file
 			$StudentsReportCards->updateAll([
-				'pdf_file_content' => $pdfFileContent
+				'file_content_pdf' => $pdfFileContent
 			], $params);
 			
 			$this->deleteFile($pdfFilePath);
