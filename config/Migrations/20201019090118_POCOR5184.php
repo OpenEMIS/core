@@ -12,7 +12,7 @@ class POCOR5184 extends AbstractMigration
      */
     public function up()
     {
-        // Backup locale_contents table
+        // Backup institution_students_report_cards table
         $this->execute('CREATE TABLE `z_5184_institution_students_report_cards` LIKE `institution_students_report_cards`');
         $this->execute('INSERT INTO `z_5184_institution_students_report_cards` SELECT * FROM `institution_students_report_cards`');
         // End	
