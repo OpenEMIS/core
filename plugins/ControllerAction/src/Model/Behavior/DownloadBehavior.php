@@ -58,7 +58,7 @@ class DownloadBehavior extends Behavior
 			$fileNameData = explode(".",$fileName);
 			$fileName = $fileNameData[0].'.pdf';
 			$pathInfo['extension'] = 'pdf';
-            $file = $this->getFile($data->pdf_file_content);
+            $file = $this->getFile($data->file_content_pdf);
             $fileType = 'image/jpg';
             if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
                 $fileType = $this->fileTypes[$pathInfo['extension']];
