@@ -26,24 +26,24 @@ class POCOR5363a extends AbstractMigration
         $this->execute("UPDATE `student_attendance_mark_types`
         INNER JOIN `education_grades` 
         ON student_attendance_mark_types.education_grade_id = education_grades.id
-        SET student_attendance_mark_types.code = education_grades.code;");
+        SET student_attendance_mark_types.code = education_grades.code");
 
         $this->execute("INSERT INTO `student_mark_type_statuses` (`academic_period_id`, `student_attendance_mark_type_id`, `date_enabled`, `date_disabled`)
         SELECT student_attendance_mark_types.academic_period_id,student_attendance_mark_types.id,academic_periods.start_date,academic_periods.end_date 
         FROM `student_attendance_mark_types` 
-        INNER JOIN `academic_periods` ON student_attendance_mark_types.academic_period_id = academic_periods.id;")  
+        INNER JOIN `academic_periods` ON student_attendance_mark_types.academic_period_id = academic_periods.id"); 
 
         $this->execute("INSERT INTO `student_mark_type_status_grades` (`id`,`education_grade_id`, `student_mark_type_status_id`)
         SELECT uuid(),student_attendance_mark_types.education_grade_id,student_mark_type_statuses.id 
         FROM `student_mark_type_statuses`
         INNER JOIN `student_attendance_mark_types`
-        ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id;")
+        ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id");
 
         $this->execute("UPDATE `student_attendance_per_day_periods`
         INNER JOIN `student_attendance_mark_types`
         ON student_attendance_per_day_periods.education_grade_id = student_attendance_mark_types.education_grade_id
         AND student_attendance_per_day_periods.academic_period_id = student_attendance_mark_types.academic_period_id
-        SET student_attendance_per_day_periods.student_attendance_mark_type_id = student_attendance_mark_types.id;");
+        SET student_attendance_per_day_periods.student_attendance_mark_type_id = student_attendance_mark_types.id");
     }
 
     public function down()
