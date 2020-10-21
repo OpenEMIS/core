@@ -1,18 +1,16 @@
 <?php
 namespace Archive\Model\Entity;
 
-
 use Cake\ORM\Entity;
 
 /**
- * Archive Entity
+ * ArchivedLog Entity
  *
  * @property int $id
- * @property string $name
- * @property string $path
+ * @property string $file
  * @property \Cake\I18n\Time $generated_on
  * @property string $generated_by
- */class Archive extends Entity
+ */class ArchivedLog extends Entity
 {
 
     /**

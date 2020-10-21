@@ -4,16 +4,15 @@ namespace Archive\Model\Entity;
 use Cake\ORM\Entity;
 
 /**
- * Delete Entity
+ * DeletedLog Entity
  *
  * @property int $id
- * @property string $academic_period
- * @property int $archives_id
+ * @property int $academic_period_id
  * @property \Cake\I18n\Time $generated_on
  * @property string $generated_by
  *
- * @property \Archive\Model\Entity\Archive $archive
- */class Delete extends Entity
+ * @property \Archive\Model\Entity\AcademicPeriod $academic_period
+ */class DeletedLog extends Entity
 {
 
     /**

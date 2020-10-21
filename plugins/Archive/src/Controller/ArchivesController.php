@@ -34,6 +34,7 @@ class ArchivesController extends AppController
     public function initialize(){
 
         parent::initialize();
+        $this->loadModel('Archive.DeletedLogs');
         Configure::write('debug', 2);
 
     }
@@ -42,23 +43,33 @@ class ArchivesController extends AppController
     {
         parent::beforeFilter($event);
 
+        //echo '<pre>'; print_r($this->request->params); die;
+
         $this->Security->config('unlockedActions', 'add');
+        $this->Security->config('unlockedActions', 'downloadExportDB');
 
         $header = 'Archive';
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
-        $this->Navigation->addCrumb($this->request->action);
 
-        $this->set('contentHeader', __($header));
+        //Customize header because model name created was different.
+        if($this->request->action == 'backupLog'){
+            $header = __('Archive') . ' - ' . __('Backup');
+            $this->Navigation->addCrumb('Backup');
+        }elseif($this->request->action == 'deleteLog'){
+            $header = __('Archive') . ' - ' . __('Delete');
+            $this->Navigation->addCrumb('Delete');
+        }
+        $this->set('contentHeader', $header); 
+
+        $this->Auth->allow(['index', 'download']);
+
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra){
-
-        $header = __('Archive');
-        echo '<pre>'; echo $model->alias; die;
-        $header .= ' - ' . __($model->getHeader($model->alias));
-
-        $this->set('contentHeader', $header);
-    }
+    /*public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    {
+        $header = __('Archive') . ' - ' . __($model->alias());
+        $this->set('contentHeader', $header); 
+    }*/
 
     /**
      * Index method
@@ -71,23 +82,6 @@ class ArchivesController extends AppController
 
         $this->set(compact('archives'));
         $this->set('_serialize', ['archives']);
-    }
-
-    /**
-     * View method
-     *
-     * @param string|null $id Archive id.
-     * @return \Cake\Network\Response|null
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
-    public function view($id = null)
-    {
-        $archive = $this->Archives->get($id, [
-            'contain' => []
-        ]);
-
-        $this->set('archive', $archive);
-        $this->set('_serialize', ['archive']);
     }
 
     /**
@@ -117,94 +111,68 @@ class ArchivesController extends AppController
         //$archive = $this->Archives->newEntity();
         if ($this->request->is('post')) {
 
-            $fileName = 'Backup_SQL_'. date("d-M-Y_h:i:s_") . time();
-            shell_exec("mysqldump --user=root --password= --host=localhost openemis_core > C:/xampp/htdocs/pocor-openemis-core/webroot/export/backup/'.$fileName.'.sql");
-            //if(shell_exec("mysqldump openemis_core > C:/xampp/htdocs/pocor-openemis-core/webroot/export/backup/'.$fileName.'.sql")){
-            /*if (exec('mysqldump --user=root --password= --host=localhost openemis_core > ' . 'localhost/pocor-openemis-core/webroot/export/backup/' . $fileName . '.sql')) {
-                echo "Success";
-            } else {
-                echo "Failed";
-            }*/
-            die;
+            $fileName = 'Backup_SQL_' . time();
+            exec('C:/xampp/mysql/bin/mysqldump --user=root --password= --host=localhost openemis_core > C:/xampp/htdocs/pocor-openemis-core/webroot/export/'.$fileName.'.sql');
 
             $session = $this->request->session();
             $firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : 'System';
             $lastName = $session->check('Auth.User.last_name') ? $session->read('Auth.User.last_name') : 'Administrator';
             
-            $this->request->data['name'] = "Backup_".time();
-            $this->request->data['path'] = "/webroot/export/backup/";
-            $this->request->data['generated_on'] = date("Y-m-d H:i:s");
-            $this->request->data['generated_by'] = $firstName.' '.$lastName;
+            $data['name'] = $fileName;
+            $data['path'] = "webroot\export\backup";
+            $data['generated_on'] = date("Y-m-d H:i:s");
+            $data['generated_by'] = $firstName.' '.$lastName;
 
+            unset($data['Size']);
+            unset($data['Available_Space']);
             //echo '<pre>'; print_r($this->request->data); die;
-
-            /*$archive = $this->Archives->patchEntity($archive, $this->request->data);
+            
+            //$archive = $this->Archives->patchEntity($archive, $this->request->data);//entity is returning null, check later
+            $archive = $this->Archives->newEntity($this->request->data);
+            //echo '<pre>'; print_r($archive); die;
+            
             if ($this->Archives->save($archive)) {
-                $this->Flash->success(__('The archive has been saved.'));
-
+                //$this->Flash->success(__('The archive has been saved.'));
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error(__('The archive could not be saved. Please, try again.'));*/
+            //$this->Flash->error(__('The archive could not be saved. Please, try again.'));
         }
         $this->set(compact('archive','available_disksize','dbsize','sizerror'));
         $this->set('_serialize', ['archive']);
     }
 
-    public function downloadExportDB($archiveId = null){
+    function downloadSql($archiveId){
 
-        $archiveData = $this->Archives->get($id);
-        echo '<pre>'; print_r($archiveData); die;
-
-        $this->response->file($archiveData['path'], array(
-            'download' => true,
-            'name' => $data['name']
-        ));
-        return $this->response;
-
-    }
-
-    /**
-     * Edit method
-     *
-     * @param string|null $id Archive id.
-     * @return \Cake\Network\Response|null Redirects on successful edit, renders view otherwise.
-     * @throws \Cake\Network\Exception\NotFoundException When record not found.
-     */
-    public function edit($id = null)
-    {
-        $archive = $this->Archives->get($id, [
-            'contain' => []
-        ]);
-        if ($this->request->is(['patch', 'post', 'put'])) {
-            $archive = $this->Archives->patchEntity($archive, $this->request->data);
-            if ($this->Archives->save($archive)) {
-                $this->Flash->success(__('The archive has been saved.'));
-
-                return $this->redirect(['action' => 'index']);
-            }
-            $this->Flash->error(__('The archive could not be saved. Please, try again.'));
+        $archiveData = $this->Archives->findById($archiveId)->first();
+        $fileLink = WWW_ROOT.'export\a.sql';
+        
+        if (fopen($fileLink, 'r')){
+            //echo 'came'; die;
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename='.basename('a.sql'));
+            header('Expires: 0');
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($fileLink));
+            ob_clean();
+            flush();
+            readfile($fileLink);
+            exit;
         }
-        $this->set(compact('archive'));
-        $this->set('_serialize', ['archive']);
+        return $this->redirect(['action' => 'BackupLog']);
     }
 
-    /**
-     * Delete method
-     *
-     * @param string|null $id Archive id.
-     * @return \Cake\Network\Response|null Redirects to index.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
-    public function delete($id = null)
-    {
-        $this->request->allowMethod(['post', 'delete']);
-        $archive = $this->Archives->get($id);
-        if ($this->Archives->delete($archive)) {
-            $this->Flash->success(__('The archive has been deleted.'));
-        } else {
-            $this->Flash->error(__('The archive could not be deleted. Please, try again.'));
-        }
+    //Archive backup module log page //currently not in use
+    public function BackupLog(){
 
-        return $this->redirect(['action' => 'index']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.Archives']);
     }
+
+    //Archive delete module log page
+    public function DeleteLog(){
+
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.DeletedLogs']);
+    }
+
 }
