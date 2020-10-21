@@ -1817,23 +1817,31 @@ class NavigationComponent extends Component
                     'selected' => ['MoodleApiLog.index'],
                     'params' => ['plugin' => 'MoodleApi', 'controller' => 'MoodleApiLog', 'action' => 'index']
                 ],
-            'Archive' => [
+            'Administration.Archive' => [
                 'title' => 'Archive',
                 'parent' => 'Administration',
                 'link' => false,
             ],
+                'Textbooks.Textbooks' => [
+                    'title' => 'Textbooks',
+                    'parent' => 'Archive',
+                    'params' => ['plugin' => 'Textbook'],
+                    'selected' => ['Textbooks.Textbooks', 'Textbooks.ImportTextbooks']
+                ],
                 'Archive.Backup' => [
                     'title' => 'Backup',
-                    'parent' => 'Archive',
-                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'index'],
-                    'selected' => ['Archive.Backup'],
+                    'parent' => 'Administration.Archive',
+                    'selected' => ['Archives.BackupLog'],
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'BackupLog'],
                 ],
                 'Archive.Delete' => [
                     'title' => 'Delete',
-                    'parent' => 'Archive',
-                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'deleteList'],
-                    'selected' => ['Archive.Delete'],
+                    'parent' => 'Administration.Archive',
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'DeleteLog'],
+                    'selected' => ['Archives.DeleteLog'],
                 ],
+                
+            
         ];
         return $navigation;
     }
