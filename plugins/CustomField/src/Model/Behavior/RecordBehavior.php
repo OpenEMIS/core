@@ -693,6 +693,14 @@ class RecordBehavior extends Behavior
             $customFormIds = $customFormQuery
                 ->toArray();
 
+            //$update1 = ;
+            // $update2 = ;
+            $update_query1 = $this->CustomFormsFields->update()
+                ->set($this->CustomFormsFields->find()->newExpr('REPLACE(section, ":", "" ))'));
+            $update_query2 = $this->CustomFormsFields->find()->update()
+                ->set($this->CustomFormsFields->find()->newExpr('REPLACE(' . $this->CustomFormsFields->aliasField('section') . ', ".", "" ))'));
+                echo "<pre>";print_r($update_query1);die;
+
             if (!empty($customFormIds)) {
                 $query = $this->CustomFormsFields
                     ->find('all')
