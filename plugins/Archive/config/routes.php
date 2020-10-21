@@ -5,7 +5,7 @@ use Cake\Routing\Route\DashedRoute;
 
 Router::plugin(
     'Archive',
-    ['path' => '/Archives'],
+    ['path' => '/Archive'],
     function (RouteBuilder $routes) {
         $routes->fallbacks(DashedRoute::class);
     }
