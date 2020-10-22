@@ -707,14 +707,24 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.ReportCardComments','Institutions.Comments'],
                 ],
 
-                
-
-            'Institutions.Positions' => [
-                'title' => 'Positions',
+            'Institutions.Appointment' => [
+                'title' => 'Appointment',
                 'parent' => 'Institutions.Institutions.index',
-                'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Positions', 'Institutions.ImportInstitutionPositions'],
+                'link' => false,
             ],
+
+                'Institutions.Positions' => [
+                    'title' => 'Positions',
+                    'parent' => 'Institutions.Appointment',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.Positions', 'Institutions.ImportInstitutionPositions'],
+                ],
+                'InstitutionStaffDuties.index' => [
+                    'title' => 'Duties',
+                    'parent' => 'Institutions.Appointment',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['InstitutionStaffDuties.add','InstitutionStaffDuties.edit','InstitutionStaffDuties.view','InstitutionStaffDuties.delete'],
+                ],         
 
             'Institution.Finance' => [
                 'title' => 'Finance',
