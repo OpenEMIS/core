@@ -180,9 +180,11 @@ class NavigationComponent extends Component
         if (!empty($pass[0])) {
             $linkName .= '.'.$pass[0];
         }
+        
         if (!in_array($linkName, $navigations)) {
             $selectedArray = $this->array_column($navigations, 'selected');
             foreach ($selectedArray as $k => $selected) {
+                //echo '<pre>'.$linkName.'#####'; print_r($selected); 
                 if (is_array($selected) && (in_array($linkName, $selected) || in_array($controllerActionLink, $selected))) {
                     $linkName = $k;
                     break;
@@ -1822,23 +1824,23 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'link' => false,
             ],
-                'Textbooks.Textbooks' => [
-                    'title' => 'Textbooks',
-                    'parent' => 'Archive',
-                    'params' => ['plugin' => 'Textbook'],
-                    'selected' => ['Textbooks.Textbooks', 'Textbooks.ImportTextbooks']
-                ],
                 'Archive.Backup' => [
                     'title' => 'Backup',
                     'parent' => 'Administration.Archive',
-                    'selected' => ['Archives.BackupLog'],
+                    'selected' => ['Archives.backupLog'],
                     'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'BackupLog'],
                 ],
-                'Archive.Delete' => [
-                    'title' => 'Delete',
+                'Archive.Transfer' => [
+                    'title' => 'Transfer',
                     'parent' => 'Administration.Archive',
                     'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'DeleteLog'],
-                    'selected' => ['Archives.DeleteLog'],
+                    'selected' => ['Archives.deleteLog'],
+                ],
+                'Archive.Connection' => [
+                    'title' => 'Connection',
+                    'parent' => 'Administration.Archive',
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'DeleteLog'],
+                    'selected' => ['Archives.deleteLog'],
                 ],
                 
             
