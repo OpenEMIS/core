@@ -151,6 +151,7 @@ use Cake\Datasource\ConnectionManager;
         $entity->path = "webroot/export/backup";
         $entity->generated_on = date("Y-m-d H:i:s");
         $entity->generated_by = $this->Session->read('Auth.User.id');
+
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
