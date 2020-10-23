@@ -308,6 +308,7 @@ class StaffTable extends AppTable
             'StaffAttendances' => ['text' => __('Attendances')],
             'Behaviours' => ['text' => __('Behaviours')],
             'StaffAppraisals' => ['text' => __('Appraisals')],
+            'StaffDuties' => ['text' => __('Duties')],
         ];
 
         // unset classes and subjects if institution is non-academic
@@ -324,7 +325,7 @@ class StaffTable extends AppTable
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            if ($key == 'StaffLeave' || $key == 'StaffAppraisals') {
+            if ($key == 'StaffLeave' || $key == 'StaffAppraisals' ||$key == 'StaffDuties') {
                 $studentUrl = array_key_exists('url', $options) ? $options['url'] : $studentUrl;
                 $userId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
 

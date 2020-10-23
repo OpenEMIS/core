@@ -146,6 +146,10 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']);
     }
+    public function StaffDuties()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffDuties']);
+    }
     public function StudentTextbooks()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']);
@@ -846,6 +850,7 @@ class DirectoriesController extends AppController
             'Attendances' => ['text' => __('Attendances')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
+            'Duties' => ['text' => __('Duties')],
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
