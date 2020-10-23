@@ -13,7 +13,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Institution\Model\Table\ClassAttendanceRecordsTable as RecordMarkedType;
-
 use Cake\Log\Log;
 
 class StudentAttendanceSummaryTable extends AppTable
@@ -139,20 +138,10 @@ class StudentAttendanceSummaryTable extends AppTable
                 $this->aliasField('id'),
                 $this->aliasField('name'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('academic_period_id'),
-                $institutionSubjects->aliasField('id')
+                $this->aliasField('academic_period_id')
             ])
-            ->leftjoin(
-                [$StudentAbsencesPeriodDetails->alias() => $StudentAbsencesPeriodDetails->table()],
-                [$StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') . $this->aliasField('id') ])
-            ->leftjoin(
-                    [$institutionSubjects->alias() => $institutionSubjects->table()],
-                    [$StudentAbsencesPeriodDetails->aliasField('subject_id = ') . $institutionSubjects->aliasField('id') ])
-          
-            ->where([$conditions,
-                $StudentAbsencesPeriodDetails->aliasField('date >=') => $reportStartDate->format("Y-m-d"),
-                $StudentAbsencesPeriodDetails->aliasField('date <=') => $reportEndDate->format("Y-m-d"),
-             ]);
+            
+            ->where([$conditions]);
             $results = $query->toArray(); 
          
             // To get a list of dates based on user's input start and end dates
@@ -738,7 +727,6 @@ class StudentAttendanceSummaryTable extends AppTable
 
     public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
     {
-       
         $subject = '';
      
         $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');   
@@ -749,10 +737,16 @@ class StudentAttendanceSummaryTable extends AppTable
             [$institutionSubject->alias() => $institutionSubject->table()],
             [$StudentAbsencesPeriodDetails->aliasField('subject_id = ') . $institutionSubject->aliasField('id') ])
                                 ->where([$StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, $StudentAbsencesPeriodDetails->aliasField('institution_id') =>$entity->institution_id,
-                                $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, $StudentAbsencesPeriodDetails->aliasField('subject_id')=>$entity->InstitutionSubjects['id'] ])
+                                $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id])
                                ->first();
        
-        return $periodDetails->InstitutionSubjects['name'];
+        $subjectName = '';
+        
+        if(!empty($periodDetails->InstitutionSubjects['name'])){
+            $subjectName = $periodDetails->InstitutionSubjects['name'];
+        }
+        
+        return $subjectName;
     }
 
     public function onExcelRenderPeriod(Event $event, Entity $entity, $attr)
@@ -766,8 +760,28 @@ class StudentAttendanceSummaryTable extends AppTable
                                 ->where(['academic_period_id' => $entity->academic_period_id, 'institution_id' =>$entity->institution_id,
                                 'institution_class_id' => $entity->id ])
                                 ->first();
+        
+        $institionClassId = $entity->id;
+        $academicPeriodId = $entity->academic_period_id;
+        $dayId = date('Y-m-d');
+        $studentAttendanceMarkTypeTmpArr = [];
+        
+        $studentAttendanceMarkTypesTable = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $studentAttendanceMarkTypes = $studentAttendanceMarkTypesTable->getAttendancePerDayOptionsByClass(
+                $institionClassId, $academicPeriodId, $dayId 
+                );
        
-        return 'Period'. $periodDetails->period;
+        foreach ($studentAttendanceMarkTypes as $studentAttendanceMarkTypes){
+            $studentAttendanceMarkTypeTmpArr[$studentAttendanceMarkTypes['id']] = $studentAttendanceMarkTypes['name'];
+        }
+        
+        $periodName = '';
+        
+        if(!empty($periodDetails->period)){
+            $periodName = $studentAttendanceMarkTypeTmpArr[$periodDetails->period];
+        }
+        
+        return $periodName;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
