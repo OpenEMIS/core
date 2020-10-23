@@ -73,9 +73,8 @@ class StudentAttendanceSummaryTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        //echo '<pre>'; print_r($query); die;
+        
         $requestData = json_decode($settings['process']['params']);
-       
         $sheetData = $settings['sheet']['sheetData'];
         $gradeId = $sheetData['education_grade_id'];
         $academicPeriodId = $requestData->academic_period_id;
@@ -90,6 +89,8 @@ class StudentAttendanceSummaryTable extends AppTable
         $conditions = [];
 
         $institutions = TableRegistry::get('Institution.Institutions');
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $institutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',
                                                     'valueField' => 'id'
@@ -129,6 +130,7 @@ class StudentAttendanceSummaryTable extends AppTable
                             'institution_id',
                             'student_status_id'
                         ])
+                        
                         ->where(['InstitutionClassStudents.student_status_id' => $enrolledStatus]);
                 }
             ])
@@ -137,10 +139,20 @@ class StudentAttendanceSummaryTable extends AppTable
                 $this->aliasField('id'),
                 $this->aliasField('name'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('academic_period_id')
+                $this->aliasField('academic_period_id'),
+                $institutionSubjects->aliasField('id')
             ])
-            ->where([$conditions]);
-           
+            ->leftjoin(
+                [$StudentAbsencesPeriodDetails->alias() => $StudentAbsencesPeriodDetails->table()],
+                [$StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') . $this->aliasField('id') ])
+            ->leftjoin(
+                    [$institutionSubjects->alias() => $institutionSubjects->table()],
+                    [$StudentAbsencesPeriodDetails->aliasField('subject_id = ') . $institutionSubjects->aliasField('id') ])
+          
+            ->where([$conditions,
+                $StudentAbsencesPeriodDetails->aliasField('date >=') => $reportStartDate->format("Y-m-d"),
+                $StudentAbsencesPeriodDetails->aliasField('date <=') => $reportEndDate->format("Y-m-d"),
+             ]);
             $results = $query->toArray(); 
          
             // To get a list of dates based on user's input start and end dates
@@ -391,6 +403,7 @@ class StudentAttendanceSummaryTable extends AppTable
     
     public function onExcelRenderTotalStudentsAbsent(Event $event, Entity $entity, $attr)
     {   
+       
         $totalStudentsAbsent = 0;
 
         $dateFormatted = $entity->date->format('Y-m-d');
@@ -399,9 +412,10 @@ class StudentAttendanceSummaryTable extends AppTable
         if ($entity->class_attendance_records == RecordMarkedType::MARKED) {
         $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()
                         ->where(['academic_period_id' => $entity->academic_period_id, 'institution_id' => $entity->institution_id,
-                        'institution_class_id' => $entity->id, 'date' =>  $dateFormatted, 'absence_type_id'=>1])
-                        ->count();
+                        'institution_class_id' => $entity->id, 'date' =>  $dateFormatted, 'absence_type_id'=>1,'subject_id'=>$entity->InstitutionSubjects['id']])
+                        ->count() ;
         } 
+    
         if ($entity->class_attendance_records == RecordMarkedType::PARTIAL_MARKED) {
             $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()
             ->where(['academic_period_id' => $entity->academic_period_id, 'institution_id' => $entity->institution_id,
@@ -489,7 +503,8 @@ class StudentAttendanceSummaryTable extends AppTable
         $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
         $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()
                         ->where(['academic_period_id' => $entity->academic_period_id, 'institution_id' => $entity->institution_id,
-                        'institution_class_id' => $entity->id, 'date' =>  $dateFormatted, 'absence_type_id'=>1])
+                        'institution_class_id' => $entity->id, 'date' =>  $dateFormatted, 'absence_type_id'=>1,'subject_id'=>$entity->InstitutionSubjects['id']])
+                        
                         ->count() ;
                        
                         if ($entity->class_attendance_records == RecordMarkedType::MARKED) {
@@ -721,8 +736,56 @@ class StudentAttendanceSummaryTable extends AppTable
         return $date;
     }
 
+    public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
+    {
+       
+        $subject = '';
+     
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');   
+        $institutionSubject = TableRegistry::get('Institution.InstitutionSubjects');             
+        $periodDetails = $StudentAbsencesPeriodDetails->find('all')
+        ->select([$institutionSubject->aliasField('name')])
+        ->innerjoin(
+            [$institutionSubject->alias() => $institutionSubject->table()],
+            [$StudentAbsencesPeriodDetails->aliasField('subject_id = ') . $institutionSubject->aliasField('id') ])
+                                ->where([$StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, $StudentAbsencesPeriodDetails->aliasField('institution_id') =>$entity->institution_id,
+                                $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, $StudentAbsencesPeriodDetails->aliasField('subject_id')=>$entity->InstitutionSubjects['id'] ])
+                               ->first();
+       
+        return $periodDetails->InstitutionSubjects['name'];
+    }
+
+    public function onExcelRenderPeriod(Event $event, Entity $entity, $attr)
+    {
+       
+        $period = '';
+     
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');                    
+        $periodDetails = $StudentAbsencesPeriodDetails->find('all')
+                               
+                                ->where(['academic_period_id' => $entity->academic_period_id, 'institution_id' =>$entity->institution_id,
+                                'institution_class_id' => $entity->id ])
+                                ->first();
+       
+        return 'Period'. $periodDetails->period;
+    }
+
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        $extraField[] = [
+            'key' => 'Subject',
+            'field' => 'Subject',
+            'type' => 'Subject',
+            'label' => 'Subject',
+        ];
+
+        $extraField[] = [
+            'key' => 'Period',
+            'field' => 'Period',
+            'type' => 'Period',
+            'label' => 'Period',
+        ];
+
         $extraField[] = [
             'key' => 'Date',
             'field' => 'Date',
@@ -825,6 +888,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
+        $institutionTypeId = $requestData->institution_type_id;
 
         $ids ='';
         $institutions = TableRegistry::get('Institution.Institutions');

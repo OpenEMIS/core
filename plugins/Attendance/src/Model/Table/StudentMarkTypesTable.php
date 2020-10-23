@@ -336,18 +336,20 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+
+    /* ublic function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $attr['type'] = 'readonly';
             return $attr;
         }
-    }
+    } */
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         
     }
+
 
     public function onUpdateFieldStudentAttendanceTypeId(Event $event, array $attr, $action, Request $request)
     {
