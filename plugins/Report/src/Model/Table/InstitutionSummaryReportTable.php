@@ -19,7 +19,7 @@ class InstitutionSummaryReportTable extends AppTable  {
 		$this->belongsTo('EducationGrades', 	['className' => 'Education.EducationGrades']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions']);
 		
-		$this->addBehavior('Excel', ['excludes' => ['start_year', 'end_year', 'institution_programme_id']]);
+		$this->addBehavior('InstitutionSummaryExcel', ['excludes' => ['start_year', 'end_year', 'institution_programme_id']]);
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Report.InstitutionSecurity');
 	}
@@ -68,13 +68,6 @@ class InstitutionSummaryReportTable extends AppTable  {
 					'field' => 'area_administrative_code',
 					'type' => 'string',
 					'label' => __('Area Administrative Code')
-				];
-
-				$newFields[] = [
-					'key' => 'AreaAdministratives.name',
-					'field' => 'area_administrative_name',
-					'type' => 'string',
-					'label' => __('Area Administrative')
 				];
 			}
 		}
