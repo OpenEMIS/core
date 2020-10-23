@@ -90,6 +90,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $institutions = TableRegistry::get('Institution.Institutions');
         $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
         $institutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $studentAttendanceMarkedRecords = TableRegistry::get('Institution.StudentAttendanceMarkedRecords');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',
                                                     'valueField' => 'id'
@@ -133,17 +134,24 @@ class StudentAttendanceSummaryTable extends AppTable
                         ->where(['InstitutionClassStudents.student_status_id' => $enrolledStatus]);
                 }
             ])
-        
+            ->leftJoin(
+            [$studentAttendanceMarkedRecords->alias() => $studentAttendanceMarkedRecords->table()],
+            [
+             $studentAttendanceMarkedRecords->aliasField('institution_class_id = ') . $this->aliasField('id')
+            ]
+            )
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('name'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('academic_period_id')
+                $this->aliasField('academic_period_id'),
+                $studentAttendanceMarkedRecords->aliasField('period'),
+                $studentAttendanceMarkedRecords->aliasField('subject_id')
             ])
             
             ->where([$conditions]);
             $results = $query->toArray(); 
-         
+            
             // To get a list of dates based on user's input start and end dates
             $begin = $reportStartDate;
             $end = $reportEndDate;
@@ -727,23 +735,17 @@ class StudentAttendanceSummaryTable extends AppTable
 
     public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
     {
-        $subject = '';
-     
-        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');   
-        $institutionSubject = TableRegistry::get('Institution.InstitutionSubjects');             
-        $periodDetails = $StudentAbsencesPeriodDetails->find('all')
-        ->select([$institutionSubject->aliasField('name')])
-        ->innerjoin(
-            [$institutionSubject->alias() => $institutionSubject->table()],
-            [$StudentAbsencesPeriodDetails->aliasField('subject_id = ') . $institutionSubject->aliasField('id') ])
-                                ->where([$StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, $StudentAbsencesPeriodDetails->aliasField('institution_id') =>$entity->institution_id,
-                                $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id])
-                               ->first();
-       
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
         $subjectName = '';
         
-        if(!empty($periodDetails->InstitutionSubjects['name'])){
-            $subjectName = $periodDetails->InstitutionSubjects['name'];
+        if(!empty($subjectId)){
+            $institutionSubject = TableRegistry::get('Institution.InstitutionSubjects');             
+            $periodDetails = $institutionSubject->find('all')
+            ->select(['name'])
+            ->where(['id' => $subjectId])
+            ->first();
+            $subjectName = $periodDetails->name;
         }
         
         return $subjectName;
@@ -751,34 +753,28 @@ class StudentAttendanceSummaryTable extends AppTable
 
     public function onExcelRenderPeriod(Event $event, Entity $entity, $attr)
     {
-       
-        $period = '';
-     
-        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');                    
-        $periodDetails = $StudentAbsencesPeriodDetails->find('all')
-                               
-                                ->where(['academic_period_id' => $entity->academic_period_id, 'institution_id' =>$entity->institution_id,
-                                'institution_class_id' => $entity->id ])
-                                ->first();
         
-        $institionClassId = $entity->id;
-        $academicPeriodId = $entity->academic_period_id;
-        $dayId = date('Y-m-d');
-        $studentAttendanceMarkTypeTmpArr = [];
-        
-        $studentAttendanceMarkTypesTable = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
-        $studentAttendanceMarkTypes = $studentAttendanceMarkTypesTable->getAttendancePerDayOptionsByClass(
-                $institionClassId, $academicPeriodId, $dayId 
-                );
-       
-        foreach ($studentAttendanceMarkTypes as $studentAttendanceMarkTypes){
-            $studentAttendanceMarkTypeTmpArr[$studentAttendanceMarkTypes['id']] = $studentAttendanceMarkTypes['name'];
-        }
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
         
         $periodName = '';
         
-        if(!empty($periodDetails->period)){
-            $periodName = $studentAttendanceMarkTypeTmpArr[$periodDetails->period];
+        if(!empty($periodId)){
+            $institionClassId = $entity->id;
+            $academicPeriodId = $entity->academic_period_id;
+            $dayId = date('Y-m-d');
+            $studentAttendanceMarkTypeTmpArr = [];
+
+            $studentAttendanceMarkTypesTable = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+            $studentAttendanceMarkTypes = $studentAttendanceMarkTypesTable->getAttendancePerDayOptionsByClass(
+                    $institionClassId, $academicPeriodId, $dayId 
+                    );
+
+            foreach ($studentAttendanceMarkTypes as $studentAttendanceMarkTypes){
+                $studentAttendanceMarkTypeTmpArr[$studentAttendanceMarkTypes['id']] = $studentAttendanceMarkTypes['name'];
+            }
+        
+            $periodName = $studentAttendanceMarkTypeTmpArr[$periodId];
         }
         
         return $periodName;
