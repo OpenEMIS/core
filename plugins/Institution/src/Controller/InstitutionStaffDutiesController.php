@@ -3,6 +3,8 @@ namespace Institution\Controller;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\Datasource\ResultSetInterface;
+use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
 class InstitutionStaffDutiesController extends PageController
@@ -10,7 +12,7 @@ class InstitutionStaffDutiesController extends PageController
     public function initialize()
     {
         parent::initialize();
-
+        $this->loadModel('AcademicPeriod.AcademicPeriods');
         // to disable actions if institution is not active
         $this->loadComponent('Institution.InstitutionInactive');
     }
@@ -30,10 +32,10 @@ class InstitutionStaffDutiesController extends PageController
         // set Breadcrumb
         $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
-        $page->addCrumb('Providers');
+        $page->addCrumb('Duties');
 
         // set header
-        $page->setHeader($institutionName . ' - ' . __('Providers'));
+        $page->setHeader($institutionName . ' - ' . __('Duties'));
 
         // to filter by institution_id
         $page->setQueryString('institution_id', $institutionId);
@@ -42,6 +44,14 @@ class InstitutionStaffDutiesController extends PageController
         $page->get('institution_id')
             ->setControlType('hidden')
             ->setValue($institutionId);
+
+        // $repeatOptions = [
+        //     1 => __('Yes'),
+        //     0 => __('No')
+        // ];
+        // $page->get('repeat')
+        //     ->setControlType('select')
+        //     ->setOptions($repeatOptions, false);
     }
 
 	public function index()
@@ -49,45 +59,107 @@ class InstitutionStaffDutiesController extends PageController
         parent::index();
 
         $page = $this->Page;
-       
-        $page->exclude(['comment', 'institution_id']);
-         //echo '<pre>';print_r($page);die;
+        $page->exclude(['institution_id']);
+
+        // reorder fields
+        $page->move('academic_period_id')->first();
+        $page->move('staff_duties_id')->after('academic_period_id');
+        // end reorder fields
     }
 
-    public function view($id)
+     public function view($id)
     {
         parent::view($id);
 
         $page = $this->Page;
+
         $entity = $page->getData();
 
-        $buses = $this->getBuses($entity);
-        $page->addNew('buses')
-            ->setControlType('table')
-            ->setAttributes('column', [
-                ['label' => __('Plate Number'), 'key' => 'plate_number'],
-                ['label' => __('Capacity'), 'key' => 'capacity'],
-                ['label' => __('Status'), 'key' => 'status']
-            ])
-            ->setAttributes('row', $buses);
+        // $page->addNew('information')
+        //     ->setControlType('section');
 
-        $page->move('buses')->after('comment');
+        // $page->addNew('days')
+        //     ->setControlType('select')
+        //     ->setAttributes('multiple', true);
+
+        // $page->addNew('passengers')
+        //     ->setControlType('section');
+
+        // $assignedStudents = $this->getAssignedStudents($entity);
+        // $page->addNew('assigned_students')
+        //     ->setControlType('table')
+        //     ->setAttributes('column', [
+        //         ['label' => __('OpenEMIS ID'), 'key' => 'openemis_no'],
+        //         ['label' => __('Student'), 'key' => 'student'],
+        //         ['label' => __('Education Grade'), 'key' => 'education_grade'],
+        //         ['label' => __('Status'), 'key' => 'status']
+        //     ])
+        //     ->setAttributes('row', $assignedStudents);
+
+        $this->reorderFields();
     }
 
-    private function getBuses(Entity $entity)
+    public function add()
     {
-        $rows = [];
+        parent::add();
+        $this->addEdit();
+        $page = $this->Page;
 
-        if ($entity->has('institution_buses')) {
-            foreach ($entity->institution_buses as $obj) {
-                $rows[] = [
-                    'plate_number' => $obj->plate_number,
-                    'capacity' => $obj->capacity,
-                    'status' => $obj->transport_status->name
-                ];
-            }
+        if ($this->request->is(['get'])) {
+            // set default academic period to current year
+            $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
+            $page->get('academic_period_id')->setValue($academicPeriodId);
         }
-
-        return $rows;
     }
+
+    private function addEdit($id=0)
+    {
+        $page = $this->Page;
+
+        $entity = $page->getData();
+
+        $institutionId = $page->getQueryString('institution_id');
+
+        $page->get('staff_duties_id')
+            ->setControlType('select');
+
+        if ($entity->isNew()) {
+            // Academic Period
+            $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+            $page->get('academic_period_id')
+                ->setControlType('select')
+                ->setOptions($academicPeriodOptions, false);
+            // end Academic Period
+
+            // Staff Duties
+            // $staffDutiesOptions = $this->InstitutionStaffDuties->getDutiesList();
+            // $page->get('staff_duties_id')
+            //     ->setControlType('select')
+            //     ->setOptions($staffDutiesOptions, false);
+
+            // reorder fields
+            $page->move('academic_period_id')->first();
+            $page->move('staff_duties_id')->after('academic_period_id');
+            // end reorder fields
+        } else {
+            $page->get('academic_period_id')
+                ->setDisabled(true);
+
+
+            $institutionId = $entity->institution_id;
+            $academicPeriodId = $entity->academic_period_id;
+
+            $this->reorderFields();
+        }
+    }
+
+    private function reorderFields()
+    {
+        $page = $this->Page;
+
+        $page->move('academic_period_id')->first();
+       
+        
+    }
+
 }
