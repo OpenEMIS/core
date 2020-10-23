@@ -55,6 +55,8 @@ class StudentAttendanceMarkTypesTable extends AppTable
     public function getAttendancePerDayByClass($classId, $academicPeriodId)
     {
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $StudentMarkTypeStatuses = TableRegistry::get('Attendance.StudentMarkTypeStatuses');
+        $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
         $gradeId = $InstitutionClassGrades
             ->find()
             ->where([$InstitutionClassGrades->aliasField('institution_class_id') => $classId])
@@ -77,7 +79,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 ]
                 )
                 ->where([
-                    $StudentMarkTypeStatusGrades->aliasField('education_grade_id') => $gradeList,
+                    $StudentMarkTypeStatusGrades->aliasField('education_grade_id') => $gradeId,
                     $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId
                 ])
                 ->extract('attendance_per_day')
