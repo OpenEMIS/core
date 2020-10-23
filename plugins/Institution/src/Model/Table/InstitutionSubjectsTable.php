@@ -998,6 +998,19 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'Institution Textbooks', 'count' => $associatedTextbooksCount];
+
+        $body = array();
+
+        $body = [  
+            'institution_subjects_id' => !empty($entity->id) ? $entity->id : NULL,
+        ];
+        if($this->action == 'remove') {
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $username = $this->Auth->user()['username']; 
+                $Webhooks->triggerShell('subject_delete', ['username' => $username], $body);
+            } 
+        }
     }
 
     /******************************************************************************************************************
