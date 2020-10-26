@@ -139,6 +139,10 @@ class InstitutionSummaryExcelBehavior extends Behavior
 				$writer->writeSheetRow('Summary', $row );
 			}
 		}
+		$blankRow[] = [];
+		$footer = $this->getFooter();
+		$writer->writeSheetRow('Summary', $blankRow);
+		$writer->writeSheetRow('Summary', $footer);
 		
 		$filepath = $_settings['path'] . $_settings['file'];
         $_settings['file_path'] = $filepath;
