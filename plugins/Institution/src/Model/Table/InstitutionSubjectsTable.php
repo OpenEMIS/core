@@ -998,18 +998,24 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'Institution Textbooks', 'count' => $associatedTextbooksCount];
+    }
 
-        $body = array();
+    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if(!empty($this->controllerAction) && ($this->controllerAction == 'Subjects')) {
 
-        $body = [  
-            'institution_subjects_id' => !empty($entity->id) ? $entity->id : NULL,
-        ];
-        if($this->action == 'remove') {
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $username = $this->Auth->user()['username']; 
-                $Webhooks->triggerShell('subject_delete', ['username' => $username], $body);
-            } 
+            $body = array();
+
+            $body = [  
+                'institution_subjects_id' => !empty($entity->id) ? $entity->id : NULL,
+            ];
+            if($this->action == 'remove') {
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if ($this->Auth->user()) {
+                    $username = $this->Auth->user()['username']; 
+                    $Webhooks->triggerShell('subject_delete', ['username' => $username], $body);
+                } 
+            }
         }
     }
 
