@@ -30,7 +30,8 @@ class ConfigWebhooksTable extends ControllerActionTable
         'institutions_delete' => 'Institutions Delete',
         'programme_create'    => 'Programme Create',
         'programme_update'    => 'Programme Update',
-        'programme_delete'    => 'Programme Delete'  
+        'programme_delete'    => 'Programme Delete',  
+        'student_delete'      => 'Student Delete'  
 
     ];
 
