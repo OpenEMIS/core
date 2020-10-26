@@ -135,15 +135,16 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                     if (angular.isObject(items) && items.length > 0)
                     {
-                        var educationSubject = null;
+                        var institutionSubject = null;
 
                         var subjects = [];
                         angular.forEach(items, function(item, key)
                         {
                             console.log(item);
-                            educationSubject = item.InstitutionSubjects;
-                            educationSubject.grading_type = item.grading_type;
-                            this.push(educationSubject);
+                            institutionSubject = item.InstitutionSubjects;
+                            institutionSubject.grading_type = item.grading_type;
+                            
+                            this.push(institutionSubject);
                         }, subjects);
 
                         deferred.resolve(subjects);
