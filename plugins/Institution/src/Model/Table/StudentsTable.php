@@ -563,6 +563,19 @@ class StudentsTable extends ControllerActionTable
             $event->stopPropagation();
             return false;
         }
+
+        $body = array();
+
+        $body = [  
+            'institution_student_id' => !empty($entity->student_id) ? $entity->student_id : NULL,
+        ];
+        if($this->action == 'remove') {
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $username = $this->Auth->user()['username']; 
+                $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
+            } 
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
