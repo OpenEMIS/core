@@ -79,7 +79,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 ]
                 )
                 ->where([
-                    $StudentMarkTypeStatusGrades->aliasField('education_grade_id') => $gradeList,
+                    $StudentMarkTypeStatusGrades->aliasField('education_grade_id') => $gradeId,
                     $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId
                 ])
                 ->extract('attendance_per_day')
