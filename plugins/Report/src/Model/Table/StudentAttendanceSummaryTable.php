@@ -144,7 +144,7 @@ class StudentAttendanceSummaryTable extends AppTable
                         'StudentAttendanceMarkedRecords.academic_period_id = '.$this->aliasField('academic_period_id'),
                         'StudentAttendanceMarkedRecords.institution_id = '.$this->aliasField('institution_id'),
                         'StudentAttendanceMarkedRecords.date >= "'.$startDate.'"',
-                        'StudentAttendanceMarkedRecords.date >= "'.$endDate.'"'
+                        'StudentAttendanceMarkedRecords.date <= "'.$endDate.'"'
                     ])
             ->select([
                 $this->aliasField('id'),
