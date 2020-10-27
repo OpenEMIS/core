@@ -1833,17 +1833,15 @@ class NavigationComponent extends Component
                 'Archive.Transfer' => [
                     'title' => 'Transfer',
                     'parent' => 'Administration.Archive',
-                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'DeleteLog'],
-                    'selected' => ['Archives.deleteLog'],
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Transfer'],
+                    'selected' => ['Archives.transfer'],
                 ],
                 'Archive.Connection' => [
                     'title' => 'Connection',
                     'parent' => 'Administration.Archive',
-                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'DeleteLog'],
-                    'selected' => ['Archives.deleteLog'],
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection/view'],
+                    'selected' => ['Archives.connection'],
                 ],
-                
-            
         ];
         return $navigation;
     }

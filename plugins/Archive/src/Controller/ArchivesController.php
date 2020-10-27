@@ -43,7 +43,7 @@ class ArchivesController extends AppController
     {
         parent::beforeFilter($event);
 
-        //echo '<pre>'; print_r($this->request->params); die;
+        //echo '<pre>'; print_r($this->request->action); die;
 
         $this->Security->config('unlockedActions', 'add');
         $this->Security->config('unlockedActions', 'downloadExportDB');
@@ -55,9 +55,12 @@ class ArchivesController extends AppController
         if($this->request->action == 'backupLog'){
             $header = __('Archive') . ' - ' . __('Backup');
             $this->Navigation->addCrumb('Backup');
-        }elseif($this->request->action == 'deleteLog'){
-            $header = __('Archive') . ' - ' . __('Delete');
-            $this->Navigation->addCrumb('Delete');
+        }elseif($this->request->action == 'transfer'){
+            $header = __('Archive') . ' - ' . __('Transfer');
+            $this->Navigation->addCrumb('Transfer');
+        }elseif($this->request->action == 'connection'){
+            $header = __('Archive') . ' - ' . __('Connection');
+            $this->Navigation->addCrumb('Connection');
         }
         $this->set('contentHeader', $header); 
 
@@ -170,9 +173,14 @@ class ArchivesController extends AppController
     }
 
     //Archive delete module log page
-    public function DeleteLog(){
+    public function Transfer(){
 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.DeletedLogs']);
+    }
+
+    public function Connection(){
+
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.ArchiveConnections']);
     }
 
 }

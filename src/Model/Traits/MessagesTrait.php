@@ -2365,7 +2365,16 @@ trait MessagesTrait
                     'ruleUniqueCode' => 'Code must be unique'
                 ]
             ]
+        ],
+        'Archive' => [
+            'lessSpace' => 'Please make sure there is enough space for backup.',
+            'backupReminder' => 'Please remember to backup first before you proceed to transfer this data.'
+        ],
+        'Connection' => [
+            'testConnectionSuccess' => 'Connection has been established successfully.',
+            'testConnectionFail' => 'Connection establishment has been failed.'
         ]
+
     ];
 
 
