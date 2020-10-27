@@ -428,7 +428,7 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
-            'absence_type_id'=>1,
+            'absence_type_id IN (1,2)',
             $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
@@ -438,7 +438,7 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
-            'absence_type_id'=>1,
+            'absence_type_id IN (1,2)',
             $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
@@ -617,7 +617,7 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
-            'absence_type_id'=>1,
+            'absence_type_id IN (1,2)',
             $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
@@ -627,7 +627,7 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
-            'absence_type_id'=>1, 
+            'absence_type_id IN (1,2)', 
             $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
@@ -711,7 +711,7 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
-            'absence_type_id'=>1,
+            'absence_type_id IN (1,2)',
             'SecurityUsers.gender_id' => 2,
             $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
@@ -722,7 +722,7 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
-            'absence_type_id'=>1,
+            'absence_type_id IN (1,2)',
             'SecurityUsers.gender_id' => 2,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
@@ -809,7 +809,7 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
-            'absence_type_id'=>1,
+            'absence_type_id IN (1,2)',
             'SecurityUsers.gender_id' => 1,
             $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
@@ -820,7 +820,7 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
-            'absence_type_id'=>1,
+            'absence_type_id IN (1,2)',
             'SecurityUsers.gender_id' => 1,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
