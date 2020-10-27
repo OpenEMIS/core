@@ -12,6 +12,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
+use Cake\Log\Log;
 
 /**
  * Archives Model
@@ -41,10 +42,10 @@ use Cake\Datasource\ConnectionManager;
         $this->displayField('name');
         $this->primaryKey('id');
 
-        $this->belongsTo('Users', [
+        /*$this->belongsTo('Users', [
             'className' => 'User.Users', 
             'foreignKey' => 'generated_by'
-        ]);
+        ]);*/
 
         $this->toggle('view', true);
         $this->toggle('edit', false);
@@ -76,8 +77,6 @@ use Cake\Datasource\ConnectionManager;
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['ControllerAction.Model.download'] = 'download';
-		$events['ControllerAction.Model.downloadPdf'] = 'downloadExportDB';
         return $events;
     }
 
@@ -131,8 +130,8 @@ use Cake\Datasource\ConnectionManager;
 
         $available_disksize = $this->getDiskSpace();
 
-        $this->field('size', ['attr' => ['value'=> $dbSize], 'type'=>'readonly']);
-        $this->field('available_disk', ['attr' => ['value'=> $available_disksize],'type'=>'readonly']);
+        $this->field('size (GB)', ['attr' => ['value'=> $dbSize], 'type'=>'readonly']);
+        $this->field('available_disk (GB)', ['attr' => ['value'=> $available_disksize],'type'=>'readonly']);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
@@ -140,22 +139,43 @@ use Cake\Datasource\ConnectionManager;
         $dbSize = $this->getDbSize();
         $available_disksize = $this->getDiskSpace();
 
-        if($dbsize <= $available_disksize){
-            $this->Alert->error('Please make sure there is enough space for backup',['reset' => true]);
-        }
-
         $fileName = 'Backup_SQL_' . time();
+
         //exec('C:/xampp/mysql/bin/mysqldump --user=root --password= --host=localhost openemis_core > C:/xampp/htdocs/pocor-openemis-core/webroot/export/'.$fileName.'.sql');
 
         $entity->name = $fileName;
         $entity->path = "webroot/export/backup";
         $entity->generated_on = date("Y-m-d H:i:s");
         $entity->generated_by = $this->Session->read('Auth.User.id');
+        
+        if($dbsize >= $available_disksize){
+            $event->stopPropagation();
+            $this->Alert->error('Archive.lessSpace', ['reset' => true]);
+        }
 
+        //$this->triggerDatabaseSqlDumpShell();
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $data){
-        //echo 'came'; die;
+    // public function triggerDatabaseSqlDumpShell()
+    // {
+
+    //     $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateInstitutionShiftType ' . $params;
+    //     $logs = ROOT . DS . 'logs' . DS . 'UpdateInstitutionShiftType.log & echo $!';
+    //     $shellCmd = $cmd . ' >> ' . $logs;
+    //     $pid = exec($shellCmd);
+    //     Log::write('debug', $shellCmd);
+    // }
+
+    public function onGetGeneratedBy(Event $event, Entity $entity)
+    {
+        $Users = TableRegistry::get('User.Users');
+        $result = $Users
+            ->find()
+            ->select(['first_name','last_name'])
+            ->where(['id' => $entity->generated_by])
+            ->first();
+
+        return $entity->generated_by = $result->first_name.' '.$result->last_name;
     }
 
     public function getDbSize(){
