@@ -1,10 +1,12 @@
 <?php
 namespace Institution\Model\Table;
-
+use ArrayObject;
 use Cake\ORM\Query;
+use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
+use App\Model\Table\AppTable;
 
 class InstitutionStaffDutiesTable extends ControllerActionTable
 {
@@ -12,6 +14,8 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
     {
         parent::initialize($config);
         $this->table('institution_staff_duties');
+        parent::initialize($config);
+        
         $this->displayField('academic_period_id');
         $this->displayField('staff_id');
         $this->displayField('institution_id');
@@ -22,6 +26,11 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         $this->belongsTo('Users', [
         'className' => 'User.Users', 
         'foreignKey' => 'created_user_id'
+        ]);
+
+         $this->belongsTo('Staff', [
+        'className' => 'Institution.Staff', 
+        'foreignKey' => 'staff_id'
         ]);
 
         $this->toggle('view', true);
@@ -45,13 +54,31 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 				'provider' => 'table'
 			]);
     }
-
-    public function findView(Query $query, array $options)
+    
+     public function implementedEvents()
     {
-//         foreach($query as $val){
-// echo '<pre>';print_r($val);
-//         };
-//        die;
+        $events = parent::implementedEvents();
+        return $events;
+    }
+
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        // $this->field('academic_period_id', []);
+        // $this->field('institution_id', []);
+        // $this->field('staff_duties_id', []);
+        // $this->field('comment', []);
+       // $this->field('female_students', []);
+
+        $this->setFieldOrder([
+            'academic_period_id',
+            'institution_id',
+            //'institution_class',
+            'staff_duties_id',
+            'comment',
+            // 'male_students',
+            // 'female_students'
+        ]);
     }
 
     public function findOptionList(Query $query, array $options)
@@ -60,27 +87,5 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         $query->where(['institution_id' => $institutionId]);
         
         return parent::findOptionList($query, $options);
-    }
-
-    public function getDutiesList($params = [])
-    {
-        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
-        $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
-        $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
-        $this->table('staff_duties');
-        $data = $this
-            ->find('visible')
-            //->find('years')
-            //->find('editable', ['isEditable' => true])
-            ->where($conditions)
-            ->toArray();
-    print_r($data);die;
-        if (!$withLevels) {
-            $list = $data;
-        } else {
-            $list[$level->name] = $data;
-        }
-
-        return $list;
     }
 }
