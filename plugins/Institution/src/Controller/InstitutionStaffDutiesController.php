@@ -13,8 +13,8 @@ class InstitutionStaffDutiesController extends PageController
     {
         parent::initialize();
         $this->loadModel('AcademicPeriod.AcademicPeriods');
-        // to disable actions if institution is not active
-        $this->loadComponent('Institution.InstitutionInactive');
+        $this->loadModel('Institution.StaffDuties');
+        $this->loadModel('Institution.Staff');
     }
 
 	public function beforeFilter(Event $event)
@@ -61,6 +61,7 @@ class InstitutionStaffDutiesController extends PageController
         $page = $this->Page;
         $page->exclude(['institution_id']);
 
+        
         // reorder fields
         $page->move('academic_period_id')->first();
         $page->move('staff_duties_id')->after('academic_period_id');
@@ -112,16 +113,20 @@ class InstitutionStaffDutiesController extends PageController
         }
     }
 
+    public function edit($id)
+    {
+        parent::edit($id);
+        $this->addEdit($id);
+    }
+
     private function addEdit($id=0)
     {
         $page = $this->Page;
 
         $entity = $page->getData();
-
+    
         $institutionId = $page->getQueryString('institution_id');
 
-        $page->get('staff_duties_id')
-            ->setControlType('select');
 
         if ($entity->isNew()) {
             // Academic Period
@@ -132,10 +137,22 @@ class InstitutionStaffDutiesController extends PageController
             // end Academic Period
 
             // Staff Duties
-            // $staffDutiesOptions = $this->InstitutionStaffDuties->getDutiesList();
-            // $page->get('staff_duties_id')
-            //     ->setControlType('select')
-            //     ->setOptions($staffDutiesOptions, false);
+            $StaffDuties = $this->StaffDuties
+                ->find('optionList', ['defaultOption' => false])
+                ->toArray();
+            $page->get('staff_duties_id')
+                ->setControlType('select')
+                ->setOptions($StaffDuties, false);
+
+                // Staff List
+            $StaffList = $this->Staff
+                ->find('optionList', ['defaultOption' => false])
+                ->toArray();
+            $page->get('staff_id')
+                ->setControlType('select')
+                ->setOptions($StaffList, false);
+
+                
 
             // reorder fields
             $page->move('academic_period_id')->first();
