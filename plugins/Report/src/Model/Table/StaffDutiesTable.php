@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\ORM\TableRegistry;
 
 class StaffDutiesTable extends AppTable  {
 	use OptionsTrait;
@@ -15,11 +16,7 @@ class StaffDutiesTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institution_staff_duties');
 		parent::initialize($config);
-	
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		
+	       
 		$this->addBehavior('Excel', ['excludes' => ['id', 'comment', 'start_year', 'end_year', 'institution_programme_id']]);
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Report.InstitutionSecurity');
@@ -40,7 +37,8 @@ class StaffDutiesTable extends AppTable  {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
         
-
+		$staffDuties = TableRegistry::get('staff_duties');
+	
          $query
             ->select([
                 'institution_code' => 'Institutions.code',
@@ -54,6 +52,7 @@ class StaffDutiesTable extends AppTable  {
                 ]),
 				'contact_value' => 'Contacts.value',
 				'contact_type' => 'ContactTypes.name',
+				'staff_duties_name' => $staffDuties->alias().'.name',
              ])
              ->leftJoin(['Users' => 'security_users'], [
                             $this->aliasfield('staff_id') . ' = '.'Users.id'
@@ -61,16 +60,22 @@ class StaffDutiesTable extends AppTable  {
              ->leftJoin(['Institutions' => 'institutions'], [
                            $this->aliasfield('institution_id') . ' = '.'Institutions.id'
                         ])
-             ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
+            ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                            $this->aliasfield('academic_period_id') . ' = AcademicPeriods.id'
                         ])
+			->leftJoin([$staffDuties->alias() => $staffDuties->table()], [
+						   $this->aliasField('staff_duties_id = ') . $staffDuties->aliasField('id')
+                        ])
 			->leftJoin(['Contacts' => 'user_contacts'], [
-                           'Users.id = Contacts.security_user_id'
+                           'Users.id = Contacts.security_user_id',
+						   'AND' => [
+								'Contacts.preferred = 1',
+							]
                         ])
 			->leftJoin(['ContactTypes' => 'contact_types'], [
                            'Contacts.contact_type_id = ContactTypes.id'
                         ])			
-               ->where($conditions);
+            ->where($conditions);
     }
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -129,6 +134,13 @@ class StaffDutiesTable extends AppTable  {
             'field' => 'contact_value',
             'type' => 'string',
             'label' => __('Contact Value')
+        ];
+		
+		$extraFields[] = [
+            'key' => '',
+            'field' => 'staff_duties_name',
+            'type' => 'string',
+            'label' => __('Duty Type')
         ];
 		
        $newFields = $extraFields;
