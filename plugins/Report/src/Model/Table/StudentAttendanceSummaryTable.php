@@ -428,7 +428,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
-            'absence_type_id'=>1
+            'absence_type_id'=>1,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
             $markConditions = [
@@ -437,7 +438,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
-            'absence_type_id'=>1
+            'absence_type_id'=>1,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
         
@@ -454,7 +456,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
-            'absence_type_id!=3'
+            'absence_type_id!=3',
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
             $conditions = [
@@ -463,7 +466,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
-            'absence_type_id!=3'
+            'absence_type_id!=3',
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
             $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()            
@@ -495,7 +499,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
             'absence_type_id!=3',
-            'SecurityUsers.gender_id' => 2
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
             $conditions = [
@@ -505,7 +510,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
             'absence_type_id!=3',
-            'SecurityUsers.gender_id' => 2
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
             $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find() 
@@ -552,7 +558,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
             'absence_type_id!=3',
-            'SecurityUsers.gender_id' => 1
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
             $conditions = [
@@ -562,7 +569,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
             'absence_type_id!=3',
-            'SecurityUsers.gender_id' => 1
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
         
@@ -609,8 +617,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
-            'absence_type_id'=>1
-            
+            'absence_type_id'=>1,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
             $markConditions = [
@@ -620,7 +628,7 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
             'absence_type_id'=>1, 
-            
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
         
@@ -648,7 +656,8 @@ class StudentAttendanceSummaryTable extends AppTable
                     $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
                     $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
                     $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
-                    'absence_type_id!=3'
+                    'absence_type_id!=3',
+                    $StudentAbsencesPeriodDetails->aliasField('period') => 1
                     ];
                 }else{
                     $conditions = [
@@ -657,7 +666,8 @@ class StudentAttendanceSummaryTable extends AppTable
                     $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
                     $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
                     $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
-                    'absence_type_id!=3'
+                    'absence_type_id!=3',
+                    $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
                     ];
                 }
 
@@ -702,7 +712,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
             'absence_type_id'=>1,
-            'SecurityUsers.gender_id' => 2
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
             $markConditions = [
@@ -712,7 +723,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
             'absence_type_id'=>1,
-            'SecurityUsers.gender_id' => 2
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
         
@@ -798,7 +810,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
             'absence_type_id'=>1,
-            'SecurityUsers.gender_id' => 1
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
             $markConditions = [
@@ -808,7 +821,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
             'absence_type_id'=>1,
-            'SecurityUsers.gender_id' => 1
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
         
@@ -860,7 +874,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
             'absence_type_id'=>3,
-            'SecurityUsers.gender_id' => 2
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
             $conditions = [
@@ -870,7 +885,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
             'absence_type_id'=>3,
-            'SecurityUsers.gender_id' => 2
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
         
@@ -916,7 +932,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
             'absence_type_id'=>3,
-            'SecurityUsers.gender_id' => 1
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
             $conditions = [
@@ -926,7 +943,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
             'absence_type_id'=>3,
-            'SecurityUsers.gender_id' => 1
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
         $totalStudentsLate = $StudentAbsencesPeriodDetails->find()
@@ -942,13 +960,13 @@ class StudentAttendanceSummaryTable extends AppTable
                 $totalMaleStudentsLate = $entity->male_late_count;
             }
 
-            if ($totalMaleStudentsLate <= 0) {
+            if ($totalMaleStudentsLate == 0) {
                 $totalMaleStudentsLate = '-';
             }
         }
         if ($entity->class_attendance_records == RecordMarkedType::PARTIAL_MARKED) {
             $totalMaleStudent = $entity->male_late_count;
-            $totalMaleStudentsLate = $totalStudentsLate - $totalMaleStudent;
+            $totalMaleStudentsLate = $totalStudentsLate;
           
         }
         
@@ -973,7 +991,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
-            'absence_type_id' => 3
+            'absence_type_id' => 3,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
             ];
         }else{
             $conditions = [
@@ -982,7 +1001,8 @@ class StudentAttendanceSummaryTable extends AppTable
             $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
             $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
             $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
-            'absence_type_id' => 3
+            'absence_type_id' => 3,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
             ];
         }
         
