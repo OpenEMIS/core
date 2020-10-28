@@ -31,6 +31,7 @@ class DirectoriesController extends AppController
             'StaffClasses'          => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
             'StaffQualifications'   => ['className' => 'Staff.Qualifications'],
             'StaffExtracurriculars'     => ['className' => 'Staff.Extracurriculars'],
+            'StaffDuties'           => ['className' => 'Institution.StaffDuties', 'actions' => ['index', 'view']],
             'TrainingResults'       => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 
             'ImportUsers'           => ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
@@ -148,7 +149,7 @@ class DirectoriesController extends AppController
     }
     public function StaffDuties()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffDuties']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Duties']);
     }
     public function StudentTextbooks()
     {
