@@ -1,3 +1,28 @@
+### [3.58.0] - 2020-10-27
+- Implemented: Allow students from different class to be combined into the same subjects / Allow students from same class to split across multiple subjects
+- Implemented: Administration > System Setup > Attendance - Student Mark Types: reorder function
+- Implemented: Webhook Feature staff (update)	
+- Implemented: Webhook Feature programme (delete)
+- Implemented: Webhook Feature programme (update)
+- Implemented: Webhook Feature programme (create)
+- Implemented: Webhook Feature institution (delete)
+- Implemented: Webhook Feature institution (update)
+- Implemented: Allow user to set dates to Administrations > Attendance configurations
+- Implemented: Add Subject filter to Class Attendance Marked Report 
+- Implemented: Add a case workflow for unmarked attendance
+- Bug Fixed: Webhooks: Missing field output after Update Programme has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Create Programme has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Update Staff has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Create Staff has been triggered in Core
+- Bug Fixed: Webhooks Institution Delete: To remove some Webhooks field output
+- Bug Fixed: Webhooks Programme Delete: To remove some Webhooks field output
+- Bug Fixed: Webhooks Update Programme: Updated Webhooks fields
+- Bug Fixed: Webhooks Create Programme: Updated Webhooks fields
+- Bug Fixed: Webhooks: When Class is created in Core and Subjects are automatically created, Create Subject was not triggered in Webhooks
+- Bug Fixed: Webhooks: Missing field output after Create Staff has been triggered in Core
+- Bug Fixed: Login: 404 Error Message encountered upon successful login
+- Bug Fixed: Institution > Attendance > Students: When changing Class dropdown, the page loads and it keeps loading
+
 ### [3.57.10] - 2020-10-02
 - Implemented: Webhook Feature student (update)
 - Implemented: Webhook Feature student (create)
