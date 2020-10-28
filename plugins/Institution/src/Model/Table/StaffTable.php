@@ -332,7 +332,7 @@ class StaffTable extends ControllerActionTable
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => __('BEMIS ID')
+            'label' => __('OpenEMIS ID')
         ];
 
         $extraField[] = [
