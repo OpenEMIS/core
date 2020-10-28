@@ -1,91 +1,116 @@
 <?php
 namespace Institution\Model\Table;
 use ArrayObject;
+
+use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
-use App\Model\Table\AppTable;
 
 class InstitutionStaffDutiesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        parent::initialize($config);
         $this->table('institution_staff_duties');
         parent::initialize($config);
-        
-        $this->displayField('academic_period_id');
-        $this->displayField('staff_id');
-        $this->displayField('institution_id');
-       
-        $this->displayField('comment');
-        $this->primaryKey('id');
-
-        $this->belongsTo('Users', [
-        'className' => 'User.Users', 
-        'foreignKey' => 'created_user_id'
-        ]);
-
-         $this->belongsTo('Staff', [
-        'className' => 'Institution.Staff', 
-        'foreignKey' => 'staff_id'
-        ]);
-
-        $this->toggle('view', true);
-        $this->toggle('edit', false);
-        $this->toggle('remove', false);
-        $this->toggle('add', false);
-       
+        $this->belongsTo('StaffDuties', ['className' => 'Institution.StaffDuties', 'foreignKey' => 'staff_duties_id']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
     }
 
-	public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-
-		return $validator
-			->add('name', 'ruleUnique', [
-                'rule' => [
-                    'validateUnique', [
-                        'scope' => 'institution_id'
-                    ]
-                ],
-				'provider' => 'table'
-			]);
-    }
-    
-     public function implementedEvents()
+    public function implementedEvents()
     {
         $events = parent::implementedEvents();
         return $events;
     }
 
+    public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+		return $validator
+			->add('staff_duties_id', 'ruleRange', [
+				'rule' => ['range', -1, 4]
+			]);
+	}
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        // $this->field('academic_period_id', []);
-        // $this->field('institution_id', []);
-        // $this->field('staff_duties_id', []);
-        // $this->field('comment', []);
-       // $this->field('female_students', []);
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } else if ($field == 'staff_duties_id') {
+            return __('Duty Type');
+        } else if ($field == 'staff_id') {
+            return __('Staff');
+        } else if ($field == 'comment') {
+            return __('Comment');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra) {  
+        
+        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'comment']);
+    }
+
+    public function onGetStaffId(Event $event, Entity $entity)
+    {
+        $Users = TableRegistry::get('User.Users');
+        $result = $Users
+            ->find()
+            ->select(['first_name','last_name'])
+            ->where(['id' => $entity->staff_id])
+            ->first();
+        return $entity->staff_id = $entity->staff_id = $entity['user']->openemis_no .' - '.$result->first_name.' '.$result->last_name;
+    }
+
+    /******************************************************************************************************************
+    **
+    ** addEdit action methods
+    **
+    ******************************************************************************************************************/
+    public function addEditBeforeAction(Event $event)
+    {
 
         $this->setFieldOrder([
-            'academic_period_id',
-            'institution_id',
-            //'institution_class',
-            'staff_duties_id',
-            'comment',
-            // 'male_students',
-            // 'female_students'
+            'academic_period_id', 'staff_duties_id',
+            'staff_id','comment'
         ]);
     }
 
-    public function findOptionList(Query $query, array $options)
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : 0;
-        $query->where(['institution_id' => $institutionId]);
-        
-        return parent::findOptionList($query, $options);
+
+        $staffOption = $this->getStaffList();
+        $this->field('academic_period_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+         $this->field('staff_duties_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+         $this->field('staff_id', [
+            'type' => 'select',
+            'options' => $staffOption
+        ]);
     }
+
+    public function getStaffList() {
+		$Users = TableRegistry::get('User.Users');
+        $staffOptions = array();
+        $result = $Users
+            ->find()
+            ->where(['is_staff' => 1])
+            ->toArray();
+         foreach($result as $val) {
+
+             $staffOptions[$val->id] = $val->openemis_no .' - '.$val->first_name.' '.$val->last_name;
+         }   
+        return $staffOptions;
+	}
+
 }
