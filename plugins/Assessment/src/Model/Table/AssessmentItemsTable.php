@@ -139,9 +139,18 @@ class AssessmentItemsTable extends AppTable
         $academinPeriod = $data->academic_period_id;
         $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $educationSubject = TableRegistry::get('Education.EducationSubjects');
         $assessmentId = $options['assessment_id'];
         $classId = $options['class_id'];
         $query
+            ->contain('EducationSubjects.InstitutionSubjects')
+            ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
+                $ClassSubjects->aliasField('institution_class_id') => $classId
+            ])
+            ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
+                $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+            ])
             ->select([
                 $this->aliasField('education_subject_id'),
                 $this->aliasField('id'),
@@ -151,14 +160,7 @@ class AssessmentItemsTable extends AppTable
                 $InstitutionSubjects->aliasField('education_subject_id'),
                 $InstitutionSubjects->aliasField('id'),
                 $InstitutionSubjects->aliasField('name'),
-            ])
-            ->contain('EducationSubjects.InstitutionSubjects')
-            ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
-                $ClassSubjects->aliasField('institution_class_id') => $classId
-            ])
-            ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
-                $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
-                $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+                $educationSubject->aliasField('id'),
             ])
             ->where([
                 $this->aliasField('assessment_id') => $assessmentId,
