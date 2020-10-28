@@ -97,6 +97,12 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     // ready
     angular.element(document).ready(function () {
+
+        const currentDate = new Date();
+        let currentYear = currentDate.getFullYear();
+        let currentMonth = currentDate.getMonth()+1;
+        let currentdate = currentDate.getDate();
+        vm.currentDayMonthYear = currentYear + '-' +currentMonth + '-' + currentdate;
         InstitutionStudentAttendancesSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';
         vm.gridOptions.context.mode = vm.action;
