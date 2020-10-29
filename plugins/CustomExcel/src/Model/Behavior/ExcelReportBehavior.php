@@ -127,8 +127,8 @@ class ExcelReportBehavior extends Behavior
         Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
 
 
-        $this->saveFile($objSpreadsheet, $temppath, $format);
-
+        $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id']);
+		
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
             $this->deleteFile($extra['temp_logo']);
@@ -145,7 +145,20 @@ class ExcelReportBehavior extends Behavior
 
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
 
-        if ($this->config('download')) {
+        if (!empty($params['student_id'])) {
+			$pdfFilePath = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $this->config('filename') . '_' . $params['student_id'].'.txt';
+            $pdfFileContent = file_get_contents($pdfFilePath);
+			
+			$StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+			// save Pdf file
+			$StudentsReportCards->updateAll([
+				'file_content_pdf' => $pdfFileContent
+			], $params);
+			
+			$this->deleteFile($pdfFilePath);
+        }
+		
+		if ($this->config('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
@@ -362,14 +375,18 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    public function saveFile($objSpreadsheet, $filepath, $format)
+    public function saveFile($objSpreadsheet, $filepath, $format, $student_id)
     {
         Log::write('debug', 'ExcelReportBehavior >>> saveFile: '.$format);
         $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
 
         if ($format == 'pdf') {
-            $this->savePDF($objSpreadsheet, $filepath);
+            $this->savePDF($objSpreadsheet, $filepath, $student_id);
         } else {
+			// pdf
+			if(!empty($student_id)) {
+				$this->savePDF($objSpreadsheet, $filepath, $student_id);
+			}
             // xlsx
             $objWriter->save($filepath);
         }
