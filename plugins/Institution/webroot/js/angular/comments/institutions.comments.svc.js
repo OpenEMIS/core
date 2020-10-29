@@ -139,6 +139,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                         this.push({
                             tabName: subject.name + " Teacher",
                             type: roles.TEACHER,
+                            id: subject.id,
                             education_subject_id: subject.education_subject_id,
                             editable: editable
                         });
@@ -519,6 +520,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     };
 
     function getRowData(academicPeriodId, institutionId, institutionClassId, educationGradeId, reportCardId, commentCodeOptions, tab, limit, page) {
+        console.log(tab);
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.error)) {
                 deferred.reject(response.data.error);
@@ -600,7 +602,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 education_grade_id: educationGradeId,
                 report_card_id: reportCardId,
                 type: tab.type,
-                education_subject_id: tab.education_subject_id
+                education_subject_id: tab.education_subject_id,
+                institution_subject_id: tab.id
             })
             .limit(limit)
             .page(page)
