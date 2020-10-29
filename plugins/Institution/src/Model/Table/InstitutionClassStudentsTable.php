@@ -749,6 +749,7 @@ class InstitutionClassStudentsTable extends AppTable
         $educationGradeId = $options['education_grade_id'];
         $reportCardId = $options['report_card_id'];
         $educationSubjectId = $options['education_subject_id'];
+        $institutionSubjectId = $options['institution_subject_id'];
         $type = $options['type'];
 
         $StudentReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
@@ -1065,10 +1066,10 @@ class InstitutionClassStudentsTable extends AppTable
                 ->leftJoin([$Staff->alias() => $Staff->table()], [
                     $Staff->aliasField('id = ') . $ReportCardsComments->aliasField('staff_id')
                 ])
-                ->where([$SubjectStudents->aliasField('education_subject_id') => $educationSubjectId])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
+                ->where([$SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId])
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId,$institutionSubjectId) {
 
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId) {
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId,$institutionSubjectId) {
 
                         $studentId = $row->student_id;
                         if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
@@ -1097,16 +1098,16 @@ class InstitutionClassStudentsTable extends AppTable
                         $subjectStudentsEntities = $SubjectStudents->find()
                             ->select([
                                 $SubjectStudents->aliasField('student_id'),
-                                $SubjectStudents->aliasField('education_subject_id')
+                                $SubjectStudents->aliasField('institution_subject_id')
                             ])
                             ->where([
                                 $SubjectStudents->aliasField('student_id') => $studentId,
                                 $SubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
                                 $SubjectStudents->aliasField('institution_id') => $institutionId,
-                                $SubjectStudents->aliasField('education_subject_id') => $educationSubjectId
+                                $SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId
                             ])
                             ->group([
-                                'education_subject_id'
+                                'institution_subject_id'
                             ])
                             ->hydrate(false)
                             ->all();
