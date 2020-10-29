@@ -135,7 +135,7 @@ class DatabaseTransferShell extends Shell
                                         ])
                                     ->where([
                                         'AcademicPeriods.id' => $academicPeriodId
-                                    ])->limit(5)->page($page)
+                                    ])->limit(500)->page($page)
                                     ->toArray();
          //get archive database connection
          $connection = ConnectionManager::get('prd_cor_arc');
@@ -176,8 +176,16 @@ class DatabaseTransferShell extends Shell
 
                 }
 
+
                 $page++;
             }
+
+            /*$AssessmentItemResults->deleteAll(['academic_period_id' => $academicPeriodId]);
+            $ClassAttendanceRecords->deleteAll(['academic_period_id' => $academicPeriodId]);
+            $StudentAbsences->deleteAll(['academic_period_id' => $academicPeriodId]);
+            $InstitutionStudentAbsenceDetails->deleteAll(['academic_period_id' => $academicPeriodId]);
+            $StudentAttendanceMarkedRecords->deleteAll(['academic_period_id' => $academicPeriodId]);
+            $StudentAttendanceMarkType->deleteAll(['academic_period_id' => $academicPeriodId]);*/
         }
         /****************************************************************************************************************************************** */
        
