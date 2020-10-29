@@ -61,7 +61,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         columnDefs: [],
         rowData: [],
         headerHeight: 38,
-        rowHeight: 125,
+        // rowHeight: 125,
         minColWidth: 200,
         enableColResize: true,
         enableSorting: true,
@@ -94,6 +94,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             isMarked: vm.isMarked,
             subject_id: vm.selectedSubject
         },
+        getRowHeight: getRowHeight,
     };
 
     // ready
@@ -292,11 +293,28 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         );
     }
 
+    function getRowHeight(params) {
+        return params.data.rowHeight;
+    }
+
     vm.setGridData = function() {
         if (angular.isDefined(vm.gridOptions.api)) {
-            vm.gridOptions.api.setRowData(vm.classStudentList);
+            // vm.gridOptions.api.setRowData(vm.classStudentList);
+            vm.setRowDatas(vm.classStudentList);
             vm.countStudentData();
         }
+    }
+
+    vm.setRowDatas = function(studentList) {
+        studentList.forEach(function (dataItem, index) {
+            if(dataItem.institution_student_absences.absence_type_code == null) {
+                dataItem.rowHeight = 60;
+            } else {
+                dataItem.rowHeight = 120;
+            }
+        });
+        vm.gridOptions.api.setRowData(studentList);
+        
     }
 
     vm.setColumnDef = function() {
