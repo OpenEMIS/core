@@ -30,8 +30,8 @@ class ConfigWebhooksTable extends ControllerActionTable
         'institutions_delete' => 'Institutions Delete',
         'programme_create'    => 'Programme Create',
         'programme_update'    => 'Programme Update',
-        'programme_delete'    => 'Programme Delete',
-        'class_delete'        => 'Class Delete'
+        'programme_delete'    => 'Programme Delete'  
+
     ];
 
     public function initialize(array $config)
