@@ -13,7 +13,7 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
 use App\Model\Traits\MessagesTrait;
-use Cake\Database\Exception\MissingConnectionException;
+use Cake\Core\Exception\Exception;
 
 /**
  * Connections Model
@@ -145,12 +145,11 @@ use Cake\Database\Exception\MissingConnectionException;
     public function EditOnTestConnection(){
 
         try {
-
             $connection = ConnectionManager::get('prd_cor_arc');
             $connected = $connection->connect();
             $this->Alert->success('Connection.testConnectionSuccess', ['reset' => true]);
 
-        } catch (MissingConnectionException $connectionError) {
+        }catch (Exception $connectionError) {
             $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
         }
 
