@@ -1189,15 +1189,18 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                             }
 
                             if (isMarksType) {
+                                console.log("1");
                                 var marks = parseFloat(subjectStudent.AssessmentItemResults.marks);
                                 if (!isNaN(marks)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
                                 }
                             } else if (isGradesType) {
+                                console.log("2");
                                 if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
                                 }
                             } else if (isDurationType) {
+                                console.log("3");
                                 var duration = parseFloat(subjectStudent.AssessmentItemResults.marks);
                                 if (!isNaN(duration)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.marks;
@@ -1269,7 +1272,6 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     }
                 }
             });
-            console.log(data);
             if (!isNaN(parseFloat(returnValue)) && valueEnabled) {
                 return $filter('number')(returnValue, 2);
             } else {
