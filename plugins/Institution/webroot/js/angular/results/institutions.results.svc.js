@@ -140,7 +140,6 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         var subjects = [];
                         angular.forEach(items, function(item, key)
                         {
-                            console.log(item);
                             educationSubject = item.InstitutionSubjects;
                             educationSubject.grading_type = item.grading_type;
                             this.push(educationSubject);
