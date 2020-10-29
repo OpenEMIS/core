@@ -130,8 +130,8 @@ use Cake\Log\Log;
 
         $available_disksize = $this->getDiskSpace();
 
-        $this->field('size (GB)', ['attr' => ['value'=> $dbSize], 'type'=>'readonly']);
-        $this->field('available_disk (GB)', ['attr' => ['value'=> $available_disksize],'type'=>'readonly']);
+        $this->field('database_size (GB)', ['attr' => ['value'=> $dbSize], 'type'=>'readonly']);
+        $this->field('available_space (GB)', ['attr' => ['value'=> $available_disksize],'type'=>'readonly']);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
@@ -151,20 +151,26 @@ use Cake\Log\Log;
         if($dbsize >= $available_disksize){
             $event->stopPropagation();
             $this->Alert->error('Archive.lessSpace', ['reset' => true]);
+        }else{
+            $this->log('=======>Before triggerDatabaseSqlDumpShell', 'debug');
+            $this->triggerDatabaseSqlDumpShell('DatabaseSqlDump',$fileName);
+            $this->log(' <<<<<<<<<<======== After triggerDatabaseSqlDumpShell', 'debug');
         }
-
-        //$this->triggerDatabaseSqlDumpShell();
+        
     }
 
-    // public function triggerDatabaseSqlDumpShell()
-    // {
+    public function triggerDatabaseSqlDumpShell($shellName,$fileName = null)
+    {
 
-    //     $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateInstitutionShiftType ' . $params;
-    //     $logs = ROOT . DS . 'logs' . DS . 'UpdateInstitutionShiftType.log & echo $!';
-    //     $shellCmd = $cmd . ' >> ' . $logs;
-    //     $pid = exec($shellCmd);
-    //     Log::write('debug', $shellCmd);
-    // }
+        $args = '';
+        $args .= !is_null($fileName) ? ' '.$fileName : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+    }
 
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
