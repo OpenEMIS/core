@@ -211,7 +211,7 @@ class ClassExcelBehavior extends Behavior
 						" ",
 						'SecurityUsers.last_name' => 'literal'
 					]),
-					'student_openemis_no' => 'ClassesStudents.openemis_no',
+					'student_openemis_ID' => 'ClassesStudents.openemis_no',
 					'student_name' => $Query->func()->concat([
 						'ClassesStudents.first_name' => 'literal',
 						" ",
@@ -519,7 +519,7 @@ class ClassExcelBehavior extends Behavior
         //$columns = $schema->columns();
 		$columns = ['institution_code','institution_name','academic_period_id',
 					'name','shift_name','education_grade','staff_name','secondary_staff_name',
-					'student_openemis_no','student_name','student_gender','student_status',
+					'student_openemis_ID','student_name','student_gender','student_status',
 					'special_need'
 					];
 
