@@ -87,7 +87,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
 		
-		$this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
+		$this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
     }
 
     public function validationDefault(Validator $validator)
