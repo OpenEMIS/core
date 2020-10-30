@@ -1596,6 +1596,16 @@ class InstitutionsController extends AppController
                 'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
                     $statuses['PROMOTED'], $statuses['REPEATED']]]
             ];
+            $highChartDatas[] = $InstitutionStudents->getHighChart('students_attandance', $params);
+
+            
+            $highChartDatas[] = $InstitutionStudents->getHighChart('staff_attandance', $params);
+            //Students By Grade for current year, excludes transferred ,withdrawn, promoted, repeated students
+            $params = [
+                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
+                    $statuses['PROMOTED'], $statuses['REPEATED']]]
+            ];
+           
 
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_stage', $params);
 
