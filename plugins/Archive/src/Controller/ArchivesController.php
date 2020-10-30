@@ -37,16 +37,9 @@ class ArchivesController extends AppController
         $this->loadModel('Archive.DeletedLogs');
     }
 
-    public function beforeFilter(Event $event)
-    {
-        parent::beforeFilter($event);
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 
-        //echo '<pre>'; print_r($this->request->action); die;
-
-        $this->Security->config('unlockedActions', 'add');
-        $this->Security->config('unlockedActions', 'downloadExportDB');
-
-        $header = 'Archive';
+		$header = 'Archive';    
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
 
         //Customize header because model name created was different.
@@ -62,8 +55,10 @@ class ArchivesController extends AppController
         }
         $this->set('contentHeader', $header); 
 
-        $this->Auth->allow(['index', 'download']);
+        $this->Security->config('unlockedActions', 'add');
+        $this->Security->config('unlockedActions', 'downloadExportDB');
 
+        $this->Auth->allow(['index', 'download']);
     }
 
     function downloadSql($archiveId){
