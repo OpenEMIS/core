@@ -26,8 +26,8 @@ class POCOR5674 extends AbstractMigration
 
         $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 369');
 
-        $this->execute("INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-            VALUES ('', 'Archive', 'Archives', 'Administration', 'Archive', '5000',
+        $this->execute("INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+            VALUES ('Archive', 'Archives', 'Administration', 'Archive', '5000',
             'index|view|download',
             'edit',
             'add',
