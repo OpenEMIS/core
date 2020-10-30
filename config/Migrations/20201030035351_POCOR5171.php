@@ -18,7 +18,7 @@ class POCOR5171 extends AbstractMigration
     // rollback
     public function down()
     {
-        $this->execute('UPDATE security_functions SET `_execute` = NULL WHERE `id` = 1008"');
+        $this->execute('UPDATE security_functions SET `_execute` = NULL WHERE `id` = 1008');
     }
 
 
