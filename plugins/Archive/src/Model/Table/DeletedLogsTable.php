@@ -12,6 +12,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
+use Cake\Log\Log;
 
 /**
  * DeletedLogs Model
