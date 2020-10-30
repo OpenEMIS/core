@@ -195,7 +195,7 @@ class SubjectExcelBehavior extends Behavior
 					'education_grade' => 'EducationGrades.name',
 					'institution_code' => 'Institutions.code',
 					'institution_name' => 'Institutions.name',
-					'class_name' => $InstitutionClasses->alias().'.name',
+					'class' => $InstitutionClasses->alias().'.name',
 					'subject_name' => 'InstitutionSubjects.name',
 					'subject_code' => 'EducationSubjects.code',
 					'student_openemis_ID' => 'SubjectStudents.openemis_no',
@@ -204,14 +204,14 @@ class SubjectExcelBehavior extends Behavior
 						" ",
 						'SubjectStudents.last_name' => 'literal'
 					]),
-					'teachers' => $Query->func()->concat([
+					'teachers' => $Query->func()->group_concat([
 						'SubjectTeachers.openemis_no' => 'literal',
 						" - ",
 						'SubjectTeachers.first_name' => 'literal',
 						" ",
 						'SubjectTeachers.last_name' => 'literal'
 					]),
-					'rooms' => $Query->func()->concat([
+					'rooms' => $Query->func()->group_concat([
 						'SubjectRooms.code' => 'literal',
 						" - ",
 						'SubjectRooms.name' => 'literal'
@@ -279,14 +279,28 @@ class SubjectExcelBehavior extends Behavior
 				]
 				)
 				->group([
-					'teachers'
+					'SubjectStudents.id'
 				])
 				->order([
 					'AcademicPeriods.order',
 					'Institutions.code',
 					'InstitutionSubjects.id'
 				]);
-
+				$Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+					return $results->map(function ($row) {
+						$teachers = explode(',',$row['teachers']);
+						$teachers = array_unique($teachers);
+						$teachers = implode(', ',$teachers);
+						$row['teachers'] = $teachers;
+						
+						$rooms = explode(',',$row['rooms']);
+						$rooms = array_unique($rooms);
+						$rooms = implode(', ',$rooms);
+						$row['rooms'] = $rooms;
+						return $row;
+					});
+				});
+				
             $this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
             $sheetName = $sheet['name'];
 
@@ -503,7 +517,7 @@ class SubjectExcelBehavior extends Behavior
         $schema = $table->schema();
         //$columns = $schema->columns();
 		$columns = ['institution_code','institution_name','academic_period_id',
-					'class_name','education_grade','subject_name','subject_code',
+					'class','education_grade','subject_name','subject_code',
 					'teachers','rooms','student_openemis_ID','student_name',
 					'student_gender','student_status'
 					];
