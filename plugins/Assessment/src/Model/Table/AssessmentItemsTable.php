@@ -125,6 +125,94 @@ class AssessmentItemsTable extends AppTable
         return $query;
     }
 
+    public function findSubjectNewTab(Query $query, array $options)
+    {    
+        $url = $_SERVER['HTTP_REFERER'];
+        $queryString = parse_url($url);
+        $name = $queryString['query'];
+        $domain = substr($name, strpos($name, "="));
+        $test = base64_decode($domain);
+        $variable = substr($test, 0, strpos($test, "}"));
+        $newVaridable = $variable . "}";
+        $data = json_decode($newVaridable);
+        $institutionId =  $data->institution_id;
+        $academinPeriod = $data->academic_period_id;
+        $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $educationSubject = TableRegistry::get('Education.EducationSubjects');
+        $assessmentId = $options['assessment_id'];
+        $classId = $options['class_id'];
+        $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
+
+        if (!empty($options['user']) && $options['user']['super_admin'] == 1) {
+                $query
+                    ->contain('EducationSubjects.InstitutionSubjects')
+                    ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
+                        $ClassSubjects->aliasField('institution_class_id') => $classId
+                    ])
+                    ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                        $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
+                        $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+                    ])
+                    ->select([
+                        $this->aliasField('education_subject_id'),
+                        $this->aliasField('id'),
+                        $this->aliasField('assessment_id'),
+                        $this->aliasField('weight'),
+                        $this->aliasField('classification'),
+                        $InstitutionSubjects->aliasField('education_subject_id'),
+                        $InstitutionSubjects->aliasField('id'),
+                        $InstitutionSubjects->aliasField('name'),
+                        $educationSubject->aliasField('id'),
+                    ])
+                    ->where([
+                        $this->aliasField('assessment_id') => $assessmentId,
+                        $InstitutionSubjects->aliasField('institution_id') => $institutionId,
+                        $InstitutionSubjects->aliasField('academic_period_id') => $academinPeriod,
+                    ]);
+                
+                return $query;
+
+        } else {
+                $staffId = $options['user']['id'];
+
+                $query
+                    ->contain('EducationSubjects.InstitutionSubjects')
+                    ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
+                        $ClassSubjects->aliasField('institution_class_id') => $classId
+                    ])
+                    ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                        $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
+                        $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+                    ])
+                    ->leftJoin(
+                        [$staffSubject->alias() => $staffSubject->table()],
+                        [
+                            $staffSubject->aliasField('institution_subject_id = ') . $ClassSubjects->aliasField('institution_subject_id'),
+                        ])
+                    ->select([
+                        $this->aliasField('education_subject_id'),
+                        $this->aliasField('id'),
+                        $this->aliasField('assessment_id'),
+                        $this->aliasField('weight'),
+                        $this->aliasField('classification'),
+                        $InstitutionSubjects->aliasField('education_subject_id'),
+                        $InstitutionSubjects->aliasField('id'),
+                        $InstitutionSubjects->aliasField('name'),
+                        $educationSubject->aliasField('id'),
+                    ])
+                    ->where([
+                        $this->aliasField('assessment_id') => $assessmentId,
+                        $InstitutionSubjects->aliasField('institution_id') => $institutionId,
+                        $InstitutionSubjects->aliasField('academic_period_id') => $academinPeriod,
+                        $staffSubject->aliasField('staff_id') => $staffId,
+                    ]);
+                
+                return $query;
+        }
+
+    }
+
     public function getSubjects($assessmentId)
     {
         $subjectList = $this
