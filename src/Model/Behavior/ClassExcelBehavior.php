@@ -204,7 +204,7 @@ class ClassExcelBehavior extends Behavior
 						" ",
 						'Staff.last_name' => 'literal'
 					]),
-					'secondary_staff_name' => $Query->func()->concat([
+					'secondary_staff_name' => $Query->func()->group_concat([
 						'SecurityUsers.openemis_no' => 'literal',
 						" - ",
 						'SecurityUsers.first_name' => 'literal',
@@ -296,6 +296,9 @@ class ClassExcelBehavior extends Behavior
 					'ClassesStudents.gender_id = Genders.id'
 				]
 				)
+				->group([
+					'ClassesStudents.id'
+				])
 				->order([
 					'AcademicPeriods.order',
 					'Institutions.code',
