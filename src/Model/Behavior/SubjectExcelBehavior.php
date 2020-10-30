@@ -185,9 +185,9 @@ class SubjectExcelBehavior extends Behavior
 			$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
 			$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
 			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-			$Institutions = TableRegistry::get('Institution.Institutions');
 			$InstitutionStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-			$InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+			$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+			$InstitutionSubjectsRooms = TableRegistry::get('Institution.InstitutionSubjectsRooms');
 		
 			$query = $Query
 				->select([
@@ -195,21 +195,29 @@ class SubjectExcelBehavior extends Behavior
 					'education_grade' => 'EducationGrades.name',
 					'institution_code' => 'Institutions.code',
 					'institution_name' => 'Institutions.name',
-					'class_name' => 'InstitutionClasses.name',
+					'class_name' => $InstitutionClasses->alias().'.name',
 					'subject_name' => 'InstitutionSubjects.name',
-					//'subject_code' => 'InstitutionSubjects.code',
-					'student_openemis_ID' => 'ClassesStudents.openemis_no',
+					'subject_code' => 'EducationSubjects.code',
+					'student_openemis_ID' => 'SubjectStudents.openemis_no',
 					'student_name' => $Query->func()->concat([
-						'ClassesStudents.first_name' => 'literal',
+						'SubjectStudents.first_name' => 'literal',
 						" ",
-						'ClassesStudents.last_name' => 'literal'
+						'SubjectStudents.last_name' => 'literal'
+					]),
+					'teachers' => $Query->func()->concat([
+						'SubjectTeachers.openemis_no' => 'literal',
+						" - ",
+						'SubjectTeachers.first_name' => 'literal',
+						" ",
+						'SubjectTeachers.last_name' => 'literal'
+					]),
+					'rooms' => $Query->func()->concat([
+						'SubjectRooms.code' => 'literal',
+						" - ",
+						'SubjectRooms.name' => 'literal'
 					]),
 					'student_gender' => 'Genders.name',
 					'student_status' => 'StudentStatuses.name',
-					'special_need' => '(CASE
-											WHEN SpecailNeed.id IS NULL THEN "No"
-											ELSE "Yes"
-										END)',
 				])
 				->contain([
 					'AcademicPeriods' => [
@@ -219,6 +227,9 @@ class SubjectExcelBehavior extends Behavior
 					],
 					'Institutions.Types',
 				])
+				->leftJoin(['EducationSubjects' => 'education_subjects'], [
+					'EducationSubjects.id =' . $InstitutionSubjects->aliasField('education_subject_id')
+				])
 				->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
 					$InstitutionSubjects->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
 				])
@@ -226,15 +237,9 @@ class SubjectExcelBehavior extends Behavior
 					$InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
 				])
 				->leftJoin(
-				['InstitutionClassGrades' => 'institution_class_grades'],
-				[
-					'InstitutionClassGrades.institution_class_id = '. $InstitutionSubjects->aliasField('id')
-				]
-				)
-				->leftJoin(
 				['EducationGrades' => 'education_grades'],
 				[
-					'InstitutionClassGrades.education_grade_id = '. $EducationGrades->aliasField('id')
+					$InstitutionSubjects->aliasField('education_grade_id ='). $EducationGrades->aliasField('id')
 				]
 				) 
 				->leftJoin(
@@ -250,23 +255,32 @@ class SubjectExcelBehavior extends Behavior
 				]
 				)
 				->leftJoin(
-				['ClassesStudents' => 'security_users'],
+				['SubjectStudents' => 'security_users'],
 				[
-					'ClassesStudents.id = '. $InstitutionStudents->aliasField('student_id')
+					'SubjectStudents.id = '. $InstitutionStudents->aliasField('student_id')
 				]
 				)
-				->leftJoin(
-				['SpecailNeed' => 'user_special_needs_assessments'],
-				[
-					'SpecailNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
-				]
-				)
+				->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()], [
+					$InstitutionSubjects->aliasField('id =') . $InstitutionSubjectStaff->aliasField('institution_subject_id')
+				])
+				->leftJoin(['SubjectTeachers' => 'security_users'], [
+					'SubjectTeachers.id = '. $InstitutionSubjectStaff->aliasField('staff_id')
+				])
+				->leftJoin([$InstitutionSubjectsRooms->alias() => $InstitutionSubjectsRooms->table()], [
+					$InstitutionSubjects->aliasField('id =') . $InstitutionSubjectsRooms->aliasField('institution_subject_id')
+				])
+				->leftJoin(['SubjectRooms' => 'institution_rooms'], [
+					'SubjectRooms.id = '. $InstitutionSubjectsRooms->aliasField('institution_room_id')
+				])
 				->leftJoin(
 				['Genders' => 'genders'],
 				[
-					'ClassesStudents.gender_id = Genders.id'
+					'SubjectStudents.gender_id = Genders.id'
 				]
 				)
+				->group([
+					'teachers'
+				])
 				->order([
 					'AcademicPeriods.order',
 					'Institutions.code',
@@ -489,9 +503,9 @@ class SubjectExcelBehavior extends Behavior
         $schema = $table->schema();
         //$columns = $schema->columns();
 		$columns = ['institution_code','institution_name','academic_period_id',
-					'class_name','education_grade','subject_name','subject_code','teachers','rooms',
-					'student_openemis_ID','student_name','student_gender','student_status',
-					'special_need'
+					'class_name','education_grade','subject_name','subject_code',
+					'teachers','rooms','student_openemis_ID','student_name',
+					'student_gender','student_status'
 					];
 
         $excludes = $this->config('excludes');
