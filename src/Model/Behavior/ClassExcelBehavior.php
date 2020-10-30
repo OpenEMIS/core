@@ -555,7 +555,7 @@ class ClassExcelBehavior extends Behavior
                 ];
             }
         }
-		//echo '<pre>';print_r($fields);die;
+
         // Event to add or modify the fields to fetch from the table
         $event = $this->dispatchEvent($table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields], true);
 
