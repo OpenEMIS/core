@@ -224,7 +224,15 @@ use Cake\Core\Exception\Exception;
 
     public function onGetConnStatusId(Event $event, Entity $entity)
     {
-        return $entity->conn_status_id == 1 ? '<b style="color:green;">Online</b>' : '<b style="color:red;">Offline</b>';
+        try {
+            $connection = ConnectionManager::get('prd_cor_arc');
+            $connected = $connection->connect();
+            return $entity->conn_status_id = '<b style="color:green;">Online</b>';
+
+        }catch (Exception $connectionError) {
+            return $entity->conn_status_id = '<b style="color:red;">Offline</b>';
+        }
+        //return $entity->conn_status_id == 1 ? '<b style="color:green;">Online</b>' : '<b style="color:red;">Offline</b>';
     }
 
     public function onGetModifiedUserId(Event $event, Entity $entity)
