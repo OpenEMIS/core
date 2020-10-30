@@ -14,7 +14,7 @@ class POCOR5674 extends AbstractMigration
     public function up()
     {
         // institution_class_students
-        $this->execute("CREATE TABLE `archive_table_logs` ( `id` int(11) NOT NULL AUTO_INCREMENT, `name` varchar(250) NOT NULL, `path` varchar(250) NOT NULL,  `generated_on` datetime DEFAULT NULL, `generated_by` int(11) NOT NULL, PRIMARY KEY (`id`) )");
+        $this->execute("CREATE TABLE `archives` ( `id` int(11) NOT NULL AUTO_INCREMENT, `name` varchar(250) NOT NULL, `path` varchar(250) NOT NULL,  `generated_on` datetime DEFAULT NULL, `generated_by` int(11) NOT NULL, PRIMARY KEY (`id`) )");
         
         $this->execute("CREATE TABLE `deleted_logs` ( `id` int(11) NOT NULL AUTO_INCREMENT, `academic_period_id` int(11) NOT NULL, `generated_on` datetime DEFAULT NULL, `generated_by` int(11) NOT NULL, PRIMARY KEY (`id`), KEY `generated_on` (`generated_on`), KEY `generated_by` (`generated_by`) )");
         
