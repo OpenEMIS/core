@@ -27,6 +27,9 @@ class ReportCardSubjectsTable extends ControllerActionTable
 
     public function findMatchingClassSubjects(Query $query, array $options)
     {
+        $staffId = $options['user']['id'];
+        $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        if (!empty($options['user']) && $options['user']['super_admin'] == 1){    
         $reportCardId = $options['report_card_id'];
         $classId = $options['institution_class_id'];
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
@@ -36,7 +39,8 @@ class ReportCardSubjectsTable extends ControllerActionTable
             ->select([
                 'education_subject_id' => $this->aliasField('education_subject_id'),
                 'code' => $this->EducationSubjects->aliasField('code'),
-                'name' => $this->EducationSubjects->aliasField('name'),
+                'name' => $InstitutionSubjects->aliasField('name'),
+                'id' => $InstitutionSubjects->aliasField('id'),
                 $this->EducationSubjects->aliasField('order')
             ])
             ->innerJoinWith('EducationSubjects')
@@ -50,5 +54,37 @@ class ReportCardSubjectsTable extends ControllerActionTable
             ])
             ->where([$this->aliasField('report_card_id') => $reportCardId])
             ->order([$this->EducationSubjects->aliasField('order')]);
+        }else{
+        $reportCardId = $options['report_card_id'];
+        $classId = $options['institution_class_id'];
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+
+        return $query
+            ->select([
+                'education_subject_id' => $this->aliasField('education_subject_id'),
+                'code' => $this->EducationSubjects->aliasField('code'),
+                'name' => $InstitutionSubjects->aliasField('name'),
+                'id' => $InstitutionSubjects->aliasField('id'),
+                $this->EducationSubjects->aliasField('order')
+            ])
+            ->innerJoinWith('EducationSubjects')
+            ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id')
+            ])->leftJoin(
+                        [$staffSubject->alias() => $staffSubject->table()],
+                        [
+                            $staffSubject->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id'),
+                        ])
+            ->innerJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+                $InstitutionClassSubjects->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id'),
+                $InstitutionClassSubjects->aliasField('institution_class_id = ') . $classId,
+                $InstitutionClassSubjects->aliasField('status > 0 ')
+            ])
+            ->where([$this->aliasField('report_card_id') => $reportCardId,
+                 $staffSubject->aliasField('staff_id') => $staffId
+            ])
+            ->order([$this->EducationSubjects->aliasField('order')]);
+        }
     }
 }
