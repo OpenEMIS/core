@@ -35,12 +35,6 @@ class DatabaseTransferShell extends Shell
 
             //$this->out('Initializing Transfer of data ('.Time::now().')');
 
-            /*flag the academic period table
-            academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
-            $AcademicPeriods->updateAll(
-                ['editable' => 0, 'visible' => 0],    //field
-                ['id' => $this->args[1], 'current'=> 0] //condition
-            );
             $this->getRecords();
 
             /*$systemProcessId = $this->SystemProcesses->addProcess('DatabaseTransfer', getmypid(), $this->args[0]);
@@ -139,7 +133,7 @@ class DatabaseTransferShell extends Shell
                                     ->toArray();
          //get archive database connection
          $connection = ConnectionManager::get('prd_cor_arc');
-         //echo '<pre>'; print_r($allData); die;
+        
         if(!empty($allData) && isset($allData)){
             foreach($allData as $data){
 
@@ -179,6 +173,8 @@ class DatabaseTransferShell extends Shell
 
                 $page++;
             }
+
+            /** Deleting all academic period associated table's data according to the requirement */
 
             /*$AssessmentItemResults->deleteAll(['academic_period_id' => $academicPeriodId]);
             $ClassAttendanceRecords->deleteAll(['academic_period_id' => $academicPeriodId]);
