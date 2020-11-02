@@ -6,6 +6,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
+use stdClass;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
@@ -232,7 +233,6 @@ use Cake\Core\Exception\Exception;
         }catch (Exception $connectionError) {
             return $entity->conn_status_id = '<b style="color:red;">Offline</b>';
         }
-        //return $entity->conn_status_id == 1 ? '<b style="color:green;">Online</b>' : '<b style="color:red;">Offline</b>';
     }
 
     public function onGetModifiedUserId(Event $event, Entity $entity)
@@ -265,7 +265,5 @@ use Cake\Core\Exception\Exception;
         $entity->created_user_id = $this->Session->read('Auth.User.id');
         
     }
-
-    
 
 }
