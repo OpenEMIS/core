@@ -109,7 +109,6 @@ class AssessmentItemsTable extends AppTable
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $assessmentId = $options['assessment_id'];
         $classId = $options['class_id'];
-
         $query
             ->contain('EducationSubjects')
             ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
@@ -118,6 +117,7 @@ class AssessmentItemsTable extends AppTable
             ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
                 $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
                 $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+
             ])
             ->where([$this->aliasField('assessment_id') => $assessmentId])
             ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
