@@ -49,11 +49,6 @@ use Cake\Log\Log;
             'className' => 'AcademicPeriod.AcademicPeriods'
         ]);
 
-        /*$this->belongsTo('Users', [
-            'className' => 'User.Users', 
-            'foreignKey' => 'generated_by'
-        ]);*/
-
         $this->toggle('view', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -87,11 +82,11 @@ use Cake\Log\Log;
         return $rules;
     }
 
-    public function implementedEvents()
+    /*public function implementedEvents()
     {
         $events = parent::implementedEvents();
         return $events;
-    }
+    }*/
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -112,7 +107,7 @@ use Cake\Log\Log;
         
         $this->setFieldOrder(['academic_period_id']);
 
-        $this->Alert->warning('Archive.backupReminder', ['reset' => true]);
+        $this->Alert->info('Archive.backupReminder', ['reset' => true]);
     }
 
     public function onGetGeneratedBy(Event $event, Entity $entity)
@@ -136,7 +131,7 @@ use Cake\Log\Log;
             ->first();  
        
         if($entity['academic_period_id'] == $AcademicPeriodsData->id){
-            $this->Alert->error('Archive.currentAcademic', ['reset' => true]);
+            $this->Alert->error('Archive.currentAcademic');
         }else{
             $entity->academic_period_id = $entity['academic_period_id'];
             $entity->generated_on = date("Y-m-d H:i:s");
@@ -145,6 +140,14 @@ use Cake\Log\Log;
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
+
+        /*flag the academic period table
+            academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods->updateAll(
+            ['editable' => 0, 'visible' => 0],    //field
+            ['id' => $entity->academic_period_id, 'current'=> 0] //condition
+        );
 
         $this->log('=======>Before triggerDatabaseTransferShell', 'debug');
         $this->triggerDatabaseTransferShell('DatabaseTransfer',$entity->academic_period_id);

@@ -6,6 +6,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
+use stdClass;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
@@ -36,26 +37,14 @@ use Cake\Log\Log;
     public function initialize(array $config)
     {
         parent::initialize($config);
-        //echo '456'; die;
-
+        
         $this->table('archives');
         $this->displayField('name');
         $this->primaryKey('id');
 
-        /*$this->belongsTo('Users', [
-            'className' => 'User.Users', 
-            'foreignKey' => 'generated_by'
-        ]);*/
-
         $this->toggle('view', true);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-
-        // $this->behaviors()->get('ControllerAction')->config(
-        //     'actions.downloadExportDB.show',
-        //     true
-        // );
-
     }
 
     /**
@@ -74,11 +63,11 @@ use Cake\Log\Log;
         return $validator;
     }
 
-    public function implementedEvents()
+    /*public function implementedEvents()
     {
         $events = parent::implementedEvents();
         return $events;
-    }
+    }*/
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -101,13 +90,11 @@ use Cake\Log\Log;
         'id' => $entity->id
         ];
 
-        //$url = $this->url('downloadSql');
         $url = [
             'plugin' => 'Archive',
             'controller' => 'Archives',
             'action' => 'downloadSql',$entity->id,
         ];
-        //$url[1] = $this->paramsEncode($params);
         $buttons['downloadSql'] = [
         'label' => '<i class="fa kd-download"></i>'.__('Download'),
         'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false],
@@ -120,7 +107,6 @@ use Cake\Log\Log;
     
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        //echo '<pre>'; print_r($event); die;
         $this->field('name', ['visible' => false]);
         $this->field('path', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
@@ -140,8 +126,6 @@ use Cake\Log\Log;
         $available_disksize = $this->getDiskSpace();
 
         $fileName = 'Backup_SQL_' . time();
-
-        //exec('C:/xampp/mysql/bin/mysqldump --user=root --password= --host=localhost openemis_core > C:/xampp/htdocs/pocor-openemis-core/webroot/export/'.$fileName.'.sql');
 
         $entity->name = $fileName;
         $entity->path = "webroot/export/backup";

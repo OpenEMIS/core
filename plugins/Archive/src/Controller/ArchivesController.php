@@ -34,7 +34,6 @@ class ArchivesController extends AppController
     public function initialize(){
 
         parent::initialize();
-        $this->loadModel('Archive.DeletedLogs');
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
@@ -42,7 +41,7 @@ class ArchivesController extends AppController
 		$header = 'Archive';    
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
 
-        //Customize header because model name created was different.
+        //Customize header because model name created was different and POCOR-5674 requirement was modified.
         if($this->request->action == 'backupLog'){
             $header = __('Archive') . ' - ' . __('Backup');
             $this->Navigation->addCrumb('Backup');
@@ -65,12 +64,13 @@ class ArchivesController extends AppController
 
         $archiveData = $this->Archives->findById($archiveId)->first();
         $fileLink = WWW_ROOT."export\backup\".$archiveData->name."."sql";
+        //$fileLink = WWW_ROOT."export\Backup_SQL_1604298214.sql";
         
         if (fopen($fileLink, 'r')){
-            //echo 'came'; die;
             header('Content-Description: File Transfer');
             header('Content-Type: application/octet-stream');
-            header('Content-Disposition: attachment; filename='.basename('a.sql'));
+            //header('Content-Disposition: attachment; filename='.basename('Backup_SQL_1604298214.sql'));
+            header('Content-Disposition: attachment; filename='.basename($fileLink));
             header('Expires: 0');
             header('Cache-Control: must-revalidate');
             header('Pragma: public');
@@ -83,7 +83,7 @@ class ArchivesController extends AppController
         return $this->redirect(['action' => 'BackupLog']);
     }
 
-    //Archive backup module log page //currently not in use
+    //Archive backup module log page
     public function BackupLog(){
 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.Archives']);
