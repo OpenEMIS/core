@@ -75,7 +75,10 @@ class StaffDutiesTable extends AppTable  {
 			->leftJoin(['ContactTypes' => 'contact_types'], [
                            'Contacts.contact_type_id = ContactTypes.id'
                         ])			
-            ->where($conditions);
+            ->where($conditions)
+			->group([
+				'Users.id'
+			]);
     }
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
