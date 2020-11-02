@@ -195,29 +195,29 @@ class ClassExcelBehavior extends Behavior
 					'education_grade' => 'EducationGrades.name',
 					'institution_code' => 'Institutions.code',
 					'institution_name' => 'Institutions.name',
-					'shift_name' => 'ShiftOptions.name',
+					'shift' => 'ShiftOptions.name',
 					'name' => 'InstitutionClasses.name',
-					'staff_name' => $Query->func()->concat([
+					'homeroom_teacher' => $Query->func()->concat([
 						'Staff.openemis_no' => 'literal',
 						" - ",
 						'Staff.first_name' => 'literal',
 						" ",
 						'Staff.last_name' => 'literal'
 					]),
-					'secondary_staff_name' => $Query->func()->group_concat([
+					'secondary_teachers' => $Query->func()->group_concat([
 						'SecurityUsers.openemis_no' => 'literal',
 						" - ",
 						'SecurityUsers.first_name' => 'literal',
 						" ",
 						'SecurityUsers.last_name' => 'literal'
 					]),
-					'student_openemis_ID' => 'ClassesStudents.openemis_no',
+					'openemis_ID' => 'ClassesStudents.openemis_no',
 					'student_name' => $Query->func()->concat([
 						'ClassesStudents.first_name' => 'literal',
 						" ",
 						'ClassesStudents.last_name' => 'literal'
 					]),
-					'student_gender' => 'Genders.name',
+					'gender' => 'Genders.name',
 					'student_status' => 'StudentStatuses.name',
 					'special_need' => '(CASE
 											WHEN SpecailNeed.id IS NULL THEN "No"
@@ -521,8 +521,8 @@ class ClassExcelBehavior extends Behavior
         $schema = $table->schema();
         //$columns = $schema->columns();
 		$columns = ['institution_code','institution_name','academic_period_id',
-					'name','shift_name','education_grade','staff_name','secondary_staff_name',
-					'student_openemis_ID','student_name','student_gender','student_status',
+					'name','shift','education_grade','homeroom_teacher','secondary_teachers',
+					'openemis_ID','student_name','gender','student_status',
 					'special_need'
 					];
 
