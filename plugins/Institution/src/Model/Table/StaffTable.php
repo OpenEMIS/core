@@ -87,6 +87,13 @@ class StaffTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('HighChart', [
+            'staff_attandance' => [
+                '_function' => 'getNumberOfStaffByYear',
+                '_defaultColors' => false,
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => ['text' => __('Years')]],
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
             'number_of_staff_by_type' => [
                 '_function' => 'getNumberOfStaffByType',
                 '_defaultColors' => false,
