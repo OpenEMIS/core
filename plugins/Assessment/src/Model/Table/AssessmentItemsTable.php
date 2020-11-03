@@ -106,6 +106,23 @@ class AssessmentItemsTable extends AppTable
     //Pocor-5758 copy of findStaffSubjects
     public function findCopyStaffSubjects(Query $query, array $options)
     {
+        $url = $_SERVER['HTTP_REFERER'];
+        $queryString = parse_url($url);
+        $name = $queryString['query'];
+        $domain = substr($name, strpos($name, "="));
+        $test = base64_decode($domain);
+        $variable = substr($test, 0, strpos($test, "}"));
+        $newVaridable = $variable . "}";
+        $data = json_decode($newVaridable);
+        $institutionId =  $data->institution_id;
+        $academinPeriod = $data->academic_period_id;
+        $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $educationSubject = TableRegistry::get('Education.EducationSubjects');
+        $assessmentId = $options['assessment_id'];
+        $classId = $options['class_id'];
+        $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        
         if (isset($options['class_id']) && isset($options['staff_id'])) {
             $classId = $options['class_id'];
             $staffId = $options['staff_id'];
