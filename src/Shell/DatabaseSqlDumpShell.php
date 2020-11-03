@@ -18,7 +18,7 @@ class DatabaseSqlDumpShell extends Shell
 
         $fileName = !empty($this->args[0]) ? $this->args[0] : 0;
 
-        exec('mysqldump --user=root --password= --host=localhost openemis_core > '.WWW_ROOT.'export/backup/'.$fileName.'.sql');
+        shell_exec('mysqldump --user=root --password= --host=localhost openemis_core > '.WWW_ROOT.'export/backup/'.$fileName.'.sql');
 
     }
 }
