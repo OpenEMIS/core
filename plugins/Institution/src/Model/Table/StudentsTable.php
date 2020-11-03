@@ -57,6 +57,13 @@ class StudentsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('HighChart', [
+            'students_attandance' => [
+                '_function' => 'getNumberOfStudentsByStage',
+                '_defaultColors' => false,
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => ['text' => __('Education')]],
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
             'number_of_students_by_year' => [
                 '_function' => 'getNumberOfStudentsByYear',
                 '_defaultColors' => false,
