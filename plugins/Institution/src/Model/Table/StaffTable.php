@@ -332,7 +332,7 @@ class StaffTable extends ControllerActionTable
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => __('BEMIS ID')
+            'label' => __('OpenEMIS ID')
         ];
 
         $extraField[] = [
@@ -1135,7 +1135,7 @@ class StaffTable extends ControllerActionTable
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
-    {
+    {  
         $broadcaster = $this;
         $listeners = [
             TableRegistry::get('Institution.StaffLeave')    // Staff Leave associated to institution must be deleted.
@@ -1245,6 +1245,20 @@ class StaffTable extends ControllerActionTable
             $this->removeStaffRole($entity);
         } catch (InvalidPrimaryKeyException $ex) {
             Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
+        }
+
+        $body = array();
+
+        $body = [  
+            'institution_staff_id' => !empty($entity->staff_id) ? $entity->staff_id : NULL,
+        ];
+
+        if($this->action == 'remove') {
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $username = $this->Auth->user()['username']; 
+                $Webhooks->triggerShell('staff_delete', ['username' => $username], $body);
+            } 
         }
     }
 
