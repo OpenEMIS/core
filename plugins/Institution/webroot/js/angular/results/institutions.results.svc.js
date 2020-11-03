@@ -253,7 +253,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 // Only get assessment items that are available for the class
                 var assessmentSubjects = AssessmentItemsTable
                     .select()
-                    .find('SubjectNewTab', {
+                    .find('subjectNewTab', {
                         class_id: classId,
                         assessment_id: assessmentId
                     });
@@ -265,6 +265,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                 // For returning of results
                 var success = function(response, deferred) {
+                    console.log(response);
                     var items = response.data.data;
 
                     if (angular.isObject(items) && items.length > 0)
@@ -274,6 +275,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         var subjects = [];
                         angular.forEach(items, function(item, key)
                         {
+                            console.log(item);
                             educationSubject = item.InstitutionSubjects;
                             educationSubject.grading_type = item.grading_type;
                             
@@ -308,7 +310,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
      
                             } else {
                                 assessmentSubjects = assessmentSubjects
-                                    .find('staffSubjects', {class_id: classId, staff_id: securityUserId})
+                                    .find('copyStaffSubjects', {class_id: classId, staff_id: securityUserId})
                                     .ajax({success: success, defer: true});
                                   
                             }
