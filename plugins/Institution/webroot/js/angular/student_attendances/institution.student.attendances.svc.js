@@ -634,6 +634,9 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         eSelect.value = data.institution_student_absences[dataKey];
         eSelect.addEventListener('change', function () {
+            setTimeout(function(){
+                setRowDatas(context, data)
+            }, 200)
             var oldValue = data.institution_student_absences[dataKey];
             var newValue = eSelect.value;
 
@@ -721,6 +724,18 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         eCell.appendChild(eSelect);
         return eCell;
+    }
+
+    function setRowDatas(context, data) {
+        var studentList = context.scope.$ctrl.classStudentList;
+        studentList.forEach(function (dataItem, index) {
+            if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
+                dataItem.rowHeight = 60;
+            } else {
+                dataItem.rowHeight = 120;
+            }
+        });
+        context.scope.$ctrl.gridOptions.api.setRowData(studentList);
     }
 
     function getEditCommentElement(data, context, api) {
