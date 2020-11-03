@@ -56,6 +56,7 @@ class TransferConnectionsTable extends ControllerActionTable
         $this->toggle('remove', false);
         $this->toggle('add', false);
         $this->toggle('search', false);
+        $this->toggle('index', false);
 
     }
 
@@ -82,13 +83,11 @@ class TransferConnectionsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        echo 'dfdskfdskfj'; die;
         // Remove back toolbarButton
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         unset($toolbarButtonsArray['back']);
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
-        $this->setupTabElements($entity);
     }
 
     public function implementedEvents()
