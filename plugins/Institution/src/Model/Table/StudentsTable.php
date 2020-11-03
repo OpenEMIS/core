@@ -78,6 +78,13 @@ class StudentsTable extends ControllerActionTable
                 'xAxis' => ['title' => ['text' => __('Education')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
+            'students_attendance_daily' => [
+                '_function' => 'getDailyStudentsandStaffAttendance',
+                '_defaultColors' => false,
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => ['text' => __('Attendance')]],
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
             'institution_student_gender' => [
                 '_function' => 'getNumberOfStudentsByGender',
                 '_defaultColors' => false,
@@ -1625,6 +1632,73 @@ class StudentsTable extends ControllerActionTable
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
         $params['options']['xAxis']['categories'] = array_values($grades);
+        $params['dataSet'] = $dataSet;
+
+        return $params;
+    }
+
+    public function getDailyStudentsandStaffAttendance($params = [])
+    {
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $_conditions = [];
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->alias().'.'.$key] = $value;
+        }
+
+        $AcademicPeriod = $this->AcademicPeriods;
+       
+        $currentYearId = $AcademicPeriod->getCurrent();
+       // echo '<pre>';  print_r($currentYearId); die;
+        if (!empty($currentYearId)) {
+            $currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+           
+        } else {
+            $currentYear = __('Not Defined');               
+        }
+
+        // $studentsByGradeConditions = [
+        //     $this->aliasField('academic_period_id') => $currentYearId,
+        //     $this->aliasField('education_grade_id').' IS NOT NULL',
+        //     'Genders.name IS NOT NULL'
+        // ];
+        // $studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
+        // $query = $this->find();
+        //echo '<pre>';  print_r($query); die;
+        $staffAttendance = TableRegistry::get('institution_staff_attendances');
+        // echo '<pre>';  print_r($staffAttendance); die;
+        $staffAttendanceDaily = $staffAttendance->find()
+            ->select([
+                 'institution_id' =>$staffAttendance->aliasField('institution_id'),
+                 'total' => count($staffAttendance->aliasField('institution_id'))
+            ])
+            ->where(['institution_id'=>$conditions['institution_id']])
+            ->toArray()
+            ;
+        //echo '<pre>'; print_r($staffAttendanceDaily); die; 
+
+        $grades = [];
+        $dataSet = array();
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
+        foreach ($staffAttendanceDaily as $key => $staffAttendances) {
+            $institutionId = $staffAttendances->institution_id;
+            $attendanceTotal = $staffAttendances->total;
+
+           // $grades[$gradeId] = $gradeName;
+
+
+            foreach ($dataSet as $dkey => $dvalue) {
+                if (!array_key_exists($institutionId, $dataSet[$dkey]['data'])) {
+                    $dataSet[$dkey]['data'][$institutionId] = 0;
+                }
+            }
+           // $dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
+            $dataSet['Total']['data'][$institutionId] += $attendanceTotal;
+        }
+
+        // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+        $params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
+       // $params['options']['xAxis']['categories'] = array_values($grades);
         $params['dataSet'] = $dataSet;
 
         return $params;
