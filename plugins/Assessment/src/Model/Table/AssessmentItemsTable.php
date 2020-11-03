@@ -213,7 +213,7 @@ class AssessmentItemsTable extends AppTable
                         $InstitutionSubjects->aliasField('institution_id') => $institutionId,
                         $InstitutionSubjects->aliasField('academic_period_id') => $academinPeriod,
                     ]);
-                
+
                 return $query;
 
         } else {
