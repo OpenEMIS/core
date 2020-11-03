@@ -239,7 +239,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
                 promises.push(KdAccessSvc.checkPermission('Institutions.Subjects.view', roles));
                 promises.push(vm.checkHomeOrStaff(classId,securityUserId));
-               
+                
                 return $q.all(promises);
             }, function(error) {
 
@@ -265,7 +265,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                 // For returning of results
                 var success = function(response, deferred) {
-                    console.log(response);
+                    
                     var items = response.data.data;
 
                     if (angular.isObject(items) && items.length > 0)
@@ -275,7 +275,6 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         var subjects = [];
                         angular.forEach(items, function(item, key)
                         {
-                            console.log(item);
                             educationSubject = item.InstitutionSubjects;
                             educationSubject.grading_type = item.grading_type;
                             
@@ -302,8 +301,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     {
                         // If no all subjects permission, check if user has my subjects permisson
                         if (mySubjectsPermission)
-                        {     
-
+                        {  
                            // Additional check for homeroom/secondary teacher
                             if(isHomeOrSecondary.total >0) {
                                 assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
