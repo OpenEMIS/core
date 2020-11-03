@@ -36,37 +36,20 @@ class ArchivesController extends AppController
         parent::initialize();
     }
 
-    public function beforeFilter(Event $event)
-    {
-        parent::beforeFilter($event);
-
-        $session = $this->request->session();
-        $action = $this->request->params['action'];
-
-        if($action == 'connection'){
-            $connectionTable = TableRegistry::get('Archive.TransferConnections');
-            $connectionData = $connectionTable->find()->select(['id'])->first()->toArray();
-            //echo '<pre>'; print_r($connectionId); die;
-            $connectionId = $this->controller->paramsEncode(['id' => $connectionData->id]);
-
-            $this->Navigation->addCrumb('Profile', ['plugin' => 'Archive', 'controller' => 'Archives', 'action' => 'Connection', 'view', $this->ControllerAction->paramsEncode(['id' => $connectionId])]);
-        }
-        
-    }
-
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 
 		$header = 'Archive';    
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
 
+        
         //Customize header because model name created was different and POCOR-5674 requirement was modified.
-        if($this->request->action == 'backupLog'){
+        if($this->request->action == 'BackupLog'){
             $header = __('Archive') . ' - ' . __('Backup');
             $this->Navigation->addCrumb('Backup');
-        }elseif($this->request->action == 'transfer'){
+        }elseif($this->request->action == 'Transfer'){
             $header = __('Archive') . ' - ' . __('Transfer');
             $this->Navigation->addCrumb('Transfer');
-        }elseif($this->request->action == 'connection'){
+        }elseif($this->request->action == 'Connection'){
             $header = __('Archive') . ' - ' . __('Connection');
             $this->Navigation->addCrumb('Connection');
         }
@@ -83,7 +66,6 @@ class ArchivesController extends AppController
         $archiveData = $backupLog->findById($archiveId)->first();
         
         $fileLink = WWW_ROOT .'export\backup' . DS .$archiveData->name . '.sql';
-        //$fileLink = WWW_ROOT."export\Backup_SQL_1604298214.sql";
         
         if (fopen($fileLink, 'r')){
             header('Content-Description: File Transfer');

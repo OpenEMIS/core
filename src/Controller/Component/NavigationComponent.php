@@ -1469,11 +1469,11 @@ class NavigationComponent extends Component
 
     public function getAdministrationNavigation()
     {
-
+        //for POCOR-5674 requirement
         $connectionTable = TableRegistry::get('Archive.TransferConnections');
         $connectionData = $connectionTable->find()->select(['id'])->first()->toArray();
-        //echo '<pre>'; print_r($connectionId); die;
-        $connectionId = $this->controller->paramsEncode(['id' => $connectionData->id]);
+        $connectionId = $this->controller->paramsEncode(['id' => $connectionData['id']]);
+        /*for POCOR-5674 */
 
         $queryString = $this->request->query('queryString');
         $navigation = [
@@ -1833,20 +1833,20 @@ class NavigationComponent extends Component
                 'Archive.Backup' => [
                     'title' => 'Backup',
                     'parent' => 'Administration.Archive',
-                    'selected' => ['Archives.backupLog'],
+                    'selected' => ['Archives.BackupLog'],
                     'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'BackupLog'],
                 ],
                 'Archive.Transfer' => [
                     'title' => 'Transfer',
                     'parent' => 'Administration.Archive',
                     'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Transfer'],
-                    'selected' => ['Archives.transfer'],
+                    'selected' => ['Archives.Transfer'],
                 ],
                 'Archive.Connection' => [
                     'title' => 'Connection',
                     'parent' => 'Administration.Archive',
                     'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection', 0 => 'view', $connectionId],
-                    'selected' => ['Archives.connection'],
+                    'selected' => ['Archives.Connection.view','Archives.Connection.edit'],
                 ],
         ];
         return $navigation;
