@@ -63,7 +63,7 @@ class ArchivesController extends AppController
     function downloadSql($archiveId){
 
         $archiveData = $this->Archives->findById($archiveId)->first();
-        $fileLink = WWW_ROOT."export\backup\".$archiveData->name."."sql";
+        $fileLink = WWW_ROOT .'export\backup' . DS .$archiveData->name . '.sql';
         //$fileLink = WWW_ROOT."export\Backup_SQL_1604298214.sql";
         
         if (fopen($fileLink, 'r')){
