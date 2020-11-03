@@ -228,7 +228,8 @@ class AssessmentItemsTable extends AppTable
                         $this->aliasField('assessment_id') => $assessmentId,
                         $InstitutionSubjects->aliasField('institution_id') => $institutionId,
                         $InstitutionSubjects->aliasField('academic_period_id') => $academinPeriod,
-                    ]);
+                    ])
+                    ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
 
                 return $query;
     }
