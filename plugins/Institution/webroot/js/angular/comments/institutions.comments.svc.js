@@ -123,7 +123,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 });
             }
 
-            return getSubjects(reportCardId, classId);
+            return getSubjects(reportCardId, classId,principalPermission);
         }, function(error)
         {
             console.log(error);
@@ -162,12 +162,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         return deferred.promise;
     };
 
-    function getSubjects(reportCardId, classId) {
+    function getSubjects(reportCardId, classId,principalPermission) {
         return ReportCardSubjectsTable
             .select()
             .find('matchingClassSubjects', {
                 report_card_id: reportCardId,
-                institution_class_id: classId
+                institution_class_id: classId,
+                type:principalPermission.length
             })
             .ajax({defer: true});
     };
@@ -520,7 +521,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     };
 
     function getRowData(academicPeriodId, institutionId, institutionClassId, educationGradeId, reportCardId, commentCodeOptions, tab, limit, page) {
-        console.log(tab);
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.error)) {
                 deferred.reject(response.data.error);

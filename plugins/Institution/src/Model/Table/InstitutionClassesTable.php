@@ -710,7 +710,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId
                         ])
                 );
-            
+
             return $query;
         }
     }
