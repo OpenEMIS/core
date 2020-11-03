@@ -6,27 +6,30 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use stdClass;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
+use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
 use Cake\Core\Exception\Exception;
 
 /**
- * Connections Model
+ * DeletedLogs Model
  *
- * @method \Archive\Model\Entity\Connection get($primaryKey, $options = [])
- * @method \Archive\Model\Entity\Connection newEntity($data = null, array $options = [])
- * @method \Archive\Model\Entity\Connection[] newEntities(array $data, array $options = [])
- * @method \Archive\Model\Entity\Connection|bool save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \Archive\Model\Entity\Connection patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \Archive\Model\Entity\Connection[] patchEntities($entities, array $data, array $options = [])
- * @method \Archive\Model\Entity\Connection findOrCreate($search, callable $callback = null, $options = [])
- */class ArchiveConnectionsTable extends ControllerActionTable
+ * @property \Cake\ORM\Association\BelongsTo $AcademicPeriods
+ *
+ * @method \Archive\Model\Entity\DeletedLog get($primaryKey, $options = [])
+ * @method \Archive\Model\Entity\DeletedLog newEntity($data = null, array $options = [])
+ * @method \Archive\Model\Entity\DeletedLog[] newEntities(array $data, array $options = [])
+ * @method \Archive\Model\Entity\DeletedLog|bool save(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \Archive\Model\Entity\DeletedLog patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
+ * @method \Archive\Model\Entity\DeletedLog[] patchEntities($entities, array $data, array $options = [])
+ * @method \Archive\Model\Entity\DeletedLog findOrCreate($search, callable $callback = null, $options = [])
+ */
+class TransferConnectionsTable extends ControllerActionTable
 {
     use MessagesTrait;
 
@@ -36,7 +39,6 @@ use Cake\Core\Exception\Exception;
         3 => ['id' => 3, 'name' => 'SqlServer'],
         4 => ['id' => 4, 'name' => 'Sqlite']
     ];
-
     /**
      * Initialize method
      *
@@ -47,25 +49,16 @@ use Cake\Core\Exception\Exception;
     {
         parent::initialize($config);
 
-        $this->table('archive_connections');
-        $this->displayField('name');
+        $this->table('transfer_connections');
+        $this->displayField('id');
         $this->primaryKey('id');
 
-        $this->toggle('add', false);
-        $this->toggle('edit', true);
-        $this->toggle('view', true);
         $this->toggle('remove', false);
+        $this->toggle('add', false);
         $this->toggle('search', false);
-        $this->toggle('index', false);
 
     }
 
-    /**
-     * Default validation rules.
-     *
-     * @param \Cake\Validation\Validator $validator Validator instance.
-     * @return \Cake\Validation\Validator
-     */
     public function validationDefault(Validator $validator)
     {
         $validator->integer('id')->allowEmpty('id', 'create');
@@ -75,11 +68,11 @@ use Cake\Core\Exception\Exception;
         $validator->requirePresence('host_port', 'create')->notEmpty('host_port');
         $validator->requirePresence('db_name', 'create')->notEmpty('db_name');
         $validator->requirePresence('username', 'create')->notEmpty('username');
-        $validator->requirePresence('password', 'create')->notEmpty('password');
+        $validator->allowEmpty('password', 'create');
         
         $validator->integer('conn_status_id')->allowEmpty('conn_status_id', 'create');
         $validator->dateTime('status_checked')->allowEmpty('status_checked', 'create');
-        $validator->integer('modified_user_id')->allowEmpty('modified_user_id')->requirePresence('modified_user_id', 'create');
+        //$validator->allowEmpty('modified_user_id');
         $validator->dateTime('modified')->allowEmpty('modified', 'create');
         //$validator->integer('created_user_id')->allowEmpty('created_user_id', 'create');
         $validator->dateTime('created')->allowEmpty('created', 'create');
@@ -87,18 +80,15 @@ use Cake\Core\Exception\Exception;
         return $validator;
     }
 
-    /**
-     * Returns a rules checker object that will be used for validating
-     * application integrity.
-     *
-     * @param \Cake\ORM\RulesChecker $rules The rules object to be modified.
-     * @return \Cake\ORM\RulesChecker
-     */
-    public function buildRules(RulesChecker $rules)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $rules->add($rules->isUnique(['username']));
+        echo 'dfdskfdskfj'; die;
+        // Remove back toolbarButton
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        unset($toolbarButtonsArray['back']);
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
-        return $rules;
+        $this->setupTabElements($entity);
     }
 
     public function implementedEvents()
@@ -154,8 +144,8 @@ use Cake\Core\Exception\Exception;
             $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
         }
 
-    }    
-
+    }   
+    
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('name');    
@@ -204,13 +194,6 @@ use Cake\Core\Exception\Exception;
         $this->fields['db_type_id']['options'] = $databaseTypeOptions;
     }
 
-    public function onGetDbTypeId(Event $event, Entity $entity)
-    {
-        list($databaseTypeOptions) = array_values($this->getSelectOptions());
-
-        return $databaseTypeOptions[$entity->db_type_id];
-    }
-
     public function getSelectOptions()
     {
         //Return all required options and their key
@@ -221,6 +204,13 @@ use Cake\Core\Exception\Exception;
         $selectedDatabaseType = key($databaseTypeOptions);
 
         return compact('databaseTypeOptions', 'selectedDatabaseType');
+    }
+    
+    public function onGetDbTypeId(Event $event, Entity $entity)
+    {
+        list($databaseTypeOptions) = array_values($this->getSelectOptions());
+
+        return $databaseTypeOptions[$entity->db_type_id];
     }
 
     public function onGetConnStatusId(Event $event, Entity $entity)
@@ -260,10 +250,9 @@ use Cake\Core\Exception\Exception;
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
-
+       
         $entity->modified_user_id = $this->Session->read('Auth.User.id');
         $entity->created_user_id = $this->Session->read('Auth.User.id');
         
     }
-
 }

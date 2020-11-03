@@ -26,7 +26,7 @@ use Cake\Log\Log;
  * @method \Archive\Model\Entity\DeletedLog patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
  * @method \Archive\Model\Entity\DeletedLog[] patchEntities($entities, array $data, array $options = [])
  * @method \Archive\Model\Entity\DeletedLog findOrCreate($search, callable $callback = null, $options = [])
- */class DeletedLogsTable extends ControllerActionTable
+ */class TransferLogsTable extends ControllerActionTable
 {
 
     /**
@@ -39,7 +39,7 @@ use Cake\Log\Log;
     {
         parent::initialize($config);
 
-        $this->table('deleted_logs');
+        $this->table('transfer_logs');
         $this->displayField('id');
         $this->primaryKey('id');
 
