@@ -1839,7 +1839,7 @@ class NavigationComponent extends Component
                 'Archive.Connection' => [
                     'title' => 'Connection',
                     'parent' => 'Administration.Archive',
-                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection/view'],
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection', 0 => 'view'],
                     'selected' => ['Archives.connection'],
                 ],
         ];
