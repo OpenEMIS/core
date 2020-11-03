@@ -239,7 +239,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
                 promises.push(KdAccessSvc.checkPermission('Institutions.Subjects.view', roles));
                 promises.push(vm.checkHomeOrStaff(classId,securityUserId));
-               
+                
                 return $q.all(promises);
             }, function(error) {
 
@@ -253,7 +253,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 // Only get assessment items that are available for the class
                 var assessmentSubjects = AssessmentItemsTable
                     .select()
-                    .find('SubjectNewTab', {
+                    .find('subjectNewTab', {
                         class_id: classId,
                         assessment_id: assessmentId
                     });
@@ -265,6 +265,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                 // For returning of results
                 var success = function(response, deferred) {
+                    
                     var items = response.data.data;
 
                     if (angular.isObject(items) && items.length > 0)
@@ -300,15 +301,14 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     {
                         // If no all subjects permission, check if user has my subjects permisson
                         if (mySubjectsPermission)
-                        {     
-
+                        {  
                            // Additional check for homeroom/secondary teacher
                             if(isHomeOrSecondary.total >0) {
                                 assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
      
                             } else {
                                 assessmentSubjects = assessmentSubjects
-                                    .find('staffSubjects', {class_id: classId, staff_id: securityUserId})
+                                    .find('copyStaffSubjects', {class_id: classId, staff_id: securityUserId})
                                     .ajax({success: success, defer: true});
                                   
                             }
