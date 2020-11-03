@@ -28,8 +28,9 @@ class ReportCardSubjectsTable extends ControllerActionTable
     public function findMatchingClassSubjects(Query $query, array $options)
     {
         $staffId = $options['user']['id'];
+        $checkType = $options['type'];
         $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
-        if (!empty($options['user']) && $options['user']['super_admin'] == 1){    
+        if (!empty($options['user']) && $options['user']['super_admin'] == 1 || $checkType == 1){    
         $reportCardId = $options['report_card_id'];
         $classId = $options['institution_class_id'];
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
