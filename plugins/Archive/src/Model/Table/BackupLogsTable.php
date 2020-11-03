@@ -6,7 +6,6 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use stdClass;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
@@ -14,19 +13,24 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
+use App\Model\Traits\MessagesTrait;
 
 /**
- * Archives Model
+ * DeletedLogs Model
  *
- * @method \App\Model\Entity\Archive get($primaryKey, $options = [])
- * @method \App\Model\Entity\Archive newEntity($data = null, array $options = [])
- * @method \App\Model\Entity\Archive[] newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Archive|bool save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\Archive patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \App\Model\Entity\Archive[] patchEntities($entities, array $data, array $options = [])
- * @method \App\Model\Entity\Archive findOrCreate($search, callable $callback = null, $options = [])
- */class ArchivesTable extends ControllerActionTable
+ * @property \Cake\ORM\Association\BelongsTo $AcademicPeriods
+ *
+ * @method \Archive\Model\Entity\DeletedLog get($primaryKey, $options = [])
+ * @method \Archive\Model\Entity\DeletedLog newEntity($data = null, array $options = [])
+ * @method \Archive\Model\Entity\DeletedLog[] newEntities(array $data, array $options = [])
+ * @method \Archive\Model\Entity\DeletedLog|bool save(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \Archive\Model\Entity\DeletedLog patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
+ * @method \Archive\Model\Entity\DeletedLog[] patchEntities($entities, array $data, array $options = [])
+ * @method \Archive\Model\Entity\DeletedLog findOrCreate($search, callable $callback = null, $options = [])
+ */
+class BackupLogsTable extends ControllerActionTable
 {
+    use MessagesTrait;
 
     /**
      * Initialize method
@@ -37,9 +41,9 @@ use Cake\Log\Log;
     public function initialize(array $config)
     {
         parent::initialize($config);
-        
-        $this->table('archives');
-        $this->displayField('name');
+
+        $this->table('backup_logs');
+        $this->displayField('id');
         $this->primaryKey('id');
 
         $this->toggle('view', true);
@@ -47,12 +51,6 @@ use Cake\Log\Log;
         $this->toggle('remove', false);
     }
 
-    /**
-     * Default validation rules.
-     *
-     * @param \Cake\Validation\Validator $validator Validator instance.
-     * @return \Cake\Validation\Validator
-     */
     public function validationDefault(Validator $validator)
     {
         $validator->integer('id')->allowEmpty('id', 'create');
@@ -62,12 +60,6 @@ use Cake\Log\Log;
         $validator->allowEmpty('generated_by', 'create');
         return $validator;
     }
-
-    /*public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        return $events;
-    }*/
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -104,7 +96,6 @@ use Cake\Log\Log;
         return $buttons;
     }
 
-    
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('name', ['visible' => false]);
@@ -118,6 +109,38 @@ use Cake\Log\Log;
 
         $this->field('database_size (GB)', ['attr' => ['value'=> $dbSize], 'type'=>'readonly']);
         $this->field('available_space (GB)', ['attr' => ['value'=> $available_disksize],'type'=>'readonly']);
+    }
+
+    public function getDbSize(){
+
+        //get database size
+        $connection = ConnectionManager::get('default');
+        $results = $connection->execute('SELECT table_schema AS "Database",  ROUND(SUM(data_length + index_length) / 1024 / 1024 / 1024, 2) AS "Size" FROM information_schema.TABLES WHERE table_schema = "openemis_core" ORDER BY (data_length + index_length) DESC')->fetch('assoc');
+        
+        $dbsize = $results['Size'];
+        
+        return $dbsize;
+
+    }
+
+    public function getDiskSpace(){
+
+        //get available disk size
+        $available_disksize = round(disk_free_space('/') / 1024 / 1024 / 1024, 2);
+
+        return $available_disksize;
+    }
+
+    public function onGetGeneratedBy(Event $event, Entity $entity)
+    {
+        $Users = TableRegistry::get('User.Users');
+        $result = $Users
+            ->find()
+            ->select(['first_name','last_name'])
+            ->where(['id' => $entity->generated_by])
+            ->first();
+
+        return $entity->generated_by = $result->first_name.' '.$result->last_name;
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
@@ -155,36 +178,5 @@ use Cake\Log\Log;
         exec($shellCmd);
         Log::write('debug', $shellCmd);
     }
-
-    public function onGetGeneratedBy(Event $event, Entity $entity)
-    {
-        $Users = TableRegistry::get('User.Users');
-        $result = $Users
-            ->find()
-            ->select(['first_name','last_name'])
-            ->where(['id' => $entity->generated_by])
-            ->first();
-
-        return $entity->generated_by = $result->first_name.' '.$result->last_name;
-    }
-
-    public function getDbSize(){
-
-        //get database size
-        $connection = ConnectionManager::get('default');
-        $results = $connection->execute('SELECT table_schema AS "Database",  ROUND(SUM(data_length + index_length) / 1024 / 1024 / 1024, 2) AS "Size" FROM information_schema.TABLES WHERE table_schema = "openemis_core" ORDER BY (data_length + index_length) DESC')->fetch('assoc');
-        
-        $dbsize = $results['Size'];
-        
-        return $dbsize;
-
-    }
-
-    public function getDiskSpace(){
-
-        //get available disk size
-        $available_disksize = round(disk_free_space('/') / 1024 / 1024 / 1024, 2);
-
-        return $available_disksize;
-    }
+    
 }

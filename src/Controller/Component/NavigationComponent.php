@@ -1469,6 +1469,12 @@ class NavigationComponent extends Component
 
     public function getAdministrationNavigation()
     {
+
+        $connectionTable = TableRegistry::get('Archive.TransferConnections');
+        $connectionData = $connectionTable->find()->select(['id'])->first()->toArray();
+        //echo '<pre>'; print_r($connectionId); die;
+        $connectionId = $this->controller->paramsEncode(['id' => $connectionData->id]);
+
         $queryString = $this->request->query('queryString');
         $navigation = [
             
@@ -1839,7 +1845,7 @@ class NavigationComponent extends Component
                 'Archive.Connection' => [
                     'title' => 'Connection',
                     'parent' => 'Administration.Archive',
-                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection', 0 => 'view'],
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection', 0 => 'view', $connectionId],
                     'selected' => ['Archives.connection'],
                 ],
         ];

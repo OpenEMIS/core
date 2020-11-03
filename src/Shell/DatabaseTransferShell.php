@@ -33,11 +33,11 @@ class DatabaseTransferShell extends Shell
         if (!empty($this->args[1])) {
             $exit = false;            
 
-            //$this->out('Initializing Transfer of data ('.Time::now().')');
+            $this->out('Initializing Transfer of data ('.Time::now().')');
 
             $this->getRecords();
 
-            /*$systemProcessId = $this->SystemProcesses->addProcess('DatabaseTransfer', getmypid(), $this->args[0]);
+            $systemProcessId = $this->SystemProcesses->addProcess('DatabaseTransfer', getmypid(), $this->args[0]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
 
             while (!$exit) {
@@ -58,7 +58,7 @@ class DatabaseTransferShell extends Shell
                 }
             }
             $this->out('End Update for Database Transfer Status ('. Time::now() .')');
-            $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);*/
+            $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
         }
     }
 

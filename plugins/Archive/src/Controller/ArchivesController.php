@@ -36,6 +36,24 @@ class ArchivesController extends AppController
         parent::initialize();
     }
 
+    public function beforeFilter(Event $event)
+    {
+        parent::beforeFilter($event);
+
+        $session = $this->request->session();
+        $action = $this->request->params['action'];
+
+        if($action == 'connection'){
+            $connectionTable = TableRegistry::get('Archive.TransferConnections');
+            $connectionData = $connectionTable->find()->select(['id'])->first()->toArray();
+            //echo '<pre>'; print_r($connectionId); die;
+            $connectionId = $this->controller->paramsEncode(['id' => $connectionData->id]);
+
+            $this->Navigation->addCrumb('Profile', ['plugin' => 'Archive', 'controller' => 'Archives', 'action' => 'Connection', 'view', $this->ControllerAction->paramsEncode(['id' => $connectionId])]);
+        }
+        
+    }
+
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 
 		$header = 'Archive';    
@@ -55,14 +73,15 @@ class ArchivesController extends AppController
         $this->set('contentHeader', $header); 
 
         $this->Security->config('unlockedActions', 'add');
-        $this->Security->config('unlockedActions', 'downloadExportDB');
 
         $this->Auth->allow(['index', 'download']);
     }
 
     function downloadSql($archiveId){
 
-        $archiveData = $this->Archives->findById($archiveId)->first();
+        $backupLog = $this->loadModel('BackupLogs');
+        $archiveData = $backupLog->findById($archiveId)->first();
+        
         $fileLink = WWW_ROOT .'export\backup' . DS .$archiveData->name . '.sql';
         //$fileLink = WWW_ROOT."export\Backup_SQL_1604298214.sql";
         
@@ -86,18 +105,18 @@ class ArchivesController extends AppController
     //Archive backup module log page
     public function BackupLog(){
 
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.Archives']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.BackupLogs']);
     }
 
     //Archive delete module log page
     public function Transfer(){
 
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.DeletedLogs']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.TransferLogs']);
     }
 
     public function Connection(){
 
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.ArchiveConnections']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Archive.TransferConnections']);
     }
 
 }
