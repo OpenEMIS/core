@@ -297,6 +297,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         return params.data.rowHeight;
     }
 
+    
     vm.setGridData = function() {
         if (angular.isDefined(vm.gridOptions.api)) {
             // vm.gridOptions.api.setRowData(vm.classStudentList);
@@ -307,7 +308,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.setRowDatas = function(studentList) {
         studentList.forEach(function (dataItem, index) {
-            if(dataItem.institution_student_absences.absence_type_code == null) {
+            if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
                 dataItem.rowHeight = 60;
             } else {
                 dataItem.rowHeight = 120;
