@@ -31,6 +31,7 @@ class DirectoriesController extends AppController
             'StaffClasses'          => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
             'StaffQualifications'   => ['className' => 'Staff.Qualifications'],
             'StaffExtracurriculars'     => ['className' => 'Staff.Extracurriculars'],
+            'StaffDuties'           => ['className' => 'Institution.StaffDuties', 'actions' => ['index', 'view']],
             'TrainingResults'       => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 
             'ImportUsers'           => ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
@@ -145,6 +146,10 @@ class DirectoriesController extends AppController
     public function StaffAppraisals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']);
+    }
+    public function StaffDuties()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Duties']);
     }
     public function StudentTextbooks()
     {
@@ -846,6 +851,7 @@ class DirectoriesController extends AppController
             'Attendances' => ['text' => __('Attendances')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
+            'Duties' => ['text' => __('Duties')],
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
