@@ -1507,7 +1507,7 @@ class NavigationComponent extends Component
                     'title' => 'Attendances',
                     'parent' => 'SystemSetup',
                     'params' => ['plugin' => 'Attendance'],
-                    'selected' => ['Attendance.StudentMarkTypes']
+                    'selected' => ['Attendances.StudentMarkTypeStatuses']
                 ],
                 'FieldOptions.index' => [
                     'title' => 'Field Options',
