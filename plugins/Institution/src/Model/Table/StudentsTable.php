@@ -280,7 +280,7 @@ class StudentsTable extends ControllerActionTable
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => 'BEMIS ID'
+            'label' => 'OpenEMIS ID'
         ];
 
         $extraField[] = [
@@ -562,6 +562,19 @@ class StudentsTable extends ControllerActionTable
         if ($entity->student_status_id != $studentStatuses['CURRENT']) {
             $event->stopPropagation();
             return false;
+        }
+
+        $body = array();
+
+        $body = [  
+            'institution_student_id' => !empty($entity->student_id) ? $entity->student_id : NULL,
+        ];
+        if($this->action == 'remove') {
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $username = $this->Auth->user()['username']; 
+                $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
+            } 
         }
     }
 
