@@ -58,6 +58,7 @@ class InstitutionsController extends AppController
         'StaffTrainingResults',
         'StaffTransferIn',
         'StaffTransferOut',
+        'StaffDuties',
         // 'StaffPositionProfiles',
 
         // attendances
@@ -191,6 +192,11 @@ class InstitutionsController extends AppController
     public function StaffAppraisals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
+    }
+
+    public function StaffDuties()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffDuties']);
     }
 
     public function Surveys()
