@@ -58,7 +58,7 @@ class StudentsTable extends ControllerActionTable
 
         $this->addBehavior('HighChart', [
             'students_attandance' => [
-                '_function' => 'getNumberOfStudentsByStage',
+                '_function' => 'getNumberOfStudentsByAttendanceType',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Education')]],
@@ -1631,6 +1631,102 @@ class StudentsTable extends ControllerActionTable
 
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
+        $params['options']['xAxis']['categories'] = array_values($grades);
+        $params['dataSet'] = $dataSet;
+
+        return $params;
+    }
+	
+	// For Dashboard (Home Page and Institution Dashboard page)
+    public function getNumberOfStudentsByAttendanceType($params = [])
+    {
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $_conditions = [];
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->alias().'.'.$key] = $value;
+        }
+
+        $AcademicPeriod = $this->AcademicPeriods;
+        $currentYearId = $AcademicPeriod->getCurrent();
+
+        if (!empty($currentYearId)) {
+            $currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+        } else {
+            $currentYear = __('Not Defined');
+        }
+		
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+		$Institutions = TableRegistry::get('Institution.Institutions');
+		$InstitutionClassesStudents = TableRegistry::get('Institution.InstitutionClassesStudents');
+
+        $studentsByGradeConditions = [
+            $this->aliasField('academic_period_id') => $currentYearId,
+        ];
+        $studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
+        $query = $this->find();
+        $studentByGrades = $query
+            ->select([
+                $this->aliasField('institution_id'),
+                'InstitutionClasses.id',
+                'InstitutionClasses.name',
+                'Users.id',
+            ])
+            ->contain([
+                'Users.Genders'
+            ])
+			->innerJoin(
+			['InstitutionClassesStudents' => 'institution_class_students'],
+			[
+				'InstitutionClassesStudents.student_id = '. $this->aliasField('student_id')
+			]
+			)
+			->innerJoin(
+			['InstitutionClasses' => 'institution_classes'],
+			[
+				'InstitutionClasses.id = InstitutionClassesStudents.institution_class_id'
+			]
+			)
+            ->where($studentsByGradeConditions)
+            ->group([
+                'Genders.name'
+            ])
+            ->toArray()
+            ;
+		
+        $grades = [];
+
+        //$genderOptions = $this->Users->Genders->getList();
+        $dataSet = array();
+        /*foreach ($genderOptions as $key => $value) {
+            $dataSet[$value] = array('name' => __($value), 'data' => array());
+        } */
+		
+		//echo '<pre>';print_r($studentByGrades);die;
+        $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
+        $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
+        $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
+
+        foreach ($studentByGrades as $key => $studentByGrade) {
+			//echo '<pre>';print_r($studentByGrade);
+            $gradeId = $studentByGrade->education_grade->education_stage_id;
+            $gradeName = $studentByGrade->education_grade->education_stage->name;
+            $gradeGender = $studentByGrade->user->gender->name;
+            $gradeTotal = $studentByGrade->total;
+
+            $grades[$gradeId] = $gradeName;
+	
+            foreach ($dataSet as $dkey => $dvalue) {
+                if (!array_key_exists($gradeId, $dataSet[$dkey]['data'])) {
+                    $dataSet[$dkey]['data'][$gradeId] = 0;
+                }
+            }
+            $dataSet['Present']['data'][$gradeId] = $gradeTotal;
+            $dataSet['Absent']['data'][$gradeId] = $gradeTotal;
+            $dataSet['Late']['data'][$gradeId] = $gradeTotal;
+        }
+		//die;
+        // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+        $params['options']['subtitle'] = array('text' => __('For Today'));
         $params['options']['xAxis']['categories'] = array_values($grades);
         $params['dataSet'] = $dataSet;
 
