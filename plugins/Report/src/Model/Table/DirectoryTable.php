@@ -14,6 +14,8 @@ class DirectoryTable extends AppTable
     const NO_FILTER = 0;
     const STUDENT = 1;
     const STAFF = 2;
+    const GUARDIAN  = 3; 
+    const OTHERS = 4;
     public function initialize(array $config)
     {
         $this->table('security_users');
@@ -109,9 +111,11 @@ class DirectoryTable extends AppTable
                 $attr['options'] = $option;
                 $attr['onChangeReload'] = true;
                 return $attr;
-            } elseif($feature == 'Report.Users'){
+            } elseif($feature == 'Report.Users') {
                 $option[self::STUDENT] = __('Students');
                 $option[self::STAFF] = __('Staff');
+                $option[self::GUARDIAN] = __('Guardian ');
+                $option[self::OTHERS] = __('Others');
                 $attr['type'] = 'select';
                 $attr['options'] = $option;
                 $attr['onChangeReload'] = true;
