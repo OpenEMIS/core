@@ -1,3 +1,16 @@
+### [3.58.1] - 2020-11-03
+- Implemented: Webhook Feature class (delete)
+- Implemented: Webhook Feature staff (delete)
+- Implemented: Webhook Feature student (delete)
+- Implemented: Webhook Feature subject (delete)
+- Implemented: Develop a function to view students report cards online
+- Bug Fixed: Institutions > Forms > Survey : System does not save mandatory dropdown fields when user clicks on save
+- Bug Fixed: Administration > Survey > Forms: Survey created with "Open" status is still resulting in Institutions having "Not Completed" status in the Survey report
+- Bug Fixed: Institution > Attendance > Staff/Student : Replace BEMIS ID with OpenEMIS ID
+- Bug Fixed: Administration > Survey > Forms > Forms tab: To allow Repeater questions in Surveys
+- Bug Fixed: Institutions > Attendance : Set default height for table row
+- Bug Fixed: Institutions > Attendance : Set default height for table row
+
 ### [3.58.0] - 2020-10-27
 - Implemented: Allow students from different class to be combined into the same subjects / Allow students from same class to split across multiple subjects
 - Implemented: Administration > System Setup > Attendance - Student Mark Types: reorder function
