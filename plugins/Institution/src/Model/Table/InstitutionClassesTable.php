@@ -528,6 +528,23 @@ class InstitutionClassesTable extends ControllerActionTable
         if (isset($extra['errorMessage']) && $extra['errorMessage']==$errorMessage) {
             $this->Alert->warning($errorMessage, ['reset'=>true]);
         }
+        if(!empty($this->controllerAction) && ($this->controllerAction == 'Classes')) {
+           $bodyData = $this->find()->where([
+                            $this->aliasField('id') => $entity->id
+                        ]);
+            $body = [];
+
+            $body = [
+                'institutions_class_id' => $entity->id,
+            ];
+            if($this->action == 'remove') {
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if ($this->Auth->user()) {
+                    $username = $this->Auth->user()['username'];
+                    $Webhooks->triggerShell('class_delete', ['username' => $username], $body);
+                }
+            }
+        }
     }
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
@@ -693,7 +710,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId
                         ])
                 );
-            
+
             return $query;
         }
     }
