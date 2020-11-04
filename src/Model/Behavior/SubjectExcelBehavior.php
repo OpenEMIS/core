@@ -198,7 +198,7 @@ class SubjectExcelBehavior extends Behavior
 					'class' => $InstitutionClasses->alias().'.name',
 					'subject_name' => 'InstitutionSubjects.name',
 					'subject_code' => 'EducationSubjects.code',
-					'student_openemis_ID' => 'SubjectStudents.openemis_no',
+					'openemis_ID' => 'SubjectStudents.openemis_no',
 					'student_name' => $Query->func()->concat([
 						'SubjectStudents.first_name' => 'literal',
 						" ",
@@ -216,7 +216,7 @@ class SubjectExcelBehavior extends Behavior
 						" - ",
 						'SubjectRooms.name' => 'literal'
 					]),
-					'student_gender' => 'Genders.name',
+					'gender' => 'Genders.name',
 					'student_status' => 'StudentStatuses.name',
 				])
 				->contain([
@@ -518,8 +518,8 @@ class SubjectExcelBehavior extends Behavior
         //$columns = $schema->columns();
 		$columns = ['institution_code','institution_name','academic_period_id',
 					'class','education_grade','subject_name','subject_code',
-					'teachers','rooms','student_openemis_ID','student_name',
-					'student_gender','student_status'
+					'teachers','rooms','openemis_ID','student_name',
+					'gender','student_status'
 					];
 
         $excludes = $this->config('excludes');
