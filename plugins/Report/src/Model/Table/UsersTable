@@ -9,7 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class DirectoryTable extends AppTable
+class UsersTable extends AppTable
 {
     const NO_FILTER = 0;
     const STUDENT = 1;
@@ -43,7 +43,7 @@ class DirectoryTable extends AppTable
 
     public function addBeforeAction(Event $event)
     {
-        $this->ControllerAction->field('filter_types', ['type' => 'hidden']);
+        $this->ControllerAction->field('user_types', ['type' => 'hidden']);
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -64,7 +64,8 @@ class DirectoryTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $feature = $requestData->feature;
-        $filter = $requestData->filter_types;
+        $filter = $requestData->user_types;
+        echo "<pre>";print_r($filter);die();
         $condition = [];
         switch ($filter) {
             case self::STUDENT:
@@ -101,15 +102,8 @@ class DirectoryTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if ($feature == 'Report.Directory') {
+            if ($feature == 'Report.Users') {
                 $option[self::NO_FILTER] = __('All Users');
-                $option[self::STUDENT] = __('Students');
-                $option[self::STAFF] = __('Staff');
-                $attr['type'] = 'select';
-                $attr['options'] = $option;
-                $attr['onChangeReload'] = true;
-                return $attr;
-            } elseif($feature == 'Report.Users'){
                 $option[self::STUDENT] = __('Students');
                 $option[self::STAFF] = __('Staff');
                 $attr['type'] = 'select';

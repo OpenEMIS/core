@@ -51,6 +51,7 @@ class ReportsController extends AppController
         if ($module == 'Directory') {
             $options = [
                 'Report.Directory' => __('User Default Identity'),
+                'Report.Users'     => __('User List')
             ];
         } elseif ($module == 'Institutions') {
             $options = [
