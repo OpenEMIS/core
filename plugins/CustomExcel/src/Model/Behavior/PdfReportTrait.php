@@ -317,10 +317,9 @@ trait PdfReportTrait
     }
     //  ================ END REMOVE COLUMN AND ROW ================
 
-    private function savePDF($objSpreadsheet, $filepath)
+    private function savePDF($objSpreadsheet, $filepath, $student_id)
     {
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
-
         // Convert spreadsheet object into html
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
 
@@ -351,8 +350,12 @@ trait PdfReportTrait
             unset($mdpf);
         }
         // Merge all the pdf that belongs to one report
-        $fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
-
+		if(!empty($student_id)) {
+			$fileName = $this->config('filename') . '_' . $student_id;
+		} else {
+			$fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
+		}
+       
         Log::write('debug', '----------------------fileName---------------------: ');
         Log::write('debug', $fileName);
 
@@ -400,10 +403,13 @@ trait PdfReportTrait
                 }
             }
         }
-
-        $finalPDF_file = $outFile.'final.pdf';
-
-        $mpdf->Output($finalPDF_file, "D");
+		
+        $file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $outFile.'.pdf';
+        $pdf_file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
+        $content = $mpdf->Output($file_path, "S");
+		$fp = fopen($pdf_file_path . $outFile . ".txt","wb");
+		fwrite($fp,$content);
+		fclose($fp);
         unset($mpdf);
     }
 
