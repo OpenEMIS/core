@@ -15,33 +15,23 @@ class DatabaseTransferShell extends Shell
         parent::initialize();
         
         $this->loadModel('SystemProcesses');
-
-        //loading all tables to update and delete rows from other tables
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-        $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
-        $StudentAbsences = TableRegistry::get('Report.StudentAbsences');
-
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
-        $StudentAttendanceMarkType = TableRegistry::get('Attendance.StudentAttendanceMarkTypesTable');
-        //institution_student_absence_days couldn't find model regarding this table
     }
 
     public function main()
     {
-        if (!empty($this->args[1])) {
-            $exit = false;            
+        
+        if (!empty($this->args[0])) {
+            $exit = false;           
+            
+            $academicPeriodId = $this->args[0];
 
             $this->out('Initializing Transfer of data ('.Time::now().')');
 
-            $this->getRecords();
-
-            $systemProcessId = $this->SystemProcesses->addProcess('DatabaseTransfer', getmypid(), $this->args[0]);
+            $systemProcessId = $this->SystemProcesses->addProcess('DatabaseTransfer', getmypid(), 'Archive.TransferLogs', $this->args[0]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
-
+            
             while (!$exit) {
-                $recordToProcess = $this->getRecords(true);
+                $recordToProcess = $this->getRecords($academicPeriodId);
                 $this->out($recordToProcess);
                 if ($recordToProcess) {
                     try {
@@ -59,17 +49,15 @@ class DatabaseTransferShell extends Shell
             }
             $this->out('End Update for Database Transfer Status ('. Time::now() .')');
             $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
+        }else{
+            $this->out('Error in Database Transfer');
         }
     }
 
-    public function getRecords()
+    public function getRecords($academicPeriodId)
     {
         //get archive database connection
         $connection = ConnectionManager::get('prd_cor_arc');
-
-        if (!empty($this->args[1])) {
-            $academicPeriodId = $this->args[1];
-        }
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
@@ -79,8 +67,8 @@ class DatabaseTransferShell extends Shell
         $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
         $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
         $StudentAttendanceMarkType = TableRegistry::get('Attendance.StudentAttendanceMarkTypesTable');
+        //institution_student_absence_days -- couldn't find model regarding this table in master branch
 
-        $page = 1;
         $allData = $AcademicPeriods->find('all')
                                     ->select([
                                         'AcademicPeriods.id','AcademicPeriods.parent_id','AcademicPeriods.name',
@@ -129,8 +117,9 @@ class DatabaseTransferShell extends Shell
                                         ])
                                     ->where([
                                         'AcademicPeriods.id' => $academicPeriodId
-                                    ])->limit(500)->page($page)
+                                    ])
                                     ->toArray();
+                                   
          //get archive database connection
          $connection = ConnectionManager::get('prd_cor_arc');
         
@@ -169,19 +158,16 @@ class DatabaseTransferShell extends Shell
                     $connection->execute('INSERT INTO student_attendance_mark_types VALUES ("'.$data['StudentAttendanceMarkTypesTable']["id"].'","'.$data['StudentAttendanceMarkTypesTable']["name"].'","'.$data['StudentAttendanceMarkTypesTable']["code"].'","'.$data['StudentAttendanceMarkTypesTable']["education_grade_id"].'","'.$data['StudentAttendanceMarkTypesTable']["academic_period_id"].'","'.$data['StudentAttendanceMarkTypesTable']["student_attendance_type_id"].'","'.$data['StudentAttendanceMarkTypesTable']["attendance_per_day"].'","'.$data['StudentAttendanceMarkTypesTable']["modified_user_id "].'","'.$data['StudentAttendanceMarkTypesTable']["modified "].'","'.$data['StudentAttendanceMarkTypesTable']["created_user_id"].'","'.$data['StudentAttendanceMarkTypesTable']["created"].'")');
 
                 }
-
-
-                $page++;
             }
 
             /** Deleting all academic period associated table's data according to the requirement */
 
-            /*$AssessmentItemResults->deleteAll(['academic_period_id' => $academicPeriodId]);
+            $AssessmentItemResults->deleteAll(['academic_period_id' => $academicPeriodId]);
             $ClassAttendanceRecords->deleteAll(['academic_period_id' => $academicPeriodId]);
             $StudentAbsences->deleteAll(['academic_period_id' => $academicPeriodId]);
             $InstitutionStudentAbsenceDetails->deleteAll(['academic_period_id' => $academicPeriodId]);
             $StudentAttendanceMarkedRecords->deleteAll(['academic_period_id' => $academicPeriodId]);
-            $StudentAttendanceMarkType->deleteAll(['academic_period_id' => $academicPeriodId]);*/
+            $StudentAttendanceMarkType->deleteAll(['academic_period_id' => $academicPeriodId]);
         }
         /****************************************************************************************************************************************** */
        
