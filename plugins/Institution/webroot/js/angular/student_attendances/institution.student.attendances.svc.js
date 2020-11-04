@@ -43,7 +43,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     var translateText = {
         'original': {
-            'OpenEmisId': 'BEMIS ID',
+            'OpenEmisId': 'OpenEMIS ID',
             'Name': 'Name',
             'Attendance': 'Attendance',
             'ReasonComment': 'Reason / Comment',
@@ -277,7 +277,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return [];
     }
 
-    function getPeriodOptions(institutionClassId, academicPeriodId) {
+    function getPeriodOptions(institutionClassId, academicPeriodId,day_id) {
         var success = function(response, deferred) {
             var attendancePeriodList = response.data.data;
             if (angular.isObject(attendancePeriodList) && attendancePeriodList.length > 0) {
@@ -290,7 +290,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return StudentAttendanceMarkTypes
             .find('periodByClass', {
                 institution_class_id: institutionClassId,
-                academic_period_id: academicPeriodId
+                academic_period_id: academicPeriodId,
+                day_id: day_id
             })
             .ajax({success: success, defer: true});
     }
@@ -633,6 +634,9 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         eSelect.value = data.institution_student_absences[dataKey];
         eSelect.addEventListener('change', function () {
+            setTimeout(function(){
+                setRowDatas(context, data)
+            }, 200)
             var oldValue = data.institution_student_absences[dataKey];
             var newValue = eSelect.value;
 
@@ -720,6 +724,18 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         eCell.appendChild(eSelect);
         return eCell;
+    }
+
+    function setRowDatas(context, data) {
+        var studentList = context.scope.$ctrl.classStudentList;
+        studentList.forEach(function (dataItem, index) {
+            if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
+                dataItem.rowHeight = 60;
+            } else {
+                dataItem.rowHeight = 120;
+            }
+        });
+        context.scope.$ctrl.gridOptions.api.setRowData(studentList);
     }
 
     function getEditCommentElement(data, context, api) {
@@ -922,7 +938,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return html;
     }
 
-    function isMarkableSubjectAttendance(institutionId,academicPeriodId,selectedClass) {
+    function isMarkableSubjectAttendance(institutionId,academicPeriodId,selectedClass,selectedDay) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.data[0].code)) {
                 var isMarkableSubjectAttendance = false;
@@ -941,7 +957,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             .find('attendanceTypeCode', {
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId,
-                institution_class_id: selectedClass                
+                institution_class_id: selectedClass,
+                day_id: selectedDay                
             })
             .ajax({success: success, defer: true});
 
