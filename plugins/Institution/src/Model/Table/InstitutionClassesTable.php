@@ -86,6 +86,8 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->addBehavior('Institution.StaffProfile');
 
         $this->setDeleteStrategy('restrict');
+		
+		$this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
     }
 
     public function validationDefault(Validator $validator)
