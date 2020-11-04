@@ -60,6 +60,7 @@ class EmailAllReportCardsShell extends Shell
                         ->select([
                             $this->InstitutionStudentsReportCards->aliasField('file_name'),
                             $this->InstitutionStudentsReportCards->aliasField('file_content'),
+                            $this->InstitutionStudentsReportCards->aliasField('file_content_pdf'),
                             $this->InstitutionStudentsReportCards->aliasField('student_id'),
                             $this->InstitutionStudentsReportCards->aliasField('institution_id'),
                             $this->InstitutionStudentsReportCards->aliasField('report_card_id'),
@@ -145,7 +146,6 @@ class EmailAllReportCardsShell extends Shell
                         $this->setAttachments($studentsReportCardEntity, $emailProcessesObj);
 
                         $emailProcessesData = $emailProcessesObj->getArrayCopy();
-
                         // default email status is error
                         $emailStatus = $this->ReportCardEmailProcesses::ERROR;
                         $errorMsg = NULL;
@@ -248,14 +248,24 @@ class EmailAllReportCardsShell extends Shell
     }
 
     private function setAttachments(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
-    {
-        $attachments = [];
-
-        if ($studentsReportCardEntity->has('file_name') && !empty($studentsReportCardEntity->file_name) && $studentsReportCardEntity->has('file_content') && !empty($studentsReportCardEntity->file_content)) {
-            $attachments[] = [
-                'file_name' => $studentsReportCardEntity->file_name,
-                'file_content' => $studentsReportCardEntity->file_content
-            ];
+    {        
+		$attachments = [];
+        if ($studentsReportCardEntity->has('file_name') && !empty($studentsReportCardEntity->file_name) && $studentsReportCardEntity->has('file_content_pdf') && !empty($studentsReportCardEntity->file_content_pdf)) {
+			if(!empty($studentsReportCardEntity->student_id)) {
+				$fileNameData = explode(".",$studentsReportCardEntity->file_name);
+				$pdfFileName = $fileNameData[0].'.pdf';
+				$file_content = NULL;
+				$file_content = $studentsReportCardEntity->file_content_pdf;
+				$attachments[] = [
+					'file_name' => $pdfFileName,
+					'file_content' => $file_content
+				];
+			} else {
+				$attachments[] = [
+					'file_name' => $studentsReportCardEntity->file_name,
+					'file_content' => $studentsReportCardEntity->file_content
+				];
+			}
         }
 
         if (!empty($attachments)) {

@@ -9,6 +9,9 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
+use Cake\I18n\Time;
+use Cake\I18n\Date;
+
 class SurveysTable extends AppTable
 {
     private $surveyStatuses = [];
@@ -73,11 +76,12 @@ class SurveysTable extends AppTable
             $requestData = json_decode($settings['process']['params']);
             $surveyFormId = $requestData->survey_form;
             $academicPeriodId = $requestData->academic_period_id;
+            
             $surveyFormName = $this->SurveyForms->get($surveyFormId)->name;
             $academicPeriodName = $this->AcademicPeriods->get($academicPeriodId)->name;
             $userId = $requestData->user_id;
             $superAdmin = $requestData->super_admin;
-
+            
             $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
             $institutionType = $SurveyFormsFilters->find()
                 ->where([
@@ -121,9 +125,38 @@ class SurveysTable extends AppTable
             $mappingArray = ['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'code'];
 
             foreach ($notCompleteRecords->all() as $record) {
+                
+                $surveyFormCount = $this->SurveyForms->find()
+                    ->select([
+                        'SurveyForms.id',
+                        'SurveyForms.code',
+                        'SurveyForms.name',
+                        'SurveyStatuses.date_enabled',
+                        'SurveyStatuses.date_disabled',
+                        'SurveyStatusPeriods.academic_period_id',
+                    ])
+                    ->leftJoin(['SurveyStatuses' => 'survey_statuses'], [
+                        'SurveyStatuses.survey_form_id = SurveyForms.id'
+                    ])
+                    ->leftJoin(['SurveyStatusPeriods' => 'survey_status_periods'], [
+                        'SurveyStatusPeriods.survey_status_id = SurveyStatuses.id'
+                    ])
+                    ->where(['SurveyForms.id' => $surveyFormId, 
+                        'SurveyStatusPeriods.academic_period_id' => $academicPeriodId,
+                        'DATE(SurveyStatuses.date_disabled) >= ' => date('Y-m-d')
+                        ])
+                    ->count();
+                
+                $record->status_id = __('Not Completed');
+                
+                if( $surveyFormCount > 0){
+                    $record->status_id = __('Open');
+                }
+                
                 $record->academic_period_id = $academicPeriodName;
                 $record->survey_form_id = $surveyFormName;
-                $record->status_id = __('Not Completed');
+                
+                
 
                 $row = [];
                 foreach ($fields as $field) {
