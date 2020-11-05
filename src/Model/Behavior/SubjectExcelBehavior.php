@@ -195,7 +195,7 @@ class SubjectExcelBehavior extends Behavior
 					'education_grade' => 'EducationGrades.name',
 					'institution_code' => 'Institutions.code',
 					'institution_name' => 'Institutions.name',
-					'class' => $InstitutionClasses->alias().'.name',
+					'Class_Name' => $InstitutionClasses->alias().'.name',
 					'subject_name' => 'InstitutionSubjects.name',
 					'subject_code' => 'EducationSubjects.code',
 					'openEMIS_ID' => 'SubjectStudents.openemis_no',
@@ -517,7 +517,7 @@ class SubjectExcelBehavior extends Behavior
         $schema = $table->schema();
         //$columns = $schema->columns();
 		$columns = ['institution_code','institution_name','academic_period_id',
-					'class','education_grade','subject_name','subject_code',
+					'Class_Name','education_grade','subject_name','subject_code',
 					'teachers','rooms','openEMIS_ID','student_name',
 					'gender','student_status'
 					];
