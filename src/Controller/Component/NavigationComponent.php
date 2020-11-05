@@ -180,9 +180,11 @@ class NavigationComponent extends Component
         if (!empty($pass[0])) {
             $linkName .= '.'.$pass[0];
         }
+        
         if (!in_array($linkName, $navigations)) {
             $selectedArray = $this->array_column($navigations, 'selected');
             foreach ($selectedArray as $k => $selected) {
+                //echo '<pre>'.$linkName.'#####'; print_r($selected); 
                 if (is_array($selected) && (in_array($linkName, $selected) || in_array($controllerActionLink, $selected))) {
                     $linkName = $k;
                     break;
@@ -1477,6 +1479,12 @@ class NavigationComponent extends Component
 
     public function getAdministrationNavigation()
     {
+        //for POCOR-5674 requirement
+        $connectionTable = TableRegistry::get('Archive.TransferConnections');
+        $connectionData = $connectionTable->find()->select(['id'])->first()->toArray();
+        $connectionId = $this->controller->paramsEncode(['id' => $connectionData['id']]);
+        /*for POCOR-5674 */
+
         $queryString = $this->request->query('queryString');
         $navigation = [
             
@@ -1832,26 +1840,24 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'link' => false,
             ],
-                'Textbooks.Textbooks' => [
-                    'title' => 'Textbooks',
-                    'parent' => 'Archive',
-                    'params' => ['plugin' => 'Textbook'],
-                    'selected' => ['Textbooks.Textbooks', 'Textbooks.ImportTextbooks']
-                ],
                 'Archive.Backup' => [
                     'title' => 'Backup',
                     'parent' => 'Administration.Archive',
                     'selected' => ['Archives.BackupLog'],
                     'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'BackupLog'],
                 ],
-                'Archive.Delete' => [
-                    'title' => 'Delete',
+                'Archive.Transfer' => [
+                    'title' => 'Transfer',
                     'parent' => 'Administration.Archive',
-                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'DeleteLog'],
-                    'selected' => ['Archives.DeleteLog'],
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Transfer'],
+                    'selected' => ['Archives.Transfer'],
                 ],
-                
-            
+                'Archive.Connection' => [
+                    'title' => 'Connection',
+                    'parent' => 'Administration.Archive',
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection', 0 => 'view', $connectionId],
+                    'selected' => ['Archives.Connection.view','Archives.Connection.edit'],
+                ],
         ];
         return $navigation;
     }

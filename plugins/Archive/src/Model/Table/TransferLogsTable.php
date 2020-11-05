@@ -11,6 +11,8 @@ use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\ConnectionManager;
+use Cake\Log\Log;
 
 /**
  * DeletedLogs Model
@@ -24,7 +26,7 @@ use App\Model\Table\ControllerActionTable;
  * @method \Archive\Model\Entity\DeletedLog patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
  * @method \Archive\Model\Entity\DeletedLog[] patchEntities($entities, array $data, array $options = [])
  * @method \Archive\Model\Entity\DeletedLog findOrCreate($search, callable $callback = null, $options = [])
- */class DeletedLogsTable extends ControllerActionTable
+ */class TransferLogsTable extends ControllerActionTable
 {
 
     /**
@@ -37,7 +39,7 @@ use App\Model\Table\ControllerActionTable;
     {
         parent::initialize($config);
 
-        $this->table('deleted_logs');
+        $this->table('transfer_logs');
         $this->displayField('id');
         $this->primaryKey('id');
 
@@ -45,11 +47,6 @@ use App\Model\Table\ControllerActionTable;
             'foreignKey' => 'academic_period_id',
             'joinType' => 'INNER',
             'className' => 'AcademicPeriod.AcademicPeriods'
-        ]);
-
-        $this->belongsTo('Users', [
-            'className' => 'User.Users', 
-            'foreignKey' => 'generated_by'
         ]);
 
         $this->toggle('view', false);
@@ -66,10 +63,8 @@ use App\Model\Table\ControllerActionTable;
     public function validationDefault(Validator $validator)
     {
         $validator->integer('id')->allowEmpty('id', 'create');
-        //$validator->integer('academic_period_id')->requirePresence('academic_period_id', 'create')->notEmpty('academic_period_id');
-
-        /*$validator->dateTime('generated_on')->requirePresence('generated_on', 'create')->notEmpty('generated_on');*/
-        //$validator->string('generated_by', 'create')->notEmpty('generated_by');
+        $validator->dateTime('generated_on')->allowEmpty('generated_on', 'create');
+        $validator->allowEmpty('generated_by', 'create');
         return $validator;
     }
 
@@ -87,11 +82,11 @@ use App\Model\Table\ControllerActionTable;
         return $rules;
     }
 
-    public function implementedEvents()
+    /*public function implementedEvents()
     {
         $events = parent::implementedEvents();
         return $events;
-    }
+    }*/
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -105,64 +100,74 @@ use App\Model\Table\ControllerActionTable;
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['type' => 'select']);
+        
         $this->field('id', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
         $this->field('generated_by', ['visible' => false]);
         
         $this->setFieldOrder(['academic_period_id']);
+
+        $this->Alert->info('Archive.backupReminder', ['reset' => true]);
+    }
+
+    public function onGetGeneratedBy(Event $event, Entity $entity)
+    {
+        $Users = TableRegistry::get('User.Users');
+        $result = $Users
+            ->find()
+            ->select(['first_name','last_name'])
+            ->where(['id' => $entity->generated_by])
+            ->first();
+
+        return $entity->generated_by = $result->first_name.' '.$result->last_name;
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
 
-        //$entity->errors('academic_period_id', __('Please remember to backup first before you proceed to delete this data.'));
-        $this->Alert->error('Please remember to backup first before you proceed to delete this data',['reset' => true]);
-
-        //echo '<pre>'; print_r($entity); die; //$data['academic_period_id']; die;
-        $entity->academic_period_id = $entity['academic_period_id'];
-        $entity->generated_on = date("Y-m-d H:i:s");
-        $entity->generated_by = $this->Session->read('Auth.User.id');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         
+        $AcademicPeriodsData = $AcademicPeriods->find()
+            ->where(['current'=> 1])
+            ->first();  
+       
+        if($entity['academic_period_id'] == $AcademicPeriodsData->id){
+            $this->Alert->error('Archive.currentAcademic');
+        }else{
+            $entity->academic_period_id = $entity['academic_period_id'];
+            $entity->generated_on = date("Y-m-d H:i:s");
+            $entity->generated_by = $this->Session->read('Auth.User.id');
+        }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
 
-        //loading all tables to update and delete rows from other tables
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-        $InstitutionStudentAbsences = TableRegistry::get('Institution.StudentAttendances');
-
         /*flag the academic period table
-        academic_periods.editable = 0, academic_periods.visible = 0 -- only update columns*/
-        // $AcademicPeriods->updateAll(
-        //     ['editable' => 0, 'visible' => 0],    //field
-        //     ['id' => $entity->academic_period_id] //condition
-        // );
+            academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods->updateAll(
+            ['editable' => 0, 'visible' => 0],    //field
+            ['id' => $entity->academic_period_id, 'current'=> 0] //condition
+        );
 
-        /*delete the rows of mentioned tables according to academic_period_id
-        deleting the rows of --
-        assessment_item_results
-        student_attendance_marked_records
-        institution_student_absence_details
-        institution_student_absences*/
+        $this->log('=======>Before triggerDatabaseTransferShell', 'debug');
+        $this->triggerDatabaseTransferShell('DatabaseTransfer',$entity->academic_period_id);
+        $this->log(' <<<<<<<<<<======== After triggerDatabaseTransferShell', 'debug');
 
-        // $AssessmentItemResults->deleteAll([
-        //     'academic_period_id'=>$entity->academic_period_id
-        // ]);
-
-        // $StudentAttendanceMarkedRecords->deleteAll([
-        //     'academic_period_id'=>$entity->academic_period_id
-        // ]);
-
-        // $InstitutionStudentAbsenceDetails->deleteAll([
-        //     'academic_period_id'=>$entity->academic_period_id
-        // ]);
-
-        // $InstitutionStudentAbsences->deleteAll([
-        //     'academic_period_id'=>$entity->academic_period_id
-        // ]);
+        $url = $this->url('index');
+        return $this->controller->redirect($url);
         
+    }
+
+    public function triggerDatabaseTransferShell($shellName,$academicPeriodId = null)
+    {
+        $args = '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
     }
     
 }
