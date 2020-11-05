@@ -198,7 +198,7 @@ class SubjectExcelBehavior extends Behavior
 					'class' => $InstitutionClasses->alias().'.name',
 					'subject_name' => 'InstitutionSubjects.name',
 					'subject_code' => 'EducationSubjects.code',
-					'openemis_ID' => 'SubjectStudents.openemis_no',
+					'openEMIS_ID' => 'SubjectStudents.openemis_no',
 					'student_name' => $Query->func()->concat([
 						'SubjectStudents.first_name' => 'literal',
 						" ",
@@ -518,7 +518,7 @@ class SubjectExcelBehavior extends Behavior
         //$columns = $schema->columns();
 		$columns = ['institution_code','institution_name','academic_period_id',
 					'class','education_grade','subject_name','subject_code',
-					'teachers','rooms','openemis_ID','student_name',
+					'teachers','rooms','openEMIS_ID','student_name',
 					'gender','student_status'
 					];
 
