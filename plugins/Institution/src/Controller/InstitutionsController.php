@@ -1600,7 +1600,7 @@ class InstitutionsController extends AppController
             ];
             $highChartDatas[] = $InstitutionStudents->getHighChart('students_attandance', $params);
             
-             $params = [
+            $params = [
                 'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
             ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('staff_attandance', $params);
