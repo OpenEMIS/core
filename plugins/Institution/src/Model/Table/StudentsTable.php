@@ -294,7 +294,7 @@ class StudentsTable extends ControllerActionTable
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => 'BEMIS ID'
+            'label' => 'OpenEMIS ID'
         ];
 
         $extraField[] = [
@@ -576,6 +576,19 @@ class StudentsTable extends ControllerActionTable
         if ($entity->student_status_id != $studentStatuses['CURRENT']) {
             $event->stopPropagation();
             return false;
+        }
+
+        $body = array();
+
+        $body = [  
+            'institution_student_id' => !empty($entity->student_id) ? $entity->student_id : NULL,
+        ];
+        if($this->action == 'remove') {
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $username = $this->Auth->user()['username']; 
+                $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
+            } 
         }
     }
 
@@ -1628,7 +1641,7 @@ class StudentsTable extends ControllerActionTable
             $dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
             $dataSet['Total']['data'][$gradeId] += $gradeTotal;
         }
-
+		//echo '<pre>';print_r($grades);die;
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
         $params['options']['xAxis']['categories'] = array_values($grades);
@@ -1709,7 +1722,7 @@ class StudentsTable extends ControllerActionTable
 				'educationGrades.id = InstitutionStudents.education_grade_id '
 			]
 			)
-			->innerJoin(
+			->leftJoin(
 			['InstitutionStudentAbsentDays' => 'institution_student_absence_days'],
 			[
 				'InstitutionStudentAbsentDays.student_id = InstitutionClassesStudents.student_id ',
@@ -1717,42 +1730,50 @@ class StudentsTable extends ControllerActionTable
 				'student_attendance_marked_records.date BETWEEN InstitutionStudentAbsentDays.start_date AND InstitutionStudentAbsentDays.end_date'
 			]
 			)
-			->innerJoin(
+			->leftJoin(
 			['absenceTypes' => 'absence_types'],
 			[
 				'absenceTypes.id = InstitutionStudentAbsentDays.absence_type_id '
 			]
 			)
             ->where([
-                'student_attendance_marked_records.date' => '2019-01-02',
+                'student_attendance_marked_records.date' => date('Y-m-d'),
+				'student_attendance_marked_records.academic_period_id' => $currentYearId,
+				'educationGrades.id IS NOT NULL',
             ])
             ->group([
                 'educationGrades.id'
             ])
+			->toArray()
             ;
 		
-        $classData = [];
+        $attendanceData = [];
 		
-		echo '<pre>';print_r($StudentAttendances);die;
+		//echo '<pre>';print_r($StudentAttendances);die;
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
         $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
 
-        foreach ($classes as $key => $class) {
-			//echo '<pre>';print_r($class);die;
+        foreach ($StudentAttendances as $key => $attendance) {
+			//echo '<pre>';print_r($attendance);die;
 
-            $classData[$class->id] = $class->name;
-	
-            $dataSet['Present']['data'][$class->id] = 4;
-            $dataSet['Absent']['data'][$class->id] = 10;
-            $dataSet['Late']['data'][$class->id] = 14;
+            $attendanceData[$attendance->education_grade_id] = $attendance->education_grade;
+			
+			foreach ($dataSet as $dkey => $dvalue) {
+                if (!array_key_exists($attendance->education_grade_id, $dataSet[$dkey]['data'])) {
+                    $dataSet[$dkey]['data'][$attendance->education_grade_id] = 0;
+                }
+            }
+			
+            $dataSet['Present']['data'][$attendance->education_grade_id] = $attendance->present;
+            $dataSet['Absent']['data'][$attendance->education_grade_id] = $attendance->absent;
+            $dataSet['Late']['data'][$attendance->education_grade_id] = $attendance->late;
         }
-		//die;
+		//echo '<pre>';print_r($dataSet);die;
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => __('For Today'));
-        $params['options']['xAxis']['categories'] = array_values($classData);
+        $params['options']['xAxis']['categories'] = array_values($attendanceData);
         $params['dataSet'] = $dataSet;
-
         return $params;
     }
 
