@@ -57,6 +57,8 @@ return array(
     'Cake\\' => array($vendorDir . '/cakephp/cakephp/src'),
     'Bake\\' => array($vendorDir . '/cakephp/bake/src'),
     'Aura\\Intl\\_Config\\' => array($vendorDir . '/aura/intl/config'),
+    'Archive\\Test\\' => array($baseDir . '/plugins/Archive/tests'),
+    'Archive\\' => array($baseDir . '/plugins/Archive/src'),
     'App\\Test\\' => array($baseDir . '/tests'),
     'App\\' => array($baseDir . '/src'),
     'ADmad\\JwtAuth\\' => array($vendorDir . '/admad/cakephp-jwt-auth/src'),

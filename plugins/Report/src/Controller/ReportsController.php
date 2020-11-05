@@ -64,6 +64,7 @@ class ReportsController extends AppController
                 'Report.InstitutionStaff' => __('Staff'),
                 'Report.StudentAbsences' => __('Student Absence'),
                 'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
+                'Report.InstitutionSummaryReport' => __('Institution Summary Report'),
                 'Report.BodyMasses' => __('Student Body Masses'),
                 // 'Report.StaffAbsences' => __('Staff Absence'),
                 'Report.StaffAttendances' => __('Staff Attendance'),
@@ -112,7 +113,8 @@ class ReportsController extends AppController
                 'Report.StaffSystemUsage' => __('System Usage'),
                 'Report.StaffTrainingReports' => __('Training Courses Report'),
                 'Report.StaffLeaveReport' => __('Staff Leave'),
-                'Report.StaffPositions' => __('Position Summary Report')
+                'Report.StaffPositions' => __('Position Summary Report'),
+                'Report.StaffDuties' => __('Duties Report')
 				
             ];
         } elseif ($module == 'Textbooks') {
@@ -197,6 +199,7 @@ class ReportsController extends AppController
                 'ReportProgress.total_records'
             );
             $ReportProgress = TableRegistry::get('Report.ReportProgress');
+            echo '<pre>';print_r($ReportProgress);die;
             if (!empty($ids)) {
                 $results = $ReportProgress
                     ->find()
