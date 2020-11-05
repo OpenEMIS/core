@@ -196,7 +196,7 @@ class ClassExcelBehavior extends Behavior
 					'institution_code' => 'Institutions.code',
 					'institution_name' => 'Institutions.name',
 					'shift' => 'ShiftOptions.name',
-					'name' => 'InstitutionClasses.name',
+					'class_name' => 'InstitutionClasses.name',
 					'homeroom_teacher' => $Query->func()->concat([
 						'Staff.openemis_no' => 'literal',
 						" - ",
@@ -211,7 +211,7 @@ class ClassExcelBehavior extends Behavior
 						" ",
 						'SecurityUsers.last_name' => 'literal'
 					]),
-					'openemis_ID' => 'ClassesStudents.openemis_no',
+					'openEMIS_ID' => 'ClassesStudents.openemis_no',
 					'student_name' => $Query->func()->concat([
 						'ClassesStudents.first_name' => 'literal',
 						" ",
@@ -521,8 +521,8 @@ class ClassExcelBehavior extends Behavior
         $schema = $table->schema();
         //$columns = $schema->columns();
 		$columns = ['institution_code','institution_name','academic_period_id',
-					'name','shift','education_grade','homeroom_teacher','secondary_teacher',
-					'openemis_ID','student_name','gender','student_status',
+					'class_name','shift','education_grade','homeroom_teacher','secondary_teacher',
+					'openEMIS_ID','student_name','gender','student_status',
 					'special_need'
 					];
 
