@@ -185,7 +185,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
             $j = 0;
             for ($i = 1; $i <= $attendencePerDay; ++$i) {
                 $options[] = [
-                    'id' => $i,
+                    'id' => (!empty($periodsData[$j]['period'])) ? $periodsData[$j]['period'] : $i,
                     'name' => __((!empty($periodsData[$j]['name'])) ? $periodsData[$j]['name'] : "Period ".$i)
                 ];
                 $j++;
