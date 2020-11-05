@@ -13,11 +13,15 @@ class POCOR5172 extends AbstractMigration
     public function up()
     {
         $this->execute('UPDATE security_functions SET `_execute` = "Classes.excel" WHERE `id` = 1007');
+        $this->execute('UPDATE security_functions SET `_execute` = "Subjects.excel" WHERE `id` = 1009');
+        $this->execute('UPDATE security_functions SET `_execute` = "Subjects.excel" WHERE `id` = 1010');
     }
 
      // rollback
     public function down()
     {
-        $this->execute('UPDATE security_functions SET `order` = NULL WHERE `id` = 1007');
+        $this->execute('UPDATE security_functions SET `_execute` = NULL WHERE `id` = 1007');
+        $this->execute('UPDATE security_functions SET `_execute` = NULL WHERE `id` = 1009');
+        $this->execute('UPDATE security_functions SET `_execute` = NULL WHERE `id` = 1010');
     }
 }
