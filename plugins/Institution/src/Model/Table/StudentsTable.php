@@ -1655,79 +1655,102 @@ class StudentsTable extends ControllerActionTable
             $currentYear = __('Not Defined');
         }
 		
-		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-		$Institutions = TableRegistry::get('Institution.Institutions');
-		$InstitutionClassesStudents = TableRegistry::get('Institution.InstitutionClassesStudents');
+		$studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
 
-        $studentsByGradeConditions = [
-            $this->aliasField('academic_period_id') => $currentYearId,
-        ];
-        $studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
-        $query = $this->find();
-        $studentByGrades = $query
+        $StudentAttendances = $studentAttendanceMarkedRecords->find('all')
             ->select([
-                $this->aliasField('institution_id'),
-                'InstitutionClasses.id',
-                'InstitutionClasses.name',
-                'Users.id',
-            ])
-            ->contain([
-                'Users.Genders'
+				'education_grade' => 'educationGrades.name',
+				'education_grade_id' => 'educationGrades.id',
+				'present' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id IS NULL OR InstitutionStudentAbsentDays.absence_type_id = 3,1,0)))',
+				'absent' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id IN (1,2),1,0)))',
+				'late' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id = 3, 1,0)))',
             ])
 			->innerJoin(
-			['InstitutionClassesStudents' => 'institution_class_students'],
+			['AcademicPeriods' => 'academic_periods'],
 			[
-				'InstitutionClassesStudents.student_id = '. $this->aliasField('student_id')
+				'AcademicPeriods.id = student_attendance_marked_records.academic_period_id'
 			]
 			)
 			->innerJoin(
 			['InstitutionClasses' => 'institution_classes'],
 			[
-				'InstitutionClasses.id = InstitutionClassesStudents.institution_class_id'
+				'InstitutionClasses.id = student_attendance_marked_records.institution_class_id '
 			]
 			)
-            ->where($studentsByGradeConditions)
-            ->group([
-                'Genders.name'
+			->innerJoin(
+			['InstitutionClassGrades' => 'institution_class_grades'],
+			[
+				'InstitutionClassGrades.institution_class_id = InstitutionClasses.id '
+			]
+			)
+			->innerJoin(
+			['InstitutionClassesStudents' => 'institution_class_students'],
+			[
+				'InstitutionClassesStudents.institution_class_id = InstitutionClasses.id '
+			]
+			)
+			->innerJoin(
+			['Users' => 'security_users'],
+			[
+				'Users.id = InstitutionClassesStudents.student_id '
+			]
+			)
+			->innerJoin(
+			['InstitutionStudents' => 'institution_students'],
+			[
+				'InstitutionStudents.student_id = InstitutionClassesStudents.student_id ',
+				'InstitutionStudents.academic_period_id = InstitutionClassesStudents.academic_period_id ',
+				'InstitutionClassesStudents.student_status_id = 1'
+			]
+			)
+			->innerJoin(
+			['educationGrades' => 'education_grades'],
+			[
+				'educationGrades.id = InstitutionStudents.education_grade_id '
+			]
+			)
+			->innerJoin(
+			['InstitutionStudentAbsentDays' => 'institution_student_absence_days'],
+			[
+				'InstitutionStudentAbsentDays.student_id = InstitutionClassesStudents.student_id ',
+				'InstitutionStudentAbsentDays.institution_id = student_attendance_marked_records.institution_id ',
+				'student_attendance_marked_records.date BETWEEN InstitutionStudentAbsentDays.start_date AND InstitutionStudentAbsentDays.end_date'
+			]
+			)
+			->innerJoin(
+			['absenceTypes' => 'absence_types'],
+			[
+				'absenceTypes.id = InstitutionStudentAbsentDays.absence_type_id '
+			]
+			)
+            ->where([
+                'student_attendance_marked_records.date' => '2019-01-02',
             ])
-            ->toArray()
+            ->group([
+                'educationGrades.id'
+            ])
             ;
 		
-        $grades = [];
-
-        //$genderOptions = $this->Users->Genders->getList();
-        $dataSet = array();
-        /*foreach ($genderOptions as $key => $value) {
-            $dataSet[$value] = array('name' => __($value), 'data' => array());
-        } */
+        $classData = [];
 		
-		//echo '<pre>';print_r($studentByGrades);die;
+		echo '<pre>';print_r($StudentAttendances);die;
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
         $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
 
-        foreach ($studentByGrades as $key => $studentByGrade) {
-			//echo '<pre>';print_r($studentByGrade);
-            $gradeId = $studentByGrade->education_grade->education_stage_id;
-            $gradeName = $studentByGrade->education_grade->education_stage->name;
-            $gradeGender = $studentByGrade->user->gender->name;
-            $gradeTotal = $studentByGrade->total;
+        foreach ($classes as $key => $class) {
+			//echo '<pre>';print_r($class);die;
 
-            $grades[$gradeId] = $gradeName;
+            $classData[$class->id] = $class->name;
 	
-            foreach ($dataSet as $dkey => $dvalue) {
-                if (!array_key_exists($gradeId, $dataSet[$dkey]['data'])) {
-                    $dataSet[$dkey]['data'][$gradeId] = 0;
-                }
-            }
-            $dataSet['Present']['data'][$gradeId] = $gradeTotal;
-            $dataSet['Absent']['data'][$gradeId] = $gradeTotal;
-            $dataSet['Late']['data'][$gradeId] = $gradeTotal;
+            $dataSet['Present']['data'][$class->id] = 4;
+            $dataSet['Absent']['data'][$class->id] = 10;
+            $dataSet['Late']['data'][$class->id] = 14;
         }
 		//die;
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => __('For Today'));
-        $params['options']['xAxis']['categories'] = array_values($grades);
+        $params['options']['xAxis']['categories'] = array_values($classData);
         $params['dataSet'] = $dataSet;
 
         return $params;
