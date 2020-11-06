@@ -60,7 +60,7 @@ class POCOR5349 extends AbstractMigration
                 (3, 'SEN Ambassador', 3, 1, 1, 0, '', '', 1, now(), 1, now()),
                 (4, 'Resource Teacher', 4, 1, 1, 0, '', '', 1, now(), 1, now())");
 
-             // code for security function
+             // code for security function staff carrer
              $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 63');   
              $this->insert('security_functions', [
             'name' => 'Duties',
@@ -77,6 +77,24 @@ class POCOR5349 extends AbstractMigration
             'created_user_id' => 1,
             'created' => date('Y-m-d H:i:s')
         ]);
+
+            // code for security function for institute principal carrer
+                $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 186');   
+                $this->insert('security_functions', [
+                'name' => 'Duties',
+                'controller' => 'Staff',
+                'module' => 'Institutions',
+                'category' => 'Staff - Career',
+                'parent_id' => 3000,
+                '_view' => 'Duties.index|Duties.view',
+                '_add' => 'add',
+                '_execute' => '',
+                'order' => 187,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]);
 
         $localeContent = [
             [
@@ -111,6 +129,7 @@ class POCOR5349 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `institution_staff_duties`');
         $this->execute('DROP TABLE IF EXISTS `staff_duties`');
         $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 63');
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 186'); 
         $this->execute('DELETE FROM security_functions WHERE name = "Duties"');
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Duties'");
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Appointments'");
