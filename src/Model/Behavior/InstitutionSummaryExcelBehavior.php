@@ -162,15 +162,8 @@ class InstitutionSummaryExcelBehavior extends Behavior
 	
     public function getData()
     {
-		$Institutions = TableRegistry::get('Institution.Institutions');
+		$Institutions = TableRegistry::get('Institutions');
 		$institutionData = $Institutions->find()
-                    ->leftJoinWith('Ownerships')
-                    ->leftJoinWith('Sectors')
-                    ->leftJoinWith('Areas')
-                    ->leftJoinWith('AreaAdministratives')
-                    ->leftJoinWith('Providers')
-                    ->leftJoinWith('Types')
-                    ->leftJoinWith('Localities')
                     ->select([
                         'ownership_name' => 'Ownerships.name',
                         'ownership_id' => 'Ownerships.id',
@@ -188,13 +181,56 @@ class InstitutionSummaryExcelBehavior extends Behavior
                         'area_administrative_code' => 'AreaAdministratives.code',
                         'locality_name' => 'Localities.name',
                         'locality_id' => 'Localities.id'
-                    ]);
+                    ])
+					->leftJoin(
+					['Ownerships' => 'institution_ownerships'],
+					[
+						'Ownerships.id = '. $Institutions->aliasField('institution_ownership_id')
+					]
+					)
+					->leftJoin(
+					['Sectors' => 'institution_sectors'],
+					[
+						'Sectors.id = '. $Institutions->aliasField('institution_sector_id')
+					]
+					)
+					->leftJoin(
+					['Areas' => 'areas'],
+					[
+						'Areas.id = '. $Institutions->aliasField('area_id')
+					]
+					)
+					->leftJoin(
+					['AreaAdministratives' => 'area_administratives'],
+					[
+						'AreaAdministratives.id = '. $Institutions->aliasField('area_administrative_id')
+					]
+					)
+					->leftJoin(
+					['Providers' => 'institution_providers'],
+					[
+						'Providers.id = '. $Institutions->aliasField('institution_provider_id')
+					]
+					)
+					->leftJoin(
+					['Types' => 'institution_types'],
+					[
+						'Types.id = '. $Institutions->aliasField('institution_type_id')
+					]
+					)
+					->leftJoin(
+					['Localities' => 'institution_localities'],
+					[
+						'Localities.id = '. $Institutions->aliasField('institution_locality_id')
+					]
+					)
+					;
 					
 		$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
 		$resultArray = array();
 		$i = 0;
 		foreach($institutionData as $key => $value) {
-			
+
 			if($i == 0) {
 				$resultArray[$key][] = 'Code';
 				$resultArray[$key][] = 'Name';

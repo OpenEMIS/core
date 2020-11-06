@@ -15,6 +15,7 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
 use Cake\Core\Exception\Exception;
+use Cake\Auth\DefaultPasswordHasher;
 
 /**
  * DeletedLogs Model
@@ -172,7 +173,7 @@ class TransferConnectionsTable extends ControllerActionTable
         $this->field('host_port');    
         $this->field('db_name');
         $this->field('username');
-        $this->field('password');    
+        $this->field('password', ['visible' => true, 'type' => 'password']);    
         $this->field('conn_status_id', ['visible' => false]);
         $this->field('status_checked', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);    
@@ -249,7 +250,10 @@ class TransferConnectionsTable extends ControllerActionTable
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
-       
+ 
+        $password  = ((new DefaultPasswordHasher)->hash($entity->password));
+        
+        $entity->password = $password;
         $entity->modified_user_id = $this->Session->read('Auth.User.id');
         $entity->created_user_id = $this->Session->read('Auth.User.id');
         
