@@ -33,7 +33,7 @@ class InstitutionInfrastructuresTable extends AppTable
         $this->table('institutions');
 
         parent::initialize($config);
-
+        //$this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         $this->addBehavior('Excel', ['excludes' => ['security_group_id', 'logo_name'], 'pages' => false]);
         $this->addBehavior('Report.ReportList');
      
@@ -80,6 +80,21 @@ class InstitutionInfrastructuresTable extends AppTable
             'label' => __('Institution Code')
         ];
 
+        //POCOR-5698 two new columns added here
+        $newFields[] = [
+            'key' => 'ShiftOptions.name',
+            'field' => 'shift_name',
+            'type' => 'string',
+            'label' => __('Institution Shift')
+        ];
+        $newFields[] = [
+            'key' => 'InstitutionStatuses.name',
+            'field' => 'intitution_status_name',
+            'type' => 'string',
+            'label' => __('Institution Status')
+        ];
+
+        /**end here */
         $newFields[] = [
             'key' => 'land_infrastructure_code',
             'field' => 'land_infrastructure_code',
@@ -155,6 +170,7 @@ class InstitutionInfrastructuresTable extends AppTable
         $buildingTypes = TableRegistry::get('building_types');
         $infrastructureCondition = TableRegistry::get('infrastructure_conditions');
         $infrastructureStatus = TableRegistry::get('infrastructure_statuses');
+        $institutionStatus = TableRegistry::get('institution_statuses');
         $infrastructureOwnerships = TableRegistry::get('infrastructure_ownerships');
         $infrastructureLevels = TableRegistry::get('infrastructure_levels');
 
@@ -178,9 +194,13 @@ class InstitutionInfrastructuresTable extends AppTable
                     'land_infrastructure_type'=>$buildingTypes->aliasField('name'),
                     'land_infrastructure_condition'=>$infrastructureCondition->aliasField('name'),
                     'land_infrastructure_status'=>$infrastructureStatus->aliasField('name'),
+                    //POCOR-5698 two new columns added here
+                    'shift_name' => 'ShiftOptions.name',
+                    'intitution_status_name'=> 'InstitutionStatuses.name',
+                    //POCOR-5698 ends here
                     'land_infrastructure_ownership'=>$infrastructureOwnerships->aliasField('name'),
                     'land_infrastructure_accessibility' => 'Institution'.$level.'.'.'accessibility',
-                  
+
                     ])
                     ->LeftJoin([ 'Institution'.$level => 'institution_'.lcfirst($level) ], [
                         'Institution'.$level.'.'.'institution_id = ' . $this->aliasField('id'),
@@ -194,10 +214,27 @@ class InstitutionInfrastructuresTable extends AppTable
                     ->LeftJoin([$infrastructureStatus->alias() => $infrastructureStatus->table()], [
                         'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureStatus->aliasField('id'),
                     ])
+                    //POCOR-5698 two new columns added here
+                    //status
+                    ->LeftJoin(['Institution' => 'insitutions'], [
+                        'Institution'.$level.'.'.'institution_id = Institution.id',
+                    ])
+                    ->LeftJoin(['InstitutionStatus' => 'institution_statuses'], [
+                        'InstitutionStatus.id = Institution.institution_status_id',
+                    ])
+                    //shift
+                    ->LeftJoin(['InstitutionShifts' => 'institution_shifts'],[
+                        'Institution'.$level.'.'.'institution_id = InstitutionShifts.institution_id',
+                    ])
+                    ->LeftJoin(['ShiftOptions' => 'shift_options'],[
+                        'ShiftOptions.id = InstitutionShifts.shift_option_id'
+                    ])
+                    //POCOR-5698 two new columns ends here
                     ->LeftJoin([$infrastructureOwnerships->alias() => $infrastructureOwnerships->table()], [
                         'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureOwnerships->aliasField('id'),
                     ])
                     ->where($conditions);
+                    
                   
     }
 }
