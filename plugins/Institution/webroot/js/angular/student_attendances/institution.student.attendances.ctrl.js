@@ -565,8 +565,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         vm.gridOptions.context.date = vm.selectedDay;
         InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay)
         .then(function(subjectListOptions) {
-                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
+            vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
+            return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
         }, vm.error)
         .then(function(attendancePeriodOptions) {
             vm.updateAttendancePeriodList(attendancePeriodOptions);
@@ -580,9 +580,9 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             vm.updateClassStudentList(classStudents);
             }, vm.error)
         .finally(function() {
+            UtilsSvc.isAppendLoader(false);
             vm.setGridData();
             vm.setColumnDef();
-            UtilsSvc.isAppendLoader(false);
         });
     }
 
