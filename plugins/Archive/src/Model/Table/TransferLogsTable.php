@@ -150,14 +150,14 @@ use Cake\Log\Log;
         /*flag the academic period table
             academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        /*$AcademicPeriods->updateAll(
+        $AcademicPeriods->updateAll(
             ['editable' => 0, 'visible' => 0],    //field
             ['id' => $entity->academic_period_id, 'current'=> 0] //condition
         );
 
         $this->log('=======>Before triggerDatabaseTransferShell', 'debug');
         $this->triggerDatabaseTransferShell('DatabaseTransfer',$entity->academic_period_id);
-        $this->log(' <<<<<<<<<<======== After triggerDatabaseTransferShell', 'debug');*/
+        $this->log(' <<<<<<<<<<======== After triggerDatabaseTransferShell', 'debug');
 
     }
 
