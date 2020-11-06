@@ -14,8 +14,7 @@ class DirectoryTable extends AppTable
     const NO_FILTER = 0;
     const STUDENT = 1;
     const STAFF = 2;
-    const GUARDIAN  = 3; 
-    const OTHERS = 4;
+   
     public function initialize(array $config)
     {
         $this->table('security_users');
@@ -41,6 +40,7 @@ class DirectoryTable extends AppTable
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
+        $this->ControllerAction->field('user_type', ['type' => 'hidden']);
     }
 
     public function addBeforeAction(Event $event)
@@ -111,17 +111,27 @@ class DirectoryTable extends AppTable
                 $attr['options'] = $option;
                 $attr['onChangeReload'] = true;
                 return $attr;
-            } elseif($feature == 'Report.Users') {
-                $option[self::STUDENT] = __('Students');
-                $option[self::STAFF] = __('Staff');
-                $option[self::GUARDIAN] = __('Guardian ');
-                $option[self::OTHERS] = __('Others');
-                $attr['type'] = 'select';
-                $attr['options'] = $option;
-                $attr['onChangeReload'] = true;
-                return $attr;
             } else {
                 $attr['value'] = self::NO_FILTER;
+            }
+        }
+    }
+
+    public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.Users'])) {
+                $options = [
+                    'Student' => __('Student'),
+                    'Staff' => __('Staff'),
+                    'Guardian' => __('Guardian'),
+                    'Others' => __('Others'),
+                ];
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $options;
+                return $attr;
             }
         }
     }
