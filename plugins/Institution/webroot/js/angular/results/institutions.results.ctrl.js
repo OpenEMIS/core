@@ -289,11 +289,11 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
         if (typeof subject !== "undefined") {
             $scope.subject = subject;
         }
-        //console.log($scope.subject[0]['education_subject_id']);
+        
         $scope.education_subject_id = $scope.subject.id;
         if ($scope.gridOptions != null) {
             // update value in context
-            $scope.gridOptions.context.education_subject_id = $scope.subject.id;
+            $scope.gridOptions.context.education_subject_id = $scope.subject.education_subject_id;
             // Always reset
             $scope.gridOptions.api.setRowData([]);
         }
