@@ -95,6 +95,8 @@ use Cake\Log\Log;
         $this->field('generated_by');
 
         $this->setFieldOrder(['academic_period_id','generated_on','generated_by']);
+
+        //$this->Alert->info('Archive.backupReminder', ['reset' => false]);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -107,7 +109,11 @@ use Cake\Log\Log;
         
         $this->setFieldOrder(['academic_period_id']);
 
-        $this->Alert->info('Archive.backupReminder', ['reset' => true]);
+    }
+
+    public function addOnInitialize(Event $event, Entity $entity)
+    {
+        $this->Alert->info('Archive.backupReminder');
     }
 
     public function onGetGeneratedBy(Event $event, Entity $entity)
@@ -144,18 +150,15 @@ use Cake\Log\Log;
         /*flag the academic period table
             academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $AcademicPeriods->updateAll(
+        /*$AcademicPeriods->updateAll(
             ['editable' => 0, 'visible' => 0],    //field
             ['id' => $entity->academic_period_id, 'current'=> 0] //condition
         );
 
         $this->log('=======>Before triggerDatabaseTransferShell', 'debug');
         $this->triggerDatabaseTransferShell('DatabaseTransfer',$entity->academic_period_id);
-        $this->log(' <<<<<<<<<<======== After triggerDatabaseTransferShell', 'debug');
+        $this->log(' <<<<<<<<<<======== After triggerDatabaseTransferShell', 'debug');*/
 
-        $url = $this->url('index');
-        return $this->controller->redirect($url);
-        
     }
 
     public function triggerDatabaseTransferShell($shellName,$academicPeriodId = null)
