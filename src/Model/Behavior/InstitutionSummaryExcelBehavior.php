@@ -432,70 +432,71 @@ class InstitutionSummaryExcelBehavior extends Behavior
 			$i++;	
 		}
 		
-		$shiftOptions = $Institutions->find()
+		$shiftGenderData = $Institutions->find()
                     ->select([
-                        'gender' => 'genders.name',
-                        'code' => 'genders.code',
+                        'gender' => 'Genders.name',
+                        'code' => 'Genders.code',
                         'shift_option' => 'ShiftOptions.name',
                         'shift_option_id' => 'ShiftOptions.id'
                     ])
-					->join([
-						 "InstitutionShifts" => [
-							 "table" => "institution_shifts",
-							 "type" => "inner",
-							 "conditions" => "Institutions.id = InstitutionShifts.institution_id"
-						  ]
-					])
-					->join([
-						 "InstitutionStudents" => [
-							 "table" => "institution_students",
-							 "type" => "inner",
-							 "conditions" => "Institutions.id = InstitutionStudents.institution_id"
-						  ]
-					])
-					->join([
-						 "ShiftOptions" => [
-							 "table" => "shift_options",
-							 "type" => "inner",
-							 "conditions" => "ShiftOptions.id = InstitutionShifts.shift_option_id"
-						  ]
-					])
-					->join([
-						 "Users" => [
-							 "table" => "security_users",
-							 "type" => "inner",
-							 "conditions" => "Users.id = InstitutionStudents.student_id"
-						  ]
-					])
-					->join([
-						 "Genders" => [
-							 "table" => "genders",
-							 "type" => "inner",
-							 "conditions" => "Genders.id = Users.gender_id"
-						  ]
-					]);
+					->innerJoin(
+					['InstitutionShifts' => 'institution_shifts'],
+					[
+						'InstitutionShifts.institution_id = '. $Institutions->aliasField('id')
+					]
+					)
+					->innerJoin(
+					['InstitutionStudents' => 'institution_students'],
+					[
+						'InstitutionStudents.institution_id = '. $Institutions->aliasField('id')
+					]
+					)
+					->innerJoin(
+					['ShiftOptions' => 'shift_options'],
+					[
+						'ShiftOptions.id = InstitutionShifts.shift_option_id'
+					]
+					)
+					->innerJoin(
+					['Users' => 'security_users'],
+					[
+						'Users.id = InstitutionStudents.student_id'
+					]
+					)
+					->innerJoin(
+					['Genders' => 'genders'],
+					[
+						'Genders.id = Users.gender_id'
+					]
+					);
 					
-		foreach($shiftOptions as $key => $value) {
-			if($value->code == 'M') {
-				$shift_gender[$value->shift_option_id][$value->code][] = $value->gender;
-			} 
-			if($value->code == 'F') {
-				$shift_gender[$value->shift_option_id][$value->code][] = $value->gender;
+		$shift_gender = array();
+		if(!empty($shiftGenderData)) {	
+			foreach($shiftGenderData as $gender_key => $gender_value) {
+				if($gender_value->code == 'M') {
+					$shift_gender[$gender_value->shift_option_id][$gender_value->code][] = $gender_value->gender;
+				} 
+				if($gender_value->code == 'F') {
+					$shift_gender[$gender_value->shift_option_id][$gender_value->code][] = $gender_value->gender;
+				}
 			}
 		}
 		$totalMale = $totalFemale = 0;
+		$genderArray = [];
 		$ShiftOptions = TableRegistry::get('ShiftOptions');
 		$shiftOptionData = $ShiftOptions->find();
 		if(!empty($shiftOptionData)) {
 			foreach($shiftOptionData as $key => $value) {
 				$genderArray[$value->name]['male_name'] = 'Male';
 				$genderArray[$value->name]['male_code'] = 'M';
-				$genderArray[$value->name]['male_count'] = count($shift_gender[$value->id]['M']);
-				$totalMale = $genderArray[$value->name]['male_count'] + $totalMale;
 				$genderArray[$value->name]['female_name'] = 'Female';
 				$genderArray[$value->name]['female_code'] = 'F';
-				$genderArray[$value->name]['female_count'] = count($shift_gender[$value->id]['F']);
-				$totalFemale = $genderArray[$value->name]['female_count'] + $totalFemale;		
+				if(!empty($shift_gender[$value->id])) {
+					$genderArray[$value->name]['male_count'] = count($shift_gender[$value->id]['M']);
+					$genderArray[$value->name]['female_count'] = count($shift_gender[$value->id]['F']);
+					$totalMale = $genderArray[$value->name]['male_count'] + $totalMale;
+					$totalFemale = $genderArray[$value->name]['female_count'] + $totalFemale;
+				}	
 			}
 		}
 		$genderArray['total_gender'] = array('male_name'=> 'Male','male_code'=> 'M','male_count'=> $totalMale, 'female_name'=> 'Female','female_code'=> 'F','female_count'=> $totalFemale);
