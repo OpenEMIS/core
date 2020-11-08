@@ -496,6 +496,9 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					$genderArray[$value->name]['female_count'] = count($shift_gender[$value->id]['F']);
 					$totalMale = $genderArray[$value->name]['male_count'] + $totalMale;
 					$totalFemale = $genderArray[$value->name]['female_count'] + $totalFemale;
+				} else {
+					$genderArray[$value->name]['male_count'] = 0;
+					$genderArray[$value->name]['female_count'] = 0;
 				}	
 			}
 		}
