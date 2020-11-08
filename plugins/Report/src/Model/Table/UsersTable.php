@@ -157,6 +157,42 @@ class UsersTable extends AppTable
                 ])
                 ->where([$this->aliasField('is_staff') => 1]);
         }
+
+        if ($userType == 'Student') {
+            $StudentCustomFieldValues = TableRegistry::get('StudentCustomFieldValues');
+            $StudentCustomFields = TableRegistry::get('StudentCustomFields');
+
+            $query
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('openemis_no'),
+                    $this->aliasField('first_name'),
+                    $this->aliasField('middle_name'),
+                    $this->aliasField('third_name'),
+                    $this->aliasField('last_name'),
+                    $this->aliasField('preferred_name'),
+                    $this->aliasField('date_of_birth'),
+                    $this->aliasField('address'),
+                    $this->aliasField('email'),
+                    $this->aliasField('postal_code'),
+                    $this->aliasField('identity_number'),
+                    'nationality_name' => 'MainNationalities.name',
+                    'identity_type' => 'MainIdentityTypes.name',
+                    'gender' => 'Genders.name',
+                    'address_area' => 'AddressAreas.name',
+                    'birth_area' => 'BirthplaceAreas.name',
+                    'student_custom_field_value' => $StudentCustomFieldValues->aliasField('text_value'),
+                ])
+                ->contain(['Genders', 'MainNationalities', 'MainIdentityTypes', 'AddressAreas', 'BirthplaceAreas'])
+                ->leftJoin([$StudentCustomFieldValues->alias() => $StudentCustomFieldValues->table()], [
+                        $StudentCustomFieldValues->aliasField('student_id = ') . $this->aliasField('id'),
+                ])
+                ->leftJoin([$StudentCustomFields->alias() => $StudentCustomFields->table()], [
+                        $StudentCustomFields->aliasField('id = ') . $StudentCustomFieldValues->aliasField('student_custom_field_id'),
+                ])
+                ->where([$this->aliasField('is_student') => 1]);
+                //->group($this->aliasField('openemis_no'));
+        }
         
     }
 
@@ -165,6 +201,7 @@ class UsersTable extends AppTable
         $cloneFields = $fields->getArrayCopy();
         $requestData = json_decode($settings['process']['params']);
         $userType = $requestData->user_type;
+        
         $extraFields = [];
 
         $extraFields[] = [
@@ -286,42 +323,28 @@ class UsersTable extends AppTable
             'label' => __('User Type')
         ];
 
-         if ($userType == 'Student') {
-            $StudentCustomFieldValues = TableRegistry::get('StudentCustomFieldValues');
+        if ($userType == 'Student') {
             $StudentCustomFields = TableRegistry::get('StudentCustomFields');
-            
-            $data = $this
-                ->find()
-                ->select([
-                    'custom_id' => $StudentCustomFields->aliasField('id'),
-                    'student_custom' => $StudentCustomFields->aliasField('name'),
-                    'student_custom_field_value' => $StudentCustomFieldValues->aliasField('text_value'),
-                ])
-                ->innerJoin([$StudentCustomFieldValues->alias() => $StudentCustomFieldValues->table()], [
-                        $StudentCustomFieldValues->aliasField('student_id = ') . $this->aliasField('id'),
-                ])
-                ->innerJoin([$StudentCustomFields->alias() => $StudentCustomFields->table()], [
-                        $StudentCustomFields->aliasField('id = ') . $StudentCustomFieldValues->aliasField('student_custom_field_id'),
-                ])
-                ->where([$this->aliasField('is_student') => 1])->toArray();
+            $customField = $StudentCustomFields->find()
+                            ->select([
+                                'id' => $StudentCustomFields->aliasField('id'),
+                                'student_custom' => $StudentCustomFields->aliasField('name'),
+                    ])->toArray();
 
-            if (!empty($data)) {
-                foreach ($data as $value) {
-                    $customField = $value->student_custom;
-                    $customValue = $value->student_custom_field_value;
-                    $id = $value->custom_id;
+            if (!empty($customField)) {
+                foreach ($customField as $value) {
+                    $customFieldName = $value->student_custom;
+                    $id = $value->id;
 
-                    $label = __($customField);
-                    $value = __($customValue);
+                    $label = __($customFieldName);
                        $extraFields[] = [
-                        'key' => 'custom_'.$id,
-                        'field' => 'custom_'.$id,
+                        'key' => 'student_custom_field_value',
+                        'field' => 'student_custom_field_value',
                         'type' => 'string',
                         'label' => $label,
                     ]; 
                 }
             }
-
         }   
 
         if($userType == 'Staff') {
