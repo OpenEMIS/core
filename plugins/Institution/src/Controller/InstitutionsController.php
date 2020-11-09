@@ -1598,7 +1598,7 @@ class InstitutionsController extends AppController
                 'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
                     $statuses['PROMOTED'], $statuses['REPEATED']]]
             ];
-            $highChartDatas[] = $InstitutionStudents->getHighChart('students_attandance', $params);
+            $highChartDatas[] = $InstitutionStudents->getHighChart('student_attandance', $params);
             
             $params = [
                 'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
