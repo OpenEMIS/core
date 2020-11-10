@@ -123,6 +123,7 @@ class DirectoryTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.Users'])) {
                 $options = [
+                    'Select' => __('--Select User Type--'),
                     'Student' => __('Student'),
                     'Staff' => __('Staff'),
                     'Guardian' => __('Guardian'),
