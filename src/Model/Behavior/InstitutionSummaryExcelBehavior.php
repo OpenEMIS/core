@@ -121,19 +121,34 @@ class InstitutionSummaryExcelBehavior extends Behavior
 
         $writer = new XLSXWriter();
         $excel = $this;
-
+		
+		$generate = function ($settings) {
+            $generate = $this->generate($settings);
+        };
+		
         $_settings['writer'] = $writer;
 
+        $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
+       
+        $generate($_settings);
+		
+		$labelArray = array("area_education","area_administrative","locality","type","ownership","sector","provider","first_shift_gender","second_shift_gender","third_shift_gender","fourth_shift_gender","total_gender");
+		
+		foreach($labelArray as $label) {
+			$headerRow[] = $this->getFields($this->_table, $settings, $label);
+			$headerRow[] = ' ';
+			$headerRow[] = ' ';
+		}
+		//echo '<pre>';print_r($headerRow);die('aa');
+		
 		$data = $this->getData();
-		
-		$row1 = array("Area Education"," "," ","Area Administrative"," "," ","Locality"," "," ","Type"," "," ","Ownership"," "," ","Sector"," "," ","Provider"," "," ","First Shift Gender"," "," ","Second Shift Gender"," "," ","Third Shift Gender"," "," ","Fourth Shift Gender"," "," ","Total Gender");
-		
+
 		$j = 0; //start column
 		for ($i=0; $i<12; $i++) {
 			$writer->markMergedCell('Summary', $start_row = 0, $start_col = $j, $end_row = 0, $end_col = $j+2);  //merge cells
 			$j+=3;
 		}
-		$writer->writeSheetRow('Summary', $row1);
+		$writer->writeSheetRow('Summary', $headerRow);
 		foreach($data as $row) {
 			if(array_filter($row)) {
 				$writer->writeSheetRow('Summary', $row );
@@ -791,311 +806,21 @@ class InstitutionSummaryExcelBehavior extends Behavior
 
     public function generate($settings = [])
     {
-        $writer = $settings['writer'];
-        $sheets = new ArrayObject();
-
-        // Event to get the sheets. If no sheet is specified, it will be by default one sheet
-        $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeStart'), 'onExcelBeforeStart', [$settings, $sheets], true);
-
-        if (count($sheets->getArrayCopy())==0) {
-            $sheets[] = [
-                'name' => $this->_table->alias(),
-                'table' => $this->_table,
-                'query' => $this->_table->find(),
-            ];
-        }
-
-        $sheetNameArr = [];
-
-        foreach ($sheets as $sheet) {
-            $table = $sheet['table'];
-            // sheet info added to settings to avoid adding more parameters to event
-            $settings['sheet'] = $sheet;
-            $this->getFields($table, $settings);
-            $fields = $settings['sheet']['fields'];
-
-            $footer = $this->getFooter();
-            $query = $sheet['query'];
-
-            $this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
-            $sheetName = $sheet['name'];
-
-            // Check to make sure the string length does not exceed 31 characters
-            $sheetName = (strlen($sheetName) > 31) ? substr($sheetName, 0, 27).'....' : $sheetName;
-
-            // Check to make sure that no two sheets has the same name
-            $counter = 1;
-            $initialLength = 0;
-            while (in_array($sheetName, $sheetNameArr)) {
-                if ($counter > 1) {
-                    $sheetName = substr($sheetName, 0, $initialLength);
-                } else {
-                    $initialLength = strlen($sheetName);
-                }
-                if (strlen($sheetName) > 23) {
-                    $sheetName = substr($sheetName, 0, 23).'('.$counter++.')';
-                } else {
-                    $sheetName = $sheetName.'('.$counter++.')';
-                }
-            }
-            $sheetNameArr[] = $sheetName;
-            $baseSheetName = $sheetName;
-
-            // if the primary key of the record is given, only generate that record
-            if (array_key_exists('id', $settings)) {
-                $id = $settings['id'];
-                if ($id != 0) {
-                    $primaryKey = $table->primaryKey();
-                    $query->where([$table->aliasField($primaryKey) => $id]);
-                }
-            }
-
-            if ($this->config('auto_contain')) {
-                $this->contain($query, $fields, $table);
-            }
-
-            // To auto include the default fields. Using select will turn off autoFields by default
-            // This is set so that the containable data will still be in the array.
-            $autoFields = $this->config('autoFields');
-
-            if (!isset($autoFields) || $autoFields == true) {
-                $query->autoFields(true);
-            }
-
-            $count = $query->count();
-            $rowCount = 0;
-            $sheetCount = 1;
-            $sheetRowCount = 0;
-            $percentCount = intval($count / 100);
-            $pages = ceil($count / $this->config('limit'));
-
-            // Debugging 
-            $pages = 1;
-
-            if (isset($sheet['orientation'])) {
-                if ($sheet['orientation'] == 'landscape') {
-                    $this->config('orientation', 'landscape');
-                } else {
-                    $this->config('orientation', 'portrait');
-                }
-            } elseif ($count == 1) {
-                $this->config('orientation', 'portrait');
-            }
-
-            $this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);
-            $this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
-            if ($this->config('orientation') == 'landscape') {
-                $headerRow = [];
-                $headerStyle = [];
-                $headerFormat = [];
-
-                // Handling of Group field for merging cells for first 2 row
-                $groupList = Hash::extract($fields, '{n}.group');
-                $hasGroupRow = (!empty($groupList));
-
-                if ($hasGroupRow) {
-                    $subjectsHeaderRow = [];
-                    $subjectsColWidth = [];
-                    $groupStartingIndex = 0;
-                    $groupName = '';
-                    $subjectHeaderstyle = ['halign' => 'center'];
-
-                    foreach ($fields as $index => $attr) {
-                        $subjectsHeaderRow[$index] = "";
-
-                        if (array_key_exists('group', $attr)) {
-                            if ($groupName !== $attr['group']) {
-                                $groupStartingIndex = $index;
-                                $groupName = $attr['group'];
-                            }
-
-                            $groupKey = $groupName . $groupStartingIndex;
-
-                            if (!array_key_exists($groupKey, $subjectsColWidth)) {
-                                $subjectsColWidth[$groupKey] = [];
-                                $subjectsColWidth[$groupKey]['start_col'] = $index;
-                                $subjectsHeaderRow[$index]  = $attr['group'];
-                            }
-
-                            $subjectsColWidth[$groupKey]['end_col'] = $index;
-
-                        } else {
-                            $groupName = '';
-                        }
-                    }
-
-                    $writer->writeSheetRow($sheetName, $subjectsHeaderRow, $subjectHeaderstyle);
-
-                    foreach ($subjectsColWidth as $obj) {
-                        $writer->markMergedCell($sheetName, $start_row=0, $start_col=$obj['start_col'], $end_row=0, $end_col=$obj['end_col']);
-                    }
-                }
-                // End of handling of Group field for merging cells
-
-                foreach ($fields as $attr) {
-                    $headerRow[] = $attr['label'];
-                    $headerStyle[] = isset($attr['style']) ? $attr['style'] : [];
-                    $headerFormat[] = isset($attr['formatting']) ? $attr['formatting'] : 'GENERAL';
-                }
-
-                // Any additional custom headers that require to be appended on the right side of the sheet
-                // Header column count must be more than the additional data columns
-                if (isset($sheet['additionalHeader'])) {
-                    $headerRow = array_merge($headerRow, $sheet['additionalHeader']);
-                }
-
-				$row1 = array("Area Education"," "," ","Area Administrative"," "," ","Locality"," "," ","Type"," "," ","Ownership"," "," ","Sector"," "," ","Provider"," "," ","First Shift Gender"," "," ","Second Shift Gender"," "," ","Third Shift Gender"," "," ","Fourth Shift Gender"," "," ","Fifth Shift Gender"," "," ","Total Gender");
-
-                $writer->writeSheetHeader($sheetName, $headerFormat, true);
-				
-				$j = 0; //start column
-				for ($i=0; $i<13; $i++) {
-					$writer->markMergedCell($sheetName, $start_row = 0, $start_col = $j, $end_row = 0, $end_col = $j+2);  //merge cells
-					$j+=3;
-				}
-
-                $writer->writeSheetRow($sheetName, $row1, $headerStyle);
-
-                $this->dispatchEvent($table, $this->eventKey('onExcelAfterHeader'), 'onExcelAfterHeader', [$settings], true);
-
-                // process every page based on the limit
-                for ($pageNo=0; $pageNo<$pages; $pageNo++) {
-                    $resultSet = $query
-                    ->limit($this->config('limit'))
-                    ->page($pageNo+1)
-                    ->all();
-
-                    // Data to be appended on the right of spreadsheet
-                    $additionalRows = [];
-                    if (isset($sheet['additionalData'])) {
-                        $additionalRows = $sheet['additionalData'];
-                    }
-
-                    // process each row based on the result set
-                    foreach ($resultSet as $entity) {
-                        if ($sheetRowCount >= $this->config('sheet_limit')) {
-                            $sheetCount++;
-                            $sheetName = $baseSheetName . '_' . $sheetCount;
-
-                            // rewrite header into new sheet
-                            $writer->writeSheetRow($sheetName, $headerRow, $headerStyle);
-
-                            $sheetRowCount= 0;
-                        }
-
-                        $settings['entity'] = $entity;
-
-                        $row = [];
-                        $rowStyle = [];
-                        foreach ($fields as $attr) {
-                            $rowDataWithStyle = $this->getValue($entity, $table, $attr);
-                            $row[] = $rowDataWithStyle['rowData'];
-                            $rowStyle[] = $rowDataWithStyle['style'];
-                        }
-
-                        $sheetRowCount++;
-                        $rowCount++;
-                        $event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
-                        if (!$event->result) {
-                            $writer->writeSheetRow($sheetName, $row, $rowStyle);
-                        }
-                    }
-                }
-            } else {
-                $entity = $query->first();
-                foreach ($fields as $attr) {
-                    $row = [$attr['label']];
-                    $rowStyle = [[]];
-                    $rowDataWithStyle = $this->getValue($entity, $table, $attr);
-                    $row[] = $rowDataWithStyle['rowData'];
-                    $rowStyle[] = $rowDataWithStyle['style'];
-                    $writer->writeSheetRow($sheetName, $row, $rowStyle);
-                }
-
-                // Any additional custom headers that require to be appended on the left column of the sheet
-                $additionalHeader = [];
-                if (isset($sheet['additionalHeader'])) {
-                    $additionalHeader = $sheet['additionalHeader'];
-                }
-                // Data to be appended on the right column of spreadsheet
-                $additionalRows = [];
-                if (isset($sheet['additionalData'])) {
-                    $additionalRows = $sheet['additionalData'];
-                }
-
-                for ($i = 0; $i < count($additionalHeader); $i++) {
-                    $row = [$additionalHeader[$i]];
-                    $row[] = $additionalRows[$i];
-                    $rowStyle = [[], []];
-                    $writer->writeSheetRow($sheetName, $row, $rowStyle);
-                }
-                $rowCount++;
-            }
-            $writer->writeSheetRow($sheetName, ['']);
-            $writer->writeSheetRow($sheetName, $footer);
-            $this->dispatchEvent($table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount], true);
-        }
+		$language = I18n::locale();
+		$module = $this->_table->alias();
+		//echo '<pre>';print_r($module);
+		
+		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'area_education', 'fr'], true);
+		return $event;
     }
 
-    private function getFields($table, $settings)
+    private function getFields($table, $settings, $label)
     {
-        $schema = $table->schema();
-        $columns = $schema->columns();
-        $excludes = $this->config('excludes');
-
-        if (!is_array($table->primaryKey())) { //if not composite key
-            $excludes[] = $table->primaryKey();
-        }
-
-        $fields = new ArrayObject();
-        $module = $table->alias();
         $language = I18n::locale();
-        $excludedTypes = ['binary'];
-        $columns = array_diff($columns, $excludes);
+		$module = $this->_table->alias();
 
-        foreach ($columns as $col) {
-            $field = $schema->column($col);
-            if (!in_array($field['type'], $excludedTypes)) {
-                $label = $table->aliasField($col);
-
-                $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $col, $language], true);
-                if (strlen($event->result)) {
-                    $label = $event->result;
-                }
-
-                $fields[] = [
-                    'key' => $table->aliasField($col),
-                    'field' => $col,
-                    'type' => $field['type'],
-                    'label' => $label,
-                    'style' => [],
-                    'formatting' => 'GENERAL'
-                ];
-            }
-        }
-        // Event to add or modify the fields to fetch from the table
-        $event = $this->dispatchEvent($table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields], true);
-
-        $newFields = [];
-        foreach ($fields->getArrayCopy() as $field) {
-            if (empty($field['label'])) {
-                $key = explode('.', $field['key']);
-                $module = $key[0];
-                $column = $key[1];
-                // Redispatch get label
-                $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $column, $language], true);
-                if (strlen($event->result)) {
-                    $field['label'] = $event->result;
-                }
-            }
-            $newFields[] = $field;
-        }
-
-        // Replace the ArrayObject with the new fields
-        $fields->exchangeArray($newFields);
-
-        // Add the fields into the sheet
-        $settings['sheet']['fields'] = $fields;
+		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
+		return $event->result;
     }
 
     private function getFooter()
