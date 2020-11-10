@@ -72,8 +72,6 @@ class UsersTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $userType = $requestData->user_type;
-        
-        if ($userType ==  'Others') {
             $query
                 ->select([
                     $this->aliasField('id'),
@@ -94,32 +92,15 @@ class UsersTable extends AppTable
                     'address_area' => 'AddressAreas.name',
                     'birth_area' => 'BirthplaceAreas.name',
                 ])
-                ->contain(['Genders', 'MainNationalities', 'MainIdentityTypes', 'AddressAreas', 'BirthplaceAreas'])
+                ->contain(['Genders', 'MainNationalities', 'MainIdentityTypes', 'AddressAreas', 'BirthplaceAreas']);
+
+        if ($userType ==  'Others') {
+            $query
                 ->where([$this->aliasField('is_staff') => 0]);
         } 
 
         if ($userType == 'Guardian') {
             $query
-                ->select([
-                    $this->aliasField('id'),
-                    $this->aliasField('openemis_no'),
-                    $this->aliasField('first_name'),
-                    $this->aliasField('middle_name'),
-                    $this->aliasField('third_name'),
-                    $this->aliasField('last_name'),
-                    $this->aliasField('preferred_name'),
-                    $this->aliasField('date_of_birth'),
-                    $this->aliasField('address'),
-                    $this->aliasField('email'),
-                    $this->aliasField('postal_code'),
-                    $this->aliasField('identity_number'),
-                    'nationality_name' => 'MainNationalities.name',
-                    'identity_type' => 'MainIdentityTypes.name',
-                    'gender' => 'Genders.name',
-                    'address_area' => 'AddressAreas.name',
-                    'birth_area' => 'BirthplaceAreas.name',
-                ])
-                ->contain(['Genders', 'MainNationalities', 'MainIdentityTypes', 'AddressAreas', 'BirthplaceAreas'])
                 ->where([$this->aliasField('is_guardian') => 1]);
         } 
 
@@ -128,27 +109,6 @@ class UsersTable extends AppTable
             $StaffCustomFields = TableRegistry::get('StaffCustomFields');
 
             $query
-                ->select([
-                    $this->aliasField('id'),
-                    $this->aliasField('openemis_no'),
-                    $this->aliasField('first_name'),
-                    $this->aliasField('middle_name'),
-                    $this->aliasField('third_name'),
-                    $this->aliasField('last_name'),
-                    $this->aliasField('preferred_name'),
-                    $this->aliasField('date_of_birth'),
-                    $this->aliasField('address'),
-                    $this->aliasField('email'),
-                    $this->aliasField('postal_code'),
-                    $this->aliasField('identity_number'),
-                    'nationality_name' => 'MainNationalities.name',
-                    'identity_type' => 'MainIdentityTypes.name',
-                    'gender' => 'Genders.name',
-                    'address_area' => 'AddressAreas.name',
-                    'birth_area' => 'BirthplaceAreas.name',
-                    'staff_association' => $StaffCustomFieldValues->aliasField('text_value'),
-                ])
-                ->contain(['Genders', 'MainNationalities', 'MainIdentityTypes', 'AddressAreas', 'BirthplaceAreas'])
                 ->leftJoin([$StaffCustomFieldValues->alias() => $StaffCustomFieldValues->table()], [
                         $StaffCustomFieldValues->aliasField('staff_id = ') . $this->aliasField('id'),
                 ])
@@ -163,40 +123,11 @@ class UsersTable extends AppTable
             $StudentCustomFields = TableRegistry::get('StudentCustomFields');
 
             $query
-                ->select([
-                    $this->aliasField('id'),
-                    $this->aliasField('openemis_no'),
-                    $this->aliasField('first_name'),
-                    $this->aliasField('middle_name'),
-                    $this->aliasField('third_name'),
-                    $this->aliasField('last_name'),
-                    $this->aliasField('preferred_name'),
-                    $this->aliasField('date_of_birth'),
-                    $this->aliasField('address'),
-                    $this->aliasField('email'),
-                    $this->aliasField('postal_code'),
-                    $this->aliasField('identity_number'),
-                    'nationality_name' => 'MainNationalities.name',
-                    'identity_type' => 'MainIdentityTypes.name',
-                    'gender' => 'Genders.name',
-                    'address_area' => 'AddressAreas.name',
-                    'birth_area' => 'BirthplaceAreas.name',
-                ])
-                ->contain(['Genders', 'MainNationalities', 'MainIdentityTypes', 'AddressAreas', 'BirthplaceAreas'])
                 ->leftJoin([$StudentCustomFieldValues->alias() => $StudentCustomFieldValues->table()], [
                         $StudentCustomFieldValues->aliasField('student_id = ') . $this->aliasField('id'),
                 ])
+                ->select(['custom' => $StudentCustomFieldValues->aliasField('text_value')])
                 ->where([$this->aliasField('is_student') => 1]);
-
-                $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-                    return $results->map(function ($row) {
-                        for($i=0;$i<4;$i++) {
-                        $row['cutom_1'] = 'Yes';  
-                        } 
-                        return $row;
-                    });
-                });
-                //->group($this->aliasField('openemis_no'));
         }
         
     }
@@ -205,6 +136,7 @@ class UsersTable extends AppTable
     {  
         $cloneFields = $fields->getArrayCopy();
         $requestData = json_decode($settings['process']['params']);
+
         $userType = $requestData->user_type;
         
         $extraFields = [];
@@ -329,7 +261,7 @@ class UsersTable extends AppTable
         ];
 
         if ($userType == 'Student') {
-            /*$StudentCustomFields = TableRegistry::get('StudentCustomFields');
+            $StudentCustomFields = TableRegistry::get('StudentCustomFields');
             $customField = $StudentCustomFields->find()
                             ->select([
                                 'id' => $StudentCustomFields->aliasField('id'),
@@ -338,34 +270,21 @@ class UsersTable extends AppTable
 
             if (!empty($customField)) {
                 foreach ($customField as $key => $value) {
-                    //echo "<pre>";print_r($key);die();
                     $customFieldName = $value->student_custom;
                     $id = $value->id;
 
                     $label = __($customFieldName);
                        $extraFields[] = [
-                        'key' => 'cutom_1',
-                        'field' => 'cutom_1',
+                        'key' => 'custom',
+                        'field' => 'custom',
                         'type' => 'string',
                         'label' => $label,
                     ]; 
                 }
-            }*/$extraFields[] = [
-                        'key' => 'cutom_1',
-                        'field' => 'cutom_1',
-                        'type' => 'string',
-                        'label' => $label,
-                    ]; 
-                    $extraFields[] = [
-                        'key' => 'cutom_2',
-                        'field' => 'cutom_2',
-                        'type' => 'string',
-                        'label' => $label,
-                    ]; 
-        }   
+            }
+        }
 
         if($userType == 'Staff') {
-
             $extraFields[] = [
                 'key' => 'staff_association',
                 'field' => 'staff_association',
