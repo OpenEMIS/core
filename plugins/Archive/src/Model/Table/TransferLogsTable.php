@@ -12,6 +12,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
+use Cake\Core\Exception\Exception;
 use Cake\Log\Log;
 
 /**
@@ -114,6 +115,13 @@ use Cake\Log\Log;
     public function addOnInitialize(Event $event, Entity $entity)
     {
         $this->Alert->info('Archive.backupReminder');
+        try {
+            $connection = ConnectionManager::get('prd_cor_arc');
+            $connected = $connection->connect();
+
+        }catch (Exception $connectionError) {
+            $this->Alert->warning('Connection.testConnectionFail');
+        }
     }
 
     public function onGetGeneratedBy(Event $event, Entity $entity)
@@ -130,6 +138,17 @@ use Cake\Log\Log;
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
 
+        try {
+            $connection = ConnectionManager::get('prd_cor_arc');
+            $connected = $connection->connect();
+
+        }catch (Exception $connectionError) {
+            $this->Alert->warning('Connection.testConnectionFail');
+        }
+        if()
+        {
+            return
+        }
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         
         $AcademicPeriodsData = $AcademicPeriods->find()
