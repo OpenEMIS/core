@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Datasource\ResultSetInterface;
 
 class UsersTable extends AppTable
 {
@@ -27,7 +28,7 @@ class UsersTable extends AppTable
         $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
-        $this->addBehavior('Excel', [
+        $this->addBehavior('UsersExcel', [
             'excludes' => ['is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status'],
             'pages' => false,
             'autoFields' => false
@@ -119,18 +120,35 @@ class UsersTable extends AppTable
         }
 
         if ($userType == 'Student') {
-            $StudentCustomFieldValues = TableRegistry::get('StudentCustomFieldValues');
-            $StudentCustomFields = TableRegistry::get('StudentCustomFields');
 
             $query
-                ->leftJoin([$StudentCustomFieldValues->alias() => $StudentCustomFieldValues->table()], [
-                        $StudentCustomFieldValues->aliasField('student_id = ') . $this->aliasField('id'),
-                ])
-                ->select(['custom' => $StudentCustomFieldValues->aliasField('text_value')])
                 ->where([$this->aliasField('is_student') => 1]);
+                /*->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+
+                        $StudentCustomFieldValues = TableRegistry::get('StudentCustomFieldValues');
+                        $StudentCustomFields = TableRegistry::get('StudentCustomFields');
+
+                        $customField = $StudentCustomFieldValues->find()
+                                    ->select([
+                                    $StudentCustomFields->aliasField('name'),
+                                    $StudentCustomFieldValues->aliasField('text_value')
+                            ])
+                            ->innerJoin([$StudentCustomFields->alias() => $StudentCustomFields->table()], [
+                                $StudentCustomFields->aliasField('id = ') . $StudentCustomFieldValues->aliasField('student_custom_field_id'),
+                            ])
+                            ->where([$StudentCustomFieldValues->aliasField('student_id =') => 12037])
+                            ->toArray();
+
+                        foreach ($data as $val) {
+                            $row['custom']['StudentCustomFields']['name'] = $val['text_value'];
+                        }
+
+                        return $row;
+                    });
+                });*/
+            }
         }
-        
-    }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {  
@@ -271,12 +289,12 @@ class UsersTable extends AppTable
             if (!empty($customField)) {
                 foreach ($customField as $key => $value) {
                     $customFieldName = $value->student_custom;
-                    $id = $value->id;
+                    $name = $value->name;
 
                     $label = __($customFieldName);
                        $extraFields[] = [
-                        'key' => 'custom',
-                        'field' => 'custom',
+                        'key' => 'custom.'.$name,
+                        'field' => 'custom.'.$name,
                         'type' => 'string',
                         'label' => $label,
                     ]; 
