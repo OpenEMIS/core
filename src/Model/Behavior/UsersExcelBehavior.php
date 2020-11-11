@@ -141,10 +141,6 @@ class UsersExcelBehavior extends Behavior
         $requestData = json_decode($settings['process']['params']);
         $userType = $requestData->user_type;
 
-        $data = $this->getData($settings);
-
-        /*echo "<pre>";print_r($data);die();*/
-
         $StudentCustomFields = TableRegistry::get('StudentCustomFields');
         $customFields = $StudentCustomFields->find()
                             ->select([
@@ -152,24 +148,47 @@ class UsersExcelBehavior extends Behavior
                                 'student_custom' => $StudentCustomFields->aliasField('name'),
                     ])->toArray();
         
-        $labelArray1 = array("openemis_ID","first_name","middle_name","third_name","last_name","preferred_name","gender","date_of_birth","address","address_area","birth_area","nationality_name","identity_type","identity_number","email","postal_code");
-
+        $labelArray3 = [];
         foreach ($customFields as $key => $value) {
-            $labelArray2[] = $value->student_custom;
+            $labelArray3[] = $value->student_custom;
+        }
+        
+        $labelArray = array("openemis_ID","first_name","middle_name","third_name","last_name","preferred_name","gender","date_of_birth","address","address_area","birth_area","nationality_name","identity_type","identity_number","email","postal_Code","user_type");
+
+        $labelArray2 = array("staff_association_ID");
+
+        if ($userType == 'Others' || $userType == 'Guardian' ) {
+            foreach($labelArray as $label) {
+                $headerRow[] = $this->getFields($this->_table, $settings, $label);
+            }
+        }
+        
+        if ($userType == 'Staff') {
+           $labelArray1 = array_merge($labelArray,$labelArray2);
+               foreach($labelArray1 as $label) {
+                    $headerRow[] = $this->getFields($this->_table, $settings, $label);
+            }
+        }
+        
+        if ($userType == 'Student') {
+           $labelArray4 = array_merge($labelArray,$labelArray3);
+                foreach($labelArray4 as $label) {
+                    $headerRow[] = $this->getFields($this->_table, $settings, $label);
+                }
         }
 
-        $headerRow = array_merge($labelArray1,$labelArray2);
-        echo "<pre>";print_r($headerRow);die();
-        $writer->writeSheetRow('Directory: User List -'.$userType, $headerRow);
+        $data = $this->getData($settings);
+       
+        $writer->writeSheetRow('UserList', $headerRow);
         foreach($data as $row) {
             if(array_filter($row)) {
-                $writer->writeSheetRow('Directory: User List -'.$userType, $row );
+                $writer->writeSheetRow('UserList', $row);
             }
         }
         $blankRow[] = [];
         $footer = $this->getFooter();
-        $writer->writeSheetRow('Directory: User List -'.$userType, $blankRow);
-        $writer->writeSheetRow('Directory: User List -'.$userType, $footer);
+        $writer->writeSheetRow('UserList', $blankRow);
+        $writer->writeSheetRow('UserList', $footer);
 
 
         $filepath = $_settings['path'] . $_settings['file'];
@@ -277,28 +296,32 @@ class UsersExcelBehavior extends Behavior
                         $result = [];
                         if (!empty($userList)) {
                             foreach ($userList as $key => $value) {
-                               $result[$key]['openemis_ID'] = $value->openemis_no;
-                               $result[$key]['first_name'] = $value->first_name;
-                               $result[$key]['middle_name'] = $value->middle_name;
-                               $result[$key]['third_name'] = $value->third_name;
-                               $result[$key]['last_name'] = $value->last_name;
-                               $result[$key]['preferred_name'] = $value->preferred_name;
-                               $result[$key]['gender'] = $value->gender;
-                               $result[$key]['date_of_birth'] = $value->date_of_birth;
-                               $result[$key]['address'] = $value->address;
-                               $result[$key]['address_area'] = $value->address_area;
-                               $result[$key]['birth_area'] = $value->birth_area;
-                               $result[$key]['nationality_name'] = $value->nationality_name;
-                               $result[$key]['identity_type'] = $value->identity_type;
-                               $result[$key]['identity_number'] = $value->identity_number;
-                               $result[$key]['email'] = $value->email;
-                               $result[$key]['postal_code'] = $value->postal_code;
-                               $result[$key]['staff_association'] = $value->staff_association;
+                               $result[$key][] = $value->openemis_no;
+                               $result[$key][] = $value->first_name;
+                               $result[$key][] = $value->middle_name;
+                               $result[$key][] = $value->third_name;
+                               $result[$key][] = $value->last_name;
+                               $result[$key][] = $value->preferred_name;
+                               $result[$key][] = $value->gender;
+                               $result[$key][] = date("d-m-Y", strtotime($value->date_of_birth));
+                               $result[$key][] = $value->address;
+                               $result[$key][] = $value->address_area;
+                               $result[$key][] = $value->birth_area;
+                               $result[$key][] = $value->nationality_name;
+                               $result[$key][] = $value->identity_type;
+                               $result[$key][] = $value->identity_number;
+                               $result[$key][] = $value->email;
+                               $result[$key][] = $value->postal_code;
+                               $result[$key][] = $userType;
+                                   if ($userType == 'Staff') {
+                                        $result[$key][] = $value->staff_association;
+                                   }
 
-                                $StudentCustomFieldValues = TableRegistry::get('StudentCustomFieldValues');
-                                $StudentCustomFields = TableRegistry::get('StudentCustomFields');
+                                   if ($userType == 'Student') {
+                                    $StudentCustomFieldValues = TableRegistry::get('StudentCustomFieldValues');
+                                    $StudentCustomFields = TableRegistry::get('StudentCustomFields');
 
-                                 $customFieldData = $StudentCustomFieldValues->find()
+                                    $customFieldData = $StudentCustomFieldValues->find()
                                             ->select([
                                             $StudentCustomFields->aliasField('name'),
                                             $StudentCustomFieldValues->aliasField('text_value')
@@ -310,11 +333,12 @@ class UsersExcelBehavior extends Behavior
                                     ->toArray();
                                     
                                     foreach ($customFieldData as $customField) {
-                                        $result[$key][$customField->StudentCustomFields['name']] = $customField->text_value;
+                                        $result[$key][] = $customField->text_value;
                                     }
+                                }
                             }
                         }
-                       /* echo '<pre>';print_r($result);die('aaaa');*/
+                       //echo '<pre>';print_r($result);die('aaaa');
                     return $result;
             }
 
@@ -434,7 +458,7 @@ class UsersExcelBehavior extends Behavior
         $module = $this->_table->alias();
         //echo '<pre>';print_r($module);
         
-        $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'area_education', 'fr'], true);
+        $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'postal_code', $language], true);
         return $event;
     }
 
