@@ -27,7 +27,7 @@ class POCOR5349 extends AbstractMigration
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the duties records for staff'");
 
             $this->execute('ALTER TABLE `institution_staff_duties`
-            ADD PRIMARY KEY (`id`,`staff_id`,`institution_id`,`academic_period_id`),
+            ADD PRIMARY KEY (`id`),
             ADD KEY `staff_id` (`staff_id`),
             ADD KEY `institution_id` (`institution_id`),
             ADD KEY `academic_period_id` (`academic_period_id`),
