@@ -37,6 +37,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
     // Functions
     vm.showSplitContentResponsive = showSplitContentResponsive;
     vm.removeSplitContentResponsive = removeSplitContentResponsive;
+    vm.showProfileCompleteData = showProfileCompleteData;
     vm.initProfileCompletness = initProfileCompletness;
     vm.initNotices = initNotices;
     vm.initWorkbenchItems = initWorkbenchItems;
@@ -60,6 +61,10 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         vm.collapse = "true";
 
         vm.workbenchTitle = '';
+    }
+
+    function showProfileCompleteData() {
+        alert('sssssssss')
     }
 
     function initProfileCompletness() {
