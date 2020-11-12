@@ -1542,6 +1542,12 @@ class StaffTable extends ControllerActionTable
             $currentYear = __('Not Defined');
         }
 		
+		if (!empty($currentYearId)) {
+            $currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+        } else {
+            $currentYear = __('Not Defined');
+        }
+		
 		$institutionStaff = TableRegistry::get('institution_staff');
 
         $staffAttendances = $institutionStaff->find('all')
@@ -1550,7 +1556,6 @@ class StaffTable extends ControllerActionTable
 				'start_time' => 'MIN(institutionShifts.start_time)',
 				'institution_staff.start_date',
 				'institution_staff.end_date',
-				'academicPeriod' => 'AcademicPeriods.name',
 				'present' => '(IF((institutionStaffAttendances.time_in <= start_time) OR (institutionStaffAttendances.time_in > start_time),1,0))',
 				'absent' => '(IF(institutionStaffAttendances.time_in IS NULL,1,0))',
 				'late' => '(IF(institutionStaffAttendances.time_in > start_time, 1,0))',
@@ -1575,12 +1580,6 @@ class StaffTable extends ControllerActionTable
 				'institutionStaffAttendances.staff_id = institutionStaffShifts.staff_id '
 			]
 			)
-			->leftJoin(
-			['AcademicPeriods' => 'academic_periods'],
-			[
-				'AcademicPeriods.id = institutionStaffAttendances.academic_period_id'
-			]
-			)
 			->where([
 				//'institutionStaffAttendances.academic_period_id' => $currentYearId,
                 'institutionShifts.institution_id' => $conditions['institution_id'],
@@ -1590,6 +1589,7 @@ class StaffTable extends ControllerActionTable
 				'institutionShifts.institution_id',
 				'institutionStaffShifts.staff_id',
             ])
+			->toArray()
             ;
 		
         $attendanceData = [];
@@ -1602,21 +1602,18 @@ class StaffTable extends ControllerActionTable
 		$total_present = $total_absent = $total_late = 0;
 		
         foreach ($staffAttendances as $key => $attendance) {
-			
-			if(!empty($attendance->academicPeriod)) {
-				$academicPeriod = $attendance->academicPeriod;
-			}
+			//echo '<pre>';print_r($attendance);
 
 			$total_present = $attendance->present + $total_present;
 			$total_absent = $attendance->absent + $total_absent;
 			$total_late = $attendance->late + $total_late;
         }
-
-		if(!empty($academicPeriod)) {
-			$attendanceData[$academicPeriod] = $academicPeriod;
-			$dataSet['Present']['data'][$academicPeriod] = $total_present;
-			$dataSet['Absent']['data'][$academicPeriod] = $total_absent;
-			$dataSet['Late']['data'][$academicPeriod] = $total_late;
+		//die;
+		if(!empty($currentYear)) {
+			$attendanceData[$currentYear] = $currentYear;
+			$dataSet['Present']['data'][$currentYear] = $total_present;
+			$dataSet['Absent']['data'][$currentYear] = $total_absent;
+			$dataSet['Late']['data'][$currentYear] = $total_late;
 		}
 		
 		//echo '<pre>';print_r($dataSet);die;
