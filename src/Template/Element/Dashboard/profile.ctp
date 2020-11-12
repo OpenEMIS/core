@@ -1,3 +1,9 @@
+<?php
+/**
+* Mini Dashboard
+*/
+echo $this->Html->css('OpenEmis.../plugins/progressbar/css/bootstrap-progressbar-3.3.0.min', ['block' => true]);
+?>
 <h3><?= __('Profile Completness'); ?></h3>
 <div class="overview-box alert attendance-dashboard ng-scope" ng-class="disableElement">
 	<a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
@@ -13,15 +19,12 @@
 			
 		</div>
 	</div>
-	<div class="data-section">
-		<div class="data-field">
-			<div class="progress">
-				<div class="progress-bar" role="progressbar" aria-valuenow="70"
-				aria-valuemin="0" aria-valuemax="100" style="width:70%">
-				70%
-				</div>
-			</div>
+	<div class="data-section">		
+	<div class="progress">
+		<div class="progress-bar" role="progressbar"  style="width:<?= number_format(70).'%' ?>">
+		<?= number_format(70).'%' ?>
 		</div>
+	</div>
 	</div>
 	<div class="data-section">
 		<div class="data-field">
