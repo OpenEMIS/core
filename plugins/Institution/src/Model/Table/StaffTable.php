@@ -1527,7 +1527,8 @@ class StaffTable extends ControllerActionTable
 	public function getNumberOfStaffByAttendanceType($params = [])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
-        $_conditions = [];
+        //echo '<pre>';print_r($conditions['institution_id']);die;
+		$_conditions = [];
         foreach ($conditions as $key => $value) {
             $_conditions[$this->alias().'.'.$key] = $value;
         }
@@ -1541,95 +1542,76 @@ class StaffTable extends ControllerActionTable
             $currentYear = __('Not Defined');
         }
 		
-		$studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
-
-        $StudentAttendances = $studentAttendanceMarkedRecords->find('all')
-            ->select([
-				'academicPeriod' => 'AcademicPeriods.name',
-				'education_grade' => 'educationGrades.name',
-				'education_grade_id' => 'educationGrades.id',
-				'present' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id IS NULL OR InstitutionStudentAbsentDays.absence_type_id = 3,1,0)))',
-				'absent' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id IN (1,2),1,0)))',
-				'late' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id = 3, 1,0)))',
+		$institutionStaff = TableRegistry::get('institution_staff');
+		
+		$institutionStaffSubquery = $institutionStaff->find('all')
+			->select([
+				'institutionStaffShifts.staff_id',
+				'institutionShifts.institution_id',
+				'start_time' => 'MIN(institutionShifts.start_time)',
+				'institution_staff.start_date',
+				'institution_staff.end_date',
+			])
+			->innerJoin(
+			['institutionStaffShifts' => 'institution_staff_shifts'],
+			[
+				'institutionStaffShifts.staff_id = institution_staff.staff_id ',
+			]
+			)
+			->innerJoin(
+			['institutionShifts' => 'institution_shifts'],
+			[
+				'institutionShifts.id = institutionStaffShifts.shift_id ',
+				'institution_staff.institution_id = institutionShifts.institution_id',
+			]
+			)
+			->group([
+                'institutionShifts.institution_id',
+				'institutionStaffShifts.staff_id'
+            ])
+			;
+		//echo '<pre>';print_r($institutionStaffSubquery);die;
+		
+        //$staffAttendances = $institutionStaffSubquery->find('all')
+            $staffAttendances = $institutionStaffSubquery->select([
+				'date' => 'CURDATE()',
+				'institutions' => 'Institutions.name',
+				'present' => '(SUM(IF((institutionStaffAttendances.time_in <= start_time) OR (institutionStaffAttendances.time_in > start_time),1,0)))',
+				'absent' => '(SUM(IF(institutionStaffAttendances.time_in IS NULL,1,0)))',
+				'late' => '(SUM(IF(institutionStaffAttendances.time_in > start_time, 1,0)))',
             ])
 			->innerJoin(
-			['AcademicPeriods' => 'academic_periods'],
+			['Institutions' => 'institutions'],
 			[
-				'AcademicPeriods.id = student_attendance_marked_records.academic_period_id'
-			]
-			)
-			->innerJoin(
-			['InstitutionClasses' => 'institution_classes'],
-			[
-				'InstitutionClasses.id = student_attendance_marked_records.institution_class_id '
-			]
-			)
-			->innerJoin(
-			['InstitutionClassGrades' => 'institution_class_grades'],
-			[
-				'InstitutionClassGrades.institution_class_id = InstitutionClasses.id '
-			]
-			)
-			->innerJoin(
-			['InstitutionClassesStudents' => 'institution_class_students'],
-			[
-				'InstitutionClassesStudents.institution_class_id = InstitutionClasses.id '
-			]
-			)
-			->innerJoin(
-			['Users' => 'security_users'],
-			[
-				'Users.id = InstitutionClassesStudents.student_id '
-			]
-			)
-			->innerJoin(
-			['InstitutionStudents' => 'institution_students'],
-			[
-				'InstitutionStudents.student_id = InstitutionClassesStudents.student_id ',
-				'InstitutionStudents.academic_period_id = InstitutionClassesStudents.academic_period_id ',
-				'InstitutionClassesStudents.student_status_id = 1'
-			]
-			)
-			->innerJoin(
-			['educationGrades' => 'education_grades'],
-			[
-				'educationGrades.id = InstitutionStudents.education_grade_id '
+				'Institutions.id = institutionShifts.institution_id '
 			]
 			)
 			->leftJoin(
-			['InstitutionStudentAbsentDays' => 'institution_student_absence_days'],
+			['institutionStaffAttendances' => 'institution_staff_attendances'],
 			[
-				'InstitutionStudentAbsentDays.student_id = InstitutionClassesStudents.student_id ',
-				'InstitutionStudentAbsentDays.institution_id = student_attendance_marked_records.institution_id ',
-				'student_attendance_marked_records.date BETWEEN InstitutionStudentAbsentDays.start_date AND InstitutionStudentAbsentDays.end_date'
+				'institutionStaffAttendances.date' => date('Y-m-d'),
+				'institutionStaffAttendances.staff_id = institutionStaffShifts.staff_id '
 			]
 			)
-			->leftJoin(
-			['absenceTypes' => 'absence_types'],
-			[
-				'absenceTypes.id = InstitutionStudentAbsentDays.absence_type_id '
-			]
-			)
-            ->where([
-                'student_attendance_marked_records.date' => date('Y-m-d'),
-				'student_attendance_marked_records.academic_period_id' => $currentYearId,
-				'educationGrades.id IS NOT NULL',
+			->where([
+                'institutionShifts.institution_id' => $conditions['institution_id'],
+                'institution_staff.start_date <= CURDATE()',
+				'institution_staff.end_date IS NULL OR institution_staff.end_date >= CURDATE()',
             ])
-            ->group([
-                'educationGrades.id'
+			->group([
+                'institutionShifts.institution_id',
             ])
-			->toArray()
             ;
 		
         $attendanceData = [];
 		
-		//echo '<pre>';print_r($StudentAttendances);die;
+		//echo '<pre>';print_r($staffAttendances);die;
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
         $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
 
-        foreach ($StudentAttendances as $key => $attendance) {
-			//echo '<pre>';print_r($attendance);die;
+        foreach ($staffAttendances as $key => $attendance) {
+			//echo '<pre>';print_r($attendance);
 
             $attendanceData[$attendance->academicPeriod] = $attendance->academicPeriod;
 			
