@@ -153,7 +153,7 @@ class UsersExcelBehavior extends Behavior
             $labelArray3[] = $value->student_custom;
         }
         
-        $labelArray = array("openemis_ID","first_name","middle_name","third_name","last_name","preferred_name","gender","date_of_birth","address","address_area","birth_area","nationality_name","identity_type","identity_number","email","postal_Code","user_type");
+        $labelArray = array("openEMIS_ID","first_name","middle_name","third_name","last_name","preferred_name","gender","date_of_birth","address","address_area","birth_area","nationality_name","identity_type","identity_number","email","postal_Code","user_type");
 
         $labelArray2 = array("staff_association_ID");
 
