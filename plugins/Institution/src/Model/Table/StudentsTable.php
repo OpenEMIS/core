@@ -1679,12 +1679,6 @@ class StudentsTable extends ControllerActionTable
 				'late' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id = 3, 1,0)))',
             ])
 			->innerJoin(
-			['AcademicPeriods' => 'academic_periods'],
-			[
-				'AcademicPeriods.id = student_attendance_marked_records.academic_period_id'
-			]
-			)
-			->innerJoin(
 			['InstitutionClasses' => 'institution_classes'],
 			[
 				'InstitutionClasses.id = student_attendance_marked_records.institution_class_id '
@@ -1743,7 +1737,7 @@ class StudentsTable extends ControllerActionTable
 				'educationGrades.id IS NOT NULL',
             ])
             ->group([
-                'educationGrades.id'
+                //'educationGrades.id'
             ])
 			->toArray()
             ;
