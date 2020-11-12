@@ -1739,6 +1739,7 @@ class StudentsTable extends ControllerActionTable
             ->where([
                 'student_attendance_marked_records.date' => date('Y-m-d'),
 				'student_attendance_marked_records.academic_period_id' => $currentYearId,
+				'student_attendance_marked_records.institution_id' => $conditions['institution_id'],
 				'educationGrades.id IS NOT NULL',
             ])
             ->group([
