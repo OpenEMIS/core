@@ -1633,6 +1633,26 @@ class InstitutionsController extends AppController
         }
 
         $this->set('highChartDatas', $highChartDatas);
+        $indexDashboard = 'dashboard';
+        $this->set('mini_dashboard', [
+                'name' => $indexDashboard,
+                'data' => [
+                    'model' => 'staff',
+                    'modelCount' => 25,
+                    'modelArray' => []]
+                ]);
+        
+            // $this->controller->viewVars['indexElements']['mini_dashboard'] = [
+            //     'name' => $indexDashboard,
+            //     'data' => [
+            //         'model' => 'staff',
+            //         'modelCount' => 25,
+            //         'modelArray' => [],
+            //     ],
+            //     'options' => [],
+            //     'order' => 1
+            // ];
+
     }
 
     //autocomplete used for InstitutionSiteShift
