@@ -251,18 +251,12 @@ class StudentUserTable extends ControllerActionTable
 
     // POCOR-5684
     public function onGetIdentityNumber(Event $event, Entity $entity){
-
-        // Case 1: if user has only one identity, show the same, 
-        // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
-        // Case 3: if user has more than one identity (no one is linked to nationality), show the first
-
         $users_ids = TableRegistry::get('user_identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
-        ])
-        ->all();
+        ])->all();
         
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
@@ -333,10 +327,9 @@ class StudentUserTable extends ControllerActionTable
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
-        ->select(['number'])
+        ->select(['number', 'identity_type_id'])
         ->where([                
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
@@ -354,7 +347,6 @@ class StudentUserTable extends ControllerActionTable
             return $entity->identity_type_id = $user_id_name->name;
         }else{
             // Case 2 or 3
-
             // Get all nationalities, which has any default identity
             $nationalities = TableRegistry::get('nationalities');
             $nationalities_ids = $nationalities->find('all',
@@ -389,6 +381,7 @@ class StudentUserTable extends ControllerActionTable
                     array_push($nat_based_ids, $user_id_data);
                 }
             }
+            // echo '<pre>'; print_r($nat_based_ids); die;
             if(count($nat_based_ids) > 0){
                 // Case 2 - returning value
                 $users_id_type = TableRegistry::get('identity_types');
