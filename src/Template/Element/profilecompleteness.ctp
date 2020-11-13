@@ -41,7 +41,7 @@ echo $this->Html->css('OpenEmis.../plugins/progressbar/css/bootstrap-progressbar
 	</div>
     <div class="data-section">
 		<div class="data-field">
-			<button href="#" class="btn btn-primary" ng-click="InstitutionsController.showProfileCompleteData()">
+			<button href="#" class="btn btn-primary" ng-click="InstitutionStudentController.showProfileCompleteData()">
 				Details
 			</button>
 		</div>

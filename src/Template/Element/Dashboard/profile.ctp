@@ -11,7 +11,7 @@ echo $this->Html->css('OpenEmis.../plugins/progressbar/css/bootstrap-progressbar
 		<i class="kd-staff icon"></i>
 		<div class="data-field">
 			<h4>Profile Complete:</h4>
-			<h1 class="data-header ng-binding">75%</h1>
+			<h1 class="data-header ng-binding">{{DashboardController.percentage}}%</h1>
 		</div>
 	</div>
 	<div class="data-section">
@@ -20,11 +20,11 @@ echo $this->Html->css('OpenEmis.../plugins/progressbar/css/bootstrap-progressbar
 		</div>
 	</div>
 	<div class="data-section">		
-	<div class="progress">
-		<div class="progress-bar" role="progressbar"  style="width:<?= number_format(70).'%' ?>">
-		<?= number_format(70).'%' ?>
+		<div class="progress">
+			<div class="progress-bar" role="progressbar"  style="width:{{DashboardController.percentage}}%">
+			{{DashboardController.percentage}}%
+			</div>
 		</div>
-	</div>
 	</div>
 	<div class="data-section">
 		<div class="data-field">
@@ -34,3 +34,20 @@ echo $this->Html->css('OpenEmis.../plugins/progressbar/css/bootstrap-progressbar
 		</div>
 	</div>
 </div>
+<table class="table" id="profile_data_div">
+	<thead>
+		<tr>
+			<th><?= __('Feature')?></th>
+			<th><?= __('Last Updated')?></th>
+			<th><?= __('Complete')?></th>
+		</tr>
+	</thead>
+	<tbody>
+		<!-- <tr ng-repeat="teacher in InstitutionSubjectStudentsController.pastTeachers"> -->
+		<tr>
+			<td class="vertical-align-top">abc</td>
+			<td class="vertical-align-top">bjsdsd</td>
+			<td class="vertical-align-top"><i class="fa fa-check" aria-hidden="true"></i></td>
+		</tr>
+	</tbody>
+</table>
