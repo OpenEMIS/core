@@ -23,10 +23,11 @@ class DatabaseSqlDumpShell extends Shell
         $host = $dbConfig['host']; 
         $dbname = $dbConfig['database']; 
         $password = $dbConfig['password']; 
-
+        //echo '<pre>'; print_r($dbConfig );
         $fileName = !empty($this->args[0]) ? $this->args[0] : 0;
 
-        shell_exec('mysqldump --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' > '.WWW_ROOT.'export\backup' . DS .$fileName.'.sql');
+        //echo 'mysqldump --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' > '.WWW_ROOT.'export/backup' . DS .$fileName.'.sql'; die;
+        exec('mysqldump --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' > '.WWW_ROOT.'export/backup' . DS .$fileName.'.sql');
 
     }
 }
