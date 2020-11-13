@@ -2097,4 +2097,8 @@ class InstitutionsController extends AppController
         echo json_encode($dataSet);
         die;
     }
+
+    public function showProfileCompleteData() {
+        print_r('sssssssss');die;
+    }
 }

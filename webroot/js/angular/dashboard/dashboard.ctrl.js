@@ -11,9 +11,9 @@ dashBoardApp.filter('removeEmded', function() {
 
 dashBoardApp.filter('getUrl', function() {
     return function(input) {
-        // var youtubeUrl = input.split('|');
-        // youtubeUrl = youtubeUrl[1].split('}');
-        // return youtubeUrl[0].replace('/watch?v=', '/embed/');
+        var youtubeUrl = input.split('|');
+        youtubeUrl = youtubeUrl[1].split('}');
+        return youtubeUrl[0].replace('/watch?v=', '/embed/');
     }
 });
 
@@ -33,6 +33,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
     vm.workbenchTitle = "";
     vm.target = '';
     vm.gridOptions = {};
+    vm.percentage = '';
 
     // Functions
     vm.showSplitContentResponsive = showSplitContentResponsive;
@@ -64,7 +65,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
     }
 
     function showProfileCompleteData() {
-        alert('sssssssss')
+        document.getElementById('profile_data_div').style.display = "block";
     }
 
     function initProfileCompletness() {
@@ -75,6 +76,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                     vm.profile.push('');
                 }
                 console.log(vm.profile);
+                vm.percentage = 75;
                 // vm.notices = notices;
                 if (vm.profile.length == 0) {
                     vm.profile = null;
