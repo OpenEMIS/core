@@ -32,7 +32,7 @@ use Cake\Log\Log;
 
     /**
      * Initialize method
-     *
+     *prd_cor_arc
      * @param array $config The configuration for the Table.
      * @return void
      */
@@ -138,17 +138,6 @@ use Cake\Log\Log;
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
 
-        try {
-            $connection = ConnectionManager::get('prd_cor_arc');
-            $connected = $connection->connect();
-
-        }catch (Exception $connectionError) {
-            $this->Alert->warning('Connection.testConnectionFail');
-        }
-        if()
-        {
-            return
-        }
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         
         $AcademicPeriodsData = $AcademicPeriods->find()

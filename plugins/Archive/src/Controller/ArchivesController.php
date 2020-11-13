@@ -64,24 +64,30 @@ class ArchivesController extends AppController
 
         $backupLog = $this->loadModel('BackupLogs');
         $archiveData = $backupLog->findById($archiveId)->first();
+        $fileLink = WWW_ROOT .'export/backup' . DS .$archiveData->name . '.sql';
+        $filetype=filetype($fileLink);
+        $filename=basename($fileLink);
+        header ("Content-Type: ".$filetype);
+        header ("Content-Length: ".filesize($fileLink));
+        header ("Content-Disposition: attachment; filename=".$filename);
+        readfile($fileLink);
+        exit();
         
-        $fileLink = WWW_ROOT .'export\backup' . DS .$archiveData->name . '.sql';
-        
-        if (fopen($fileLink, 'r')){
-            header('Content-Description: File Transfer');
-            header('Content-Type: application/octet-stream');
-            //header('Content-Disposition: attachment; filename='.basename('Backup_SQL_1604298214.sql'));
-            header('Content-Disposition: attachment; filename='.basename($fileLink));
-            header('Expires: 0');
-            header('Cache-Control: must-revalidate');
-            header('Pragma: public');
-            header('Content-Length: ' . filesize($fileLink));
-            ob_clean();
-            flush();
-            readfile($fileLink);
-            exit;
-        }
-        return $this->redirect(['action' => 'BackupLog']);
+        // if (fopen($fileLink, 'r')){
+        //     header('Content-Description: File Transfer');
+        //     header('Content-Type: application/octet-stream');
+        //     //header('Content-Disposition: attachment; filename='.basename('Backup_SQL_1604298214.sql'));
+        //     header('Content-Disposition: attachment; filename='.basename($fileLink));
+        //     header('Expires: 0');
+        //     header('Cache-Control: must-revalidate');
+        //     header('Pragma: public');
+        //     header('Content-Length: ' . filesize($fileLink));
+        //     ob_clean();
+        //     flush();
+        //     readfile($fileLink);
+        //     exit;
+        // }
+        // return $this->redirect(['action' => 'BackupLog']);
     }
 
     //Archive backup module log page
