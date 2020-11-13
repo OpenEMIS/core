@@ -157,7 +157,7 @@ class ProfilesTable extends ControllerActionTable
         
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
-        ->select(['number'])
+        ->select(['number', 'identity_type_id'])
         ->where([                
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
