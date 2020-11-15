@@ -154,6 +154,171 @@ class StaffUserTable extends ControllerActionTable
         }
     }
 
+    // POCOR-5684
+    public function onGetIdentityNumber(Event $event, Entity $entity){
+
+        // Case 1: if user has only one identity, show the same, 
+        // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
+        // Case 3: if user has more than one identity (no one is linked to nationality), show the first
+
+        $users_ids = TableRegistry::get('user_identities');
+        $user_identities = $users_ids->find()
+        ->select(['number','nationality_id'])
+        ->where([
+            $users_ids->aliasField('security_user_id') => $entity->id,
+        ])
+        ->all();
+        
+        $users_ids = TableRegistry::get('user_identities');
+        $user_id_data = $users_ids->find()
+        ->select(['number'])
+        ->where([                
+            $users_ids->aliasField('security_user_id') => $entity->id,
+        ])
+        ->first();
+
+        if(count($user_identities) == 1){
+            // Case 1
+            return $entity->identity_number = $user_id_data->number;
+        }else{
+            // Case 2 or 3
+
+            // Get all nationalities, which has any default identity
+            $nationalities = TableRegistry::get('nationalities');
+            $nationalities_ids = $nationalities->find('all',
+                [
+                    'fields' => [
+                        'id',
+                        'name',
+                        'identity_type_id'
+                    ],
+                    'conditions' => [
+                        'identity_type_id !=' => 'NULL'
+                    ]
+                ]
+            )->all();
+
+            $nat_ids = [];
+            foreach ($nationalities_ids as $item) {
+                array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
+            }     
+
+            $nat_based_ids = [];
+            foreach ($nat_ids as $nat_id) {
+                $users_ids = TableRegistry::get('user_identities');
+                $user_id_data = $users_ids->find()
+                ->select(['number'])
+                ->where([                
+                    $users_ids->aliasField('security_user_id') => $entity->id,
+                    $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
+                ])
+                ->first();
+                if($user_id_data != null){
+                    array_push($nat_based_ids, $user_id_data);
+                }
+            }
+            
+            if(count($nat_based_ids) > 0){
+                // Case 2 - returning value
+                return $entity->identity_number = $nat_based_ids[0]['number'];
+            }else{
+                // Case 3 - returning value, return again from Case 1
+                return $entity->identity_number = $user_id_data->number;
+            }
+        }
+    }
+
+    // POCOR-5684
+    public function onGetIdentityTypeID(Event $event, Entity $entity)
+    {
+        $users_ids = TableRegistry::get('user_identities');
+        $user_identities = $users_ids->find()
+        ->select(['number','nationality_id'])
+        ->where([
+            $users_ids->aliasField('security_user_id') => $entity->id,
+        ])
+        ->all();
+        
+        $users_ids = TableRegistry::get('user_identities');
+        $user_id_data = $users_ids->find()
+        ->select(['number', 'identity_type_id'])
+        ->where([                
+            $users_ids->aliasField('security_user_id') => $entity->id,
+        ])
+        ->first();
+
+        if(count($user_identities) == 1){
+            // Case 1
+            $users_id_type = TableRegistry::get('identity_types');
+            $user_id_name = $users_id_type->find()
+            ->select(['name'])
+            ->where([
+                $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
+            ])
+            ->first();
+            return $entity->identity_type_id = $user_id_name->name;
+        }else{
+            // Case 2 or 3
+
+            // Get all nationalities, which has any default identity
+            $nationalities = TableRegistry::get('nationalities');
+            $nationalities_ids = $nationalities->find('all',
+                [
+                    'fields' => [
+                        'id',
+                        'name',
+                        'identity_type_id'
+                    ],
+                    'conditions' => [
+                        'identity_type_id !=' => 'NULL'
+                    ]
+                ]
+            )->all();
+
+            $nat_ids = [];
+            foreach ($nationalities_ids as $item) {
+                array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
+            }     
+
+            $nat_based_ids = [];
+            foreach ($nat_ids as $nat_id) {
+                $users_ids = TableRegistry::get('user_identities');
+                $user_id_data = $users_ids->find()
+                ->select(['number','identity_type_id'])
+                ->where([                
+                    $users_ids->aliasField('security_user_id') => $entity->id,
+                    $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
+                ])
+                ->first();
+                if($user_id_data != null){
+                    array_push($nat_based_ids, $user_id_data);
+                }
+            }
+            if(count($nat_based_ids) > 0){
+                // Case 2 - returning value
+                $users_id_type = TableRegistry::get('identity_types');
+                $user_id_name = $users_id_type->find()
+                ->select(['name'])
+                ->where([
+                    $users_id_type->aliasField('id') => $nat_based_ids[0]['identity_type_id'],
+                ])
+                ->first();
+                return $entity->identity_type_id = $user_id_name->name;
+            }else{
+                // Case 3 - returning value, return again from Case 1
+                $users_id_type = TableRegistry::get('identity_types');
+                $user_id_name = $users_id_type->find()
+                ->select(['name'])
+                ->where([
+                    $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
+                ])
+                ->first();
+                return $entity->identity_type_id = $user_id_name->name;
+            }
+        }
+    }
+
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
