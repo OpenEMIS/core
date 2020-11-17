@@ -37,6 +37,10 @@ class InstitutionIncomesTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'income_source_id', 'income_type_id', 'amount', 'attachment', 'description']);
     }
 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
+    }
+	
     public function indexBeforeAction($event) { 
         unset($this->fields['academic_period_id']);
         unset($this->fields['description']);
