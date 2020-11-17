@@ -43,11 +43,16 @@ class IncomeTable extends AppTable  {
 
         $query
             ->select([
+                'institution_code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',
                 'academic_period' => 'AcademicPeriods.name',
                 $this->aliasField('date'),
                 $this->aliasField('amount'),
                 'source' => 'IncomeSources.name',
                 'income_type' => 'IncomeTypes.name',
+            ])
+            ->innerJoin(['Institutions' => 'institutions'], [
+                'Institutions.id =' . $this->aliasField('institution_id')
             ])
             ->innerJoin(['IncomeTypes' => 'income_types'], [
                 'IncomeTypes.id =' . $this->aliasField('income_type_id')
