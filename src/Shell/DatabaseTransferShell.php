@@ -57,7 +57,7 @@ class DatabaseTransferShell extends Shell
     public function getRecords($academicPeriodId)
     {
         //get archive database connection
-        $connection = ConnectionManager::get('prd_cor_arc');
+        $connection = ConnectionManager::get('default');
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');

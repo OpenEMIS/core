@@ -164,8 +164,8 @@ class BackupLogsTable extends ControllerActionTable
             $this->Alert->error('Archive.lessSpace', ['reset' => true]);
         }else{
 
-            if (!file_exists(WWW_ROOT .'export\backup')) {
-                mkdir(WWW_ROOT .'export\backup', 0777, true);
+            if (!file_exists(WWW_ROOT .'export/backup')) {
+                mkdir(WWW_ROOT .'export/backup', 0777, true);
             }
        
             $this->log('=======>Before triggerDatabaseSqlDumpShell', 'debug');
