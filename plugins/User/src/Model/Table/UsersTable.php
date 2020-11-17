@@ -1272,4 +1272,30 @@ class UsersTable extends AppTable
         
         die;
     }
+    
+    public function findStudents($institutionId = 0){
+       
+        $query = TableRegistry::get('Institution.Students');
+        $studentQuery = $query->find()
+                ->contain(['Users'])                
+                ->where(['institution_id' => $institutionId])
+                ;
+        
+        
+        $student = $studentQuery->select(['id' =>'Users.id','openemis_no' =>'Users.openemis_no', 
+                    'first_name' =>"Users.first_name",
+                    'middle_name' =>"Users.middle_name",
+                    'third_name' =>"Users.third_name",
+                    'last_name' => "Users.last_name"
+                ]);
+        
+        $students = $student->formatResults(function($results) {
+                return $results->map(function($row) { 
+                    $row->name = preg_replace('/\s+/', ' ',$row->first_name.' '.$row->middle_name.' '.$row->third_name.' '.$row->last_name);
+                    return $row;
+                });
+            })->toArray();
+            
+        return $students;
+    }
 }
