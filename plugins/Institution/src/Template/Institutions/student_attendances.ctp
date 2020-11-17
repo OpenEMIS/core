@@ -29,15 +29,6 @@ $this->start('toolbar');
     </button>
 <?php endif; ?>
 
-<?php if ($_archive) : ?>
-    <a href="<?=$archiveUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>" >
-            <i class="fa kd-import"></i>
-        </button>
-    </a>
-</button>
-<?php endif; ?>
-
 <?php
 $this->end();
 ?>
