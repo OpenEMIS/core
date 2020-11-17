@@ -2374,7 +2374,7 @@ trait MessagesTrait
         'Connection' => [
             'testConnectionSuccess' => 'Connection has been established successfully.',
             'testConnectionFail' => 'Please configure correct Connection to Archive Database.',
-            'transferConnectionFail' => 'Please configure Connection to Archive Database.'
+            'transferConnectionFail' => 'Please configure connection to Archive Database.'
         ]
 
     ];

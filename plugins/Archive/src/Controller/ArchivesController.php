@@ -72,22 +72,6 @@ class ArchivesController extends AppController
         header ("Content-Disposition: attachment; filename=".$filename);
         readfile($fileLink);
         exit();
-        
-        // if (fopen($fileLink, 'r')){
-        //     header('Content-Description: File Transfer');
-        //     header('Content-Type: application/octet-stream');
-        //     //header('Content-Disposition: attachment; filename='.basename('Backup_SQL_1604298214.sql'));
-        //     header('Content-Disposition: attachment; filename='.basename($fileLink));
-        //     header('Expires: 0');
-        //     header('Cache-Control: must-revalidate');
-        //     header('Pragma: public');
-        //     header('Content-Length: ' . filesize($fileLink));
-        //     ob_clean();
-        //     flush();
-        //     readfile($fileLink);
-        //     exit;
-        // }
-        // return $this->redirect(['action' => 'BackupLog']);
     }
 
     //Archive backup module log page

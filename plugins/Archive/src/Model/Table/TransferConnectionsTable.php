@@ -134,41 +134,30 @@ class TransferConnectionsTable extends ControllerActionTable
     }
 
     public function EditOnTestConnection(){
-        // $connection = ConnectionManager::get('default');
-
-        $connection = ConnectionManager::config('new_connection', [
-            'className' => 'Cake\Database\Connection',
-            'driver' => 'Cake\Database\Driver\Mysql',
-            'persistent' => false,
-            'host' => '35.179.96.113:3306',
-            'username' => 'mb_analitics',
-            'password' => 'Team@Medic@',
-            'database' => 'mb_analytics',
-            'encoding' => 'utf8mb4',
-            'timezone' => 'UTC',
-            'cacheMetadata' => true,
-        ]);
-
-        // $connectionData = ConnectionManager::get('new_connection');
-
-        try {
-            $connection = ConnectionManager::get('new_connection');
-            $connected = $connection->connect();
-            $this->Alert->success('Connection.testConnectionSuccess', ['reset' => true]);
-
-        }catch (Exception $connectionError) {
-            $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+        $post_data= $this->request->data;
+        if(isset($post_data)){
+            $connection = ConnectionManager::config($post_data['TransferConnections']['name'], [
+                'className' => 'Cake\Database\Connection',
+                'driver' => 'Cake\Database\Driver\Mysql',
+                'persistent' => false,
+                'host' => $post_data['TransferConnections']['host'],
+                'username' => $post_data['TransferConnections']['username'],
+                'password' => $post_data['TransferConnections']['password'],
+                'database' => $post_data['TransferConnections']['db_name'],
+                'encoding' => 'utf8mb4',
+                'timezone' => 'UTC',
+                'cacheMetadata' => true,
+            ]);
+    
+            try {
+                $connection = ConnectionManager::get($post_data['TransferConnections']['name']);
+                $connected = $connection->connect();
+                $this->Alert->success('Connection.testConnectionSuccess', ['reset' => true]);
+    
+            }catch (Exception $connectionError) {
+                $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+            }
         }
-
-        // echo "<pre>";print_r($connectionData);exit();
-        // try {
-        //     $connection = ConnectionManager::get('prd_cor_arc');
-        //     $connected = $connection->connect();
-        //     $this->Alert->success('Connection.testConnectionSuccess', ['reset' => true]);
-
-        // }catch (Exception $connectionError) {
-        //     $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
-        // }
 
     }   
     
