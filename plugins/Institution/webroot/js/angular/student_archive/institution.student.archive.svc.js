@@ -45,7 +45,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
         'original': {
             'AcedemicPeriod': 'Acedemic Period',
             'day': 'Day',
-            'class': 'Call',
+            'class': 'Class',
             'AttendencePerDay': 'Attendence Per Day',
             'OpenEmisId': 'OpenEMIS ID',
             'name': 'Name',

@@ -120,7 +120,7 @@ use Cake\Log\Log;
             $connected = $connection->connect();
 
         }catch (Exception $connectionError) {
-            $this->Alert->warning('Connection.testConnectionFail');
+            $this->Alert->warning('Connection.transferConnectionFail');
         }
     }
 
