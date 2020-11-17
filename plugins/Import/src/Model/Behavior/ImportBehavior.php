@@ -1079,6 +1079,7 @@ class ImportBehavior extends Behavior
             $lookupPlugin = $row->lookup_plugin;
             $lookupModel = $row->lookup_model;
             $lookupColumn = $row->lookup_column;
+            $mappingModel = $row->model;
 
             $translatedCol = $this->getExcelLabel($model, $lookupColumn);
 
@@ -1091,18 +1092,35 @@ class ImportBehavior extends Behavior
             if ($foreignKey == self::FIELD_OPTION) {
                 if (TableRegistry::exists($lookupModel)) {
                     $relatedModel = TableRegistry::get($lookupModel);
-                } else {
+                } elseif($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
+                    $institutionId = 0;
+                    $session = $this->_table->Session;
+                    if ($session->check('Institution.Institutions.id')) {
+                        $institutionId = $session->read('Institution.Institutions.id');
+                    }
+                    
+                    $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table'])->findStudents($institutionId);
+                }else{
                     $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table']);
                 }
-                $modelData = $relatedModel->getList($relatedModel->find());
-                $emptyCodeRecords = $modelData;
-                $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $key) {
-                    return !empty($record->national_code);
-                })->toArray();
-
+                
+                if($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
+                    
+                    $emptyCodeRecords = $relatedModel;
+                    $modelData = $relatedModel;
+                }else{
+                    $modelData = $relatedModel->getList($relatedModel->find());
+                    $emptyCodeRecords = $modelData;
+                    $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $key) {
+                        return !empty($record->national_code);
+                    })->toArray();
+                    
+                    $modelData = $modelData->toArray();
+                }
+                
                 $data[$row->order]['lookupColumn'] = 2;
                 $data[$row->order]['data'][] = [__('Name'), $translatedCol];
-                $modelData = $modelData->toArray();
+                
                 if (!empty($modelData)) {
                     foreach ($modelData as $record) {
                         if (count($emptyCodeRecords)<1) {
