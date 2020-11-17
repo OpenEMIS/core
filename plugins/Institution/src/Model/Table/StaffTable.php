@@ -1593,8 +1593,7 @@ class StaffTable extends ControllerActionTable
             ;
 		
         $attendanceData = [];
-		
-		//echo '<pre>';print_r($staffAttendances);die;
+
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
         $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
@@ -1602,13 +1601,11 @@ class StaffTable extends ControllerActionTable
 		$total_present = $total_absent = $total_late = 0;
 		
         foreach ($staffAttendances as $key => $attendance) {
-			//echo '<pre>';print_r($attendance);
-
+		
 			$total_present = $attendance->present + $total_present;
 			$total_absent = $attendance->absent + $total_absent;
 			$total_late = $attendance->late + $total_late;
         }
-		//die;
 		if(!empty($currentYear)) {
 			$attendanceData[$currentYear] = $currentYear;
 			$dataSet['Present']['data'][$currentYear] = $total_present;
