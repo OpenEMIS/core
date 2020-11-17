@@ -57,7 +57,7 @@ class StudentsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('HighChart', [
-            'student_attandance' => [
+            'student_attendance' => [
                 '_function' => 'getNumberOfStudentsByAttendanceType',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
