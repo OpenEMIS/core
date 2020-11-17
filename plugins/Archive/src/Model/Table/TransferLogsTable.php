@@ -12,6 +12,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
+use Cake\Core\Exception\Exception;
 use Cake\Log\Log;
 
 /**
@@ -31,7 +32,7 @@ use Cake\Log\Log;
 
     /**
      * Initialize method
-     *
+     *prd_cor_arc
      * @param array $config The configuration for the Table.
      * @return void
      */
@@ -114,6 +115,13 @@ use Cake\Log\Log;
     public function addOnInitialize(Event $event, Entity $entity)
     {
         $this->Alert->info('Archive.backupReminder');
+        try {
+            $connection = ConnectionManager::get('prd_cor_arc');
+            $connected = $connection->connect();
+
+        }catch (Exception $connectionError) {
+            $this->Alert->warning('Connection.transferConnectionFail');
+        }
     }
 
     public function onGetGeneratedBy(Event $event, Entity $entity)
