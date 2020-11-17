@@ -1685,21 +1685,9 @@ class StudentsTable extends ControllerActionTable
 			]
 			)
 			->innerJoin(
-			['InstitutionClassGrades' => 'institution_class_grades'],
-			[
-				'InstitutionClassGrades.institution_class_id = InstitutionClasses.id '
-			]
-			)
-			->innerJoin(
 			['InstitutionClassesStudents' => 'institution_class_students'],
 			[
 				'InstitutionClassesStudents.institution_class_id = InstitutionClasses.id '
-			]
-			)
-			->innerJoin(
-			['Users' => 'security_users'],
-			[
-				'Users.id = InstitutionClassesStudents.student_id '
 			]
 			)
 			->innerJoin(
