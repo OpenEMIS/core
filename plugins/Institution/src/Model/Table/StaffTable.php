@@ -87,7 +87,7 @@ class StaffTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('HighChart', [
-            'staff_attandance' => [
+            'staff_attendance' => [
                 '_function' => 'getNumberOfStaffByAttendanceType',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
@@ -1591,7 +1591,7 @@ class StaffTable extends ControllerActionTable
             ])
 			->toArray()
             ;
-		
+		//echo '<pre>';print_r($staffAttendances);die;
         $attendanceData = [];
 
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
