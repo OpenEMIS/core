@@ -119,24 +119,24 @@ class ProfilesTable extends ControllerActionTable
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
             }     
 
-            $nat_based_ids = [];
+            $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
-                $user_id_data = $users_ids->find()
+                $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
                 ->where([                
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
                 ->first();
-                if($user_id_data != null){
-                    array_push($nat_based_ids, $user_id_data);
+                if($user_id_data_nat != null){
+                    array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
             
-            if(count($nat_based_ids) > 0){
+            if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
-                return $entity->identity_number = $nat_based_ids[0]['number'];
+                return $entity->identity_number = $nationality_based_ids[0]['number'];
             }else{
                 // Case 3 - returning value, return again from Case 1
                 return $entity->identity_number = $user_id_data->number;
@@ -196,27 +196,27 @@ class ProfilesTable extends ControllerActionTable
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
             }     
 
-            $nat_based_ids = [];
+            $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
-                $user_id_data = $users_ids->find()
+                $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
                 ->where([                
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
                 ->first();
-                if($user_id_data != null){
-                    array_push($nat_based_ids, $user_id_data);
+                if($user_id_data_nat != null){
+                    array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
-            if(count($nat_based_ids) > 0){
+            if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
                 $users_id_type = TableRegistry::get('identity_types');
                 $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
-                    $users_id_type->aliasField('id') => $nat_based_ids[0]['identity_type_id'],
+                    $users_id_type->aliasField('id') => $nationality_based_ids[0]['identity_type_id'],
                 ])
                 ->first();
                 return $entity->identity_type_id = $user_id_name->name;
