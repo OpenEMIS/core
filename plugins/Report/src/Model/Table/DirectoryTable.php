@@ -14,6 +14,7 @@ class DirectoryTable extends AppTable
     const NO_FILTER = 0;
     const STUDENT = 1;
     const STAFF = 2;
+   
     public function initialize(array $config)
     {
         $this->table('security_users');
@@ -39,6 +40,7 @@ class DirectoryTable extends AppTable
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
+        $this->ControllerAction->field('user_type', ['type' => 'hidden']);
     }
 
     public function addBeforeAction(Event $event)
@@ -111,6 +113,25 @@ class DirectoryTable extends AppTable
                 return $attr;
             } else {
                 $attr['value'] = self::NO_FILTER;
+            }
+        }
+    }
+
+    public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.Users'])) {
+                $options = [
+                    'Guardian' => __('Guardian'),
+                    'Others' => __('Others'),
+                    'Staff' => __('Staff'),
+                    'Student' => __('Student'),
+                ];
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $options;
+                return $attr;
             }
         }
     }

@@ -12,6 +12,7 @@ use ControllerAction\Model\Traits\EventTrait;
 use Cake\I18n\I18n;
 use Cake\Utility\Hash;
 use XLSXWriter;
+use Cake\ORM\TableRegistry;
 
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
@@ -22,7 +23,7 @@ use XLSXWriter;
 // public function onExcelEndSheet(Event $event, ArrayObject $settings, $totalProcessed) {}
 // public function onExcelGetLabel(Event $event, $column) {}
 
-class ExcelBehavior extends Behavior
+class UsersExcelBehavior extends Behavior
 {
     use EventTrait;
 
@@ -137,6 +138,59 @@ class ExcelBehavior extends Behavior
 
         $generate($_settings);
 
+        $requestData = json_decode($settings['process']['params']);
+        $userType = $requestData->user_type;
+
+        $StudentCustomFields = TableRegistry::get('StudentCustomFields');
+        $customFields = $StudentCustomFields->find()
+                            ->select([
+                                'id' => $StudentCustomFields->aliasField('id'),
+                                'student_custom' => $StudentCustomFields->aliasField('name'),
+                    ])->toArray();
+        
+        $labelArray3 = [];
+        foreach ($customFields as $key => $value) {
+            $labelArray3[] = $value->student_custom;
+        }
+        
+        $labelArray = array("openEMIS_ID","first_name","middle_name","third_name","last_name","preferred_name","gender","date_of_birth","address","address_area","birth_area","nationality_name","identity_type","identity_number","email","postal_Code","user_type");
+
+        $labelArray2 = array("staff_association_ID");
+
+        if ($userType == 'Others' || $userType == 'Guardian' ) {
+            foreach($labelArray as $label) {
+                $headerRow[] = $this->getFields($this->_table, $settings, $label);
+            }
+        }
+        
+        if ($userType == 'Staff') {
+           $labelArray1 = array_merge($labelArray,$labelArray2);
+               foreach($labelArray1 as $label) {
+                    $headerRow[] = $this->getFields($this->_table, $settings, $label);
+            }
+        }
+        
+        if ($userType == 'Student') {
+           $labelArray4 = array_merge($labelArray,$labelArray3);
+                foreach($labelArray4 as $label) {
+                    $headerRow[] = $this->getFields($this->_table, $settings, $label);
+                }
+        }
+
+        $data = $this->getData($settings);
+       
+        $writer->writeSheetRow('UserList', $headerRow);
+        foreach($data as $row) {
+            if(array_filter($row)) {
+                $writer->writeSheetRow('UserList', $row);
+            }
+        }
+        $blankRow[] = [];
+        $footer = $this->getFooter();
+        $writer->writeSheetRow('UserList', $blankRow);
+        $writer->writeSheetRow('UserList', $footer);
+
+
         $filepath = $_settings['path'] . $_settings['file'];
         $_settings['file_path'] = $filepath;
         $writer->writeToFile($_settings['file_path']);
@@ -152,304 +206,149 @@ class ExcelBehavior extends Behavior
         return $_settings;
     }
 
-    public function generate($settings = [])
-    {
-        $writer = $settings['writer'];
-        $sheets = new ArrayObject();
 
-        // Event to get the sheets. If no sheet is specified, it will be by default one sheet
-        $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeStart'), 'onExcelBeforeStart', [$settings, $sheets], true);
 
-        if (count($sheets->getArrayCopy())==0) {
-            $sheets[] = [
-                'name' => $this->_table->alias(),
-                'table' => $this->_table,
-                'query' => $this->_table->find(),
-            ];
-        }
+    private function getData($settings) {
+        $requestData = json_decode($settings['process']['params']);
+        $userType = $requestData->user_type;
+        $Users = TableRegistry::get('Security.Users');
+        $userList = $Users
+                        ->find()
+                        ->select([
+                            $Users->aliasField('id'),
+                            $Users->aliasField('openemis_no'),
+                            $Users->aliasField('first_name'),
+                            $Users->aliasField('middle_name'),
+                            $Users->aliasField('third_name'),
+                            $Users->aliasField('last_name'),
+                            $Users->aliasField('preferred_name'),
+                            $Users->aliasField('date_of_birth'),
+                            $Users->aliasField('address'),
+                            $Users->aliasField('email'),
+                            $Users->aliasField('postal_code'),
+                            $Users->aliasField('identity_number'),
+                            'nationality_name' => 'MainNationalities.name',
+                            'identity_type' => 'MainIdentityTypes.name',
+                            'gender' => 'Genders.name',
+                            'address_area' => 'AddressAreas.name',
+                            'birth_area' => 'BirthplaceAreas.name',
+                        ])
+                    ->leftJoin(
+                        ['Genders' => 'genders'],
+                        [
+                            'Genders.id = '. $Users->aliasField('gender_id')
+                        ]
+                    )
+                    ->leftJoin(
+                        ['MainNationalities' => 'nationalities'],
+                        [
+                            'MainNationalities.id = '. $Users->aliasField('nationality_id')
+                        ]
+                    )
+                    ->leftJoin(
+                        ['MainIdentityTypes' => 'identity_types'],
+                        [
+                            'MainIdentityTypes.id = '. $Users->aliasField('identity_type_id')
+                        ]
+                    )
+                    ->leftJoin(
+                        ['AddressAreas' => 'area_administratives'],
+                        [
+                            'AddressAreas.id = '. $Users->aliasField('address_area_id')
+                        ]
+                    )
+                    ->leftJoin(
+                        ['BirthplaceAreas' => 'area_administratives'],
+                        [
+                            'BirthplaceAreas.id = '. $Users->aliasField('birthplace_area_id')
+                        ]);
 
-        $sheetNameArr = [];
+                    if ($userType ==  'Others') {
+                        $userList
+                             ->where([$Users->aliasField('is_staff') => 0]);
+                    } 
 
-        foreach ($sheets as $sheet) {
-            $table = $sheet['table'];
-            // sheet info added to settings to avoid adding more parameters to event
-            $settings['sheet'] = $sheet;
-            $this->getFields($table, $settings);
-            $fields = $settings['sheet']['fields'];
+                    if ($userType == 'Guardian') {
+                        $userList 
+                            ->where([$Users->aliasField('is_guardian') => 1]);
+                    } 
 
-            $footer = $this->getFooter();
-            $query = $sheet['query'];
-            
-            $this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
-            $sheetName = $sheet['name'];
+                    if ($userType == 'Staff') {
+                        $StaffCustomFieldValues = TableRegistry::get('StaffCustomFieldValues');
+                        $StaffCustomFields = TableRegistry::get('StaffCustomFields');
 
-            // Check to make sure the string length does not exceed 31 characters
-            $sheetName = (strlen($sheetName) > 31) ? substr($sheetName, 0, 27).'....' : $sheetName;
+                        $userList
+                        ->select(['staff_association' => $StaffCustomFieldValues->aliasField('text_value')])
+                        ->leftJoin([$StaffCustomFieldValues->alias() => $StaffCustomFieldValues->table()], [
+                            $StaffCustomFieldValues->aliasField('staff_id = ') . $Users->aliasField('id'),
+                        ])
+                        ->leftJoin([$StaffCustomFields->alias() => $StaffCustomFields->table()], [
+                            $StaffCustomFields->aliasField('id = ') . $StaffCustomFieldValues->aliasField('staff_custom_field_id'),
+                        ])
+                        ->where([$Users->aliasField('is_staff') => 1]);
+                    }
 
-            // Check to make sure that no two sheets has the same name
-            $counter = 1;
-            $initialLength = 0;
-            while (in_array($sheetName, $sheetNameArr)) {
-                if ($counter > 1) {
-                    $sheetName = substr($sheetName, 0, $initialLength);
-                } else {
-                    $initialLength = strlen($sheetName);
-                }
-                if (strlen($sheetName) > 23) {
-                    $sheetName = substr($sheetName, 0, 23).'('.$counter++.')';
-                } else {
-                    $sheetName = $sheetName.'('.$counter++.')';
-                }
-            }
-            $sheetNameArr[] = $sheetName;
-            $baseSheetName = $sheetName;
+                    if ($userType == 'Student') {
 
-            // if the primary key of the record is given, only generate that record
-            if (array_key_exists('id', $settings)) {
-                $id = $settings['id'];
-                if ($id != 0) {
-                    $primaryKey = $table->primaryKey();
-                    $query->where([$table->aliasField($primaryKey) => $id]);
-                }
-            }
+                        $userList
+                            ->where([$Users->aliasField('is_student') => 1]);
+                        }
+                        $result = [];
+                        if (!empty($userList)) {
+                            foreach ($userList as $key => $value) {
+                               $result[$key][] = $value->openemis_no;
+                               $result[$key][] = $value->first_name;
+                               $result[$key][] = $value->middle_name;
+                               $result[$key][] = $value->third_name;
+                               $result[$key][] = $value->last_name;
+                               $result[$key][] = $value->preferred_name;
+                               $result[$key][] = $value->gender;
+                               $result[$key][] = date("d-m-Y", strtotime($value->date_of_birth));
+                               $result[$key][] = $value->address;
+                               $result[$key][] = $value->address_area;
+                               $result[$key][] = $value->birth_area;
+                               $result[$key][] = $value->nationality_name;
+                               $result[$key][] = $value->identity_type;
+                               $result[$key][] = $value->identity_number;
+                               $result[$key][] = $value->email;
+                               $result[$key][] = $value->postal_code;
+                               $result[$key][] = $userType;
+                                   if ($userType == 'Staff') {
+                                        $result[$key][] = $value->staff_association;
+                                   }
 
-            if ($this->config('auto_contain')) {
-                $this->contain($query, $fields, $table);
-            }
+                                   if ($userType == 'Student') {
+                                    $StudentCustomFieldValues = TableRegistry::get('StudentCustomFieldValues');
+                                    $StudentCustomFields = TableRegistry::get('StudentCustomFields');
 
-            // To auto include the default fields. Using select will turn off autoFields by default
-            // This is set so that the containable data will still be in the array.
-            $autoFields = $this->config('autoFields');
-
-            if (!isset($autoFields) || $autoFields == true) {
-                $query->autoFields(true);
-            }
-
-            $count = $query->count();
-            $rowCount = 0;
-            $sheetCount = 1;
-            $sheetRowCount = 0;
-            $percentCount = intval($count / 100);
-            $pages = ceil($count / $this->config('limit'));
-
-            // Debugging 
-            $pages = 1;
-
-            if (isset($sheet['orientation'])) {
-                if ($sheet['orientation'] == 'landscape') {
-                    $this->config('orientation', 'landscape');
-                } else {
-                    $this->config('orientation', 'portrait');
-                }
-            } elseif ($count == 1) {
-                $this->config('orientation', 'portrait');
-            }
-
-            $this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);
-            $this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
-            if ($this->config('orientation') == 'landscape') {
-                $headerRow = [];
-                $headerStyle = [];
-                $headerFormat = [];
-
-                // Handling of Group field for merging cells for first 2 row
-                $groupList = Hash::extract($fields, '{n}.group');
-                $hasGroupRow = (!empty($groupList));
-
-                if ($hasGroupRow) {
-                    $subjectsHeaderRow = [];
-                    $subjectsColWidth = [];
-                    $groupStartingIndex = 0;
-                    $groupName = '';
-                    $subjectHeaderstyle = ['halign' => 'center'];
-
-                    foreach ($fields as $index => $attr) {
-                        $subjectsHeaderRow[$index] = "";
-
-                        if (array_key_exists('group', $attr)) {
-                            if ($groupName !== $attr['group']) {
-                                $groupStartingIndex = $index;
-                                $groupName = $attr['group'];
+                                    $customFieldData = $StudentCustomFieldValues->find()
+                                            ->select([
+                                            $StudentCustomFields->aliasField('name'),
+                                            $StudentCustomFieldValues->aliasField('text_value')
+                                    ])
+                                    ->rightJoin([$StudentCustomFields->alias() => $StudentCustomFields->table()], [
+                                        $StudentCustomFields->aliasField('id = ') . $StudentCustomFieldValues->aliasField('student_custom_field_id'),
+                                    ])
+                                    ->where([$StudentCustomFieldValues->aliasField('student_id =') => $value->id])
+                                    ->toArray();
+                                    
+                                    foreach ($customFieldData as $customField) {
+                                        $result[$key][] = $customField->text_value;
+                                    }
+                                }
                             }
-
-                            $groupKey = $groupName . $groupStartingIndex;
-
-                            if (!array_key_exists($groupKey, $subjectsColWidth)) {
-                                $subjectsColWidth[$groupKey] = [];
-                                $subjectsColWidth[$groupKey]['start_col'] = $index;
-                                $subjectsHeaderRow[$index]  = $attr['group'];
-                            }
-
-                            $subjectsColWidth[$groupKey]['end_col'] = $index;
-
-                        } else {
-                            $groupName = '';
                         }
-                    }
-
-                    $writer->writeSheetRow($sheetName, $subjectsHeaderRow, $subjectHeaderstyle);
-
-                    foreach ($subjectsColWidth as $obj) {
-                        $writer->markMergedCell($sheetName, $start_row=0, $start_col=$obj['start_col'], $end_row=0, $end_col=$obj['end_col']);
-                    }
-                }
-                // End of handling of Group field for merging cells
-
-                foreach ($fields as $attr) {
-                    $headerRow[] = $attr['label'];
-                    $headerStyle[] = isset($attr['style']) ? $attr['style'] : [];
-                    $headerFormat[] = isset($attr['formatting']) ? $attr['formatting'] : 'GENERAL';
-                }
-
-                // Any additional custom headers that require to be appended on the right side of the sheet
-                // Header column count must be more than the additional data columns
-                if (isset($sheet['additionalHeader'])) {
-                    $headerRow = array_merge($headerRow, $sheet['additionalHeader']);
-                }
-
-                $writer->writeSheetHeader($sheetName, $headerFormat, true);
-                $writer->writeSheetRow($sheetName, $headerRow, $headerStyle);
-
-                $this->dispatchEvent($table, $this->eventKey('onExcelAfterHeader'), 'onExcelAfterHeader', [$settings], true);
-
-                // process every page based on the limit
-                for ($pageNo=0; $pageNo<$pages; $pageNo++) {
-                    $resultSet = $query
-                    ->limit($this->config('limit'))
-                    ->page($pageNo+1)
-                    ->all();
-
-                    // Data to be appended on the right of spreadsheet
-                    $additionalRows = [];
-                    if (isset($sheet['additionalData'])) {
-                        $additionalRows = $sheet['additionalData'];
-                    }
-
-                    // process each row based on the result set
-                    foreach ($resultSet as $entity) {
-                        if ($sheetRowCount >= $this->config('sheet_limit')) {
-                            $sheetCount++;
-                            $sheetName = $baseSheetName . '_' . $sheetCount;
-
-                            // rewrite header into new sheet
-                            $writer->writeSheetRow($sheetName, $headerRow, $headerStyle);
-
-                            $sheetRowCount= 0;
-                        }
-
-                        $settings['entity'] = $entity;
-
-                        $row = [];
-                        $rowStyle = [];
-                        foreach ($fields as $attr) {
-                            $rowDataWithStyle = $this->getValue($entity, $table, $attr);
-                            $row[] = $rowDataWithStyle['rowData'];
-                            $rowStyle[] = $rowDataWithStyle['style'];
-                        }
-
-                        $sheetRowCount++;
-                        $rowCount++;
-                        $event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
-                        if (!$event->result) {
-                            $writer->writeSheetRow($sheetName, $row, $rowStyle);
-                        }
-                    }
-                }
-            } else {
-                $entity = $query->first();
-                foreach ($fields as $attr) {
-                    $row = [$attr['label']];
-                    $rowStyle = [[]];
-                    $rowDataWithStyle = $this->getValue($entity, $table, $attr);
-                    $row[] = $rowDataWithStyle['rowData'];
-                    $rowStyle[] = $rowDataWithStyle['style'];
-                    $writer->writeSheetRow($sheetName, $row, $rowStyle);
-                }
-
-                // Any additional custom headers that require to be appended on the left column of the sheet
-                $additionalHeader = [];
-                if (isset($sheet['additionalHeader'])) {
-                    $additionalHeader = $sheet['additionalHeader'];
-                }
-                // Data to be appended on the right column of spreadsheet
-                $additionalRows = [];
-                if (isset($sheet['additionalData'])) {
-                    $additionalRows = $sheet['additionalData'];
-                }
-
-                for ($i = 0; $i < count($additionalHeader); $i++) {
-                    $row = [$additionalHeader[$i]];
-                    $row[] = $additionalRows[$i];
-                    $rowStyle = [[], []];
-                    $writer->writeSheetRow($sheetName, $row, $rowStyle);
-                }
-                $rowCount++;
+                       //echo '<pre>';print_r($result);die('aaaa');
+                    return $result;
             }
-            $writer->writeSheetRow($sheetName, ['']);
-            $writer->writeSheetRow($sheetName, $footer);
-            $this->dispatchEvent($table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount], true);
-        }
-    }
 
-    private function getFields($table, $settings)
+    private function getFields($table, $settings, $label)
     {
-        $schema = $table->schema();
-        $columns = $schema->columns();
-        $excludes = $this->config('excludes');
-
-        if (!is_array($table->primaryKey())) { //if not composite key
-            $excludes[] = $table->primaryKey();
-        }
-
-        $fields = new ArrayObject();
-        $module = $table->alias();
         $language = I18n::locale();
-        $excludedTypes = ['binary'];
-        $columns = array_diff($columns, $excludes);
+        $module = $this->_table->alias();
 
-        foreach ($columns as $col) {
-            $field = $schema->column($col);
-            if (!in_array($field['type'], $excludedTypes)) {
-                $label = $table->aliasField($col);
-
-                $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $col, $language], true);
-                if (strlen($event->result)) {
-                    $label = $event->result;
-                }
-
-                $fields[] = [
-                    'key' => $table->aliasField($col),
-                    'field' => $col,
-                    'type' => $field['type'],
-                    'label' => $label,
-                    'style' => [],
-                    'formatting' => 'GENERAL'
-                ];
-            }
-        }
-        // Event to add or modify the fields to fetch from the table
-        $event = $this->dispatchEvent($table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields], true);
-
-        $newFields = [];
-        foreach ($fields->getArrayCopy() as $field) {
-            if (empty($field['label'])) {
-                $key = explode('.', $field['key']);
-                $module = $key[0];
-                $column = $key[1];
-                // Redispatch get label
-                $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $column, $language], true);
-                if (strlen($event->result)) {
-                    $field['label'] = $event->result;
-                }
-            }
-            $newFields[] = $field;
-        }
-
-        // Replace the ArrayObject with the new fields
-        $fields->exchangeArray($newFields);
-
-        // Add the fields into the sheet
-        $settings['sheet']['fields'] = $fields;
+        $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
+        return $event->result;
     }
 
     private function getFooter()
@@ -551,6 +450,16 @@ class ExcelBehavior extends Behavior
             $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
         }
         return $key;
+    }
+
+    public function generate($settings = [])
+    {
+        $language = I18n::locale();
+        $module = $this->_table->alias();
+        //echo '<pre>';print_r($module);
+        
+        $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'postal_code', $language], true);
+        return $event;
     }
 
     private function contain(Query $query, $fields, $table)
