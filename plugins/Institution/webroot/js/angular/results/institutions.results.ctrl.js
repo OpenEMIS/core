@@ -349,7 +349,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
     };
 
     $scope.onEditClick = function() {
-        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
+        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.education_subject_id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
         .then(function(hasPermission) {
             if(hasPermission) {
                 $scope.action = 'edit';
