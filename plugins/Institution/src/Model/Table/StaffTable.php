@@ -1527,7 +1527,6 @@ class StaffTable extends ControllerActionTable
 	public function getNumberOfStaffByAttendanceType($params = [])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
-        //echo '<pre>';print_r($conditions['institution_id']);die;
 		$_conditions = [];
         foreach ($conditions as $key => $value) {
             $_conditions[$this->alias().'.'.$key] = $value;
@@ -1591,7 +1590,7 @@ class StaffTable extends ControllerActionTable
             ])
 			->toArray()
             ;
-		//echo '<pre>';print_r($staffAttendances);die;
+
         $attendanceData = [];
 
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
@@ -1613,7 +1612,6 @@ class StaffTable extends ControllerActionTable
 			$dataSet['Late']['data'][$currentYear] = $total_late;
 		}
 		
-		//echo '<pre>';print_r($dataSet);die;
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => __('For Today'));
         $params['options']['xAxis']['categories'] = array_values($attendanceData);
