@@ -87,12 +87,21 @@ class InstitutionInfrastructuresTable extends AppTable
             'type' => 'string',
             'label' => __('Institution Shift')
         ];
+<<<<<<< HEAD
         // $newFields[] = [
         //     'key' => 'InstitutionStatuses.name',
         //     'field' => 'intitution_status_name',
         //     'type' => 'string',
         //     'label' => __('Institution Status')
         // ];
+=======
+        $newFields[] = [
+            'key' => 'InstitutionStatuses.name',
+            'field' => 'intitution_status_name',
+            'type' => 'string',
+            'label' => __('Institution Status')
+        ];
+>>>>>>> 07dd990824d12de7211df98880c83117052e63fa
 
         /**end here */
         $newFields[] = [
@@ -196,7 +205,11 @@ class InstitutionInfrastructuresTable extends AppTable
                     'land_infrastructure_status'=>$infrastructureStatus->aliasField('name'),
                     //POCOR-5698 two new columns added here
                     'shift_name' => 'ShiftOptions.name',
+<<<<<<< HEAD
                     //'intitution_status_name'=> 'InstitutionStatuses.name',
+=======
+                    'intitution_status_name'=> 'InstitutionStatuses.name',
+>>>>>>> 07dd990824d12de7211df98880c83117052e63fa
                     //POCOR-5698 ends here
                     'land_infrastructure_ownership'=>$infrastructureOwnerships->aliasField('name'),
                     'land_infrastructure_accessibility' => 'Institution'.$level.'.'.'accessibility',
@@ -216,12 +229,20 @@ class InstitutionInfrastructuresTable extends AppTable
                     ])
                     //POCOR-5698 two new columns added here
                     //status
+<<<<<<< HEAD
                     /*->LeftJoin(['Institution' => 'insitutions'], [
+=======
+                    ->LeftJoin(['Institution' => 'insitutions'], [
+>>>>>>> 07dd990824d12de7211df98880c83117052e63fa
                         'Institution'.$level.'.'.'institution_id = Institution.id',
                     ])
                     ->LeftJoin(['InstitutionStatus' => 'institution_statuses'], [
                         'InstitutionStatus.id = Institution.institution_status_id',
+<<<<<<< HEAD
                     ])*/
+=======
+                    ])
+>>>>>>> 07dd990824d12de7211df98880c83117052e63fa
                     //shift
                     ->LeftJoin(['InstitutionShifts' => 'institution_shifts'],[
                         'Institution'.$level.'.'.'institution_id = InstitutionShifts.institution_id',

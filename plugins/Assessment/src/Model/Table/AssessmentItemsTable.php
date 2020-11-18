@@ -205,7 +205,7 @@ class AssessmentItemsTable extends AppTable
         $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
         
                 $query
-                    ->contain('EducationSubjects.InstitutionSubjects')
+                    ->contain('EducationSubjects')
                     ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
                         $ClassSubjects->aliasField('institution_class_id') => $classId
                     ])

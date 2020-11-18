@@ -73,6 +73,7 @@ class StaffController extends AppController
             'Accounts'          => ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
             'Nationalities'     => ['className' => 'User.Nationalities'],
             'Positions'             => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
+            'Duties'                => ['className' => 'Staff.Duties', 'actions' => ['index', 'view']],
             'Sections'          => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
             'Classes'           => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
             'Qualifications'    => ['className' => 'Staff.Qualifications'],
@@ -106,6 +107,10 @@ class StaffController extends AppController
     public function Positions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']);
+    }
+    public function Duties()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Duties']);
     }
     public function Classes()
     {
