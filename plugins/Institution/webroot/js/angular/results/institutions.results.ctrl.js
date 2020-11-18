@@ -300,7 +300,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
 
         UtilsSvc.isAppendSpinner(true, 'institution-result-table');
         // getPeriods
-        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
+        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.education_subject_id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
         .then(function(hasPermission) {
             $scope.editPermissionForSelectedSubject = hasPermission;
             return InstitutionsResultsSvc.getPeriods($scope.assessment_id, $scope.selectedAcademicTerm)
