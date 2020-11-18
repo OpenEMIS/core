@@ -208,7 +208,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return deferred.promise;
         },
 
-        getDataSubjects: function(roles, assessmentId, classId)
+        getDataSubjects: function(roles, assessmentId, classId,academic_period_id,institution_id)
         {
             var deferred = $q.defer();
             var isSuperAdmin = 0;
@@ -255,7 +255,9 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     .select()
                     .find('subjectNewTab', {
                         class_id: classId,
-                        assessment_id: assessmentId
+                        assessment_id: assessmentId,
+                        academic_period_id: academic_period_id,
+                        institution_id: institution_id
                     });
 
                 // For no subjects
