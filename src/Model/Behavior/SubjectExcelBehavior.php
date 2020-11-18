@@ -12,6 +12,7 @@ use ControllerAction\Model\Traits\EventTrait;
 use Cake\I18n\I18n;
 use Cake\Utility\Hash;
 use XLSXWriter;
+use Cake\ORM\TableRegistry;
 
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
@@ -22,7 +23,7 @@ use XLSXWriter;
 // public function onExcelEndSheet(Event $event, ArrayObject $settings, $totalProcessed) {}
 // public function onExcelGetLabel(Event $event, $column) {}
 
-class ExcelBehavior extends Behavior
+class SubjectExcelBehavior extends Behavior
 {
     use EventTrait;
 
@@ -178,8 +179,128 @@ class ExcelBehavior extends Behavior
             $fields = $settings['sheet']['fields'];
 
             $footer = $this->getFooter();
-            $query = $sheet['query'];
-            
+            $Query = $sheet['query'];
+			
+			$EducationGrades = TableRegistry::get('Education.EducationGrades');
+			$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+			$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+			$InstitutionStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+			$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+			$InstitutionSubjectsRooms = TableRegistry::get('Institution.InstitutionSubjectsRooms');
+		
+			$query = $Query
+				->select([
+					'academic_period_id' => 'InstitutionSubjects.academic_period_id',
+					'education_grade' => 'EducationGrades.name',
+					'institution_code' => 'Institutions.code',
+					'institution_name' => 'Institutions.name',
+					'Class_Name' => $InstitutionClasses->alias().'.name',
+					'subject_name' => 'InstitutionSubjects.name',
+					'subject_code' => 'EducationSubjects.code',
+					'openEMIS_ID' => 'SubjectStudents.openemis_no',
+					'student_name' => $Query->func()->concat([
+						'SubjectStudents.first_name' => 'literal',
+						" ",
+						'SubjectStudents.last_name' => 'literal'
+					]),
+					'teachers' => $Query->func()->group_concat([
+						'SubjectTeachers.openemis_no' => 'literal',
+						" - ",
+						'SubjectTeachers.first_name' => 'literal',
+						" ",
+						'SubjectTeachers.last_name' => 'literal'
+					]),
+					'rooms' => $Query->func()->group_concat([
+						'SubjectRooms.code' => 'literal',
+						" - ",
+						'SubjectRooms.name' => 'literal'
+					]),
+					'gender' => 'Genders.name',
+					'student_status' => 'StudentStatuses.name',
+				])
+				->contain([
+					'AcademicPeriods' => [
+						'fields' => [
+							'AcademicPeriods.name'
+						]
+					],
+					'Institutions.Types',
+				])
+				->leftJoin(['EducationSubjects' => 'education_subjects'], [
+					'EducationSubjects.id =' . $InstitutionSubjects->aliasField('education_subject_id')
+				])
+				->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+					$InstitutionSubjects->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
+				])
+				->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+					$InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
+				])
+				->leftJoin(
+				['EducationGrades' => 'education_grades'],
+				[
+					$InstitutionSubjects->aliasField('education_grade_id ='). $EducationGrades->aliasField('id')
+				]
+				) 
+				->leftJoin(
+				['InstitutionSubjectStudents' => 'institution_subject_students'],
+				[
+					'InstitutionSubjectStudents.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
+				]
+				) 
+				->leftJoin(
+				['StudentStatuses' => 'student_statuses'],
+				[
+					'StudentStatuses.id = InstitutionSubjectStudents.student_status_id'
+				]
+				)
+				->leftJoin(
+				['SubjectStudents' => 'security_users'],
+				[
+					'SubjectStudents.id = '. $InstitutionStudents->aliasField('student_id')
+				]
+				)
+				->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()], [
+					$InstitutionSubjects->aliasField('id =') . $InstitutionSubjectStaff->aliasField('institution_subject_id')
+				])
+				->leftJoin(['SubjectTeachers' => 'security_users'], [
+					'SubjectTeachers.id = '. $InstitutionSubjectStaff->aliasField('staff_id')
+				])
+				->leftJoin([$InstitutionSubjectsRooms->alias() => $InstitutionSubjectsRooms->table()], [
+					$InstitutionSubjects->aliasField('id =') . $InstitutionSubjectsRooms->aliasField('institution_subject_id')
+				])
+				->leftJoin(['SubjectRooms' => 'institution_rooms'], [
+					'SubjectRooms.id = '. $InstitutionSubjectsRooms->aliasField('institution_room_id')
+				])
+				->leftJoin(
+				['Genders' => 'genders'],
+				[
+					'SubjectStudents.gender_id = Genders.id'
+				]
+				)
+				->group([
+					'SubjectStudents.id'
+				])
+				->order([
+					'AcademicPeriods.order',
+					'Institutions.code',
+					'InstitutionSubjects.id'
+				]);
+				$Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+					return $results->map(function ($row) {
+						$teachers = explode(',',$row['teachers']);
+						$teachers = array_unique($teachers);
+						$teachers = implode(', ',$teachers);
+						$row['teachers'] = $teachers;
+						
+						$rooms = explode(',',$row['rooms']);
+						$rooms = array_unique($rooms);
+						$rooms = implode(', ',$rooms);
+						$row['rooms'] = $rooms;
+						return $row;
+					});
+				});
+				
             $this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
             $sheetName = $sheet['name'];
 
@@ -394,7 +515,13 @@ class ExcelBehavior extends Behavior
     private function getFields($table, $settings)
     {
         $schema = $table->schema();
-        $columns = $schema->columns();
+        //$columns = $schema->columns();
+		$columns = ['institution_code','institution_name','academic_period_id',
+					'Class_Name','education_grade','subject_name','subject_code',
+					'teachers','rooms','openEMIS_ID','student_name',
+					'gender','student_status'
+					];
+
         $excludes = $this->config('excludes');
 
         if (!is_array($table->primaryKey())) { //if not composite key
@@ -418,15 +545,16 @@ class ExcelBehavior extends Behavior
                 }
 
                 $fields[] = [
-                    'key' => $table->aliasField($col),
+                    'key' => '',
                     'field' => $col,
-                    'type' => $field['type'],
+                    'type' => 'string',
                     'label' => $label,
                     'style' => [],
                     'formatting' => 'GENERAL'
                 ];
             }
         }
+
         // Event to add or modify the fields to fetch from the table
         $event = $this->dispatchEvent($table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields], true);
 

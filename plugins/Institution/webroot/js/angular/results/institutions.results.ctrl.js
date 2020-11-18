@@ -289,18 +289,18 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
         if (typeof subject !== "undefined") {
             $scope.subject = subject;
         }
-        //console.log($scope.subject[0]['education_subject_id']);
+        
         $scope.education_subject_id = $scope.subject.id;
         if ($scope.gridOptions != null) {
             // update value in context
-            $scope.gridOptions.context.education_subject_id = $scope.subject.id;
+            $scope.gridOptions.context.education_subject_id = $scope.subject.education_subject_id;
             // Always reset
             $scope.gridOptions.api.setRowData([]);
         }
 
         UtilsSvc.isAppendSpinner(true, 'institution-result-table');
         // getPeriods
-        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
+        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.education_subject_id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
         .then(function(hasPermission) {
             $scope.editPermissionForSelectedSubject = hasPermission;
             return InstitutionsResultsSvc.getPeriods($scope.assessment_id, $scope.selectedAcademicTerm)
@@ -349,7 +349,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
     };
 
     $scope.onEditClick = function() {
-        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
+        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.education_subject_id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
         .then(function(hasPermission) {
             if(hasPermission) {
                 $scope.action = 'edit';
