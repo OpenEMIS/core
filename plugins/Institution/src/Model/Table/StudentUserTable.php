@@ -295,15 +295,15 @@ class StudentUserTable extends ControllerActionTable
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
-                $user_id_data = $users_ids->find()
+                $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
                 ->where([                
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
                 ->first();
-                if($user_id_data != null){
-                    array_push($nationality_based_ids, $user_id_data);
+                if($user_id_data_nat != null){
+                    array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
             
@@ -370,15 +370,15 @@ class StudentUserTable extends ControllerActionTable
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
-                $user_id_data = $users_ids->find()
+                $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
                 ->where([                
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
                 ->first();
-                if($user_id_data != null){
-                    array_push($nationality_based_ids, $user_id_data);
+                if($user_id_data_nat != null){
+                    array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
             // echo '<pre>'; print_r($nationality_based_ids); die;
