@@ -1723,23 +1723,21 @@ class StudentsTable extends ControllerActionTable
 				'student_attendance_marked_records.academic_period_id' => $currentYearId,
 				'student_attendance_marked_records.institution_id' => $conditions['institution_id'],
 				'educationGrades.id IS NOT NULL',
-            ])
+            ]) 
             ->group([
-                //'educationGrades.id'
+                'educationGrades.id'
             ])
 			->toArray()
             ;
 		
         $attendanceData = [];
-		
-		//echo '<pre>';print_r($StudentAttendances);die;
+	
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
         $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
         $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
 
         foreach ($StudentAttendances as $key => $attendance) {
-			//echo '<pre>';print_r($attendance);die;
-
+			
             $attendanceData[$attendance->education_grade_id] = $attendance->education_grade;
 			
 			foreach ($dataSet as $dkey => $dvalue) {
@@ -1752,7 +1750,7 @@ class StudentsTable extends ControllerActionTable
             $dataSet['Absent']['data'][$attendance->education_grade_id] = $attendance->absent;
             $dataSet['Late']['data'][$attendance->education_grade_id] = $attendance->late;
         }
-		//echo '<pre>';print_r($dataSet);die;
+
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => __('For Today'));
         $params['options']['xAxis']['categories'] = array_values($attendanceData);
