@@ -31,8 +31,9 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
             $scope.assessment = assessment;
             $scope.academic_period_id = assessment.academic_period_id;
             $scope.education_grade_id = assessment.education_grade_id;
+            
             //promises[0] = InstitutionsResultsSvc.getSubjects($scope.roles, $scope.assessment_id, $scope.class_id);
-            promises[0] = InstitutionsResultsSvc.getDataSubjects($scope.roles, $scope.assessment_id, $scope.class_id);
+            promises[0] = InstitutionsResultsSvc.getDataSubjects($scope.roles, $scope.assessment_id, $scope.class_id,$scope.academic_period_id,$scope.institution_id);
             promises[1] = InstitutionsResultsSvc.getAssessmentTerms($scope.assessment_id);
             
             return $q.all(promises);
