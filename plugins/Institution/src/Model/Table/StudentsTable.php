@@ -1674,9 +1674,9 @@ class StudentsTable extends ControllerActionTable
             ->select([
 				'education_grade' => 'educationGrades.name',
 				'education_grade_id' => 'educationGrades.id',
-				'present' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id IS NULL OR InstitutionStudentAbsentDays.absence_type_id = 3,1,0)))',
-				'absent' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id IN (1,2),1,0)))',
-				'late' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id = 3, 1,0)))',
+				'present' => '(SUM(IF(InstitutionStudentAbsences.absence_type_id IS NULL OR InstitutionStudentAbsences.absence_type_id = 3,1,0)))',
+				'absent' => '(SUM(IF(InstitutionStudentAbsences.absence_type_id IN (1,2),1,0)))',
+				'late' => '(SUM(IF(InstitutionStudentAbsences.absence_type_id = 3, 1,0)))',
             ])
 			->innerJoin(
 			['InstitutionClasses' => 'institution_classes'],
@@ -1705,17 +1705,17 @@ class StudentsTable extends ControllerActionTable
 			]
 			)
 			->leftJoin(
-			['InstitutionStudentAbsentDays' => 'institution_student_absence_days'],
+			['InstitutionStudentAbsences' => 'institution_student_absences'],
 			[
-				'InstitutionStudentAbsentDays.student_id = InstitutionClassesStudents.student_id ',
-				'InstitutionStudentAbsentDays.institution_id = student_attendance_marked_records.institution_id ',
-				'student_attendance_marked_records.date BETWEEN InstitutionStudentAbsentDays.start_date AND InstitutionStudentAbsentDays.end_date'
+				'InstitutionStudentAbsences.student_id = InstitutionClassesStudents.student_id ',
+				'InstitutionStudentAbsences.institution_id = student_attendance_marked_records.institution_id ',
+				'student_attendance_marked_records.date = InstitutionStudentAbsences.date'
 			]
 			)
 			->leftJoin(
 			['absenceTypes' => 'absence_types'],
 			[
-				'absenceTypes.id = InstitutionStudentAbsentDays.absence_type_id '
+				'absenceTypes.id = InstitutionStudentAbsences.absence_type_id '
 			]
 			)
             ->where([
