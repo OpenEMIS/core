@@ -1675,7 +1675,7 @@ class StudentsTable extends ControllerActionTable
 				'education_grade' => 'educationGrades.name',
 				'education_grade_id' => 'educationGrades.id',
 				'present' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id IS NULL OR InstitutionStudentAbsentDays.absence_type_id = 3,1,0)))',
-				'absent' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id IN (1,2),1,0)))',
+				'absent' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id = 2,1,0)))',
 				'late' => '(SUM(IF(InstitutionStudentAbsentDays.absence_type_id = 3, 1,0)))',
             ])
 			->innerJoin(
@@ -1729,7 +1729,7 @@ class StudentsTable extends ControllerActionTable
             ])
 			->toArray()
             ;
-		
+
         $attendanceData = [];
 	
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
