@@ -57,13 +57,6 @@ class StudentsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('HighChart', [
-            'student_attendance' => [
-                '_function' => 'getNumberOfStudentsByAttendanceType',
-                '_defaultColors' => false,
-                'chart' => ['type' => 'column', 'borderWidth' => 1],
-                'xAxis' => ['title' => ['text' => __('Education')]],
-                'yAxis' => ['title' => ['text' => __('Total')]]
-            ],
             'number_of_students_by_year' => [
                 '_function' => 'getNumberOfStudentsByYear',
                 '_defaultColors' => false,
@@ -76,13 +69,6 @@ class StudentsTable extends ControllerActionTable
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Education')]],
-                'yAxis' => ['title' => ['text' => __('Total')]]
-            ],
-            'students_attendance_daily' => [
-                '_function' => 'getDailyStudentsandStaffAttendance',
-                '_defaultColors' => false,
-                'chart' => ['type' => 'column', 'borderWidth' => 1],
-                'xAxis' => ['title' => ['text' => __('Attendance')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'institution_student_gender' => [
@@ -1641,185 +1627,10 @@ class StudentsTable extends ControllerActionTable
             $dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
             $dataSet['Total']['data'][$gradeId] += $gradeTotal;
         }
-		//echo '<pre>';print_r($grades);die;
+
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
         $params['options']['xAxis']['categories'] = array_values($grades);
-        $params['dataSet'] = $dataSet;
-
-        return $params;
-    }
-	
-	// For Dashboard (Home Page and Institution Dashboard page)
-    public function getNumberOfStudentsByAttendanceType($params = [])
-    {
-        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
-        $_conditions = [];
-        foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias().'.'.$key] = $value;
-        }
-
-        $AcademicPeriod = $this->AcademicPeriods;
-        $currentYearId = $AcademicPeriod->getCurrent();
-
-        if (!empty($currentYearId)) {
-            $currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
-        } else {
-            $currentYear = __('Not Defined');
-        }
-		
-		$studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
-
-        $StudentAttendances = $studentAttendanceMarkedRecords->find('all')
-            ->select([
-				'education_grade' => 'educationGrades.name',
-				'education_grade_id' => 'educationGrades.id',
-				'present' => '(SUM(IF(InstitutionStudentAbsences.absence_type_id IS NULL OR InstitutionStudentAbsences.absence_type_id = 3,1,0)))',
-				'absent' => '(SUM(IF(InstitutionStudentAbsences.absence_type_id IN (1,2),1,0)))',
-				'late' => '(SUM(IF(InstitutionStudentAbsences.absence_type_id = 3, 1,0)))',
-            ])
-			->innerJoin(
-			['InstitutionClasses' => 'institution_classes'],
-			[
-				'InstitutionClasses.id = student_attendance_marked_records.institution_class_id '
-			]
-			)
-			->innerJoin(
-			['InstitutionClassesStudents' => 'institution_class_students'],
-			[
-				'InstitutionClassesStudents.institution_class_id = InstitutionClasses.id '
-			]
-			)
-			->innerJoin(
-			['InstitutionStudents' => 'institution_students'],
-			[
-				'InstitutionStudents.student_id = InstitutionClassesStudents.student_id ',
-				'InstitutionStudents.academic_period_id = InstitutionClassesStudents.academic_period_id ',
-				'InstitutionClassesStudents.student_status_id = 1'
-			]
-			)
-			->innerJoin(
-			['educationGrades' => 'education_grades'],
-			[
-				'educationGrades.id = InstitutionStudents.education_grade_id '
-			]
-			)
-			->leftJoin(
-			['InstitutionStudentAbsences' => 'institution_student_absences'],
-			[
-				'InstitutionStudentAbsences.student_id = InstitutionClassesStudents.student_id ',
-				'InstitutionStudentAbsences.institution_id = student_attendance_marked_records.institution_id ',
-				'student_attendance_marked_records.date = InstitutionStudentAbsences.date'
-			]
-			)
-			->leftJoin(
-			['absenceTypes' => 'absence_types'],
-			[
-				'absenceTypes.id = InstitutionStudentAbsences.absence_type_id '
-			]
-			)
-            ->where([
-                'student_attendance_marked_records.date' => date('Y-m-d'),
-				'student_attendance_marked_records.academic_period_id' => $currentYearId,
-				'student_attendance_marked_records.institution_id' => $conditions['institution_id'],
-				'educationGrades.id IS NOT NULL',
-            ]) 
-            ->group([
-                'educationGrades.id'
-            ])
-			->toArray()
-            ;
-		
-        $attendanceData = [];
-	
-        $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
-        $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
-        $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
-
-        foreach ($StudentAttendances as $key => $attendance) {
-			
-            $attendanceData[$attendance->education_grade_id] = $attendance->education_grade;
-			
-			foreach ($dataSet as $dkey => $dvalue) {
-                if (!array_key_exists($attendance->education_grade_id, $dataSet[$dkey]['data'])) {
-                    $dataSet[$dkey]['data'][$attendance->education_grade_id] = 0;
-                }
-            }
-			
-            $dataSet['Present']['data'][$attendance->education_grade_id] = $attendance->present;
-            $dataSet['Absent']['data'][$attendance->education_grade_id] = $attendance->absent;
-            $dataSet['Late']['data'][$attendance->education_grade_id] = $attendance->late;
-        }
-
-        // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
-        $params['options']['subtitle'] = array('text' => __('For Today'));
-        $params['options']['xAxis']['categories'] = array_values($attendanceData);
-        $params['dataSet'] = $dataSet;
-        return $params;
-    }
-
-    public function getDailyStudentsandStaffAttendance($params = [])
-    {
-        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
-        $_conditions = [];
-        foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias().'.'.$key] = $value;
-        }
-
-        $AcademicPeriod = $this->AcademicPeriods;
-       
-        $currentYearId = $AcademicPeriod->getCurrent();
-       // echo '<pre>';  print_r($currentYearId); die;
-        if (!empty($currentYearId)) {
-            $currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
-           
-        } else {
-            $currentYear = __('Not Defined');               
-        }
-
-        // $studentsByGradeConditions = [
-        //     $this->aliasField('academic_period_id') => $currentYearId,
-        //     $this->aliasField('education_grade_id').' IS NOT NULL',
-        //     'Genders.name IS NOT NULL'
-        // ];
-        // $studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
-        // $query = $this->find();
-        //echo '<pre>';  print_r($query); die;
-        $staffAttendance = TableRegistry::get('institution_staff_attendances');
-        // echo '<pre>';  print_r($staffAttendance); die;
-        $staffAttendanceDaily = $staffAttendance->find()
-            ->select([
-                 'institution_id' =>$staffAttendance->aliasField('institution_id'),
-                 'total' => count($staffAttendance->aliasField('institution_id'))
-            ])
-            ->where(['institution_id'=>$conditions['institution_id']])
-            ->toArray()
-            ;
-        //echo '<pre>'; print_r($staffAttendanceDaily); die; 
-
-        $grades = [];
-        $dataSet = array();
-        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
-
-        foreach ($staffAttendanceDaily as $key => $staffAttendances) {
-            $institutionId = $staffAttendances->institution_id;
-            $attendanceTotal = $staffAttendances->total;
-
-           // $grades[$gradeId] = $gradeName;
-
-
-            foreach ($dataSet as $dkey => $dvalue) {
-                if (!array_key_exists($institutionId, $dataSet[$dkey]['data'])) {
-                    $dataSet[$dkey]['data'][$institutionId] = 0;
-                }
-            }
-           // $dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
-            $dataSet['Total']['data'][$institutionId] += $attendanceTotal;
-        }
-
-        // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
-        $params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
-       // $params['options']['xAxis']['categories'] = array_values($grades);
         $params['dataSet'] = $dataSet;
 
         return $params;
