@@ -11,7 +11,7 @@ use App\Model\Table\AppTable;
 
 class ExpenditureTable extends AppTable  {
 	public function initialize(array $config) {
-		$this->table('institution_incomes');
+		$this->table('institution_expenditures');
 		parent::initialize($config);
 
 		$this->addBehavior('Excel', [
@@ -48,17 +48,17 @@ class ExpenditureTable extends AppTable  {
                 'academic_period' => 'AcademicPeriods.name',
                 $this->aliasField('date'),
                 $this->aliasField('amount'),
-                'source' => 'IncomeSources.name',
-                'income_type' => 'IncomeTypes.name',
+                'budget' => 'BudgetTypes.name',
+                'expenditure_type' => 'ExpenditureTypes.name',
             ])
             ->innerJoin(['Institutions' => 'institutions'], [
                 'Institutions.id =' . $this->aliasField('institution_id')
             ])
-            ->innerJoin(['IncomeTypes' => 'income_types'], [
-                'IncomeTypes.id =' . $this->aliasField('income_type_id')
+            ->innerJoin(['ExpenditureTypes' => 'expenditure_types'], [
+                'ExpenditureTypes.id =' . $this->aliasField('expenditure_type_id')
             ])
-            ->innerJoin(['IncomeSources' => 'income_sources'], [
-                'IncomeSources.id =' . $this->aliasField('income_source_id')
+            ->innerJoin(['BudgetTypes' => 'budget_types'], [
+                'BudgetTypes.id =' . $this->aliasField('budget_type_id')
             ])
 			->innerJoin(['AcademicPeriods' => 'academic_periods'], [
                 'AcademicPeriods.id =' . $this->aliasField('academic_period_id')
@@ -93,28 +93,28 @@ class ExpenditureTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionIncomes.date',
+            'key' => 'InstitutionExpenditure.date',
             'field' => 'date',
             'type' => 'date',
             'label' => __('Date')
         ];
 		
         $newFields[] = [
-            'key' => 'IncomeSources.name',
-            'field' => 'source',
+            'key' => 'BudgetTypes.name',
+            'field' => 'budget',
             'type' => 'string',
-            'label' => __('Source')
+            'label' => __('Budget')
         ];
 		
         $newFields[] = [
-            'key' => 'IncomeTypes.name',
-            'field' => 'income_type',
+            'key' => 'ExpenditureTypes.name',
+            'field' => 'expenditure_type',
             'type' => 'string',
             'label' => __('Type')
         ];
 		
         $newFields[] = [
-            'key' => 'InstitutionIncomes.amount',
+            'key' => 'InstitutionExpenditure.amount',
             'field' => 'amount',
             'type' => 'string',
             'label' => __('Amount')
