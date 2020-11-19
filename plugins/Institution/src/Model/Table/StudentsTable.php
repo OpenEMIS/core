@@ -1674,9 +1674,9 @@ class StudentsTable extends ControllerActionTable
             ->select([
 				'education_grade' => 'educationGrades.name',
 				'education_grade_id' => 'educationGrades.id',
-				'present' => '(SUM(IF(InstitutionStudentAbsences.absence_type_id IS NULL OR InstitutionStudentAbsences.absence_type_id = 3,1,0)))',
-				'absent' => '(SUM(IF(InstitutionStudentAbsences.absence_type_id IN (1,2),1,0)))',
-				'late' => '(SUM(IF(InstitutionStudentAbsences.absence_type_id = 3, 1,0)))',
+				'present' => '(SUM(IF(InstitutionStudentAbsenceDetails.absence_type_id IS NULL OR InstitutionStudentAbsenceDetails.absence_type_id = 3,1,0)))',
+				'absent' => '(SUM(IF(InstitutionStudentAbsenceDetails.absence_type_id IN (1,2),1,0)))',
+				'late' => '(SUM(IF(InstitutionStudentAbsenceDetails.absence_type_id = 3, 1,0)))',
             ])
 			->innerJoin(
 			['InstitutionClasses' => 'institution_classes'],
@@ -1705,17 +1705,17 @@ class StudentsTable extends ControllerActionTable
 			]
 			)
 			->leftJoin(
-			['InstitutionStudentAbsences' => 'institution_student_absences'],
+			['InstitutionStudentAbsenceDetails' => 'institution_student_absence_details'],
 			[
-				'InstitutionStudentAbsences.student_id = InstitutionClassesStudents.student_id ',
-				'InstitutionStudentAbsences.institution_id = student_attendance_marked_records.institution_id ',
-				'student_attendance_marked_records.date = InstitutionStudentAbsences.date'
+				'InstitutionStudentAbsenceDetails.student_id = InstitutionClassesStudents.student_id ',
+				'InstitutionStudentAbsenceDetails.institution_id = student_attendance_marked_records.institution_id ',
+				'student_attendance_marked_records.date = InstitutionStudentAbsenceDetails.date'
 			]
 			)
 			->leftJoin(
 			['absenceTypes' => 'absence_types'],
 			[
-				'absenceTypes.id = InstitutionStudentAbsences.absence_type_id '
+				'absenceTypes.id = InstitutionStudentAbsenceDetails.absence_type_id '
 			]
 			)
             ->where([
@@ -1729,7 +1729,7 @@ class StudentsTable extends ControllerActionTable
             ])
 			->toArray()
             ;
-		
+
         $attendanceData = [];
 	
         $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
