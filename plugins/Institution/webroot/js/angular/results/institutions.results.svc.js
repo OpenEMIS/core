@@ -208,7 +208,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return deferred.promise;
         },
 
-        getDataSubjects: function(roles, assessmentId, classId)
+        getDataSubjects: function(roles, assessmentId, classId,academic_period_id,institution_id)
         {
             var deferred = $q.defer();
             var isSuperAdmin = 0;
@@ -255,7 +255,9 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     .select()
                     .find('subjectNewTab', {
                         class_id: classId,
-                        assessment_id: assessmentId
+                        assessment_id: assessmentId,
+                        academic_period_id: academic_period_id,
+                        institution_id: institution_id
                     });
 
                 // For no subjects
@@ -308,7 +310,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
      
                             } else {
                                 assessmentSubjects = assessmentSubjects
-                                    .find('copyStaffSubjects', {class_id: classId, staff_id: securityUserId})
+                                    .find('StaffSubjects', {class_id: classId, staff_id: securityUserId})
                                     .ajax({success: success, defer: true});
                                   
                             }
@@ -1195,7 +1197,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                 }
                             } else if (isGradesType) {
                                 console.log("2");
-                                if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null) {
+                                if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null && subjectStudent.AssessmentItemResults.marks == null) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
                                 }
                             } else if (isDurationType) {

@@ -179,7 +179,7 @@ class ExcelBehavior extends Behavior
 
             $footer = $this->getFooter();
             $query = $sheet['query'];
-
+            
             $this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
             $sheetName = $sheet['name'];
 
