@@ -5,39 +5,6 @@ angular
 InstitutionStudentArchiveSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc', 'UtilsSvc'];
 
 function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
-    const attendanceType = {
-        'NOTMARKED': {
-            code: 'NOTMARKED',
-            icon: 'fa fa-minus',
-            color: '#999999'
-        },
-        'PRESENT': {
-            code: 'PRESENT',
-            icon: 'fa fa-check',
-            color: '#77B576'
-        },
-        'LATE': {
-            code: 'LATE',
-            icon: 'fa fa-check-circle-o',
-            color: '#999'
-        },
-        'UNEXCUSED': {
-            code: 'UNEXCUSED',
-            icon: 'fa fa-circle-o',
-            color: '#CC5C5C'
-        },
-        'EXCUSED': {
-            code: 'EXCUSED',
-            icon: 'fa fa-circle-o',
-            color: '#CC5C5C'
-        },
-    };
-
-    const icons = {
-        'REASON': 'kd kd-reason',
-        'COMMENT': 'kd kd-comment',
-        'PRESENT': 'fa fa-minus',
-    };
 
     const ALL_DAY_VALUE = -1;
 
@@ -59,28 +26,14 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
     var controllerScope;
 
     var models = {
-        AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
-        StudentAttendances: 'Institution.StudentAttendances',
-        StudentArchive: 'Institution.StudentArchive',
-        InstitutionClasses: 'Institution.InstitutionClasses',
-        StudentAttendanceTypes: 'Attendance.StudentAttendanceTypes',
-        InstitutionClassSubjects: 'Institution.InstitutionClassSubjects',
-        AbsenceTypes: 'Institution.AbsenceTypes',
-        StudentAbsenceReasons: 'Institution.StudentAbsenceReasons',
-        StudentAbsencesPeriodDetails: 'Institution.StudentAbsencesPeriodDetails',
-        StudentAttendanceMarkTypes: 'Attendance.StudentAttendanceMarkTypes',
-        StudentAttendanceMarkedRecords: 'Attendance.StudentAttendanceMarkedRecords'
+        StudentArchive: 'Institution.StudentArchive'
     };
 
     var service = {
         init: init,
         translate: translate,
-
-        getAttendanceTypeList: getAttendanceTypeList,
-
         getTranslatedText: getTranslatedText,
         getClassStudent: getClassStudent,
-
         getDummyData: getDummyData
     };
 
@@ -100,10 +53,6 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
             deferred.resolve(translated);
         };
         return translation.translate(data, {success: success, defer: true});
-    }
-
-    function getAttendanceTypeList() {
-        return attendanceType;
     }
 
     // data service
@@ -146,8 +95,6 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
                 deferred.reject('There was an error when retrieving the class student list');
             }
         };
-        console.log("StudentArchive")
-        console.log(StudentArchive)
         return StudentArchive
             .find('classStudentsWithAbsence', extra)
             .ajax({success: success, defer: true});
@@ -171,7 +118,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
 
         columnDefs.push({
             headerName: translateText.translated.AcedemicPeriod,
-            field: "Column one",
+            field: "academic_period",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -179,7 +126,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
         });
         columnDefs.push({
             headerName: translateText.translated.day,
-            field: "Column two",
+            field: "day",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -187,7 +134,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
         });
         columnDefs.push({
             headerName: translateText.translated.class,
-            field: "Column two",
+            field: "class",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -195,7 +142,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
         });
         columnDefs.push({
             headerName: translateText.translated.AttendencePerDay,
-            field: "Column two",
+            field: "attendance_per_day",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -203,7 +150,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
         });
         columnDefs.push({
             headerName: translateText.translated.OpenEmisId,
-            field: "Column two",
+            field: "open_emis_id",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -211,7 +158,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
         });
         columnDefs.push({
             headerName: translateText.translated.attendence,
-            field: "Column two",
+            field: "attendance",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -219,7 +166,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
         });
         columnDefs.push({
             headerName: translateText.translated.ReasonComment,
-            field: "Column two",
+            field: "reason_comment",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -231,8 +178,6 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
 
     function setRowDatas(context, data) {
         var studentList = context.scope.$ctrl.classStudentList;
-        console.log("studentListOne")
-        console.log(studentList)
         studentList.forEach(function (dataItem, index) {
             if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
                 dataItem.rowHeight = 60;
