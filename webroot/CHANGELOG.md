@@ -1,3 +1,21 @@
+### [3.58.2] - 2020-11-19
+- Improvement student overview page
+- Data Archiving feature in OpenEMIS Core
+- Develop Reports > Directoty > User List
+- Develop API Feature student assessment (write)
+- Develop API Feature student assessment (read)
+- Develop Staff Duties feature
+- Develop Export Subject List in Institutions > Subjects Page
+- Develop Export Class List Institutions > Class Page
+- Develop Reports > Staff > Duties Report
+- Develop Reports > Institution > Summary Report
+- Bug Fix in Institution > Finance > Expenditure > Add page
+- Bug Fix in Institution > Finance > Income > Add page
+- Bug Fix in Institutions > Performance > Assessments page
+- Bug Fix in Institution > Attendance > Students page
+- Bug Fix in Institutions > Students > Academic > Extracurricular page
+- Bug Fix in Institution > Students > Import > Import Extracurricular feature
+
 ### [3.58.1] - 2020-11-03
 - Implemented: Webhook Feature class (delete)
 - Implemented: Webhook Feature staff (delete)
