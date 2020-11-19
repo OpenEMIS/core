@@ -12,7 +12,7 @@
                     $j = 1;
                     for ($i=0; $i<$attendance_per_day; $i++) {  ?>
                         <tr>
-                            <td>Period <?= $j;?></td>
+                            <td>Period <?php echo (!empty($StudentAttendancePerDayPeriodsData[$i]['period'])) ? $StudentAttendancePerDayPeriodsData[$i]['period'] : $j ?></td>
                             <td><?php echo $this->Form->input('period['.$j.']',
                              [ 
                                 'value' => (!empty($StudentAttendancePerDayPeriodsData[$i]['name'])) ? $StudentAttendancePerDayPeriodsData[$i]['name'] : "Period ".$j
@@ -46,9 +46,10 @@
                 <tbody>
                     <?php 
                     $j = 1;
+                    
                     for ($i=0; $i<$attendance_per_day; $i++) {  ?>
                         <tr>
-                            <td>Period <?= $j;?></td>
+                            <td>Period <?php echo (!empty($StudentAttendancePerDayPeriodsData[$i]['period'])) ? $StudentAttendancePerDayPeriodsData[$i]['period'] : $j ?></td>
                             <td><?php echo (!empty($StudentAttendancePerDayPeriodsData[$i]['name'])) ? $StudentAttendancePerDayPeriodsData[$i]['name'] : "Period ".$j ?></td> 
                             <td class="sorter">  
                                     <div class="reorder-icon">

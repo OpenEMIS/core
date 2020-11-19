@@ -102,6 +102,7 @@ class ProfilesController extends AppController
     public function StaffAwards()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function TrainingNeeds()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
     public function StaffAppraisals()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
+    public function StaffDuties()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Duties']); }
     public function StudentTextbooks()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
     public function ProfileGuardians()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Guardians']); }
     public function ProfileGuardianUser()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.GuardianUser']); }
@@ -532,6 +533,7 @@ class ProfilesController extends AppController
             'Attendances' => ['text' => __('Attendances')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
+            'Duties' => ['text' => __('Duties')],
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
