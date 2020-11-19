@@ -197,7 +197,7 @@ $panelHeader = $this->fetch('panelHeader');
                 </div>
             </bg-pane>
 
-            <bg-pane class="" min-size-p="20" max-size-p="30" size-p="20">
+            <bg-pane class="" min-size-p="0" max-size-p="30" size-p="0">
                 <div class="split-content-area">
                     <h5 ng-if="$ctrl.isMarkableSubjectAttendance==true"><?= __('Subjects') ?>: </h5>
                     <div class="input-select-wrapper" ng-if="$ctrl.isMarkableSubjectAttendance==true">
