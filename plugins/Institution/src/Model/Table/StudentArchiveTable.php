@@ -134,7 +134,6 @@ class StudentArchiveTable extends ControllerActionTable
             $archiveDataKeyValAssociation[] = array("academic_period"=>$archiveDataval[1], "day"=>$archiveDataval[0],"class"=> $archiveDataval[4],"attendance_per_day"=>$archiveDataval[5],"open_emis_id"=>$archiveDataval[6],"name"=>$archiveDataval[3],"attendance"=>$archiveDataval[7],"reason_comment"=>$archiveDataval[8]);
             
         }
-        $archiveDataKeyValAssociation = array("data"=>$archiveDataKeyValAssociation);
         echo json_encode($archiveDataKeyValAssociation); exit;
         
         $this->addBehavior('Restful.RestfulAccessControl', [
