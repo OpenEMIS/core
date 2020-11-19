@@ -231,6 +231,8 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
 
     function setRowDatas(context, data) {
         var studentList = context.scope.$ctrl.classStudentList;
+        console.log("studentListOne")
+        console.log(studentList)
         studentList.forEach(function (dataItem, index) {
             if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
                 dataItem.rowHeight = 60;

@@ -76,6 +76,7 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
             this.api.sizeColumnsToFit();
         },
         onGridReady: function() {
+                vm.setGridData();
                 vm.setColumnDef();
         },
         context: {
@@ -107,13 +108,14 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
                 return InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
             .then(function(classStudents) {
-                if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
-                    classStudents = [];
-                }
+                console.log("classStudents")
+                console.log(classStudents)
                 vm.updateClassStudentList(classStudents);
             }, vm.error)
             .finally(function() {
                 vm.initGrid();
+                vm.setGridData();
+                vm.setColumnDef();
                 UtilsSvc.isAppendLoader(false);
             });
         }
@@ -225,6 +227,8 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
     }
 
     vm.updateClassStudentList = function(classStudents) {
+        console.log("classStudentsOne")
+        console.log(classStudents)
         vm.classStudents = [];
         vm.classStudentList = classStudents;
     }
@@ -435,37 +439,7 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
         //debugger;
         //"var test = "/search?fname="+fname"+"&lname="+lname"
         UtilsSvc.isAppendLoader(true);
-        InstitutionStudentArchiveSvc.getWeekListOptions(vm.selectedAcademicPeriod)
-        .then(function(weekListOptions) {
-            vm.updateWeekList(weekListOptions);
-            return InstitutionStudentArchiveSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
-        }, vm.error)
-        .then(function(dayListOptions) {
-            vm.updateDayList(dayListOptions);
-            return InstitutionStudentArchiveSvc.getClassOptions(vm.institutionId, vm.selectedAcademicPeriod);
-        }, vm.error)
-        .then(function(classListOptions) {
-            vm.updateClassList(classListOptions);
-                return InstitutionStudentArchiveSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay);
-            }, vm.error)
-        .then(function(attendanceType) { 
-                vm.isMarkableSubjectAttendance = attendanceType;                 
-                return InstitutionStudentArchiveSvc.getSubjectOptions(vm.institutionId,vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
-        }, vm.error)
-        .then(function(subjectListOptions) {
-                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentArchiveSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
-        }, vm.error)
-        .then(function(attendancePeriodOptions) {
-            var markedParams = vm.getIsMarkedParams();
-            //console.log('markedParams', markedParams);
-            vm.updateAttendancePeriodList(attendancePeriodOptions);
-            return InstitutionStudentArchiveSvc.getIsMarked(vm.getIsMarkedParams());
-        }, vm.error)
-        .then(function(isMarked) {
-            vm.updateIsMarked(isMarked);
-            return InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams());
-        }, vm.error)
+        InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams())
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
         }, vm.error)
@@ -482,27 +456,7 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
         vm.selectedWeekStartDate = weekObj.start_day;
         vm.selectedWeekEndDate = weekObj.end_day;
         vm.gridOptions.context.week = vm.selectedWeek;
-        InstitutionStudentArchiveSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId)
-        .then(function(dayListOptions) {
-            vm.updateDayList(dayListOptions);
-            return InstitutionStudentArchiveSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay);
-        }, vm.error)
-        .then(function(attendanceType) { 
-                vm.isMarkableSubjectAttendance = attendanceType;
-            return InstitutionStudentArchiveSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
-        }, vm.error)
-        .then(function(subjectListOptions) {
-                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentArchiveSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
-        }, vm.error)
-        .then(function(attendancePeriodOptions) {
-            vm.updateAttendancePeriodList(attendancePeriodOptions); 
-            return InstitutionStudentArchiveSvc.getIsMarked(vm.getIsMarkedParams());
-        }, vm.error)
-        .then(function(isMarked) {
-            vm.updateIsMarked(isMarked);
-            return InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams());
-        }, vm.error)
+        InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams())
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
         }, vm.error)
@@ -519,19 +473,7 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
         vm.schoolClosed = (angular.isDefined(dayObj.closed) && dayObj.closed) ? true : false;
         vm.gridOptions.context.schoolClosed = vm.schoolClosed;
         vm.gridOptions.context.date = vm.selectedDay;
-        InstitutionStudentArchiveSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay)
-        .then(function(subjectListOptions) {
-                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentArchiveSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
-        }, vm.error)
-        .then(function(attendancePeriodOptions) {
-            vm.updateAttendancePeriodList(attendancePeriodOptions);
-            return InstitutionStudentArchiveSvc.getIsMarked(vm.getIsMarkedParams());
-        }, vm.error)
-        .then(function(isMarked) {
-            vm.updateIsMarked(isMarked);
-            return InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams());
-        }, vm.error)
+        InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams())
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
             }, vm.error)
@@ -547,23 +489,7 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
         if (vm.superAdmin == 0) {
             vm.updateClassRoles(vm.selectedClass);
         }
-        InstitutionStudentArchiveSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay)
-        .then(function(attendanceType) { 
-                vm.isMarkableSubjectAttendance = attendanceType;              
-                return InstitutionStudentArchiveSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
-        }, vm.error)
-        .then(function(subjectListOptions) {
-                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentArchiveSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
-        }, vm.error)
-        .then(function(attendancePeriodOptions) {
-            vm.updateAttendancePeriodList(attendancePeriodOptions);
-            return InstitutionStudentArchiveSvc.getIsMarked(vm.getIsMarkedParams());
-        }, vm.error)
-        .then(function(isMarked) {
-            vm.updateIsMarked(isMarked);
-            return InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams());
-        }, vm.error)
+        InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams())
         .then(function(classStudents) {
             if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
                     classStudents = [];
@@ -579,15 +505,7 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
 
     vm.changeSubject = function() {
         UtilsSvc.isAppendLoader(true);
-        InstitutionStudentArchiveSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay)
-        .then(function(subjectListOptions) { 
-            vm.gridOptions.context.subject_id = vm.selectedSubject;
-            return InstitutionStudentArchiveSvc.getIsMarked(vm.getIsMarkedParams());
-        }, vm.error)
-        .then(function(isMarked) {
-            vm.updateIsMarked(isMarked);
-            return InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams());
-        }, vm.error)
+        InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams())
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
         }, vm.error)
@@ -601,11 +519,7 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
     vm.changeAttendancePeriod = function() {
         vm.gridOptions.context.period = vm.selectedAttendancePeriod;
         UtilsSvc.isAppendLoader(true);
-        InstitutionStudentArchiveSvc.getIsMarked(vm.getIsMarkedParams())
-        .then(function(isMarked) {
-            vm.updateIsMarked(isMarked);
-            return InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams());
-        }, vm.error)
+        InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams())
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
             vm.setGridData();
