@@ -32,7 +32,7 @@ class StudentArchiveTable extends ControllerActionTable
         $db1 =  $connectionone->config()['database'];
         $db2 =  $connectiontwo->config()['database'];
 
-        $allData = $connectionone->query("SELECT
+        $getArchiveData = $connectionone->query("SELECT
         all_class_students.marked_date AS 'date',
         all_class_students.academic_period_name AS 'academic_period',
         all_class_students.institutions_code AS 'institution_id',
@@ -128,14 +128,15 @@ class StudentArchiveTable extends ControllerActionTable
         AND all_class_students.security_users_id = student_absences.student_id
         ORDER BY all_class_students.marked_date ASC,all_class_students.institutions_code ASC,all_class_students.institutions_name ASC, all_class_students.period_name ASC,all_class_students.security_users_oe LIMIT 10;
         ");
-        $user = $allData->fetchAll();
-        if(empty($user)){
-            echo json_encode("No data found");exit;
-        }else{
-            echo json_encode($user); exit;
+        $archiveDataArr = $getArchiveData->fetchAll();
+        foreach($archiveDataArr AS $archiveDataval)
+        {
+            $archiveDataKeyValAssociation[] = array("academic_period"=>$archiveDataval[1], "day"=>$archiveDataval[0],"class"=> $archiveDataval[4],"attendance_per_day"=>$archiveDataval[5],"open_emis_id"=>$archiveDataval[6],"name"=>$archiveDataval[3],"attendance"=>$archiveDataval[7],"reason_comment"=>$archiveDataval[8]);
+            
         }
+        $archiveDataKeyValAssociation = array("data"=>$archiveDataKeyValAssociation);
+        echo json_encode($archiveDataKeyValAssociation); exit;
         
-
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentArchive' => ['index', 'view']
         ]);
