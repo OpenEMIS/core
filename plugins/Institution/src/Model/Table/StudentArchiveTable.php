@@ -29,31 +29,110 @@ class StudentArchiveTable extends ControllerActionTable
     {
         $connectionone = ConnectionManager::get('default');
         $connectiontwo = ConnectionManager::get('prd_cor_arc');
+        $db1 =  $connectionone->config()['database'];
+        $db2 =  $connectiontwo->config()['database'];
 
-        $AcademicPeriods = TableRegistry::config('default', ['table' => 'academic_periods']);
-        $Institution = TableRegistry::config('default', ['table' => 'institutions']);
-        $institution_classes = TableRegistry::config('default', ['table' => 'institution_classes']);
-        $institution_class_grades = TableRegistry::config('default', ['table' => 'institution_class_grades']);
-        $education_grades = TableRegistry::config('default', ['table' => 'education_grades']);
-        $institution_class_students = TableRegistry::config('default', ['table' => 'institution_class_students']);
-        $security_users = TableRegistry::config('default', ['table' => 'security_users']);
-        $institution_subjects = TableRegistry::config('default', ['table' => 'institution_subjects']);
-        $student_mark_type_statuses = TableRegistry::config('default', ['table' => 'student_mark_type_statuses']);
-        $student_attendance_types = TableRegistry::config('default', ['table' => 'student_attendance_types']);
-        $student_attendance_per_day_periods = TableRegistry::config('default', ['table' => 'student_attendance_per_day_periods']);
-        $student_mark_type_status_grades = TableRegistry::config('default', ['table' => 'student_mark_type_status_grades']);
-        $student_absence_reasons = TableRegistry::config('default', ['table' => 'student_absence_reasons']);
-
-        $student_attendance_marked_records = TableRegistry::config('prd_cor_arc', ['table' => 'student_attendance_marked_records']);
-        $student_attendance_mark_types = TableRegistry::config('prd_cor_arc', ['table' => 'student_attendance_mark_types']);
-        $institution_student_absence_details = TableRegistry::config('prd_cor_arc', ['table' => 'institution_student_absence_details']);
-
-        $allData = $connection->query("SELECT * FROM academic_periods");
+        $allData = $connectionone->query("SELECT
+        all_class_students.marked_date AS 'date',
+        all_class_students.academic_period_name AS 'academic_period',
+        all_class_students.institutions_code AS 'institution_id',
+        all_class_students.institutions_name AS 'institution_name',
+        all_class_students.institution_classes_name AS 'institution_class_name',
+        IF(all_class_students.subject_name IS NULL,all_class_students.period_name, all_class_students.subject_name) AS 'Attendance Per Day',
+        all_class_students.security_users_oe AS 'student_id',
+        IF(student_absences.attendance IS NULL,'Present',student_absences.attendance) AS 'student_attendance',
+        IF(student_absences.absence_type IS NULL ,'',student_absences.absence_type) AS 'student_absence_type',
+        IF(student_absences.absence_reasons IS NULL,'',student_absences.absence_reasons) AS 'student_absence_reasons'
+        FROM
+        (
+            SELECT 
+            student_attendance_marked_records.date AS marked_date,
+            academic_periods.id AS academic_period_id,
+            academic_periods.name AS academic_period_name,
+            academic_periods.current AS academic_periods_current,
+            institutions.id AS institutions_id,
+            institutions.code AS institutions_code,
+            institutions.name AS institutions_name,
+            institution_classes.id AS institution_classes_id,
+            institution_classes.name AS institution_classes_name,
+            student_attendance_marked_records.subject_id,
+            institution_subjects.name AS subject_name,
+            IF(attendance_config.period IS NULL, student_attendance_marked_records.period,attendance_config.period) AS period_id,
+            IF(attendance_config.period_name IS NULL,CONCAT('Period ',student_attendance_marked_records.period),attendance_config.period_name) AS period_name,
+            security_users.id AS security_users_id,
+            security_users.openemis_no AS security_users_oe
+            FROM $db2.student_attendance_marked_records
+            INNER JOIN $db1.academic_periods
+            ON student_attendance_marked_records.academic_period_id = academic_periods.id
+            INNER JOIN $db1.institutions
+            ON student_attendance_marked_records.institution_id = institutions.id
+            INNER JOIN $db1.institution_classes
+            ON student_attendance_marked_records.institution_class_id = institution_classes.id
+            INNER JOIN $db1.institution_class_grades
+            ON institution_classes.id = institution_class_grades.institution_class_id
+            INNER JOIN $db1.education_grades
+            ON institution_class_grades.education_grade_id = education_grades.id 
+            INNER JOIN $db1.institution_class_students
+            ON institution_class_students.institution_class_id = institution_classes.id
+            INNER JOIN $db1.security_users
+            ON institution_class_students.student_id = security_users.id
+            LEFT JOIN $db1.institution_subjects
+            ON institution_subjects.id = student_attendance_marked_records.subject_id
+            LEFT JOIN 
+                (SELECT 
+                    student_attendance_types.name,
+                    student_mark_type_status_grades.education_grade_id,
+                    student_mark_type_statuses.academic_period_id,
+                    student_mark_type_statuses.date_enabled,
+                    student_mark_type_statuses.date_disabled,
+                    student_attendance_per_day_periods.name AS period_name,
+                    student_attendance_per_day_periods.period,
+                        student_attendance_per_day_periods.order,
+                    student_attendance_mark_types.attendance_per_day
+                    FROM $db1.student_mark_type_statuses
+                        INNER JOIN $db2.student_attendance_mark_types
+                        ON student_mark_type_statuses.student_attendance_mark_type_id = student_attendance_mark_types.id
+                        INNER JOIN $db1.student_attendance_types
+                        ON student_attendance_types.id = student_attendance_mark_types.student_attendance_type_id
+                        LEFT JOIN $db1.student_attendance_per_day_periods
+                        ON student_attendance_per_day_periods.student_attendance_mark_type_id = student_attendance_mark_types.id 
+                        INNER JOIN $db1.student_mark_type_status_grades
+                        ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
+                    ORDER BY student_mark_type_statuses.academic_period_id DESC,student_mark_type_status_grades.education_grade_id ASC, student_mark_type_statuses.date_enabled ASC,
+                    student_attendance_per_day_periods.period ASC) AS attendance_config
+                ON institution_class_grades.education_grade_id = attendance_config.education_grade_id
+                AND institution_classes.academic_period_id = attendance_config.academic_period_id
+                AND student_attendance_marked_records.period = attendance_config.period
+                AND student_attendance_marked_records.date BETWEEN attendance_config.date_enabled AND attendance_config.date_disabled
+        ) AS all_class_students
+        LEFT JOIN 
+        (SELECT
+            IF(institution_student_absence_details.absence_type_id ='3', 'Late', 'Absent') AS attendance,
+            IF(institution_student_absence_details.absence_type_id ='2','Unexcused Absence',IF(institution_student_absence_details.absence_type_id !='3','Excused Absence','')) absence_type,
+            IF(student_absence_reasons.name IS NULL,'',student_absence_reasons.name) AS absence_reasons,
+            institution_student_absence_details.student_id,
+            institution_student_absence_details.institution_id,
+            institution_student_absence_details.institution_class_id,
+            institution_student_absence_details.date,
+            institution_student_absence_details.period,
+            institution_student_absence_details.subject_id,
+            institution_student_absence_details.academic_period_id
+                FROM $db2.institution_student_absence_details 
+                LEFT JOIN $db1.student_absence_reasons
+                ON institution_student_absence_details.student_absence_reason_id = student_absence_reasons.id
+        ) AS student_absences
+        ON all_class_students.marked_date = student_absences.date
+        AND all_class_students.institution_classes_id = student_absences.institution_class_id
+        AND all_class_students.institutions_id = student_absences.institution_id
+        AND all_class_students.period_id = student_absences.period
+        AND all_class_students.security_users_id = student_absences.student_id
+        ORDER BY all_class_students.marked_date ASC,all_class_students.institutions_code ASC,all_class_students.institutions_name ASC, all_class_students.period_name ASC,all_class_students.security_users_oe LIMIT 10;
+        ");
         $user = $allData->fetchAll();
         if(empty($user)){
-            echo "<pre>";print_r("Empty");exit;
+            echo json_encode("No data found");exit;
         }else{
-            echo "<pre>";print_r($user);exit;
+            echo json_encode($user); exit;
         }
         
 
@@ -64,7 +143,7 @@ class StudentArchiveTable extends ControllerActionTable
 
     public function findClassStudentsWithAbsence()
     {
-        $queryData = "Hello Ehteram";
+        $queryData = "";
         return $queryData;
     }
 
