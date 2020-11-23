@@ -563,7 +563,9 @@ class InstitutionsTable extends AppTable
                           'Report.WashReports', 
                           'Report.InstitutionClasses',
                           'Report.InstitutionCommittees',
-                          'Report.ClassAttendanceMarkedSummaryReport'
+                          'Report.ClassAttendanceMarkedSummaryReport',
+                          'Report.Income',
+                          'Report.Expenditure'
                         ]
                     )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
@@ -801,7 +803,9 @@ class InstitutionsTable extends AppTable
 				'Report.SpecialNeedsFacilities', 
 				'Report.InstitutionCommittees',
 				'Report.SubjectsBookLists',
-                'Report.StudentAbsences'
+                'Report.StudentAbsences',
+                'Report.Income',
+                'Report.Expenditure'
             ];
 
             
@@ -861,7 +865,7 @@ class InstitutionsTable extends AppTable
                     $attr['attr']['required'] = true;
                 } else {
 					
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary', 'Report.Income', 'Report.Expenditure'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
