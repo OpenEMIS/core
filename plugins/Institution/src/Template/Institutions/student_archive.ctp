@@ -40,6 +40,10 @@ $panelHeader = $this->fetch('panelHeader');
         border: 1px solid #ccc!important;
         color: #999!important;
     }
+    .ag-root {
+        overflow-x: scroll;
+    }
+    .ag-header {width:154%}
 
     .splitter-filter .split-content-header {
         margin-bottom: 15px;
