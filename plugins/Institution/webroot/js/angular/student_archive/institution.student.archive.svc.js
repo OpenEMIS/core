@@ -172,6 +172,14 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
             menuTabs: menuTabs,
             filter: "text"
         });
+        columnDefs.push({
+            headerName: translateText.translated.name,
+            field: "name",
+            filterParams: filterParams,
+            pinned: direction,
+            menuTabs: menuTabs,
+            filter: "text"
+        });
 
         return columnDefs;
     }
