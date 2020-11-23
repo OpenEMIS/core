@@ -81,12 +81,70 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
 
    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        
         $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
         $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
         $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
         $requestData = json_decode($settings['process']['params']);
+      
+        $institutionTypeId = $requestData->institution_type_id;
         $institution_id = $requestData->institution_id;
-        $query
+
+        $conditionsLands = [];
+        $conditionsFloors = [];
+        $conditionsRooms = [];
+        $conditionsBuildings = [];
+        
+
+        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutionIds = $institutions->find('list', [
+                                                    'keyField' => 'id',
+                                                    'valueField' => 'id'
+                                                ])
+                        ->where(['institution_type_id' => $institutionTypeId])
+                        ->toArray();
+        
+      
+        if (!empty($institutionTypeId) && $institution_id == 0) {
+
+            if($query->repository['registryAlias'] ='Report.SpecialNeedsFacilities' ){
+                $conditionsLands[$this->aliasField('institution_id IN')] = $institutionIds;
+            }
+            
+            if($InstitutionFloors){
+                $conditionsFloors[$InstitutionFloors->aliasField('institution_id IN')] = $institutionIds;
+            }  
+
+            if($InstitutionRooms ){
+                $conditionsRooms[$InstitutionRooms->aliasField('institution_id IN')] = $institutionIds;
+            } 
+
+            if($InstitutionBuildings){
+                $conditionsBuildings[$InstitutionBuildings->aliasField('institution_id IN')] = $institutionIds;
+            } 
+        }
+
+         if (!empty($institution_id)) {
+
+            if($query->repository['registryAlias'] ='Report.SpecialNeedsFacilities' ){
+                $conditionsLands[$this->aliasField('institution_id')] = $institution_id;
+            }
+
+            if($InstitutionFloors){
+               $conditionsFloors[$InstitutionFloors->aliasField('institution_id')] = $institution_id;
+            }
+
+            if($InstitutionRooms){
+                $conditionsRooms[$InstitutionRooms->aliasField('institution_id')] = $institution_id;
+            }
+
+            if($InstitutionBuildings){
+                 $conditionsBuildings[$InstitutionBuildings->aliasField('institution_id')] = $institution_id;
+            }
+
+        }
+
+         $query
             ->select([
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
@@ -99,8 +157,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                 'infrastructure_ownership' => 'InfrastructureOwnership.name',
                 'infrastructure_level' => $query->func()->concat([self::LAND])
             ])
-            ->where([$this->aliasField('accessibility') => 1,
-            $this->aliasField('institution_id') => $institution_id])
+            ->where([$this->aliasField('accessibility') => 1,$conditionsLands])
             ->contain(['InfrastructureConditions', 'LandStatuses', 'LandTypes', 'Institutions', 'InfrastructureOwnership'])
             ->union(
                 $InstitutionFloors->find()
@@ -116,8 +173,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                         'infrastructure_ownership' => $query->func()->concat([""]),
                         'infrastructure_level' => $query->func()->concat([self::FLOOR])
                     ])
-                    ->where([$InstitutionFloors->aliasField('accessibility') => 1,
-                    $InstitutionFloors->aliasField('institution_id') => $institution_id])
+                    ->where([$InstitutionFloors->aliasField('accessibility') => 1,$conditionsFloors])
                     ->contain(['InfrastructureConditions', 'FloorStatuses', 'FloorTypes', 'Institutions'])
             )            
             ->union(
@@ -134,8 +190,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                         'infrastructure_ownership' => $query->func()->concat([""]),
                         'infrastructure_level' => $query->func()->concat([self::ROOM])
                     ])
-                    ->where([$InstitutionRooms->aliasField('accessibility') => 1,
-                    $InstitutionRooms->aliasField('institution_id') => $institution_id])
+                    ->where([$InstitutionRooms->aliasField('accessibility') => 1,$conditionsRooms])
                     ->contain(['InfrastructureConditions', 'RoomStatuses', 'RoomTypes', 'Institutions'])
             )
             
@@ -153,11 +208,10 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                         'infrastructure_ownership' => 'InfrastructureOwnership.name',
                         'infrastructure_level' => $query->func()->concat([self::BUILDING])
                     ])
-                    ->where([$InstitutionBuildings->aliasField('accessibility') => 1,
-                    $InstitutionBuildings->aliasField('institution_id') => $institution_id])
+                    ->where([$InstitutionBuildings->aliasField('accessibility') => 1,$conditionsBuildings])
                     ->contain(['InfrastructureConditions', 'BuildingStatuses', 'BuildingTypes', 'Institutions', 'InfrastructureOwnership'])
-
-            );
+        ) ;
+       
     }
 
     public function onExcelRenderAccessibility(Event $event, Entity $entity, $attr)
