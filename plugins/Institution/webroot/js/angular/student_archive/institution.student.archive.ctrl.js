@@ -76,22 +76,24 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
             this.api.sizeColumnsToFit();
         },
         onGridReady: function() {
+            if (angular.isDefined(vm.gridOptions.api)) {
                 vm.setGridData();
                 vm.setColumnDef();
+            }
         },
         context: {
             scope: $scope,
             mode: vm.action,
-            absenceTypes: vm.absenceTypeOptions,
-            studentAbsenceReasons: vm.studentAbsenceReasonOptions,
-            date: vm.selectedDay,
-            schoolClosed: vm.schoolClosed,
-            week: vm.selectedWeek,
-            period: vm.selectedAttendancePeriod,
-            isMarked: vm.isMarked,
-            subject_id: vm.selectedSubject
+            // absenceTypes: vm.absenceTypeOptions,
+            // studentAbsenceReasons: vm.studentAbsenceReasonOptions,
+            // date: vm.selectedDay,
+            // schoolClosed: vm.schoolClosed,
+            // week: vm.selectedWeek,
+            // period: vm.selectedAttendancePeriod,
+            // isMarked: vm.isMarked,
+            // subject_id: vm.selectedSubject
         },
-        getRowHeight: getRowHeight,
+        // getRowHeight: getRowHeight,
     };
 
     // ready
@@ -111,10 +113,10 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
                 vm.updateClassStudentList(classStudents);
             }, vm.error)
             .finally(function() {
+                UtilsSvc.isAppendLoader(false);
                 vm.initGrid();
                 vm.setGridData();
                 vm.setColumnDef();
-                UtilsSvc.isAppendLoader(false);
             });
         }
     });
@@ -128,7 +130,7 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
         console.log("classStudentsOne")
         console.log(classStudents)
         vm.classStudents = [];
-        vm.classStudentList = classStudents;
+        vm.classStudentList = [...classStudents.data];
     }
 
     vm.updateIsMarked = function(isMarked) {
@@ -161,8 +163,8 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
     }
 
     vm.setRowDatas = function(studentList) {
-        vm.gridOptions.api.setRowData(studentList.data);
-        
+        vm.gridOptions.api.setRowData(studentList);
+        // vm.gridOptions.rowData = studentList        
     }
 
     vm.setColumnDef = function() {
