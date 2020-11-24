@@ -1,23 +1,23 @@
 angular
-    .module('institution.student.archive.svc', ['kd.data.svc', 'alert.svc'])
-    .service('InstitutionStudentArchiveSvc', InstitutionStudentArchiveSvc);
+    .module('institution.assessments.archive.svc', ['kd.data.svc', 'alert.svc'])
+    .service('InstitutionAssessmentsArchiveSvc', InstitutionAssessmentsArchiveSvc);
 
-InstitutionStudentArchiveSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc', 'UtilsSvc'];
+InstitutionAssessmentsArchiveSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc', 'UtilsSvc'];
 
-function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
+function InstitutionAssessmentsArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
 
     const ALL_DAY_VALUE = -1;
 
     var translateText = {
         'original': {
             'AcedemicPeriod': 'Acedemic Period',
-            'day': 'Day',
-            'class': 'Class',
-            'AttendencePerDay': 'Attendence Per Day',
-            'OpenEmisId': 'OpenEMIS ID',
+            'assessment': 'Assessment',
+            'EducationGrade': 'Education Grade',
+            'class': 'class',
+            'subject': 'Subject',
+            'OpenEMISID': 'OpenEMIS ID',
             'name': 'Name',
-            'attendence': 'Attendence',
-            'ReasonComment': 'Reason/Comment'
+            'mark': 'Mark'
         },
         'translated': {
         }
@@ -26,7 +26,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
     var controllerScope;
 
     var models = {
-        StudentArchive: 'Institution.StudentArchive'
+        AssessmentsArchive: 'Institution.AssessmentsArchive'
     };
 
     var service = {
@@ -42,7 +42,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
     function init(baseUrl, scope) {
         controllerScope = scope;
         KdDataSvc.base(baseUrl);
-        KdDataSvc.controllerAction('StudentArchive');
+        KdDataSvc.controllerAction('AssessmentsArchive');
         KdDataSvc.init(models);
     }
 
@@ -95,7 +95,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
                 deferred.reject('There was an error when retrieving the class student list');
             }
         };
-        return StudentArchive
+        return AssessmentsArchive
             .find('classStudentsWithAbsence', extra)
             .ajax({success: success, defer: true});
     }
@@ -125,8 +125,16 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
             filter: "text"
         });
         columnDefs.push({
-            headerName: translateText.translated.day,
-            field: "day",
+            headerName: translateText.translated.assessment,
+            field: "assessment",
+            filterParams: filterParams,
+            pinned: direction,
+            menuTabs: menuTabs,
+            filter: "text"
+        });
+        columnDefs.push({
+            headerName: translateText.translated.EducationGrade,
+            field: "education_grade",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -141,15 +149,15 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
             filter: "text"
         });
         columnDefs.push({
-            headerName: translateText.translated.AttendencePerDay,
-            field: "attendance_per_day",
+            headerName: translateText.translated.subject,
+            field: "subject",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
             filter: "text"
         });
         columnDefs.push({
-            headerName: translateText.translated.OpenEmisId,
+            headerName: translateText.translated.OpenEMISID,
             field: "open_emis_id",
             filterParams: filterParams,
             pinned: direction,
@@ -165,16 +173,8 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
             filter: "text"
         });
         columnDefs.push({
-            headerName: translateText.translated.attendence,
-            field: "attendance",
-            filterParams: filterParams,
-            pinned: direction,
-            menuTabs: menuTabs,
-            filter: "text"
-        });
-        columnDefs.push({
-            headerName: translateText.translated.ReasonComment,
-            field: "reason_comment",
+            headerName: translateText.translated.mark,
+            field: "mark",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
