@@ -30,7 +30,12 @@ class StudentArchiveTable extends ControllerActionTable
         $connectionone = ConnectionManager::get('default');
         $connectiontwo = ConnectionManager::get('prd_cor_arc');
         $db1 =  $connectionone->config()['database'];
-        $db2 =  $connectiontwo->config()['database'];
+
+        $getArchiveConnection = $connectionone->query("SELECT * FROM transfer_connections");
+        $archiveConnection = $getArchiveConnection->fetchAll();
+        foreach($archiveConnection AS $archiveConnectionData){
+            $db2 = $archiveConnectionData[5];
+        }
 
         $getArchiveData = $connectionone->query("SELECT
         all_class_students.marked_date AS 'date',
@@ -126,7 +131,7 @@ class StudentArchiveTable extends ControllerActionTable
         AND all_class_students.institutions_id = student_absences.institution_id
         AND all_class_students.period_id = student_absences.period
         AND all_class_students.security_users_id = student_absences.student_id
-        ORDER BY all_class_students.marked_date ASC,all_class_students.institutions_code ASC,all_class_students.institutions_name ASC, all_class_students.period_name ASC,all_class_students.security_users_oe LIMIT 10;
+        ORDER BY all_class_students.marked_date ASC,all_class_students.institutions_code ASC,all_class_students.institutions_name ASC, all_class_students.period_name ASC,all_class_students.security_users_oe;
         ");
         $archiveDataArr = $getArchiveData->fetchAll();
         foreach($archiveDataArr AS $archiveDataval)
