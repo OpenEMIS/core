@@ -99,6 +99,13 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     // ready
     angular.element(document).ready(function () {
+
+        const currentDate = new Date();
+        var currentYear = currentDate.getFullYear();
+        var currentMonth = currentDate.getMonth()+1;
+        var currentdate = currentDate.getDate();
+        console.log(currentYear + '-' +currentMonth + '-' + currentdate)
+        vm.currentDayMonthYear = currentYear + '-' +currentMonth + '-' + currentdate;
         InstitutionStudentAttendancesSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';
         vm.gridOptions.context.mode = vm.action;
@@ -202,13 +209,17 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     }
 
     vm.updateDayList = function(dayListOptions) {
+
         vm.dayListOptions = dayListOptions;
+        console.log(vm.dayListOptions);
         var hasSelected = false;
         if (dayListOptions.length > 0) {
             for (var i = 0; i < dayListOptions.length; ++i) {
                 if (angular.isDefined(dayListOptions[i]['selected']) && dayListOptions[i]['selected']) {
                     hasSelected = true;
                     vm.selectedDay = dayListOptions[i].date;
+                    console.log(vm.selectedDay);
+                   
                     vm.schoolClosed = (angular.isDefined(dayListOptions[i]['closed']) && dayListOptions[i]['closed']) ? true : false;
                     vm.gridOptions.context.date = vm.selectedDay;
                     vm.gridOptions.context.schoolClosed = vm.schoolClosed;
@@ -558,15 +569,23 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     }
 
     vm.changeDay = function() {
+       
         UtilsSvc.isAppendLoader(true);
         var dayObj = vm.dayListOptions.find(obj => obj.date == vm.selectedDay);
         vm.schoolClosed = (angular.isDefined(dayObj.closed) && dayObj.closed) ? true : false;
         vm.gridOptions.context.schoolClosed = vm.schoolClosed;
         vm.gridOptions.context.date = vm.selectedDay;
+        const currentDate = new Date();
+       
+        let currentYear = currentDate.getFullYear();
+        let currentMonth = currentDate.getMonth()+1;
+        let currentdate = currentDate.getDate();
+        vm.currentDayMonthYear = currentYear + '-' +currentMonth + '-' + currentdate;
+        
         InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay)
         .then(function(subjectListOptions) {
-                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
+            vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
+            return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
         }, vm.error)
         .then(function(attendancePeriodOptions) {
             vm.updateAttendancePeriodList(attendancePeriodOptions);
@@ -580,9 +599,9 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             vm.updateClassStudentList(classStudents);
             }, vm.error)
         .finally(function() {
+            UtilsSvc.isAppendLoader(false);
             vm.setGridData();
             vm.setColumnDef();
-            UtilsSvc.isAppendLoader(false);
         });
     }
 

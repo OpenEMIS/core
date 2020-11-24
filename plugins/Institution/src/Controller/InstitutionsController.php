@@ -58,6 +58,7 @@ class InstitutionsController extends AppController
         'StaffTrainingResults',
         'StaffTransferIn',
         'StaffTransferOut',
+        'StaffDuties',
         // 'StaffPositionProfiles',
 
         // attendances
@@ -191,6 +192,11 @@ class InstitutionsController extends AppController
     public function StaffAppraisals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
+    }
+
+    public function StaffDuties()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffDuties']);
     }
 
     public function Surveys()
@@ -1590,13 +1596,24 @@ class InstitutionsController extends AppController
             $InstitutionStudents = TableRegistry::get('Institution.Students');
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
-
+			
+			$params = [
+                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
+                    $statuses['PROMOTED'], $statuses['REPEATED']]]
+            ];
+            $highChartDatas[] = $InstitutionStudents->getHighChart('student_attendance', $params);
+            
+            $params = [
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
+            ];
+            $highChartDatas[] = $InstitutionStaff->getHighChart('staff_attendance', $params);
+            
             //Students By Grade for current year, excludes transferred ,withdrawn, promoted, repeated students
             $params = [
                 'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
                     $statuses['PROMOTED'], $statuses['REPEATED']]]
             ];
-
+	
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_stage', $params);
 
             //Students By Year, excludes transferred withdrawn,promoted,repeated students

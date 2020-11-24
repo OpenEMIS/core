@@ -20,8 +20,8 @@ $this->start('toolbar');
 <?php endif; ?>
 
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onEditClick()">
-        <i class="fa kd-edit"></i>
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onEditClick()">
+        <i class="fa kd-edit"></i> 
     </button>
 
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
@@ -201,6 +201,7 @@ $panelHeader = $this->fetch('panelHeader');
 <div class="panel">
     <div class="panel-body" style="position: relative;">
         <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;$ctrl.exportexcel='<?=$excelUrl ?>';" float-btn="true">
+           
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">
                     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
