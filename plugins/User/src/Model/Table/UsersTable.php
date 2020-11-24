@@ -1282,7 +1282,7 @@ class UsersTable extends AppTable
                 ;
         
         
-        $student = $studentQuery->select(['id' =>'Users.id','openemis_no' =>'Users.openemis_no', 
+        $student = $studentQuery->select(['id' =>'Users.openemis_no','openemis_no' =>'Users.openemis_no', 
                     'first_name' =>"Users.first_name",
                     'middle_name' =>"Users.middle_name",
                     'third_name' =>"Users.third_name",
