@@ -182,10 +182,20 @@ class StudentAttendanceMarkTypesTable extends AppTable
                             ->toArray();
 
             $options = [];
-            $j = 0;
+            $j = 0;  
+            $periodsDataId = [];
+            for ($k = 0; $k <= $attendencePerDay; ++$k) {
+              $periodsDataId[] =  $periodsData[$k]['id'];
+            }
+            
+            $periodsDataId = array_filter($periodsDataId);
+            asort($periodsDataId);
+            $periodsDataId = array_combine(range(1, count($periodsDataId)), array_values($periodsDataId));
+            $periodsDataId = array_flip($periodsDataId);  
+            
             for ($i = 1; $i <= $attendencePerDay; ++$i) {
                 $options[] = [
-                    'id' => $i,
+                    'id' => (!empty($periodsDataId[$periodsData[$j]['id']])) ? $periodsDataId[$periodsData[$j]['id']] : $i,
                     'name' => __((!empty($periodsData[$j]['name'])) ? $periodsData[$j]['name'] : "Period ".$i)
                 ];
                 $j++;
