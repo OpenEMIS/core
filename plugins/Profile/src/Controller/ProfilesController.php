@@ -253,8 +253,9 @@ class ProfilesController extends AppController
         $action = $this->request->params['action'];
 
         $loginUserId = $this->Auth->user('id'); // login user
-        $this->Navigation->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
 
+        $this->Navigation->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
+        
         $header = '';
         if ($this->Profiles->exists([$this->Profiles->primaryKey() => $loginUserId])) {
             $entity = $this->Profiles->get($loginUserId);
@@ -264,8 +265,9 @@ class ProfilesController extends AppController
 
             $this->activeObj = $entity;
         } else {
-            // record not found
+            
         }
+
         $this->set('contentHeader', $header);
     }
 
@@ -311,6 +313,17 @@ class ProfilesController extends AppController
 
         $alias = $model->alias;
         $this->Navigation->addCrumb($model->getHeader($alias));
+        //POCOR-5675
+            $action = $this->request->params['action'];
+            if ($action == 'ProfileStudentUser') {
+                $studentId = $this->request->pass[1];
+                $sId = $this->ControllerAction->paramsDecode($studentId);
+                $student_id = $sId['id'];
+                $entity = $this->Profiles->get($student_id);
+                $name = $entity->name;
+                $header = $name;
+            }
+        //POCOR-5675
         $header = $header . ' - ' . $model->getHeader($alias);
         $this->set('contentHeader', $header);
 
@@ -464,7 +477,7 @@ class ProfilesController extends AppController
     }
 
     public function getAcademicTabElements($options = [])
-    {
+    { 
         $id = (array_key_exists('id', $options))? $options['id']: 0;
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];
