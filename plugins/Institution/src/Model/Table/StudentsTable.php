@@ -57,6 +57,13 @@ class StudentsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('HighChart', [
+            'student_attendance' => [
+                '_function' => 'getNumberOfStudentsByAttendanceType',
+                '_defaultColors' => false,
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => ['text' => __('Education')]],
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
             'number_of_students_by_year' => [
                 '_function' => 'getNumberOfStudentsByYear',
                 '_defaultColors' => false,
@@ -1635,7 +1642,135 @@ class StudentsTable extends ControllerActionTable
 
         return $params;
     }
+	
+	// For Dashboard (Home Page and Institution Dashboard page)
+    public function getNumberOfStudentsByAttendanceType($params = [])
+    {
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $_conditions = [];
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->alias().'.'.$key] = $value;
+        }
 
+        $AcademicPeriod = $this->AcademicPeriods;
+        $currentYearId = $AcademicPeriod->getCurrent();
+
+        if (!empty($currentYearId)) {
+            $currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+        } else {
+            $currentYear = __('Not Defined');
+        }
+		
+		$studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
+
+        $StudentAttendancesRecords = $studentAttendanceMarkedRecords->find('all')
+            ->select([
+				'education_grade' => 'educationGrades.name',
+				'education_grade_id' => 'educationGrades.id',
+				'period' => 'student_attendance_marked_records.period',
+				'student_id' => 'InstitutionClassesStudents.student_id',
+            ])
+			->innerJoin(
+			['InstitutionClasses' => 'institution_classes'],
+			[
+				'InstitutionClasses.id = student_attendance_marked_records.institution_class_id '
+			]
+			)
+			->innerJoin(
+			['InstitutionClassesStudents' => 'institution_class_students'],
+			[
+				'InstitutionClassesStudents.institution_class_id = InstitutionClasses.id '
+			]
+			)
+			->innerJoin(
+			['InstitutionStudents' => 'institution_students'],
+			[
+				'InstitutionStudents.student_id = InstitutionClassesStudents.student_id ',
+				'InstitutionStudents.academic_period_id = InstitutionClassesStudents.academic_period_id ',
+				'InstitutionClassesStudents.student_status_id = 1'
+			]
+			)
+			->innerJoin(
+			['educationGrades' => 'education_grades'],
+			[
+				'educationGrades.id = InstitutionStudents.education_grade_id '
+			]
+			)
+            ->where([
+                'student_attendance_marked_records.date' => date('Y-m-d'),
+				'student_attendance_marked_records.academic_period_id' => $currentYearId,
+				'student_attendance_marked_records.institution_id' => $conditions['institution_id'],
+				'educationGrades.id IS NOT NULL',
+            ])
+			->order(['educationGrades.id' => 'ASC'])			
+			->toArray()
+            ;
+		
+		foreach ($StudentAttendancesRecords as $key => $record) {
+	
+			$InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
+
+			$StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
+            ->select([
+				'student_id' => 'institution_student_absence_details.student_id',
+				'class_id' => 'institution_student_absence_details.institution_class_id',
+				'present' => '(IF(institution_student_absence_details.absence_type_id IS NULL OR institution_student_absence_details.absence_type_id = 3,1,0))',
+				'absent' => '(IF(institution_student_absence_details.absence_type_id IN (1,2),1,0))',
+				'late' => '(IF(institution_student_absence_details.absence_type_id = 3, 1,0))',
+            ])
+			->where([
+                'institution_student_absence_details.date' => date('Y-m-d'),
+				'institution_student_absence_details.period' => $record->period,
+				'institution_student_absence_details.student_id' => $record->student_id,
+            ])
+			->toArray();
+			
+			$StudentAttendances[$record->education_grade_id][] = array('attendance'=>$StudentAttendancesData, 'education_grade_id'=> $record->education_grade_id, 'education_grade'=>$record->education_grade);
+		}			
+
+        $attendanceData = [];
+	
+        $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
+        $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
+        $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
+		
+        foreach ($StudentAttendances as $key => $attendances) {
+			
+			$total_present = $total_absent = $total_late = 0;
+			
+			foreach ($attendances as $key => $attendance) {
+
+				$attendanceData[$attendance['education_grade_id']] = $attendance['education_grade'];
+				
+				if(!empty($attendance['attendance'])) {
+					foreach ($attendance['attendance'] as $key => $markAttendanceData) {
+						$total_present = $markAttendanceData->present + $total_present;
+						$total_absent = $markAttendanceData->absent + $total_absent;
+						$total_late = $markAttendanceData->late + $total_late;
+					}
+				} else {
+					$total_present = $total_present + 1;
+				}
+
+				foreach ($dataSet as $dkey => $dvalue) {
+					if (!array_key_exists($attendance['education_grade_id'], $dataSet[$dkey]['data'])) {
+						$dataSet[$dkey]['data'][$attendance['education_grade_id']] = 0;
+					}
+				}
+				
+				$dataSet['Present']['data'][$attendance['education_grade_id']] = $total_present;
+				$dataSet['Absent']['data'][$attendance['education_grade_id']] = $total_absent;
+				$dataSet['Late']['data'][$attendance['education_grade_id']] = $total_late;
+			}
+		}
+		
+        // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+        $params['options']['subtitle'] = array('text' => __('For Today'));
+        $params['options']['xAxis']['categories'] = array_values($attendanceData);
+        $params['dataSet'] = $dataSet;
+        return $params;
+    }
+	
     public function completedGrade($educationGradeId, $studentId)
     {
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
