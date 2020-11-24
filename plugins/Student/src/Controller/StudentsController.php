@@ -142,7 +142,7 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentTransport']);
     }
-    public function Outcomes($actionOutcome = '')
+    public function Outcomes()
     {
         $comment = $this->request->query['comment'];
         if(!empty($comment) && $comment == 1){ 
