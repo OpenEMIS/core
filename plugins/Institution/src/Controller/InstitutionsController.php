@@ -1564,6 +1564,11 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
     }
 
+    public function dashboard2($id)
+    {
+        $this->set('ngController', 'DashboardCtrl as DashboardController');
+    }
+
     public function dashboard($id)
     {
         $id = $this->ControllerAction->paramsDecode($id)['id'];
@@ -1631,7 +1636,7 @@ class InstitutionsController extends AppController
             ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_year', $params);
         }
-
+        $this->set('percentage', 75);
         $this->set('highChartDatas', $highChartDatas);
     }
 
