@@ -45,6 +45,15 @@ class ReportsController extends AppController
         $this->set('contentHeader', $header);
     }
 
+    public function getInstitutionStatusOptions($module)
+    {
+        $options = [
+                'active' => __('Active'),
+                'inactive' => __('Inactive')
+            ];
+            return $options;
+    }
+
     public function getFeatureOptions($module)
     {
         $options = [];
