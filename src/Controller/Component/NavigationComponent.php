@@ -1408,6 +1408,11 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            'Reports.Profiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
             'Reports.Students' => [
                 'title' => 'Students',
                 'parent' => 'Reports',
@@ -1603,6 +1608,12 @@ class NavigationComponent extends Component
                     'parent' => 'SystemSetup',
                     'params' => ['plugin' => 'Risk'],
                     'selected' => ['Risks.Risks']
+                ],
+                'ProfileTemplate.ProfileTemplate' => [
+                    'title' => 'Profiles',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'ProfileTemplate'],
+                    'selected' => ['ProfileTemplate.ProfileTemplate']
                 ],
 
             'Security' => [
