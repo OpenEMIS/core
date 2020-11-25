@@ -1609,10 +1609,11 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Risk'],
                     'selected' => ['Risks.Risks']
                 ],
-               'ProfileTemplate.index' => [
-                    'title' => 'Profile',
-                    'parent' => 'SystemSetup',
-                    'selected' => ['ProfileTemplate.index']
+				'ProfileTemplates.Templates' => [
+                'title' => 'Profiles',
+                'parent' => 'SystemSetup',
+                'params' => ['plugin' => 'ProfileTemplate'],
+                'selected' => ['ProfileTemplates.Templates']
                 ],
 
             'Security' => [
