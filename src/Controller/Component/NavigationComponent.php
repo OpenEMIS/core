@@ -344,7 +344,9 @@ class NavigationComponent extends Component
 
             if ($isGuardian) {
                 $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileGuardianNavigation());
-            
+                
+                $this->checkClassification($navigations);
+
                 $session->write('Profile.Profiles.reload', true);
             }
         } 
@@ -1064,6 +1066,7 @@ class NavigationComponent extends Component
                 $n['params']['institutionId'] = $institutionId;
             }
         }
+
         return $navigation;
     }
 
@@ -1299,15 +1302,22 @@ class NavigationComponent extends Component
                     'title' => 'Students',
                     'parent' => 'Profiles.Guardian',
                     'params' => ['plugin' => 'Profile'],
-                    //'params' => ['plugin' => 'Profile'],
-                    'selected' => ['Profiles.ProfileStudents', 'Profiles.ProfileStudentUser']
+                    'selected' => ['Profiles.ProfileStudents']
+                ],
+                'Profiles.ProfileStudentUser' => [
+                    'title' => 'General',
+                    'parent' => 'Profiles.ProfileStudents.index',
+                    'params' => ['plugin' => 'Profile'],
+                    //'params' => ['plugin' => 'Profile', 0 => $this->controller->paramsEncode(['id' => $stdId])],
+                    'selected' => ['Profiles.ProfileStudentUser']
                 ],
                 'Profiles.StudentProgrammes.index' => [
-                    'title' => 'Academic',
-                    'parent' => 'Profiles.ProfileStudents',
-                    'params' => ['plugin' => 'Profile'],
-                    'selected' => []
-                ],
+                'title' => 'Academic',
+                'parent' => 'Profiles.ProfileStudents.index',
+                'params' => ['plugin' => 'Profile'],
+                'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours',
+                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes']
+            ],
         ];
        
         foreach ($navigation as &$n) {
@@ -1315,8 +1325,7 @@ class NavigationComponent extends Component
                 $n['params']['studentId'] = $stdId;
             }
         }
-
-
+        
         return $navigation;
     }
 
