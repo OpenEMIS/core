@@ -62,8 +62,16 @@ class SurveysTable extends AppTable
 
             if (!(isset($this->request->data[$this->alias()]['institution_status']))) {
                 $option = $attr['options'];
-                reset($option);
-                $this->request->data[$this->alias()]['institution_status'] = key($option);
+                $options = [
+                    'Active' => __('Active'),
+                    'Inactive' => __('Inactive'),
+                ];
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $options;
+                
+                //reset($option);
+                //$this->request->data[$this->alias()]['institution_status'] = key($option);
             }
             return $attr;
         }
@@ -371,6 +379,7 @@ class SurveysTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
+        //echo "<pre>"; print_r($fields); die();
 
         // To update to this code when upgrade server to PHP 5.5 and above
         // unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
