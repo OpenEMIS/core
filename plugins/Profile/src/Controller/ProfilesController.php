@@ -314,14 +314,18 @@ class ProfilesController extends AppController
         $alias = $model->alias;
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
-            $action = $this->request->params['action'];
+        $action = $this->request->params['action'];
             if ($action == 'ProfileStudentUser') {
                 $studentId = $this->request->pass[1];
-                $sId = $this->ControllerAction->paramsDecode($studentId);
-                $student_id = $sId['id'];
-                $entity = $this->Profiles->get($student_id);
-                $name = $entity->name;
-                $header = $name;
+                if (!empty($studentId)) {
+                    $sId = $this->ControllerAction->paramsDecode($studentId);
+                    $student_id = $sId['id'];
+                    $entity = $this->Profiles->get($student_id);
+                    $name = $entity->name;
+                    $header = $name;
+                } else {
+                   $header = $header . ' - ' . $model->getHeader($alias);
+                }
             }
         //POCOR-5675
         $header = $header . ' - ' . $model->getHeader($alias);
