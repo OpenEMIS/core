@@ -51,7 +51,22 @@ class SurveysTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('survey_form', ['type' => 'hidden']);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_status');
         $this->ControllerAction->field('status', ['type' => 'hidden']);
+    }
+
+     public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+           $attr['options'] = $this->controller->getInstitutionStatusOptions($this->alias());
+
+            if (!(isset($this->request->data[$this->alias()]['institution_status']))) {
+                $option = $attr['options'];
+                reset($option);
+                $this->request->data[$this->alias()]['institution_status'] = key($option);
+            }
+            return $attr;
+        }
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
