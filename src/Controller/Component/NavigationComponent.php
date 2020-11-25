@@ -344,6 +344,7 @@ class NavigationComponent extends Component
 
             if ($isGuardian) {
                 $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileGuardianNavigation());
+                $navigations = $this->appendNavigation('Profiles.ProfileStudents.index', $navigations, $this->getProfileGuardianStudentNavigation());
                 
                 $this->checkClassification($navigations);
 
@@ -1169,6 +1170,7 @@ class NavigationComponent extends Component
                 'selected' => ['Profiles.ScholarshipApplications', 'ScholarshipsDirectory.index', 'ScholarshipsDirectory.view', 'ProfileApplicationInstitutionChoices.index', 'ProfileApplicationInstitutionChoices.view', 'ProfileApplicationInstitutionChoices.add', 'ProfileApplicationInstitutionChoices.edit', 'ProfileApplicationInstitutionChoices.delete', 'ProfileApplicationAttachments.index', 'ProfileApplicationAttachments.view', 'ProfileApplicationAttachments.add', 'ProfileApplicationAttachments.edit', 'ProfileApplicationAttachments.delete']
             ],
         ];
+        
         return $navigation;
     }
 
@@ -1288,10 +1290,6 @@ class NavigationComponent extends Component
 
     public function getProfileGuardianNavigation()
     {
-        $session = $this->request->session();
-        $id = $this->controller->paramsEncode(['id' => $session->read('Student.Students.id')]);
-        $stdId = isset($this->request->params['studentId']) ? $this->request->params['studentId'] : $id;
-
         $navigation = [
                 'Profiles.Guardian' => [
                     'title' => 'Guardian',
@@ -1303,13 +1301,20 @@ class NavigationComponent extends Component
                     'parent' => 'Profiles.Guardian',
                     'params' => ['plugin' => 'Profile'],
                     'selected' => ['Profiles.ProfileStudents']
-                ],
+                ]
+        ];
+    
+        return $navigation;
+    }
+
+    public function getProfileGuardianStudentNavigation()
+    {
+        $navigation = [
                 'Profiles.ProfileStudentUser' => [
-                    'title' => 'General',
+                    'title' => 'Overview',
                     'parent' => 'Profiles.ProfileStudents.index',
                     'params' => ['plugin' => 'Profile'],
-                    //'params' => ['plugin' => 'Profile', 0 => $this->controller->paramsEncode(['id' => $stdId])],
-                    'selected' => ['Profiles.ProfileStudentUser']
+                    'selected' => ['Profiles.ProfileStudentUser.view']
                 ],
                 'Profiles.StudentProgrammes.index' => [
                 'title' => 'Academic',
@@ -1319,14 +1324,8 @@ class NavigationComponent extends Component
                 'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes']
             ],
         ];
-       
-        foreach ($navigation as &$n) {
-            if (isset($n['params'])) {
-                $n['params']['studentId'] = $stdId;
-            }
-        }
-        
-        return $navigation;
+
+        return $navigation;   
     }
 
     public function getDirectoryStaffNavigation()
