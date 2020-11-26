@@ -9,12 +9,16 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
+use Cake\I18n\Time;
+use Cake\I18n\Date;
+
 class SurveysTable extends AppTable
 {
     private $surveyStatuses = [];
     const OPEN = 1;
     const PENDINGAPPROVAL = 2;
     const COMPLETED = 3;
+    const SURVEY_DISABLED = -1;
     
     public function initialize(array $config)
     {
@@ -72,11 +76,12 @@ class SurveysTable extends AppTable
             $requestData = json_decode($settings['process']['params']);
             $surveyFormId = $requestData->survey_form;
             $academicPeriodId = $requestData->academic_period_id;
+            
             $surveyFormName = $this->SurveyForms->get($surveyFormId)->name;
             $academicPeriodName = $this->AcademicPeriods->get($academicPeriodId)->name;
             $userId = $requestData->user_id;
             $superAdmin = $requestData->super_admin;
-
+            
             $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
             $institutionType = $SurveyFormsFilters->find()
                 ->where([
@@ -120,9 +125,38 @@ class SurveysTable extends AppTable
             $mappingArray = ['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'code'];
 
             foreach ($notCompleteRecords->all() as $record) {
+                
+                $surveyFormCount = $this->SurveyForms->find()
+                    ->select([
+                        'SurveyForms.id',
+                        'SurveyForms.code',
+                        'SurveyForms.name',
+                        'SurveyStatuses.date_enabled',
+                        'SurveyStatuses.date_disabled',
+                        'SurveyStatusPeriods.academic_period_id',
+                    ])
+                    ->leftJoin(['SurveyStatuses' => 'survey_statuses'], [
+                        'SurveyStatuses.survey_form_id = SurveyForms.id'
+                    ])
+                    ->leftJoin(['SurveyStatusPeriods' => 'survey_status_periods'], [
+                        'SurveyStatusPeriods.survey_status_id = SurveyStatuses.id'
+                    ])
+                    ->where(['SurveyForms.id' => $surveyFormId, 
+                        'SurveyStatusPeriods.academic_period_id' => $academicPeriodId,
+                        'DATE(SurveyStatuses.date_disabled) >= ' => date('Y-m-d')
+                        ])
+                    ->count();
+                
+                $record->status_id = __('Not Completed');
+                
+                if( $surveyFormCount > 0){
+                    $record->status_id = __('Open');
+                }
+                
                 $record->academic_period_id = $academicPeriodName;
                 $record->survey_form_id = $surveyFormName;
-                $record->status_id = __('Not Completed');
+                
+                
 
                 $row = [];
                 foreach ($fields as $field) {
@@ -147,13 +181,14 @@ class SurveysTable extends AppTable
                         $this->aliasField('academic_period_id').' = '.$academicPeriodId,
                         $this->aliasField('survey_form_id').' = '.$surveyFormId,
                         $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id'),
-                        $this->aliasField('status_id').' IN ('.self::OPEN.','.self::PENDINGAPPROVAL.')'
+                        $this->aliasField('status_id').' IN ('.self::SURVEY_DISABLED.','.self::OPEN.','.self::PENDINGAPPROVAL.')'
                     ])
                 .')'])
                 ->innerJoinWith('Areas')
                 ->leftJoinWith('AreaAdministratives')
                 ->select([
                     'institution_id' => $InstitutionsTable->aliasField('name'),
+                    'institutionId' => $InstitutionsTable->aliasField('id'),
                     'code' => $InstitutionsTable->aliasField('code'),
                     'area' => 'Areas.name',
                     'area_administrative' => 'AreaAdministratives.name'
@@ -173,12 +208,27 @@ class SurveysTable extends AppTable
             $writer = $settings['writer'];
             $sheetName = $settings['sheet']['name'];
             $mappingArray = ['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'code'];
-
+           
             foreach ($notOpenRecords->all() as $record) {
                 $record->academic_period_id = $academicPeriodName;
                 $record->survey_form_id = $surveyFormName;
-                $record->status_id = $record->status_id = __('Open');
-
+                
+                $countDisabledSurveyInstitution = $this->find('list',[
+                'keyField' => 'institution_id',
+		'valueField' => 'status_id',
+                ])->where([
+                    $this->aliasField('academic_period_id') .' = '. $academicPeriodId,
+                    $this->aliasField('survey_form_id') .' = '. $surveyFormId,
+                    $this->aliasField('institution_id') .' = '. $record->institutionId,
+                    $this->aliasField('status_id') .' = '. self::SURVEY_DISABLED
+                ])->count();
+                
+                if($countDisabledSurveyInstitution > 0){
+                    $record->status_id = __('Not Completed');
+                }else{
+                    $record->status_id = __('Open');
+                }
+                
                 $row = [];
                 foreach ($fields as $field) {
                     if (in_array($field['field'], $mappingArray)) {
@@ -191,6 +241,7 @@ class SurveysTable extends AppTable
                         $row[] = '';
                     }
                 }
+                 
                 $writer->writeSheetRow($sheetName, $row);
              }
             }

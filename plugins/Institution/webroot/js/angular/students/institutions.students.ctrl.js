@@ -292,7 +292,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     {headerName: StudentController.translatedTexts.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
                 ],
                 localeText: localeText,
-                enableColResize: false,
+                enableColResize: true,
                 enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,

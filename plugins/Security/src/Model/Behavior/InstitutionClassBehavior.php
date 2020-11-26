@@ -36,6 +36,9 @@ class InstitutionClassBehavior extends Behavior
                     'SecurityRoleFunctions.security_role_id = SecurityAccess.security_role_id',
                     'SecurityRoleFunctions.`_view` = 1' // check if the role have view access
                 ])
+                ->innerJoin(['SecurityRoles' => 'security_roles'], [
+                    'SecurityRoles.id = SecurityRoleFunctions.security_role_id'
+                ])
                 ->innerJoin(['SecurityFunctions' => 'security_functions'], [
                     'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
                     "SecurityFunctions.controller = 'Institutions'" // only restricted to permissions of Institutions
@@ -72,7 +75,8 @@ class InstitutionClassBehavior extends Behavior
                                         "InstitutionClasses.staff_id" => $userId,
                                         "InstitutionClassesSecondaryStaff.secondary_staff_id" => $userId
                                     ]
-                                ]
+                                ],
+                                'SecurityRoles.code' => 'HOMEROOM_TEACHER'
                             ]
                         ], [
                             'AND' => [
@@ -86,7 +90,9 @@ class InstitutionClassBehavior extends Behavior
                                 'OR' => [
                                     'InstitutionSubjectStaff.end_date IS NULL',
                                     'InstitutionSubjectStaff.end_date >= ' => $today->format('Y-m-d')
-                                ]
+                                ],
+                                'SecurityRoles.code' => 'TEACHER',
+                                "InstitutionClasses.staff_id != " => $userId  
                             ]
                         ]
                     ]

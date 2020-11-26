@@ -205,91 +205,91 @@ class InstitutionsTable extends ControllerActionTable
         $validator = $this->LatLongValidation();
 
         $validator
-            ->add('date_opened', [
-                    'ruleCompare' => [
-                        'rule' => ['comparison', 'notequal', '0000-00-00'],
-                    ]
-                ])
+        ->add('date_opened', [
+            'ruleCompare' => [
+                'rule' => ['comparison', 'notequal', '0000-00-00'],
+            ]
+        ])
 
-            ->allowEmpty('date_closed')
-            ->add('date_opened', 'ruleLessThanToday', [
-                'rule' => ['lessThanToday', true]
-                ])
-            ->add('date_closed', 'ruleCompareDateReverse', [
-                    'rule' => ['compareDateReverse', 'date_opened', true]
-                ])
-            ->add('date_closed', 'ruleCheckPendingWorkbench', [
-                'rule' => 'checkPendingWorkbench',
-                'last' => true
-            ])
-            ->add('classification', [
-                'validClassification' => [
-                    'rule' => ['range', 1, 2],
-                ]
-            ])
+        ->allowEmpty('date_closed')
+        ->add('date_opened', 'ruleLessThanToday', [
+            'rule' => ['lessThanToday', true]
+        ])
+        ->add('date_closed', 'ruleCompareDateReverse', [
+            'rule' => ['compareDateReverse', 'date_opened', true]
+        ])
+        ->add('date_closed', 'ruleCheckPendingWorkbench', [
+            'rule' => 'checkPendingWorkbench',
+            'last' => true
+        ])
+        ->add('classification', [
+            'validClassification' => [
+                'rule' => ['range', 1, 2],
+            ]
+        ])
 
             // ->add('address', 'ruleMaximum255', [
-            // 		'rule' => ['maxLength', 255],
-            // 		'message' => 'Maximum allowable character is 255',
-            // 		'last' => true
-            // 	])
+            //      'rule' => ['maxLength', 255],
+            //      'message' => 'Maximum allowable character is 255',
+            //      'last' => true
+            //  ])
 
-            ->add('code', 'ruleCustomCode', [
-                    'rule' => ['validateCustomPattern', 'institution_code'],
-                    'provider' => 'table',
-                    'last' => true
-                ])
+        ->add('code', 'ruleCustomCode', [
+            'rule' => ['validateCustomPattern', 'institution_code'],
+            'provider' => 'table',
+            'last' => true
+        ])
 
-            ->allowEmpty('postal_code')
-            ->add('postal_code', 'ruleCustomPostalCode', [
-                    'rule' => ['validateCustomPattern', 'postal_code'],
-                    'provider' => 'table',
-                    'last' => true
-                ])
+        ->allowEmpty('postal_code')
+        ->add('postal_code', 'ruleCustomPostalCode', [
+            'rule' => ['validateCustomPattern', 'postal_code'],
+            'provider' => 'table',
+            'last' => true
+        ])
 
-            ->add('code', 'ruleUnique', [
-                    'rule' => 'validateUnique',
-                    'provider' => 'table',
+        ->add('code', 'ruleUnique', [
+            'rule' => 'validateUnique',
+            'provider' => 'table',
                     // 'message' => 'Code has to be unique'
-                ])
+        ])
 
-            ->allowEmpty('email')
-            ->add('email', [
-                    'ruleValidEmail' => [
-                        'rule' => 'email'
-                    ]
-                ])
+        ->allowEmpty('email')
+        ->add('email', [
+            'ruleValidEmail' => [
+                'rule' => 'email'
+            ]
+        ])
 
-            ->allowEmpty('telephone')
-            ->add('telephone', 'ruleCustomTelephone', [
-                    'rule' => ['validateCustomPattern', 'institution_telephone'],
-                    'provider' => 'table',
-                    'last' => true
-                ])
+        ->allowEmpty('telephone')
+        ->add('telephone', 'ruleCustomTelephone', [
+            'rule' => ['validateCustomPattern', 'institution_telephone'],
+            'provider' => 'table',
+            'last' => true
+        ])
 
-            ->allowEmpty('fax')
-            ->add('fax', 'ruleCustomFax', [
-                    'rule' => ['validateCustomPattern', 'institution_fax'],
-                    'provider' => 'table',
-                    'last' => true
-                ])
+        ->allowEmpty('fax')
+        ->add('fax', 'ruleCustomFax', [
+            'rule' => ['validateCustomPattern', 'institution_fax'],
+            'provider' => 'table',
+            'last' => true
+        ])
 
-            ->add('area_id', 'ruleAuthorisedArea', [
-                    'rule' => ['checkAuthorisedArea']
-                ])
-            ->add('area_id', 'ruleConfiguredArea', [
-                    'rule' => ['checkConfiguredArea']
-                ])
-            ->allowEmpty('area_administrative_id')
-            ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
-                    'rule' => ['checkConfiguredArea']
-                ])
-            ->add('institution_provider_id', 'ruleLinkedSector', [
-                        'rule' => 'checkLinkedSector',
-                        'provider' => 'table'
-                ])
-            ->allowEmpty('logo_content')
-            ;
+        ->add('area_id', 'ruleAuthorisedArea', [
+            'rule' => ['checkAuthorisedArea']
+        ])
+        ->add('area_id', 'ruleConfiguredArea', [
+            'rule' => ['checkConfiguredArea']
+        ])
+        ->allowEmpty('area_administrative_id')
+        ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
+            'rule' => ['checkConfiguredArea']
+        ])
+        ->add('institution_provider_id', 'ruleLinkedSector', [
+            'rule' => 'checkLinkedSector',
+            'provider' => 'table'
+        ])
+        ->allowEmpty('logo_content')
+        ;
         return $validator;
     }
 
@@ -314,17 +314,17 @@ class InstitutionsTable extends ControllerActionTable
     public function areaAdminstrativeAfterDelete(Event $event, $areaAdministrative)
     {
         $subquery = $this->AreaAdministratives
-            ->find()
-            ->select(1)
-            ->where(function ($exp, $q) {
-                return $exp->equalFields($this->AreaAdministratives->aliasField('id'), $this->aliasField('area_administrative_id'));
-            });
+        ->find()
+        ->select(1)
+        ->where(function ($exp, $q) {
+            return $exp->equalFields($this->AreaAdministratives->aliasField('id'), $this->aliasField('area_administrative_id'));
+        });
 
         $query = $this->find()
-            ->select('id')
-            ->where(function ($exp, $q) use ($subquery) {
-                return $exp->notExists($subquery);
-            });
+        ->select('id')
+        ->where(function ($exp, $q) use ($subquery) {
+            return $exp->notExists($subquery);
+        });
 
         foreach ($query as $row) {
             $this->updateAll(
@@ -364,8 +364,8 @@ class InstitutionsTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $query
-            ->contain(['Areas'])
-            ->select(['area_code' => 'Areas.code']);
+        ->contain(['Areas'])
+        ->select(['area_code' => 'Areas.code']);
     }
 
     public function onGetName(Event $event, Entity $entity)
@@ -389,12 +389,12 @@ class InstitutionsTable extends ControllerActionTable
             }
             else {
                 $name = $event->subject()->HtmlField->link($entity->name, [
-                        'plugin' => $this->controller->plugin,
-                        'controller' => $this->controller->name,
-                        'action' => 'Institutions',
-                        '0' => "view",
-                        '1' => $this->paramsEncode(['id' => $entity->id])
-                    ]);
+                    'plugin' => $this->controller->plugin,
+                    'controller' => $this->controller->name,
+                    'action' => 'Institutions',
+                    '0' => "view",
+                    '1' => $this->paramsEncode(['id' => $entity->id])
+                ]);
             }
         }
 
@@ -413,27 +413,27 @@ class InstitutionsTable extends ControllerActionTable
     public function getViewShiftDetail($institutionId, $academicPeriod)
     {
         $data = $this->InstitutionShifts->find()
-                ->innerJoinWith('Institutions')
-                ->innerJoinWith('LocationInstitutions')
-                ->innerJoinWith('ShiftOptions')
-                ->select([
-                    'Owner' => 'Institutions.name',
-                    'OwnerId' => 'Institutions.id',
-                    'Occupier' => 'LocationInstitutions.name',
-                    'OccupierId' => 'LocationInstitutions.id',
-                    'Shift' => 'ShiftOptions.name',
-                    'ShiftId' => 'ShiftOptions.id',
-                    'StartTime' => 'InstitutionShifts.start_time',
-                    'EndTime' => 'InstitutionShifts.end_time'
-                ])
-                ->where([
-                    'OR' => [
-                        [$this->InstitutionShifts->aliasField('location_institution_id') => $institutionId],
-                        [$this->InstitutionShifts->aliasField('institution_id') => $institutionId]
-                    ],
-                    $this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
-                ])
-                ->toArray();
+        ->innerJoinWith('Institutions')
+        ->innerJoinWith('LocationInstitutions')
+        ->innerJoinWith('ShiftOptions')
+        ->select([
+            'Owner' => 'Institutions.name',
+            'OwnerId' => 'Institutions.id',
+            'Occupier' => 'LocationInstitutions.name',
+            'OccupierId' => 'LocationInstitutions.id',
+            'Shift' => 'ShiftOptions.name',
+            'ShiftId' => 'ShiftOptions.id',
+            'StartTime' => 'InstitutionShifts.start_time',
+            'EndTime' => 'InstitutionShifts.end_time'
+        ])
+        ->where([
+            'OR' => [
+                [$this->InstitutionShifts->aliasField('location_institution_id') => $institutionId],
+                [$this->InstitutionShifts->aliasField('institution_id') => $institutionId]
+            ],
+            $this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
+        ])
+        ->toArray();
 
         return $data;
     }
@@ -487,6 +487,10 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
+        // set action for webhook
+        $this->webhookAction = $this->action;
+
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Institutions', 'index'];
         $this->field('security_group_id', ['visible' => false]);
         // $this->field('institution_site_area_id', ['visible' => false]);
@@ -565,7 +569,7 @@ class InstitutionsTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    {   
         $SecurityGroup = TableRegistry::get('Security.SystemGroups');
         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
@@ -573,11 +577,91 @@ class InstitutionsTable extends ControllerActionTable
         $dispatchTable[] = $SecurityGroup;
         $dispatchTable[] = $this->ExaminationCentres;
         $dispatchTable[] = $SecurityGroupAreas;
+        
+        if(!empty($this->controllerAction) && ($this->controllerAction == 'Institutions')) {
+            // Webhook institution create -- start
+            
+            $bodyData = $this->find()
+            ->innerJoinWith('Ownerships')
+            ->innerJoinWith('Sectors')
+            ->innerJoinWith('Areas')
+            ->innerJoinWith('AreaAdministratives')
+            ->innerJoinWith('Genders')
+            ->innerJoinWith('Providers')
+            ->innerJoinWith('Types')
+            ->innerJoinWith('Localities')
+            ->select([
+                'Owner' => 'Ownerships.name',
+                'OwnerId' => 'Ownerships.id',
+                'Sector' => 'Sectors.name',
+                'Providers' => 'Providers.name',
+                'ProvidersId' => 'Providers.id',
+                'Type' => 'Types.name',
+                'Area' => 'Areas.name',
+                'AreaAdministratives' => 'AreaAdministratives.name',
+                'Localities' => 'Localities.name',
+                'LocalitiesId' => 'Localities.id',
+                'Genders' => 'Genders.name',
+                'GendersId' => 'Genders.id'
+            ])
+            ->where([
+                $this->aliasField('id') => $entity->id
+            ])->first();
+            
+            $classificationId = $entity->classification;
+            if($classificationId == 1 ){
+                $clss= 'Academic Institution';
+            } else {
+                $clss = 'Non-academic institution';
+            }
+            
+            $body = array();
+            $body = [
+                'institution_id' => $entity->id,
+                'institution_name' => $entity->name,
+                'institution_alternative_name' => $entity->alternative_name,
+                'institution_code' => $entity->code,
+                'institution_classification' => $clss,
+                'institution_sector' => !empty($bodyData->Sector) ? $bodyData->Sector : NULL,
+                'institution_type' =>  !empty($bodyData->Type) ? $bodyData->Type : NULL,
+                'institution_gender' => !empty($bodyData->Genders) ? $bodyData->Genders : NULL,
+                'institution_date_opened' => date("d-m-Y", strtotime($entity->date_opened)),
+                'institution_address' => $entity->address,
+                'institution_postal_code' => $entity->postal_code,
+                'institution_locality' => !empty($bodyData->Localities) ? $bodyData->Localities : NULL,
+                'institution_latitude' => $entity->latitude,
+                'institution_longitude' => $entity->longitude,
+                'institution_area_education' =>  !empty($bodyData->Area) ? $bodyData->Area : NULL,
+                'institution_area_administrative' => !empty($bodyData->AreaAdministratives) ? $bodyData->AreaAdministratives : NULL,
+                'institution_contact_person' => $entity->contact_person,
+                'institution_telephone' => $entity->telephone,
+                'institution_mobile' => $entity->fax,
+                'institution_email' => $entity->email,
+                'institution_website' => $entity->website,
+            ];
+            if($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if ($this->Auth->user()) { 
+                    $Webhooks->triggerShell('institutions_create', ['username' => $username], $body);
+                }   
+            }
+        // Webhook institution create -- end
 
+        // Webhook institution update --start
+            if($this->webhookAction == 'edit') {
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if ($this->Auth->user()) {
+                    $Webhooks->triggerShell('institutions_update', ['username' => $username], $body);
+                }
+            }            
+        // webhook institution update --end
+        }
+        
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
         }
     }
+
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -586,30 +670,40 @@ class InstitutionsTable extends ControllerActionTable
 
         $groupEntity = $SecurityGroup->get($securityGroupId);
         $SecurityGroup->delete($groupEntity);
-    }
+        $body = array();
+        $body = [
+            'institution_id' => $entity->id
+        ];
 
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        if ($this->action == 'index') {
-            $institutionCount = $this->find();
-            $conditions = [];
+        //webhook event
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        if ($this->Auth->user()) {
+         $Webhooks->triggerShell('institutions_delete', ['username' => $username],$body);
+     }
+ }
 
-            $institutionCount = clone $this->dashboardQuery;
-            $cloneClass = clone $this->dashboardQuery;
+ public function afterAction(Event $event, ArrayObject $extra)
+ {
+    if ($this->action == 'index') {
+        $institutionCount = $this->find();
+        $conditions = [];
 
-            $models = [
-                ['Types', $this->aliasField('institution_type_id'), 'Type', 'query' => $this->dashboardQuery],
-                ['Sectors', $this->aliasField('institution_sector_id'), 'Sector', 'query' => $this->dashboardQuery],
-                ['Localities', $this->aliasField('institution_locality_id'), 'Locality', 'query' => $this->dashboardQuery],
-            ];
+        $institutionCount = clone $this->dashboardQuery;
+        $cloneClass = clone $this->dashboardQuery;
 
-            foreach ($models as $key => $model) {
-                $institutionArray[$key] = $this->getDonutChart('institutions', $model);
-            }
+        $models = [
+            ['Types', $this->aliasField('institution_type_id'), 'Type', 'query' => $this->dashboardQuery],
+            ['Sectors', $this->aliasField('institution_sector_id'), 'Sector', 'query' => $this->dashboardQuery],
+            ['Localities', $this->aliasField('institution_locality_id'), 'Locality', 'query' => $this->dashboardQuery],
+        ];
 
-            $indexDashboard = 'dashboard';
-            $count = $institutionCount->count();
-            unset($institutionCount);
+        foreach ($models as $key => $model) {
+            $institutionArray[$key] = $this->getDonutChart('institutions', $model);
+        }
+
+        $indexDashboard = 'dashboard';
+        $count = $institutionCount->count();
+        unset($institutionCount);
 
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $extra['elements']['mini_dashboard'] = [
@@ -641,13 +735,14 @@ class InstitutionsTable extends ControllerActionTable
 
             $selectString = $modelName.'.name';
             $institutionTypesCount = $institutionRecords
-                ->contain([$modelName])
-                ->select([
-                    'count' => $institutionRecords->func()->count($modelId),
-                    'name' => $selectString
-                ])
-                ->group($modelId)
-                ;
+            ->contain([$modelName])
+            ->select([
+                    //'modelId' => $modelId,
+                'count' => $institutionRecords->func()->count($modelId),
+                'name' => $selectString
+            ])
+            ->group($modelId)
+            ;
 
             $this->advancedSearchQuery($this->request, $institutionTypesCount);
 
@@ -657,6 +752,14 @@ class InstitutionsTable extends ControllerActionTable
                 // Compile the dataset
                 $dataSet[] = [0 => $value['name'], 1 =>$value['count']];
             }
+            
+            /*$dataSet = [
+                ['Lower Secondary', 7],
+                ['Upper  Secondary', 4],
+                ['Pre-primary', 6],
+                ['Primary', 15]
+            ];*/            
+            
             $params['dataSet'] = $dataSet;
         }
         unset($institutionRecords);
@@ -702,9 +805,9 @@ class InstitutionsTable extends ControllerActionTable
             try {
                 if ($areaId > 0) {
                     $path = $this->Areas
-                        ->find('path', ['for' => $areaId])
-                        ->contain('AreaLevels')
-                        ->toArray();
+                    ->find('path', ['for' => $areaId])
+                    ->contain('AreaLevels')
+                    ->toArray();
 
                     foreach ($path as $value) {
                         if ($value['area_level']['level'] == $areaLevel) {
@@ -736,8 +839,8 @@ class InstitutionsTable extends ControllerActionTable
 
             $AreaTable = TableRegistry::get('Area.AreaLevels');
             $value = $AreaTable->find()
-                    ->where([$AreaTable->aliasField('level') => $areaLevel])
-                    ->first();
+            ->where([$AreaTable->aliasField('level') => $areaLevel])
+            ->first();
 
             if (is_object($value)) {
                 return $value->name;
@@ -937,9 +1040,9 @@ class InstitutionsTable extends ControllerActionTable
         } elseif ($action == 'add') {
             $SectorTable = $this->Sectors;
             $defaultSector = $SectorTable
-                ->find()
-                ->where([$SectorTable->aliasField('default') => 1])
-                ->first();
+            ->find()
+            ->where([$SectorTable->aliasField('default') => 1])
+            ->first();
 
             if (!empty($defaultSector)) {
                 $selectedSectorId = $defaultSector->id;
@@ -951,8 +1054,8 @@ class InstitutionsTable extends ControllerActionTable
         if (!empty($selectedSectorId)) {
             $ProviderTable = $this->Providers;
             $providerOptions = $ProviderTable->find('list')
-                ->where([$ProviderTable->aliasField('institution_sector_id') => $selectedSectorId])
-                ->toArray();
+            ->where([$ProviderTable->aliasField('institution_sector_id') => $selectedSectorId])
+            ->toArray();
         }
 
         $attr['options'] = $providerOptions;
@@ -973,16 +1076,16 @@ class InstitutionsTable extends ControllerActionTable
         $search = sprintf('%s%%', $search);
 
         $list = $this
-            ->find()
-            ->where([
-                'OR' => [
-                    $this->aliasField('name') . ' LIKE' => $search,
-                    $this->aliasField('code') . ' LIKE' => $search
-                ]
-            ])
-            ->where([$conditions])
-            ->order([$this->aliasField('name')])
-            ->all();
+        ->find()
+        ->where([
+            'OR' => [
+                $this->aliasField('name') . ' LIKE' => $search,
+                $this->aliasField('code') . ' LIKE' => $search
+            ]
+        ])
+        ->where([$conditions])
+        ->order([$this->aliasField('name')])
+        ->all();
 
         $data = array();
         foreach ($list as $obj) {
@@ -1121,27 +1224,27 @@ class InstitutionsTable extends ControllerActionTable
         $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
         $securityGroupIds = $SecurityGroupAreas->find()
-            ->innerJoinWith('Areas')
+        ->innerJoinWith('Areas')
+        ->innerJoinWith('SecurityGroups.Users')
+        ->where([
+            'Areas.lft <= ' => $institutionArea->lft,
+            'Areas.rght >= ' => $institutionArea->rght,
+            'Users.id' => $userId
+        ])
+        ->union(
+            $SecurityGroupInstitutions->find()
             ->innerJoinWith('SecurityGroups.Users')
             ->where([
-                'Areas.lft <= ' => $institutionArea->lft,
-                'Areas.rght >= ' => $institutionArea->rght,
+                $SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,
                 'Users.id' => $userId
             ])
-            ->union(
-                $SecurityGroupInstitutions->find()
-                    ->innerJoinWith('SecurityGroups.Users')
-                    ->where([
-                        $SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,
-                        'Users.id' => $userId
-                    ])
-                    ->select([$SecurityGroupInstitutions->aliasField('security_group_id')])
-                    ->distinct([$SecurityGroupInstitutions->aliasField('security_group_id')])
-            )
-            ->select([$SecurityGroupAreas->aliasField('security_group_id')])
-            ->distinct([$SecurityGroupAreas->aliasField('security_group_id')])
-            ->hydrate(false)
-            ->toArray();
+            ->select([$SecurityGroupInstitutions->aliasField('security_group_id')])
+            ->distinct([$SecurityGroupInstitutions->aliasField('security_group_id')])
+        )
+        ->select([$SecurityGroupAreas->aliasField('security_group_id')])
+        ->distinct([$SecurityGroupAreas->aliasField('security_group_id')])
+        ->hydrate(false)
+        ->toArray();
         $securityGroupIds = $this->array_column($securityGroupIds, 'security_group_id');
         return $securityGroupIds;
     }
@@ -1204,14 +1307,14 @@ class InstitutionsTable extends ControllerActionTable
     {
         if (isset($options['academic_period_id'])) {
             $query
-                ->leftJoinWith('ExaminationCentres', function ($q) use ($options) {
-                    return $q
-                        ->where(['ExaminationCentres.academic_period_id' => $options['academic_period_id']]);
-                })
-                ->where([
-                    'ExaminationCentres.institution_id IS NULL'
-                ])
-                ;
+            ->leftJoinWith('ExaminationCentres', function ($q) use ($options) {
+                return $q
+                ->where(['ExaminationCentres.academic_period_id' => $options['academic_period_id']]);
+            })
+            ->where([
+                'ExaminationCentres.institution_id IS NULL'
+            ])
+            ;
             return $query;
         }
     }
@@ -1219,76 +1322,76 @@ class InstitutionsTable extends ControllerActionTable
     public function findMap(Query $query, array $options)
     {
         $query
-            ->select([
-                'id',
-                'code',
-                'name',
-                'longitude',
-                'latitude'
-            ])
-            ->contain([
-                'Types' => [
-                    'fields' => [
-                        'Types.id',
-                        'Types.name',
-                        'Types.order'
-                    ],
-                    'sort' => ['Types.order' => 'ASC']
-                ]
-            ])
-            ->formatResults(function (ResultSetInterface $results) {
-                $formattedResults = [];
-                $institutionTypes = [];
-                foreach ($results as $institution) {
-                    $groupId = 'group_' . $institution->type->id;
-                    $institutionTypes[$groupId] = $institution->type->name;
+        ->select([
+            'id',
+            'code',
+            'name',
+            'longitude',
+            'latitude'
+        ])
+        ->contain([
+            'Types' => [
+                'fields' => [
+                    'Types.id',
+                    'Types.name',
+                    'Types.order'
+                ],
+                'sort' => ['Types.order' => 'ASC']
+            ]
+        ])
+        ->formatResults(function (ResultSetInterface $results) {
+            $formattedResults = [];
+            $institutionTypes = [];
+            foreach ($results as $institution) {
+                $groupId = 'group_' . $institution->type->id;
+                $institutionTypes[$groupId] = $institution->type->name;
 
-                    if (!array_key_exists($groupId, $formattedResults)) {
-                        $formattedResults[$groupId]['data'] = [];
-                    }
-
-                    $encodedId = $this->paramsEncode(['id' => $institution->id]);
-                    $url = Router::url([
-                        'plugin' => 'Institution',
-                        'controller' => 'Institutions',
-                        'action' => 'Institutions',
-                        'view',
-                        'institutionId' => $encodedId,
-                        $encodedId
-                    ], true);
-                    $longitude = $institution->has('longitude') ? $institution->longitude : 0;
-                    $latitude = $institution->has('latitude') ? $institution->latitude : 0;
-
-                    $obj = [
-                        'id' => $encodedId,
-                        'lng' => $longitude,
-                        'lat' => $latitude,
-                        'content' => $institution->name."<br/>".$institution->code."<br/><br/><a href='".$url."' target='_blank'>".__('View Details')."</a>"
-                    ];
-
-                    $formattedResults[$groupId]['data'][] = $obj;
+                if (!array_key_exists($groupId, $formattedResults)) {
+                    $formattedResults[$groupId]['data'] = [];
                 }
 
-                $colorIndex = 0;
-                foreach ($formattedResults as $key => &$obj) {
-                    $colors = $this->getMarkerColor();
-                    $markerColor = $colors[$colorIndex % sizeof($colors)];
+                $encodedId = $this->paramsEncode(['id' => $institution->id]);
+                $url = Router::url([
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Institutions',
+                    'view',
+                    'institutionId' => $encodedId,
+                    $encodedId
+                ], true);
+                $longitude = $institution->has('longitude') ? $institution->longitude : 0;
+                $latitude = $institution->has('latitude') ? $institution->latitude : 0;
 
-                    $numberOfRecords = sizeof($obj['data']);
-                    $title = $institutionTypes[$key] . ' ('.$numberOfRecords.')';
+                $obj = [
+                    'id' => $encodedId,
+                    'lng' => $longitude,
+                    'lat' => $latitude,
+                    'content' => $institution->name."<br/>".$institution->code."<br/><br/><a href='".$url."' target='_blank'>".__('View Details')."</a>"
+                ];
 
-                    $obj['marker'] = [
-                        'icon' => 'university',
-                        'markerColor' => $markerColor,
-                        'title' => $title,
-                        'id' => $key
-                    ];
+                $formattedResults[$groupId]['data'][] = $obj;
+            }
 
-                    $colorIndex++;
-                }
+            $colorIndex = 0;
+            foreach ($formattedResults as $key => &$obj) {
+                $colors = $this->getMarkerColor();
+                $markerColor = $colors[$colorIndex % sizeof($colors)];
 
-                return $formattedResults;
-            });
+                $numberOfRecords = sizeof($obj['data']);
+                $title = $institutionTypes[$key] . ' ('.$numberOfRecords.')';
+
+                $obj['marker'] = [
+                    'icon' => 'university',
+                    'markerColor' => $markerColor,
+                    'title' => $title,
+                    'id' => $key
+                ];
+
+                $colorIndex++;
+            }
+
+            return $formattedResults;
+        });
 
         return $query;
     }

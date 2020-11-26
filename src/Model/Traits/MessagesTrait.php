@@ -331,7 +331,8 @@ trait MessagesTrait
                 'failed' => 'The record is not rejected due to errors encountered.'
             ],
             'class' => 'Class',
-            'noAccess' => 'You do not have access to this Class.'
+            'noAccess' => 'You do not have access to this Class.',
+            'mandatoryFieldFill' => "Please fill up mandatory fields before submitting for approval"
         ],
         'InstitutionRubrics' => [
             'noRubrics' => 'No Available Rubrics'
@@ -2364,7 +2365,18 @@ trait MessagesTrait
                     'ruleUniqueCode' => 'Code must be unique'
                 ]
             ]
+        ],
+        'Archive' => [
+            'lessSpace' => 'Please make sure there is enough space for backup.',
+            'backupReminder' => 'Please remember to backup first before you proceed to transfer this data. Transfer is not possible for the current Academic Period. After the transfer is completed, the Academic Period will be updated to non-editable and non-visible.',
+            'currentAcademic' => 'Please do not transfer data of current Academic Period.'
+        ],
+        'Connection' => [
+            'testConnectionSuccess' => 'Connection has been established successfully.',
+            'testConnectionFail' => 'Please configure correct Connection to Archive Database.',
+            'transferConnectionFail' => 'Please configure connection to Archive Database.'
         ]
+
     ];
 
 

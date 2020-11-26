@@ -20,7 +20,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StudentAttendances' => ['index', 'add']
+            'StudentAttendances' => ['index', 'add', 'edit']
         ]);
     }
 
@@ -31,6 +31,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $institutionClassId = $options['institution_class_id'];
         $day = $options['day_id'];
         $period = $options['attendance_period_id'];
+        $subjectId = $options['subject_id'];
 
         return $query
             ->where([
@@ -38,12 +39,15 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('date') => $day,
-                $this->aliasField('period') => $period
+                $this->aliasField('period') => $period,
+                $this->aliasField('subject_id = ') => $subjectId
             ]);
+            
     }
 
     public function afterSaveCommit(Event $event, Entity $entity)
     {
+        
         $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
         $ClassAttendanceRecords->dispatchEvent('Model.StudentAttendances.afterSaveCommit', [$entity], $ClassAttendanceRecords);
     }

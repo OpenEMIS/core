@@ -192,6 +192,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
 
                                 InstitutionStudentOutcomesSvc.getRowData(Controller.outcomeTemplateId, subject, defaultRow, gradingOptions, Controller.studentResults, limit, page)
                                 .then(function(response) {
+                                    // console.log('response data source', response.data);
                                     var lastRowIndex = response.data.total;
 
                                     if (lastRowIndex > 0) {
@@ -313,7 +314,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 columnDefs: [],
                 rowData: [],
                 headerHeight: 38,
-                rowHeight: 58,
+                rowHeight: 40,
                 minColWidth: 100,
                 enableColResize: true,
                 enableSorting: false,
@@ -330,6 +331,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 ensureDomOrder: true,
                 pagination: true,
                 paginationPageSize: 40,
+                rowBuffer:40,
                 maxBlocksInCache: 1,
                 cacheBlockSize: 40,
                 localeText: localeText,

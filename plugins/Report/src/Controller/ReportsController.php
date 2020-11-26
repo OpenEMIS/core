@@ -51,6 +51,7 @@ class ReportsController extends AppController
         if ($module == 'Directory') {
             $options = [
                 'Report.Directory' => __('User Default Identity'),
+                'Report.Users'     => __('User List')
             ];
         } elseif ($module == 'Institutions') {
             $options = [
@@ -64,6 +65,7 @@ class ReportsController extends AppController
                 'Report.InstitutionStaff' => __('Staff'),
                 'Report.StudentAbsences' => __('Student Absence'),
                 'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
+                'Report.InstitutionSummaryReport' => __('Institution Summary Report'),
                 'Report.BodyMasses' => __('Student Body Masses'),
                 // 'Report.StaffAbsences' => __('Staff Absence'),
                 'Report.StaffAttendances' => __('Staff Attendance'),
@@ -77,7 +79,9 @@ class ReportsController extends AppController
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
-                'Report.InstitutionCommittees' => __('Committees')
+                'Report.InstitutionCommittees' => __('Committees'),
+                'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),
+                'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report')
 				
             ];
         } elseif ($module == 'Students') {
@@ -109,9 +113,9 @@ class ReportsController extends AppController
                 'Report.StaffSalaries' => __('Salaries'),
                 'Report.StaffSystemUsage' => __('System Usage'),
                 'Report.StaffTrainingReports' => __('Training Courses Report'),
+                'Report.StaffLeaveReport' => __('Staff Leave'),
                 'Report.StaffPositions' => __('Position Summary Report'),
-                'Report.StaffLeaveReport' => __('Staff Leave')
-
+                'Report.StaffDuties' => __('Duties Report')
 				
             ];
         } elseif ($module == 'Textbooks') {
@@ -196,6 +200,7 @@ class ReportsController extends AppController
                 'ReportProgress.total_records'
             );
             $ReportProgress = TableRegistry::get('Report.ReportProgress');
+            echo '<pre>';print_r($ReportProgress);die;
             if (!empty($ids)) {
                 $results = $ReportProgress
                     ->find()

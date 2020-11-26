@@ -1,3 +1,151 @@
+### [3.58.2] - 2020-11-19
+- Data Archiving feature in OpenEMIS Core
+- Develop Reports > Directoty > User List
+- Develop API Feature student assessment (write)
+- Develop API Feature student assessment (read)
+- Develop Staff Duties feature
+- Develop Export Subject List in Institutions > Subjects Page
+- Develop Export Class List Institutions > Class Page
+- Develop Reports > Staff > Duties Report
+- Develop Reports > Institution > Summary Report
+- Bug Fix in Institution > Finance > Expenditure > Add page
+- Bug Fix in Institution > Finance > Income > Add page
+- Bug Fix in Institutions > Performance > Assessments page
+- Bug Fix in Institution > Attendance > Students page
+- Bug Fix in Institutions > Students > Academic > Extracurricular page
+- Bug Fix in Institution > Students > Import > Import Extracurricular feature
+- Bug Fix in student overview page
+
+### [3.58.1] - 2020-11-03
+- Implemented: Webhook Feature class (delete)
+- Implemented: Webhook Feature staff (delete)
+- Implemented: Webhook Feature student (delete)
+- Implemented: Webhook Feature subject (delete)
+- Implemented: Develop a function to view students report cards online
+- Bug Fixed: Institutions > Forms > Survey : System does not save mandatory dropdown fields when user clicks on save
+- Bug Fixed: Administration > Survey > Forms: Survey created with "Open" status is still resulting in Institutions having "Not Completed" status in the Survey report
+- Bug Fixed: Institution > Attendance > Staff/Student : Replace BEMIS ID with OpenEMIS ID
+- Bug Fixed: Administration > Survey > Forms > Forms tab: To allow Repeater questions in Surveys
+- Bug Fixed: Institutions > Attendance : Set default height for table row
+- Bug Fixed: Institutions > Attendance : Set default height for table row
+
+### [3.58.0] - 2020-10-27
+- Implemented: Allow students from different class to be combined into the same subjects / Allow students from same class to split across multiple subjects
+- Implemented: Administration > System Setup > Attendance - Student Mark Types: reorder function
+- Implemented: Webhook Feature staff (update)	
+- Implemented: Webhook Feature programme (delete)
+- Implemented: Webhook Feature programme (update)
+- Implemented: Webhook Feature programme (create)
+- Implemented: Webhook Feature institution (delete)
+- Implemented: Webhook Feature institution (update)
+- Implemented: Allow user to set dates to Administrations > Attendance configurations
+- Implemented: Add Subject filter to Class Attendance Marked Report 
+- Implemented: Add a case workflow for unmarked attendance
+- Bug Fixed: Webhooks: Missing field output after Update Programme has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Create Programme has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Update Staff has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Create Staff has been triggered in Core
+- Bug Fixed: Webhooks Institution Delete: To remove some Webhooks field output
+- Bug Fixed: Webhooks Programme Delete: To remove some Webhooks field output
+- Bug Fixed: Webhooks Update Programme: Updated Webhooks fields
+- Bug Fixed: Webhooks Create Programme: Updated Webhooks fields
+- Bug Fixed: Webhooks: When Class is created in Core and Subjects are automatically created, Create Subject was not triggered in Webhooks
+- Bug Fixed: Webhooks: Missing field output after Create Staff has been triggered in Core
+- Bug Fixed: Login: 404 Error Message encountered upon successful login
+- Bug Fixed: Institution > Attendance > Students: When changing Class dropdown, the page loads and it keeps loading
+
+### [3.57.10] - 2020-10-02
+- Implemented: Webhook Feature student (update)
+- Implemented: Webhook Feature student (create)
+- Implemented: Webhook Feature subject (update)
+- Implemented: Webhook Feature subject (create)
+- Implemented: Webhook Feature staff (create)
+- Bug Fixed: Institution > Academic > Schedules > Timetable > Timetable tab: Rooms field has no option
+- Bug Fixed: Administration > System Configuration > Webhooks : Add id to Class Create output
+- Bug Fixed: Webhooks Output for Create Class: Missing fields in Webhooks Output
+- Bug Fixed: Administration > System Configuration > Webhooks : Add institution id to Institutions Create output
+- Bug Fixed: Administration > System Configuration > Webhooks : Add id to Class Update output
+- Bug Fixed: Institutions > Attendance > Students: View and Edit permissions
+- Bug Fixed: Institutions > Students/Staff > Add : Unable to create users as OpenEMIS ID is showing 1 or 2 digits.
+- Bug Fixed: Institutions > Academic > Subjects : Subject list should follow Institution > Programme subject list
+
+### [3.57.9] - 2020-09-25
+- Bug Fixed: Webhooks Output for Update Class: Missing fields in Webhooks Output
+- Bug Fixed: Administration > Security > Groups : 404 error when creating group that is linked to an institution
+
+### [3.57.8] - 2020-09-22
+- Bug Fixed: Institutions > Academic > Subjects: Subjects are not automatically created
+- Bug Fixed: System Configurations > Authentication > Other Identity Providers > SAML: Increase the input length of the below fields from 50 to 100
+- Bug Fixed: Reports > Institution > Student Attendance Summary Report: Report generated is inaccurate
+- Implemented: Webhook Feature institution (create)
+- Implemented: Webhook Feature class (update)
+- Implemented: Webhook Feature class (create)
+
+### [3.57.7] - 2020-09-17
+- Bug Fixed: System Configurations > Authentication > Other Identity Providers > SAML: Increase the input length of the fields from 50 to 100
+- Bug Fixed: Reports > Institution > Student Attendance Summary Report: Report generated is inaccurate
+
+### [3.57.6] - 2020-09-10
+- Bug Fixed: Institution > Attendance > Students : Access for Secondary Teacher/ Subject Teacher
+- Bug Fixed: Institutions > Academic > Subjects: System does not create subjects based on configuration in National Level
+
+### [3.57.5] - 2020-09-07
+- Bug Fixed: Institutions > Attendance > Students: Unable to view/mark attendance even though permission for All Classes and All Subjects have been given
+- Bug FIxed: Institutions > Performance > Outcomes: Problems viewing all outcomes when editing
+
+### [3.57.4] - 2020-09-01
+- Bug Fixed: Report > Institutions > Student Attendance Summary report : Include gender columns
+- Bug Fixed: Institutions > Academic > Subjects: Subjects are not automatically created
+
+### [3.57.3] - 2020-08-18
+- Bug Fixed: Institutions > Attendance > Students: Unable to view/mark attendance even though permission for All Classes and All Subjects have been given
+- Bug FIxed: Institutions > General > Overview: Fax is not reflecting as Mobile after it has been updated in Labels
+- Bug Fixed: User > Nationalities : Ordering of nationalities should be the same as ordering of nationalities in Field Options>Nationalities
+- Bug Fixed: Administration > System Setup > Education Structure > Grades: Reorder function is not working
+
+### [3.57.2] - 2020-08-12
+- Bug Fixed: Institutions > Attendance > Students: Period Names are in the wrong order
+- Bug Fixed: Institutions > Attendance > Students: Teachers are able to view/mark attendance of other classes and grades that they are not assigned to
+
+### [3.57.1] - 2020-08-12
+- Bug Fixed: Institutions > Academics > Classes: Number of Subjects not reflected
+- Bug Fixed: Institution > Attendance > Students: Periods are not displaying accordingly
+- Bug Fixed: Administrations > Performance > Assessments > Assessment Periods: Encountered 404 error when editing record
+- Bug Fixed: Institutions > Dashboard: Total Number of students should only consist of students with Enrolled Status
+- Bug Fixed: Translation : Reports > Institution > Subject Report : Report headers is not translated
+- Bug Fixed: Directory > Student > Overview tab: Gender field unable to edit
+- Bug Fixed: Institutions > Attendance > Students > All Days filter: Error Encountered
+- Bug Fixed: Institutions > Student/Staff > Internal Search: Columns are not resizable
+
+### [3.57.0] - 2020-07-28
+- Implemented feature to mark student attendance by subject
+- Implemented institution Finance (Income/Expenditure) feature
+
+### [3.54.2] - 2020-07-13
+- Bug Fixed: Pages where reordering of items do not save when refreshed
+- Bug Fixed: Administration > Survey > Forms: Mandatory Fields are empty but can be Approved
+
+### [3.54.1] - 2020-07-09
+- Bug Fixed: Institutions > Examinations > Results > View: 404 error 
+- Bug Fixed: Institution > Academics > Programmes > Edit: 404 Error encountered
+
+### [3.54.0] - 2020-07-03
+- Implemented Student Extracurricular Activities Import
+- Implemented Dhivehi translations to Student Report
+- Implemented Download and Export of Class list and Subject list
+
+### [3.53.1] - 2020-6-23
+- Bug Fixed: Reports > Remove abc option from format options
+- Bug Fixed: API > Gender not working
+- Bug Fixed: Institution > Attendance > Student > Comment box for Reason/Comment not placed accurately in the cell box
+- Bug Fixed: Reports > Survey > Status in report is still showing Open when Date Disabled for the survey is changed to a past date
+
+### [3.53.0] - 2020-6-19
+- Implemented Reports > Staff Leave Report
+- Implemented Reports > Staff > Training Report
+- Implemented Reports > Staff > Position Summary Report
+- Implemented Reports > Staff Attendance and Leave Reports
+
 ### [3.52.0] - 2020-6-10
 - Implemented Reports > Students > Risk Assessment Report
 - Implemented Reports > Students > Health Report
@@ -143,7 +291,7 @@
 - Implemented lesson timetable feature: Institution > Academic > Schedules
 
 ### [3.44.1] - 2019-11-01
-- Bug fix on Attendance: Changes made in Attendace not reflected in individual student profile.
+- Bug fix on Attendance: Changes made in Attendance not reflected in individual student profile.
 - Bug Fix on Competencies: Not availabe in student profile > academic
 - Bug Fix on Competencies: Crate permissions for users to grant access for Competencies
 - Bug Fix on student status after Promotion and Repeat

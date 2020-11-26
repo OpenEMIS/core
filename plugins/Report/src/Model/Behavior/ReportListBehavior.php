@@ -96,7 +96,7 @@ class ReportListBehavior extends Behavior {
 			$attr['options'] = ['zip' => 'Zip'];
 
 		} else {
-			$attr['options'] = ['xlsx' => 'Excel', 'pdf' => 'abc'];
+			$attr['options'] = ['xlsx' => 'Excel'];
 		}
 
 		$attr['select'] = false;
