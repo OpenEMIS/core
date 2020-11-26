@@ -48,8 +48,8 @@ class ReportsController extends AppController
     public function getInstitutionStatusOptions($module)
     {
         $options = [
-                'active' => __('Active'),
-                'inactive' => __('Inactive')
+                'Active' => __('Active'),
+                'Inactive' => __('Inactive')
             ];
             return $options;
     }
