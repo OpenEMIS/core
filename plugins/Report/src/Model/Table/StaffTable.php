@@ -41,9 +41,21 @@ class StaffTable extends AppTable  {
             ->notEmpty('institution_id');
         return $validator;
     }
+	
+	public function validationStaffDuties(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('institution_id');
+        return $validator;
+    }
 
      public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+		if ($data[$this->alias()]['feature'] == 'Report.StaffDuties') {
+            $options['validate'] = 'StaffDuties';
+        } 
         if ($data[$this->alias()]['feature'] == 'Report.StaffLeaveReport') {
             $options['validate'] = 'StaffLeaveReport';
         }
@@ -81,18 +93,40 @@ class StaffTable extends AppTable  {
                             'valueField' => 'name'
                         ]);
 
-                $attr['options'] = $staffLeaveTypeOptions->toArray();
-                $attr['type'] = 'select';
-                $attr['select'] = false;
+               $staffLeaveTypeList = $staffLeaveTypeOptions->toArray();
+                
+               if (empty($staffLeaveTypeList)) {
+                    $staffLeaveTypeOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    $attr['type'] = 'select';
+                    $attr['options'] = $staffLeaveTypeOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+                    
+                    if (in_array($feature, [
+                        'Report.StaffLeaveReport'
+                    ])) {
+                        $staffLeaveTypeOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Staff Leaves')] + $staffLeaveTypeList;
+                    }else {
+                        $staffLeaveTypeOptions = ['' => '-- ' . __('Select') . ' --'] + $staffLeaveTypeList;
+                    }
 
-                if (empty($request->data[$this->alias()]['staff_leave_type_id'])) {
-                    reset($staffLeaveTypeOptions);
-                    $request->data[$this->alias()]['staff_leave_type_id'] = key($staffLeaveTypeOptions);
+                    $attr['type'] = 'chosenSelect';
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $staffLeaveTypeOptions;
+                    $attr['attr']['required'] = true;
                 }
-                return $attr;
-            }
         }
+<<<<<<< HEAD
     }
+=======
+              return $attr;
+          }
+        }
+    
+>>>>>>> 3c9983a8ede9b0d956a7c372e090a0da6d39a00c
+
+
 
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -100,7 +134,7 @@ class StaffTable extends AppTable  {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.StaffSalaries',
-                                    'Report.StaffLeaveReport'])) {
+                                    'Report.StaffLeaveReport','Report.StaffDuties'])) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
 
@@ -208,7 +242,7 @@ class StaffTable extends AppTable  {
             $feature = $this->request->data[$this->alias()]['feature'];
 
             if (in_array($feature, ['Report.StaffPositions',
-                                    'Report.StaffLeaveReport'])) { 
+                                    'Report.StaffLeaveReport','Report.StaffDuties'])) { 
                 $area_id = $this->request->data[$this->alias()]['area_id'];
                 $institutionList = [];
 
@@ -266,6 +300,8 @@ class StaffTable extends AppTable  {
                     
                     if (in_array($feature, [
                         'Report.StaffPositions',
+                        'Report.StaffLeaveReport',
+                        'Report.StaffDuties'
                     ])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     }else {

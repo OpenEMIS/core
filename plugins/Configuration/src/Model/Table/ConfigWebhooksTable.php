@@ -17,6 +17,26 @@ class ConfigWebhooksTable extends ControllerActionTable
 
     private $eventKeyOptions = [
         'logout' => 'Logout',
+        'institutions_create' => 'Institution Create',
+        'class_create'  	  => 'Class Create',
+        'class_update'    	  => 'Class Update',
+        'subject_create'      => 'Subject Create',
+        'student_create'      => 'Student Create',
+        'student_update'      => 'Student Update',
+        'subject_update'      => 'Subject Update',
+        'staff_create'    	  => 'Staff Create',
+        'staff_update'        => 'Staff Update',
+        'institutions_update' => 'Institution Update',
+        'institutions_delete' => 'Institutions Delete',
+        'programme_create'    => 'Programme Create',
+        'programme_update'    => 'Programme Update',
+        'programme_delete'    => 'Programme Delete',
+        'class_delete'        => 'Class Delete',
+        'programme_delete'    => 'Programme Delete',  
+        'subject_delete'      => 'Subject Delete',
+        'programme_delete'    => 'Programme Delete',  
+        'student_delete'      => 'Student Delete',
+        'staff_delete'        => 'Staff Delete'
     ];
 
     public function initialize(array $config)

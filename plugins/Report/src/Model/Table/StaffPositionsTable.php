@@ -57,17 +57,17 @@ class StaffPositionsTable extends AppTable
         
         $query
             ->select([
-                'workflow_steps_name' => 'Statuses.name',
-                'position_no' => $this->aliasField('position_no'),
-                'staff_position_grade_name' => 'StaffPositionGrades.name',
+                'institution_code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',               
                 'area_code' => 'Areas.code',
                 'area_name' => 'Areas.name',
                 'area_administratives_code' => 'AreaAdministratives.code',
                 'area_administratives_name' => 'AreaAdministratives.name',
                 'assignee_id' => 'Assignees.id',
+                'workflow_steps_name' => 'Statuses.name',
+                'position_no' => $this->aliasField('position_no'),
+                'staff_position_grade_name' => 'StaffPositionGrades.name',
                 'is_homeroom' => $this->aliasField('is_homeroom'),
-                'institution_name' => 'Institutions.name',
-                
                 'openemis_no' => $Staff->aliasField('openemis_no'),
                 'first_name' => $Staff->aliasField('first_name'),
                 'last_name' => $Staff->aliasField('last_name'),
@@ -163,38 +163,17 @@ class StaffPositionsTable extends AppTable
         $newFields = [];
 
         $newFields[] = [
-            'key' => 'Statuses.name',
-            'field' => 'workflow_steps_name',
+            'key' => 'Institutions.code',
+            'field' => 'institution_code',
             'type' => 'string',
-            'label' => __('Status')
+            'label' => __('Institution Code')
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionPositions.position_no',
-            'field' => 'position_no',
+            'key' => 'Institutions.name',
+            'field' => 'institution_name',
             'type' => 'string',
-            'label' => __('Number')
-        ];
-
-        $newFields[] = [
-            'key' => 'StaffPositionTitles.id',
-            'field' => 'staff_position_id',
-            'type' => 'string',
-            'label' => __('Title')
-        ];
-
-        $newFields[] = [
-            'key' => 'StaffPositionGrades.name',
-            'field' => 'staff_position_grade_name',
-            'type' => 'string',
-            'label' => __('Grade')
-        ];
-
-        $newFields[] = [
-            'key' => 'Institutions.id',
-            'field' => 'institution_id',
-            'type' => 'string',
-            'label' => __('Institution')
+            'label' => __('Institution Name')
         ];
 
         $newFields[] = [
@@ -230,6 +209,34 @@ class StaffPositionsTable extends AppTable
             'field' => 'assignee_id',
             'type' => 'string',
             'label' => __('Assignee')
+        ];
+
+        $newFields[] = [
+            'key' => 'Statuses.name',
+            'field' => 'workflow_steps_name',
+            'type' => 'string',
+            'label' => __('Status')
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionPositions.position_no',
+            'field' => 'position_no',
+            'type' => 'string',
+            'label' => __('Number')
+        ];
+
+        $newFields[] = [
+            'key' => 'StaffPositionTitles.id',
+            'field' => 'staff_position_id',
+            'type' => 'string',
+            'label' => __('Title')
+        ];
+
+        $newFields[] = [
+            'key' => 'StaffPositionGrades.name',
+            'field' => 'staff_position_grade_name',
+            'type' => 'string',
+            'label' => __('Grade')
         ];
 
         $newFields[] = [

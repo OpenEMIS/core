@@ -14,7 +14,8 @@ class ImportStudentBehavior extends Behavior
     public $importFeatureList = [
         'Institution.Institutions.ImportStudentAdmission' => 'Import Student',
         'Institution.Institutions.ImportStudentBodyMasses' => 'Import Body Masses',
-        'Institution.Institutions.ImportStudentGuardians' => 'Import Student Guardians'
+        'Institution.Institutions.ImportStudentGuardians' => 'Import Student Guardians',
+        'Institution.Institutions.ImportStudentExtracurriculars' => 'Import Extracurriculars'
     ];
 
     public function implementedEvents()

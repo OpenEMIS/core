@@ -65,7 +65,7 @@ class StudentsController extends AppController
             'Nationalities'     => ['className' => 'User.Nationalities'],
             'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
             'Behaviours'        => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-            'Extracurriculars'  => ['className' => 'Student.Extracurriculars'],
+            'Extracurriculars'  => ['className' => 'Student.Extracurriculars',  'actions' => ['index', 'add', 'edit', 'remove','view']],
             'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
             'ImportStudents'    => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
         ];

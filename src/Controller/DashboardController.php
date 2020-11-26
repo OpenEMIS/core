@@ -7,6 +7,7 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use App\Controller\AppController;
+use Cake\Log\Log;
 
 class DashboardController extends AppController
 {
@@ -18,6 +19,9 @@ class DashboardController extends AppController
         // $this->loadComponent('Paginator');
 
         $this->attachAngularModules();
+        $this->triggerUnmarkedAttendanceShell();
+        $this->triggerInstitutionClassSubjectsShell();
+		
     }
 
     // CAv4
@@ -85,5 +89,27 @@ class DashboardController extends AppController
                 ]);
                 break;
         }
+    }
+
+    
+    private function triggerUnmarkedAttendanceShell()
+    {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateStudentUnmarkedAttendances';
+        $logs = ROOT . DS . 'logs' . DS . 'GenerateStudentUnmarkedAttendances.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        $pid = exec($shellCmd);
+        Log::write('debug', $shellCmd); 
+    
+    }
+
+    private function triggerInstitutionClassSubjectsShell()
+    {
+        $script = 'InstitutionClassSubjects';
+        $consoleDir = ROOT . DS . 'bin' . DS;
+        $logs = ROOT . DS . 'logs' . DS . 'InstitutionClassSubjects.log & echo $!';
+        $cmd = ROOT . DS . 'bin' . DS . 'cake InstitutionClassSubjects';
+        $nohup = 'nohup ' . $cmd . '> /dev/null 2>/dev/null &';
+        exec($nohup);
+        Log::write('debug', $nohup); 
     }
 }

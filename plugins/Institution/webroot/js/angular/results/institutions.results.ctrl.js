@@ -31,9 +31,11 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
             $scope.assessment = assessment;
             $scope.academic_period_id = assessment.academic_period_id;
             $scope.education_grade_id = assessment.education_grade_id;
-
-            promises[0] = InstitutionsResultsSvc.getSubjects($scope.roles, $scope.assessment_id, $scope.class_id);
+            
+            //promises[0] = InstitutionsResultsSvc.getSubjects($scope.roles, $scope.assessment_id, $scope.class_id);
+            promises[0] = InstitutionsResultsSvc.getDataSubjects($scope.roles, $scope.assessment_id, $scope.class_id,$scope.academic_period_id,$scope.institution_id);
             promises[1] = InstitutionsResultsSvc.getAssessmentTerms($scope.assessment_id);
+            
             return $q.all(promises);
         }, function(error) {
             // No Assessment
@@ -288,18 +290,18 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
         if (typeof subject !== "undefined") {
             $scope.subject = subject;
         }
-
+        
         $scope.education_subject_id = $scope.subject.id;
         if ($scope.gridOptions != null) {
             // update value in context
-            $scope.gridOptions.context.education_subject_id = $scope.subject.id;
+            $scope.gridOptions.context.education_subject_id = $scope.subject.education_subject_id;
             // Always reset
             $scope.gridOptions.api.setRowData([]);
         }
 
         UtilsSvc.isAppendSpinner(true, 'institution-result-table');
         // getPeriods
-        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
+        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.education_subject_id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
         .then(function(hasPermission) {
             $scope.editPermissionForSelectedSubject = hasPermission;
             return InstitutionsResultsSvc.getPeriods($scope.assessment_id, $scope.selectedAcademicTerm)
@@ -309,7 +311,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
         .then(function(periods) {
             if (periods) {
                 $scope.periods = periods;
-                return InstitutionsResultsSvc.getGradingTypes($scope.assessment_id, $scope.education_subject_id);
+                return InstitutionsResultsSvc.getCopyGradingTypes($scope.assessment_id, $scope.subject.education_subject_id);
             }
         }, function(error) {
             // No Assessment Periods
@@ -330,7 +332,8 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
         // resetColumnDefs
         .then(function(response) {
             if (response) {
-                return InstitutionsResultsSvc.getRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id, $scope.education_grade_id);
+                //return InstitutionsResultsSvc.getRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id, $scope.education_grade_id);
+                return InstitutionsResultsSvc.getNewRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id, $scope.education_grade_id);
             }
         })
         // getRowData
@@ -347,7 +350,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
     };
 
     $scope.onEditClick = function() {
-        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
+        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.education_subject_id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
         .then(function(hasPermission) {
             if(hasPermission) {
                 $scope.action = 'edit';
