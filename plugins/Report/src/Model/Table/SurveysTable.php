@@ -55,6 +55,17 @@ class SurveysTable extends AppTable
         $this->ControllerAction->field('status', ['type' => 'hidden']);
     }
 
+    public function onExcelGetInstitutionStatusActive(Event $event, Entity $entity)
+    {
+        return 'Active';
+    }
+
+    public function onExcelGetInstitutionStatusInactive(Event $event, Entity $entity)
+    {
+        
+        return 'InActive';
+    }
+
     public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -422,8 +433,8 @@ class SurveysTable extends AppTable
         ];
 
         $fields[] = [
-            'key' => $institutionStatus,
-            'field' =>$institutionStatus,
+            'key' => 'institution_status'. $institutionStatus,
+            'field' =>'institution_status'. $institutionStatus,
             'type' => 'string',
             'label' => __('Institution Status')
         ];
