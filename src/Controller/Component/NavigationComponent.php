@@ -344,11 +344,10 @@ class NavigationComponent extends Component
 
             if ($isGuardian) {
                 $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileGuardianNavigation());
+
                 $navigations = $this->appendNavigation('Profiles.ProfileStudents.index', $navigations, $this->getProfileGuardianStudentNavigation());
                 
                 $this->checkClassification($navigations);
-
-                $session->write('Profile.Profiles.reload', true);
             }
         } 
 
@@ -1170,7 +1169,7 @@ class NavigationComponent extends Component
                 'selected' => ['Profiles.ScholarshipApplications', 'ScholarshipsDirectory.index', 'ScholarshipsDirectory.view', 'ProfileApplicationInstitutionChoices.index', 'ProfileApplicationInstitutionChoices.view', 'ProfileApplicationInstitutionChoices.add', 'ProfileApplicationInstitutionChoices.edit', 'ProfileApplicationInstitutionChoices.delete', 'ProfileApplicationAttachments.index', 'ProfileApplicationAttachments.view', 'ProfileApplicationAttachments.add', 'ProfileApplicationAttachments.edit', 'ProfileApplicationAttachments.delete']
             ],
         ];
-        
+
         return $navigation;
     }
 
@@ -1301,7 +1300,7 @@ class NavigationComponent extends Component
                     'parent' => 'Profiles.Guardian',
                     'params' => ['plugin' => 'Profile'],
                     'selected' => ['Profiles.ProfileStudents']
-                ]
+                ],
         ];
     
         return $navigation;
@@ -1309,17 +1308,19 @@ class NavigationComponent extends Component
 
     public function getProfileGuardianStudentNavigation()
     {
+        $studentId = $this->request->pass[1];
+    
         $navigation = [
                 'Profiles.ProfileStudentUser' => [
                     'title' => 'Overview',
                     'parent' => 'Profiles.ProfileStudents.index',
-                    'params' => ['plugin' => 'Profile'],
-                    'selected' => ['Profiles.ProfileStudentUser.view']
+                    'params' => ['plugin' => 'Profile','controller' => 'Profiles', 'action' => 'ProfileStudentUser', 0 => 'view', $studentId],
+                    'selected' => ['Profiles.ProfileStudentUser']
                 ],
                 'Profiles.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Profiles.ProfileStudents.index',
-                'params' => ['plugin' => 'Profile'],
+                'params' =>  ['plugin' => 'Profile', 'controller' => 'Profiles', $studentId],
                 'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours',
                 'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes']
             ],

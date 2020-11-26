@@ -176,7 +176,9 @@ class ProfilesController extends AppController
     public function StudentResults()
     {
         $session = $this->request->session();
-        $studentId = $this->Auth->user('id');
+       /* $studentId = $this->Auth->user('id');*/
+        $studentId  = $this->request->pass[1];
+        print_r($studentId);die();
         $session->write('Student.Results.student_id', $studentId);
 
         // tabs
@@ -192,7 +194,8 @@ class ProfilesController extends AppController
     public function StudentExaminationResults()
     {
         $session = $this->request->session();
-        $studentId = $this->Auth->user('id');
+        /*$studentId = $this->Auth->user('id');*/
+        $studentId  = $this->request->pass[1];
         $session->write('Student.ExaminationResults.student_id', $studentId);
 
         // tabs
@@ -315,7 +318,8 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
         $action = $this->request->params['action'];
-/*            if ($action == 'ProfileStudentUser') {
+        
+        if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentResults'|| $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentAwards'|| $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks') {
                 $studentId = $this->request->pass[1];
                 if (!empty($studentId)) {
                     $sId = $this->ControllerAction->paramsDecode($studentId);
@@ -326,12 +330,12 @@ class ProfilesController extends AppController
                 } else {
                     $header = $header . ' - ' . $model->getHeader($alias);
                 }
-            }*/
+            }
         //POCOR-5675
         $header = $header . ' - ' . $model->getHeader($alias);
         $this->set('contentHeader', $header);
 
-        if ($model->hasField('security_user_id')) {
+        if ($model->hasField('security_user_id')) { 
             $model->fields['security_user_id']['type'] = 'hidden';
             $model->fields['security_user_id']['value'] = $userId;
 
@@ -374,26 +378,26 @@ class ProfilesController extends AppController
             $model->fields['student_id']['type'] = 'hidden';
             $model->fields['student_id']['value'] = $userId;
 
-            if (count($this->request->pass) > 1) {
-                $modelId = $this->request->pass[1]; // id of the sub model
+            //if (count($this->request->pass) > 1) {
+                //$modelId = $this->request->pass[1]; // id of the sub model
 
-                $ids = $this->ControllerAction->paramsDecode($modelId);
-                $idKey = $this->ControllerAction->getIdKeys($model, $ids);
-                $idKey[$model->aliasField('student_id')] = $userId;
-                $exists = $model->exists($idKey);
+                //$ids = $this->ControllerAction->paramsDecode($modelId);
+                //$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+                //$idKey[$model->aliasField('student_id')] = $userId;
+                //$exists = $model->exists($idKey);
 
-               if (in_array($model->alias(), ['Students'])) {
-                    $params[$model->aliasField('guardian_id')] = $userId;
-                    $exists = $model->exists($params);
-                }
+               //if (in_array($model->alias(), ['Students'])) {
+                    //$params[$model->aliasField('guardian_id')] = $userId;
+                    //$exists = $model->exists($params);
+                //}
                 /**
                  * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
                  */
-                if (!$exists) {
-                    $this->Alert->warning('general.notExists');
-                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
-                }
-            }
+                //if (!$exists) {
+                    //$this->Alert->warning('general.notExists');
+                    //return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+                //}
+            //}
         }
     }
 
@@ -404,7 +408,17 @@ class ProfilesController extends AppController
         if ($model->hasField('security_user_id')) {
             $query->where([$model->aliasField('security_user_id') => $loginUserId]);
         } else if ($model->hasField('student_id')) {
-            $query->where([$model->aliasField('student_id') => $loginUserId]);
+            $action = $this->request->params['action'];
+            if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes') {
+                $studentId = $this->request->pass[1];
+                if (!empty($studentId)) {
+                    $sId = $this->ControllerAction->paramsDecode($studentId);
+                    $student_id = $sId['id'];
+                    $query->where([$model->aliasField('student_id') => $student_id]);
+                } else {
+                    $query->where([$model->aliasField('student_id') => $loginUserId]);
+                }
+            }
         } else if ($model->hasField('staff_id') && $model->alias!='StudentCompetencies') {
             $query->where([$model->aliasField('staff_id') => $loginUserId]);
         } else if ($model->hasField('applicant_id')) {
@@ -482,10 +496,12 @@ class ProfilesController extends AppController
 
     public function getAcademicTabElements($options = [])
     { 
-        $id = (array_key_exists('id', $options))? $options['id']: 0;
+        $studentId  = $this->request->pass[1];
+        $id = (array_key_exists('id', $options))? $options['id'] : $studentId;
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];
         $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
+        $plugin = $this->plugin;
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
@@ -505,8 +521,9 @@ class ProfilesController extends AppController
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', $studentId, 'type' => $type]);
         }
+       
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
@@ -642,6 +659,8 @@ class ProfilesController extends AppController
     public function getCompetencyTabElements($options = [])
     {
         $queryString = $this->request->query('queryString');
+        $studentId  = $this->request->pass[1];
+        
         $tabElements = [
             'Competencies' => [
                 'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],
