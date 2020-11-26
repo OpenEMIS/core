@@ -45,7 +45,8 @@ class EducationLevelsTable extends ControllerActionTable
 		list($systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
 		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('systemOptions', 'selectedSystem'));
-		$query->where([$this->aliasField('education_system_id') => $selectedSystem]);
+		$query->where([$this->aliasField('education_system_id') => $selectedSystem])
+                        ->order([$this->aliasField('order')]);
 
 		$sortList = ['name', 'EducationLevelIsced.name', 'EducationSystems.name'];
 		if (array_key_exists('sortWhitelist', $extra['options'])) {

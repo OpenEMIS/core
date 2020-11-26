@@ -221,9 +221,12 @@ class EducationGradesTable extends ControllerActionTable
         list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme'));
-        $query->where([$this->aliasField('education_programme_id') => $selectedProgramme]);
+        $query->where([$this->aliasField('education_programme_id') => $selectedProgramme])
+                ->order([ $this->aliasField('order') => 'ASC', 
+                          $this->aliasField('modified') => 'DESC'
+                        ]); 
 
-        $sortList = ['name', 'code', 'EducationProgrammes.name', 'EducationStages.name'];
+        $sortList = ['order', 'name', 'code', 'EducationProgrammes.name', 'EducationStages.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }

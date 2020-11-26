@@ -180,9 +180,11 @@ class NavigationComponent extends Component
         if (!empty($pass[0])) {
             $linkName .= '.'.$pass[0];
         }
+        
         if (!in_array($linkName, $navigations)) {
             $selectedArray = $this->array_column($navigations, 'selected');
             foreach ($selectedArray as $k => $selected) {
+                //echo '<pre>'.$linkName.'#####'; print_r($selected); 
                 if (is_array($selected) && (in_array($linkName, $selected) || in_array($controllerActionLink, $selected))) {
                     $linkName = $k;
                     break;
@@ -273,7 +275,7 @@ class NavigationComponent extends Component
             'Counsellings', 'StudentBodyMasses', 'StaffBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds',
             'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashHygienes',
             'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
-            'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips',
+            'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips', 'InstitutionStaffDuties',
             'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances', 'InstitutionCommittees', 'InstitutionCommitteeAttachments', 'InstitutionAssets', 'StudentBehaviourAttachments', 'StaffBehaviourAttachments', 'Guardians', 'GuardianComments'
         ];
 
@@ -707,14 +709,24 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.ReportCardComments','Institutions.Comments'],
                 ],
 
-                
-
-            'Institutions.Positions' => [
-                'title' => 'Positions',
+            'Institutions.Appointment' => [
+                'title' => 'Appointment',
                 'parent' => 'Institutions.Institutions.index',
-                'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Positions', 'Institutions.ImportInstitutionPositions'],
+                'link' => false,
             ],
+
+                'Institutions.Positions' => [
+                    'title' => 'Positions',
+                    'parent' => 'Institutions.Appointment',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.Positions', 'Institutions.ImportInstitutionPositions'],
+                ], 
+                'Institutions.StaffDuties' => [
+                    'title' => 'Duties',
+                    'parent' => 'Institutions.Appointment',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.StaffDuties'],
+                ],        
 
             'Institution.Finance' => [
                 'title' => 'Finance',
@@ -727,6 +739,27 @@ class NavigationComponent extends Component
                     'parent' => 'Institution.Finance',
                     'params' => ['plugin' => 'Institution'],
                     'selected' => ['Institutions.BankAccounts'],
+                ],
+
+                'Institutions.Budget' => [
+                    'title' => 'Budget',
+                    'parent' => 'Institution.Finance',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.Budget'],
+                ],
+
+                'Institutions.Income' => [
+                    'title' => 'Income',
+                    'parent' => 'Institution.Finance',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.Income'],
+                ],
+
+                'Institutions.Expenditure' => [
+                    'title' => 'Expenditure',
+                    'parent' => 'Institution.Finance',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.Expenditure'],
                 ],
 
                 'Institutions.Fees' => [
@@ -1048,7 +1081,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave'],
+                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave','Staff.Duties'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',
@@ -1185,7 +1218,7 @@ class NavigationComponent extends Component
                     'title' => 'Career',
                     'parent' => 'Profiles.Staff',
                     'params' => ['plugin' => 'Profile'],
-                    'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffLeave', 'Profiles.HistoricalStaffLeave','Profiles.StaffAttendances','Profiles.StaffBehaviours', 'Profiles.StaffAppraisals']
+                    'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffLeave', 'Profiles.HistoricalStaffLeave','Profiles.StaffAttendances','Profiles.StaffBehaviours', 'Profiles.StaffAppraisals','Profiles.StaffDuties']
                 ],
                 'Profiles.StaffBankAccounts' => [
                     'title' => 'Finance',
@@ -1279,7 +1312,7 @@ class NavigationComponent extends Component
                     'title' => 'Career',
                     'parent' => 'Directories.Staff',
                     'params' => ['plugin' => 'Directory'],
-                    'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.HistoricalStaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffLeave', 'Directories.HistoricalStaffLeave', 'Directories.StaffAttendances', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals']
+                    'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.HistoricalStaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffLeave', 'Directories.HistoricalStaffLeave', 'Directories.StaffAttendances', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals','Directories.StaffDuties']
                 ],
                 'Directories.StaffBankAccounts' => [
                     'title' => 'Finance',
@@ -1446,8 +1479,15 @@ class NavigationComponent extends Component
 
     public function getAdministrationNavigation()
     {
+        //for POCOR-5674 requirement
+        $connectionTable = TableRegistry::get('Archive.TransferConnections');
+        $connectionData = $connectionTable->find()->select(['id'])->first()->toArray();
+        $connectionId = $this->controller->paramsEncode(['id' => $connectionData['id']]);
+        /*for POCOR-5674 */
+
         $queryString = $this->request->query('queryString');
         $navigation = [
+            
             'SystemSetup' => [
                 'title' => 'System Setup',
                 'parent' => 'Administration',
@@ -1476,7 +1516,7 @@ class NavigationComponent extends Component
                     'title' => 'Attendances',
                     'parent' => 'SystemSetup',
                     'params' => ['plugin' => 'Attendance'],
-                    'selected' => ['Attendance.StudentMarkTypes']
+                    'selected' => ['Attendances.StudentMarkTypeStatuses']
                 ],
                 'FieldOptions.index' => [
                     'title' => 'Field Options',
@@ -1794,7 +1834,30 @@ class NavigationComponent extends Component
                     'parent' => 'Administration.MoodleApi',
                     'selected' => ['MoodleApiLog.index'],
                     'params' => ['plugin' => 'MoodleApi', 'controller' => 'MoodleApiLog', 'action' => 'index']
-                ]
+                ],
+            'Administration.Archive' => [
+                'title' => 'Archive',
+                'parent' => 'Administration',
+                'link' => false,
+            ],
+                'Archive.Backup' => [
+                    'title' => 'Backup',
+                    'parent' => 'Administration.Archive',
+                    'selected' => ['Archives.BackupLog'],
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'BackupLog'],
+                ],
+                'Archive.Transfer' => [
+                    'title' => 'Transfer',
+                    'parent' => 'Administration.Archive',
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Transfer'],
+                    'selected' => ['Archives.Transfer'],
+                ],
+                'Archive.Connection' => [
+                    'title' => 'Connection',
+                    'parent' => 'Administration.Archive',
+                    'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection', 0 => 'view', $connectionId],
+                    'selected' => ['Archives.Connection.view','Archives.Connection.edit'],
+                ],
         ];
         return $navigation;
     }

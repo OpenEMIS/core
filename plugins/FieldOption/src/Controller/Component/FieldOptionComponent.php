@@ -27,6 +27,7 @@ class FieldOptionComponent extends Component
     private $fieldOptions = [
     // Institution
         'Localities' => ['className' => 'Institution.Localities', 'parent' => 'Institution'],
+        'Duties' => ['className' => 'Institution.StaffDuties', 'parent' => 'Institution'],
         'Ownerships' => ['className' => 'Institution.Ownerships', 'parent' => 'Institution'],
         'Sectors' => ['className' => 'Institution.Sectors', 'parent' => 'Institution'],
         'Providers' => ['className' => 'Institution.Providers', 'parent' => 'Institution'],
@@ -54,6 +55,10 @@ class FieldOptionComponent extends Component
         'Banks' => ['className' => 'FieldOption.Banks', 'parent' => 'Finance'],
         'BankBranches' => ['className' => 'FieldOption.BankBranches', 'parent' => 'Finance'],
         'FeeTypes' => ['className' => 'FieldOption.FeeTypes', 'parent' => 'Finance'],
+        'BudgetTypes' => ['className' => 'FieldOption.BudgetTypes', 'parent' => 'Finance'],
+        'IncomeSources' => ['className' => 'FieldOption.IncomeSources', 'parent' => 'Finance'],
+        'IncomeTypes' => ['className' => 'FieldOption.IncomeTypes', 'parent' => 'Finance'],
+        'ExpenditureTypes' => ['className' => 'FieldOption.ExpenditureTypes', 'parent' => 'Finance'],
 
     // Guardian
         'GuardianRelations' => ['className' => 'Student.GuardianRelations', 'parent' => 'Guardian'],

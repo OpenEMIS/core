@@ -305,7 +305,6 @@ class LocalizationComponent extends Component
         // get direction from locales table.
         $Locales = TableRegistry::get('Locales');
         $langDir = $Locales->getLangDir($htmlLang);
-
         $htmlLangDir = array_key_exists($htmlLang, $languages) ? $languages[$htmlLang]['direction'] : $langDir;
 
         $controller->set('showLanguage', $this->showLanguage);
