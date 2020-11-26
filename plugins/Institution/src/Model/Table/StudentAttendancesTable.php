@@ -67,6 +67,7 @@ class StudentAttendancesTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $institutionClassId = $options['institution_class_id'];
+        $educationGradeId = $options['education_grade_id'];
         $academicPeriodId = $options['academic_period_id'];
         $attendancePeriodId = $options['attendance_period_id'];
         $weekId = $options['week_id'];
@@ -158,11 +159,11 @@ class StudentAttendancesTable extends ControllerActionTable
         if ($day != -1) {
             // single day
             $query
-                ->formatResults(function (ResultSetInterface $results) use ($findDay, $attendancePeriodId, $subjectId) {
+                ->formatResults(function (ResultSetInterface $results) use ($findDay, $attendancePeriodId, $subjectId, $educationGradeId) {
 
                     $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
                     
-                    return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId, $subjectId) {
+                    return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId, $subjectId, $educationGradeId) {
 
                         $academicPeriodId = $row->academic_period_id;
                         $institutionClassId = $row->institution_class_id;
@@ -173,6 +174,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         $conditions = [
                             $StudentAbsencesPeriodDetails->aliasField('academic_period_id = ') => $academicPeriodId,
                             $StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') => $institutionClassId,
+                            $StudentAbsencesPeriodDetails->aliasField('education_grade_id = ') => $educationGradeId,
                             $StudentAbsencesPeriodDetails->aliasField('student_id = ') => $studentId,
                             $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
                             $StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId,
@@ -253,6 +255,7 @@ class StudentAttendancesTable extends ControllerActionTable
                                     ->where([
                                         $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
                                         $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
+                                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
                                         $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
                                         $StudentAttendanceMarkedRecords->aliasField('date = ') => $findDay,
                                         $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId
@@ -360,6 +363,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     ->where([
                         $StudentAbsencesPeriodDetails->aliasField('academic_period_id = ') => $academicPeriodId,
                         $StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') => $institutionClassId,
+                        $StudentAbsencesPeriodDetails->aliasField('education_grade_id = ') => $educationGradeId,
                         $StudentAbsencesPeriodDetails->aliasField('student_id IN ') => $studentList,
                         $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
                         'AND' => [
@@ -379,6 +383,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     ->where([
                         $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
                         $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
+                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
                         $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
                         $StudentAttendanceMarkedRecords->aliasField('date >= ') => $weekStartDay,
                         $StudentAttendanceMarkedRecords->aliasField('date <= ') => $weekEndDay
