@@ -104,7 +104,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     // ready
     angular.element(document).ready(function () {
 
-        const currentDate = new Date();
+        var currentDate = new Date();
         var currentYear = currentDate.getFullYear();
         var currentMonth = currentDate.getMonth()+1;
         var currentdate = currentDate.getDate();
@@ -600,10 +600,10 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         vm.gridOptions.context.schoolClosed = vm.schoolClosed;
         vm.gridOptions.context.date = vm.selectedDay;
 
-        const currentDate = new Date();       
-        let currentYear = currentDate.getFullYear();
-        let currentMonth = currentDate.getMonth()+1;
-        let currentdate = currentDate.getDate();
+        var currentDate = new Date();       
+        var currentYear = currentDate.getFullYear();
+        var currentMonth = currentDate.getMonth()+1;
+        var currentdate = currentDate.getDate();
         vm.currentDayMonthYear = currentYear + '-' +currentMonth + '-' + currentdate;
         
         InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade)
