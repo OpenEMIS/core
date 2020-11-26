@@ -55,7 +55,7 @@ class SurveysTable extends AppTable
         $this->ControllerAction->field('status', ['type' => 'hidden']);
     }
 
-     public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
            $attr['options'] = $this->controller->getInstitutionStatusOptions($this->alias());
@@ -278,12 +278,12 @@ class SurveysTable extends AppTable
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
-
         // Setting request data and modifying fetch condition
         $requestData = json_decode($settings['process']['params']);
         $surveyFormId = $requestData->survey_form;
         $academicPeriodId = $requestData->academic_period_id;
         $status = $requestData->status;
+        $institutionStatus = $requestData->institution_status;
        
         $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
         
@@ -379,7 +379,9 @@ class SurveysTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        //echo "<pre>"; print_r($fields); die();
+        $requestData = json_decode($settings['process']['params']);
+        
+        $institutionStatus = $requestData->institution_status;
 
         // To update to this code when upgrade server to PHP 5.5 and above
         // unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
@@ -417,6 +419,13 @@ class SurveysTable extends AppTable
             'field' => 'area_administrative',
             'type' => 'string',
             'label' => '',
+        ];
+
+        $fields[] = [
+            'key' => $institutionStatus,
+            'field' =>$institutionStatus,
+            'type' => 'string',
+            'label' => __('Institution Status')
         ];
     }
 
