@@ -16,13 +16,13 @@ class ProfileTemplatesController extends AppController
     }
 
     // CAv4
-    public function Templates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ReportCard.ReportCards']); }
+    public function Templates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.ProfileTemplates']); }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-        $header = __('Report Cards');
+        $header = __('Profile');
         $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Report Cards', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+        $this->Navigation->addCrumb('Profile', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
         $this->set('contentHeader', $header);
     }
 }
