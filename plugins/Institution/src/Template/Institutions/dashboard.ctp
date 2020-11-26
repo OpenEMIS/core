@@ -39,16 +39,18 @@ $this->start('panelBody');
 			</div>
 		</div>
 	</div>
+   <div class="data-section">
+	</div>
     <div class="data-section">
 		<div class="data-field">
-			<button href="#" class="btn btn-primary" ng-click="InstitutionStudentController.showProfileCompleteData()">
+			<button href="#" class="btn btn-primary">
 				Details
 			</button>
 		</div>
 	</div>
 	</div>
 <!--Mini Dashboard End---->
-<div class="table-wrapper" ng-class="disableElement">
+<div class="table-wrapper" ng-class="disableElement" id="profile-data-div">
    <div class="table-responsive">
       <table class="table" id="profile_data_div">
       <thead>
@@ -61,8 +63,8 @@ $this->start('panelBody');
       <tbody>
          <!-- <tr ng-repeat="teacher in InstitutionSubjectStudentsController.pastTeachers"> -->
          <tr>
-            <td class="vertical-align-top">abc</td>
-            <td class="vertical-align-top">bjsdsd</td>
+            <td class="vertical-align-top">Feature1</td>
+            <td class="vertical-align-top"><?= date("F j,Y") ;?></td>
             <td class="vertical-align-top"><i class="fa fa-check" aria-hidden="true"></i></td>
          </tr>
       </tbody>
@@ -90,6 +92,3 @@ $this->start('panelBody');
 <?php
 $this->end();
 ?>
-<script>
-alert('ssssssss')
-</script>
