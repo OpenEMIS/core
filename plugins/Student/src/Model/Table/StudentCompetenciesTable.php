@@ -76,6 +76,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
 
         $this->field('class_number', ['visible' => false]);
+        $this->field('student_id');
         $this->field('staff_id', ['type' => 'hidden']);
         $this->field('secondary_staff_id', ['type' => 'hidden']);
         $this->field('institution_shift_id', ['type' => 'hidden']);
