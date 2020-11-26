@@ -14,17 +14,19 @@ echo $this->Html->css('OpenEmis.../plugins/progressbar/css/bootstrap-progressbar
 			<h1 class="data-header ng-binding">{{DashboardController.percentage}}%</h1>
 		</div>
 	</div>
-	<div class="data-section">
+	<!-- <div class="data-section">
 		<div class="data-field">
 			
 		</div>
-	</div>
+	</div> -->
 	<div class="data-section">		
 		<div class="progress">
 			<div class="progress-bar" role="progressbar"  style="width:{{DashboardController.percentage}}%">
 			{{DashboardController.percentage}}%
 			</div>
 		</div>
+	</div>
+	<div class="data-section">
 	</div>
 	<div class="data-section">
 		<div class="data-field">
@@ -45,8 +47,8 @@ echo $this->Html->css('OpenEmis.../plugins/progressbar/css/bootstrap-progressbar
 	<tbody>
 		<!-- <tr ng-repeat="teacher in InstitutionSubjectStudentsController.pastTeachers"> -->
 		<tr>
-			<td class="vertical-align-top">abc</td>
-			<td class="vertical-align-top">bjsdsd</td>
+			<td class="vertical-align-top">Feature1</td>
+			<td class="vertical-align-top"><?= date("F j,Y") ;?></td>
 			<td class="vertical-align-top"><i class="fa fa-check" aria-hidden="true"></i></td>
 		</tr>
 	</tbody>

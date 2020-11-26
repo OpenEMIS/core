@@ -911,7 +911,7 @@ class StudentsTable extends ControllerActionTable
                 ['query' => $this->dashboardQuery, 'key' => __('Grade')]
             );
 
-            $indexDashboard = 'profilecompleteness';
+            $indexDashboard = 'dashboard';
 
             $indexElements = (isset($this->controller->viewVars['indexElements']))?$this->controller->viewVars['indexElements'] :[] ;
 
@@ -925,7 +925,7 @@ class StudentsTable extends ControllerActionTable
                 $indexElements[] = [
                     'name' => $indexDashboard,
                     'data' => [
-                        'model' => 'institutions',
+                        'model' => 'students',
                         'modelCount' => $studentCount,
                         'modelArray' => $InstitutionArray,
                     ],

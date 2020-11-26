@@ -14,17 +14,29 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 $(document).ready(function() {
-	dashboards.init();
+    dashboards.init();
+    showProfileCompleteData();
 });
 
 var dashboards = {
-	init: function() {
-		$.each($('.highchart'), function(key, group) {
-			json = $(group).html();
-			obj = JSON.parse(json);
-			$(group).highcharts(obj);
-			$(group).css({"visibility":"visible"});
-		});
-		$('#dashboard-spinner').css({"display":"none"});
-	}
+
+    init: function() {
+        $.each($('.highchart'), function(key, group) {
+            json = $(group).html();
+            obj = JSON.parse(json);
+            $(group).highcharts(obj);
+            $(group).css({
+                "visibility": "visible"
+            });
+        });
+        $('#dashboard-spinner').css({
+            "display": "none"
+        });
+    }
+}
+
+function showProfileCompleteData() {
+    $("button").click(function() {
+        $("#profile-data-div").toggle();
+    });
 }

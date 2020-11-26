@@ -65,7 +65,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
     }
 
     function showProfileCompleteData() {
-        document.getElementById('profile_data_div').style.display = "block";
+        $("#profile_data_div").toggle();
     }
 
     function initProfileCompletness() {
