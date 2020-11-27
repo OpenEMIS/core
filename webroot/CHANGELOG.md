@@ -1,7 +1,7 @@
 ### [3.58.3] - 2020-11-27
-- Implemnted: Add Results and Comments tabs under Institution > Student > Academic Outcomes
-- Implemnted: Add a chart for student/staff attendance to institution dashboard
-- Implemnted: Reports > Institution > Finance (Income and Expenditure) Report
+- Implemented: Add Results and Comments tabs under Institution > Student > Academic Outcomes
+- Implemented: Add a chart for student/staff attendance to institution dashboard
+- Implemented: Reports > Institution > Finance (Income and Expenditure) Report
 - Bug Fixed: Import Extracurriculars: Changes to the Import Template
 - Bug Fixed: Institutions > Students > Academic > Competencies tab: Competencies filter list down all Competencies even though student is not taking all
 - Bug Fixed: Institutions > Attendance > Students: Add an Education Grade field
