@@ -62,11 +62,16 @@ $this->start('panelBody');
       </thead>
       <tbody>
          <!-- <tr ng-repeat="teacher in InstitutionSubjectStudentsController.pastTeachers"> -->
+		 <?php
+		 	$data['listing'] = array('feature'=>'General','data'=> '2020-11-26','complete'=>'yes');
+		  	foreach ($data as $listing) : 
+			  ?>
          <tr>
-            <td class="vertical-align-top">Feature1</td>
-            <td class="vertical-align-top"><?= date("F j,Y") ;?></td>
+            <td class="vertical-align-top"><?= $listing['feature']?></td>
+            <td class="vertical-align-top"><?= date("F j,Y",strtotime($listing['data'])) ;?></td>
             <td class="vertical-align-top"><i class="fa fa-check" aria-hidden="true"></i></td>
          </tr>
+		 <?php endforeach?>
       </tbody>
    </table>
    </div>
