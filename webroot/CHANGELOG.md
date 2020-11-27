@@ -1,4 +1,4 @@
-### [3.58.3] - 2020-11-27]
+### [3.58.3] - 2020-11-27
 - Implemnted: Add Results and Comments tabs under Institution > Student > Academic Outcomes
 - Implemnted: Add a chart for student/staff attendance to institution dashboard
 - Implemnted: Reports > Institution > Finance (Income and Expenditure) Report
