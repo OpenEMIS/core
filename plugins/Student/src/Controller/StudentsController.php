@@ -144,7 +144,13 @@ class StudentsController extends AppController
     }
     public function Outcomes()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
+        $comment = $this->request->query['comment'];
+        if(!empty($comment) && $comment == 1){ 
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
+        
+        }else{
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
+        }        
     }
 
     // health
