@@ -55,17 +55,6 @@ class SurveysTable extends AppTable
         $this->ControllerAction->field('status', ['type' => 'hidden']);
     }
 
-    public function onExcelGetInstitutionStatusActive(Event $event, Entity $entity)
-    {
-        return 'Active';
-    }
-
-    public function onExcelGetInstitutionStatusInactive(Event $event, Entity $entity)
-    {
-        
-        return 'InActive';
-    }
-
     public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -103,13 +92,13 @@ class SurveysTable extends AppTable
     }
 
     public function onExcelAfterHeader(Event $event, ArrayObject $settings)
-    {  
-    
+    {      
        if ($settings['renderNotComplete'] || $settings['renderNotOpen']) {
             $fields = $settings['sheet']['fields'];
             $requestData = json_decode($settings['process']['params']);
             $surveyFormId = $requestData->survey_form;
             $academicPeriodId = $requestData->academic_period_id;
+            $institutionStatus = $requestData->institution_status;
             
             $surveyFormName = $this->SurveyForms->get($surveyFormId)->name;
             $academicPeriodName = $this->AcademicPeriods->get($academicPeriodId)->name;
@@ -187,6 +176,8 @@ class SurveysTable extends AppTable
                     $record->status_id = __('Open');
                 }
                 
+
+                
                 $record->academic_period_id = $academicPeriodName;
                 $record->survey_form_id = $surveyFormName;
                 
@@ -198,9 +189,16 @@ class SurveysTable extends AppTable
                         $row[] = __($record->{$field['field']});
                     } else if ($field['field'] == 'area') {
                         $row[] = __($record->area);
-                    } else if ($field['field'] == 'area_administrative') {
+                    } else if ($field['field'] == 'institution_statusActive') {
+                        $row[] = __('Active');
+                    } 
+                    else if ($field['field'] == 'institution_statusInactive') {
+                        $row[] = __('Inactive');
+                    } 
+                    else if ($field['field'] == 'area_administrative') {
                         $row[] = __($record->area_administrative);
-                    } else {
+                    }
+                    else {
                         $row[] = '';
                     }
                 }
@@ -269,7 +267,13 @@ class SurveysTable extends AppTable
                         $row[] = __($record->{$field['field']});
                     } else if ($field['field'] == 'area') {
                         $row[] = __($record->area);
-                    } else if ($field['field'] == 'area_administrative') {
+                    }else if ($field['field'] == 'institution_statusActive') {
+                        $row[] = __('Active');
+                    } 
+                    else if ($field['field'] == 'institution_statusInactive') {
+                        $row[] = __('Inactive');
+                    } 
+                    else if ($field['field'] == 'area_administrative') {
                         $row[] = __($record->area_administrative);
                     } else {
                         $row[] = '';
@@ -394,11 +398,13 @@ class SurveysTable extends AppTable
         
         $institutionStatus = $requestData->institution_status;
 
+
         // To update to this code when upgrade server to PHP 5.5 and above
         // unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 
         foreach ($fields as $key => $field) {
             if ($field['field'] == 'institution_id') {
+
                 unset($fields[$key]);
                 break;
             }
@@ -438,6 +444,7 @@ class SurveysTable extends AppTable
             'type' => 'string',
             'label' => __('Institution Status')
         ];
+
     }
 
     public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, Request $request)
