@@ -298,7 +298,7 @@ $panelHeader = $this->fetch('panelHeader');
                     <h5><?= __('Education Grade') ?>: </h5>
                     <div class="input-select-wrapper">
 
-                        <select ng-disabled="$ctrl.action=='edit'" name="education_grade" ng-options="education_grade.id as education_grade.name for education_grade in $ctrl.educationGradeListOptions" ng-model="$ctrl.selectedEducationGrade">
+                        <select ng-disabled="$ctrl.action=='edit'" name="education_grade" ng-options="education_grade.id as education_grade.name for education_grade in $ctrl.educationGradeListOptions" ng-model="$ctrl.selectedEducationGrade" ng-change="$ctrl.changeEducationGrade();">
                             <option value="" ng-if="$ctrl.educationGradeListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
