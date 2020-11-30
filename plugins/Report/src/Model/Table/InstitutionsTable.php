@@ -184,6 +184,15 @@ class InstitutionsTable extends AppTable
         return $validator;
     }
 
+
+    public function validationInfrastructureNeeds(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator->notEmpty('institution_id');
+        return $validator;
+    }
+
+
     public function beforeAction(Event $event)
     { 
         $this->fields = [];
@@ -243,6 +252,8 @@ class InstitutionsTable extends AppTable
             $options['validate'] = 'guardians';
         } elseif ($data[$this->alias()]['feature'] == 'Report.InstitutionInfrastructures') {
             $options['validate'] = 'institutionInfrastructures';
+        } elseif ($data[$this->alias()]['feature'] == 'Report.InfrastructureNeeds') {
+            $options['validate'] = 'infrastructureNeeds';
         }
 
     }
@@ -563,18 +574,19 @@ class InstitutionsTable extends AppTable
                           'Report.WashReports', 
                           'Report.InstitutionClasses',
                           'Report.InstitutionCommittees',
-                          'Report.ClassAttendanceMarkedSummaryReport',
+                          'Report.ClassAttendanceMarkedSummaryReport',  
+                          'Report.InfrastructureNeeds',
                           'Report.Income',
                           'Report.Expenditure'
-                        ]
+                         ]
                     )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
 
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();
-
-                $attr['options'] = $academicPeriodOptions;
+                //add All Academic Period task POCOR 5698
+                $attr['options'] = ['0' => __('All Academic Period')] + $academicPeriodOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 if (in_array($feature, 
@@ -588,9 +600,9 @@ class InstitutionsTable extends AppTable
                     $attr['onChangeReload'] = true;
                 }
 
-                if (empty($request->data[$this->alias()]['academic_period_id'])) {
+                /*if (empty($request->data[$this->alias()]['academic_period_id'])) {
                     $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
-                }
+                }*/
                 return $attr;
             }
         }
@@ -806,6 +818,7 @@ class InstitutionsTable extends AppTable
 				'Report.InstitutionCommittees',
 				'Report.SubjectsBookLists',
                 'Report.StudentAbsences',
+                'Report.InfrastructureNeeds',
                 'Report.Income',
                 'Report.Expenditure'
             ];
@@ -869,7 +882,8 @@ class InstitutionsTable extends AppTable
                     if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
-                        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                        //add All Institution task POCOR 5698
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     }
 
                     $attr['type'] = 'chosenSelect';
