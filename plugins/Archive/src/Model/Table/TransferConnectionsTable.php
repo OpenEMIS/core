@@ -16,6 +16,7 @@ use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
 use Cake\Core\Exception\Exception;
 use Cake\Auth\DefaultPasswordHasher;
+use Cake\Core\Configure;
 
 /**
  * DeletedLogs Model
@@ -157,6 +158,7 @@ class TransferConnectionsTable extends ControllerActionTable
     
             }catch (Exception $connectionError) {
                 $this->Session->write('is_connection_stablished', "0");
+                
                 $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
             }
         }
@@ -237,6 +239,14 @@ class TransferConnectionsTable extends ControllerActionTable
         }else{
             return $entity->conn_status_id = '<b style="color:red;">Offline</b>';
         }
+        // try {
+        //     $connection = ConnectionManager::get('prd_cor_arc');
+        //     $connected = $connection->connect();
+        //     return $entity->conn_status_id = '<b style="color:green;">Online</b>';
+
+        // }catch (Exception $connectionError) {
+        //     return $entity->conn_status_id = '<b style="color:red;">Offline</b>';
+        // }
     }
 
     public function onGetModifiedUserId(Event $event, Entity $entity)
@@ -267,8 +277,7 @@ class TransferConnectionsTable extends ControllerActionTable
         $is_connection_stablished = $this->Session->read('is_connection_stablished');
         if($is_connection_stablished == "0"){
             $entity->conn_status_id = "0";
-        }
-        else{
+        }else{
             $entity->conn_status_id = "1";
         }
         $password  = ((new DefaultPasswordHasher)->hash($entity->password));

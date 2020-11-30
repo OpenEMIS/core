@@ -65,6 +65,7 @@ class InstitutionsController extends AppController
         'InstitutionStaffAttendances',
         'InstitutionStudentAbsences',
         'StudentAttendances',
+        'StudentArchive',
 
         // behaviours
         'StaffBehaviours',
@@ -174,7 +175,7 @@ class InstitutionsController extends AppController
             'ImportInstitutionPositions'=> ['className' => 'Institution.ImportInstitutionPositions', 'actions' => ['add']],
             'ImportStudentBodyMasses'   => ['className' => 'Institution.ImportStudentBodyMasses', 'actions' => ['add']],
             'ImportStudentGuardians'   => ['className' => 'Institution.ImportStudentGuardians', 'actions' => ['add']],
-            'ImportStudentExtracurriculars'   => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']]
+            'ImportStudentExtracurriculars'   => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']],
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -373,6 +374,31 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
     }
+
+    public function AssessmentsArchive()
+    {
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $backUrl = [
+            'plugin' => $this->plugin,
+            'controller' => $this->name,
+            'action' => 'Assessments',
+            'institutionId' => $institutionId,
+            'index',
+            $this->ControllerAction->paramsEncode(['id' => $timetableId])
+        ];
+        $this->set('_back', Router::url($backUrl));
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $this->Navigation->addCrumb($crumbTitle);
+        $this->set('institution_id', $institutionId);
+        $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
+    }
     public function ReportCardStatuses()
     {
         $classId = $this->request->query['class_id'];
@@ -566,18 +592,56 @@ class InstitutionsController extends AppController
             'add'
         ];
 
+        $archiveUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StudentArchive',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+            'add'
+        ];
+
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
             $this->Navigation->addCrumb($crumbTitle);
 
         $this->set('_edit', $_edit);
         $this->set('_excel', $_excel);
         $this->set('_import', $_import);
+        $this->set('_archive', $_archive);
         $this->set('excelUrl', Router::url($excelUrl));
         $this->set('importUrl', Router::url($importUrl));
+        $this->set('archiveUrl', Router::url($archiveUrl));
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
     }
     }
+
+    public function StudentArchive(){
+
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $archiveUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StudentArchive',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+            'add'
+        ];
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $this->Navigation->addCrumb($crumbTitle);
+
+        $this->set('archiveUrl', Router::url($archiveUrl));
+        $this->set('institution_id', $institutionId);
+        $this->set('ngController', 'InstitutionStudentArchiveCtrl as $ctrl');
+
+        
+    }
+
 
     public function Results()
     {
@@ -1370,6 +1434,19 @@ class InstitutionsController extends AppController
                 $this->Angular->addModules([
                     'timetable.ctrl',
                     'timetable.svc'
+                ]);
+                break;
+
+            case 'StudentArchive':
+                $this->Angular->addModules([
+                    'institution.student.archive.ctrl',
+                    'institution.student.archive.svc'
+                ]);
+                break;
+            case 'AssessmentsArchive':
+                $this->Angular->addModules([
+                    'institution.assessments.archive.ctrl',
+                    'institution.assessments.archive.svc'
                 ]);
                 break;
         }
