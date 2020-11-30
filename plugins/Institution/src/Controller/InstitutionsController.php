@@ -58,13 +58,13 @@ class InstitutionsController extends AppController
         'StaffTrainingResults',
         'StaffTransferIn',
         'StaffTransferOut',
+        'StaffDuties',
         // 'StaffPositionProfiles',
 
         // attendances
         'InstitutionStaffAttendances',
         'InstitutionStudentAbsences',
         'StudentAttendances',
-        'StudentArchive',
 
         // behaviours
         'StaffBehaviours',
@@ -192,6 +192,11 @@ class InstitutionsController extends AppController
     public function StaffAppraisals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
+    }
+
+    public function StaffDuties()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffDuties']);
     }
 
     public function Surveys()
@@ -559,7 +564,6 @@ class InstitutionsController extends AppController
         
         $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
         $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
-        $_archive = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'view']);
 
         $_excel = true;
 
@@ -587,54 +591,17 @@ class InstitutionsController extends AppController
             'add'
         ];
 
-        $archiveUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'StudentArchive',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'add'
-        ];
-
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
             $this->Navigation->addCrumb($crumbTitle);
 
         $this->set('_edit', $_edit);
         $this->set('_excel', $_excel);
         $this->set('_import', $_import);
-        $this->set('_archive', $_archive);
         $this->set('excelUrl', Router::url($excelUrl));
         $this->set('importUrl', Router::url($importUrl));
-        $this->set('archiveUrl', Router::url($archiveUrl));
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
     }
-    }
-
-    public function StudentArchive(){
-
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
-        } else {
-            $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
-
-        $archiveUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'StudentArchive',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'add'
-        ];
-
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-            $this->Navigation->addCrumb($crumbTitle);
-
-        $this->set('archiveUrl', Router::url($archiveUrl));
-        $this->set('institution_id', $institutionId);
-        $this->set('ngController', 'InstitutionStudentArchiveCtrl as $ctrl');
-
-        
     }
 
     public function Results()
@@ -1667,13 +1634,24 @@ class InstitutionsController extends AppController
             $InstitutionStudents = TableRegistry::get('Institution.Students');
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
-
+			
+			$params = [
+                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
+                    $statuses['PROMOTED'], $statuses['REPEATED']]]
+            ];
+            $highChartDatas[] = $InstitutionStudents->getHighChart('student_attendance', $params);
+            
+            $params = [
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
+            ];
+            $highChartDatas[] = $InstitutionStaff->getHighChart('staff_attendance', $params);
+            
             //Students By Grade for current year, excludes transferred ,withdrawn, promoted, repeated students
             $params = [
                 'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
                     $statuses['PROMOTED'], $statuses['REPEATED']]]
             ];
-
+	
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_stage', $params);
 
             //Students By Year, excludes transferred withdrawn,promoted,repeated students

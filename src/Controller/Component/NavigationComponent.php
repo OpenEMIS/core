@@ -68,6 +68,7 @@ class NavigationComponent extends Component
         $controller = $this->controller;
         try {
             $navigations = $this->buildNavigation();
+           
             $this->checkSelectedLink($navigations);
             $this->checkPermissions($navigations);
             $controller->set('_navigations', $navigations);
@@ -275,7 +276,7 @@ class NavigationComponent extends Component
             'Counsellings', 'StudentBodyMasses', 'StaffBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds',
             'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashHygienes',
             'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
-            'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips',
+            'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips', 'InstitutionStaffDuties',
             'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances', 'InstitutionCommittees', 'InstitutionCommitteeAttachments', 'InstitutionAssets', 'StudentBehaviourAttachments', 'StaffBehaviourAttachments', 'Guardians', 'GuardianComments'
         ];
 
@@ -512,7 +513,7 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution']
                 ],
                 
-                'Institution.Schedules' => [
+                'Institutions.Schedules' => [
                     'title' => 'Schedules',
                     'parent' => 'Institution.Academic',
                     'link' => false
@@ -520,19 +521,19 @@ class NavigationComponent extends Component
                 
                 'Institutions.ScheduleTimetableOverview' => [
                     'title' => 'Timetables',
-                    'parent' => 'Institution.Schedules',
+                    'parent' => 'Institutions.Schedules',
                     'selected' => ['Institutions.ScheduleTimetableOverview', 'Institutions.ScheduleTimetable'],
                     'params' => ['plugin' => 'Institution']
                 ],
                 'Institutions.ScheduleIntervals' => [
                     'title' => 'Intervals',
-                    'parent' => 'Institution.Schedules',
+                    'parent' => 'Institutions.Schedules',
                     'selected' => ['Institutions.ScheduleIntervals'],
                     'params' => ['plugin' => 'Institution']
                 ],
                 'Institutions.ScheduleTerms' => [
                     'title' => 'Terms',
-                    'parent' => 'Institution.Schedules',
+                    'parent' => 'Institutions.Schedules',
                     'selected' => ['Institutions.ScheduleTerms'],
                     'params' => ['plugin' => 'Institution']
                 ],
@@ -563,18 +564,7 @@ class NavigationComponent extends Component
                         'selected' => ['Institutions.FeederIncomingInstitutions'],
                         'params' => ['plugin' => 'Institution']
                     ],
-                // 'Institution.Schedules' => [
-                //     'title' => 'Schedules',
-                //     'parent' => 'Institution.Feeders',
-                //     'link' => false
-                // ],
-                // 'Institutions.ScheduleTerms' => [
-                //     'title' => 'Terms',
-                //     'parent' => 'Institution.Academic',
-                //     'selected' => ['Institutions.ScheduleTerms'],
-                //     'params' => ['plugin' => 'Institution']
-                // ],
-
+               
             'Institutions.Students.index' => [
                 'title' => 'Students',
                 'parent' => 'Institutions.Institutions.index',
@@ -709,14 +699,24 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.ReportCardComments','Institutions.Comments'],
                 ],
 
-                
-
-            'Institutions.Positions' => [
-                'title' => 'Positions',
+            'Institutions.Appointment' => [
+                'title' => 'Appointment',
                 'parent' => 'Institutions.Institutions.index',
-                'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Positions', 'Institutions.ImportInstitutionPositions'],
+                'link' => false,
             ],
+
+                'Institutions.Positions' => [
+                    'title' => 'Positions',
+                    'parent' => 'Institutions.Appointment',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.Positions', 'Institutions.ImportInstitutionPositions'],
+                ], 
+                'Institutions.StaffDuties' => [
+                    'title' => 'Duties',
+                    'parent' => 'Institutions.Appointment',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.StaffDuties'],
+                ],        
 
             'Institution.Finance' => [
                 'title' => 'Finance',
@@ -1071,7 +1071,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave'],
+                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave','Staff.Duties'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',
@@ -1208,7 +1208,7 @@ class NavigationComponent extends Component
                     'title' => 'Career',
                     'parent' => 'Profiles.Staff',
                     'params' => ['plugin' => 'Profile'],
-                    'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffLeave', 'Profiles.HistoricalStaffLeave','Profiles.StaffAttendances','Profiles.StaffBehaviours', 'Profiles.StaffAppraisals']
+                    'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffLeave', 'Profiles.HistoricalStaffLeave','Profiles.StaffAttendances','Profiles.StaffBehaviours', 'Profiles.StaffAppraisals','Profiles.StaffDuties']
                 ],
                 'Profiles.StaffBankAccounts' => [
                     'title' => 'Finance',
@@ -1302,7 +1302,7 @@ class NavigationComponent extends Component
                     'title' => 'Career',
                     'parent' => 'Directories.Staff',
                     'params' => ['plugin' => 'Directory'],
-                    'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.HistoricalStaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffLeave', 'Directories.HistoricalStaffLeave', 'Directories.StaffAttendances', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals']
+                    'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.HistoricalStaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffLeave', 'Directories.HistoricalStaffLeave', 'Directories.StaffAttendances', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals','Directories.StaffDuties']
                 ],
                 'Directories.StaffBankAccounts' => [
                     'title' => 'Finance',
