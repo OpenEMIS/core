@@ -91,9 +91,9 @@ class ReportsController extends AppController
                 'Report.InstitutionCommittees' => __('Committees'),
                 'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),
                 'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
+                'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
                 'Report.Income' => __('Income Report'),
                 'Report.Expenditure' => __('Expenditure Report')
-				
             ];
         } elseif ($module == 'Students') {
             $options = [
