@@ -31,10 +31,10 @@ class UsersController extends AppController
     {
         parent::beforeFilter($event);
 
-        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword', 'userAuthentication']);
+        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword']);
 
         $action = $this->request->params['action'];
-        if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put')) || $action == 'userAuthentication') {
+        if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put'))) {
             $this->eventManager()->off($this->Csrf);
             $this->Security->config('unlockedActions', [$action]);
         }
@@ -113,52 +113,6 @@ class UsersController extends AppController
 
             $this->set('username', $username);
             $this->set('password', $password);
-        }
-    }
-
-    public function userAuthentication(){
-        if ($this->request->is('post')) {
-            $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
-            $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
-            $ApiSecuritiesScopes = TableRegistry::get('AcademicPeriod.ApiSecuritiesScopes');
-            $ApiSecuritiesData = $ApiSecuritiesScopes->find('all')
-            ->select([
-                'ApiSecuritiesScopes.view','ApiSecuritiesScopes.edit','ApiSecuritiesScopes.execute'
-            ])
-            ->toArray();
-            if($ApiSecuritiesData[0]->execute == 0){
-                $authenticationType = $authentications[0]['authentication_type'];
-                $code = $authentications[0]['code'];
-                $response['message'] = "Api is disabled.";
-            } else if (!$enableLocalLogin && count($authentications) == 1) {
-                $response['message'] = "Api is disabled.";
-            } elseif (is_null($code)) {
-                $authenticationType = 'Local';
-                $this->SSO->doAuthentication($authenticationType, $code);
-                $postData = $this->request->data;
-                $password = $postData['password'];
-                $hash = password_hash($password,  PASSWORD_DEFAULT); 
-                $UserData = TableRegistry::get('Report.Users');
-                $GetUserData = $UserData->find('all')
-                ->select([
-                    'Users.id','Users.password'
-                ])
-                ->where([
-                    'Users.username' => $postData['username']
-                ])
-                ->toArray();
-                if (password_verify($password, $GetUserData[0]->password)) {
-                    $response['token'] = JWT::encode([
-                        'sub' => $GetUserData[0]->id,
-                        'exp' =>  time() + 10800
-                    ], Configure::read('Application.private.key'), 'RS256');
-                    $response['message'] = 'Logged in successfuly.';
-                } else {
-                    $response['message'] = "Invalid login creadential.";
-                }
-            }
-            $dataArr = array("data"=>$response);
-            echo json_encode($dataArr);exit;
         }
     }
 
