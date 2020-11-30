@@ -1,6 +1,7 @@
 <?php
-echo $this->Html->script('highchart/highcharts', ['block' => true]);
+echo $this->Html->script('highchart/dashboard-highcharts', ['block' => true]);
 echo $this->Html->script('highchart/modules/exporting', ['block' => true]);
+echo $this->Html->script('highchart/modules/export-data', ['block' => true]);
 echo $this->Html->script('dashboards', ['block' => true]);
 ?>
 <?php
