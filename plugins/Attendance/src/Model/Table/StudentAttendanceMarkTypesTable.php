@@ -95,7 +95,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
         }
     }
 
-    public function getAttendancePerDayOptionsByClass($classId, $academicPeriodId, $dayId)
+    public function getAttendancePerDayOptionsByClass($classId, $academicPeriodId, $dayId, $educationGradeId)
     {
         $prefix = 'Period ';
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
@@ -107,7 +107,9 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 'keyField' => 'education_grade_id',
                 'valueField' => 'education_grade_id'
             ])
-            ->where([$InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+            ->where([$InstitutionClassGrades->aliasField('institution_class_id') => $classId,
+                    $InstitutionClassGrades->aliasField('education_grade_id') => $educationGradeId
+                    ])
             ->all();
 
         if (!$gradesResultSet->isEmpty()) {
@@ -182,10 +184,20 @@ class StudentAttendanceMarkTypesTable extends AppTable
                             ->toArray();
 
             $options = [];
-            $j = 0;
+            $j = 0;  
+            $periodsDataId = [];
+            for ($k = 0; $k <= $attendencePerDay; ++$k) {
+              $periodsDataId[] =  $periodsData[$k]['id'];
+            }
+            
+            $periodsDataId = array_filter($periodsDataId);
+            asort($periodsDataId);
+            $periodsDataId = array_combine(range(1, count($periodsDataId)), array_values($periodsDataId));
+            $periodsDataId = array_flip($periodsDataId);  
+            
             for ($i = 1; $i <= $attendencePerDay; ++$i) {
                 $options[] = [
-                    'id' => $i,
+                    'id' => (!empty($periodsDataId[$periodsData[$j]['id']])) ? $periodsDataId[$periodsData[$j]['id']] : $i,
                     'name' => __((!empty($periodsData[$j]['name'])) ? $periodsData[$j]['name'] : "Period ".$i)
                 ];
                 $j++;
@@ -200,8 +212,9 @@ class StudentAttendanceMarkTypesTable extends AppTable
         $institionClassId = $options['institution_class_id'];
         $academicPeriodId = $options['academic_period_id'];
         $dayId = $options['day_id'];
+        $educationGradeId = $options['education_grade_id'];
 
-        $attendanceOptions = $this->getAttendancePerDayOptionsByClass($institionClassId, $academicPeriodId, $dayId);
+        $attendanceOptions = $this->getAttendancePerDayOptionsByClass($institionClassId, $academicPeriodId, $dayId, $educationGradeId);
 
         return $query
             ->formatResults(function (ResultSetInterface $results) use ($attendanceOptions) {

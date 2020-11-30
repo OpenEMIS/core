@@ -579,6 +579,7 @@ class ImportBehavior extends Behavior
     {
         $session = $this->_table->Session;
         if ($session->check($this->sessionKey)) {
+            
             $completedData = $session->read($this->sessionKey);
             $this->_table->ControllerAction->field('select_file', ['visible' => false]);
             $this->_table->ControllerAction->field('results', [
@@ -1079,6 +1080,7 @@ class ImportBehavior extends Behavior
             $lookupPlugin = $row->lookup_plugin;
             $lookupModel = $row->lookup_model;
             $lookupColumn = $row->lookup_column;
+            $mappingModel = $row->model;
 
             $translatedCol = $this->getExcelLabel($model, $lookupColumn);
 
@@ -1091,18 +1093,35 @@ class ImportBehavior extends Behavior
             if ($foreignKey == self::FIELD_OPTION) {
                 if (TableRegistry::exists($lookupModel)) {
                     $relatedModel = TableRegistry::get($lookupModel);
-                } else {
+                } elseif($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
+                    $institutionId = 0;
+                    $session = $this->_table->Session;
+                    if ($session->check('Institution.Institutions.id')) {
+                        $institutionId = $session->read('Institution.Institutions.id');
+                    }
+                    
+                    $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table'])->findStudents($institutionId);
+                }else{
                     $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table']);
                 }
-                $modelData = $relatedModel->getList($relatedModel->find());
-                $emptyCodeRecords = $modelData;
-                $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $key) {
-                    return !empty($record->national_code);
-                })->toArray();
-
+                
+                if($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
+                    
+                    $emptyCodeRecords = $relatedModel;
+                    $modelData = $relatedModel;
+                }else{
+                    $modelData = $relatedModel->getList($relatedModel->find());
+                    $emptyCodeRecords = $modelData;
+                    $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $key) {
+                        return !empty($record->national_code);
+                    })->toArray();
+                    
+                    $modelData = $modelData->toArray();
+                }
+                
                 $data[$row->order]['lookupColumn'] = 2;
                 $data[$row->order]['data'][] = [__('Name'), $translatedCol];
-                $modelData = $modelData->toArray();
+                
                 if (!empty($modelData)) {
                     foreach ($modelData as $record) {
                         if (count($emptyCodeRecords)<1) {
@@ -1234,8 +1253,8 @@ class ImportBehavior extends Behavior
             } else {
                 $originalValue = $cell->getValue();
             }
-
-             $cellValue = $originalValue;
+            
+            $cellValue = $originalValue;
             // need to understand this check
             // @hanafi - this might be for type casting a double or boolean value to a string to avoid data loss when assigning
             // them to $val. Example: the value of latitude, "1.05647" might become "1" if not casted as a string type.
@@ -1249,10 +1268,22 @@ class ImportBehavior extends Behavior
             $lookupPlugin = $excelMappingObj->lookup_plugin;
             $lookupModel = $excelMappingObj->lookup_model;
             $lookupColumn = $excelMappingObj->lookup_column;
-            $columnName = $columns[$col];
-            $originalRow[$col] = $originalValue;
+            $lookupColumnName = $excelMappingObj->column_name;
+            $mappingModel = $excelMappingObj->model;
+            
+            if($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users' && $lookupColumnName == 'openemis_no'){
+                $columnName = 'security_user_id';
+                $securityUser = TableRegistry::get('User.Users')->find()->where(['openemis_no' => $originalValue])->first();
+                
+                $originalRow[$col] = $securityUser->id;
+                $cellValue = $securityUser->id;
+            }else{
+                $columnName = $columns[$col];
+                $originalRow[$col] = $originalValue;
+            }
+            
             $val = $cellValue;
-
+            
             $datePattern = "/(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/[0-9]{4}/"; // dd/mm/yyyy
 
             // skip a record column which has value defined earlier before this function is called
@@ -1395,7 +1426,7 @@ class ImportBehavior extends Behavior
                 $tempRow[$columnName] = $val;
             }
         }
-
+        
         // add condition to check if its importing institutions
         $plugin = $this->config('plugin');
         $model = $this->config('model');
@@ -1409,12 +1440,11 @@ class ImportBehavior extends Behavior
             $tempRow['userId'] = $userId;
             $tempRow['superAdmin'] = $superAdmin;
         }
-
+       
         if ($rowPass) {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
             $rowPass = $rowPassEvent->result;
         }
-
 
         return $rowPass;
     }
