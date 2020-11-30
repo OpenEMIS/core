@@ -149,7 +149,7 @@ class UsersController extends AppController
                 ->toArray();
                 if (password_verify($password, $GetUserData[0]->password)) {
                     $response['token'] = JWT::encode([
-                        'sub' => $user[0],
+                        'sub' => $GetUserData[0]->id,
                         'exp' =>  time() + 10800
                     ], Configure::read('Application.private.key'), 'RS256');
                     $response['message'] = 'Logged in successfuly.';
