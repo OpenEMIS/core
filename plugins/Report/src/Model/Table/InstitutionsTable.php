@@ -726,7 +726,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
 
-                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities') {
+                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports') {
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
@@ -866,7 +866,7 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
