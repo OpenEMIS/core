@@ -36,6 +36,10 @@ class InstitutionExpendituresTable extends ControllerActionTable
         $this->field('attachment', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setFieldOrder(['academic_period_id', 'date', 'budget_type_id', 'expenditure_type_id', 'amount', 'attachment', 'description']);
     }
+	
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
+    }
 
     public function indexBeforeAction($event) { 
         unset($this->fields['academic_period_id']);
