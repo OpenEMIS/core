@@ -29,6 +29,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
         $institutionClassId = $options['institution_class_id'];
+        $educationGradeId = $options['education_grade_id'];        
         $day = $options['day_id'];
         $period = $options['attendance_period_id'];
         $subjectId = $options['subject_id'];
@@ -36,6 +37,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         return $query
             ->where([
                 $this->aliasField('institution_class_id') => $institutionClassId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('date') => $day,

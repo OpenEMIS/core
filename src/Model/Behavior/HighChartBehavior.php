@@ -9,7 +9,7 @@ class HighChartBehavior extends Behavior
     private $colors = [
         '#7D68D5',
         '#F1658D',
-        '#FFD16A'
+        '#D5AA68'
     ];
 
     public function initialize(array $config)
