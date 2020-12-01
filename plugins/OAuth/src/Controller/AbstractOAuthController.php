@@ -85,52 +85,68 @@ abstract class AbstractOAuthController extends Controller
     public function login()
     {
         if ($this->request->is('post')) {
-            $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
-            $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
-            $apiSecuritiesScopes = TableRegistry::get('AcademicPeriod.ApiSecuritiesScopes');
-            $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
-            $apiSecuritiesData = $apiSecurities->find('all')
-            ->select([
-                'ApiSecuritiesScopes.view','ApiSecuritiesScopes.edit','ApiSecuritiesScopes.execute'
-            ])
-            ->innerJoin(
-                [$apiSecuritiesScopes->alias() => $apiSecuritiesScopes->table()],
-                [
-                    $apiSecuritiesScopes->aliasField('api_security_id = ') . $apiSecurities->aliasField('id')
-                ]
-            )
-            ->first();
-            if($apiSecuritiesData["ApiSecuritiesScopes"]["execute"] == 0){
-                $authenticationType = $authentications[0]['authentication_type'];
-                $code = $authentications[0]['code'];
-                $response['message'] = "Api is disabled.";
-            } else if (!$enableLocalLogin && count($authentications) == 1) {
-                $response['message'] = "Api is disabled.";
-            } elseif (is_null($code)) {
-                $authenticationType = 'Local';
-                $postData = $this->request->data;
-                $password = $postData['password'];
-                $hash = password_hash($password,  PASSWORD_DEFAULT); 
-                $userData = TableRegistry::get('Report.Users');
-                $getUserData = $userData->find('all')
+            $postData = $this->request->data;
+            $password = $postData['password'];
+            $userName = $postData['username'];
+            if(!isset($userName) && !isset($password)){
+                $response["username"][] ="The username field is required";
+                $response["password"][] ="The password field is required";
+                $dataArr = array("Enter Required fields"=>$response);
+            }else if(!isset($userName)){
+                $response["username"][] ="The username field is required";
+                $dataArr = array("Enter Required fields"=>$response);
+            }else if(!isset($password)){
+                $response["password"][] ="The password field is required";
+                $dataArr = array("Enter Required fields"=>$response);
+            }
+            else{
+                $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
+                $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
+                $apiSecuritiesScopes = TableRegistry::get('AcademicPeriod.ApiSecuritiesScopes');
+                $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
+                $apiSecuritiesData = $apiSecurities->find('all')
                 ->select([
-                    'Users.id','Users.password'
+                    'ApiSecuritiesScopes.view','ApiSecuritiesScopes.edit','ApiSecuritiesScopes.execute'
                 ])
-                ->where([
-                    'Users.username' => $postData['username']
-                ])
+                ->innerJoin(
+                    [$apiSecuritiesScopes->alias() => $apiSecuritiesScopes->table()],
+                    [
+                        $apiSecuritiesScopes->aliasField('api_security_id = ') . $apiSecurities->aliasField('id')
+                    ]
+                )
                 ->first();
-                if (password_verify($password, $getUserData["password"])) {
-                    $response['token'] = JWT::encode([
-                        'sub' => $getUserData["id"],
-                        'exp' =>  time() + 10800
-                    ], Configure::read('Application.private.key'), 'RS256');
-                    $response['message'] = 'Logged in successfuly.';
-                } else {
-                    $response['message'] = "Invalid login creadential.";
+                if($apiSecuritiesData["ApiSecuritiesScopes"]["execute"] == 0){
+                    $authenticationType = $authentications[0]['authentication_type'];
+                    $code = $authentications[0]['code'];
+                    $response['message'] = "Api is disabled";
+                } else if (!$enableLocalLogin && count($authentications) == 1) {
+                    $response['message'] = "Api is disabled";
+                } elseif (is_null($code)) {
+                    $authenticationType = 'Local';
+                    $postData = $this->request->data;
+                    $password = $postData['password'];
+                    $hash = password_hash($password,  PASSWORD_DEFAULT); 
+                    $userData = TableRegistry::get('Report.Users');
+                    $getUserData = $userData->find('all')
+                    ->select([
+                        'Users.id','Users.password'
+                    ])
+                    ->where([
+                        'Users.username' => $postData['username']
+                    ])
+                    ->first();
+                    if (password_verify($password, $getUserData["password"])) {
+                        $response['token'] = JWT::encode([
+                            'sub' => $getUserData["id"],
+                            'exp' =>  time() + 10800
+                        ], Configure::read('Application.private.key'), 'RS256');
+                        $response['message'] = 'Logged in successfuly.';
+                    } else {
+                        $response['message'] = "Invalid login creadential";
+                    }
+                    $dataArr = array("data"=>$response);
                 }
             }
-            $dataArr = array("data"=>$response);
             echo json_encode($dataArr);exit;
         }
     }
