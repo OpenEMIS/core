@@ -140,7 +140,18 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 this.api.sizeColumnsToFit();
             },
             onCellValueChanged: function(params) {
+                console.log("params", params)
                 if (params.newValue != params.oldValue) {
+
+                    var newVal = params.newValue;
+                    var format = /[ `/'"=%]/;
+                    if(format.test(newVal.charAt(0))) {
+                        AlertSvc.warning(vm, 'Special character not allow at first character of text');
+                        return false
+                    } else {
+                        AlertSvc.info(vm, 'Student comment will be saved after the comment has been entered.');
+                    } 
+
                     if (angular.isUndefined(vm.comments[params.data.student_id])) {
                         vm.comments[params.data.student_id] = {};
                     }
