@@ -1297,7 +1297,7 @@ class NavigationComponent extends Component
         $sId = $this->request->pass[1];
         $studentId = $session->read('Student.Students.id');        
     
-        if ($this->action == "ProfileStudentUser" || $this->action == 'StudentRisks' || $this->action == 'StudentProgrammes' && empty($studentId)) {
+        if ($this->action == "ProfileStudentUser" && empty($studentId)) {
             $session->write('Student.Students.id', $sId);
         }
         $navigation = [
@@ -1311,7 +1311,7 @@ class NavigationComponent extends Component
                 'title' => 'Academic',
                 'parent' => 'Profiles.ProfileStudents.index',
                 'params' =>  ['plugin' => 'Profile', 'controller' => 'Profiles', $studentId],
-                'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours', 'Profiles.StudentCompetencies.index',
+                'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours', 'Profiles.StudentCompetencies','Profiles.StudentCompetencies.index',
                 'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes', 'Profiles.StudentRisks']
             ],
         ];

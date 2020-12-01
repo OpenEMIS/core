@@ -66,17 +66,16 @@ class ProgrammesTable extends ControllerActionTable
 	{
 		$session = $this->request->session();
 		if ($this->controller->name == 'Profiles') {
-			$student_id = $this->request->pass[1];
-			if (!empty($student_id )) {
-				$sId = $this->ControllerAction->paramsDecode($student_id);
-                $studentId = $sId['id'];
+			$sId = $session->read('Student.Students.id');
+			if (!empty($sId)) {
+				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
 			} else {
 				$studentId = $session->read('Auth.User.id');
 			}
 		} else {
 				$studentId = $session->read('Student.Students.id');
 		}
-
+		
 		// end POCOR-1893
 		$sortList = ['AcademicPeriods.name'];
 		
