@@ -1309,7 +1309,12 @@ class NavigationComponent extends Component
     public function getProfileGuardianStudentNavigation()
     {
         $studentId = $this->request->pass[1];
-    
+        /*$session = $this->request->session();
+        $id = !empty($this->controller->getQueryString('student_id')) ? $this->controller->getQueryString('student_id') : $this->request->pass[1];
+        if ($this->action == "ProfileStudentUser") {
+            $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
+        }*/
+          
         $navigation = [
                 'Profiles.ProfileStudentUser' => [
                     'title' => 'Overview',
@@ -1322,9 +1327,15 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.ProfileStudents.index',
                 'params' =>  ['plugin' => 'Profile', 'controller' => 'Profiles', $studentId],
                 'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours',
-                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes']
+                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes', 'Profiles.StudentRisks']
             ],
         ];
+
+        foreach ($navigation as &$n) {
+            if (isset($n['params'])) {
+                $n['params']['studentId'] = $studentId;
+            }
+        }
 
         return $navigation;   
     }
