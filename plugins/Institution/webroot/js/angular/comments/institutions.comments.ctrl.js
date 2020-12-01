@@ -140,7 +140,6 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 this.api.sizeColumnsToFit();
             },
             onCellValueChanged: function(params) {
-                console.log("params", params)
                 if (params.newValue != params.oldValue) {
 
                     var newVal = params.newValue;
