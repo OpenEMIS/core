@@ -777,7 +777,9 @@ class StudentsTable extends ControllerActionTable
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
             $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
         } else {
-            if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
+            //POCOR-5690 remove check isAdvancedSearchEnabled for search data from list
+            //if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
+            if ($selectedStatus != -1) {
                 $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
             }
         }
