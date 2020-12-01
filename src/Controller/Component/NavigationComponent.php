@@ -68,6 +68,7 @@ class NavigationComponent extends Component
         $controller = $this->controller;
         try {
             $navigations = $this->buildNavigation();
+            
             $this->checkSelectedLink($navigations);
             $this->checkPermissions($navigations);
             $controller->set('_navigations', $navigations);
@@ -321,7 +322,6 @@ class NavigationComponent extends Component
 
             if ($isGuardian) {
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
-                
                 $session->write('Directory.Directories.reload', true);
             }
         } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
@@ -349,7 +349,7 @@ class NavigationComponent extends Component
                 
                 $this->checkClassification($navigations);
             }
-        } 
+        }
 
         $navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
         $navigations = $this->appendNavigation('Administration', $navigations, $this->getAdministrationNavigation());
@@ -515,28 +515,28 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Subjects'],
                 'params' => ['plugin' => 'Institution']
             ],
-
-            'Institution.Schedules' => [
+            
+            'Institutions.Schedules' => [
                 'title' => 'Schedules',
                 'parent' => 'Institution.Academic',
                 'link' => false
             ],
-
+            
             'Institutions.ScheduleTimetableOverview' => [
                 'title' => 'Timetables',
-                'parent' => 'Institution.Schedules',
+                'parent' => 'Institutions.Schedules',
                 'selected' => ['Institutions.ScheduleTimetableOverview', 'Institutions.ScheduleTimetable'],
                 'params' => ['plugin' => 'Institution']
             ],
             'Institutions.ScheduleIntervals' => [
                 'title' => 'Intervals',
-                'parent' => 'Institution.Schedules',
+                'parent' => 'Institutions.Schedules',
                 'selected' => ['Institutions.ScheduleIntervals'],
                 'params' => ['plugin' => 'Institution']
             ],
             'Institutions.ScheduleTerms' => [
                 'title' => 'Terms',
-                'parent' => 'Institution.Schedules',
+                'parent' => 'Institutions.Schedules',
                 'selected' => ['Institutions.ScheduleTerms'],
                 'params' => ['plugin' => 'Institution']
             ],
@@ -567,18 +567,7 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.FeederIncomingInstitutions'],
                 'params' => ['plugin' => 'Institution']
             ],
-                // 'Institution.Schedules' => [
-                //     'title' => 'Schedules',
-                //     'parent' => 'Institution.Feeders',
-                //     'link' => false
-                // ],
-                // 'Institutions.ScheduleTerms' => [
-                //     'title' => 'Terms',
-                //     'parent' => 'Institution.Academic',
-                //     'selected' => ['Institutions.ScheduleTerms'],
-                //     'params' => ['plugin' => 'Institution']
-                // ],
-
+            
             'Institutions.Students.index' => [
                 'title' => 'Students',
                 'parent' => 'Institutions.Institutions.index',
@@ -963,9 +952,7 @@ class NavigationComponent extends Component
         $id = !empty($this->controller->getQueryString('institution_student_id')) ? $this->controller->getQueryString('institution_student_id') :$session->read('Institution.Students.id');
         $studentId = $session->read('Student.Students.id');
         $institutionIdSession = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
-        
         $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $institutionIdSession;
-
         $queryString = $this->controller->paramsEncode(['institution_id' => $this->controller->paramsDecode($institutionId)['id'], 'institution_student_id' => $id]);
         $navigation = [
             'Institutions.StudentUser.view' => [
@@ -1066,7 +1053,6 @@ class NavigationComponent extends Component
                 $n['params']['institutionId'] = $institutionId;
             }
         }
-
         return $navigation;
     }
 
@@ -1169,7 +1155,6 @@ class NavigationComponent extends Component
                 'selected' => ['Profiles.ScholarshipApplications', 'ScholarshipsDirectory.index', 'ScholarshipsDirectory.view', 'ProfileApplicationInstitutionChoices.index', 'ProfileApplicationInstitutionChoices.view', 'ProfileApplicationInstitutionChoices.add', 'ProfileApplicationInstitutionChoices.edit', 'ProfileApplicationInstitutionChoices.delete', 'ProfileApplicationAttachments.index', 'ProfileApplicationAttachments.view', 'ProfileApplicationAttachments.add', 'ProfileApplicationAttachments.edit', 'ProfileApplicationAttachments.delete']
             ],
         ];
-
         return $navigation;
     }
 
@@ -1290,19 +1275,19 @@ class NavigationComponent extends Component
     public function getProfileGuardianNavigation()
     {
         $navigation = [
-                'Profiles.Guardian' => [
-                    'title' => 'Guardian',
-                    'parent' => 'Profiles.Profiles',
-                    'link' => false,
-                ],
-                'Profiles.ProfileStudents.index' => [
-                    'title' => 'Students',
-                    'parent' => 'Profiles.Guardian',
-                    'params' => ['plugin' => 'Profile'],
-                    'selected' => ['Profiles.ProfileStudents']
-                ],
+            'Profiles.Guardian' => [
+                'title' => 'Guardian',
+                'parent' => 'Profiles.Profiles',
+                'link' => false,
+            ],
+            'Profiles.ProfileStudents.index' => [
+                'title' => 'Students',
+                'parent' => 'Profiles.Guardian',
+                'params' => ['plugin' => 'Profile'],
+                'selected' => ['Profiles.ProfileStudents']
+            ],
         ];
-    
+        
         return $navigation;
     }
 
@@ -1314,15 +1299,15 @@ class NavigationComponent extends Component
         if ($this->action == "ProfileStudentUser") {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         }*/
-          
+        
         $navigation = [
-                'Profiles.ProfileStudentUser' => [
-                    'title' => 'Overview',
-                    'parent' => 'Profiles.ProfileStudents.index',
-                    'params' => ['plugin' => 'Profile','controller' => 'Profiles', 'action' => 'ProfileStudentUser', 0 => 'view', $studentId],
-                    'selected' => ['Profiles.ProfileStudentUser']
-                ],
-                'Profiles.StudentProgrammes.index' => [
+            'Profiles.ProfileStudentUser' => [
+                'title' => 'Overview',
+                'parent' => 'Profiles.ProfileStudents.index',
+                'params' => ['plugin' => 'Profile','controller' => 'Profiles', 'action' => 'ProfileStudentUser', 0 => 'view', $studentId],
+                'selected' => ['Profiles.ProfileStudentUser']
+            ],
+            'Profiles.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Profiles.ProfileStudents.index',
                 'params' =>  ['plugin' => 'Profile', 'controller' => 'Profiles', $studentId],
@@ -1530,7 +1515,7 @@ class NavigationComponent extends Component
 
         $queryString = $this->request->query('queryString');
         $navigation = [
-
+            
             'SystemSetup' => [
                 'title' => 'System Setup',
                 'parent' => 'Administration',
