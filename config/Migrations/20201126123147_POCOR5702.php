@@ -30,7 +30,7 @@ class POCOR5702 extends AbstractMigration
             'add' => 0,
             'edit' => 0,
             'delete' => 0,
-            'execute' => 1
+            'execute' => 0
         ]);
     }
 
