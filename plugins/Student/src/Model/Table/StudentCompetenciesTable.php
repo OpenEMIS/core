@@ -100,9 +100,10 @@ class StudentCompetenciesTable extends ControllerActionTable
     {
         $session = $this->request->session(); 
         if ($this->controller->name == 'Profiles') {
-            $sId = $this->request->pass[1];
-            if (!empty($sId)) {
-                $studentId = $this->ControllerAction->paramsDecode($this->request->pass[1])['id'];
+            $session = $this->request->session();
+            $id = $session->read('Student.Students.id');
+            if (!empty($id)) {
+                $studentId = $this->controller->paramsDecode($id)['id'];
             } else {
                 $studentId = $session->read('Student.Students.id');
             }

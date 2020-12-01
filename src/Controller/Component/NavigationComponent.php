@@ -68,7 +68,7 @@ class NavigationComponent extends Component
         $controller = $this->controller;
         try {
             $navigations = $this->buildNavigation();
-            
+
             $this->checkSelectedLink($navigations);
             $this->checkPermissions($navigations);
             $controller->set('_navigations', $navigations);
@@ -515,13 +515,13 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Subjects'],
                 'params' => ['plugin' => 'Institution']
             ],
-            
+
             'Institutions.Schedules' => [
                 'title' => 'Schedules',
                 'parent' => 'Institution.Academic',
                 'link' => false
             ],
-            
+
             'Institutions.ScheduleTimetableOverview' => [
                 'title' => 'Timetables',
                 'parent' => 'Institutions.Schedules',
@@ -567,7 +567,7 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.FeederIncomingInstitutions'],
                 'params' => ['plugin' => 'Institution']
             ],
-            
+
             'Institutions.Students.index' => [
                 'title' => 'Students',
                 'parent' => 'Institutions.Institutions.index',
@@ -1287,19 +1287,19 @@ class NavigationComponent extends Component
                 'selected' => ['Profiles.ProfileStudents']
             ],
         ];
-        
+
         return $navigation;
     }
 
     public function getProfileGuardianStudentNavigation()
-    {
-        $studentId = $this->request->pass[1];
-        /*$session = $this->request->session();
-        $id = !empty($this->controller->getQueryString('student_id')) ? $this->controller->getQueryString('student_id') : $this->request->pass[1];
-        if ($this->action == "ProfileStudentUser") {
-            $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
-        }*/
-        
+    {   
+        $session = $this->request->session();
+        $sId = $this->request->pass[1];
+        $studentId = $session->read('Student.Students.id');        
+    
+        if ($this->action == "ProfileStudentUser" || $this->action == 'StudentRisks' || $this->action == 'StudentProgrammes' && empty($studentId)) {
+            $session->write('Student.Students.id', $sId);
+        }
         $navigation = [
             'Profiles.ProfileStudentUser' => [
                 'title' => 'Overview',
@@ -1311,16 +1311,10 @@ class NavigationComponent extends Component
                 'title' => 'Academic',
                 'parent' => 'Profiles.ProfileStudents.index',
                 'params' =>  ['plugin' => 'Profile', 'controller' => 'Profiles', $studentId],
-                'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours',
+                'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours', 'Profiles.StudentCompetencies.index',
                 'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes', 'Profiles.StudentRisks']
             ],
         ];
-
-        foreach ($navigation as &$n) {
-            if (isset($n['params'])) {
-                $n['params']['studentId'] = $studentId;
-            }
-        }
 
         return $navigation;   
     }
@@ -1515,7 +1509,7 @@ class NavigationComponent extends Component
 
         $queryString = $this->request->query('queryString');
         $navigation = [
-            
+
             'SystemSetup' => [
                 'title' => 'System Setup',
                 'parent' => 'Administration',
