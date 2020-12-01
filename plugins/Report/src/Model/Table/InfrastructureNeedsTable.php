@@ -45,9 +45,6 @@ class InfrastructureNeedsTable extends AppTable  {
         $institutionId = $requestData->institution_id;
         
         $conditions = [];
-        if (!empty($academicPeriodId)) {
-            $conditions['AcademicPeriods.id'] = $academicPeriodId;
-        }
         if (!empty($institutionId)) {
             $conditions['InfrastructureNeeds.institution_id'] = $institutionId;
         }
@@ -60,7 +57,6 @@ class InfrastructureNeedsTable extends AppTable  {
                 ->select([
                 'institution_name' => 'Institutions.name',
                 'institution_code' => 'Institutions.code',
-                'shift_name' => 'ShiftOptions.name',
                 'institution_status_name'=> 'InstitutionStatuses.name',
                 'need_code'=>'InfrastructureNeeds.code',
                 'need_name'=>'InfrastructureNeeds.name',
@@ -81,16 +77,6 @@ class InfrastructureNeedsTable extends AppTable  {
                 ])
                 ->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
                     'InstitutionStatuses.id = Institutions.institution_status_id',
-                ])
-                //shift
-                ->LeftJoin(['InstitutionShifts' => 'institution_shifts'],[
-                    'InfrastructureNeeds.institution_id = InstitutionShifts.institution_id',
-                ])
-                ->LeftJoin(['ShiftOptions' => 'shift_options'],[
-                    'ShiftOptions.id = InstitutionShifts.shift_option_id'
-                ])
-                ->LeftJoin(['AcademicPeriods' => 'academic_periods'],[
-                    'AcademicPeriods.id = InstitutionShifts.academic_period_id'
                 ])
                 ->LeftJoin(['InfrastructureNeedTypes' => $infrastructureNeedTypes->table()], [
                     'InfrastructureNeeds.infrastructure_need_type_id = InfrastructureNeedTypes.id',
@@ -123,13 +109,6 @@ class InfrastructureNeedsTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'ShiftOptions.name',
-            'field' => 'shift_name',
-            'type' => 'string',
-            'label' => __('Institution Shift')
-        ];
-
-        $newFields[] = [
             'key' => 'InstitutionStatuses.name',
             'field' => 'institution_status_name',
             'type' => 'string',
@@ -140,21 +119,21 @@ class InfrastructureNeedsTable extends AppTable  {
             'key' => 'InfrastructureNeeds.code',
             'field' => 'need_code',
             'type' => 'string',
-            'label' => __('Need Code')
+            'label' => __('Needs Code')
         ];
 
         $newFields[] = [
             'key' => 'InfrastructureNeeds.name',
             'field' => 'need_name',
             'type' => 'string',
-            'label' => __('Need Name')
+            'label' => __('Needs Name')
         ];
 
         $newFields[] = [
             'key' => 'InfrastructureNeedTypes.name',
             'field' => 'need_type',
             'type' => 'string',
-            'label' => __('Need Type')
+            'label' => __('Needs Type')
         ];
 
         $newFields[] = [

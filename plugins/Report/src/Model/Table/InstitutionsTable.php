@@ -575,7 +575,6 @@ class InstitutionsTable extends AppTable
                           'Report.InstitutionClasses',
                           'Report.InstitutionCommittees',
                           'Report.ClassAttendanceMarkedSummaryReport',  
-                          'Report.InfrastructureNeeds',
                           'Report.Income',
                           'Report.Expenditure'
                          ]
@@ -585,7 +584,6 @@ class InstitutionsTable extends AppTable
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();
-                //add All Academic Period task POCOR 5698
                 $attr['options'] = ['0' => __('All Academic Period')] + $academicPeriodOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
