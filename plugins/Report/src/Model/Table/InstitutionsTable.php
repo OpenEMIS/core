@@ -563,7 +563,9 @@ class InstitutionsTable extends AppTable
                           'Report.WashReports', 
                           'Report.InstitutionClasses',
                           'Report.InstitutionCommittees',
-                          'Report.ClassAttendanceMarkedSummaryReport'
+                          'Report.ClassAttendanceMarkedSummaryReport',
+                          'Report.Income',
+                          'Report.Expenditure'
                         ]
                     )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
@@ -707,7 +709,9 @@ class InstitutionsTable extends AppTable
                             'Report.BodyMasses', 
                             'Report.WashReports',
                             'Report.Guardians',
-                            'Report.InstitutionInfrastructures','Report.SubjectsBookLists'
+                            'Report.InstitutionInfrastructures',
+                            'Report.SubjectsBookLists',
+                            'Report.SpecialNeedsFacilities'
                         ])
                 ) {
                 
@@ -722,7 +726,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
 
-                if($feature == 'Report.StudentAttendanceSummary') {
+                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities') {
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
@@ -801,7 +805,9 @@ class InstitutionsTable extends AppTable
 				'Report.SpecialNeedsFacilities', 
 				'Report.InstitutionCommittees',
 				'Report.SubjectsBookLists',
-                'Report.StudentAbsences'
+                'Report.StudentAbsences',
+                'Report.Income',
+                'Report.Expenditure'
             ];
 
             
@@ -860,8 +866,7 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-					
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;

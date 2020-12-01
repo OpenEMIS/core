@@ -1815,4 +1815,34 @@ class InstitutionClassesTable extends ControllerActionTable
           
         return false;
     }
+    
+    public function findGradesByInstitutionAndAcademicPeriodAndInstitutionClass(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $institutionClassId = $options['institution_class_id'];
+        $institutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        
+        $query->select([
+            'id' => $EducationGrades->aliasField('id'),
+            'name' => $EducationGrades->aliasField('name')
+        ])
+        ->innerJoin(
+            [$institutionClassGrades->alias() => $institutionClassGrades->table()],
+            [$this->aliasField('id = ') . $institutionClassGrades->aliasField('institution_class_id')]
+        )->innerJoin(
+            [$EducationGrades->alias() => $EducationGrades->table()],
+            [$EducationGrades->aliasField('id = ') . $institutionClassGrades->aliasField('education_grade_id')]
+        )
+        ->where([
+            $this->aliasField('institution_id') => $institutionId,
+            $this->aliasField('academic_period_id') => $academicPeriodId,
+            $institutionClassGrades->aliasField('institution_class_id') => $institutionClassId
+        ])
+        ->order([$EducationGrades->aliasField('name')]);
+        
+        return $query;
+        
+    }
 }
