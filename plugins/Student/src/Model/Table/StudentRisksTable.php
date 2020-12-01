@@ -131,9 +131,12 @@ class StudentRisksTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->session();
-        $id = $session->read('Student.Students.id');
-        $studentId = $this->controller->paramsDecode($id)['id'];
-
+        $studentId = $session->read('Student.Students.id');
+        
+        if ($this->controller->name == 'Profiles' && $this->action == 'index') {
+            $session = $this->request->session();
+            $studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
+        }
         $query = $query
             ->where([
                 $this->aliasField('student_id') => $studentId,
