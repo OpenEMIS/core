@@ -186,9 +186,8 @@ class ProfilesController extends AppController
     public function StudentResults()
     {
         $session = $this->request->session();
-       /* $studentId = $this->Auth->user('id');*/
-        $studentId  = $this->request->pass[1];
-        //$session->write('Student.Results.student_id', $studentId);
+        //$studentId = $this->Auth->user('id');
+        $sId = $this->request->pass[1];
 
         // tabs
         $options['type'] = 'student';
@@ -413,24 +412,23 @@ class ProfilesController extends AppController
     public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
         $loginUserId = $this->Auth->user('id'); // login user
-
+        $action = $this->request->params['action'];
         if ($model->hasField('security_user_id')) {
-            $studentId = $this->request->pass[1];
-            if (!empty($studentId)) {
-                $sId = $this->ControllerAction->paramsDecode($studentId);
-                $student_id = $sId['id'];
-                $query->where([$model->aliasField('security_user_id') => $student_id]);
+            $session = $this->request->session();
+                $studentId = $session->read('Student.Students.id'); 
+                if (!empty($studentId)) {
+                    $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
+                    $query->where([$model->aliasField('security_user_id') => $sId]);
             } else {
                 $query->where([$model->aliasField('security_user_id') => $loginUserId]);
             }
         } else if ($model->hasField('student_id')) {
-            $action = $this->request->params['action'];
-            if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes') {
-                $studentId = $this->request->pass[1];
+            if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentTextbooks') {
+                $session = $this->request->session();
+                $studentId = $session->read('Student.Students.id'); 
                 if (!empty($studentId)) {
-                    $sId = $this->ControllerAction->paramsDecode($studentId);
-                    $student_id = $sId['id'];
-                    $query->where([$model->aliasField('student_id') => $student_id]);
+                    $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
+                    $query->where([$model->aliasField('student_id') => $sId]);
                 } else {
                     $query->where([$model->aliasField('student_id') => $loginUserId]);
                 }
@@ -538,8 +536,7 @@ class ProfilesController extends AppController
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            /*$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', $studentId, 'type' => $type]);*/
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', $studentId]);
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', $studentId, 'type' => $type]);
         }
         
         return $this->TabPermission->checkTabPermission($tabElements);
