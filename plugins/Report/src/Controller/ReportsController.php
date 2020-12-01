@@ -81,7 +81,9 @@ class ReportsController extends AppController
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionCommittees' => __('Committees'),
                 'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),
-                'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report')
+                'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
+                'Report.Income' => __('Income Report'),
+                'Report.Expenditure' => __('Expenditure Report')
 				
             ];
         } elseif ($module == 'Students') {
