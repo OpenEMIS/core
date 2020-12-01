@@ -17,6 +17,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $this->table('institution_outcome_results');
 
         parent::initialize($config);
+       
         $this->belongsTo('OutcomeGradingOptions', ['className' => 'Outcome.OutcomeGradingOptions']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('OutcomeTemplates', [
@@ -82,6 +83,13 @@ class StudentOutcomesTable extends ControllerActionTable
             ])
             ->extract('education_grade_id')
             ->toArray();
+            $institution = $InstitutionStudents->find()
+            ->where([
+                $InstitutionStudents->aliasField('student_id') => $this->studentId,
+                $InstitutionStudents->aliasField('academic_period_id') => $selectedAcademicPeriod
+            ])
+            ->extract('institution_id')
+            ->toArray();
 
         $templateOptions = [];
         if (!empty($studentGrades)) {
@@ -128,7 +136,16 @@ class StudentOutcomesTable extends ControllerActionTable
                 ->matching('EducationGrades', function ($q) use ($educationGradeId) {
                     return $q->where(['EducationGrades.id' => $educationGradeId]);
                 })
+                ->innerJoinWith('InstitutionSubjectStudents')
+                ->where([
+                    'InstitutionSubjectStudents.institution_id = ' => $institution[0],
+                    'InstitutionSubjectStudents.student_id =' => $this->studentId,
+                    'InstitutionSubjectStudents.academic_period_id =' => $selectedAcademicPeriod
+                    
+                ])
                 ->toArray();
+               
+                
             $subjectOptions = ['0' => __('All Subjects')] + $subjectOptions;
         }
 

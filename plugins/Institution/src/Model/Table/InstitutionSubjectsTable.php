@@ -61,6 +61,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'targetForeignKey' => 'student_id',
             'dependent' => true
         ]);
+        $this->belongsTo('InstitutionSubjectStudents', [
+            'className' => 'Institution.InstitutionSubjectStudents'
+           
+        ]);
 
         $this->belongsToMany('Rooms', [
             'className' => 'Institution.InstitutionRooms',

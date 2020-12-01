@@ -659,7 +659,7 @@ class StudentOutcomesTable extends ControllerActionTable
         return $outcomePeriodOptions;
     }
 
-    private function getSubjectOptions()
+    private function getSubjectOptions($studentId)
     {
         $subjectOptions = [];
         $baseUrl = $this->url($this->action, false);
@@ -690,6 +690,10 @@ class StudentOutcomesTable extends ControllerActionTable
                     'EducationGrades.id' => $gradeId,
                     'InstitutionSubjects.institution_id' => $institutionId,
                     'InstitutionSubjects.academic_period_id' => $academicPeriodId,
+                ])
+                ->innerJoinWith('SubjectStudents')
+                ->where([
+                    'SubjectStudents.student_id ' => $studentId
                 ])
                 ->order('EducationSubjects.order')
                 ->toArray();
@@ -787,14 +791,13 @@ class StudentOutcomesTable extends ControllerActionTable
         // set Outcome Period filter
         $attr['period_options'] = $this->getOutcomePeriodOptions();
         $attr['selected_period'] = $this->outcomePeriodId;
-
-        // set Subject filter
-        $attr['subject_options'] = $this->getSubjectOptions();
-        $attr['selected_subject'] = $this->subjectId;
-
         // set Student filter
         $attr['student_options'] = $this->getStudentOptions();
         $attr['selected_student'] = $this->studentId;
+
+          // set Subject filter
+          $attr['subject_options'] = $this->getSubjectOptions($this->studentId);
+          $attr['selected_subject'] = $this->subjectId;
 
         $gradingTypes = $this->getOutcomeGradingTypes();
 
