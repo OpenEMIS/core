@@ -1,3 +1,15 @@
+### [3.58.3] - 2020-11-27
+- Implemented: Add Results and Comments tabs under Institution > Student > Academic Outcomes
+- Implemented: Add a chart for student/staff attendance to institution dashboard
+- Implemented: Reports > Institution > Finance (Income and Expenditure) Report
+- Bug Fixed: Import Extracurriculars: Changes to the Import Template
+- Bug Fixed: Institutions > Students > Academic > Competencies tab: Competencies filter list down all Competencies even though student is not taking all
+- Bug Fixed: Institutions > Attendance > Students: Add an Education Grade field
+- Bug Fixed: Institutions > Attendance > Students: Disable edit for future date attendances
+- Bug Fixed: Reports > Institutions > Special Needs Facilities: Changes to the report and filters
+- Bug Fixed: Reports > Students > Guardians: Add an Institution filter option and an Institution column in Guardians report
+- Bug Fixed: Institution > Academic > Schedules: Schedules not found even though user has been given the Permission rights
+
 ### [3.58.2] - 2020-11-19
 - Data Archiving feature in OpenEMIS Core
 - Develop Reports > Directoty > User List
