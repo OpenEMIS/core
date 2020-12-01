@@ -58,7 +58,6 @@ class StudentSubjectsTable extends ControllerActionTable
         if (!empty($this->request->query['institution_subject_id'])) {
             $action = 'view';
             $hasAllSubjectsPermission = $this->AccessControl->check(['Institutions', 'AllSubjects', $action]);
-   
             $hasMySubjectsPermission = $this->AccessControl->check(['Institutions', 'Subjects', $action]);
             $url = [
                 'plugin' => 'Institution',
