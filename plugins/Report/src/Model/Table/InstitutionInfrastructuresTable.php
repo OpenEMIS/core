@@ -226,6 +226,7 @@ class InstitutionInfrastructuresTable extends AppTable
                     //shift
                     ->LeftJoin(['InstitutionShifts' => 'institution_shifts'],[
                         'Institution'.$level.'.'.'institution_id = InstitutionShifts.institution_id',
+                        'Institution'.$level.'.'.'academic_period_id = InstitutionShifts.academic_period_id'
                     ])
                     ->LeftJoin(['ShiftOptions' => 'shift_options'],[
                         'ShiftOptions.id = InstitutionShifts.shift_option_id'
