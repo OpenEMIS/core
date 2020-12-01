@@ -113,6 +113,7 @@ class ProfilesController extends AppController
     public function StaffBehaviours()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']); }
     public function StudentOutcomes()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']); }
     public function StudentCompetencies()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCompetencies']); }
+    public function StudentRisks() {  $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentRisks']);}
     public function ScholarshipApplications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipApplications']); }
     public function Demographic()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']); }
     public function ProfileStudents()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Students']); }
@@ -178,8 +179,7 @@ class ProfilesController extends AppController
         $session = $this->request->session();
        /* $studentId = $this->Auth->user('id');*/
         $studentId  = $this->request->pass[1];
-        print_r($studentId);die();
-        $session->write('Student.Results.student_id', $studentId);
+        //$session->write('Student.Results.student_id', $studentId);
 
         // tabs
         $options['type'] = 'student';
@@ -268,7 +268,7 @@ class ProfilesController extends AppController
 
             $this->activeObj = $entity;
         } else {
-            
+            //no record
         }
 
         $this->set('contentHeader', $header);
@@ -319,7 +319,7 @@ class ProfilesController extends AppController
         //POCOR-5675
         $action = $this->request->params['action'];
         
-        if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentResults'|| $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentAwards'|| $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks') {
+        if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks') {
                 $studentId = $this->request->pass[1];
                 if (!empty($studentId)) {
                     $sId = $this->ControllerAction->paramsDecode($studentId);
@@ -406,7 +406,14 @@ class ProfilesController extends AppController
         $loginUserId = $this->Auth->user('id'); // login user
 
         if ($model->hasField('security_user_id')) {
-            $query->where([$model->aliasField('security_user_id') => $loginUserId]);
+            $studentId = $this->request->pass[1];
+            if (!empty($studentId)) {
+                $sId = $this->ControllerAction->paramsDecode($studentId);
+                $student_id = $sId['id'];
+                $query->where([$model->aliasField('security_user_id') => $student_id]);
+            } else {
+                $query->where([$model->aliasField('security_user_id') => $loginUserId]);
+            }
         } else if ($model->hasField('student_id')) {
             $action = $this->request->params['action'];
             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes') {
@@ -495,9 +502,9 @@ class ProfilesController extends AppController
     }
 
     public function getAcademicTabElements($options = [])
-    { 
+    {  
         $studentId  = $this->request->pass[1];
-        $id = (array_key_exists('id', $options))? $options['id'] : $studentId;
+        $id = (array_key_exists('id', $options))? $options['id'] : 0;
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];
         $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
@@ -515,15 +522,17 @@ class ProfilesController extends AppController
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
-            'Textbooks' => ['text' => __('Textbooks')]
+            'Textbooks' => ['text' => __('Textbooks')],
+            'Risks' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', $studentId, 'type' => $type]);
+            /*$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', $studentId, 'type' => $type]);*/
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', $studentId]);
         }
-       
+        
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
@@ -663,10 +672,11 @@ class ProfilesController extends AppController
         
         $tabElements = [
             'Competencies' => [
-                'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],
+                'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentCompetencies', 'view', $studentId, 'queryString' => $queryString],
                 'text' => __('Items')
             ]
         ];
+
         return $this->TabPermission->checkTabPermission($tabElements);
     }
     

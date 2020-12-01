@@ -76,7 +76,6 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
 
         $this->field('class_number', ['visible' => false]);
-        $this->field('student_id');
         $this->field('staff_id', ['type' => 'hidden']);
         $this->field('secondary_staff_id', ['type' => 'hidden']);
         $this->field('institution_shift_id', ['type' => 'hidden']);
@@ -99,9 +98,14 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->session(); 
         if ($this->controller->name == 'Profiles') {
-            $studentId = $session->read('Auth.User.id');
+            $sId = $this->request->pass[1];
+            if (!empty($sId)) {
+                $studentId = $this->ControllerAction->paramsDecode($this->request->pass[1])['id'];
+            } else {
+                $studentId = $session->read('Student.Students.id');
+            }
         } else {
             $studentId = $session->read('Student.Students.id');
         }
