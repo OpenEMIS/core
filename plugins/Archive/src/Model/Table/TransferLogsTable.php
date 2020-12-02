@@ -102,7 +102,9 @@ use Cake\Log\Log;
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id', ['type' => 'select']);
+        $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+        $this->field('academic_period_id', ['type' => 'select', 'options' => $academicPeriodOptions]);
         
         $this->field('id', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
