@@ -243,4 +243,10 @@ class ReportsController extends AppController
         echo json_encode($dataSet);
         die;
     }
+	
+	public function Profiles()
+    { 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
+    }
+	
 }
