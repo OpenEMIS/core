@@ -10,10 +10,10 @@ function InstitutionAssessmentsArchiveSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     var translateText = {
         'original': {
-            'AcedemicPeriod': 'Acedemic Period',
+            'AcedemicPeriod': 'Academic Period',
             'assessment': 'Assessment',
             'EducationGrade': 'Education Grade',
-            'class': 'class',
+            'class': 'Class',
             'subject': 'Subject',
             'OpenEMISID': 'OpenEMIS ID',
             'name': 'Name',
