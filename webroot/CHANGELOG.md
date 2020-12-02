@@ -1,3 +1,9 @@
+### [3.59.0] - 2020-12-02
+- Implemented: Enhancement of the Core survey report module
+- Implemneted: Reports for the Infrastructure module
+- Implemented: Automation of a revised WebGIS input file and API for user authentification
+- Bug Fixed: Student Attendance POST API
+
 ### [3.58.3] - 2020-11-27
 - Implemented: Add Results and Comments tabs under Institution > Student > Academic Outcomes
 - Implemented: Add a chart for student/staff attendance to institution dashboard
