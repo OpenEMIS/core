@@ -43,7 +43,7 @@ $this->start('panelBody');
 		<!--Getting the correct icon and the header name base on the calling method-->
 		<i class="kd-institutions icon"></i>
 		<div class="data-field">
-			<h4><?= __('Percent') ?>:</h4>
+			<h4><?= __('Complete') ?>:</h4>
 			<h1 class="data-header">
 			<?= number_format($instituteprofileCompletness['percentage']) .'%' ?>
 			</h1>
