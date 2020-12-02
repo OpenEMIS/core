@@ -182,6 +182,7 @@ class StudentArchiveTable extends ControllerActionTable
         ]);
     }
 
+    
     public function decrypt($encrypted_string, $secretHash) {
 
         $iv = substr($secretHash, 0, 16);
