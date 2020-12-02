@@ -39,7 +39,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
     vm.showSplitContentResponsive = showSplitContentResponsive;
     vm.removeSplitContentResponsive = removeSplitContentResponsive;
     vm.showProfileCompleteData = showProfileCompleteData;
-    vm.initProfileCompletness = initProfileCompletness;
     vm.initNotices = initNotices;
     vm.initWorkbenchItems = initWorkbenchItems;
     vm.initGrid = initGrid;
@@ -48,8 +47,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
     // Initialisation
     angular.element(document).ready(function() {
         DashboardSvc.init(angular.baseUrl);
-
-        vm.initProfileCompletness();
         vm.initNotices();
         vm.initWorkbenchItems();
     });
@@ -66,33 +63,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
 
     function showProfileCompleteData() {
         $("#profile_data_div").toggle();
-    }
-
-    function initProfileCompletness() {
-        UtilsSvc.isAppendSpinner(true, 'dashboard-profile-table');
-        DashboardSvc.getNotices()
-            .then(function(notices) {
-                for (var key in notices) {
-                    vm.profile.push('');
-                }
-                console.log(vm.profile);
-                vm.percentage = 75;
-                // vm.notices = notices;
-                if (vm.profile.length == 0) {
-                    vm.profile = null;
-                }
-            }, function(error) {
-                // No Notices
-                console.log(error);
-                vm.profile = null;
-                AlertSvc.warning($scope, error);
-            })
-            .finally(function() {
-                UtilsSvc.isAppendSpinner(false, 'dashboard-profile-table');
-            });
-        vm.target = 'profile';
-
-
     }
 
     function initNotices() {
