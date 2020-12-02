@@ -61,9 +61,9 @@ class StudentArchiveTable extends ControllerActionTable
         if($getconnected == "1"){
             $db2 = $transferConnectionsData['db_name'];
         }
-        $table1 = $tableSchema[7];
-        $table2 = $tableSchema[6];
-        $table3 = $tableSchema[4];
+        $table1 = $tableSchema[8];
+        $table2 = $tableSchema[7];
+        $table3 = $tableSchema[5];
 
         $stmt1 = $connectionone->prepare("CREATE OR REPLACE VIEW student_attendance_marked_records_archived AS SELECT * FROM $table1");
         $stmt1->execute();
@@ -182,7 +182,7 @@ class StudentArchiveTable extends ControllerActionTable
         ]);
     }
 
-    
+
     public function decrypt($encrypted_string, $secretHash) {
 
         $iv = substr($secretHash, 0, 16);
