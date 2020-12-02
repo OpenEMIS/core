@@ -96,7 +96,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         $studentId = $entity->student_id;
         $absenceTypeId = $entity->absence_type_id;
 
-        $optionList = $StudentAttendanceMarkTypes->getAttendancePerDayOptionsByClass($classId, $academicPeriodId, $date);
+        $optionList = $StudentAttendanceMarkTypes->getAttendancePerDayOptionsByClass($classId, $academicPeriodId, $date, $educationGradeId);
         if (!is_null($optionList)) {
             $periodCount = count($optionList);
             $totalRecordCount = $this
