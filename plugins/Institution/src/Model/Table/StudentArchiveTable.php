@@ -16,6 +16,7 @@ use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Core\Configure;
 use Cake\Datasource\ConnectionManager;
+use Cake\Utility\Security;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -28,14 +29,50 @@ class StudentArchiveTable extends ControllerActionTable
     public function initialize(array $config)
     {
         $connectionone = ConnectionManager::get('default');
-        $connectiontwo = ConnectionManager::get('prd_cor_arc');
-        $db1 =  $connectionone->config()['database'];
-
-        $getArchiveConnection = $connectionone->query("SELECT * FROM transfer_connections");
-        $archiveConnection = $getArchiveConnection->fetchAll();
-        foreach($archiveConnection AS $archiveConnectionData){
-            $db2 = $archiveConnectionData[5];
+        $db1 = $connectionone->config()['database'];
+        $transferConnections = TableRegistry::get('TransferConnections.TransferConnections');
+        $transferConnectionsData = $transferConnections->find('all')
+            ->select([
+                'TransferConnections.host','TransferConnections.db_name','TransferConnections.host','TransferConnections.username','TransferConnections.password','TransferConnections.db_name'
+            ])
+            ->first();
+        if ( base64_encode(base64_decode($transferConnectionsData['password'], true)) === $transferConnectionsData['password']){
+        $db_password = $this->decrypt($transferConnectionsData['password'], Security::salt());
         }
+        else {
+        $db_password = $dbConnection['db_password'];
+        }
+        $connectiontwo = ConnectionManager::config($transferConnectionsData['db_name'], [
+            'className' => 'Cake\Database\Connection',
+            'driver' => 'Cake\Database\Driver\Mysql',
+            'persistent' => false,
+            'host' => $transferConnectionsData['host'],
+            'username' => $transferConnectionsData['username'],
+            'password' => $db_password,
+            'database' => $transferConnectionsData['db_name'],
+            'encoding' => 'utf8mb4',
+            'timezone' => 'UTC',
+            'cacheMetadata' => true,
+        ]);
+        $checkconnection = ConnectionManager::get($transferConnectionsData['db_name']);
+        $collection = $checkconnection->schemaCollection();
+        $tableSchema = $collection->listTables();
+        $getconnected = $checkconnection->connect();
+        if($getconnected == "1"){
+            $db2 = $transferConnectionsData['db_name'];
+        }
+        $table1 = $tableSchema[7];
+        $table2 = $tableSchema[6];
+        $table3 = $tableSchema[4];
+
+        $stmt1 = $connectionone->prepare("CREATE OR REPLACE VIEW student_attendance_marked_records_archived AS SELECT * FROM $table1");
+        $stmt1->execute();
+
+        $stmt2 = $connectionone->prepare("CREATE OR REPLACE VIEW student_attendance_mark_types_archived AS SELECT * FROM $table2");
+        $stmt2->execute();
+
+        $stmt3 = $connectionone->prepare("CREATE OR REPLACE VIEW institution_student_absence_details_archived AS SELECT * FROM $table3");
+        $stmt3->execute();
 
         $getArchiveData = $connectionone->query("SELECT
         all_class_students.marked_date AS 'date',
@@ -51,7 +88,7 @@ class StudentArchiveTable extends ControllerActionTable
         FROM
         (
             SELECT 
-            student_attendance_marked_records.date AS marked_date,
+            student_attendance_marked_records_archived.date AS marked_date,
             academic_periods.id AS academic_period_id,
             academic_periods.name AS academic_period_name,
             academic_periods.current AS academic_periods_current,
@@ -60,19 +97,19 @@ class StudentArchiveTable extends ControllerActionTable
             institutions.name AS institutions_name,
             institution_classes.id AS institution_classes_id,
             institution_classes.name AS institution_classes_name,
-            student_attendance_marked_records.subject_id,
+            student_attendance_marked_records_archived.subject_id,
             institution_subjects.name AS subject_name,
-            IF(attendance_config.period IS NULL, student_attendance_marked_records.period,attendance_config.period) AS period_id,
-            IF(attendance_config.period_name IS NULL,CONCAT('Period ',student_attendance_marked_records.period),attendance_config.period_name) AS period_name,
+            IF(attendance_config.period IS NULL, student_attendance_marked_records_archived.period,attendance_config.period) AS period_id,
+            IF(attendance_config.period_name IS NULL,CONCAT('Period ',student_attendance_marked_records_archived.period),attendance_config.period_name) AS period_name,
             security_users.id AS security_users_id,
             security_users.openemis_no AS security_users_oe
-            FROM $db2.student_attendance_marked_records
+            FROM $db1.student_attendance_marked_records_archived
             INNER JOIN $db1.academic_periods
-            ON student_attendance_marked_records.academic_period_id = academic_periods.id
+            ON student_attendance_marked_records_archived.academic_period_id = academic_periods.id
             INNER JOIN $db1.institutions
-            ON student_attendance_marked_records.institution_id = institutions.id
+            ON student_attendance_marked_records_archived.institution_id = institutions.id
             INNER JOIN $db1.institution_classes
-            ON student_attendance_marked_records.institution_class_id = institution_classes.id
+            ON student_attendance_marked_records_archived.institution_class_id = institution_classes.id
             INNER JOIN $db1.institution_class_grades
             ON institution_classes.id = institution_class_grades.institution_class_id
             INNER JOIN $db1.education_grades
@@ -82,7 +119,7 @@ class StudentArchiveTable extends ControllerActionTable
             INNER JOIN $db1.security_users
             ON institution_class_students.student_id = security_users.id
             LEFT JOIN $db1.institution_subjects
-            ON institution_subjects.id = student_attendance_marked_records.subject_id
+            ON institution_subjects.id = student_attendance_marked_records_archived.subject_id
             LEFT JOIN 
                 (SELECT 
                     student_attendance_types.name,
@@ -93,46 +130,45 @@ class StudentArchiveTable extends ControllerActionTable
                     student_attendance_per_day_periods.name AS period_name,
                     student_attendance_per_day_periods.period,
                         student_attendance_per_day_periods.order,
-                    student_attendance_mark_types.attendance_per_day
+                    student_attendance_mark_types_archived.attendance_per_day
                     FROM $db1.student_mark_type_statuses
-                        INNER JOIN $db2.student_attendance_mark_types
-                        ON student_mark_type_statuses.student_attendance_mark_type_id = student_attendance_mark_types.id
+                        INNER JOIN $db1.student_attendance_mark_types_archived
+                        ON student_mark_type_statuses.student_attendance_mark_type_id = student_attendance_mark_types_archived.id
                         INNER JOIN $db1.student_attendance_types
-                        ON student_attendance_types.id = student_attendance_mark_types.student_attendance_type_id
+                        ON student_attendance_types.id = student_attendance_mark_types_archived.student_attendance_type_id
                         LEFT JOIN $db1.student_attendance_per_day_periods
-                        ON student_attendance_per_day_periods.student_attendance_mark_type_id = student_attendance_mark_types.id 
+                        ON student_attendance_per_day_periods.student_attendance_mark_type_id = student_attendance_mark_types_archived.id 
                         INNER JOIN $db1.student_mark_type_status_grades
                         ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
                     ORDER BY student_mark_type_statuses.academic_period_id DESC,student_mark_type_status_grades.education_grade_id ASC, student_mark_type_statuses.date_enabled ASC,
                     student_attendance_per_day_periods.period ASC) AS attendance_config
                 ON institution_class_grades.education_grade_id = attendance_config.education_grade_id
                 AND institution_classes.academic_period_id = attendance_config.academic_period_id
-                AND student_attendance_marked_records.period = attendance_config.period
-                AND student_attendance_marked_records.date BETWEEN attendance_config.date_enabled AND attendance_config.date_disabled
+                AND student_attendance_marked_records_archived.period = attendance_config.period
+                AND student_attendance_marked_records_archived.date BETWEEN attendance_config.date_enabled AND attendance_config.date_disabled
         ) AS all_class_students
         LEFT JOIN 
         (SELECT
-            IF(institution_student_absence_details.absence_type_id ='3', 'Late', 'Absent') AS attendance,
-            IF(institution_student_absence_details.absence_type_id ='2','Unexcused Absence',IF(institution_student_absence_details.absence_type_id !='3','Excused Absence','')) absence_type,
+            IF(institution_student_absence_details_archived.absence_type_id ='3', 'Late', 'Absent') AS attendance,
+            IF(institution_student_absence_details_archived.absence_type_id ='2','Unexcused Absence',IF(institution_student_absence_details_archived.absence_type_id !='3','Excused Absence','')) absence_type,
             IF(student_absence_reasons.name IS NULL,'',student_absence_reasons.name) AS absence_reasons,
-            institution_student_absence_details.student_id,
-            institution_student_absence_details.institution_id,
-            institution_student_absence_details.institution_class_id,
-            institution_student_absence_details.date,
-            institution_student_absence_details.period,
-            institution_student_absence_details.subject_id,
-            institution_student_absence_details.academic_period_id
-                FROM $db2.institution_student_absence_details 
+            institution_student_absence_details_archived.student_id,
+            institution_student_absence_details_archived.institution_id,
+            institution_student_absence_details_archived.institution_class_id,
+            institution_student_absence_details_archived.date,
+            institution_student_absence_details_archived.period,
+            institution_student_absence_details_archived.subject_id,
+            institution_student_absence_details_archived.academic_period_id
+                FROM $db1.institution_student_absence_details_archived 
                 LEFT JOIN $db1.student_absence_reasons
-                ON institution_student_absence_details.student_absence_reason_id = student_absence_reasons.id
+                ON institution_student_absence_details_archived.student_absence_reason_id = student_absence_reasons.id
         ) AS student_absences
         ON all_class_students.marked_date = student_absences.date
         AND all_class_students.institution_classes_id = student_absences.institution_class_id
         AND all_class_students.institutions_id = student_absences.institution_id
         AND all_class_students.period_id = student_absences.period
         AND all_class_students.security_users_id = student_absences.student_id
-        ORDER BY all_class_students.marked_date ASC,all_class_students.institutions_code ASC,all_class_students.institutions_name ASC, all_class_students.period_name ASC,all_class_students.security_users_oe;
-        ");
+        ORDER BY all_class_students.marked_date ASC,all_class_students.institutions_code ASC,all_class_students.institutions_name ASC, all_class_students.period_name ASC,all_class_students.security_users_oe;");
         $archiveDataArr = $getArchiveData->fetchAll();
         foreach($archiveDataArr AS $archiveDataval)
         {
@@ -144,6 +180,17 @@ class StudentArchiveTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentArchive' => ['index', 'view']
         ]);
+    }
+
+    public function decrypt($encrypted_string, $secretHash) {
+
+        $iv = substr($secretHash, 0, 16);
+        $data = base64_decode($encrypted_string);
+        $decryptedMessage = openssl_decrypt($data, "AES-256-CBC", $secretHash, $raw_input = false, $iv);
+        $decrypted = rtrim(
+            $decryptedMessage
+        );
+        return $decrypted;
     }
 
     public function findClassStudentsWithAbsence()
