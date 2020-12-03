@@ -560,4 +560,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 
         return $autoAddSubject;
     }
+
+
+    
 }
