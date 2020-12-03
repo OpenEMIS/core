@@ -111,16 +111,19 @@ abstract class AbstractOAuthController extends Controller
                 ->innerJoin(
                     [$apiSecuritiesScopes->alias() => $apiSecuritiesScopes->table()],
                     [
-                        $apiSecuritiesScopes->aliasField('api_security_id = ') . $apiSecurities->aliasField('id')
+                        $apiSecuritiesScopes->aliasField('api_security_id = 1031')
                     ]
                 )
                 ->first();
-                if($apiSecuritiesData["ApiSecuritiesScopes"]["execute"] == 0){
+                // echo "<pre>";print_r($apiSecuritiesData->ApiSecuritiesScopes['execute']);exit;
+                if($apiSecuritiesData->ApiSecuritiesScopes['execute'] == 0){
                     $authenticationType = $authentications[0]['authentication_type'];
                     $code = $authentications[0]['code'];
                     $response['message'] = "Api is disabled";
+                    $dataArr = array("data"=>$response);
                 } else if (!$enableLocalLogin && count($authentications) == 1) {
                     $response['message'] = "Api is disabled";
+                    $dataArr = array("data"=>$response);
                 } elseif (is_null($code)) {
                     $authenticationType = 'Local';
                     $postData = $this->request->data;
