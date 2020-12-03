@@ -28,7 +28,9 @@ class ReportCardsTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('ReportCardSubjects', ['className' => 'ReportCard.ReportCardSubjects', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']);
         $this->hasMany('StudentReportCards', ['className' => 'Institution.InstitutionStudentsReportCards', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        // $this->belongsTo('InstitutionSubjectStudents', [
+        //     'className' => 'Institution.InstitutionSubjectStudents'
+        // ]);
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'excel_template_name',
             'content' => 'excel_template',
@@ -382,6 +384,7 @@ class ReportCardsTable extends ControllerActionTable
             if ($action == 'add') {
                 $teacherComments = isset($request->data[$this->alias()]['teacher_comments_required']) ? $request->data[$this->alias()]['teacher_comments_required'] : 0;
                 $selectedGrade = isset($request->data[$this->alias()]['education_grade_id']) ? $request->data[$this->alias()]['education_grade_id'] : null;
+                $student = isset($request->data[$this->alias()]['student_id']) ? $request->data[$this->alias()]['student_id'] : null;
 
             } else if($action == 'edit') {
                 $teacherComments = isset($request->data[$this->alias()]['teacher_comments_required']) ? $request->data[$this->alias()]['teacher_comments_required'] : $attr['entity']->teacher_comments_required;
@@ -402,6 +405,8 @@ class ReportCardsTable extends ControllerActionTable
                         ->find('visible')
                         ->innerJoinWith('EducationGrades')
                         ->where(['EducationGrades.id' => $selectedGrade])
+                        ->innerJoinWith('InstitutionSubjectStudents')
+                        ->where(['InstitutionSubjectStudents.student_id' => $student])
                         ->order([$EducationSubjects->aliasField('order')])
                         ->toArray();
                 }
