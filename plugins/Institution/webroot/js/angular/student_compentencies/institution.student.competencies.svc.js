@@ -218,11 +218,20 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
 
                     commentInput.addEventListener('blur', function() {
                         var newValue = commentInput.value;
-
+                        var controller = params.context._controller;
                         if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+
+                            var newVal = newValue;
+                            var format = /[ `/'"=%]/;
+                            if(format.test(newVal.charAt(0))) {
+                                AlertSvc.warning(controller, 'Special character not allow at first character of text');
+                                return false
+                            } else {
+                                AlertSvc.info(controller, 'Changes will be automatically saved when any value is changed');
+                            } 
+
                             params.data[params.colDef.field] = newValue;
 
-                            var controller = params.context._controller;
                             vm.saveCompetencyResults(params)
                             .then(function(response) {
                                 params.data.save_error[params.colDef.field] = false;
