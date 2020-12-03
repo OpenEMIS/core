@@ -1,5 +1,6 @@
 <?php
 use Migrations\AbstractMigration;
+use Cake\I18n\Date;
 
 class POCOR5829 extends AbstractMigration
 {
@@ -19,28 +20,34 @@ class POCOR5829 extends AbstractMigration
         $this->execute('INSERT INTO `zz_5829_api_securities_scopes` SELECT * FROM `api_securities_scopes`');
         // End
         
-        $getApiSecurityId = $this->query("SELECT * FROM api_securities WHERE `name` = 'User Athentication' AND `model` = 'User.Users'");
-        $apiSecurityId = $getApiSecurityId->fetchAll();
-        $apiSecurityKey = $apiSecurityId[0]['id'];
+        $uerAuthenticationSecurityId = $this->query("SELECT * FROM api_securities WHERE `name` = 'User Athentication' AND `model` = 'User.Users'");
+        $securityId = $uerAuthenticationSecurityId->fetchAll();
+        $securityValue = $securityId[0]['id'];
 
         $getApiScope = $this->query("SELECT * FROM api_scopes WHERE `name` = 'API'");
         $apiScope = $getApiScope->fetchAll();
         $apiScopeId = $apiScope[0]['id'];
-		
-		$this->insert('api_securities_scopes', [
-            'api_security_id' => $apiSecurityKey,
-            'api_scope_id' => $apiScopeId,
-            'index' => 0,
-            'view' => 0,
-            'add' => 0,
-            'edit' => 0,
-            'delete' => 0,
-            'execute' => 1,
-            'modified_user_id' => NULL,
-            'modified' => NULL,
-            'created_user_id' => 2,
-            'created' => '2020-12-06 12:53:31',
-        ]);
+        
+        $todayDate = Date::now();
+
+        $checkDataExist = $this->query("SELECT * FROM api_securities_scopes WHERE `api_security_id` = $securityValue ");
+        $data = $checkDataExist->fetchAll();
+		if(empty($data)){
+            $this->insert('api_securities_scopes', [
+                'api_security_id' => $securityValue,
+                'api_scope_id' => $apiScopeId,
+                'index' => 0,
+                'view' => 0,
+                'add' => 0,
+                'edit' => 0,
+                'delete' => 0,
+                'execute' => 1,
+                'modified_user_id' => NULL,
+                'modified' => NULL,
+                'created_user_id' => 0,
+                'created' => $todayDate,
+            ]);
+        }
     }
 
     // rollback
