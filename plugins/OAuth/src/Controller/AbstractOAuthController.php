@@ -106,17 +106,22 @@ abstract class AbstractOAuthController extends Controller
                 $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
                 $apiSecuritiesData = $apiSecurities->find('all')
                 ->select([
-                    'ApiSecuritiesScopes.view','ApiSecuritiesScopes.edit','ApiSecuritiesScopes.execute'
+                    'ApiSecurities.id','ApiSecurities.name'
                 ])
-                ->innerJoin(
-                    [$apiSecuritiesScopes->alias() => $apiSecuritiesScopes->table()],
-                    [
-                        $apiSecuritiesScopes->aliasField('api_security_id = 1031')
-                    ]
-                )
+                ->where([
+                    'ApiSecurities.name' => 'User Athentication',
+                    'ApiSecurities.model' => 'User.Users'
+                ])
                 ->first();
-                // echo "<pre>";print_r($apiSecuritiesData->ApiSecuritiesScopes['execute']);exit;
-                if($apiSecuritiesData->ApiSecuritiesScopes['execute'] == 0){
+                $apiSecuritiesScopesData = $apiSecuritiesScopes->find('all')
+                ->select([
+                    'ApiSecuritiesScopes.execute'
+                ])
+                ->where([
+                    'ApiSecuritiesScopes.api_security_id' => $apiSecuritiesData->id
+                ])
+                ->first();
+                if($apiSecuritiesScopesData->execute == 0){
                     $authenticationType = $authentications[0]['authentication_type'];
                     $code = $authentications[0]['code'];
                     $response['message'] = "Api is disabled";
