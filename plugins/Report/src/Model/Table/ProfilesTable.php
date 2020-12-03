@@ -46,8 +46,8 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
 
-        $this->ReportCards = TableRegistry::get('ReportCard.ReportCards');
-        $this->StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $this->ReportCards = TableRegistry::get('profile_templates');
+        $this->StudentsReportCards = TableRegistry::get('institution_report_cards');
         $this->ReportCardEmailProcesses = TableRegistry::get('ReportCard.ReportCardEmailProcesses');
         $this->ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
 
@@ -210,8 +210,8 @@ class ProfilesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
-        $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
+        //$this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        //$this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('report_card');
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
@@ -262,24 +262,16 @@ class ProfilesTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
 
-        $availableGrades = $InstitutionGrades->find()
-            ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
-            ->extract('education_grade_id')
-            ->toArray();
-
+		//echo '<pre>';print_r($this->ReportCards);die;
         // Report Cards filter
         $reportCardOptions = [];
-        if (!empty($availableGrades)) {
-            $reportCardOptions = $this->ReportCards->find('list')
-                ->where([
-                    $this->ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                    $this->ReportCards->aliasField('education_grade_id IN ') => $availableGrades
-                ])
-                ->toArray();
-        } else {
-            $this->Alert->warning('ReportCardStatuses.noProgrammes');
-        }
-
+		$reportCardOptions = $this->ReportCards->find('list')
+			->where([
+				$this->ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
+				//$this->ReportCards->aliasField('education_grade_id IN ') => $availableGrades
+			])
+			->toArray();
+        
         $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
