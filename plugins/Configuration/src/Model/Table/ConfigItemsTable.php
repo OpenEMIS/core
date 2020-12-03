@@ -51,6 +51,10 @@ class ConfigItemsTable extends AppTable
 
         $this->ControllerAction->field('name', ['visible' => ['index'=>true]]);
         $this->ControllerAction->field('default_value', ['visible' => ['view'=>true]]);
+        
+        if ($this->request->query['type'] == 8) {
+          $this->ControllerAction->field('default_value', ['visible' => ['index'=>true]]);
+        }
 
         $this->ControllerAction->field('type', ['visible' => ['view'=>true, 'edit'=>true]]);
         $this->ControllerAction->field('label', ['visible' => ['view'=>true, 'edit'=>true]]);
