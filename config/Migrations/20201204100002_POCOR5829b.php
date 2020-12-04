@@ -13,19 +13,17 @@ class POCOR5829b extends AbstractMigration
      */
     public function up()
     {
-        // $this->execute("UPDATE `api_securities` SET `execute` = '1' WHERE `name` = 'User Athentication' AND `model` = 'User.Users'");
-        // Backup locale_contents table
+        // Backup table
+        $this->execute('CREATE TABLE `zz_5829b_api_securities` LIKE `api_securities`');
+        $this->execute('INSERT INTO `zz_5829b_api_securities` SELECT * FROM `api_securities`');
         $this->execute('CREATE TABLE `zz_5829b_api_securities_scopes` LIKE `api_securities_scopes`');
         $this->execute('INSERT INTO `zz_5829b_api_securities_scopes` SELECT * FROM `api_securities_scopes`');
         // End
+        $this->execute("UPDATE `api_securities` SET `execute` = 1 WHERE `name` = 'User Authentication' AND `model` = 'User.Users'");
 
-        $uerAuthenticationSecurityId = $this->query("SELECT * FROM api_securities WHERE `model` = 'User.Users'");
+        $uerAuthenticationSecurityId = $this->query("SELECT * FROM api_securities WHERE `name` = 'User Authentication' AND `model` = 'User.Users'");
         $securityId = $uerAuthenticationSecurityId->fetchAll();
-        foreach($securityId AS $val){
-            if($val['name']== 'User Authentication'){
-                $securityValue = $val['id'];
-            }
-        }
+        $securityValue = $securityId[0]['id'];
 
         $getApiScope = $this->query("SELECT * FROM api_scopes WHERE `name` = 'API'");
         $apiScope = $getApiScope->fetchAll();
@@ -33,16 +31,10 @@ class POCOR5829b extends AbstractMigration
         
         $todayDate = Date::now();
 
-        $checkDataExist = $this->query("SELECT * FROM api_securities_scopes");
+        $checkDataExist = $this->query("SELECT * FROM api_securities_scopes WHERE api_security_id = $securityValue");
        
         $data = $checkDataExist->fetchAll();
-        $isDataExist = 0;
-        foreach($data AS $val2){
-            if($val2['api_security_id']== $securityValue){
-                $isDataExist = 1;
-            }
-        }
-		if($isDataExist == 0){
+		if(empty($data)){
             $this->insert('api_securities_scopes', [
                 'api_security_id' => $securityValue,
                 'api_scope_id' => $apiScopeId,
@@ -52,11 +44,12 @@ class POCOR5829b extends AbstractMigration
                 'edit' => 0,
                 'delete' => 0,
                 'execute' => 1,
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => 0,
+                'created_user_id' => 1,
                 'created' => $todayDate,
             ]);
+        }
+        else{
+            $this->execute("UPDATE `api_securities_scopes` SET `execute` = 1 WHERE `api_security_id` = $securityValue");
         }
     }
 
@@ -65,5 +58,7 @@ class POCOR5829b extends AbstractMigration
     {
         $this->execute('DROP TABLE IF EXISTS `api_securities_scopes`');
         $this->execute('RENAME TABLE `zz_5829b_api_securities_scopes` TO `api_securities_scopes`');
+        $this->execute('DROP TABLE IF EXISTS `api_securities`');
+        $this->execute('RENAME TABLE `zz_5829b_api_securities` TO `api_securities`');
     }
 }
