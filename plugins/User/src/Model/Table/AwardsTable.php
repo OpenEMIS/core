@@ -40,7 +40,9 @@ class AwardsTable extends ControllerActionTable
             case 'Profiles':
                 $type = $this->request->query('type');
                 $options['type'] = $type;
-                if ($type == 'student') {
+                if ($this->action == 'index') {
+                    $tabElements = $this->controller->getAcademicTabElements($options);
+                } elseif ($type == 'student') {
                     $tabElements = $this->controller->getAcademicTabElements($options);
                 } else {
                     $tabElements = $this->controller->getProfessionalTabElements($options);

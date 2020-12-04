@@ -65,15 +65,18 @@ class ProgrammesTable extends ControllerActionTable
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
 		$session = $this->request->session();
-
-		// POCOR-1893 Profile using loginId as studentId
 		if ($this->controller->name == 'Profiles') {
-			$studentId = $session->read('Auth.User.id');
+			$sId = $session->read('Student.Students.id');
+			if (!empty($sId)) {
+				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+			} else {
+				$studentId = $session->read('Auth.User.id');
+			}
 		} else {
-			$studentId = $session->read('Student.Students.id');
+				$studentId = $session->read('Student.Students.id');
 		}
+		
 		// end POCOR-1893
-
 		$sortList = ['AcademicPeriods.name'];
 		
         if (array_key_exists('sortWhitelist', $extra['options'])) {
