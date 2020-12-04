@@ -1,3 +1,12 @@
+### [3.59.1] - 2020-12-05
+- Implemented: Quick Search and Advanced Search option for Institution > Students List > Withdrawn
+- Implemented: Enable Guardians to access their pupil's records
+- Bug Fixed: Institution > Performance > Assessments > Edit: Marks are not displaying for Assessments with more than one Assessment Period
+- Bug Fixed: Reports > Survey: Data reflected incorrectly upon generating and downloading the report
+- Bug Fixed: Institutions > Performance > Assessment: Edit Permission do not work for Homeroom Teacher role
+- Bug Fixed: Remove the InsitutionClassSubjects shell script as it keeps running in the background
+- Bug Fixed: Validate Report Cards / Outcome / Competency Comments - Comments cannot start with special characters
+
 ### [3.59.0] - 2020-12-02
 - Implemented: Enhancement of the Core survey report module
 - Implemneted: Reports for the Infrastructure module
