@@ -299,7 +299,6 @@ class WashReportsTable extends AppTable
                     $this->aliasField('name'),
                     'area_code' => 'Areas.code',
                     'area_name' => 'Areas.name',
-                    'area_level' => 'AreaLevels.name',
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWashWaterTypes.name',
                     'infrastructure_wash_functionality' => 'InfrastructureWashWaterFunctionalities.name',
@@ -308,7 +307,7 @@ class WashReportsTable extends AppTable
                     'infrastructure_wash_quality' => 'InfrastructureWashWaterQualities.name',
                     'infrastructure_wash_proximity' => 'InfrastructureWashWaterProximities.name'
                 ])
-                ->contain(['Areas', 'AreaAdministratives', 'Areas.AreaLevels'])
+                ->contain(['Areas', 'AreaAdministratives'])
                 ->leftJoin(
                     ['InfrastructureWashWaters' => 'infrastructure_wash_waters'],
                     [
@@ -363,12 +362,11 @@ class WashReportsTable extends AppTable
                     $this->aliasField('name'),
                     'area_code' => 'Areas.code',
                     'area_name' => 'Areas.name',
-					'area_level' => 'AreaLevels.name',
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWash'.$washType.'Types.name',
                     'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'                    
                 ])
-                ->contain(['Areas', 'AreaAdministratives', 'Areas.AreaLevels'])
+                ->contain(['Areas', 'AreaAdministratives'])
                 ->leftJoin(
                     ['InfrastructureWash'.$washType.'s' => 'infrastructure_wash_'.strtolower($washType).'s'],
                     [
@@ -402,7 +400,6 @@ class WashReportsTable extends AppTable
                     $this->aliasField('name'),
                     'area_code' => 'Areas.code',
                     'area_name' => 'Areas.name',
-					'area_level' => 'AreaLevels.name',
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWashSanitationTypes.name',
                     'infrastructure_wash_uses' => 'InfrastructureWashSanitationUses.name',
@@ -410,7 +407,7 @@ class WashReportsTable extends AppTable
                     'infrastructure_wash_quality' => 'InfrastructureWashSanitationQualities.name',
                     'infrastructure_wash_id' => 'InfrastructureWashSanitations.id'
                 ])
-                ->contain(['Areas', 'AreaAdministratives', 'Areas.AreaLevels'])
+                ->contain(['Areas', 'AreaAdministratives'])
                 ->leftJoin(
                     ['InfrastructureWashSanitations' => 'infrastructure_wash_sanitations'],
                     [
@@ -454,14 +451,13 @@ class WashReportsTable extends AppTable
                     $this->aliasField('name'),
                     'area_code' => 'Areas.code',
                     'area_name' => 'Areas.name',
-                    'area_level' => 'AreaLevels.name',
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWashHygieneTypes.name',
                     'infrastructure_wash_hygiene_education' => 'InfrastructureWashHygieneEducations.name',
                     'infrastructure_wash_accessibility' => 'InfrastructureWashHygieneSoapashAccessibilities.name',                    
                     'infrastructure_wash_id' => 'InfrastructureWashHygienes.id'
                 ])
-                ->contain(['Areas', 'AreaAdministratives', 'Areas.AreaLevels'])
+                ->contain(['Areas', 'AreaAdministratives'])
                 ->leftJoin(
                     ['InfrastructureWashHygienes' => 'infrastructure_wash_hygienes'],
                     [
@@ -516,13 +512,6 @@ class WashReportsTable extends AppTable
             'label' => __('Name')
         ];
         
-		$extraFields[] = [
-            'key' => 'area_level',
-            'field' => 'area_level',
-            'type' => 'string',
-            'label' => __('Area Level')
-        ];
-		
         $extraFields[] = [
             'key' => 'area_name',
             'field' => 'area_name',
