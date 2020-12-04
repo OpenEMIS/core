@@ -106,33 +106,21 @@ abstract class AbstractOAuthController extends Controller
                 $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
                 $apiSecuritiesData = $apiSecurities->find('all')
                 ->select([
-                    'ApiSecurities.id','ApiSecurities.name','ApiSecurities.execute'
+                    'ApiSecuritiesScopes.view','ApiSecuritiesScopes.edit','ApiSecuritiesScopes.execute'
                 ])
-                ->where([
-                    'ApiSecurities.name' => 'User Athentication',
-                    'ApiSecurities.model' => 'User.Users'
-                ])
+                ->innerJoin(
+                    [$apiSecuritiesScopes->alias() => $apiSecuritiesScopes->table()],
+                    [
+                        $apiSecuritiesScopes->aliasField('api_security_id = ') . $apiSecurities->aliasField('id')
+                    ]
+                )
                 ->first();
-                $apiSecuritiesScopesData = $apiSecuritiesScopes->find('all')
-                ->select([
-                    'ApiSecuritiesScopes.execute'
-                ])
-                ->where([
-                    'ApiSecuritiesScopes.api_security_id' => $apiSecuritiesData->id
-                ])
-                ->first();
-                if($apiSecuritiesData->execute == 0){
-                    $response['message'] = "Api is disabled";
-                    $dataArr = array("data"=>$response);
-                }
-                else if($apiSecuritiesScopesData->execute == 0){
+                if($apiSecuritiesData["ApiSecuritiesScopes"]["execute"] == 0){
                     $authenticationType = $authentications[0]['authentication_type'];
                     $code = $authentications[0]['code'];
                     $response['message'] = "Api is disabled";
-                    $dataArr = array("data"=>$response);
                 } else if (!$enableLocalLogin && count($authentications) == 1) {
                     $response['message'] = "Api is disabled";
-                    $dataArr = array("data"=>$response);
                 } elseif (is_null($code)) {
                     $authenticationType = 'Local';
                     $postData = $this->request->data;
