@@ -6,14 +6,9 @@
 $this->start('toolbar');
 ?>
 
-<?php if ($backUrl) : ?>
-    <a href="<?=$backUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back') ?>" >
-            <i class="fa kd-back"></i>
-        </button>
-    </a>
+<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-click="$ctrl.onBackClick()">
+        <i class="fa kd-back"></i>
 </button>
-<?php endif; ?>
 
 <?php
 $this->end();
@@ -45,10 +40,10 @@ $panelHeader = $this->fetch('panelHeader');
         border: 1px solid #ccc!important;
         color: #999!important;
     }
-    /* .ag-root {
+    .ag-root {
         overflow-x: scroll;
-    } */
-    /* .ag-header {width:154%} */
+    }
+    .ag-header {width:154%}
 
     .splitter-filter .split-content-header {
         margin-bottom: 15px;
