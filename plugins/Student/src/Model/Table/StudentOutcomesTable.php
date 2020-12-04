@@ -15,7 +15,9 @@ class StudentOutcomesTable extends ControllerActionTable
     public function initialize(array $config)
     {
         $this->table('institution_outcome_results');
+
         parent::initialize($config);
+       
         $this->belongsTo('OutcomeGradingOptions', ['className' => 'Outcome.OutcomeGradingOptions']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('OutcomeTemplates', [
@@ -128,6 +130,8 @@ class StudentOutcomesTable extends ControllerActionTable
                     return $q->where(['EducationGrades.id' => $educationGradeId]);
                 })
                 ->toArray();
+               
+                
             $subjectOptions = ['0' => __('All Subjects')] + $subjectOptions;
         }
 
