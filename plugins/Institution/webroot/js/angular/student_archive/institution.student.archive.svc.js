@@ -10,13 +10,13 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
 
     var translateText = {
         'original': {
-            'AcedemicPeriod': 'Acedemic Period',
+            'AcedemicPeriod': 'Academic Period',
             'day': 'Day',
             'class': 'Class',
-            'AttendencePerDay': 'Attendence Per Day',
+            'AttendencePerDay': 'Attendance Per Day',
             'OpenEmisId': 'OpenEMIS ID',
             'name': 'Name',
-            'attendence': 'Attendence',
+            'attendence': 'Attendance',
             'ReasonComment': 'Reason/Comment'
         },
         'translated': {
