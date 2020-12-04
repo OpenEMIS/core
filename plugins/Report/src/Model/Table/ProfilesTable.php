@@ -29,25 +29,17 @@ class ProfilesTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
-        $this->table('institution_class_students');
+        $this->table('institutions');
         parent::initialize($config);
-        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('NextInstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' =>'next_institution_class_id']);
-        $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
-
-        $this->addBehavior('User.AdvancedNameSearch');
-
-        $this->toggle('add', false);
+        //$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+        //$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+		
+		$this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
 
-        $this->ReportCards = TableRegistry::get('profile_templates');
-        $this->StudentsReportCards = TableRegistry::get('institution_report_cards');
+        $this->ReportCards = TableRegistry::get('ProfileTemplate.ProfileTemplates');
+        $this->StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $this->ReportCardEmailProcesses = TableRegistry::get('ReportCard.ReportCardEmailProcesses');
         $this->ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
 
@@ -76,22 +68,22 @@ class ProfilesTable extends ControllerActionTable
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
+    { 
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         // check if report card request is valid
         $reportCardId = $this->request->query('report_card_id');
+        $academicPeriodId = $this->request->query('academic_period_id');
+		
         if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
                 'report_card_id' => $reportCardId,
-                'student_id' => $entity->student_id,
-                'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id,
-                'education_grade_id' => $entity->education_grade_id,
+				'institution_id' => $entity->id,
+				'academic_period_id' => $academicPeriodId,
             ];
-
+			
             // Download button, status must be generated or published
             if ($this->AccessControl->check(['Institutions', 'InstitutionStudentsReportCards', 'download']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 $downloadUrl = [
@@ -119,8 +111,6 @@ class ProfilesTable extends ControllerActionTable
                     'url' => $downloadPdfUrl
                 ];
             }
-
-            $params['institution_class_id'] = $entity->institution_class_id;
 
             // Generate button, all statuses
             if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
@@ -210,8 +200,8 @@ class ProfilesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        //$this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
-        //$this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
+        $this->field('institution_name', ['sort' => ['field' => 'name']]);
+        $this->field('institution_code', ['sort' => ['field' => 'code']]);
         $this->field('report_card');
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
@@ -225,17 +215,15 @@ class ProfilesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
-        $this->setFieldOrder(['openemis_no', 'student_id', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->setFieldOrder(['institution_name', 'institution_code', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+		$this->setFieldVisible(['index'], ['institution_name', 'institution_code', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->ReportCardProcesses
             ->find()
             ->select([
                 $this->ReportCardProcesses->aliasField('report_card_id'),
-                $this->ReportCardProcesses->aliasField('institution_class_id'),
-                $this->ReportCardProcesses->aliasField('student_id'),
                 $this->ReportCardProcesses->aliasField('institution_id'),
-                $this->ReportCardProcesses->aliasField('education_grade_id'),
                 $this->ReportCardProcesses->aliasField('academic_period_id')
             ])
             ->where([
@@ -243,7 +231,6 @@ class ProfilesTable extends ControllerActionTable
             ])
             ->order([
                 $this->ReportCardProcesses->aliasField('created'),
-                $this->ReportCardProcesses->aliasField('student_id')
             ])
             ->hydrate(false)
             ->toArray();
@@ -252,38 +239,37 @@ class ProfilesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $Classes = $this->InstitutionClasses;
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-
+		
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+      
         // Academic Periods filter
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        //$where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
+		
+        $ProfileTemplates = TableRegistry::get('profile_templates');
 
-		//echo '<pre>';print_r($this->ReportCards);die;
         // Report Cards filter
         $reportCardOptions = [];
-		$reportCardOptions = $this->ReportCards->find('list')
+		$reportCardOptions = $ProfileTemplates->find('list')
 			->where([
-				$this->ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
-				//$this->ReportCards->aliasField('education_grade_id IN ') => $availableGrades
+				$ProfileTemplates->aliasField('academic_period_id') => $selectedAcademicPeriod
 			])
 			->toArray();
-        
+       
+
         $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-        //End
-
-        $selectedReport = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
-		//echo '<pre>';print_r($this);die;
-        $where[$this->StudentsReportCards->aliasField('report_card_id')] = $selectedReport;
+		//$where[$this->StudentsReportCards->aliasField('report_card_id')] = $selectedReportCard;
         //End
 
         $query
             ->select([
+                'institution_name' => $this->aliasField('name'),
+                'institution_code' => $this->aliasField('code'),
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
                 'report_card_status' => $this->StudentsReportCards->aliasField('status'),
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
@@ -293,21 +279,15 @@ class ProfilesTable extends ControllerActionTable
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
-                    $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('id'),
+                    //$this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->StudentsReportCards->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
             ->leftJoin([$this->ReportCardEmailProcesses->alias() => $this->ReportCardEmailProcesses->table()],
                 [
-                    $this->ReportCardEmailProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    $this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $this->ReportCardEmailProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('id'),
+                    //$this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
@@ -315,16 +295,10 @@ class ProfilesTable extends ControllerActionTable
             ->where($where)
             ->all();
 
-        if (is_null($this->request->query('sort'))) {
-            $query
-                ->contain('Users')
-                ->order(['Users.first_name', 'Users.last_name']);
-        }
-
         $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
 
         // sort
-        $sortList = ['report_card_status', 'Users.first_name', 'Users.openemis_no'];
+        $sortList = ['report_card_status', 'institution_name', 'institution_code'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
@@ -341,11 +315,9 @@ class ProfilesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $reportCardId = $this->request->query('report_card_id');
-        //$classId = $this->request->query('class_id');
-		
+
         if (!is_null($reportCardId)) {
             $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
-            //$existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->primaryKey() => $classId]);
 
             // only show toolbar buttons if request for report card and class is valid
             if ($existingReportCard) {
@@ -377,7 +349,7 @@ class ProfilesTable extends ControllerActionTable
                 ];
 
                 // Download all button
-                if ($generatedCount > 0 || $publishedCount > 0) { 
+                if ($generatedCount > 0 || $publishedCount > 0) {
                     $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
                     $downloadButton['type'] = 'button';
                     $downloadButton['label'] = '<i class="fa kd-download"></i>';
@@ -459,15 +431,14 @@ class ProfilesTable extends ControllerActionTable
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
     {
-        $searchableFields[] = 'student_id';
-        $searchableFields[] = 'openemis_no';
+        $searchableFields[] = 'institution_name';
+        $searchableFields[] = 'institution_code';
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('institution_class_id', ['type' => 'integer']);
         $this->field('academic_period_id', ['visible' => true]);
-        $this->setFieldOrder(['academic_period_id', 'institution_class_id', 'openemis_no', 'student_id', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->setFieldOrder(['academic_period_id', 'institution_name', 'institution_code', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -485,20 +456,14 @@ class ProfilesTable extends ControllerActionTable
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
-                    $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
+                    //$this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                 ]
             )
             ->leftJoin([$this->ReportCardEmailProcesses->alias() => $this->ReportCardEmailProcesses->table()],
                 [
-                    $this->ReportCardEmailProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    $this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $this->ReportCardEmailProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    //$this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $params['report_card_id']
                 ]
             )
@@ -549,11 +514,8 @@ class ProfilesTable extends ControllerActionTable
 
         $search = [
             'report_card_id' => $reportCardId,
-            'institution_class_id' => $entity->institution_class_id,
-            'student_id' => $entity->student_id,
-            'institution_id' => $entity->institution_id,
-            'education_grade_id' => $entity->education_grade_id,
-            'academic_period_id' => $entity->academic_period_id
+            //'institution_id' => $entity->institution_id,
+            //'academic_period_id' => $entity->academic_period_id
         ];
 
         $resultIndex = array_search($search, $this->reportProcessList);
@@ -685,7 +647,7 @@ class ProfilesTable extends ControllerActionTable
             ->contain(['Students', 'ReportCards'])
             ->where([
                 $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
-                //$this->StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
                 $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
                 $this->StudentsReportCards->aliasField('status IN ') => $statusArray,
                 $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
