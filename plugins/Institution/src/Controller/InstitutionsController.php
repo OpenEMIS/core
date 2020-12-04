@@ -65,7 +65,6 @@ class InstitutionsController extends AppController
         'InstitutionStudentAbsences',
         'StudentAttendances',
         'StudentArchive',
-        'AssessmentsArchive',
 
         // behaviours
         'StaffBehaviours',
@@ -175,9 +174,7 @@ class InstitutionsController extends AppController
             'ImportInstitutionPositions'=> ['className' => 'Institution.ImportInstitutionPositions', 'actions' => ['add']],
             'ImportStudentBodyMasses'   => ['className' => 'Institution.ImportStudentBodyMasses', 'actions' => ['add']],
             'ImportStudentGuardians'   => ['className' => 'Institution.ImportStudentGuardians', 'actions' => ['add']],
-            'ImportStudentExtracurriculars'   => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']],
-            'StudentArchive'  => ['className' => 'Institution.StudentArchive', 'actions' => ['add']],
-            'AssessmentsArchive'  => ['className' => 'Institution.AssessmentsArchive', 'actions' => ['index']]
+            'ImportStudentExtracurriculars'   => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -381,14 +378,14 @@ class InstitutionsController extends AppController
         }
 
         $backUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
+            'plugin' => $this->plugin,
+            'controller' => $this->name,
             'action' => 'Assessments',
             'institutionId' => $institutionId,
             'index',
             $this->ControllerAction->paramsEncode(['id' => $timetableId])
         ];
-        $this->set('backUrl', Router::url($backUrl));
+        $this->set('_back', Router::url($backUrl));
 
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
             $this->Navigation->addCrumb($crumbTitle);
@@ -627,16 +624,6 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
                 'add'
             ];
-
-            $backUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'StudentAttendances',
-                'institutionId' => $institutionId,
-                'index',
-                $this->ControllerAction->paramsEncode(['id' => $timetableId])
-            ];
-            $this->set('backUrl', Router::url($backUrl));
     
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
                 $this->Navigation->addCrumb($crumbTitle);
