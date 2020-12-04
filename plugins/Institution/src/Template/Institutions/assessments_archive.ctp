@@ -5,10 +5,14 @@
 <?php
 $this->start('toolbar');
 ?>
-
-<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-click="$ctrl.onBackClick()">
-        <i class="fa kd-back"></i>
+<?php if ($backUrl) : ?>
+    <a href="<?=$backUrl ?>" ng-show="$ctrl.action == 'view'">
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back') ?>" >
+            <i class="fa kd-back"></i>
+        </button>
+    </a>
 </button>
+<?php endif; ?>
 
 <?php
 $this->end();
