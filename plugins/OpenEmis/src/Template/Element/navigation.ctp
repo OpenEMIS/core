@@ -1,8 +1,10 @@
 <?php
 $navigations = [];
 if (isset($_navigations)) {
-	$navigations = $_navigations;
+	$navigations = $_navigations;	
 }
+// echo "<pre>";print_r($navigations);
+
 
 $selectedLink = '';
 if (isset($ControllerAction) && array_key_exists('selectedLink', $ControllerAction)) {
@@ -30,6 +32,8 @@ $(document).ready(function() {
 	})
 
 	var action = '<?= $selectedLink ?>';
+	var navigation = '<?= $navigations ?>';
+	console.log("navigation", navigation)
 	$('#' + action).addClass('nav-active');
 	var ul = $('#' + action).parents('ul');
 
