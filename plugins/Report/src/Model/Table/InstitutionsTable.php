@@ -736,7 +736,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
 
-                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports') {
+                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities') {
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
@@ -877,7 +877,7 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         //add All Institution task POCOR 5698
