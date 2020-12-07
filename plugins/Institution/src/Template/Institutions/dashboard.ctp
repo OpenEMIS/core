@@ -34,6 +34,9 @@ $this->start('panelBody');
     width: 20%;
     text-align: center;
 }
+.progress-bar {
+	background-color: #6699CC !important;
+}
 </style>
 <!--Mini Dashboard Start-->
 <?php if(isset($haveProfilePermission) && $haveProfilePermission == 1) :?>
@@ -51,16 +54,14 @@ $this->start('panelBody');
 	</div>
 	<div class="data-section section_custom_2">
 		<div class="progress" style= "border-radius: 25px;height: 22px;">
-			<div class="progress-bar" role="progressbar"  style="background-color: #6699CC;width:<?= number_format($instituteprofileCompletness['percentage']).'%' ?>">
+			<div class="navbar progress-bar" role="progressbar"  style="background-color: #6699CC; width:<?= number_format($instituteprofileCompletness['percentage']).'%' ?>">
 			<?= number_format($instituteprofileCompletness['percentage']).'%' ?>
 			</div>
 		</div>
 	</div>
     <div class="data-section section_custom_3">
 		<div class="data-field">
-			<button href="#" class="btn btn-default btn-save">
-				Details
-			</button>
+			<button id="institute_profile_detail"  class="btn btn-default btn-save">Details</button>
 		</div>
 	</div>
 	</div>
