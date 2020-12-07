@@ -280,18 +280,21 @@ class ProfilesTable extends ControllerActionTable
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
                     $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('id'),
-                    //$this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $this->StudentsReportCards->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
                     $this->StudentsReportCards->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
             ->leftJoin([$this->ReportCardEmailProcesses->alias() => $this->ReportCardEmailProcesses->table()],
                 [
                     $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('id'),
-                    //$this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
             ->autoFields(true)
+			->order([
+                $this->aliasField('name'),
+            ])
             ->where($where)
             ->all();
 
@@ -304,12 +307,6 @@ class ProfilesTable extends ControllerActionTable
         }
         $extra['options']['sortWhitelist'] = $sortList;
 
-        // search
-        $search = $this->getSearchKey();
-        if (!empty($search)) {
-            $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
-            $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
-        }
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -437,8 +434,8 @@ class ProfilesTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id', ['visible' => true]);
-        $this->setFieldOrder(['academic_period_id', 'institution_name', 'institution_code', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->setFieldOrder(['institution_name', 'institution_code', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+		$this->setFieldVisible(['view'], ['institution_name', 'institution_code', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -447,6 +444,8 @@ class ProfilesTable extends ControllerActionTable
 
         $query
             ->select([
+				'institution_name' => $this->aliasField('name'),
+                'institution_code' => $this->aliasField('code'),
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
                 'report_card_status' => $this->StudentsReportCards->aliasField('status'),
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
@@ -456,13 +455,14 @@ class ProfilesTable extends ControllerActionTable
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
-                    $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('id'),
                     //$this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+					$this->StudentsReportCards->aliasField('report_card_id = ') . $params['report_card_id']
                 ]
             )
             ->leftJoin([$this->ReportCardEmailProcesses->alias() => $this->ReportCardEmailProcesses->table()],
                 [
-                    $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('id'),
                     //$this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $params['report_card_id']
                 ]
