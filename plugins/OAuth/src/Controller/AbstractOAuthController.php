@@ -121,11 +121,7 @@ abstract class AbstractOAuthController extends Controller
                     'ApiSecuritiesScopes.api_security_id' => $apiSecuritiesData->id
                 ])
                 ->first();
-                if($apiSecuritiesData->execute == 0){
-                    $response['message'] = "Api is disabled";
-                    $dataArr = array("data"=>$response);
-                }
-                else if($apiSecuritiesScopesData->execute == 0){
+                if($apiSecuritiesScopesData->execute == 0){
                     $authenticationType = $authentications[0]['authentication_type'];
                     $code = $authentications[0]['code'];
                     $response['message'] = "Api is disabled";

@@ -132,7 +132,11 @@ class StudentRisksTable extends ControllerActionTable
     {
         $session = $this->request->session();
         $studentId = $session->read('Student.Students.id');
-
+        
+        if ($this->controller->name == 'Profiles' && $this->action == 'index') {
+            $session = $this->request->session();
+            $studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
+        }
         $query = $query
             ->where([
                 $this->aliasField('student_id') => $studentId,
@@ -140,7 +144,7 @@ class StudentRisksTable extends ControllerActionTable
             ])
             ->order(['risk_id'])
             ;
-
+        
         return $query;
     }
 
