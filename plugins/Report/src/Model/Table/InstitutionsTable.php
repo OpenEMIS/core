@@ -584,7 +584,7 @@ class InstitutionsTable extends AppTable
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();
-                $attr['options'] = ['0' => __('All Academic Period')] + $academicPeriodOptions;
+                $attr['options'] = $academicPeriodOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 if (in_array($feature, 
@@ -598,9 +598,9 @@ class InstitutionsTable extends AppTable
                     $attr['onChangeReload'] = true;
                 }
 
-                /*if (empty($request->data[$this->alias()]['academic_period_id'])) {
+                if (empty($request->data[$this->alias()]['academic_period_id'])) {
                     $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
-                }*/
+                }
                 return $attr;
             }
         }
