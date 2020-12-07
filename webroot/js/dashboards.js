@@ -36,7 +36,8 @@ var dashboards = {
 }
 
 function showProfileCompleteData() {
-    $("button").click(function() {
+    $("#institute_profile_detail").click(function() {
         $("#profile-data-div").toggle();
+        $(this).text($(this).text() == 'Details' ? 'Hide Details' : 'Details');
     });
 }

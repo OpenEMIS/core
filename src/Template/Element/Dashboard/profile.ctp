@@ -44,9 +44,7 @@ if(!$isAdmin): ?>
 	</div>
 	<div class="data-section section_custom_3">
 		<div class="data-field">
-			<button href="#" class="btn btn-default btn-save" ng-click="DashboardController.showProfileCompleteData()">
-				Details
-			</button>
+			<button id="profile_detail" class="btn btn-default btn-save" ng-click="DashboardController.showProfileCompleteData()">Details</button>
 		</div>
 	</div>
 </div>

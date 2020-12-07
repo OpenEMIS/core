@@ -62,7 +62,10 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
     }
 
     function showProfileCompleteData() {
-        $("#profile_data_div").toggle();
+        $("#profile_detail").click(function() {
+            $("#profile_data_div").toggle();
+            $(this).text($(this).text() == 'Details' ? 'Hide Details' : 'Details');
+        });
     }
 
     function initNotices() {
