@@ -99,7 +99,15 @@ class SurveysTable extends AppTable
             $surveyFormId = $requestData->survey_form;
             $academicPeriodId = $requestData->academic_period_id;
             $institutionStatus = $requestData->institution_status;
-            
+
+            $institutionFormStatus = [];
+            if ($institutionStatus == "Active") {
+                $institutionFormStatus = 1;
+            }
+            if ($institutionStatus == "Inactive") {
+                $institutionFormStatus = 2;
+            }
+
             $surveyFormName = $this->SurveyForms->get($surveyFormId)->name;
             $academicPeriodName = $this->AcademicPeriods->get($academicPeriodId)->name;
             $userId = $requestData->user_id;
@@ -123,6 +131,9 @@ class SurveysTable extends AppTable
                         $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id')
                     ])
                 .')'])
+                ->where([
+                            $InstitutionsTable->aliasField('institution_status_id') => $institutionFormStatus
+                        ])
                 ->innerJoinWith('Areas')
                 ->leftJoinWith('AreaAdministratives')
                 ->select([
@@ -215,7 +226,10 @@ class SurveysTable extends AppTable
                         $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id'),
                         $this->aliasField('status_id').' IN ('.self::SURVEY_DISABLED.','.self::OPEN.','.self::PENDINGAPPROVAL.')'
                     ])
-                .')'])
+                .')'])                
+                ->where([
+                            $InstitutionsTable->aliasField('institution_status_id') => $institutionFormStatus
+                        ])
                 ->innerJoinWith('Areas')
                 ->leftJoinWith('AreaAdministratives')
                 ->select([
