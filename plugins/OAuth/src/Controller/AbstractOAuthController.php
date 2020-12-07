@@ -109,7 +109,7 @@ abstract class AbstractOAuthController extends Controller
                     'ApiSecurities.id','ApiSecurities.name','ApiSecurities.execute'
                 ])
                 ->where([
-                    'ApiSecurities.name' => 'User Athentication',
+                    'ApiSecurities.name' => 'User Authentication',
                     'ApiSecurities.model' => 'User.Users'
                 ])
                 ->first();
