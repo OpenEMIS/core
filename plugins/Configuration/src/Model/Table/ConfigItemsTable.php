@@ -271,6 +271,24 @@ class ConfigItemsTable extends AppTable
                     } else if ($entity->type == 'Student Settings') {
                         $attr['type'] = 'integer';
                         $attr['attr'] = ['min' => 1, 'max' => 200];
+                    } else if ($entity->code == 'latitude_minimum') {
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => -90, 'max' => 0];
+                    } else if ($entity->code == 'latitude_maximum') {
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 0, 'max' => 90];
+                    } else if ($entity->code == 'longitude_minimum') {
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => -180, 'max' => 0];
+                    } else if ($entity->code == 'longitude_maximum') {
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 0, 'max' => 180];
+                    } else if ($entity->code == 'latitude_length') {
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 1, 'max' => 7];
+                    } else if ($entity->code == 'longitude_length') {
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 1, 'max' => 7];
                     }
                 }
             }
