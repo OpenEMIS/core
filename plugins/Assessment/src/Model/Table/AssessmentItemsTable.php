@@ -186,7 +186,7 @@ class AssessmentItemsTable extends AppTable
     }
 
     public function findSubjectNewTab(Query $query, array $options)
-    {    
+    {  
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
         $name = $queryString['query'];
@@ -195,8 +195,10 @@ class AssessmentItemsTable extends AppTable
         $variable = substr($test, 0, strpos($test, "}"));
         $newVaridable = $variable . "}";
         $data = json_decode($newVaridable);
-        $institutionId =  $data->institution_id;
-        $academinPeriod = $data->academic_period_id;
+       // $institutionId =  $data->institution_id;
+        //$academinPeriod = $data->academic_period_id;
+        $institutionId =  $options['institution_id'];
+        $academinPeriod = $options['academic_period_id'];
         $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $educationSubject = TableRegistry::get('Education.EducationSubjects');
@@ -205,7 +207,7 @@ class AssessmentItemsTable extends AppTable
         $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
         
                 $query
-                    ->contain('EducationSubjects.InstitutionSubjects')
+                    ->contain('EducationSubjects')
                     ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
                         $ClassSubjects->aliasField('institution_class_id') => $classId
                     ])

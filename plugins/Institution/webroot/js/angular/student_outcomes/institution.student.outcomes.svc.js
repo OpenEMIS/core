@@ -341,11 +341,19 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
 
                         textInput.addEventListener('blur', function() {
                             var newValue = textInput.value;
-
+                            var controller = params.context._controller;
                             if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
                                 params.data[params.colDef.field] = newValue;
-
-                                var controller = params.context._controller;
+                                
+                                var newVal = newValue;
+                                var format = /[ `/'"=%]/;
+                                if(format.test(newVal.charAt(0))) {
+                                    AlertSvc.warning(controller, 'Special character not allow at first character of text');
+                                    return false
+                                } else {
+                                    AlertSvc.info(controller, 'Changes will be automatically saved when any value is changed');
+                                } 
+                                
                                 vm.saveOutcomeComments(params)
                                 .then(function(response) {
                                     params.data.save_error[params.colDef.field] = false;
