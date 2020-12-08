@@ -20,8 +20,8 @@ $this->start('toolbar');
 <?php endif; ?>
 
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onEditClick()">
-        <i class="fa kd-edit"></i>
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onEditClick()">
+        <i class="fa kd-edit"></i> 
     </button>
 
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
@@ -201,6 +201,7 @@ $panelHeader = $this->fetch('panelHeader');
 <div class="panel">
     <div class="panel-body" style="position: relative;">
         <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;$ctrl.exportexcel='<?=$excelUrl ?>';" float-btn="true">
+           
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">
                     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
@@ -292,6 +293,13 @@ $panelHeader = $this->fetch('panelHeader');
 
                         <select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="class.id as class.name for class in $ctrl.classListOptions" ng-model="$ctrl.selectedClass" ng-change="$ctrl.changeClass();">
                             <option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
+                        </select>
+                    </div>
+                    <h5><?= __('Education Grade') ?>: </h5>
+                    <div class="input-select-wrapper">
+
+                        <select ng-disabled="$ctrl.action=='edit'" name="education_grade" ng-options="education_grade.id as education_grade.name for education_grade in $ctrl.educationGradeListOptions" ng-model="$ctrl.selectedEducationGrade" ng-change="$ctrl.changeEducationGrade();">
+                            <option value="" ng-if="$ctrl.educationGradeListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
                     <h5 ng-if="$ctrl.isMarkableSubjectAttendance==true"><?= __('Subjects') ?>: </h5>
