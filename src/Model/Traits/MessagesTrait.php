@@ -877,6 +877,14 @@ trait MessagesTrait
                     'validClassification' => 'Please enter a valid Classification',
                 ],
             ],
+            'InstitutionMaps' => [
+                'longitude' => [
+                    'ruleLongitude' => 'Please enter a valid Longitude'
+                ],
+                'latitude' => [
+                    'ruleLatitude' => 'Please enter a valid Latitude'
+                ]
+            ],
             'InstitutionContacts' => [
                 'email' => [
                     'ruleValidEmail' => 'Please enter a valid Email'
