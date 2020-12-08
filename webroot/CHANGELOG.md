@@ -1,3 +1,48 @@
+### [3.59.1] - 2020-12-05
+- Implemented: Quick Search and Advanced Search option for Institution > Students List > Withdrawn
+- Implemented: Enable Guardians to access their pupil's records
+- Bug Fixed: Institution > Performance > Assessments > Edit: Marks are not displaying for Assessments with more than one Assessment Period
+- Bug Fixed: Reports > Survey: Data reflected incorrectly upon generating and downloading the report
+- Bug Fixed: Institutions > Performance > Assessment: Edit Permission do not work for Homeroom Teacher role
+- Bug Fixed: Remove the InsitutionClassSubjects shell script as it keeps running in the background
+- Bug Fixed: Validate Report Cards / Outcome / Competency Comments - Comments cannot start with special characters
+
+### [3.59.0] - 2020-12-02
+- Implemented: Enhancement of the Core survey report module
+- Implemneted: Reports for the Infrastructure module
+- Implemented: Automation of a revised WebGIS input file and API for user authentification
+- Bug Fixed: Student Attendance POST API
+
+### [3.58.3] - 2020-11-27
+- Implemented: Add Results and Comments tabs under Institution > Student > Academic Outcomes
+- Implemented: Add a chart for student/staff attendance to institution dashboard
+- Implemented: Reports > Institution > Finance (Income and Expenditure) Report
+- Bug Fixed: Import Extracurriculars: Changes to the Import Template
+- Bug Fixed: Institutions > Students > Academic > Competencies tab: Competencies filter list down all Competencies even though student is not taking all
+- Bug Fixed: Institutions > Attendance > Students: Add an Education Grade field
+- Bug Fixed: Institutions > Attendance > Students: Disable edit for future date attendances
+- Bug Fixed: Reports > Institutions > Special Needs Facilities: Changes to the report and filters
+- Bug Fixed: Reports > Students > Guardians: Add an Institution filter option and an Institution column in Guardians report
+- Bug Fixed: Institution > Academic > Schedules: Schedules not found even though user has been given the Permission rights
+
+### [3.58.2] - 2020-11-19
+- Data Archiving feature in OpenEMIS Core
+- Develop Reports > Directoty > User List
+- Develop API Feature student assessment (write)
+- Develop API Feature student assessment (read)
+- Develop Staff Duties feature
+- Develop Export Subject List in Institutions > Subjects Page
+- Develop Export Class List Institutions > Class Page
+- Develop Reports > Staff > Duties Report
+- Develop Reports > Institution > Summary Report
+- Bug Fix in Institution > Finance > Expenditure > Add page
+- Bug Fix in Institution > Finance > Income > Add page
+- Bug Fix in Institutions > Performance > Assessments page
+- Bug Fix in Institution > Attendance > Students page
+- Bug Fix in Institutions > Students > Academic > Extracurricular page
+- Bug Fix in Institution > Students > Import > Import Extracurricular feature
+- Bug Fix in student overview page
+
 ### [3.58.1] - 2020-11-03
 - Implemented: Webhook Feature class (delete)
 - Implemented: Webhook Feature staff (delete)

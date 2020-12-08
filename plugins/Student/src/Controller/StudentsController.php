@@ -65,7 +65,7 @@ class StudentsController extends AppController
             'Nationalities'     => ['className' => 'User.Nationalities'],
             'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
             'Behaviours'        => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-            'Extracurriculars'  => ['className' => 'Student.Extracurriculars',  'actions' => ['index', 'view']],
+            'Extracurriculars'  => ['className' => 'Student.Extracurriculars',  'actions' => ['index', 'add', 'edit', 'remove','view']],
             'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
             'ImportStudents'    => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
         ];
@@ -144,7 +144,13 @@ class StudentsController extends AppController
     }
     public function Outcomes()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
+        $comment = $this->request->query['comment'];
+        if(!empty($comment) && $comment == 1){ 
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
+        
+        }else{
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
+        }        
     }
 
     // health

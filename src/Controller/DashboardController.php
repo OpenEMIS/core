@@ -20,7 +20,7 @@ class DashboardController extends AppController
 
         $this->attachAngularModules();
         $this->triggerUnmarkedAttendanceShell();
-        $this->triggerInstitutionClassSubjectsShell();
+        //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
 		
     }
 
@@ -249,4 +249,15 @@ class DashboardController extends AppController
 		$data['percentage'] = $profilePercentage;
         return $data;
     }
+//    private function triggerInstitutionClassSubjectsShell()
+//    {
+//        $script = 'InstitutionClassSubjects';
+//        $consoleDir = ROOT . DS . 'bin' . DS;
+//        $logs = ROOT . DS . 'logs' . DS . 'InstitutionClassSubjects.log & echo $!';
+//        $cmd = ROOT . DS . 'bin' . DS . 'cake InstitutionClassSubjects';
+//        $nohup = 'nohup ' . $cmd . '> /dev/null 2>/dev/null &';
+//        exec($nohup);
+//        Log::write('debug', $nohup); 
+//    }
+    
 }

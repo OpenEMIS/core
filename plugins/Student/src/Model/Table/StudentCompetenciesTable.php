@@ -98,13 +98,19 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->session(); 
         if ($this->controller->name == 'Profiles') {
-            $studentId = $session->read('Auth.User.id');
+            $session = $this->request->session();
+            $id = $session->read('Student.Students.id');
+            if (!empty($id)) {
+                $studentId = $this->controller->paramsDecode($id)['id'];
+            } else {
+                $studentId = $session->read('Student.Students.id');
+            }
         } else {
             $studentId = $session->read('Student.Students.id');
         }
-
+        
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $Competencies = TableRegistry::get('Competency.CompetencyTemplates');
@@ -183,11 +189,18 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         if (!empty($selectedPeriod)) {
             $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
-
+            
+            $InstitutionClassStudentGrade = $InstitutionClassStudents->find()->where([
+                'student_id' =>$studentId,
+                'academic_period_id' => $selectedPeriod
+                ])->first();
+            
             // Competencies
             $competencyOptions = $Competencies
                 ->find('list')
-                ->where([$Competencies->aliasField('academic_period_id') => $selectedPeriod])
+                ->where([$Competencies->aliasField('academic_period_id') => $selectedPeriod,
+                         $Competencies->aliasField('education_grade_id') => $InstitutionClassStudentGrade->education_grade_id
+                        ])
                 ->toArray();
             $competencyOptions = ['-1' => __('All Competencies')] + $competencyOptions;
             $selectedCompetency = $this->queryString('competency', $competencyOptions);
