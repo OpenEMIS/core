@@ -115,7 +115,7 @@ class InstitutionMapsTable extends ControllerActionTable
             $this->field('location_section', ['type' => 'section', 'title' => __('Location')]);
 
             $this->field('map_section', ['type' => 'section', 'title' => __('Map'), 'visible' => ['view'=>true]]);
-            $this->field('google_maps');
+            $this->field('google_maps', ['visible' => ['view'=>true]]);
             $this->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
 
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
