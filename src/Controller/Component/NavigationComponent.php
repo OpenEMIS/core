@@ -448,7 +448,7 @@ class NavigationComponent extends Component
                 'Institutions.InstitutionMaps.view' => [
                     'title' => 'Map',
                     'parent' => 'Institution.General',
-                    'selected' => ['Institutions.InstitutionMaps.view', 'Institutions.InstitutionMaps.edit', 'map'],
+                    'selected' => ['Institutions.InstitutionMaps.view', 'Institutions.InstitutionMaps.edit'],
                     'params' => ['plugin' => 'Institution', 0 => $institutionId]
                 ],
 
