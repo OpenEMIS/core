@@ -95,6 +95,15 @@ function InstitutionStudentCompetencyCommentsController($scope, $q, $window, $ht
                 ensureDomOrder: true,
                 onCellValueChanged: function(params) {
                     if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
+                        var newVal = params.newValue;
+                        var format = /[ `/'"=%]/;
+                        if(format.test(newVal.charAt(0))) {
+                            AlertSvc.warning(Controller, 'Special character not allow at first character of text');
+                            return false
+                        } else {
+                            AlertSvc.info(Controller, 'Changes will be automatically saved when any value is changed');
+                        } 
+
                         InstitutionStudentCompetencyCommentsSvc.saveCompetencyPeriodComments(params)
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
