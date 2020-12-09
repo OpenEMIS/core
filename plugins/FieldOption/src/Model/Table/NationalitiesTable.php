@@ -34,6 +34,7 @@ class NationalitiesTable extends ControllerActionTable
             'after' => 'name',
             'entity' => $extra['entity']
         ]);
+
     }
 
     public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, Request $request)
