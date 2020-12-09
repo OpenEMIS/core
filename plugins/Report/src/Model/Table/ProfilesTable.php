@@ -224,7 +224,7 @@ class ProfilesTable extends ControllerActionTable
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        //$where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        //$where[$this->InstitutionReportCards->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
 		
         $ProfileTemplates = TableRegistry::get('profile_templates');
@@ -243,7 +243,7 @@ class ProfilesTable extends ControllerActionTable
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//$where[$this->InstitutionReportCards->aliasField('report_card_id')] = $selectedReportCard;
         //End
-
+	
         $query
             ->select([
                 'institution_name' => $this->aliasField('name'),
@@ -281,7 +281,8 @@ class ProfilesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $reportCardId = $this->request->query('report_card_id');
-
+		//$institutionId = $this->request->query('institution_id');
+		
         if (!is_null($reportCardId)) {
             $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
 
@@ -309,8 +310,7 @@ class ProfilesTable extends ControllerActionTable
                 ];
 
                 $params = [
-                    'institution_id' => $this->Session->read('Institution.Institutions.id'),
-                    'institution_class_id' => $classId,
+                    //'institution_id' => $institutionId,
                     'report_card_id' => $reportCardId
                 ];
 
@@ -565,15 +565,13 @@ class ProfilesTable extends ControllerActionTable
     public function downloadAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-
+		
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
         $files = $this->InstitutionReportCards->find()
-            ->contain(['Students', 'ReportCards'])
+            ->contain(['ReportCards'])
             ->where([
-                $this->InstitutionReportCards->aliasField('institution_id') => $params['institution_id'],
-                $this->InstitutionReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
                 $this->InstitutionReportCards->aliasField('report_card_id') => $params['report_card_id'],
                 $this->InstitutionReportCards->aliasField('status IN ') => $statusArray,
                 $this->InstitutionReportCards->aliasField('file_name IS NOT NULL'),
@@ -652,7 +650,6 @@ class ProfilesTable extends ControllerActionTable
     public function unpublishAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-
         // only unpublish report cards with published status to new status
         $result = $this->InstitutionReportCards->updateAll(['status' => self::NEW_REPORT], [
             $params,
