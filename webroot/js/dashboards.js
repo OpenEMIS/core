@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 $(document).ready(function() {
     dashboards.init();
+    showInstituteProfileCompleteData();
     showProfileCompleteData();
 });
 
@@ -35,9 +36,16 @@ var dashboards = {
     }
 }
 
-function showProfileCompleteData() {
+function showInstituteProfileCompleteData() {
     $("#institute_profile_detail").click(function() {
         $("#profile-data-div").toggle();
+        $(this).text($(this).text() == 'Details' ? 'Hide Details' : 'Details');
+    });
+}
+
+function showProfileCompleteData() {
+    $("#profile_detail").click(function() {
+        $("#profile_data_div").toggle();
         $(this).text($(this).text() == 'Details' ? 'Hide Details' : 'Details');
     });
 }

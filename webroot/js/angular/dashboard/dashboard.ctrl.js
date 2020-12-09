@@ -38,7 +38,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
     // Functions
     vm.showSplitContentResponsive = showSplitContentResponsive;
     vm.removeSplitContentResponsive = removeSplitContentResponsive;
-    vm.showProfileCompleteData = showProfileCompleteData;
     vm.initNotices = initNotices;
     vm.initWorkbenchItems = initWorkbenchItems;
     vm.initGrid = initGrid;
@@ -59,13 +58,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         vm.collapse = "true";
 
         vm.workbenchTitle = '';
-    }
-
-    function showProfileCompleteData() {
-        $("#profile_detail").click(function() {
-            $("#profile_data_div").toggle();
-            $(this).text($(this).text() == 'Details' ? 'Hide Details' : 'Details');
-        });
     }
 
     function initNotices() {
