@@ -17,6 +17,7 @@ $panelHeader = $this->fetch('panelHeader');
 		<?= $this->element('nav_tabs') ?>
 		<bg-splitter orientation="horizontal" class="content-splitter" collapse="{{DashboardController.collapse}}" elements="getSplitterElements" float-btn="false">
 		<bg-pane class="main-content">
+			<?= $this->element('Dashboard/profile'); ?>
 			<?= $this->element('Dashboard/notices'); ?>
 			<hr>
 			<?= $this->element('Dashboard/workbench'); ?>

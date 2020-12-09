@@ -95,10 +95,14 @@ class ValidationBehavior extends Behavior
 
     public static function checkLongitude($check)
     {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $LongitudeMinimum = $ConfigItems->value("longitude_minimum");
+        $LongitudeMaximum = $ConfigItems->value("longitude_maximum");
+        
         $isValid = false;
         $longitude = trim($check);
 
-        if (is_numeric($longitude) && floatval($longitude) >= -180.00 && floatval($longitude <= 180.00)) {
+        if (is_numeric($longitude) && floatval($longitude) >= $LongitudeMinimum && floatval($longitude <= $LongitudeMaximum)) {
             $isValid = true;
         }
         return $isValid;
@@ -261,11 +265,14 @@ class ValidationBehavior extends Behavior
 
     public static function checkLatitude($check)
     {
-
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $LatitudeMinimum = $ConfigItems->value("latitude_minimum");
+        $LatitudeMaximum = $ConfigItems->value("latitude_maximum");
+        
         $isValid = false;
         $latitude = trim($check);
 
-        if (is_numeric($latitude) && floatval($latitude) >= -90.00 && floatval($latitude <= 90.00)) {
+        if (is_numeric($latitude) && floatval($latitude) >= $LatitudeMinimum && floatval($latitude <= $LatitudeMaximum)) {
             $isValid = true;
         }
         return $isValid;
