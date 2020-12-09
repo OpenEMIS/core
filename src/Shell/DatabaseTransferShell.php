@@ -118,8 +118,8 @@ class DatabaseTransferShell extends Shell
                                     ->where([
                                         'AcademicPeriods.id' => $academicPeriodId
                                     ])
+                                    ->limit(10)
                                     ->toArray();
-                                   
          //get archive database connection
          $connection = ConnectionManager::get('prd_cor_arc');
         
