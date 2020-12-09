@@ -16,6 +16,8 @@ use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
 use Cake\Core\Exception\Exception;
 use Cake\Auth\DefaultPasswordHasher;
+use Cake\Core\Configure;
+use Cake\Utility\Security;
 
 /**
  * DeletedLogs Model
@@ -271,11 +273,23 @@ class TransferConnectionsTable extends ControllerActionTable
         else{
             $entity->conn_status_id = "1";
         }
-        $password  = ((new DefaultPasswordHasher)->hash($entity->password));
+        // $password  = ((new DefaultPasswordHasher)->hash($entity->password));
+        // $password = $this->PasswordHash->encrypt($entity->password, Security::salt());
+        $password = $this->encrypt($entity->password, Security::salt());
         
         $entity->password = $password;
         $entity->modified_user_id = $this->Session->read('Auth.User.id');
         $entity->created_user_id = $this->Session->read('Auth.User.id');
         
+    }
+
+    public  function encrypt($pure_string, $secretHash) {
+
+        $iv = substr($secretHash, 0, 16);
+        $encryptedMessage = openssl_encrypt($pure_string, "AES-256-CBC", $secretHash, $raw_input = false, $iv);
+        $encrypted = base64_encode(
+            $encryptedMessage
+        );
+        return $encrypted;
     }
 }
