@@ -24,8 +24,8 @@ class POCOR5669 extends AbstractMigration
                 'default_value' => 0,
                 'field_type' => 'Dropdown',
                 'option_type'=> 'configitems_type_value',
-                'created_user_id' => 2,
-                'created' =>Time::now()
+                'created_user_id' => 1,
+                'created' =>date('Y-m-d H:i:s')
             ], 
             [ 
                 'name' => 'Longitude Mandatory', 
@@ -36,8 +36,8 @@ class POCOR5669 extends AbstractMigration
                 'default_value' => 0,
                 'field_type' => 'Dropdown',
                 'option_type'=> 'configitems_type_value',
-                'created_user_id' => 2,
-                'created' =>Time::now()
+                'created_user_id' => 1,
+                'created' =>date('Y-m-d H:i:s')
             ],
              [ 
                 'name' => 'Latitude Minimum', 
@@ -46,8 +46,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Latitude Minimum',
                 'value' => -90,
                 'default_value' => -90,
-                'created_user_id' => 2,
-                'created' =>Time::now()
+                'created_user_id' => 1,
+                'created' =>date('Y-m-d H:i:s')
             ], 
              [ 
                 'name' => 'Latitude Maximum', 
@@ -56,8 +56,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Latitude Maximum',
                 'value' => 90,
                 'default_value' => 90,
-                'created_user_id' => 2,
-                'created' =>Time::now()
+                'created_user_id' => 1,
+                'created' =>date('Y-m-d H:i:s')
             ], 
              [ 
                 'name' => 'Longitude Minimum', 
@@ -66,8 +66,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Longitude Minimum',
                 'value' => -180,
                 'default_value' => -180,
-                'created_user_id' => 2,
-                'created' =>Time::now()
+                'created_user_id' => 1,
+                'created' =>date('Y-m-d H:i:s')
             ], 
              [ 
                 'name' => 'Longitude Maximum', 
@@ -76,8 +76,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Longitude Maximum',
                 'value' => 180,
                 'default_value' => 180,
-                'created_user_id' => 2,
-                'created' =>Time::now()
+                'created_user_id' => 1,
+                'created' =>date('Y-m-d H:i:s')
             ], 
              [ 
                 'name' => 'Latitude Length', 
@@ -86,8 +86,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Latitude Length',
                 'value' => 7,
                 'default_value' => 7,
-                'created_user_id' => 2,
-                'created' =>Time::now()
+                'created_user_id' => 1,
+                'created' =>date('Y-m-d H:i:s')
             ], 
              [ 
                 'name' => 'Longitude Length', 
@@ -96,8 +96,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Longitude Length',
                 'value' => 7,
                 'default_value' => 7,
-                'created_user_id' => 2,
-                'created' =>Time::now()
+                'created_user_id' => 1,
+                'created' =>date('Y-m-d H:i:s')
             ],  
         ];
 
@@ -134,8 +134,8 @@ class POCOR5669 extends AbstractMigration
                 '_view' => 'view',
                 '_edit' => 'edit',
                 'order' => 46,
-                'created_user_id' => 2,
-                'created' =>Time::now()
+                'created_user_id' => 1,
+                'created' =>date('Y-m-d H:i:s')
                   
             ]
         ];
