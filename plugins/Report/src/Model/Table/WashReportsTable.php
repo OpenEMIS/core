@@ -487,6 +487,27 @@ class WashReportsTable extends AppTable
                 )
                 ->where($conditions);
         }
+		
+		$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+			return $results->map(function ($row) {
+				
+				$areaLevel = '';
+				$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+				$areaLevelId = $ConfigItems->value('institution_area_level_id');
+				
+				$AreaTable = TableRegistry::get('Area.AreaLevels');
+				$value = $AreaTable->find()
+							->where([$AreaTable->aliasField('level') => $areaLevelId])
+							->first();
+			
+				if (!empty($value->name)) {
+					$areaLevel = $value->name;
+				}
+
+				$row['area_level'] = $areaLevel;
+				return $row;
+			});
+		});
         
     }
 
@@ -512,6 +533,13 @@ class WashReportsTable extends AppTable
             'label' => __('Name')
         ];
         
+		$extraFields[] = [
+            'key' => 'area_level',
+            'field' => 'area_level',
+            'type' => 'string',
+            'label' => __('Area Level')
+        ];
+		
         $extraFields[] = [
             'key' => 'area_name',
             'field' => 'area_name',
