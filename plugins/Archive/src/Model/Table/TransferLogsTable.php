@@ -152,20 +152,20 @@ use Cake\I18n\Time;
 
         $academicPeriodId = 28;
 
-        $allData = $AssessmentItemResults->find('all')
+        $allData = $InstitutionStudentAbsenceDetails->find('all')
                                     ->select([
-                                       'AssessmentItemResults.id','AssessmentItemResults.marks','AssessmentItemResults.assessment_grading_option_id','AssessmentItemResults.student_id','AssessmentItemResults.assessment_id','AssessmentItemResults.education_subject_id','AssessmentItemResults.education_grade_id','AssessmentItemResults.academic_period_id','AssessmentItemResults.assessment_period_id','AssessmentItemResults.institution_id','AssessmentItemResults.modified_user_id','AssessmentItemResults.modified','AssessmentItemResults.created_user_id','AssessmentItemResults.created'
+                                        'StudentAbsencesPeriodDetails.student_id','StudentAbsencesPeriodDetails.institution_id','StudentAbsencesPeriodDetails.academic_period_id','StudentAbsencesPeriodDetails.institution_class_id','StudentAbsencesPeriodDetails.date','StudentAbsencesPeriodDetails.period','StudentAbsencesPeriodDetails.comment','StudentAbsencesPeriodDetails.absence_type_id','StudentAbsencesPeriodDetails.student_absence_reason_id','StudentAbsencesPeriodDetails.subject_id','StudentAbsencesPeriodDetails.modified_user_id','StudentAbsencesPeriodDetails.modified','StudentAbsencesPeriodDetails.created_user_id','StudentAbsencesPeriodDetails.created'
                                     ])
                                     ->where([
-                                        'AssessmentItemResults.academic_period_id' => $academicPeriodId
+                                        'StudentAbsencesPeriodDetails.academic_period_id' => $academicPeriodId
                                     ])
                                     ->limit(10)
                                     ->toArray();
         $connection = ConnectionManager::get('prd_cor_arc');                                
         foreach($allData AS $data){
             $newDate = date('Y-m-d H:i:s');
-            if(isset($data["modified_user_id"])){
-                $val = $data["modified_user_id"];
+            if(isset($data["created_user_id"])){
+                $val = $data["created_user_id"];
             }else{
                 $val = 'NULL';
             }
@@ -177,73 +177,60 @@ use Cake\I18n\Time;
 
             if(!empty($data && isset($data))){
                 try{
-                    $data_inserted_successfully = 0;
-                    $select_statement = $connection->prepare("select * from assessment_item_results where id = :id");
-                    $select_statement->execute(array(':id' => $data["id"]));
-                    $row = $select_statement->fetch();
-                    if(empty($row)){
-                        $statement = $connection->prepare('INSERT INTO assessment_item_results (id, 
-                        marks, 
-                        assessment_grading_option_id,
-                        student_id,
-                        assessment_id,
-                        education_subject_id,
-                        education_grade_id,
-                        academic_period_id,
-                        assessment_period_id,
+                    $statement = $connection->prepare('INSERT INTO institution_student_absence_details (student_id,
                         institution_id,
+                        academic_period_id,
+                        institution_class_id,
+                        date,
+                        period,
+                        comment,
+                        absence_type_id,
+                        student_absence_reason_id,
+                        subject_id,
                         modified_user_id,
                         modified,
                         created_user_id,
                         created)
                         
-                        VALUES (:id, 
-                        :marks, 
-                        :assessment_grading_option_id,
-                        :student_id,
-                        :assessment_id,
-                        :education_subject_id,
-                        :education_grade_id,
-                        :academic_period_id,
-                        :assessment_period_id,
+                        VALUES (:student_id,
                         :institution_id,
+                        :academic_period_id,
+                        :institution_class_id,
+                        :date,
+                        :period,
+                        :comment,
+                        :absence_type_id,
+                        :student_absence_reason_id,
+                        :subject_id,
                         :modified_user_id,
                         :modified,
                         :created_user_id,
                         :created)');
 
                         $statement->execute([
-                        'id' => $data["id"],
-                        'marks' => $data["marks"],
-                        'assessment_grading_option_id' => $data["assessment_grading_option_id"],
                         'student_id' => $data["student_id"],
-                        'assessment_id' => $data["assessment_id"],
-                        'education_subject_id' => $data["education_subject_id"],
-                        'education_grade_id' => $data["education_grade_id"],
-                        'academic_period_id' => $data["academic_period_id"],
-                        'assessment_period_id' => $data["assessment_period_id"],
                         'institution_id' => $data["institution_id"],
-                        'modified_user_id' => isset($data["modified_user_id"]) ? $data["modified_user_id"] : NULL,
-                        'modified' => isset($data["modified"]) ? $newDate : NULL,
-                        'created_user_id' => $data["created_user_id"],
+                        'academic_period_id' => $data["academic_period_id"],
+                        'institution_class_id' => $data["institution_class_id"],
+                        'date' => $newDate,
+                        'period' => $data["period"],
+                        'comment' => $data["comment"],
+                        'absence_type_id' => $data["absence_type_id"],
+                        'student_absence_reason_id' => $data["student_absence_reason_id"],
+                        'subject_id' => $data["subject_id"],
+                        'modified_user_id' => $data["modified_user_id"],
+                        'modified' => $data["modified"],
+                        'created_user_id' => isset($data["created_user_id"]) ? $data["created_user_id"] : NULL,
                         'created' => $newDate,
                         ]);
                         $data_inserted_successfully = 1;
-                        $delete_statement = $default_connection->prepare("delete from assessment_item_results where id = :id");
-                        $delete_statement->execute(array(':id' => $data["id"]));
-                        
-                    }
-                    else{
-                        echo "Already archived";
-                    }
-                
                 }catch (PDOException $e) {
                     
                 }
                 
             }
         }
-        $default_connection->execute('DELETE FROM assessment_item_results WHERE academic_period_id = 28 ');
+        // $default_connection->execute('DELETE FROM assessment_item_results WHERE academic_period_id = 28 ');
         echo "<pre>";print_r($allData);exit;
          //get archive database connection
          $connection = ConnectionManager::get('prd_cor_arc');
