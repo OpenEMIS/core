@@ -28,6 +28,7 @@ class InstitutionsController extends AppController
     private $features = [
         // general
         'InstitutionAttachments',
+        'InstitutionMaps',
 
         // academic
         'InstitutionShifts',
@@ -367,6 +368,13 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
     }
+
+    //Institution Map page
+    public function InstitutionMaps(){
+
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionMaps']);
+    }
+
     public function ReportCardStatuses()
     {
         $classId = $this->request->query['class_id'];

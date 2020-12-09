@@ -447,6 +447,12 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Institutions.edit'],
                 'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
+            'Institutions.InstitutionMaps.view' => [
+                    'title' => 'Map',
+                    'parent' => 'Institution.General',
+                    'selected' => ['Institutions.InstitutionMaps.view', 'Institutions.InstitutionMaps.edit'],
+                    'params' => ['plugin' => 'Institution', 0 => $institutionId]
+            ],
 
             'InstitutionCalendars.index' => [
                 'title' => 'Calendar',
