@@ -3,6 +3,7 @@
 * Mini Dashboard
 */
 echo $this->Html->css('OpenEmis.../plugins/progressbar/css/bootstrap-progressbar-3.3.0.min', ['block' => true]);
+echo $this->Html->script('dashboards', ['block' => true]);
 if(!$isAdmin): ?>
 <style type="text/css">
 .data-section.section_custom_1 {
@@ -44,7 +45,7 @@ if(!$isAdmin): ?>
 	</div>
 	<div class="data-section section_custom_3">
 		<div class="data-field">
-			<button id="profile_detail" class="btn btn-default btn-save" ng-click="DashboardController.showProfileCompleteData()">Details</button>
+			<button id="profile_detail" class="btn btn-default btn-save">Details</button>
 		</div>
 	</div>
 </div>
