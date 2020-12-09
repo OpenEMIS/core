@@ -943,7 +943,7 @@ class StudentsTable extends ControllerActionTable
                 ];
                 }
             }
-
+            
             foreach ($indexElements as $key => $value) {
                 if ($value['name']=='OpenEmis.ControllerAction/index') {
                     $indexElements[$key]['order'] = 3;
@@ -953,6 +953,7 @@ class StudentsTable extends ControllerActionTable
             }
 
             $extra['elements'] = array_merge($extra['elements'], $indexElements);
+            //echo '<pre>';print_r($indexElements);die;
         }
     }
 
