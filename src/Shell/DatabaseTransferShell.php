@@ -54,7 +54,310 @@ class DatabaseTransferShell extends Shell
         }
     }
 
-    public function getRecords($academicPeriodId)
+
+    public function getRecords($academicPeriodId){
+        $connection = ConnectionManager::get('default');
+        $archive_connection = ConnectionManager::get('prd_cor_arc');
+
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+        $StudentAbsences = TableRegistry::get('Report.StudentAbsences');
+
+        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+        $StudentAttendanceMarkType = TableRegistry::get('Attendance.StudentAttendanceMarkTypesTable');
+
+        $assessmentItemResultsData = $AssessmentItemResults->find('all')
+                    ->select([
+                        'AssessmentItemResults.id','AssessmentItemResults.marks','AssessmentItemResults.assessment_grading_option_id','AssessmentItemResults.student_id','AssessmentItemResults.assessment_id','AssessmentItemResults.education_subject_id','AssessmentItemResults.education_grade_id','AssessmentItemResults.academic_period_id','AssessmentItemResults.assessment_period_id','AssessmentItemResults.institution_id','AssessmentItemResults.modified_user_id','AssessmentItemResults.modified','AssessmentItemResults.created_user_id','AssessmentItemResults.created'
+                    ])
+                    ->where([
+                        'AssessmentItemResults.academic_period_id' => $academicPeriodId
+                    ])
+                    ->toArray();
+        foreach($assessmentItemResultsData AS $data){
+            $newDate = date('Y-m-d H:i:s');
+            if(isset($data["modified_user_id"])){
+                $val = $data["modified_user_id"];
+            }else{
+                $val = 'NULL';
+            }
+            if(isset($data["modified"])){
+                $val1 = $data["modified"];
+            }else{
+                $val1 = 'NULL';
+            }
+
+            if(!empty($data && isset($data))){
+                try{
+                    $data_inserted_successfully = 0;
+                $select_statement = $connection->prepare("select * from assessment_item_results where id = :id");
+                $select_statement->execute(array(':id' => $data["id"]));
+                $row = $select_statement->fetch();
+                    if(empty($row)){
+                        $statement = $connection->prepare('INSERT INTO assessment_item_results (id, 
+                        marks, 
+                        assessment_grading_option_id,
+                        student_id,
+                        assessment_id,
+                        education_subject_id,
+                        education_grade_id,
+                        academic_period_id,
+                        assessment_period_id,
+                        institution_id,
+                        modified_user_id,
+                        modified,
+                        created_user_id,
+                        created)
+                        
+                        VALUES (:id, 
+                        :marks, 
+                        :assessment_grading_option_id,
+                        :student_id,
+                        :assessment_id,
+                        :education_subject_id,
+                        :education_grade_id,
+                        :academic_period_id,
+                        :assessment_period_id,
+                        :institution_id,
+                        :modified_user_id,
+                        :modified,
+                        :created_user_id,
+                        :created)');
+
+                        $statement->execute([
+                        'id' => $data["id"],
+                        'marks' => $data["marks"],
+                        'assessment_grading_option_id' => $data["assessment_grading_option_id"],
+                        'student_id' => $data["student_id"],
+                        'assessment_id' => $data["assessment_id"],
+                        'education_subject_id' => $data["education_subject_id"],
+                        'education_grade_id' => $data["education_grade_id"],
+                        'academic_period_id' => $data["academic_period_id"],
+                        'assessment_period_id' => $data["assessment_period_id"],
+                        'institution_id' => $data["institution_id"],
+                        'modified_user_id' => isset($data["modified_user_id"]) ? $data["modified_user_id"] : NULL,
+                        'modified' => isset($data["modified"]) ? $newDate : NULL,
+                        'created_user_id' => $data["created_user_id"],
+                        'created' => $newDate,
+                        ]);
+                        $data_inserted_successfully = 1;
+                        
+                    }
+                    else{
+                        echo "Already archived";
+                    }
+                
+                }catch (PDOException $e) {
+                    
+                }
+                
+            }
+        }
+        $AssessmentItemResults->deleteAll(['academic_period_id' => $academicPeriodId]);
+
+        ///
+        $classAttendanceRecordsData = $ClassAttendanceRecords->find('all')
+                    ->select([
+                        'ClassAttendanceRecords.institution_class_id','ClassAttendanceRecords.academic_period_id','ClassAttendanceRecords.year ','ClassAttendanceRecords.month','ClassAttendanceRecords.day_1','ClassAttendanceRecords.day_2','ClassAttendanceRecords.day_3','ClassAttendanceRecords.day_4','ClassAttendanceRecords.day_5','ClassAttendanceRecords.day_6','ClassAttendanceRecords.day_7','ClassAttendanceRecords.day_8','ClassAttendanceRecords.day_9','ClassAttendanceRecords.day_10','ClassAttendanceRecords.day_11','ClassAttendanceRecords.day_12','ClassAttendanceRecords.day_13','ClassAttendanceRecords.day_14','ClassAttendanceRecords.day_15','ClassAttendanceRecords.day_16','ClassAttendanceRecords.day_17','ClassAttendanceRecords.day_18','ClassAttendanceRecords.day_19','ClassAttendanceRecords.day_20','ClassAttendanceRecords.day_21','ClassAttendanceRecords.day_22','ClassAttendanceRecords.day_23','ClassAttendanceRecords.day_24','ClassAttendanceRecords.day_25','ClassAttendanceRecords.day_26','ClassAttendanceRecords.day_27','ClassAttendanceRecords.day_28','ClassAttendanceRecords.day_29','ClassAttendanceRecords.day_30'
+                    ])
+                    ->where([
+                        'ClassAttendanceRecords.academic_period_id' => $academicPeriodId
+                    ])
+                    ->limit(10)
+                    ->toArray();
+        foreach($classAttendanceRecordsData AS $data){
+
+            if(!empty($data && isset($data))){
+                try{
+                    $data_inserted_successfully = 0;
+                    $select_statement = $connection->prepare("select * from institution_class_attendance_records where academic_period_id = :academic_period_id");
+                    $select_statement->execute(array(':academic_period_id' => $data["academic_period_id"]));
+                    $row = $select_statement->fetch();
+                        $statement = $connection->prepare('INSERT INTO institution_class_attendance_records (institution_class_id,
+                        academic_period_id,
+                        year,
+                        month,
+                        day_1,
+                        day_2,
+                        day_3,
+                        day_4,
+                        day_5,
+                        day_6,
+                        day_7,
+                        day_8,
+                        day_9,
+                        day_10,
+                        day_11,
+                        day_12,
+                        day_13,
+                        day_14,
+                        day_15,
+                        day_16,
+                        day_17,
+                        day_18,
+                        day_19,
+                        day_20,
+                        day_21,
+                        day_22,
+                        day_23,
+                        day_24,
+                        day_25,
+                        day_26,
+                        day_27,
+                        day_28,
+                        day_29,
+                        day_30,
+                        day_31)
+                        
+                        VALUES (:institution_class_id, 
+                        :academic_period_id,
+                        :year,
+                        :month,
+                        :day_1,
+                        :day_2,
+                        :day_3,
+                        :day_4,
+                        :day_5,
+                        :day_6,
+                        :day_7,
+                        :day_8,
+                        :day_9,
+                        :day_10,
+                        :day_11,
+                        :day_12,
+                        :day_13,
+                        :day_14,
+                        :day_15,
+                        :day_16,
+                        :day_17,
+                        :day_18,
+                        :day_19,
+                        :day_20,
+                        :day_21,
+                        :day_22,
+                        :day_23,
+                        :day_24,
+                        :day_25,
+                        :day_26,
+                        :day_27,
+                        :day_28,
+                        :day_29,
+                        :day_30,
+                        :day_31)');
+
+                        $statement->execute([
+                        'institution_class_id' => $data["institution_class_id"],
+                        'academic_period_id' => $data["academic_period_id"],
+                        'year' => $data["year"],
+                        'month' => $data["month"],
+                        'day_1' => $data["day_1"],
+                        'day_2' => $data["day_2"],
+                        'day_3' => $data["day_3"],
+                        'day_4' => $data["day_4"],
+                        'day_5' => $data["day_5"],
+                        'day_6' => $data["day_6"],
+                        'day_7' => $data["day_7"],
+                        'day_8' => $data["day_8"],
+                        'day_9' => $data["day_9"],
+                        'day_10' => $data["day_10"],
+                        'day_11' => $data["day_11"],
+                        'day_12' => $data["day_12"],
+                        'day_13' => $data["day_13"],
+                        'day_14' => $data["day_14"],
+                        'day_15' => $data["day_15"],
+                        'day_16' => $data["day_16"],
+                        'day_17' => $data["day_17"],
+                        'day_18' => $data["day_18"],
+                        'day_19' => $data["day_19"],
+                        'day_20' => $data["day_20"],
+                        'day_21' => $data["day_21"],
+                        'day_22' => $data["day_22"],
+                        'day_23' => $data["day_23"],
+                        'day_24' => $data["day_24"],
+                        'day_25' => $data["day_25"],
+                        'day_26' => $data["day_26"],
+                        'day_27' => $data["day_27"],
+                        'day_28' => $data["day_28"],
+                        'day_29' => $data["day_29"],
+                        'day_30' => $data["day_30"],
+                        'day_31' => isset($data["day_31"]) ? $data["day_31"] : 0,
+                        ]);
+                        $data_inserted_successfully = 1;
+                }catch (PDOException $e) {
+                    
+                }
+                
+            }
+        }
+        $ClassAttendanceRecords->deleteAll(['academic_period_id' => $academicPeriodId]);
+
+        $studentAbsencesData = $StudentAbsences->find('all')
+                    ->select([
+                        'StudentAbsences.id','StudentAbsences.student_id','StudentAbsences.institution_id','StudentAbsences.academic_period_id','StudentAbsences.institution_class_id','StudentAbsences.date','StudentAbsences.absence_type_id','StudentAbsences.institution_student_absence_day_id','StudentAbsences.modified_user_id','StudentAbsences.modified','StudentAbsences.created_user_id','StudentAbsences.created'
+                    ])
+                    ->where([
+                        'StudentAbsences.academic_period_id' => $academicPeriodId
+                    ])
+                    ->limit(10)
+                    ->toArray();
+        foreach($studentAbsencesData AS $data){
+            $newDate = date('Y-m-d H:i:s');
+            if(!empty($data && isset($data))){
+                try{
+                    $statement = $connection->prepare('INSERT INTO institution_student_absences (id, 
+                    student_id,
+                    institution_id,
+                    academic_period_id,
+                    institution_class_id,
+                    date,
+                    absence_type_id,
+                    institution_student_absence_day_id,
+                    modified_user_id,
+                    modified,
+                    created_user_id,
+                    created)
+                    
+                    VALUES (:id, 
+                    :student_id,
+                    :institution_id,
+                    :academic_period_id,
+                    :institution_class_id,
+                    :date,
+                    :absence_type_id,
+                    :institution_student_absence_day_id,
+                    :modified_user_id,
+                    :modified,
+                    :created_user_id,
+                    :created)');
+
+                    $statement->execute([
+                    'id' => $data["id"],
+                    'student_id' => $data["student_id"],
+                    'institution_id' => $data["institution_id"],
+                    'academic_period_id' => $data["academic_period_id"],
+                    'institution_class_id' => $data["institution_class_id"],
+                    'date' => $newDate,
+                    'absence_type_id' => $data["absence_type_id"],
+                    'institution_student_absence_day_id' => $data["institution_student_absence_day_id"],
+                    'modified_user_id' => $data["modified_user_id"],
+                    'modified' => $data["modified"],
+                    'created_user_id' => $data["created_user_id"],
+                    'created' => $newDate,
+                    ]);
+                        $data_inserted_successfully = 1;
+                }catch (PDOException $e) {
+                    
+                }
+                
+            }
+        }
+        $StudentAbsences->deleteAll(['academic_period_id' => $academicPeriodId]);
+    }
+
+
+    public function getRecordsbkp($academicPeriodId)
     {
         //get archive database connection
         $connection = ConnectionManager::get('default');
