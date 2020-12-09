@@ -46,6 +46,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Latitude Minimum',
                 'value' => -90,
                 'default_value' => -90,
+                'field_type' => '',
+                'option_type'=> '',
                 'created_user_id' => 1,
                 'created' =>date('Y-m-d H:i:s')
             ], 
@@ -56,6 +58,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Latitude Maximum',
                 'value' => 90,
                 'default_value' => 90,
+                'field_type' => '',
+                'option_type'=> '',
                 'created_user_id' => 1,
                 'created' =>date('Y-m-d H:i:s')
             ], 
@@ -66,6 +70,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Longitude Minimum',
                 'value' => -180,
                 'default_value' => -180,
+                'field_type' => '',
+                'option_type'=> '',
                 'created_user_id' => 1,
                 'created' =>date('Y-m-d H:i:s')
             ], 
@@ -76,6 +82,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Longitude Maximum',
                 'value' => 180,
                 'default_value' => 180,
+                'field_type' => '',
+                'option_type'=> '',
                 'created_user_id' => 1,
                 'created' =>date('Y-m-d H:i:s')
             ], 
@@ -86,6 +94,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Latitude Length',
                 'value' => 7,
                 'default_value' => 7,
+                'field_type' => '',
+                'option_type'=> '',
                 'created_user_id' => 1,
                 'created' =>date('Y-m-d H:i:s')
             ], 
@@ -96,6 +106,8 @@ class POCOR5669 extends AbstractMigration
                 'label' => 'Longitude Length',
                 'value' => 7,
                 'default_value' => 7,
+                'field_type' => '',
+                'option_type'=> '',
                 'created_user_id' => 1,
                 'created' =>date('Y-m-d H:i:s')
             ],  
