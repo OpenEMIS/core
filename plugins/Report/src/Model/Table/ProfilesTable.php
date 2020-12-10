@@ -80,7 +80,7 @@ class ProfilesTable extends ControllerActionTable
 				'institution_id' => $entity->id,
 				'academic_period_id' => $academicPeriodId,
             ];
-
+		
             // Download button, status must be generated or published
             if ($this->AccessControl->check(['Institutions', 'InstitutionReportCards', 'download']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 $downloadUrl = [
