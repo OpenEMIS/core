@@ -521,6 +521,13 @@ class InstitutionsController extends AppController
     }
     // Timetable - END
 
+    //POCOR-5669 added InstitutionMaps
+    public function InstitutionMaps()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionMaps']);
+    }
+    //POCOR-5669 added InstitutionMaps
+
     // AngularJS
     public function ScheduleTimetable($action = 'view')
     {
