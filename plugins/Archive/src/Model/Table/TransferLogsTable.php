@@ -14,7 +14,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
 use Cake\Core\Exception\Exception;
 use Cake\Log\Log;
-use Cake\I18n\Time;
+use Cake\Utility\Security;
 
 /**
  * DeletedLogs Model
@@ -103,7 +103,9 @@ use Cake\I18n\Time;
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id', ['type' => 'select']);
+        $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+        $this->field('academic_period_id', ['type' => 'select', 'options' => $academicPeriodOptions]);
         
         $this->field('id', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
@@ -117,12 +119,48 @@ use Cake\I18n\Time;
     {
         $this->Alert->info('Archive.backupReminder');
         try {
-            $connection = ConnectionManager::get('prd_cor_arc');
+
+            $transferConnections = TableRegistry::get('TransferConnections.TransferConnections');
+            $transferConnectionsData = $transferConnections->find('all')
+                ->select([
+                    'TransferConnections.host','TransferConnections.db_name','TransferConnections.host','TransferConnections.username','TransferConnections.password','TransferConnections.db_name'
+                ])
+                ->first();
+            if ( base64_encode(base64_decode($transferConnectionsData['password'], true)) === $transferConnectionsData['password']){
+            $db_password = $this->decrypt($transferConnectionsData['password'], Security::salt());
+            }
+            else {
+            $db_password = $dbConnection['db_password'];
+            }
+            $connectiontwo = ConnectionManager::config($transferConnectionsData['db_name'], [
+                'className' => 'Cake\Database\Connection',
+                'driver' => 'Cake\Database\Driver\Mysql',
+                'persistent' => false,
+                'host' => $transferConnectionsData['host'],
+                'username' => $transferConnectionsData['username'],
+                'password' => $db_password,
+                'database' => $transferConnectionsData['db_name'],
+                'encoding' => 'utf8mb4',
+                'timezone' => 'UTC',
+                'cacheMetadata' => true,
+            ]);
+            $connection = ConnectionManager::get($transferConnectionsData['db_name']);
             $connected = $connection->connect();
 
         }catch (Exception $connectionError) {
             $this->Alert->warning('Connection.transferConnectionFail');
         }
+    }
+
+    public function decrypt($encrypted_string, $secretHash) {
+
+        $iv = substr($secretHash, 0, 16);
+        $data = base64_decode($encrypted_string);
+        $decryptedMessage = openssl_decrypt($data, "AES-256-CBC", $secretHash, $raw_input = false, $iv);
+        $decrypted = rtrim(
+            $decryptedMessage
+        );
+        return $decrypted;
     }
 
     public function onGetGeneratedBy(Event $event, Entity $entity)
