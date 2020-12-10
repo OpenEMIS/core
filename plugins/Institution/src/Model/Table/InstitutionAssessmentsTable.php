@@ -100,6 +100,39 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $this->field('subjects');
 
         $this->setFieldOrder(['name', 'assessment', 'academic_period_id', 'education_grade', 'subjects', 'total_male_students', 'total_female_students']);
+
+        // from onUpdateToolbarButtons
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default icon-big',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $buttons = $extra['indexButtons'];
+
+        $extraButtons = [
+            'archive' => [
+                'AssessmentsArchive' => ['Institutions', 'AssessmentsArchive', 'index'],
+                'action' => 'AssessmentsArchive',
+                'icon' => '<i class="fa fa-folder"></i>',
+                'title' => __('Archive')
+            ]
+        ];
+
+        foreach ($extraButtons as $key => $attr) {
+            if ($this->AccessControl->check($attr['permission'])) {
+                $button = [
+                    'type' => 'button',
+                    'attr' => $btnAttr,
+                    'url' => [0 => 'index']
+                ];
+                $button['url']['action'] = $attr['action'];
+                $button['attr']['title'] = $attr['title'];
+                $button['label'] = $attr['icon'];
+
+                $extra['toolbarButtons'][$key] = $button;
+            }
+        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {

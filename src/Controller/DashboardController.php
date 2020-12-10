@@ -70,9 +70,15 @@ class DashboardController extends AppController
 
     public function index()
     {
+        $user = $this->Auth->user();
         $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
         $StudentStatusUpdates->checkRequireUpdate();
         $this->set('ngController', 'DashboardCtrl as DashboardController');
+        if ($this->AccessControl->isAdmin()) {
+            $this->set('isAdmin',true);
+        }
+        $profileData = $this->getProfileCompletnessData($user['id']);
+        $this->set('profileCompletness',$profileData);
         $this->set('noBreadcrumb', true);
     }
 
@@ -102,6 +108,152 @@ class DashboardController extends AppController
     
     }
 
+    private function triggerInstitutionClassSubjectsShell()
+    {
+        $script = 'InstitutionClassSubjects';
+        $consoleDir = ROOT . DS . 'bin' . DS;
+        $logs = ROOT . DS . 'logs' . DS . 'InstitutionClassSubjects.log & echo $!';
+        $cmd = ROOT . DS . 'bin' . DS . 'cake InstitutionClassSubjects';
+        $nohup = 'nohup ' . $cmd . '> /dev/null 2>/dev/null &';
+        exec($nohup);
+        Log::write('debug', $nohup); 
+    }
+
+    public function getProfileCompletnessData ($userId) {
+        $data = array();
+        $profileComplete = 0;
+		$totalProfileComplete = 6;
+        $securityUsers = TableRegistry::get('security_users');
+		$securityUsersData = $securityUsers->find()		
+				->select([
+					'created' => 'security_users.created',
+					'modified' => 'security_users.modified',
+				])
+				->where([$securityUsers->aliasField('id') => $userId])
+                ->order(['security_users.modified'=>'desc'])
+				->limit(1)
+				->first();
+		
+		
+		$data[0]['feature'] = 'Overview';
+		if(!empty($securityUsersData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[0]['complete'] = 'yes';
+		    $data[0]['modifiedDate'] = ($securityUsersData->modified)?date("F j,Y",strtotime($securityUsersData->modified)):date("F j,Y",strtotime($securityUsersData->created));
+		} else {
+            $data[0]['complete'] = 'no';
+            $data[0]['modifiedDate'] = 'Not updated';
+        }
+		
+		$userDemographics = TableRegistry::get('user_demographics');
+		$userDemographicsData = $userDemographics->find()		
+				->select([
+					'created' => 'user_demographics.created',
+					'modified' => 'user_demographics.modified',
+				])
+				->where([$userDemographics->aliasField('security_user_id') => $userId])
+                ->order(['user_demographics.modified'=>'desc'])
+				->limit(1)
+				->first();
+				;
+        $data[1]['feature'] = 'Demographic';
+		if(!empty($userDemographicsData)) {
+			$profileComplete = $profileComplete + 1;
+            $data[1]['complete'] = 'yes';
+		    $data[1]['modifiedDate'] = ($userDemographicsData->modified)?date("F j,Y",strtotime($userDemographicsData->modified)):date("F j,Y",strtotime($userDemographicsData->created));
+		} else {
+            $data[1]['complete'] = 'no';
+            $data[1]['modifiedDate'] = 'Not updated';
+        }
+		
+		$userIdentities = TableRegistry::get('user_identities');
+		$userIdentitiesData = $userIdentities->find()		
+				->select([
+					'created' => 'user_identities.created',
+					'modified' => 'user_identities.modified',
+				])
+				->where([$userIdentities->aliasField('security_user_id') => $userId])
+                ->order(['user_identities.modified'=>'desc'])
+				->limit(1)
+				->first();
+				;
+        $data[2]['feature'] = 'Identities';
+		if(!empty($userIdentitiesData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[2]['complete'] = 'yes';
+		    $data[2]['modifiedDate'] = ($userIdentitiesData->modified)?date("F j,Y",strtotime($userIdentitiesData->modified)):date("F j,Y",strtotime($userIdentitiesData->created));
+		} else {
+            $data[2]['complete'] = 'no';
+            $data[2]['modifiedDate'] = 'Not updated';
+        }
+		
+		$userNationalities = TableRegistry::get('user_nationalities');
+		$userNationalitiesData = $userNationalities->find()		
+				->select([
+					'created' => 'user_nationalities.created',
+					'modified' => 'user_nationalities.modified',
+				])
+				->where([$userNationalities->aliasField('security_user_id') => $userId])
+                ->order(['user_nationalities.modified'=>'desc'])
+				->limit(1)
+				->first();
+		$data[3]['feature'] = 'Nationalities';
+		if(!empty($userNationalitiesData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[3]['complete'] = 'yes';
+		    $data[3]['modifiedDate'] = ($userNationalitiesData->modified)?date("F j,Y",strtotime($userNationalitiesData->modified)):date("F j,Y",strtotime($userNationalitiesData->created));
+		} else {
+            $data[3]['complete'] = 'no';
+            $data[3]['modifiedDate'] = 'Not updated';
+        }
+		
+		$userContacts = TableRegistry::get('user_contacts');
+		$userContactsData = $userContacts->find()		
+				->select([
+					'created' => 'user_contacts.created',
+					'modified' => 'user_contacts.modified',
+				])
+				->where([$userContacts->aliasField('security_user_id') => $userId])
+                ->order(['user_contacts.modified'=>'desc'])
+				->limit(1)
+				->first();
+		
+        $data[4]['feature'] = 'Contacts';
+		if(!empty($userContactsData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[4]['complete'] = 'yes';
+		    $data[4]['modifiedDate'] = ($userContactsData->modified)?date("F j,Y",strtotime($userContactsData->modified)):date("F j,Y",strtotime($userContactsData->created));
+		} else {
+            $data[4]['complete'] = 'no';
+            $data[4]['modifiedDate'] = 'Not updated';
+        }
+		
+		$userLanguages = TableRegistry::get('user_languages');
+		$userLanguagesData = $userLanguages->find()		
+				->select([
+					'created' => 'user_languages.created',
+					'modified' => 'user_languages.modified',
+				])
+				->where([$userLanguages->aliasField('security_user_id') => $userId])
+                ->order(['user_languages.modified'=>'desc'])
+				->limit(1)
+				->first();
+		$data[5]['feature'] = 'Languages';
+		if(!empty($userLanguagesData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[5]['complete'] = 'yes';
+		    $data[5]['modifiedDate'] = ($userLanguagesData->modified)?date("F j,Y",strtotime($userLanguagesData->modified)):date("F j,Y",strtotime($userLanguagesData->created));
+		} else {
+            $data[5]['complete'] = 'no';
+            $data[5]['modifiedDate'] = 'Not updated';
+        }
+	
+		
+		$profilePercentage = 100/$totalProfileComplete * $profileComplete;
+		$profilePercentage = round($profilePercentage);
+		$data['percentage'] = $profilePercentage;
+        return $data;
+    }
 //    private function triggerInstitutionClassSubjectsShell()
 //    {
 //        $script = 'InstitutionClassSubjects';
