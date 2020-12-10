@@ -1798,6 +1798,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institutions.modified',
 				])
 				->where([$institutions->aliasField('id') => $institutionId])
+                ->order(['institutions.modified'=>'desc'])
 				->limit(1)
 				->first();
 				;
@@ -1810,7 +1811,8 @@ class InstitutionsController extends AppController
             $data[0]['complete'] = 'no';
             $data[0]['modifiedDate'] = 'Not updated';
         }
-
+/********************************************* */ 
+        //Events
         $calendarEvents = TableRegistry::get('calendar_events');
 		$calendarEventsData = $calendarEvents->find()		
 				->select([
@@ -1818,6 +1820,7 @@ class InstitutionsController extends AppController
 					'modified' => 'calendar_events.modified',
 				])
 				->where([$calendarEvents->aliasField('institution_id') => $institutionId])
+                ->order(['calendar_events.modified'=>'desc'])
 				->limit(1)
 				->first();
 		$data[1]['feature'] = 'Calendar';		;
@@ -1838,6 +1841,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_contact_persons.modified',
 				])
 				->where([$institutionContactPersons->aliasField('institution_id') => $institutionId])
+                ->order(['institution_contact_persons.modified'=>'desc'])
 				->limit(1)
 				->first();
                 
@@ -1859,14 +1863,14 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_shifts.modified',
 				])
 				->where([$institutionShifts->aliasField('institution_id') => $institutionId])
-				->limit(1)
+				->order(['institution_shifts.modified'=>'desc'])
+                ->limit(1)
 				->first();
-
 		$data[3]['feature'] = 'Shifts';
 		if(!empty($institutionShiftsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[3]['complete'] = 'yes';
-		    $data[3]['modifiedDate'] = date("F j,Y",strtotime($institutionShiftsData->modified));
+		    $data[3]['modifiedDate'] = ($institutionShiftsData->modified)?date("F j,Y",strtotime($institutionShiftsData->modified)):date("F j,Y",strtotime($institutionShiftsData->created));
 		} else {
             $data[3]['complete'] = 'no';
             $data[3]['modifiedDate'] = 'Not updated';
@@ -1880,6 +1884,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_grades.modified',
 				])
 				->where([$institutionProgrammes->aliasField('institution_id') => $institutionId])
+                ->order(['institution_grades.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -1887,7 +1892,7 @@ class InstitutionsController extends AppController
 		if(!empty($institutionProgrammesData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[4]['complete'] = 'yes';
-		    $data[4]['modifiedDate'] = date("F j,Y",strtotime($institutionProgrammesData->modified));
+		    $data[4]['modifiedDate'] = ($institutionProgrammesData->modified)?date("F j,Y",strtotime($institutionProgrammesData->modified)):date("F j,Y",strtotime($institutionProgrammesData->created));
 		} else {
             $data[4]['complete'] = 'no';
             $data[4]['modifiedDate'] = 'Not updated';
@@ -1901,6 +1906,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_classes.modified',
 				])
 				->where([$institutionClasses->aliasField('institution_id') => $institutionId])
+                ->order(['institution_classes.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -1908,7 +1914,7 @@ class InstitutionsController extends AppController
 		if(!empty($institutionClassesData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[5]['complete'] = 'yes';
-		    $data[5]['modifiedDate'] = date("F j,Y",strtotime($institutionClassesData->modified));
+		    $data[5]['modifiedDate'] = ($institutionClassesData->modified)?date("F j,Y",strtotime($institutionClassesData->modified)):date("F j,Y",strtotime($institutionClassesData->created));
 		} else {
             $data[5]['complete'] = 'no';
             $data[5]['modifiedDate'] = 'Not updated';
@@ -1922,6 +1928,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_subjects.modified',
 				])
 				->where([$institutionSubjects->aliasField('institution_id') => $institutionId])
+                ->order(['institution_subjects.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -1943,6 +1950,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_textbooks.modified',
 				])
 				->where([$institutionTextbooks->aliasField('institution_id') => $institutionId])
+                ->order(['institution_textbooks.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -1964,6 +1972,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_students.modified',
 				])
 				->where([$institutionStudents->aliasField('institution_id') => $institutionId])
+                ->order(['institution_students.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -1985,6 +1994,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_staff.modified',
 				])
 				->where([$institutionStaff->aliasField('institution_id') => $institutionId])
+                ->order(['institution_staff.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2006,6 +2016,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_staff_attendances.modified',
 				])
 				->where([$institutionAttendance->aliasField('institution_id') => $institutionId])
+                ->order(['institution_staff_attendances.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2028,6 +2039,7 @@ class InstitutionsController extends AppController
 					'modified' => 'staff_behaviours.modified',
 				])
 				->where([$institutionBehaviour->aliasField('institution_id') => $institutionId])
+                ->order(['staff_behaviours.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2049,6 +2061,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_positions.modified',
 				])
 				->where([$institutionPositions->aliasField('institution_id') => $institutionId])
+                ->order(['institution_positions.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2070,6 +2083,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_bank_accounts.modified',
 				])
 				->where([$institutionBankAccounts->aliasField('institution_id') => $institutionId])
+                ->order(['institution_bank_accounts.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2091,6 +2105,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_fees.modified',
 				])
 				->where([$institutionInstitutionFees->aliasField('institution_id') => $institutionId])
+                ->order(['institution_fees.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2133,6 +2148,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_lands.modified',
 				])
 				->where([$institutionInfrastructuresOverview->aliasField('institution_id') => $institutionId])
+                ->order(['institution_lands.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2154,6 +2170,7 @@ class InstitutionsController extends AppController
 					'modified' => 'infrastructure_needs.modified',
 				])
 				->where([$institutionInfrastructuresNeeds->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_needs.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2175,6 +2192,7 @@ class InstitutionsController extends AppController
 					'modified' => 'infrastructure_wash_waters.modified',
 				])
 				->where([$institutionWashWater->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_waters.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2196,6 +2214,7 @@ class InstitutionsController extends AppController
 					'modified' => 'infrastructure_wash_hygienes.modified',
 				])
 				->where([$institutionWashHygiene->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_hygienes.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2217,6 +2236,7 @@ class InstitutionsController extends AppController
 					'modified' => 'infrastructure_wash_wastes.modified',
 				])
 				->where([$institutionWashWaste->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_wastes.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2238,6 +2258,7 @@ class InstitutionsController extends AppController
 					'modified' => 'infrastructure_wash_sewages.modified',
 				])
 				->where([$institutionWashSewage->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_sewages.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2260,6 +2281,7 @@ class InstitutionsController extends AppController
 					'modified' => 'infrastructure_utility_electricities.modified',
 				])
 				->where([$institutionUtilitiesElectricity->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_electricities.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2281,6 +2303,7 @@ class InstitutionsController extends AppController
 					'modified' => 'infrastructure_utility_internets.modified',
 				])
 				->where([$institutionUtilitiesInternet->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_internets.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2302,6 +2325,7 @@ class InstitutionsController extends AppController
 					'modified' => 'infrastructure_utility_telephones.modified',
 				])
 				->where([$institutionUtilitiesTelephone->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_telephones.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2323,6 +2347,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_assets.modified',
 				])
 				->where([$institutionAssets->aliasField('institution_id') => $institutionId])
+                ->order(['institution_assets.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2340,6 +2365,7 @@ class InstitutionsController extends AppController
         $institutionTransport  = TableRegistry::get('institution_buses');
 		$institutionTransportData = $institutionTransport->find()		
 				->where([$institutionTransport->aliasField('institution_id') => $institutionId])
+                ->order(['institution_buses.modified'=>'desc'])
 				->limit(1)
 				->first();
 
@@ -2361,6 +2387,7 @@ class InstitutionsController extends AppController
 					'modified' => 'institution_committees.modified',
 				])
 				->where([$institutionCommittees->aliasField('institution_id') => $institutionId])
+                ->order(['institution_committees.modified'=>'desc'])
 				->limit(1)
 				->first();
 
