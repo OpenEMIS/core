@@ -570,7 +570,7 @@ class ProfilesTable extends ControllerActionTable
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
         $files = $this->InstitutionReportCards->find()
-            ->contain(['ReportCards'])
+            ->contain(['ProfileTemplates'])
             ->where([
                 $this->InstitutionReportCards->aliasField('report_card_id') => $params['report_card_id'],
                 $this->InstitutionReportCards->aliasField('status IN ') => $statusArray,
@@ -581,7 +581,7 @@ class ProfilesTable extends ControllerActionTable
 
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
-            $zipName = 'ReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $zipName = 'InstitutionReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
 
             $zip = new ZipArchive;
