@@ -130,9 +130,9 @@ class DashboardController extends AppController
 					'modified' => 'security_users.modified',
 				])
 				->where([$securityUsers->aliasField('id') => $userId])
+                ->order(['security_users.modified'=>'desc'])
 				->limit(1)
 				->first();
-				;
 		
 		
 		$data[0]['feature'] = 'Overview';
@@ -152,6 +152,7 @@ class DashboardController extends AppController
 					'modified' => 'user_demographics.modified',
 				])
 				->where([$userDemographics->aliasField('security_user_id') => $userId])
+                ->order(['user_demographics.modified'=>'desc'])
 				->limit(1)
 				->first();
 				;
@@ -172,6 +173,7 @@ class DashboardController extends AppController
 					'modified' => 'user_identities.modified',
 				])
 				->where([$userIdentities->aliasField('security_user_id') => $userId])
+                ->order(['user_identities.modified'=>'desc'])
 				->limit(1)
 				->first();
 				;
@@ -192,6 +194,7 @@ class DashboardController extends AppController
 					'modified' => 'user_nationalities.modified',
 				])
 				->where([$userNationalities->aliasField('security_user_id') => $userId])
+                ->order(['user_nationalities.modified'=>'desc'])
 				->limit(1)
 				->first();
 		$data[3]['feature'] = 'Nationalities';
@@ -211,6 +214,7 @@ class DashboardController extends AppController
 					'modified' => 'user_contacts.modified',
 				])
 				->where([$userContacts->aliasField('security_user_id') => $userId])
+                ->order(['user_contacts.modified'=>'desc'])
 				->limit(1)
 				->first();
 		
@@ -231,6 +235,7 @@ class DashboardController extends AppController
 					'modified' => 'user_languages.modified',
 				])
 				->where([$userLanguages->aliasField('security_user_id') => $userId])
+                ->order(['user_languages.modified'=>'desc'])
 				->limit(1)
 				->first();
 		$data[5]['feature'] = 'Languages';
