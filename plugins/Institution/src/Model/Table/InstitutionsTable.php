@@ -397,7 +397,7 @@ class InstitutionsTable extends ControllerActionTable
                 ]);
             }
         }
-
+        
         return $name;
     }
 
@@ -537,9 +537,12 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('area_administrative_section', ['type' => 'section', 'title' => $areaAdministrativesLabel]);
         $this->field('contact_section', ['type' => 'section', 'title' => __('Contact'), 'after' => $field]);
         $this->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => 'website', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-        $this->field('map_section', ['type' => 'section', 'title' => __('Map'), 'visible' => ['view'=>true]]);
-        $this->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
-
+        //$this->field('map_section', ['type' => 'section', 'title' => __('Map'), 'visible' => ['view'=>true]]);
+        //$this->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
+        //pocor-5669
+        $this->field('longitude', ['visible' => ['view' => false]]);
+        $this->field('latitude', ['visible' => ['view' => false]]);
+        //pocor-5669
         if (strtolower($this->action) != 'index') {
             $this->Navigation->addCrumb($this->getHeader($this->action));
         }
