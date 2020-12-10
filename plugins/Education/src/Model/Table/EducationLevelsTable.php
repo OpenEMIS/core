@@ -42,7 +42,14 @@ class EducationLevelsTable extends ControllerActionTable
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		list($systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
+		// Academic period filter
+		$EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $academicPeriodOptions = $this->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationSystems->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+
+		list($systemOptions, $selectedSystem) = array_values($this->getSelectOptions($selectedAcademicPeriod));
 		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('systemOptions', 'selectedSystem'));
 		$query->where([$this->aliasField('education_system_id') => $selectedSystem])
@@ -79,13 +86,14 @@ class EducationLevelsTable extends ControllerActionTable
 			->order(['EducationSystems.order' => 'ASC', $this->aliasField('order') => 'ASC']);
 	}
 
-	public function getSelectOptions()
+	public function getSelectOptions($selectedAcademicPeriod)
 	{
 		//Return all required options and their key
 		$systemOptions = $this->EducationSystems
 			->find('list')
 			->find('visible')
 			->find('order')
+			->where([$this->EducationSystems->aliasField('academic_period_id') => $selectedAcademicPeriod])
 			->toArray();
 		$selectedSystem = !is_null($this->request->query('system')) ? $this->request->query('system') : key($systemOptions);
 
