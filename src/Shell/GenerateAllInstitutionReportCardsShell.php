@@ -51,7 +51,7 @@ class GenerateAllInstitutionReportCardsShell extends Shell
                 $excelParams = new ArrayObject([]);
                 $excelParams['className'] = 'CustomExcel.InstitutionReportCards';
                 $excelParams['requestQuery'] = $recordToProcess;
-				//echo '<pre>';print_r($excelParams);die;
+				
                 try {
                     $this->InstitutionReportCards->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {

@@ -101,7 +101,7 @@ class InstitutionReportCardsTable extends AppTable
         $filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
         $status = $InstitutionsReportCards::GENERATED;
-		//echo '<pre>';print_r($fileContent);die;
+		
         // save file
         $InstitutionsReportCards->updateAll([
             'status' => $status,
