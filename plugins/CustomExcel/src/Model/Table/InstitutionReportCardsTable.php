@@ -16,11 +16,11 @@ class InstitutionReportCardsTable extends AppTable
 
     public function initialize(array $config)
     {
-        $this->table('institution_class_students');
+        $this->table('institutions');
         parent::initialize($config);
 
         $this->addBehavior('CustomExcel.ExcelReport', [
-            'templateTable' => 'ReportCard.InstitutionReportCards',
+            'templateTable' => 'ProfileTemplate.ProfileTemplates',
             'templateTableKey' => 'report_card_id',
             'format' => $this->fileType,
             'download' => false,
@@ -61,16 +61,49 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
     {
-        $StudentsReportCards = TableRegistry::get('Institution.InstitutionReportCards');
-
+        $InstitutionsReportCards = TableRegistry::get('Institution.InstitutionReportCards');
+		//echo '<pre>';print_r($extra);die;
+		$institutionReportCardData = $InstitutionsReportCards
+            ->find()
+            ->select([
+                $InstitutionsReportCards->aliasField('academic_period_id'),
+                $InstitutionsReportCards->aliasField('institution_id'),
+				$InstitutionsReportCards->aliasField('report_card_id')
+            ])
+            ->contain([
+                'AcademicPeriods' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+				'Institutions' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'ProfileTemplates' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ]
+            ])
+            ->where([
+                $InstitutionsReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
+                $InstitutionsReportCards->aliasField('institution_id') => $params['institution_id'],
+                $InstitutionsReportCards->aliasField('report_card_id') => $params['report_card_id'],
+            ])
+            ->first();
+			
         // set filename
-        $fileName = 'test' . '.' . $this->fileType;
+        $fileName = $institutionReportCardData->academic_period->name . '_' . $institutionReportCardData->profile_template->code. '_' . $institutionReportCardData->institution->name . '.' . $this->fileType;
         $filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
-        $status = $StudentsReportCards::GENERATED;
-
+        $status = $InstitutionsReportCards::GENERATED;
+		//echo '<pre>';print_r($fileContent);die;
         // save file
-        $StudentsReportCards->updateAll([
+        $InstitutionsReportCards->updateAll([
             'status' => $status,
             'completed_on' => date('Y-m-d H:i:s'),
             'file_name' => $fileName,

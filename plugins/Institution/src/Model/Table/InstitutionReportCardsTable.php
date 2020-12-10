@@ -20,7 +20,7 @@ class InstitutionReportCardsTable extends ControllerActionTable
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('ReportCards', ['className' => 'ReportCard.ReportCards']);
+        $this->belongsTo('ProfileTemplates', ['className' => 'ProfileTemplate.ProfileTemplates', 'foreignKey' => 'report_card_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
