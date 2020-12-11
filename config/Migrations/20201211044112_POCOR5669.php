@@ -160,7 +160,7 @@ class POCOR5669 extends AbstractMigration
     public function down()
     {
         $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 45');
-        $this->execute('DELETE FROM security_functions WHERE name = Map');
+        $this->execute('DELETE FROM security_functions WHERE name = Map AND controller = Institutions');
         $this->execute('DELETE FROM config_items WHERE type = Coordinates');
         $this->execute('DELETE FROM config_item_options WHERE option_type = configitems_type_value');
     }
