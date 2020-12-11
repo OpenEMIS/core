@@ -56,7 +56,7 @@ class EducationLevelsTable extends ControllerActionTable
 		$query->where([$this->aliasField('education_system_id') => $selectedSystem,
 						$educationSystems->aliasField('academic_period_id') => $selectedAcademicPeriod])
                         ->order([$this->aliasField('order')]);
-
+         //echo "<pre>";print_r($query);die();
 		$sortList = ['name', 'EducationLevelIsced.name', 'EducationSystems.name'];
 		if (array_key_exists('sortWhitelist', $extra['options'])) {
 			$sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
