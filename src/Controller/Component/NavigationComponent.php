@@ -447,6 +447,12 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Institutions.edit'],
                 'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
+            'Institutions.InstitutionMaps.view' => [
+                    'title' => 'Map',
+                    'parent' => 'Institution.General',
+                    'selected' => ['Institutions.InstitutionMaps.view', 'Institutions.InstitutionMaps.edit'],
+                    'params' => ['plugin' => 'Institution', 0 => $institutionId]
+            ],
 
             'InstitutionCalendars.index' => [
                 'title' => 'Calendar',
@@ -593,7 +599,7 @@ class NavigationComponent extends Component
             'Institutions.StudentAttendances.index' => [
                 'title' => 'Students',
                 'parent' => 'Institution.Attendance',
-                'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences', 'Institutions.ImportStudentAttendances'],
+                'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences', 'Institutions.ImportStudentAttendances' , 'Institutions.StudentArchive'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -647,7 +653,7 @@ class NavigationComponent extends Component
             'Institutions.Assessments.index' => [
                 'title' => 'Assessments',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.Assessments', 'Institutions.Results'],
+                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive'],
                 'params' => ['plugin' => 'Institution'],
             ],
 
