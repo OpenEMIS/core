@@ -1,6 +1,5 @@
 <?php
 use Migrations\AbstractMigration;
-use Cake\I18n\Time;
 
 class POCOR5669 extends AbstractMigration
 {
@@ -143,8 +142,8 @@ class POCOR5669 extends AbstractMigration
                 'module' => 'Institutions',
                 'category' => 'General',
                 'parent_id' => 8,
-                '_view' => 'view',
-                '_edit' => 'edit',
+                '_view' => 'InstitutionMaps.index|InstitutionMaps.view',
+                '_edit' => 'InstitutionMaps.edit',
                 'order' => 46,
                 'created_user_id' => 1,
                 'created' =>date('Y-m-d H:i:s')
