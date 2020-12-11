@@ -110,7 +110,7 @@ class ProfilesTable extends ControllerActionTable
             }
 
             // Generate button, all statuses
-            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
+            if ($this->AccessControl->check(['Reports', 'Profiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->ReportCards
@@ -136,7 +136,7 @@ class ProfilesTable extends ControllerActionTable
                             'url' => $generateUrl
                             ];
                 } else {
-                    $indexAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
+                    $indexAttr['title'] = $this->getMessage('Profiles.date_closed');
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
                             'attr' => $indexAttr,
@@ -146,7 +146,7 @@ class ProfilesTable extends ControllerActionTable
             }
 
             // Publish button, status must be generated
-            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'publish']) && $entity->has('report_card_status') 
+            if ($this->AccessControl->check(['Reports', 'Profiles', 'publish']) && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::GENERATED 
                          || $entity->report_card_status == '12' 
                        )
@@ -160,7 +160,7 @@ class ProfilesTable extends ControllerActionTable
             }
 
             // Unpublish button, status must be published
-            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'unpublish']) 
+            if ($this->AccessControl->check(['Reports', 'Profiles', 'unpublish']) 
                     && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::PUBLISHED 
                           || $entity->report_card_status == '16'
