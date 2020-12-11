@@ -13,10 +13,10 @@ class LatLongBehavior extends Behavior
     const EXCLUDED = 2;
 
     public function LatLongValidation()
-    {   
+    {    
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $LatLongPermission = $ConfigItems->value("latitude_longitude");
-
+        
         if ($LatLongPermission == self::MANDATORY) {
             $validator = new Validator();
             return $validator

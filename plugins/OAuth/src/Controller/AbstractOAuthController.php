@@ -106,21 +106,29 @@ abstract class AbstractOAuthController extends Controller
                 $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
                 $apiSecuritiesData = $apiSecurities->find('all')
                 ->select([
-                    'ApiSecuritiesScopes.view','ApiSecuritiesScopes.edit','ApiSecuritiesScopes.execute'
+                    'ApiSecurities.id','ApiSecurities.name','ApiSecurities.execute'
                 ])
-                ->innerJoin(
-                    [$apiSecuritiesScopes->alias() => $apiSecuritiesScopes->table()],
-                    [
-                        $apiSecuritiesScopes->aliasField('api_security_id = ') . $apiSecurities->aliasField('id')
-                    ]
-                )
+                ->where([
+                    'ApiSecurities.name' => 'User Authentication',
+                    'ApiSecurities.model' => 'User.Users'
+                ])
                 ->first();
-                if($apiSecuritiesData["ApiSecuritiesScopes"]["execute"] == 0){
+                $apiSecuritiesScopesData = $apiSecuritiesScopes->find('all')
+                ->select([
+                    'ApiSecuritiesScopes.execute'
+                ])
+                ->where([
+                    'ApiSecuritiesScopes.api_security_id' => $apiSecuritiesData->id
+                ])
+                ->first();
+                if($apiSecuritiesScopesData->execute == 0){
                     $authenticationType = $authentications[0]['authentication_type'];
                     $code = $authentications[0]['code'];
                     $response['message'] = "Api is disabled";
+                    $dataArr = array("data"=>$response);
                 } else if (!$enableLocalLogin && count($authentications) == 1) {
                     $response['message'] = "Api is disabled";
+                    $dataArr = array("data"=>$response);
                 } elseif (is_null($code)) {
                     $authenticationType = 'Local';
                     $postData = $this->request->data;
