@@ -19,7 +19,7 @@ class InstitutionReportCardsTable extends AppTable
         $this->table('institutions');
         parent::initialize($config);
 
-        $this->addBehavior('CustomExcel.ExcelReport', [
+        $this->addBehavior('CustomExcel.InstitutionExcelReport', [
             'templateTable' => 'ProfileTemplate.ProfileTemplates',
             'templateTableKey' => 'report_card_id',
             'format' => $this->fileType,
