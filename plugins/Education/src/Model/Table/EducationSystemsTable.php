@@ -85,4 +85,16 @@ class EducationSystemsTable extends ControllerActionTable
         }
         return $attr;
     }
+
+    public function getEducationSystemOptions($selectedAcademicPeriod)
+    {
+        $educationSystem = $this
+            ->find('list')
+            ->find('visible')
+            ->find('order')
+            ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod])
+            ->toArray();
+
+        return $educationSystem;
+    }
 }
