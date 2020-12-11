@@ -1,3 +1,10 @@
+### [3.60.0] - 2020-12-11
+- Implemented: Devlop a function to show percentage of user profile data completion
+- Implemented: Develop Data Archiving feature
+- Implemented: Enhancement of the OpenEMIS mapping features
+- Bug Fixed: Reports > Institution > Add > WASH Report : Changes in WASH report page
+- Bug Fixed: Administrations > System Setup > APIs : Unable to change User Authentication API security permission
+
 ### [3.59.1] - 2020-12-05
 - Implemented: Quick Search and Advanced Search option for Institution > Students List > Withdrawn
 - Implemented: Enable Guardians to access their pupil's records
