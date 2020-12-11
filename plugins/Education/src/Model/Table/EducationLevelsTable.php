@@ -43,16 +43,18 @@ class EducationLevelsTable extends ControllerActionTable
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
 		// Academic period filter
-		$EducationSystems = TableRegistry::get('Education.EducationSystems');
+		$educationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        $where[$educationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
-		list($systemOptions, $selectedSystem) = array_values($this->getSelectOptions($selectedAcademicPeriod));
+
+		list($systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
 		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('systemOptions', 'selectedSystem'));
-		$query->where([$this->aliasField('education_system_id') => $selectedSystem])
+		$query->where([$this->aliasField('education_system_id') => $selectedSystem,
+						$educationSystems->aliasField('academic_period_id') => $selectedAcademicPeriod])
                         ->order([$this->aliasField('order')]);
 
 		$sortList = ['name', 'EducationLevelIsced.name', 'EducationSystems.name'];
@@ -86,14 +88,13 @@ class EducationLevelsTable extends ControllerActionTable
 			->order(['EducationSystems.order' => 'ASC', $this->aliasField('order') => 'ASC']);
 	}
 
-	public function getSelectOptions($selectedAcademicPeriod)
+	public function getSelectOptions()
 	{
 		//Return all required options and their key
 		$systemOptions = $this->EducationSystems
 			->find('list')
 			->find('visible')
 			->find('order')
-			->where([$this->EducationSystems->aliasField('academic_period_id') => $selectedAcademicPeriod])
 			->toArray();
 		$selectedSystem = !is_null($this->request->query('system')) ? $this->request->query('system') : key($systemOptions);
 
@@ -136,5 +137,32 @@ class EducationLevelsTable extends ControllerActionTable
         }
 
         return $returnList;
+    }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $attr['options'] = $this->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
+            $attr['onChangeReload'] = true;
+        } else if ($action == 'edit') {
+            if (isset($attr['entity'])) {
+                $attr['attr']['value'] = $attr['entity']->_matchingData['AcademicPeriods']->name;
+            }
+            $attr['type'] = 'readonly';
+        }
+        return $attr;
+    }
+
+     public function getAcademicPeriodOptions($querystringPeriod)
+    {
+        $periodOptions = $this->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
+
+        if ($querystringPeriod) {
+            $selectedPeriod = $querystringPeriod;
+        } else {
+            $selectedPeriod = $this->EducationSystems->AcademicPeriods->getCurrent();
+        }
+
+        return compact('periodOptions', 'selectedPeriod');
     }
 }
