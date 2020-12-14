@@ -99,7 +99,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 'rule' => ['validatePreferredNationality'],
                 'provider' => 'table'
             ]);
-
+            // task POCOR-5668 starts
             $isFieldsShow = $this->showIdentityTypeAndNumber();
             if($isFieldsShow > 0){
                 $validator
@@ -113,6 +113,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                         ]
                     ]);
             }
+            // task POCOR-5668 ends
         return $validator;
 	}
 
@@ -163,7 +164,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 $this->dispatchEventToModels('Model.UserNationalities.onChange', [$entity], $this, $listeners);
             }
         }
-
+        // task POCOR-5668 starts
         if($this->request->params['pass'][0] == 'add'){ 
             if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
             {
@@ -223,6 +224,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 }
             }
         }
+        // task POCOR-5668 ends
     }
 
     public function beforeDelete(Event $event, Entity $entity)
@@ -268,7 +270,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
     }
 
-
+    // task POCOR-5668 starts
     public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -475,7 +477,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             }
         }
     }
-
+    // task POCOR-5668 ends
     public function onGetPreferred(Event $event, Entity $entity) {
         $preferredOptions = $this->getSelectOptions('general.yesno');
         return $preferredOptions[$entity->preferred];
@@ -487,6 +489,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $attr;
     }
 
+    // task POCOR-5668 starts
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {   
         $nationalityId = '';
@@ -624,6 +627,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 if(!empty($resultArr)){
                     $countVal = 0;
                     foreach ($resultArr as $arr) {
+                        //you can remove $arr->openemis_no == $userData->openemis_no this condition while testing
                         if($arr->openemis_no == $userData->openemis_no && $arr->identity_number == trim($this->request->query('identity_number'))){
                             $countVal++;
                         }
@@ -757,4 +761,5 @@ class UserNationalitiesTable extends ControllerActionTable {
             return 0;   
         }
     }
+    // task POCOR-5668 ends
 }
