@@ -477,6 +477,13 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.Attachments'],
                     'params' => ['plugin' => 'Institution']
                 ],
+				
+                'Institutions.Profiles.index' => [
+                    'title' => 'Profiles',
+                    'parent' => 'Institution.General',
+                    'selected' => ['Institutions.Profiles'],
+                    'params' => ['plugin' => 'Institution']
+                ],
 
             'Institution.Academic' => [
                 'title' => 'Academic',
