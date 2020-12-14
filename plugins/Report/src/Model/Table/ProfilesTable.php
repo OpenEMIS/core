@@ -27,12 +27,30 @@ class ProfilesTable extends ControllerActionTable
 
     CONST MAX_PROCESSES = 2;
 
+	public $fileTypes = [
+        'jpeg'  => 'image/jpeg',
+        'jpg'   => 'image/jpeg',
+        'gif'   => 'image/gif',
+        'png'   => 'image/png',
+        // 'jpeg'=>'image/pjpeg',
+        // 'jpeg'=>'image/x-png'
+        'rtf'   => 'text/rtf',
+        'txt'   => 'text/plain',
+        'csv'   => 'text/csv',
+        'pdf'   => 'application/pdf',
+        'ppt'   => 'application/vnd.ms-powerpoint',
+        'pptx'  => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'doc'   => 'application/msword',
+        'docx'  => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls'   => 'application/vnd.ms-excel',
+        'xlsx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'zip'   => 'application/zip'
+    ];
+
     public function initialize(array $config)
     {
         $this->table('institutions');
         parent::initialize($config);
-        //$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-        //$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		
 		$this->toggle('add', false);
         $this->toggle('edit', false);
@@ -56,6 +74,8 @@ class ProfilesTable extends ControllerActionTable
         $events['ControllerAction.Model.generate'] = 'generate';
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
+        $events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
+        $events['ControllerAction.Model.downloadPDF'] = 'downloadPDF';
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
@@ -82,26 +102,14 @@ class ProfilesTable extends ControllerActionTable
             ];
 		
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['Institutions', 'InstitutionReportCards', 'download']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
-                $downloadUrl = [
-                    'plugin' => 'Institution',
-                    'controller' => 'Institutions',
-                    'action' => 'InstitutionReportCards',
-                    '0' => 'download',
-                    '1' => $this->paramsEncode($params)
-                ];
+            if ($this->AccessControl->check(['Reports', 'Profiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+                $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
                 $buttons['download'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
                     'attr' => $indexAttr,
                     'url' => $downloadUrl
                 ];
-				$downloadPdfUrl = [
-                    'plugin' => 'Institution',
-                    'controller' => 'Institutions',
-                    'action' => 'InstitutionReportCards',
-                    '0' => 'downloadPdf',
-                    '1' => $this->paramsEncode($params)
-                ];
+				$downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
                 $buttons['downloadPdf'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
                     'attr' => $indexAttr,
@@ -215,9 +223,7 @@ class ProfilesTable extends ControllerActionTable
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-		
+    {		
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
       
         // Academic Periods filter
@@ -498,6 +504,68 @@ class ProfilesTable extends ControllerActionTable
         return $value;
     }
 
+	public function downloadExcel(Event $event, ArrayObject $extra)
+    {
+		$model = $this->InstitutionReportCards;
+        $ids = $this->getQueryString();
+		
+        if ($model->exists($ids)) {
+            $data = $model->get($ids);
+            $fileName = $data->file_name;
+            $pathInfo = pathinfo($fileName);
+            $file = $this->getFile($data->file_content);
+            $fileType = 'image/jpg';
+            if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+                $fileType = $this->fileTypes[$pathInfo['extension']];
+            }
+
+            // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: " . $fileType);
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+
+            echo $file;
+        }
+        exit();
+    }
+	
+	public function downloadPDF(Event $event, ArrayObject $extra)
+    {
+		$model = $this->InstitutionReportCards;
+        $ids = $this->getQueryString();
+		
+        if ($model->exists($ids)) {
+            $data = $model->get($ids);
+            $fileName = $data->file_name;
+            $fileNameData = explode(".",$fileName);
+			$fileName = $fileNameData[0].'.pdf';
+			$pathInfo['extension'] = 'pdf';
+            $file = $this->getFile($data->file_content_pdf);
+            $fileType = 'image/jpg';
+            if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+                $fileType = $this->fileTypes[$pathInfo['extension']];
+            }
+
+            // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: " . $fileType);
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+
+            echo $file;
+        }
+        exit();
+    }
+	
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
