@@ -1,4 +1,4 @@
-<?php if (!empty($systemOptions) || !empty($levelOptions) || !empty($cycleOptions) || !empty($programmeOptions) || !empty($gradeOptions) || !empty($setupOptions)) : ?>
+<?php if (!empty($academicPeriodOptions) || !empty($systemOptions) || !empty($levelOptions) || !empty($cycleOptions) || !empty($programmeOptions) || !empty($gradeOptions) || !empty($setupOptions)) : ?>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -10,6 +10,17 @@
 				$template = $this->ControllerAction->getFormTemplate();
 				$this->Form->templates($template);
 
+				if (!empty($academicPeriodOptions)) {
+                    echo $this->Form->input('academic_period', array(
+                        'class' => 'form-control',
+                        'label' => false,
+                        'options' => $academicPeriodOptions,
+                        'default' => $selectedAcademicPeriod,
+                        'url' => $baseUrl,
+                        'data-named-key' => 'academic_period_id'
+                    ));
+                }
+
 				if (!empty($systemOptions)) {
 					echo $this->Form->input('systems', array(
 						'class' => 'form-control',
@@ -17,7 +28,8 @@
 						'options' => $systemOptions,
 						'default' => $selectedSystem,
 						'url' => $baseUrl,
-						'data-named-key' => 'system'
+						'data-named-key' => 'system',
+						'data-named-group' => 'academic_period_id'
 					));
 				}
 

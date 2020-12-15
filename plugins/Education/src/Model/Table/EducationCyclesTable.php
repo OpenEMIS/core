@@ -54,9 +54,19 @@ class EducationCyclesTable extends ControllerActionTable
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
-                $this->controller->set(compact('levelOptions', 'selectedLevel'));
-		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
+		// Academic period filter
+	    $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $academicPeriodOptions = $this->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+
+        //level filter
+        $levelOptions = $this->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
+        $levelOptions = ['0' => '-- '.__('Select Level').' --'] + $levelOptions;
+        $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+        $this->controller->set(compact('levelOptions', 'selectedLevel'));
+        $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
 		$query->where([$this->aliasField('education_level_id') => $selectedLevel])
                         ->order([$this->aliasField('order') => 'ASC']); 
 		
@@ -127,8 +137,14 @@ class EducationCyclesTable extends ControllerActionTable
 
 	public function getSelectOptions()
 	{
+		// Academic period filter
+	    $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $academicPeriodOptions = $this->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+
 		//Return all required options and their key
-		$levelOptions = $this->EducationLevels->getLevelOptions();
+		$levelOptions = $this->EducationLevels->getLevelOptions($selectedAcademicPeriod);
 		$selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
 
 		return compact('levelOptions', 'selectedLevel');
