@@ -27,7 +27,12 @@ class InstitutionReportCardsTable extends AppTable
             'wrapText' => true,
             'lockSheets' => true,
             'variables' => [
-                'InstitutionReportCards'
+                'Profiles',
+                'InstitutionReportCards',
+				'Institutions',
+				'InstitutionShifts',
+				'Principal',
+                'DeputyPrincipal',
             ]
         ]);
     }
@@ -38,7 +43,13 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
         $events['ExcelTemplates.Model.onExcelTemplateAfterGenerate'] = 'onExcelTemplateAfterGenerate';
         $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
-        return $events;
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseProfiles'] = 'onExcelTemplateInitialiseProfiles';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionShifts'] = 'onExcelTemplateInitialiseInstitutionShifts';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialisePrincipal'] = 'onExcelTemplateInitialisePrincipal';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseDeputyPrincipal'] = 'onExcelTemplateInitialiseDeputyPrincipal';
+		
+		return $events;
     }
 
     public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
@@ -134,5 +145,131 @@ class InstitutionReportCardsTable extends AppTable
         return $controller->redirect($url);
     }
     
+	public function onExcelTemplateInitialiseProfiles(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('report_card_id', $params)) {
+            $ProfileTemplates = TableRegistry::get('ProfileTemplate.ProfileTemplates');
+            $entity = $ProfileTemplates->get($params['report_card_id'], ['contain' => ['AcademicPeriods']]);
+
+            $extra['report_card_start_date'] = $entity->start_date;
+            $extra['report_card_end_date'] = $entity->end_date;
+
+            return $entity->toArray();
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $entity = $Institutions->get($params['institution_id'], ['contain' => ['Providers', 'Areas', 'AreaAdministratives', 'Types']]);
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInstitutionShifts(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+
+            $entity = $InstitutionShifts
+                ->find()
+                ->where([
+                    $InstitutionShifts->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionShifts->aliasField('academic_period_id') => $params['academic_period_id'],
+                ])
+                ->count();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialisePrincipal(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $Staff = TableRegistry::get('Institution.Staff');
+            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+            $principalRoleId = $SecurityRoles->getPrincipalRoleId();
+
+            $entity = $Staff
+                ->find()
+                ->select([
+                    $Staff->aliasField('id'),
+                    $Staff->aliasField('FTE'),
+                    $Staff->aliasField('start_date'),
+                    $Staff->aliasField('start_year'),
+                    $Staff->aliasField('end_date'),
+                    $Staff->aliasField('end_year'),
+                    $Staff->aliasField('staff_id'),
+                    $Staff->aliasField('security_group_user_id')
+                ])
+                ->innerJoinWith('SecurityGroupUsers')
+                ->contain([
+                    'Users' => [
+                        'fields' => [
+                            'openemis_no',
+                            'first_name',
+                            'middle_name',
+                            'third_name',
+                            'last_name',
+                            'preferred_name',
+                            'email',
+                            'address',
+                            'postal_code'
+                        ]
+                    ]
+                ])
+                ->where([
+                    $Staff->aliasField('institution_id') => $params['institution_id'],
+                    'SecurityGroupUsers.security_role_id' => $principalRoleId
+                ])
+                ->first();
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseDeputyPrincipal(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $Staff = TableRegistry::get('Institution.Staff');
+            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+            $deputyPrincipalRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
+
+            $entity = $Staff
+                ->find()
+                ->select([
+                    $Staff->aliasField('id'),
+                    $Staff->aliasField('FTE'),
+                    $Staff->aliasField('start_date'),
+                    $Staff->aliasField('start_year'),
+                    $Staff->aliasField('end_date'),
+                    $Staff->aliasField('end_year'),
+                    $Staff->aliasField('staff_id'),
+                    $Staff->aliasField('security_group_user_id')
+                ])
+                ->innerJoinWith('SecurityGroupUsers')
+                ->contain([
+                    'Users' => [
+                        'fields' => [
+                            'openemis_no',
+                            'first_name',
+                            'middle_name',
+                            'third_name',
+                            'last_name',
+                            'preferred_name',
+                            'email',
+                            'address',
+                            'postal_code'
+                        ]
+                    ]
+                ])
+                ->where([
+                    $Staff->aliasField('institution_id') => $params['institution_id'],
+                    'SecurityGroupUsers.security_role_id' => $deputyPrincipalRoleId
+                ])
+                ->first();
+
+            return $entity;
+        }
+    }
 
 }
