@@ -18,6 +18,26 @@ class ProfilesTable extends ControllerActionTable
     CONST IN_PROGRESS = 2;
     CONST GENERATED = 3;
     CONST PUBLISHED = 4;
+	
+	public $fileTypes = [
+        'jpeg'  => 'image/jpeg',
+        'jpg'   => 'image/jpeg',
+        'gif'   => 'image/gif',
+        'png'   => 'image/png',
+        // 'jpeg'=>'image/pjpeg',
+        // 'jpeg'=>'image/x-png'
+        'rtf'   => 'text/rtf',
+        'txt'   => 'text/plain',
+        'csv'   => 'text/csv',
+        'pdf'   => 'application/pdf',
+        'ppt'   => 'application/vnd.ms-powerpoint',
+        'pptx'  => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'doc'   => 'application/msword',
+        'docx'  => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls'   => 'application/vnd.ms-excel',
+        'xlsx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'zip'   => 'application/zip'
+    ];
 
     public function initialize(array $config)
     {
@@ -29,6 +49,15 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
 		
+		$this->InstitutionReportCards = TableRegistry::get('Institution.InstitutionReportCards');
+    }
+	
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
+        $events['ControllerAction.Model.downloadPDF'] = 'downloadPDF';
+        return $events;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -129,20 +158,99 @@ class ProfilesTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
-        $downloadUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => $this->alias,
-            'institutionId' => $this->paramsEncode(['id' => $entity->institution_id]),
-            '0' => 'download',
-            '1' => $this->paramsEncode(['id' => $entity->id])
-        ];
-        $buttons['download'] = [
-            'label' => '<i class="fa kd-download"></i>'.__('Download'),
-            'attr' => $indexAttr,
-            'url' => $downloadUrl
-        ];
+        //echo '<pre>';print_r($entity);die;
+		$params = [
+			'report_card_id' => $entity->report_card_id,
+			'institution_id' => $entity->institution_id,
+			'academic_period_id' => $entity->academic_period_id,
+		];
+			
+		$downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+		$buttons['download'] = [
+			'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+			'attr' => $indexAttr,
+			'url' => $downloadUrl
+		];
+		$downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
+		$buttons['downloadPdf'] = [
+			'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
+			'attr' => $indexAttr,
+			'url' => $downloadPdfUrl
+		];
 
         return $buttons;
     }
+	
+	public function downloadExcel(Event $event, ArrayObject $extra)
+    {
+		$model = $this->InstitutionReportCards;
+        $ids = $this->getQueryString();
+		
+        if ($model->exists($ids)) {
+            $data = $model->get($ids);
+            $fileName = $data->file_name;
+            $pathInfo = pathinfo($fileName);
+            $file = $this->getFile($data->file_content);
+            $fileType = 'image/jpg';
+            if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+                $fileType = $this->fileTypes[$pathInfo['extension']];
+            }
+
+            // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: " . $fileType);
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+
+            echo $file;
+        }
+        exit();
+    }
+	
+	public function downloadPDF(Event $event, ArrayObject $extra)
+    {
+		$model = $this->InstitutionReportCards;
+        $ids = $this->getQueryString();
+		
+        if ($model->exists($ids)) {
+            $data = $model->get($ids);
+            $fileName = $data->file_name;
+            $fileNameData = explode(".",$fileName);
+			$fileName = $fileNameData[0].'.pdf';
+			$pathInfo['extension'] = 'pdf';
+            $file = $this->getFile($data->file_content_pdf);
+            $fileType = 'image/jpg';
+            if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+                $fileType = $this->fileTypes[$pathInfo['extension']];
+            }
+
+            // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: " . $fileType);
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+
+            echo $file;
+        }
+        exit();
+    }
+	
+	private function getFile($phpResourceFile) {
+        $file = '';
+        while (!feof($phpResourceFile)) {
+            $file .= fread($phpResourceFile, 8192);
+        }
+        fclose($phpResourceFile);
+
+        return $file;
+    }
+	
 }
