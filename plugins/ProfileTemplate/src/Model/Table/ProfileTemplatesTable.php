@@ -231,7 +231,7 @@ class ProfileTemplatesTable extends ControllerActionTable
 
     public function downloadTemplate()
     {
-        $filename = 'report_card_template';
+        $filename = 'profile_template';
         $fileType = 'xlsx';
         $filepath = WWW_ROOT . 'export' . DS . 'customexcel'. DS . 'default_templates'. DS . $filename . '.' . $fileType;
 
