@@ -23,7 +23,7 @@ class GenerateAllInstitutionReportCardsShell extends Shell
     public function main()
     {
         if (!empty($this->args[0]) && !empty($this->args[1])) {
-            $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllReportCards', getmypid(), $this->args[0], '', $this->args[1]);
+            $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllInstitutionReportCards', getmypid(), $this->args[0], '', $this->args[1]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
 
             $recordToProcess = $this->InstitutionReportCardProcesses->find()
@@ -71,8 +71,8 @@ class GenerateAllInstitutionReportCardsShell extends Shell
 
     private function recursiveCallToMyself($args)
     {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards '.$args[0] . " " . $args[1];
-        $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
+        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllInstitutionReportCards '.$args[0] . " " . $args[1];
+        $logs = ROOT . DS . 'logs' . DS . 'GenerateAllInstitutionReportCards.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
