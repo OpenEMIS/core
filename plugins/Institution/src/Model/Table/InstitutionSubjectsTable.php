@@ -787,7 +787,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $this->aliasField('id') => $entity->id
             ]);
 
-            $studentData = $teacherData = $className = [];
+            $studentData = $teacherData = $className = $classId = [];
 
             if(isset($bodyData)) {
                 foreach ($bodyData as $key => $value) {
@@ -796,8 +796,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $institutionId = $value->institution->id;
                     $institutionName = $value->institution->name;
                     $institutionCode = $value->institution->code;
+                    $edSubId = $value->education_subject->id;
                     $edSubCode = $value->education_subject->code;
                     $edSubName = $value->education_subject->name;
+                    $educationGradeId =  $value->education_grade->id;
                     $educationGradeCode =  $value->education_grade->code;
                     $educationGradeName =  $value->education_grade->name;
                     $programmeCode = $value->education_grade->education_programme->code;
@@ -818,6 +820,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     if(!empty($value->classes)) {
                         foreach ($value->classes as $key => $class) {
                             $className[] = $class->name;
+                            $classId[] = $class->id;
                         }
                     }
                 }
@@ -830,13 +833,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'education_cycles_name' => !empty($edCycleName) ? $edCycleName : NULL,
                 'education_programmes_code' => !empty($programmeCode) ? $programmeCode : NULL,
                 'education_programmes_name' => !empty($programmeName) ? $programmeName : NULL,
+                'education_grades_id' => !empty($educationGradeId) ? $educationGradeId : NULL,
                 'education_grades_code' => !empty($educationGradeCode) ? $educationGradeCode : NULL,
                 'education_grades_name' => !empty($educationGradeName) ? $educationGradeName : NULL,
+                'education_subjects_id' => !empty($edSubId) ? $edSubId : NULL,
                 'education_subjects_code' => !empty($edSubCode) ? $edSubCode : NULL,
                 'education_subjects_name' => !empty($edSubName) ? $edSubName : NULL,
                 'institutions_id' =>  !empty($institutionId) ? $institutionId : NULL,
                 'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                'institution_classes_id' => !empty($classId) ? $classId : NULL,
                 'institution_classes_name' => !empty($className) ? $className : NULL,
                 'academic_periods_code' => !empty($academic_period_code) ? $academic_period_code : NULL,
                 'academic_periods_name' => !empty($academic_period_name) ? $academic_period_name : NULL,
@@ -871,7 +877,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         $this->aliasField('id') => $entity->id
                     ]);
 
-            $studentData = $teacherData = $className = [];
+            $studentData = $teacherData = $className = $classId = [];
 
             if(isset($bodyData)) {
                 foreach ($bodyData as $key => $value) {
@@ -880,8 +886,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $institutionId = $value->institution->id;
                     $institutionName = $value->institution->name;
                     $institutionCode = $value->institution->code;
+                    $edSubId = $value->education_subject->id;
                     $edSubCode = $value->education_subject->code;
                     $edSubName = $value->education_subject->name;
+                    $educationGradeId =  $value->education_grade->id;
                     $educationGradeCode =  $value->education_grade->code;
                     $educationGradeName =  $value->education_grade->name;
                     $programmeCode = $value->education_grade->education_programme->code;
@@ -902,6 +910,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     if(!empty($value->classes)) {
                             foreach ($value->classes as $key => $class) {
                                 $className[] = $class->name;
+                                $classId[]  =   $class->id;
                         }
                     }
                 }
@@ -914,13 +923,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'education_cycles_name' => !empty($edCycleName) ? $edCycleName : NULL,
                 'education_programmes_code' => !empty($programmeCode) ? $programmeCode : NULL,
                 'education_programmes_name' => !empty($programmeName) ? $programmeName : NULL,
+                'education_grades_id' => !empty($educationGradeId) ? $educationGradeId : NULL,
                 'education_grades_code' => !empty($educationGradeCode) ? $educationGradeCode : NULL,
                 'education_grades_name' => !empty($educationGradeName) ? $educationGradeName : NULL,
+                'education_subjects_id' => !empty($edSubId) ? $edSubId : NULL,
                 'education_subjects_code' => !empty($edSubCode) ? $edSubCode : NULL,
                 'education_subjects_name' => !empty($edSubName) ? $edSubName : NULL,
                 'institutions_id' =>  !empty($institutionId) ? $institutionId : NULL,
                 'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
                 'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                'institution_classes_id' => !empty($classId) ? $classId : NULL,
                 'institution_classes_name' => !empty($className) ? $className : NULL,
                 'academic_periods_code' => !empty($academic_period_code) ? $academic_period_code : NULL,
                 'academic_periods_name' => !empty($academic_period_name) ? $academic_period_name : NULL,
