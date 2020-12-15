@@ -26,6 +26,17 @@ class EducationSystemsTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
     }
 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
+    }
+
+    //getting name of academic period
     public function getAcademicPeriodOptions($querystringPeriod)
     {
         $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -39,33 +50,18 @@ class EducationSystemsTable extends ControllerActionTable
         return compact('periodOptions', 'selectedPeriod');
     }
 
+    //added academic filter on systme listing
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-    	// Academic period filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $query->where($where);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $this->setupFields($entity);
-    }
-
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        // send to ctp
-        $this->setupFields($entity);
-    }
-
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $query->contain(['AcademicPeriods']);
-    }
-
+    //updating type of academic period
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -86,15 +82,13 @@ class EducationSystemsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function getEducationSystemOptions($selectedAcademicPeriod)
+    public function getSystemOptions($selectedAcademicPeriod)
     {
-        $educationSystem = $this
+        $systemOptions = $this
             ->find('list')
-            ->find('visible')
-            ->find('order')
             ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod])
             ->toArray();
 
-        return $educationSystem;
+        return $systemOptions;
     }
 }
