@@ -2948,4 +2948,89 @@ class ValidationBehavior extends Behavior
         }
     }
 
+    //POCOR-5668 validation for external validation in fieldOption edit Nationalities
+    public static function check_external_validation($field)
+    {   
+        //$field is for external variable
+        if($field == 1){
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $type = $ConfigItems->value('external_data_source_type');
+            if($type == 'None'){
+                return false;
+            }
+        }
+        return true;
+    }  
+
+    public static function check_validate_number($field, array $globalData)
+    {   
+        //$field is for external variable
+        $nationalityTable = TableRegistry::get('Nationalities')
+                            ->find()
+                            ->where([
+                                'Nationalities.id' => $globalData['data']['nationality_id']
+                            ])
+                            ->first();
+        if($nationalityTable->external_validation == 1){
+            if($globalData['data']['id'] != '' && $globalData['data']['identity_type_id'] != '' && $globalData['data']['number'] != ''){
+                //edit nationality case
+                $IdentityTypes = TableRegistry::get('identity_types');
+                $UserIdentities = TableRegistry::get('UserIdentities');
+                $identityTypeData = $UserIdentities
+                                        ->find()
+                                        ->select([
+                                            $UserIdentities->aliasField('id'),
+                                            $UserIdentities->aliasField('identity_type_id'),
+                                            $IdentityTypes->aliasField('name'),
+                                            $UserIdentities->aliasField('number'),
+                                            $UserIdentities->aliasField('nationality_id'),
+                                        ])
+                                        ->leftJoin(
+                                            [$IdentityTypes->alias() => $IdentityTypes->table()], [
+                                                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+                                            ]
+                                        )
+                                        ->where([
+                                            'UserIdentities.identity_type_id' => $globalData['data']['identity_type_id'],
+                                            'UserIdentities.nationality_id' => $globalData['data']['nationality_id'],
+                                            'UserIdentities.security_user_id' => $globalData['data']['security_user_id']
+                                        ])
+                                        ->first();
+                if(!empty($identityTypeData)){
+                    if($identityTypeData->number == $globalData['data']['number']){
+                        return true;
+                    }else if($identityTypeData->number != $globalData['data']['number'] && $globalData['data']['validate_number'] == 1){
+                        return true;
+                    }
+                }
+                return false;
+            }else{
+                //add nationality                          
+                if($globalData['data']['validate_number'] == 0){
+                    return false;
+                }
+            }
+        }                    
+        return true;
+    }
+
+
+    public static function check_identity_type_id_validation($field)
+    {   
+        //$field is for external variable
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $arr = array('StudentIdentities', 'StaffIdentities','GuardianIdentities','OtherIdentities');
+        $conditions = [
+            'code IN ' => $arr,
+            'value' => 1,
+        ];
+        $count = $ConfigItems->find()
+            ->where($conditions)
+            ->count();
+        if($count > 0){
+            return true;
+        }
+        return false;
+    }
+    //POCOR-5668 ends
 }
