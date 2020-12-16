@@ -19,6 +19,14 @@ class UserCascadeBehavior extends Behavior {
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		$userId = $entity->id;
 		$this->cleanUserRecords($userId);
+
+        $body = [];
+        $body = [
+        	'security_user_id' => $userId 
+        ];
+        
+		$Webhooks = TableRegistry::get('Webhook.Webhooks');
+		$Webhooks->triggerShell('security_user_delete', ['username' => ''], $body);
 	}
 
 	// this function is to delete all records from user's related tables
