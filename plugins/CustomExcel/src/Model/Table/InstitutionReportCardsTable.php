@@ -33,6 +33,13 @@ class InstitutionReportCardsTable extends AppTable
 				'InstitutionShifts',
 				'Principal',
                 'DeputyPrincipal',
+                'InstitutionMaleStudents',
+                'InstitutionFemaleStudents',
+                'InstitutionTotalStudents',
+                'SpecialNeedMaleStudents',
+                'SpecialNeedFemaleStudents',
+                'SpecialNeedTotalStudents',
+                'InstitutionContactPersons',
             ]
         ]);
     }
@@ -45,9 +52,16 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseProfiles'] = 'onExcelTemplateInitialiseProfiles';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionContactPersons'] = 'onExcelTemplateInitialiseInstitutionContactPersons';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionShifts'] = 'onExcelTemplateInitialiseInstitutionShifts';
         $events['ExcelTemplates.Model.onExcelTemplateInitialisePrincipal'] = 'onExcelTemplateInitialisePrincipal';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseDeputyPrincipal'] = 'onExcelTemplateInitialiseDeputyPrincipal';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionMaleStudents'] = 'onExcelTemplateInitialiseInstitutionMaleStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionFemaleStudents'] = 'onExcelTemplateInitialiseInstitutionFemaleStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionTotalStudents'] = 'onExcelTemplateInitialiseInstitutionTotalStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseSpecialNeedMaleStudents'] = 'onExcelTemplateInitialiseSpecialNeedMaleStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseSpecialNeedFemaleStudents'] = 'onExcelTemplateInitialiseSpecialNeedFemaleStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseSpecialNeedTotalStudents'] = 'onExcelTemplateInitialiseSpecialNeedTotalStudents';
 		
 		return $events;
     }
@@ -73,7 +87,6 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
     {
         $InstitutionsReportCards = TableRegistry::get('Institution.InstitutionReportCards');
-		//echo '<pre>';print_r($extra);die;
 		$institutionReportCardData = $InstitutionsReportCards
             ->find()
             ->select([
@@ -162,7 +175,26 @@ class InstitutionReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params)) {
             $Institutions = TableRegistry::get('Institution.Institutions');
-            $entity = $Institutions->get($params['institution_id'], ['contain' => ['Providers', 'Areas', 'AreaAdministratives', 'Types']]);
+            $entity = $Institutions->get($params['institution_id'], ['contain' => ['Areas', 'AreaAdministratives', 'Types']]);
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInstitutionContactPersons(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionContactPersons = TableRegistry::get('Institution.InstitutionContactPersons');
+
+            $entity = $InstitutionContactPersons
+                ->find()
+				->select([
+                    $InstitutionContactPersons->aliasField('telephone'),
+                    $InstitutionContactPersons->aliasField('email')
+                ])
+                ->where([
+                    $InstitutionContactPersons->aliasField('institution_id') => $params['institution_id'],
+                ])
+                ->first();
             return $entity;
         }
     }
@@ -268,6 +300,125 @@ class InstitutionReportCardsTable extends AppTable
                 ])
                 ->first();
 
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInstitutionMaleStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $gender_id = 1; // male
+			$entity = $InstitutionStudents
+				->find()
+				->contain('Users')
+				->matching('StudentStatuses', function ($q) {
+					return $q->where(['StudentStatuses.code' => 'CURRENT']);
+				})
+				->where([$InstitutionStudents->Users->aliasField('gender_id') => $gender_id])
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->count()
+			;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInstitutionFemaleStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $gender_id = 2; // females
+			$entity = $InstitutionStudents
+				->find()
+				->contain('Users')
+				->matching('StudentStatuses', function ($q) {
+					return $q->where(['StudentStatuses.code' => 'CURRENT']);
+				})
+				->where([$InstitutionStudents->Users->aliasField('gender_id') => $gender_id])
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->count()
+			;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInstitutionTotalStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+			$entity = $InstitutionStudents
+				->find()
+				->contain('Users')
+				->matching('StudentStatuses', function ($q) {
+					return $q->where(['StudentStatuses.code' => 'CURRENT']);
+				})
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->count()
+			;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseSpecialNeedMaleStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $gender_id = 1; // male
+			$entity = $InstitutionStudents
+				->find()
+				->contain('Users')
+				->innerJoin(
+				['SpecailNeed' => 'user_special_needs_assessments'],
+				[
+					'SpecailNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
+				]
+				)
+				->where([$InstitutionStudents->Users->aliasField('gender_id') => $gender_id])
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->count()
+			;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseSpecialNeedFemaleStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $gender_id = 2; // female
+			$entity = $InstitutionStudents
+				->find()
+				->contain('Users')
+				->innerJoin(
+				['SpecailNeed' => 'user_special_needs_assessments'],
+				[
+					'SpecailNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
+				]
+				)
+				->where([$InstitutionStudents->Users->aliasField('gender_id') => $gender_id])
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->count()
+			;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseSpecialNeedTotalStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+			$entity = $InstitutionStudents
+				->find()
+				->contain('Users')
+				->innerJoin(
+				['SpecailNeed' => 'user_special_needs_assessments'],
+				[
+					'SpecailNeed.security_user_id = '. $InstitutionStudents->aliasField('student_id')
+				]
+				)
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->count()
+			;
             return $entity;
         }
     }
