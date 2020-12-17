@@ -40,6 +40,12 @@ class InstitutionReportCardsTable extends AppTable
                 'SpecialNeedFemaleStudents',
                 'SpecialNeedTotalStudents',
                 'InstitutionContactPersons',
+                'InstitutionBudgets',
+                'InstitutionExpenditures',
+                'InstitutionLands',
+                'InfrastructureuUtilityInternets',
+                'InfrastructureWashSanitationStudents',
+                'InfrastructureWashSanitationStaffs',
             ]
         ]);
     }
@@ -62,6 +68,12 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseSpecialNeedMaleStudents'] = 'onExcelTemplateInitialiseSpecialNeedMaleStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseSpecialNeedFemaleStudents'] = 'onExcelTemplateInitialiseSpecialNeedFemaleStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseSpecialNeedTotalStudents'] = 'onExcelTemplateInitialiseSpecialNeedTotalStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionBudgets'] = 'onExcelTemplateInitialiseInstitutionBudgets';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionExpenditures'] = 'onExcelTemplateInitialiseInstitutionExpenditures';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionLands'] = 'onExcelTemplateInitialiseInstitutionLands';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureuUtilityInternets'] = 'onExcelTemplateInitialiseInfrastructureuUtilityInternets';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureWashSanitationStudents'] = 'onExcelTemplateInitialiseInfrastructureWashSanitationStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureWashSanitationStaffs'] = 'onExcelTemplateInitialiseInfrastructureWashSanitationStaffs';
 		
 		return $events;
     }
@@ -175,7 +187,98 @@ class InstitutionReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params)) {
             $Institutions = TableRegistry::get('Institution.Institutions');
-            $entity = $Institutions->get($params['institution_id'], ['contain' => ['Areas', 'AreaAdministratives', 'Types']]);
+            $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types']]);
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInstitutionLands(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
+            $entity = $InstitutionLands
+                ->find()
+				->select([
+                    $InstitutionLands->aliasField('area')
+                ])
+                ->where([
+                    $InstitutionLands->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionLands->aliasField('academic_period_id') => $params['academic_period_id'],
+                ])
+                ->first();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInfrastructureuUtilityInternets(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InfrastructureUtilityInternets = TableRegistry::get('Institution.InfrastructureUtilityInternets');
+            $entity = $InfrastructureUtilityInternets
+                ->find()
+				->select([
+                    $InfrastructureUtilityInternets->UtilityInternetConditions->aliasField('name')
+                ])
+				->contain('UtilityInternetConditions')
+                ->where([
+                    $InfrastructureUtilityInternets->aliasField('institution_id') => $params['institution_id'],
+                    $InfrastructureUtilityInternets->aliasField('academic_period_id') => $params['academic_period_id'],
+                ])
+                ->first();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInfrastructureWashSanitationStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InfrastructureWashSanitations = TableRegistry::get('Institution.InfrastructureWashSanitations');
+            $infrastructure_wash_sanitation_use_id = 2; // student
+			$entity = $InfrastructureWashSanitations
+                ->find()
+				->select([
+                    'quantity' => 'SUM(InfrastructureWashSanitationQuantities.value)'
+                ])
+				->innerJoin(
+				['InfrastructureWashSanitationQuantities' => 'infrastructure_wash_sanitation_quantities'],
+				[
+					'InfrastructureWashSanitationQuantities.infrastructure_wash_sanitation_id = '. $InfrastructureWashSanitations->aliasField('id')
+				]
+				)
+                ->where([
+                    $InfrastructureWashSanitations->aliasField('institution_id') => $params['institution_id'],
+                    $InfrastructureWashSanitations->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InfrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_use_id') => $infrastructure_wash_sanitation_use_id,
+                ])
+				->group($InfrastructureWashSanitations->aliasField('institution_id'))
+                ->first();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInfrastructureWashSanitationStaffs(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InfrastructureWashSanitations = TableRegistry::get('Institution.InfrastructureWashSanitations');
+            $infrastructure_wash_sanitation_use_id = 1; // staff
+			$entity = $InfrastructureWashSanitations
+                ->find()
+				->select([
+                    'quantity' => 'SUM(InfrastructureWashSanitationQuantities.value)'
+                ])
+				->innerJoin(
+				['InfrastructureWashSanitationQuantities' => 'infrastructure_wash_sanitation_quantities'],
+				[
+					'InfrastructureWashSanitationQuantities.infrastructure_wash_sanitation_id = '. $InfrastructureWashSanitations->aliasField('id')
+				]
+				)
+                ->where([
+                    $InfrastructureWashSanitations->aliasField('institution_id') => $params['institution_id'],
+                    $InfrastructureWashSanitations->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InfrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_use_id') => $infrastructure_wash_sanitation_use_id,
+                ])
+				->group($InfrastructureWashSanitations->aliasField('institution_id'))
+                ->first();
             return $entity;
         }
     }
@@ -418,6 +521,54 @@ class InstitutionReportCardsTable extends AppTable
 				)
 				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
 				->count()
+			;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInstitutionBudgets(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionBudgets = TableRegistry::get('Institution.InstitutionBudgets');
+			$entity = $InstitutionBudgets
+				->find()
+				->select([
+					'amount' => 'SUM(amount)'
+				])
+				->contain('AcademicPeriods')
+				->innerJoin(
+				['Institution' => 'institutions'],
+				[
+					'Institution.id = '. $InstitutionBudgets->aliasField('institution_id')
+				]
+				)
+				->where([$InstitutionBudgets->aliasField('institution_id') => $params['institution_id']])
+				->where([$InstitutionBudgets->aliasField('academic_period_id') => $params['academic_period_id']])
+				->first()
+			;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInstitutionExpenditures(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionExpenditures = TableRegistry::get('Institution.InstitutionExpenditures');
+			$entity = $InstitutionExpenditures
+				->find()
+				->select([
+					'amount' => 'SUM(amount)'
+				])
+				->contain('AcademicPeriods')
+				->innerJoin(
+				['Institution' => 'institutions'],
+				[
+					'Institution.id = '. $InstitutionExpenditures->aliasField('institution_id')
+				]
+				)
+				->where([$InstitutionExpenditures->aliasField('institution_id') => $params['institution_id']])
+				->where([$InstitutionExpenditures->aliasField('academic_period_id') => $params['academic_period_id']])
+				->first()
 			;
             return $entity;
         }
