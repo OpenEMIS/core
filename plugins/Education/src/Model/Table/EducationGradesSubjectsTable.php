@@ -109,13 +109,16 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        
         //level filter
-        $levelOptions = $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod);
-        $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
-        $levelOptions = ['0' => '-- '.__('Select Level').' --'] + $levelOptions;
-        $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+        $levelOptions = $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
+        if (!empty($levelOptions)) {
+            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+        } else{
+            $levelOptions = ['0' => '-- '.__('No Education Level').' --'] + $levelOptions;
+            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+        }
         $this->controller->set(compact('levelOptions', 'selectedLevel'));
-
         $EducationCycles = $this->EducationGrades->EducationProgrammes->EducationCycles;
         $cycleIds = $EducationCycles
             ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
@@ -140,9 +143,14 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             ])
             ->where([$EducationProgrammes->aliasField('education_cycle_id') . ' IN (' .  $cycleIds . ')'])
             ->toArray();
-        $programmeOptions = ['0' => '-- '.__('Select Programme').' --'] + $programmeOptions;
-        $selectedProgramme = !is_null($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);
-        $selectedProgramme = !empty($this->request->query('programme')) ? $this->request->query('programme') : 0;
+
+        if (!empty($programmeOptions)) {
+            $selectedProgramme = !is_null($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);
+        } else {
+            $programmeOptions = ['0' => '-- '.__('No Education Programme').' --'] + $programmeOptions;
+            $selectedProgramme = !empty($this->request->query('programme')) ? $this->request->query('programme') : 0;
+        }
+        
         $this->controller->set(compact('programmeOptions', 'selectedProgramme'));
 
         $EducationGrades = $this->EducationGrades;
@@ -152,9 +160,13 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             ->order([$EducationGrades->aliasField('order')])
             ->where([$EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
             ->toArray();
-        $gradeOptions = ['0' => '-- '.__('Select Grade').' --'] + $gradeOptions;
-        $selectedGrade = !is_null($this->request->query('grade')) ? $this->request->query('grade') : key($gradeOptions);
-        $selectedGrade = !empty($this->request->query('grade')) ? $this->request->query('grade') : 0;
+        if (!empty($gradeOptions)) {
+            $selectedGrade = !is_null($this->request->query('grade')) ? $this->request->query('grade') : key($gradeOptions);
+        } else {
+            $gradeOptions = ['0' => '-- '.__('No Education Grade').' --'] + $gradeOptions;
+            $selectedGrade = !empty($this->request->query('grade')) ? $this->request->query('grade') : 0;
+        }
+        
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('gradeOptions', 'selectedGrade'));
 
