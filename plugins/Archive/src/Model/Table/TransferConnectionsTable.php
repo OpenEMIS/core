@@ -155,10 +155,10 @@ class TransferConnectionsTable extends ControllerActionTable
                 $connection = ConnectionManager::get($post_data['TransferConnections']['name']);
                 $connected = $connection->connect();
                 $this->Alert->success('Connection.testConnectionSuccess', ['reset' => true]);
-                $this->Session->write('is_connection_stablished', "1");
+                // $this->Session->write('is_connection_stablished', "1");
     
             }catch (Exception $connectionError) {
-                $this->Session->write('is_connection_stablished', "0");
+                // $this->Session->write('is_connection_stablished', "0");
                 $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
             }
         }
@@ -266,6 +266,33 @@ class TransferConnectionsTable extends ControllerActionTable
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
+
+        $post_data= $this->request->data;
+        if(isset($post_data)){
+            $connection = ConnectionManager::config($post_data['TransferConnections']['name'], [
+                'className' => 'Cake\Database\Connection',
+                'driver' => 'Cake\Database\Driver\Mysql',
+                'persistent' => false,
+                'host' => $post_data['TransferConnections']['host'],
+                'username' => $post_data['TransferConnections']['username'],
+                'password' => $post_data['TransferConnections']['password'],
+                'database' => $post_data['TransferConnections']['db_name'],
+                'encoding' => 'utf8mb4',
+                'timezone' => 'UTC',
+                'cacheMetadata' => true,
+            ]);
+    
+            try {
+                $connection = ConnectionManager::get($post_data['TransferConnections']['name']);
+                $connected = $connection->connect();
+                $this->Alert->success('Connection.testConnectionSuccess', ['reset' => true]);
+                $this->Session->write('is_connection_stablished', "1");
+    
+            }catch (Exception $connectionError) {
+                $this->Session->write('is_connection_stablished', "0");
+                $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+            }
+        }
         $is_connection_stablished = $this->Session->read('is_connection_stablished');
         if($is_connection_stablished == "0"){
             $entity->conn_status_id = "0";
@@ -273,6 +300,7 @@ class TransferConnectionsTable extends ControllerActionTable
         else{
             $entity->conn_status_id = "1";
         }
+        // echo "<pre>";print_r($post_data);exit;
         // $password  = ((new DefaultPasswordHasher)->hash($entity->password));
         // $password = $this->PasswordHash->encrypt($entity->password, Security::salt());
         $password = $this->encrypt($entity->password, Security::salt());
