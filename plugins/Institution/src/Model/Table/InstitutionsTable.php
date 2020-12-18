@@ -583,35 +583,28 @@ class InstitutionsTable extends ControllerActionTable
         
         if(!empty($this->controllerAction) && ($this->controllerAction == 'Institutions')) {
             // Webhook institution create -- start
-            
-            $bodyData = $this->find()
-            ->innerJoinWith('Ownerships')
-            ->innerJoinWith('Sectors')
-            ->innerJoinWith('Areas')
-            ->innerJoinWith('AreaAdministratives')
-            ->innerJoinWith('Genders')
-            ->innerJoinWith('Providers')
-            ->innerJoinWith('Types')
-            ->innerJoinWith('Localities')
-            ->select([
-                'Owner' => 'Ownerships.name',
-                'OwnerId' => 'Ownerships.id',
-                'Sector' => 'Sectors.name',
-                'Providers' => 'Providers.name',
-                'ProvidersId' => 'Providers.id',
-                'Type' => 'Types.name',
-                'Area_id' => 'Areas.id',
-                'Area_name' => 'Areas.name',
-                'AreaAdministratives_id' => 'AreaAdministratives.id',
-                'AreaAdministratives_name' => 'AreaAdministratives.name',
-                'Localities' => 'Localities.name',
-                'LocalitiesId' => 'Localities.id',
-                'Genders' => 'Genders.name',
-                'GendersId' => 'Genders.id'
-            ])
-            ->where([
-                $this->aliasField('id') => $entity->id
-            ])->first();
+            $bodyData =  $this->find('all',
+                            [ 'contain' => [
+                                'Sectors',
+                                'Types',
+                                'Areas',
+                                'AreaAdministratives',
+                                'Localities',
+                                'Genders'
+                            ],
+                    ])->where([
+                        $this->aliasField('id') => $entity->id
+                    ]);
+            foreach ($bodyData as $key => $value) {
+                $sectorName = $value->sector->name;
+                $typeName = $value->sector->name;
+                $genderName = $value->gender->name;
+                $localitiesName =  $value->locality->name;
+                $areaEducationId = $value->area->id;
+                $areaEducationName = $value->area->name;
+                $areaAdministrativeId = $value->area_administrative->id;
+                $areaAdministrativeName = $value->area_administrative->name;
+            }
             
             $classificationId = $entity->classification;
             if($classificationId == 1 ){
@@ -627,19 +620,19 @@ class InstitutionsTable extends ControllerActionTable
                 'institution_alternative_name' => $entity->alternative_name,
                 'institution_code' => $entity->code,
                 'institution_classification' => $clss,
-                'institution_sector' => !empty($bodyData->Sector) ? $bodyData->Sector : NULL,
-                'institution_type' =>  !empty($bodyData->Type) ? $bodyData->Type : NULL,
-                'institution_gender' => !empty($bodyData->Genders) ? $bodyData->Genders : NULL,
+                'institution_sector' => !empty($sectorName) ? $sectorName : NULL,
+                'institution_type' =>  !empty($typeName) ? $typeName : NULL,
+                'institution_gender' => !empty($genderName) ? $genderName : NULL,
                 'institution_date_opened' => date("d-m-Y", strtotime($entity->date_opened)),
                 'institution_address' => $entity->address,
                 'institution_postal_code' => $entity->postal_code,
-                'institution_locality' => !empty($bodyData->Localities) ? $bodyData->Localities : NULL,
+                'institution_locality' => !empty($localitiesName) ? $localitiesName : NULL,
                 'institution_latitude' => $entity->latitude,
                 'institution_longitude' => $entity->longitude,
-                'institution_area_education_id' => !empty($bodyData->Area_id) ? $bodyData->Area_id : NULL,
-                'institution_area_education' =>  !empty($bodyData->Area_name) ? $bodyData->Area_name : NULL,
-                'institution_area_administrative_id' => !empty($bodyData->AreaAdministratives_id) ? $bodyData->AreaAdministratives_id : NULL,
-                'institution_area_administrative' => !empty($bodyData->AreaAdministratives_name) ? $bodyData->AreaAdministratives_name : NULL,
+                'institution_area_education_id' => !empty($areaEducationId) ? $areaEducationId : NULL,
+                'institution_area_education' =>  !empty($areaEducationName) ? $areaEducationName : NULL,
+                'institution_area_administrative_id' => !empty($areaAdministrativeId) ? $areaAdministrativeId : NULL,
+                'institution_area_administrative' => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
                 'institution_contact_person' => $entity->contact_person,
                 'institution_telephone' => $entity->telephone,
                 'institution_mobile' => $entity->fax,
