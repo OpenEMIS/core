@@ -148,7 +148,7 @@ use Cake\Utility\Security;
             $connected = $connection->connect();
 
         }catch (Exception $connectionError) {
-            $this->Alert->warning('Connection.transferConnectionFail');
+            $this->Alert->warning('Connection.archiveConfigurationFail');
         }
     }
 
@@ -196,7 +196,7 @@ use Cake\Utility\Security;
             // return true;
         }
         else{
-            $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+            $this->Alert->error('Connection.archiveConfigurationFail', ['reset' => true]);
             return false;
         }
         
