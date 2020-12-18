@@ -46,6 +46,8 @@ class InstitutionReportCardsTable extends AppTable
                 'InfrastructureuUtilityInternets',
                 'InfrastructureWashSanitationStudents',
                 'InfrastructureWashSanitationStaffs',
+                'StudentToiletRatio',
+                'RoomTypes',
             ]
         ]);
     }
@@ -74,6 +76,8 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureuUtilityInternets'] = 'onExcelTemplateInitialiseInfrastructureuUtilityInternets';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureWashSanitationStudents'] = 'onExcelTemplateInitialiseInfrastructureWashSanitationStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureWashSanitationStaffs'] = 'onExcelTemplateInitialiseInfrastructureWashSanitationStaffs';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentToiletRatio'] = 'onExcelTemplateInitialiseStudentToiletRatio';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseRoomTypes'] = 'onExcelTemplateInitialiseRoomTypes';
 		
 		return $events;
     }
@@ -194,7 +198,7 @@ class InstitutionReportCardsTable extends AppTable
 	
 	public function onExcelTemplateInitialiseInstitutionLands(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
             $entity = $InstitutionLands
                 ->find()
@@ -212,7 +216,7 @@ class InstitutionReportCardsTable extends AppTable
 	
 	public function onExcelTemplateInitialiseInfrastructureuUtilityInternets(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InfrastructureUtilityInternets = TableRegistry::get('Institution.InfrastructureUtilityInternets');
             $entity = $InfrastructureUtilityInternets
                 ->find()
@@ -231,7 +235,7 @@ class InstitutionReportCardsTable extends AppTable
 	
 	public function onExcelTemplateInitialiseInfrastructureWashSanitationStudents(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InfrastructureWashSanitations = TableRegistry::get('Institution.InfrastructureWashSanitations');
             $infrastructure_wash_sanitation_use_id = 2; // student
 			$entity = $InfrastructureWashSanitations
@@ -258,7 +262,7 @@ class InstitutionReportCardsTable extends AppTable
 	
 	public function onExcelTemplateInitialiseInfrastructureWashSanitationStaffs(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InfrastructureWashSanitations = TableRegistry::get('Institution.InfrastructureWashSanitations');
             $infrastructure_wash_sanitation_use_id = 1; // staff
 			$entity = $InfrastructureWashSanitations
@@ -283,6 +287,54 @@ class InstitutionReportCardsTable extends AppTable
         }
     }
 	
+	public function onExcelTemplateInitialiseStudentToiletRatio(Event $event, array $params, ArrayObject $extra)
+    {
+		if (array_key_exists('institution_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+			$totalStudent = $InstitutionStudents
+				->find()
+				->contain('Users')
+				->matching('StudentStatuses', function ($q) {
+					return $q->where(['StudentStatuses.code' => 'CURRENT']);
+				})
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->count()
+			;
+        }
+		
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InfrastructureWashSanitations = TableRegistry::get('Institution.InfrastructureWashSanitations');
+            $infrastructure_wash_sanitation_use_id = 2; // student
+			$totalStudentToilet = $InfrastructureWashSanitations
+                ->find()
+				->select([
+                    'quantity' => 'SUM(InfrastructureWashSanitationQuantities.value)'
+                ])
+				->innerJoin(
+				['InfrastructureWashSanitationQuantities' => 'infrastructure_wash_sanitation_quantities'],
+				[
+					'InfrastructureWashSanitationQuantities.infrastructure_wash_sanitation_id = '. $InfrastructureWashSanitations->aliasField('id')
+				]
+				)
+                ->where([
+                    $InfrastructureWashSanitations->aliasField('institution_id') => $params['institution_id'],
+                    $InfrastructureWashSanitations->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InfrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_use_id') => $infrastructure_wash_sanitation_use_id,
+                ])
+				->group($InfrastructureWashSanitations->aliasField('institution_id'))
+                ->first();
+				
+			$totalStudentToilet = !empty($totalStudentToilet->quantity) ? $totalStudentToilet->quantity : 0;
+			if(!empty($totalStudent) && !empty($totalStudentToilet)) {
+				$entity = $totalStudent/$totalStudentToilet;
+				$entity = number_format((float)$entity, 2, '.', '');
+			} else{
+				$entity = 0;
+			}
+			return $entity;	
+        }
+    }
+	
 	public function onExcelTemplateInitialiseInstitutionContactPersons(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params)) {
@@ -304,7 +356,7 @@ class InstitutionReportCardsTable extends AppTable
 	
 	public function onExcelTemplateInitialiseInstitutionShifts(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
+        if (array_key_exists('institution_id', $params) && array_key_exists('institution_id', $params)) {
             $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
 
             $entity = $InstitutionShifts
@@ -528,7 +580,7 @@ class InstitutionReportCardsTable extends AppTable
 	
 	public function onExcelTemplateInitialiseInstitutionBudgets(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionBudgets = TableRegistry::get('Institution.InstitutionBudgets');
 			$entity = $InstitutionBudgets
 				->find()
@@ -552,7 +604,7 @@ class InstitutionReportCardsTable extends AppTable
 	
 	public function onExcelTemplateInitialiseInstitutionExpenditures(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionExpenditures = TableRegistry::get('Institution.InstitutionExpenditures');
 			$entity = $InstitutionExpenditures
 				->find()
@@ -569,6 +621,21 @@ class InstitutionReportCardsTable extends AppTable
 				->where([$InstitutionExpenditures->aliasField('institution_id') => $params['institution_id']])
 				->where([$InstitutionExpenditures->aliasField('academic_period_id') => $params['academic_period_id']])
 				->first()
+			;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseRoomTypes(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $RoomTypes = TableRegistry::get('room_types');
+
+            $entity = $RoomTypes->find()
+				->select([
+					$RoomTypes->aliasField('name')
+				])
+				->toArray()
 			;
             return $entity;
         }
