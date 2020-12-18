@@ -925,6 +925,12 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution']
             ],
+            'Institutions.Committees' => [
+                    'title' => 'Test Committees',
+                    'parent' => 'Institutions.Institutions.index',
+                    'selected' => ['Institutions.Committees'],
+                    'params' => ['plugin' => 'Institution']
+                ],
 
             'InstitutionCommittees.index' => [
                     'title' => 'Committees',
