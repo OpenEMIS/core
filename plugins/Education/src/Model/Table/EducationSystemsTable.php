@@ -233,9 +233,22 @@ class EducationSystemsTable extends ControllerActionTable
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
-        $entity->academic_period_id = $this->request->data['EducationSystems']['academic_period_id'];
+        /*$entity->academic_period_id = $this->request->data['EducationSystems']['academic_period_id'];
         $entity->modified_user_id = $this->Session->read('Auth.User.id');
-        $entity->created_user_id = $this->Session->read('Auth.User.id');
+        $entity->created_user_id = $this->Session->read('Auth.User.id');*/
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            $academic_period_id = $entity->academic_period_id;
+            $this->updateAll(
+                ['academic_period_id' => $academic_period_id],
+                ['id' => $entity->id]
+            );
+        }
+
+        
     }
 
 }
