@@ -25,7 +25,6 @@ webroot/css/themes/layout.min.css
 /tags
 *.mo
 *.po
-config/
 
 # IDE and editor specific files #
 #################################
