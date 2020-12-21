@@ -122,5 +122,4 @@ class EducationsController extends AppController {
     public function Stages() {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationStages']);
     }
-
 }
