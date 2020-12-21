@@ -417,7 +417,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $downloadButtonPdf['type'] = 'button';
                     $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
                     $downloadButtonPdf['attr'] = $toolbarAttr;
-                    $downloadButtonPdf['attr']['title'] = __('Download All Pdf');
+                    $downloadButtonPdf['attr']['title'] = __('Download All PDF');
                     $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
                 }
                 if ($generatedCount > 0 || $publishedCount > 0) {
