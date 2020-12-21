@@ -8,7 +8,6 @@
                     'action' => $this->request->params['action']
                 ]);
                 $template = $this->ControllerAction->getFormTemplate();
-                print_r($template);die;
                 $this->Form->templates($template);
 
                 if (!empty($periodOptions)) {
