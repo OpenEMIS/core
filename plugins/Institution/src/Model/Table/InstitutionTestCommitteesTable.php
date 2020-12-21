@@ -56,7 +56,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
             'type' => 'element',
             'element' => 'Institution.CommitteeMeeting/committee_meeting'
         ]);
-        $this->setFieldOrder(['academic_period_id', 'institution_committee_type_id', 'name', 'meeting_date', 'start_time','end_time','comment','meeting_section']);
+        $this->setFieldOrder(['academic_period_id', 'institution_committee_type_id', 'name', 'chairperson', 'telephone','email','comment','meeting_section']);
     }
 
     
