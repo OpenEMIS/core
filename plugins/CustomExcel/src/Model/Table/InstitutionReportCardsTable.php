@@ -48,6 +48,10 @@ class InstitutionReportCardsTable extends AppTable
                 'InfrastructureWashSanitationStaffs',
                 'StudentToiletRatio',
                 'RoomTypes',
+                'RoomTypeCount',
+                'StaffPositions',
+                'EducationGrades',
+                'EducationGradeStudents',
             ]
         ]);
     }
@@ -78,6 +82,10 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureWashSanitationStaffs'] = 'onExcelTemplateInitialiseInfrastructureWashSanitationStaffs';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentToiletRatio'] = 'onExcelTemplateInitialiseStudentToiletRatio';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseRoomTypes'] = 'onExcelTemplateInitialiseRoomTypes';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseRoomTypeCount'] = 'onExcelTemplateInitialiseRoomTypeCount';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffPositions'] = 'onExcelTemplateInitialiseStaffPositions';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGrades'] = 'onExcelTemplateInitialiseEducationGrades';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGradeStudents'] = 'onExcelTemplateInitialiseEducationGradeStudents';
 		
 		return $events;
     }
@@ -630,14 +638,162 @@ class InstitutionReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $RoomTypes = TableRegistry::get('room_types');
+            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
 
             $entity = $RoomTypes->find()
 				->select([
+					$RoomTypes->aliasField('id'),
 					$RoomTypes->aliasField('name')
 				])
 				->toArray()
 			;
             return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseEducationGrades(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $RoomTypes = TableRegistry::get('room_types');
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+
+            $entity = $EducationGrades->find()
+				->select([
+					$EducationGrades->aliasField('id'),
+					$EducationGrades->aliasField('name'),
+				])
+				->hydrate(false)
+				->toArray()
+			;
+			
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseEducationGradeStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('institution_students');
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+
+            $EducationGradesData = $EducationGrades->find()
+				->select([
+					$EducationGrades->aliasField('id'),
+				])
+				->hydrate(false)
+				->toArray()
+			;
+			//echo '<pre>';print_r($EducationGradesData);die;
+			foreach ($EducationGradesData as $value) {
+				$InstitutionStudentsData = $InstitutionStudents->find()
+					->select([
+						'count' => 'count(id)'
+					])
+					->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+					->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+					->hydrate(false)
+					->toArray()
+				;
+				
+				$result = [];
+				foreach ($InstitutionStudentsData as $data) {
+					$result = [
+						'education_grade_id' => $value['id'],
+						'count' => $data['count'],
+					];
+				}
+				$entity[] = $result;
+			}
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseRoomTypeCount(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $RoomTypes = TableRegistry::get('room_types');
+            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
+
+            $RoomTypesData = $RoomTypes->find()
+				->select([
+					$RoomTypes->aliasField('id'),
+				])
+				->toArray()
+			;
+			
+			foreach ($RoomTypesData as $value) {
+				$InstitutionRoomsData = $InstitutionRooms->find()
+					->select([
+						'count' => 'count(id)'
+					])
+					->where([$InstitutionRooms->aliasField('room_type_id') => $value->id])
+					->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])
+					->hydrate(false)
+					->toArray()
+				;
+				
+				$result = [];
+				foreach ($InstitutionRoomsData as $data) {
+					$result = [
+						'id' => $value->id,
+						'count' => $data['count'],
+					];
+				}
+				$entity[] = $result;
+			}
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffPositions(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $StaffPositionTitles = TableRegistry::get('staff_position_titles');
+			$entity = $StaffPositionTitles
+				->find()
+				->select([
+					'first_name' => 'Users.first_name',
+					'last_name' => 'Users.last_name'
+				])
+				->innerJoin(
+				['InstitutionPositions' => 'institution_positions'],
+				[
+					'InstitutionPositions.staff_position_title_id = '. $StaffPositionTitles->aliasField('id')
+				]
+				)
+				->innerJoin(
+				['InstitutionPositions' => 'institution_positions'],
+				[
+					'InstitutionPositions.staff_position_title_id = '. $StaffPositionTitles->aliasField('id')
+				]
+				)
+				->innerJoin(
+				['InstitutionStaff' => 'institution_staff'],
+				[
+					'InstitutionStaff.institution_position_id = InstitutionPositions.id'
+				]
+				)
+				->innerJoin(
+				['Users' => 'security_users'],
+				[
+					'Users.id = InstitutionStaff.staff_id'
+				]
+				)
+				->where([$StaffPositionTitles->aliasField('security_role_id') => 2])
+				->where(['InstitutionStaff.institution_id' => $params['institution_id']])
+				->where(['InstitutionPositions.institution_id' => $params['institution_id']])
+				->hydrate(false)
+				->toArray()
+			;
+			$result = [];
+            foreach ($entity as $key => $value) {
+				$result = [
+                    'name' => $value['first_name'].' '.$value['last_name'],
+                ];
+			}
+            return $result;
         }
     }
 

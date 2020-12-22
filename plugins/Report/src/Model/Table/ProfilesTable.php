@@ -572,14 +572,6 @@ class ProfilesTable extends ControllerActionTable
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
         
         if ($hasTemplate) {
-             $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id']);
-                
-            if ($checkReportCard) {
-                $this->Alert->warning('ReportCardStatuses.checkReportCardTemplatePeriod');
-               return $this->controller->redirect($this->url('index'));
-               die;
-            }
-			
             $this->addReportCardsToProcesses($params['institution_id'], $params['report_card_id'], $params['academic_period_id']);
             $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['report_card_id'], $params['academic_period_id']);
             $this->Alert->warning('ReportCardStatuses.generate');
@@ -598,14 +590,6 @@ class ProfilesTable extends ControllerActionTable
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
         
         if ($hasTemplate) {
-            $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id']);
-                
-               if ($checkReportCard) {
-                   $this->Alert->warning('ReportCardStatuses.checkReportCardTemplatePeriod');
-                  return $this->controller->redirect($this->url('index'));
-                  die;
-               }
-
             $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.InstitutionReportCardProcesses');
             $inProgress = $InstitutionReportCardProcesses->find()
                 ->where([
@@ -615,16 +599,30 @@ class ProfilesTable extends ControllerActionTable
                 ->count();      
                         
 
-            if (!$inProgress) {                   
-                $this->addReportCardsToProcesses($params['institution_id'], $params['report_card_id'], $params['academic_period_id']);
-				$this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['report_card_id'], $params['academic_period_id']);
-                $this->Alert->warning('ReportCardStatuses.generateAll');
-            } else {
-                $this->Alert->warning('ReportCardStatuses.inProgress');
-            }
-        } else {
-            $this->Alert->warning('ReportCardStatuses.noTemplate');
-        }
+            if (!$inProgress) { 
+				
+				$InstitutionTable = TableRegistry::get('institutions');
+				$institutionData = $InstitutionTable->find()
+					->select([
+						$InstitutionTable->aliasField('id'),
+					])
+					->order([
+						$InstitutionTable->aliasField('name'),
+					])
+					->toArray();
+				foreach ($institutionData as $institution) {
+					if(!empty($institution->id)) {
+						$this->addReportCardsToProcesses($institution->id, $params['report_card_id'], $params['academic_period_id']);
+						$this->triggerGenerateAllReportCardsShell($institution->id, $params['report_card_id'], $params['academic_period_id']);
+						$this->Alert->warning('ReportCardStatuses.generateAll');
+					}
+				}
+			} 	else {
+					$this->Alert->warning('ReportCardStatuses.inProgress');
+				}
+		} else {
+			$this->Alert->warning('ReportCardStatuses.noTemplate');
+		}
 
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
@@ -839,69 +837,5 @@ class ProfilesTable extends ControllerActionTable
         fclose($phpResourceFile);
 
         return $file;
-    }
-    
-    private function checkReportCardsToBeProcess($institutionClassId, $reportCardId, $academicPeriodId  = null)
-    {
-        $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $where = [];
-        $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
-        $classStudents = $classStudentsTable->find()
-            ->select([
-                $classStudentsTable->aliasField('education_grade_id'),
-                $classStudentsTable->aliasField('academic_period_id')
-            ])
-            ->where($where)
-            ->first();  
-        
-        if (empty($classStudents)) {
-            return false;
-        }   
-        
-        $condition = [];
-        $Assessments = TableRegistry::get('Assessment.Assessments');
-        $entityAssessment = $Assessments->find()
-                ->where([
-                    $Assessments->aliasField('academic_period_id') => $classStudents->academic_period_id,
-                    $Assessments->aliasField('education_grade_id') => $classStudents->education_grade_id
-                ])
-                ->first();
-
-        if (!empty($entityAssessment)) {
-            $condition['assessment_id'] = $entityAssessment->id;
-        }
-        
-        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
-        $entityReportCards = $ReportCards->get($reportCardId);
-        
-        $condition['report_card_start_date'] = $entityReportCards->start_date;
-        $condition['report_card_end_date'] = $entityReportCards->end_date;
-        
-        if ( array_key_exists('assessment_id', $condition)
-            && array_key_exists('report_card_start_date', $condition) 
-            && array_key_exists('report_card_end_date', $condition)
-           ) {
-            
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
-            $entityAssessmentPeriods = $AssessmentPeriods->find()
-                ->where([
-                    $AssessmentPeriods->aliasField('assessment_id') => $condition['assessment_id'],
-                    $AssessmentPeriods->aliasField('start_date >= ') => $condition['report_card_start_date'],
-                    $AssessmentPeriods->aliasField('end_date <= ') => $condition['report_card_end_date']
-                ])
-                ->order([$AssessmentPeriods->aliasField('start_date')]);
-
-            if (($entityAssessmentPeriods->count() > 0)) {
-                
-                 return false;
-            } else {
-                
-                 return true;
-            }
-            
-        }
-        
-         return false;
-        
     }
 }
