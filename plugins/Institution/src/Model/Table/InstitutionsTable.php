@@ -457,7 +457,11 @@ class InstitutionsTable extends ControllerActionTable
         if ($action == 'add') {
             $attr['visible'] = false;
         }
-
+        //POCOR-5683
+        if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+        }
+        //POCOR-5683
         return $attr;
     }
 
@@ -955,6 +959,38 @@ class InstitutionsTable extends ControllerActionTable
             'map_section',
             'map',
         ]);
+
+        // from onUpdateToolbarButtons
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default icon-big',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+ 
+        $extraButtons = [
+            'close' => [
+                'Systems' => ['Institution', 'CopySystems', 'update'],
+                'action' => 'UpdateInstitution',
+                'icon' => '<i class="fa fa-times"></i>',
+                'title' => __('Update')
+            ]
+        ];
+
+        foreach ($extraButtons as $key => $attr) {
+            if ($this->AccessControl->check($attr['permission'])) {
+                $button = [
+                    'type' => 'button',
+                    'attr' => $btnAttr,
+                    'url' => [0 => 'add']
+                ];
+                $button['url']['action'] = $attr['action'];
+                $button['attr']['title'] = $attr['title'];
+                $button['label'] = $attr['icon'];
+
+                $extra['toolbarButtons'][$key] = $button;
+            }
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
