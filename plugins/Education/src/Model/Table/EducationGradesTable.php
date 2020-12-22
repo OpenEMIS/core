@@ -218,13 +218,69 @@ class EducationGradesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
+        /*list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme'));
         $query->where([$this->aliasField('education_programme_id') => $selectedProgramme])
                 ->order([ $this->aliasField('order') => 'ASC', 
                           $this->aliasField('modified') => 'DESC'
-                        ]); 
+                        ]); */
+        // Academic period filter
+        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $academicPeriodOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+
+        //level filter
+        $levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
+        if (!empty($levelOptions)) {
+            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+        } else{
+            $levelOptions = ['0' => '-- '.__('No Education Level').' --'] + $levelOptions;
+            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+        }
+        
+        $this->controller->set(compact('levelOptions', 'selectedLevel'));
+
+        $cycleIds = $this->EducationProgrammes->EducationCycles
+            ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+            ->find('visible')
+            ->where([$this->EducationProgrammes->EducationCycles->aliasField('education_level_id') => $selectedLevel])
+            ->toArray();
+
+        if (is_array($cycleIds) && !empty($cycleIds)) {
+            $cycleIds = implode(', ', $cycleIds);
+        } else {
+            $cycleIds = 0;
+        }
+
+        $EducationProgrammes = $this->EducationProgrammes;
+        $programmeOptions = $EducationProgrammes
+            ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+            ->find('visible')
+            ->contain(['EducationCycles'])
+            ->order([
+                $EducationProgrammes->EducationCycles->aliasField('order'),
+                $EducationProgrammes->aliasField('order')
+            ])
+            ->where([
+                $EducationProgrammes->aliasField('education_cycle_id') . ' IN (' .  $cycleIds . ')'
+            ])
+            ->toArray();
+        $selectedProgramme = !is_null($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);
+        $programmeOptions = $programmeOptions;
+        if (!empty($programmeOptions )) {
+            $selectedProgramme = !empty($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);
+        } else {
+            $programmeOptions = ['0' => '-- '.__('No Education Programme').' --'] + $programmeOptions;
+            $selectedProgramme = !empty($this->request->query('programme')) ? $this->request->query('programme') : 0;
+        }
+        
+        $this->controller->set(compact('programmeOptions', 'selectedProgramme'));
+        $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
+        $query->where([$this->aliasField('education_programme_id') => $selectedProgramme])
+                        ->order([$this->aliasField('order') => 'ASC']);  
 
         $sortList = ['order', 'name', 'code', 'EducationProgrammes.name', 'EducationStages.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
@@ -376,8 +432,14 @@ class EducationGradesTable extends ControllerActionTable
 
     public function _getSelectOptions()
     {
+        // Academic period filter
+        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $academicPeriodOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        
         //Return all required options and their key
-        $levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getLevelOptions();
+        $levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod);
         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
 
         $cycleIds = $this->EducationProgrammes->EducationCycles
