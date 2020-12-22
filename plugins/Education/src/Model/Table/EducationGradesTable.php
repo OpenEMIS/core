@@ -439,7 +439,7 @@ class EducationGradesTable extends ControllerActionTable
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         
         //Return all required options and their key
-        $levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod);
+        $levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
 
         $cycleIds = $this->EducationProgrammes->EducationCycles
