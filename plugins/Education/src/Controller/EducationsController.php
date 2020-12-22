@@ -62,13 +62,14 @@ class EducationsController extends AppController {
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
         $header = __('Education');
+        //POCOR-5696 start
         if($this->request->action == 'CopySystems'){
             $model->alias = 'Systems';
             $header .= ' - ' . $model->getHeader('SystemsCopy');
         }else{
             $header .= ' - ' . $model->getHeader($model->alias);
         }
-        
+        //POCOR-5696 ends
         $this->Navigation->addCrumb('Education Structure', ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
@@ -94,11 +95,11 @@ class EducationsController extends AppController {
     public function Systems() {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationSystems']);
     }
-
+    //POCOR-5696 start
     public function CopySystems() {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationSystems']);
     }
-
+    //POCOR-5696 ends
     public function Levels() {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationLevels']);
     }
@@ -122,4 +123,5 @@ class EducationsController extends AppController {
     public function Stages() {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationStages']);
     }
+
 }
