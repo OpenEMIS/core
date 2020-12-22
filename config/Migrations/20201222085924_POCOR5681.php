@@ -39,6 +39,5 @@ class POCOR5681 extends AbstractMigration
     {
         $this->execute('DROP TABLE IF EXISTS `education_systems`');
         $this->execute('RENAME TABLE `z_5681_education_systems` TO `education_systems`');
-        $this->execute('ALTER TABLE `education_systems` DROP COLUMN `academic_period_id`');
     }
 }
