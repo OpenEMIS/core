@@ -60,7 +60,7 @@ class POCOR5674 extends AbstractMigration
             'db_name' => 'prd_cor_arc',
             'username' => 'prd_cor_arc',
             'password' => 'prd_cor_arc',
-            'conn_status_id' => 1,
+            'conn_status_id' => 0,
             'status_checked' => '2020-11-04 10:00:00',
             'modified_user_id' => 2,
             'modified' => NULL,
