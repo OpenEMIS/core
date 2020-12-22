@@ -1,5 +1,6 @@
 <?php
 use Migrations\AbstractMigration;
+use Cake\ORM\TableRegistry;
 
 class POCOR5681 extends AbstractMigration
 {
@@ -22,7 +23,15 @@ class POCOR5681 extends AbstractMigration
         $this->execute("ALTER TABLE `education_systems` CHANGE `academic_period_id` `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id'");
 
         //updating academic_period_id column value
-        $this->execute('UPDATE `education_systems` SET `academic_period_id` = 29');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = $AcademicPeriods
+                    ->find()
+                    ->where([
+                        $AcademicPeriods->aliasField('current') => 1
+                    ])
+                  ->first();
+        
+        $this->execute('UPDATE `education_systems` SET `academic_period_id` = '.$academicPeriodId['id']);
     }
 
 
