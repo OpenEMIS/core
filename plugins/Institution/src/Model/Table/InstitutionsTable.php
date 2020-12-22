@@ -962,16 +962,17 @@ class InstitutionsTable extends ControllerActionTable
 
         // from onUpdateToolbarButtons
         $btnAttr = [
-            'class' => 'btn btn-xs btn-default icon-big',
+            'class' => 'btn btn-xs btn-default',
             'data-toggle' => 'tooltip',
             'data-placement' => 'bottom',
             'escape' => false
         ];
- 
+        
+        $institutionId = $extra['toolbarButtons']['back']['url']['institutionId'];
         $extraButtons = [
             'close' => [
-                'Systems' => ['Institution', 'CopySystems', 'update'],
-                'action' => 'UpdateInstitution',
+                'Institutions' => ['Institutions', 'edit'],
+                'model' => 'InstitutionStatus',
                 'icon' => '<i class="fa fa-times"></i>',
                 'title' => __('Update')
             ]
@@ -982,7 +983,7 @@ class InstitutionsTable extends ControllerActionTable
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'add']
+                    'url' => [0 => 'edit']
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
