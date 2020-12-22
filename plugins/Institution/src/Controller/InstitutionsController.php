@@ -527,6 +527,12 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionMaps']);
     }
     //POCOR-5669 added InstitutionMaps
+    
+    //POCOR-5669 added InstitutionMaps
+    public function InstitutionStatusUpdate()
+    {
+
+    }
 
     // AngularJS
     public function ScheduleTimetable($action = 'view')
