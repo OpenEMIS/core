@@ -12,18 +12,24 @@ class POCOR5681 extends AbstractMigration
      */
     public function up()
     {
-        $this->execute('CREATE TABLE `z_5681_education_systems` LIKE `education_systems`');//backup
+        //backup
+        $this->execute('CREATE TABLE `z_5681_education_systems` LIKE `education_systems`');
+        $this->execute('INSERT INTO `z_5681_education_systems` SELECT * FROM `education_systems`');
+
+        //insert new column
         $this->execute('ALTER TABLE `education_systems` ADD `academic_period_id` INT NOT NULL AFTER `name`');
         
         $this->execute("ALTER TABLE `education_systems` CHANGE `academic_period_id` `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id'");
 
+        //updating academic_period_id column value
         $this->execute('UPDATE `education_systems` SET `academic_period_id` = 29');
     }
 
 
     public function down()
     {
-     $this->execute('RENAME TABLE `z_5681_education_systems` TO `education_systems`');
-     $this->execute('ALTER TABLE `education_systems` DROP COLUMN `academic_period_id`');
+        $this->execute('DROP TABLE IF EXISTS `education_systems`');
+        $this->execute('RENAME TABLE `z_5681_education_systems` TO `education_systems`');
+        $this->execute('ALTER TABLE `education_systems` DROP COLUMN `academic_period_id`');
     }
 }
