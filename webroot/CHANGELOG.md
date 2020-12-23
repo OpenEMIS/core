@@ -1,3 +1,13 @@
+### [3.61.0] - 2020-12-22
+- Implemented: Education System setup
+- Bug Fixed: Webhook Institution Create/Update: To include institution_area_education_id and institution_area_administrative_id
+- Bug Fixed: Webhook Subject create/update: To include institution_classes_name,institution_classes_id,education_grades_id,education_subjects_id
+- Bug Fixed: Webhook Class Create/Update: To include education_grade_id
+- Bug Fixed: Webhook Security User delete
+- Bug Fixed: Webhook Student/Staff Delete: To include institution_id
+- Bug Fixed: API endpoints to return JSON response and not redirects to the sign-in page
+- Bug Fixed: Institution > Report Cards > Comments: Total Mark for Assessment is not reflecting even though Total Mark is filled up in Assessment page
+
 ### [3.60.0] - 2020-12-11
 - Implemented: Devlop a function to show percentage of user profile data completion
 - Implemented: Develop Data Archiving feature
