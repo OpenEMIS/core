@@ -52,6 +52,8 @@ class InstitutionReportCardsTable extends AppTable
                 'StaffPositions',
                 'EducationGrades',
                 'EducationGradeStudents',
+                'EducationGradeClasses',
+                'InstitutionSubjects',
             ]
         ]);
     }
@@ -86,6 +88,8 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffPositions'] = 'onExcelTemplateInitialiseStaffPositions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGrades'] = 'onExcelTemplateInitialiseEducationGrades';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGradeStudents'] = 'onExcelTemplateInitialiseEducationGradeStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGradeClasses'] = 'onExcelTemplateInitialiseEducationGradeClasses';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjects'] = 'onExcelTemplateInitialiseInstitutionSubjects';
 		
 		return $events;
     }
@@ -665,7 +669,13 @@ class InstitutionReportCardsTable extends AppTable
 				->hydrate(false)
 				->toArray()
 			;
-			
+			$totalArray = [];
+			$totalArray = [
+				'id' => count($entity) + 1,
+				'name' => 'Total',
+			];
+			$entity[] = $totalArray;
+			//echo '<pre>';print_r($entity);die;
             return $entity;
         }
     }
@@ -683,7 +693,7 @@ class InstitutionReportCardsTable extends AppTable
 				->hydrate(false)
 				->toArray()
 			;
-			//echo '<pre>';print_r($EducationGradesData);die;
+			$total_count = 0;
 			foreach ($EducationGradesData as $value) {
 				$InstitutionStudentsData = $InstitutionStudents->find()
 					->select([
@@ -697,14 +707,126 @@ class InstitutionReportCardsTable extends AppTable
 				;
 				
 				$result = [];
+				$total_student_count = 0;
 				foreach ($InstitutionStudentsData as $data) {
+					$total_student_count = $data['count'];
 					$result = [
 						'education_grade_id' => $value['id'],
 						'count' => $data['count'],
 					];
 				}
+				$total_count = $total_count + $total_student_count;
 				$entity[] = $result;
 			}
+			$totalArray = [];
+			$totalArray = [
+				'education_grade_id' => $value['id'] + 1,
+				'count' => $total_count,
+			];
+			$entity[] = $totalArray;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseEducationGradeClasses(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionClasses = TableRegistry::get('institution_classes');
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+
+            $EducationGradesData = $EducationGrades->find()
+				->select([
+					$EducationGrades->aliasField('id'),
+				])
+				->hydrate(false)
+				->toArray()
+			;
+			$total_count = 0;
+			foreach ($EducationGradesData as $value) {
+				$InstitutionClassesData = $InstitutionClasses->find()
+					->select([
+						'count' => 'count(institutionClassGrades.id)'
+					])
+					->innerJoin(
+					['institutionClassGrades' => 'institution_class_grades'],
+					[
+						'institutionClassGrades.institution_class_id = '. $InstitutionClasses->aliasField('id')
+					]
+					)
+					->where(['institutionClassGrades.education_grade_id' => $value['id']])
+					->where([$InstitutionClasses->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionClasses->aliasField('academic_period_id') => $params['academic_period_id']])
+					->hydrate(false)
+					->toArray()
+				;
+				
+				$result = [];
+				$total_student_count = 0;
+				foreach ($InstitutionClassesData as $data) {
+					$total_student_count = $data['count'];
+					$result = [
+						'education_grade_id' => $value['id'],
+						'count' => $data['count'],
+					];
+				}
+				$total_count = $total_count + $total_student_count;
+				$entity[] = $result;
+			}
+			$totalArray = [];
+			$totalArray = [
+				'education_grade_id' => $value['id'] + 1,
+				'count' => $total_count,
+			];
+			$entity[] = $totalArray;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInstitutionSubjects(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+
+            $InstitutionSubjectsData = $InstitutionSubjects->find()
+				->select([
+					$InstitutionSubjects->aliasField('id'),
+					$InstitutionSubjects->aliasField('name'),
+					$InstitutionSubjects->aliasField('total_male_students'),
+					$InstitutionSubjects->aliasField('total_female_students'),
+					'education_grade_name'=> 'EducationGrades.name',
+				])
+				->innerJoin(
+				['EducationGrades' => 'education_grades'],
+				[
+					'EducationGrades.id = '. $InstitutionSubjects->aliasField('education_grade_id')
+				]
+				)
+				->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
+				->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
+				->hydrate(false)
+				->toArray()
+			;
+			
+			$result = [];
+			$total_students = 0;
+			foreach ($InstitutionSubjectsData as $data) {
+				$total_students = $total_students + $data['total_male_students'] + $data['total_male_students'];
+				$result = [
+					'id' => $data['id'],
+					'name' => $data['name'],
+					'education_grade_name' => $data['education_grade_name'],
+					'total_students' => $data['total_male_students'] + $data['total_male_students'],
+				];
+				$entity[] = $result;
+			}
+			$totalArray = [];
+			$totalArray = [
+				'id' => $data['id'] + 1,
+				'name' => 'Total',
+				'education_grade_name' => '',
+				'total_students' => $total_students,
+			];
+			$entity[] = $totalArray;
             return $entity;
         }
     }
