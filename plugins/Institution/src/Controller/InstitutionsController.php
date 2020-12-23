@@ -528,10 +528,10 @@ class InstitutionsController extends AppController
     }
     //POCOR-5669 added InstitutionMaps
     
-    //POCOR-5669 added InstitutionMaps
-    public function InstitutionStatusUpdate()
+    //POCOR-5683 added InstitutionStatusUpdate
+    public function InstitutionStatus()
     {
-
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStatus']);
     }
 
     // AngularJS
