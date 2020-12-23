@@ -9,6 +9,7 @@ trait OptionsTrait
             'general' => [
                 'active' => [1 => __('Active'), 0 => __('Inactive')],
                 'yesno' => [1 => __('Yes'), 0 => __('No')],
+                'enabledisable' => [1 => __('Enabled'), 0 => __('Disabled')],
             ],
             'Authentication' => [
                 'yesno' => [0 => __('No'), 1 => __('Yes')]
