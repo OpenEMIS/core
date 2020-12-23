@@ -93,9 +93,14 @@ class EducationProgrammesTable extends ControllerActionTable {
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
         //level filter
-        $levelOptions = $this->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod);
-        $levelOptions = ['0' => '-- '.__('Select Level').' --'] + $levelOptions;
-        $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+        $levelOptions = $this->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
+        if (!empty($levelOptions)) {
+            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+        } else{
+            $levelOptions = ['0' => '-- '.__('No Education Level').' --'] + $levelOptions;
+            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+        }
+        
         $this->controller->set(compact('levelOptions', 'selectedLevel'));
 
         $cycleOptions = $this->EducationCycles
@@ -107,8 +112,13 @@ class EducationProgrammesTable extends ControllerActionTable {
         $selectedCycle = !is_null($this->request->query('cycle')) ? $this->request->query('cycle') : key($cycleOptions);
 
         $cycleOptions = $cycleOptions;
-        $cycleOptions = ['0' => '-- '.__('Select cycle').' --'] + $cycleOptions;
-        $selectedCycle = !empty($this->request->query('cycle')) ? $this->request->query('cycle') : 0;
+        if (!empty($cycleOptions)) {
+            $selectedCycle = !empty($this->request->query('cycle')) ? $this->request->query('cycle') : key($cycleOptions);
+        } else{
+            $cycleOptions = ['0' => '-- '.__('No Education Cycle').' --'] + $cycleOptions;
+            $selectedCycle = !empty($this->request->query('cycle')) ? $this->request->query('cycle') : 0;    
+        }
+        
         $this->controller->set(compact('cycleOptions', 'selectedCycle'));
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $query->where([$this->aliasField('education_cycle_id') => $selectedCycle])
