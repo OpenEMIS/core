@@ -305,7 +305,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     $this->aliasField('id') => $entity->id
                 ]);
                 
-                $grades = $secondaryTeachers = $students = [];
+                $grades = $gradeId = $secondaryTeachers = $students = [];
 
                 if (!empty($bodyData)) { 
                     foreach ($bodyData as $key => $value) { 
@@ -320,6 +320,7 @@ class InstitutionClassesTable extends ControllerActionTable
                         if(!empty($value->education_grades)) {
                             foreach ($value->education_grades as $key => $gradeOptions) {
                                 $grades[] = $gradeOptions->name;
+                                $gradeId[] = $gradeOptions->id;
                             }
                         }
                         
@@ -357,6 +358,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
                     'shift_options_name' => !empty($shift) ? $shift : NULL,
                     'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
+                    'education_grades_id' => !empty($gradeId) ? $gradeId :NULL,
                     'education_grades_name' => !empty($grades) ? $grades : NULL, 
                     'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
                     'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
@@ -435,7 +437,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             $this->aliasField('id') => $entity->id
                         ]);
         
-            $grades = $secondaryTeachers = $students = [];
+            $grades = $gradeId = $secondaryTeachers = $students = [];
 
             if (!empty($bodyData)) { 
                 foreach ($bodyData as $key => $value) { 
@@ -450,6 +452,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     if(!empty($value->education_grades)) {
                         foreach ($value->education_grades as $key => $gradeOptions) {
                             $grades[] = $gradeOptions->name;
+                            $gradeId[] = $gradeOptions->id;
                         }
                     }
                     
@@ -487,6 +490,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
                 'shift_options_name' => !empty($shift) ? $shift : NULL,
                 'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
+                'education_grades_id' => !empty($gradeId) ? $gradeId :NULL,
                 'education_grades_name' => !empty($grades) ? $grades : NULL, 
                 'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
                 'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
