@@ -971,8 +971,8 @@ class InstitutionsTable extends ControllerActionTable
         $institutionId = $extra['toolbarButtons']['back']['url']['institutionId'];
         $extraButtons = [
             'close' => [
-                'Institutions' => ['Institutions', 'edit'],
-                'model' => 'InstitutionStatus',
+                'Institution' => ['InstitutionStatus', 'edit', $institutionId],
+                'action' => 'InstitutionStatus',
                 'icon' => '<i class="fa fa-times"></i>',
                 'title' => __('Update')
             ]
@@ -980,17 +980,12 @@ class InstitutionsTable extends ControllerActionTable
 
         foreach ($extraButtons as $key => $attr) {
             if ($this->AccessControl->check($attr['permission'])) {
-                /*$button = [
+                $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
                     'url' => [0 => 'edit']
-                ];*/
-                $button = [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
-                    'action' => 'InstitutionStatusUpdate',
-                    'institutionId' => $this->paramsEncode(['id' => $entity->id])
-                ]
+                ];
+                
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
                 $button['label'] = $attr['icon'];
