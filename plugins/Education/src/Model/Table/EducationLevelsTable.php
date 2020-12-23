@@ -51,8 +51,13 @@ class EducationLevelsTable extends ControllerActionTable
 
         // Education System filter
         $systemOptions = $this->EducationSystems->getSystemOptions($selectedAcademicPeriod);
-        $systemOptions = ['0' => '-- '.__('Select Education System').' --'] + $systemOptions;
-        $selectedSystem = !empty($this->request->query('system')) ? $this->request->query('system') : 0;
+        if (!empty($systemOptions )) {
+        	$selectedSystem = !empty($this->request->query('system')) ? $this->request->query('system') : key($systemOptions);
+        } else {
+        	$systemOptions = ['0' => '-- '.__('No Education System').' --'] + $systemOptions;
+        	$selectedSystem = !empty($this->request->query('system')) ? $this->request->query('system') : 0;
+        }
+        
         $this->controller->set(compact('systemOptions', 'selectedSystem'));
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $query->where([$this->aliasField('education_system_id') => $selectedSystem])

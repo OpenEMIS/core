@@ -63,8 +63,13 @@ class EducationCyclesTable extends ControllerActionTable
 
         //level filter
         $levelOptions = $this->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
-        $levelOptions = ['0' => '-- '.__('Select Level').' --'] + $levelOptions;
-        $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+        if (!empty($levelOptions)) {
+        	$selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+        } else {
+            $levelOptions = ['0' => '-- '.__('No Education Level').' --'] + $levelOptions;
+            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+        }
+        
         $this->controller->set(compact('levelOptions', 'selectedLevel'));
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
 		$query->where([$this->aliasField('education_level_id') => $selectedLevel])
