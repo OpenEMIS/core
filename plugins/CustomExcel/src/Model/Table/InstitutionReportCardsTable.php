@@ -54,6 +54,8 @@ class InstitutionReportCardsTable extends AppTable
                 'EducationGradeStudents',
                 'EducationGradeClasses',
                 'InstitutionSubjects',
+                'QualificationTitles',
+                'StaffQualificationSubjects',
             ]
         ]);
     }
@@ -90,6 +92,8 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGradeStudents'] = 'onExcelTemplateInitialiseEducationGradeStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGradeClasses'] = 'onExcelTemplateInitialiseEducationGradeClasses';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjects'] = 'onExcelTemplateInitialiseInstitutionSubjects';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseQualificationTitles'] = 'onExcelTemplateInitialiseQualificationTitles';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationSubjects'] = 'onExcelTemplateInitialiseStaffQualificationSubjects';
 		
 		return $events;
     }
@@ -658,7 +662,6 @@ class InstitutionReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseEducationGrades(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $RoomTypes = TableRegistry::get('room_types');
             $EducationGrades = TableRegistry::get('Education.EducationGrades');
 
             $entity = $EducationGrades->find()
@@ -827,6 +830,82 @@ class InstitutionReportCardsTable extends AppTable
 				'total_students' => $total_students,
 			];
 			$entity[] = $totalArray;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseQualificationTitles(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $QualificationTitles = TableRegistry::get('qualification_titles');
+
+            $entity = $QualificationTitles->find()
+				->select([
+					$QualificationTitles->aliasField('id'),
+					$QualificationTitles->aliasField('name'),
+				])
+				->hydrate(false)
+				->toArray()
+			;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffQualificationSubjects(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $QualificationTitles = TableRegistry::get('qualification_titles');
+            $InstitutionSubjects = TableRegistry::get('institution_subjects');
+
+            $QualificationTitlesData = $QualificationTitles->find()
+				->select([
+					$QualificationTitles->aliasField('id'),
+					$QualificationTitles->aliasField('name'),
+				])
+				->hydrate(false)
+				->toArray()
+			;
+			
+			foreach ($QualificationTitlesData as $value) {
+				$InstitutionSubjectsData = $InstitutionSubjects->find()
+					->select([
+						$InstitutionSubjects->aliasField('name')
+					])
+					->innerJoin(
+					['InstitutionSubjectStaff' => 'institution_subject_staff'],
+					[
+						'InstitutionSubjectStaff.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
+					]
+					)
+					->innerJoin(
+					['StaffQualifications' => 'staff_qualifications'],
+					[
+						'StaffQualifications.staff_id = InstitutionSubjectStaff.staff_id'
+					]
+					)
+					->where(['StaffQualifications.qualification_title_id' => $value['id']])
+					->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
+					->hydrate(false)
+					->toArray()
+				;
+				$result = [];
+				if(!empty($InstitutionSubjectsData)) {
+					foreach ($InstitutionSubjectsData as $data) {
+						$result = [
+							'id' => $value['id'],
+							'name' => $data['name'],
+						];
+						$entity[] = $result;
+					}
+				} else {
+					$result = [
+						'id' => $value['id'],
+						'name' => '',
+					];
+					$entity[] = $result;
+				}
+			}
+			//echo '<pre>';print_r($entity);die;
             return $entity;
         }
     }
