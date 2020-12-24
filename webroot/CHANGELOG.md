@@ -1,3 +1,8 @@
+### [3.61.1] - 2020-12-24
+- Implemented: Enable Changes in the Education Structure across school years
+- Bug Fixed: Institution > Performance > Assessment: Only show assigned subjects
+- Bug Fixed: Issues with Archive feature
+
 ### [3.61.0] - 2020-12-22
 - Implemented: Education System setup
 - Bug Fixed: Webhook Institution Create/Update: To include institution_area_education_id and institution_area_administrative_id
