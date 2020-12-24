@@ -487,6 +487,12 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $TransferConnections = TableRegistry::get('TransferConnections.TransferConnections');
+        $TransferConnectionsResult = $TransferConnections
+            ->find()
+            ->select(['conn_status_id'])
+            ->first();
+        $this->Session->write('is_connection_stablished', $TransferConnectionsResult->conn_status_id);
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         // set action for webhook
         $this->webhookAction = $this->action;
