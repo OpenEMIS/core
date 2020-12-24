@@ -1538,7 +1538,7 @@ class NavigationComponent extends Component
                 'parent' => 'SystemSetup',
                 'params' => ['plugin' => 'Education'],
                 'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Stages', 'Educations.Subjects', 'Educations.GradeSubjects', 'Educations.Certifications',
-                'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
+                'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations','Educations.CopySystems']
             ],
             'Attendances.StudentMarkTypes' => [
                 'title' => 'Attendances',
