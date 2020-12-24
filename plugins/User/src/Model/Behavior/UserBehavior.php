@@ -10,6 +10,8 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use User\Model\Entity\User;
 use Cake\I18n\I18n;
+use Cake\Network\Session;
+use Cake\Routing\Router;
 
 class UserBehavior extends Behavior
 {
@@ -154,9 +156,10 @@ class UserBehavior extends Behavior
             }
 
             $this->_table->fields['date_of_birth']['order'] = $i++;
-            $this->_table->fields['nationality_id']['order'] = $i++;
-            $this->_table->fields['identity_type_id']['order'] = $i++;
-            $this->_table->fields['identity_number']['order'] = $i++;
+            //POCOR-5668 remove nationality, identity type, identity number
+            //$this->_table->fields['nationality_id']['order'] = $i++;
+            //$this->_table->fields['identity_type_id']['order'] = $i++;
+            //$this->_table->fields['identity_number']['order'] = $i++;
             $this->_table->fields['email']['order'] = $i++;
 
             $this->_table->fields['address']['order'] = $i++;
@@ -191,11 +194,28 @@ class UserBehavior extends Behavior
                     $this->_table->ControllerAction->field('email', ['type' => 'hidden']);
                 }
             }
-
+  
             if ($this->_table->registryAlias() != 'Security.Users') {
                 $language = I18n::locale();
                 if ($this->isCAv4()) {
                     $this->_table->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    //POCOR-5668 add identity section starts
+                    $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $security_users_id = '';
+                    $model = $this->_table;
+                    if($this->_table->controller->request->params['pass'][0] == 'view'){
+                        $security_users_id = $model->paramsDecode($this->_table->controller->request->params['pass']['1'])['id'];
+                    }
+                    if($security_users_id > 0){
+                        $this->_table->field('details', [
+                            'type' => 'element',
+                            'after' => 'identity_section',
+                            'element' => 'User.UserIdentities/details',
+                            'visible' => ['view'=>true],
+                            'data' => $this->getViewUserIdentities($security_users_id)
+                        ]);
+                    }
+                    //POCOR-5668 add identity section ends
                     $this->_table->field('location_section', ['type' => 'section', 'title' => __('Location'), 'before' => 'address', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     $field = 'address_area_id';
                     $userTableLabelAlias = 'Users';
@@ -207,6 +227,23 @@ class UserBehavior extends Behavior
                     $this->_table->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                 } else {
                     $this->_table->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    //POCOR-5668 add identity section starts
+                    $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $security_users_id = '';
+                    $model = $this->_table;
+                    if($this->_table->controller->request->params['pass'][0] == 'view'){
+                        $security_users_id = $model->paramsDecode($this->_table->controller->request->params['pass']['1'])['id'];
+                    }
+                    if($security_users_id > 0){
+                        $this->_table->field('details', [
+                            'type' => 'element',
+                            'after' => 'identity_section',
+                            'element' => 'User.UserIdentities/details',
+                            'visible' => ['view'=>true],
+                            'data' => $this->getViewUserIdentities($security_users_id)
+                        ]);
+                    }
+                    //POCOR-5668 add identity section ends
                     $this->_table->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location'), 'before' => 'address', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     $field = 'address_area_id';
                     $userTableLabelAlias = 'Users';
@@ -220,6 +257,48 @@ class UserBehavior extends Behavior
             }
         }
     }
+
+    //POCOR-5668 add identity section starts
+    public function getViewUserIdentities($security_users_id)
+    {
+        $UserIdentities = TableRegistry::get('user_identities');
+        $IdentityTypes = TableRegistry::get('identity_types');
+        $UserNationalities = TableRegistry::get('user_nationalities');
+        $Nationalities = TableRegistry::get('nationalities');
+       
+        $data = $UserIdentities->find()
+                ->select([
+                    $UserIdentities->aliasField('id'),
+                    $UserIdentities->aliasField('identity_type_id'),
+                    $IdentityTypes->aliasField('name'),
+                    $UserIdentities->aliasField('number'),
+                    $UserIdentities->aliasField('nationality_id'),
+                    $Nationalities->aliasField('name'),
+                    $UserNationalities->aliasField('preferred')
+                ])
+                ->leftJoin(
+                    [$IdentityTypes->alias() => $IdentityTypes->table()], [
+                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+                    ]
+                )
+                ->leftJoin(
+                    [$UserNationalities->alias() => $UserNationalities->table()], [
+                        $UserNationalities->aliasField('security_user_id = ') . $UserIdentities->aliasField('security_user_id'),
+                        $UserNationalities->aliasField('nationality_id = ') . $UserIdentities->aliasField('nationality_id')
+                    ]
+                )
+                ->leftJoin(
+                    [$Nationalities->alias() => $Nationalities->table()], [
+                        $Nationalities->aliasField('id = ') . $UserIdentities->aliasField('nationality_id')
+                    ]
+                )
+                ->where([
+                    $UserIdentities->aliasField('security_user_id') => $security_users_id,
+                ])
+                ->toArray();
+        return $data;
+    }
+    //POCOR-5668 add identity section ends
 
     public function addBeforeAction(Event $event)
     {
