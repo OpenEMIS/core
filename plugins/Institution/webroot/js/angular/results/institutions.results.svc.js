@@ -310,7 +310,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
      
                             } else {
                                 assessmentSubjects = assessmentSubjects
-                                    .find('StaffSubjects', {class_id: classId, staff_id: securityUserId})
+                                    .find('CopyStaffSubjects', {class_id: classId, staff_id: securityUserId})
                                     .ajax({success: success, defer: true});
                                   
                             }
