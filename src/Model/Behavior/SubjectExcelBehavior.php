@@ -208,6 +208,8 @@ class SubjectExcelBehavior extends Behavior
 			$InstitutionStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 			$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 			$InstitutionSubjectsRooms = TableRegistry::get('Institution.InstitutionSubjectsRooms');
+            $UserIdentities = TableRegistry::get('user_identities');//POCOR-5852 starts
+            $IdentityTypes = TableRegistry::get('identity_types');//POCOR-5852 ends
 		
 			$query = $Query
 				->select([
@@ -238,7 +240,17 @@ class SubjectExcelBehavior extends Behavior
 					]),
 					'gender' => 'Genders.name',
 					'student_status' => 'StudentStatuses.name',
-				])
+                    //'identity_type' => $IdentityTypes->alias().'.name',//POCOR-5852 starts
+                    'identity_type' => '(CASE
+                                            WHEN '.$IdentityTypes->alias().'.default = 0 THEN " "
+                                            ELSE '.$IdentityTypes->alias().'.name
+                                        END)',
+                    'identity_number' => '(CASE
+                                            WHEN '.$IdentityTypes->alias().'.default = 0 THEN " "
+                                            ELSE '.$UserIdentities->alias().'.number
+                                        END)'
+                    //'identity_number' => $UserIdentities->alias().'.number'//POCOR-5852 ends
+                ])
 				->contain([
 					'AcademicPeriods' => [
 						'fields' => [
@@ -279,7 +291,20 @@ class SubjectExcelBehavior extends Behavior
 				[
 					'SubjectStudents.id = '. $InstitutionStudents->aliasField('student_id')
 				]
-				)
+				)//POCOR-5852 starts
+                ->leftJoin(
+                [$UserIdentities->alias() => $UserIdentities->table()],
+                [
+                    $UserIdentities->aliasField('security_user_id = '). $InstitutionStudents->aliasField('student_id')
+                ]
+                )
+                ->leftJoin(
+                [$IdentityTypes->alias() => $IdentityTypes->table()],
+                [
+                    $IdentityTypes->aliasField('id = '). $UserIdentities->aliasField('identity_type_id'),
+                    //$IdentityTypes->aliasField('default') => 1
+                ]
+                )//POCOR-5852 ends
 				->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()], [
 					$InstitutionSubjects->aliasField('id =') . $InstitutionSubjectStaff->aliasField('institution_subject_id')
 				])
@@ -540,12 +565,13 @@ class SubjectExcelBehavior extends Behavior
     {
         $schema = $table->schema();
         //$columns = $schema->columns();
+        //POCOR-5852 added 'identity_type', 'identity_number' starts
 		$columns = ['institution_code','institution_name','academic_period_id',
 					'Class_Name','education_grade','subject_name','subject_code',
 					'teachers','rooms','openEMIS_ID','student_name',
-					'gender','student_status'
+					'gender','student_status', 'identity_type', 'identity_number'
 					];
-
+        //POCOR-5852 ends            
         $excludes = $this->config('excludes');
 
         if (!is_array($table->primaryKey())) { //if not composite key
