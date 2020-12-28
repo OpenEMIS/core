@@ -13,7 +13,8 @@ use Cake\I18n\I18n;
 use Cake\Utility\Hash;
 use XLSXWriter;
 use Cake\ORM\TableRegistry;
-
+use Cake\Network\Request;
+use Cake\Network\Session;
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
 // public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
@@ -28,7 +29,7 @@ class SubjectExcelBehavior extends Behavior
     use EventTrait;
 
     private $events = [];
-
+    private $_session;
     protected $_defaultConfig = [
         'folder' => 'export',
         'default_excludes' => ['modified_user_id', 'modified', 'created', 'created_user_id', 'password'],
@@ -170,7 +171,26 @@ class SubjectExcelBehavior extends Behavior
         }
 
         $sheetNameArr = [];
+        //POCOR-5852 starts
+        $session = $this->_table->request->session();
+        $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
+        $class_id = $academic_period_id = '';
+        $condition = [];
+        if(isset($this->_table->request->query['class_id']) && isset($this->_table->request->query['academic_period_id'])){
+            $class_id = $this->_table->request->query['class_id'];
+            $academic_period_id = $this->_table->request->query['academic_period_id'];
 
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $conditions = [
+                $InstitutionClassSubjects->aliasField('institution_class_id') => $class_id,
+                $InstitutionSubjects->aliasField('InstitutionSubjects.academic_period_id') => $academic_period_id,
+                $InstitutionSubjects->aliasField('InstitutionSubjects.institution_id') => $institution_id
+                
+            ];
+
+        }
+        //POCOR-5852 ends
         foreach ($sheets as $sheet) {
             $table = $sheet['table'];
             // sheet info added to settings to avoid adding more parameters to event
@@ -278,6 +298,9 @@ class SubjectExcelBehavior extends Behavior
 					'SubjectStudents.gender_id = Genders.id'
 				]
 				)
+                //POCOR-5852 starts
+                ->where($conditions)
+                //POCOR-5852 ends
 				->group([
 					'SubjectStudents.id'
 				])
@@ -286,7 +309,7 @@ class SubjectExcelBehavior extends Behavior
 					'Institutions.code',
 					'InstitutionSubjects.id'
 				]);
-				$Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
 					return $results->map(function ($row) {
 						$teachers = explode(',',$row['teachers']);
 						$teachers = array_unique($teachers);
@@ -340,11 +363,12 @@ class SubjectExcelBehavior extends Behavior
 
             // To auto include the default fields. Using select will turn off autoFields by default
             // This is set so that the containable data will still be in the array.
+            /* //POCOR-5852 starts
             $autoFields = $this->config('autoFields');
 
             if (!isset($autoFields) || $autoFields == true) {
                 $query->autoFields(true);
-            }
+            } //POCOR-5852 ends*/
 
             $count = $query->count();
             $rowCount = 0;
@@ -736,7 +760,8 @@ class SubjectExcelBehavior extends Behavior
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
-        if (in_array($action, $this->config('pages'))) {
+        //POCOR-5852 starts add  || $action == 'index' condition
+        if (in_array($action, $this->config('pages')) || $action == 'index') {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
                 'class' => 'btn btn-xs btn-default',
@@ -758,6 +783,7 @@ class SubjectExcelBehavior extends Behavior
             $toolbarButtons['export']['url'] = $url;
             $extra['toolbarButtons'] = $toolbarButtons;
         }
+        //POCOR-5852 ends
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
