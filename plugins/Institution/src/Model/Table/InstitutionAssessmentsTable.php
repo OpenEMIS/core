@@ -112,7 +112,32 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $buttons = $extra['indexButtons'];
         $superAdmin = $session->read('Auth.User.super_admin');
         $is_connection_is_online = $session->read('is_connection_stablished');
-        if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+        $securityFunctions = TableRegistry::get('SecurityFunctions');
+        $securityFunctionsData = $securityFunctions
+        ->find()
+        ->select([
+            'SecurityFunctions.id'
+        ])
+        ->where([
+            'SecurityFunctions.name' => 'Student Assessment Archive'
+        ])
+        ->first();
+
+        $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+        $securityRoleFunctionsData = $securityRoleFunctions
+        ->find()
+        ->select([
+            'SecurityRoleFunctions._view'
+        ])
+        ->where([
+            'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id
+        ])
+        ->first();
+        $is_button_accesible = 0;
+        if( (!empty($securityRoleFunctionsData) && $securityRoleFunctionsData->_view == 1) ){
+            $is_button_accesible = 1;
+        }
+        if( ($superAdmin == 1 && $is_connection_is_online == 1 && $is_button_accesible == 1) ){
             $extraButtons = [
                 'archive' => [
                     'AssessmentsArchive' => ['Institutions', 'AssessmentsArchive', 'index'],
