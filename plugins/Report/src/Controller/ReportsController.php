@@ -89,7 +89,7 @@ class ReportsController extends AppController
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionCommittees' => __('Committees'),
-                'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),
+                //'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),//POCOR-5852 
                 'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
                 'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
                 'Report.Income' => __('Income Report'),
