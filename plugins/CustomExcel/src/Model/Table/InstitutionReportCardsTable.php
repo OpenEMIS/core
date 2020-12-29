@@ -56,6 +56,11 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionSubjects',
                 'QualificationTitles',
                 'StaffQualificationSubjects',
+                'StudentTeacherRatio',
+                'TotalStaffs',
+                'StaffQualificationDuties',
+                'StaffQualificationPositions',
+                'StaffQualificationStaffType',
             ]
         ]);
     }
@@ -94,7 +99,11 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjects'] = 'onExcelTemplateInitialiseInstitutionSubjects';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseQualificationTitles'] = 'onExcelTemplateInitialiseQualificationTitles';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationSubjects'] = 'onExcelTemplateInitialiseStaffQualificationSubjects';
-		
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentTeacherRatio'] = 'onExcelTemplateInitialiseStudentTeacherRatio';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseTotalStaffs'] = 'onExcelTemplateInitialiseTotalStaffs';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationDuties'] = 'onExcelTemplateInitialiseStaffQualificationDuties';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationPositions'] = 'onExcelTemplateInitialiseStaffQualificationPositions';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationStaffType'] = 'onExcelTemplateInitialiseStaffQualificationStaffType';
 		return $events;
     }
 
@@ -530,6 +539,51 @@ class InstitutionReportCardsTable extends AppTable
         }
     }
 	
+	public function onExcelTemplateInitialiseStudentTeacherRatio(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $InstitutionStaffs = TableRegistry::get('Institution.Staff');
+			$totalStudents = $InstitutionStudents
+				->find()
+				->contain('Users')
+				->matching('StudentStatuses', function ($q) {
+					return $q->where(['StudentStatuses.code' => 'CURRENT']);
+				})
+				->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+				->count()
+			;
+			
+			$totalStaffs = $InstitutionStaffs
+				->find()
+				->contain('Users')
+				->where([$InstitutionStaffs->aliasField('institution_id') => $params['institution_id']])
+				->count()
+			;
+			if(!empty($totalStudents) && !empty($totalStaffs)) {
+				$entity = $totalStudents/$totalStaffs;
+				$entity = number_format((float)$entity, 2, '.', '');
+			} else{
+				$entity = 0;
+			}
+			return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseTotalStaffs(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionStaffs = TableRegistry::get('Institution.Staff');
+			$entity = $InstitutionStaffs
+				->find()
+				->contain('Users')
+				->where([$InstitutionStaffs->aliasField('institution_id') => $params['institution_id']])
+				->count()
+			;
+			return $entity;
+        }
+    }
+	
 	public function onExcelTemplateInitialiseSpecialNeedMaleStudents(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params)) {
@@ -678,7 +732,6 @@ class InstitutionReportCardsTable extends AppTable
 				'name' => 'Total',
 			];
 			$entity[] = $totalArray;
-			//echo '<pre>';print_r($entity);die;
             return $entity;
         }
     }
@@ -856,6 +909,7 @@ class InstitutionReportCardsTable extends AppTable
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $QualificationTitles = TableRegistry::get('qualification_titles');
             $InstitutionSubjects = TableRegistry::get('institution_subjects');
+            $StaffQualifications = TableRegistry::get('staff_qualifications');
 
             $QualificationTitlesData = $QualificationTitles->find()
 				->select([
@@ -866,7 +920,33 @@ class InstitutionReportCardsTable extends AppTable
 				->toArray()
 			;
 			
+			$init = 1;
+			$totalStaff = 0;
 			foreach ($QualificationTitlesData as $value) {
+				
+				$NumberOfStaff = $InstitutionSubjects->find()
+					->select([
+						'number_of_staff' => 'count(InstitutionSubjectStaff.staff_id)'
+					])
+					->innerJoin(
+					['InstitutionSubjectStaff' => 'institution_subject_staff'],
+					[
+						'InstitutionSubjectStaff.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
+					]
+					)
+					->innerJoin(
+					['StaffQualifications' => 'staff_qualifications'],
+					[
+						'StaffQualifications.staff_id = InstitutionSubjectStaff.staff_id'
+					]
+					)
+					->where(['StaffQualifications.qualification_title_id' => $value['id']])
+					->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
+					->hydrate(false)
+					->first()
+				;
+		
 				$InstitutionSubjectsData = $InstitutionSubjects->find()
 					->select([
 						$InstitutionSubjects->aliasField('name')
@@ -885,27 +965,361 @@ class InstitutionReportCardsTable extends AppTable
 					)
 					->where(['StaffQualifications.qualification_title_id' => $value['id']])
 					->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
+					->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
 					->hydrate(false)
 					->toArray()
 				;
 				$result = [];
 				if(!empty($InstitutionSubjectsData)) {
 					foreach ($InstitutionSubjectsData as $data) {
+						
+						$totalStaff = $NumberOfStaff['number_of_staff'] + $totalStaff;
+
 						$result = [
-							'id' => $value['id'],
+							'id' => $init,
+							'qualification_title' => $value['name'],
 							'name' => $data['name'],
+							'number_of_staff' => $NumberOfStaff['number_of_staff'],
 						];
 						$entity[] = $result;
+						$init++;
 					}
 				} else {
 					$result = [
-						'id' => $value['id'],
+						'id' => $init,
+						'qualification_title' => $value['name'],
 						'name' => '',
+						'number_of_staff' => $NumberOfStaff['number_of_staff'],
 					];
 					$entity[] = $result;
+					$init++;
 				}
 			}
-			//echo '<pre>';print_r($entity);die;
+			$totalArray = [];
+			$totalArray = [
+				'id' => $init,
+				'qualification_title' => 'Total',
+				'name' => '',
+				'number_of_staff' => $totalStaff,
+			];
+			$entity[] = $totalArray;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffQualificationDuties(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $QualificationTitles = TableRegistry::get('qualification_titles');
+            $StaffDuties = TableRegistry::get('staff_duties');
+            $StaffQualifications = TableRegistry::get('staff_qualifications');
+
+            $QualificationTitlesData = $QualificationTitles->find()
+				->select([
+					$QualificationTitles->aliasField('id'),
+					$QualificationTitles->aliasField('name'),
+				])
+				->hydrate(false)
+				->toArray()
+			;
+			
+			$init = 1;
+			$totalStaff = 0;
+			foreach ($QualificationTitlesData as $value) {
+				
+				$NumberOfStaff = $StaffDuties->find()
+					->select([
+						'count' => 'count(InstitutionStaffDuties.staff_id)'
+					])
+					->innerJoin(
+					['InstitutionStaffDuties' => 'institution_staff_duties'],
+					[
+						'InstitutionStaffDuties.staff_duties_id = '. $StaffDuties->aliasField('id')
+					]
+					)
+					->innerJoin(
+					['StaffQualifications' => 'staff_qualifications'],
+					[
+						'StaffQualifications.staff_id = InstitutionStaffDuties.staff_id'
+					]
+					)
+					->where(['StaffQualifications.qualification_title_id' => $value['id']])
+					->where(['InstitutionStaffDuties.institution_id' => $params['institution_id']])
+					->where(['InstitutionStaffDuties.academic_period_id' => $params['academic_period_id']])
+					->hydrate(false)
+					->first()
+				;
+				
+				$StaffDutiesData = $StaffDuties->find()
+					->select([
+						$StaffDuties->aliasField('name')
+					])
+					->innerJoin(
+					['InstitutionStaffDuties' => 'institution_staff_duties'],
+					[
+						'InstitutionStaffDuties.staff_duties_id = '. $StaffDuties->aliasField('id')
+					]
+					)
+					->innerJoin(
+					['StaffQualifications' => 'staff_qualifications'],
+					[
+						'StaffQualifications.staff_id = InstitutionStaffDuties.staff_id'
+					]
+					)
+					->where(['StaffQualifications.qualification_title_id' => $value['id']])
+					->where(['InstitutionStaffDuties.institution_id' => $params['institution_id']])
+					->where(['InstitutionStaffDuties.academic_period_id' => $params['academic_period_id']])
+					->hydrate(false)
+					->toArray()
+				;
+				$result = [];
+				if(!empty($StaffDutiesData)) {
+					foreach ($StaffDutiesData as $data) {
+						
+						$totalStaff = $NumberOfStaff['count'] + $totalStaff;
+
+						$result = [
+							'id' => $init,
+							'qualification_title' => $value['name'],
+							'name' => $data['name'],
+							'number_of_staff' => $NumberOfStaff['count'],
+						];
+						$entity[] = $result;
+						$init++;
+					}
+				} else {
+					$result = [
+						'id' => $init,
+						'qualification_title' => $value['name'],
+						'name' => '',
+						'number_of_staff' => $NumberOfStaff['count'],
+					];
+					$entity[] = $result;
+					$init++;
+				}
+			}
+			$totalArray = [];
+			$totalArray = [
+				'id' => $init,
+				'qualification_title' => 'Total',
+				'name' => '',
+				'number_of_staff' => $totalStaff,
+			];
+			$entity[] = $totalArray;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffQualificationPositions(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $QualificationTitles = TableRegistry::get('qualification_titles');
+            $StaffPositionTitles = TableRegistry::get('staff_position_titles');
+            $StaffQualifications = TableRegistry::get('staff_qualifications');
+
+            $QualificationTitlesData = $QualificationTitles->find()
+				->select([
+					$QualificationTitles->aliasField('id'),
+					$QualificationTitles->aliasField('name'),
+				])
+				->hydrate(false)
+				->toArray()
+			;
+			
+			$init = 1;
+			$totalStaff = 0;
+			foreach ($QualificationTitlesData as $value) {
+				
+				$NumberOfStaff = $StaffPositionTitles->find()
+					->select([
+						'count' => 'count(InstitutionStaff.staff_id)'
+					])
+					->innerJoin(
+					['InstitutionPositions' => 'institution_positions'],
+					[
+						'InstitutionPositions.staff_position_title_id = '. $StaffPositionTitles->aliasField('id')
+					]
+					)
+					->innerJoin(
+					['InstitutionStaff' => 'institution_staff'],
+					[
+						'InstitutionStaff.institution_position_id = InstitutionPositions.id'
+					]
+					)
+					->innerJoin(
+					['StaffQualifications' => 'staff_qualifications'],
+					[
+						'StaffQualifications.staff_id = InstitutionStaff.staff_id'
+					]
+					)
+					->where(['StaffQualifications.qualification_title_id' => $value['id']])
+					->where(['InstitutionStaff.institution_id' => $params['institution_id']])
+					->hydrate(false)
+					->first()
+				;
+				
+				$StaffPositionTitlesData = $StaffPositionTitles->find()
+					->select([
+						$StaffPositionTitles->aliasField('name')
+					])
+					->innerJoin(
+					['InstitutionPositions' => 'institution_positions'],
+					[
+						'InstitutionPositions.staff_position_title_id = '. $StaffPositionTitles->aliasField('id')
+					]
+					)
+					->innerJoin(
+					['InstitutionStaff' => 'institution_staff'],
+					[
+						'InstitutionStaff.institution_position_id = InstitutionPositions.id'
+					]
+					)
+					->innerJoin(
+					['StaffQualifications' => 'staff_qualifications'],
+					[
+						'StaffQualifications.staff_id = InstitutionStaff.staff_id'
+					]
+					)
+					->where(['StaffQualifications.qualification_title_id' => $value['id']])
+					->where(['InstitutionStaff.institution_id' => $params['institution_id']])
+					->hydrate(false)
+					->toArray()
+				;
+				$result = [];
+				if(!empty($StaffPositionTitlesData)) {
+					foreach ($StaffPositionTitlesData as $data) {
+						
+						$totalStaff = $NumberOfStaff['count'] + $totalStaff;
+
+						$result = [
+							'id' => $init,
+							'qualification_title' => $value['name'],
+							'name' => $data['name'],
+							'number_of_staff' => $NumberOfStaff['count'],
+						];
+						$entity[] = $result;
+						$init++;
+					}
+				} else {
+					$result = [
+						'id' => $init,
+						'qualification_title' => $value['name'],
+						'name' => '',
+						'number_of_staff' => $NumberOfStaff['count'],
+					];
+					$entity[] = $result;
+					$init++;
+				}
+			}
+			$totalArray = [];
+			$totalArray = [
+				'id' => $init,
+				'qualification_title' => 'Total',
+				'name' => '',
+				'number_of_staff' => $totalStaff,
+			];
+			$entity[] = $totalArray;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffQualificationStaffType(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $QualificationTitles = TableRegistry::get('qualification_titles');
+            $StaffTypes = TableRegistry::get('staff_types');
+            $StaffQualifications = TableRegistry::get('staff_qualifications');
+
+            $QualificationTitlesData = $QualificationTitles->find()
+				->select([
+					$QualificationTitles->aliasField('id'),
+					$QualificationTitles->aliasField('name'),
+				])
+				->hydrate(false)
+				->toArray()
+			;
+			
+			$init = 1;
+			$totalStaff = 0;
+			foreach ($QualificationTitlesData as $value) {
+				
+				$NumberOfStaff = $StaffTypes->find()
+					->select([
+						'count' => 'count(InstitutionStaff.staff_id)'
+					])
+					->innerJoin(
+					['InstitutionStaff' => 'institution_staff'],
+					[
+						'InstitutionStaff.staff_type_id = '. $StaffTypes->aliasField('id')
+					]
+					)
+					->innerJoin(
+					['StaffQualifications' => 'staff_qualifications'],
+					[
+						'StaffQualifications.staff_id = InstitutionStaff.staff_id'
+					]
+					)
+					->where(['StaffQualifications.qualification_title_id' => $value['id']])
+					->where(['InstitutionStaff.institution_id' => $params['institution_id']])
+					->hydrate(false)
+					->first()
+				;
+				
+				$StaffTypesData = $StaffTypes->find()
+					->select([
+						$StaffTypes->aliasField('name')
+					])
+					->innerJoin(
+					['InstitutionStaff' => 'institution_staff'],
+					[
+						'InstitutionStaff.staff_type_id = '. $StaffTypes->aliasField('id')
+					]
+					)
+					->innerJoin(
+					['StaffQualifications' => 'staff_qualifications'],
+					[
+						'StaffQualifications.staff_id = InstitutionStaff.staff_id'
+					]
+					)
+					->where(['StaffQualifications.qualification_title_id' => $value['id']])
+					->where(['InstitutionStaff.institution_id' => $params['institution_id']])
+					->hydrate(false)
+					->toArray()
+				;
+				$result = [];
+				if(!empty($StaffTypesData)) {
+					foreach ($StaffTypesData as $data) {
+						
+						$totalStaff = $NumberOfStaff['count'] + $totalStaff;
+
+						$result = [
+							'id' => $init,
+							'qualification_title' => $value['name'],
+							'name' => $data['name'],
+							'number_of_staff' => $NumberOfStaff['count'],
+						];
+						$entity[] = $result;
+						$init++;
+					}
+				} else {
+					$result = [
+						'id' => $init,
+						'qualification_title' => $value['name'],
+						'name' => '',
+						'number_of_staff' => $NumberOfStaff['count'],
+					];
+					$entity[] = $result;
+					$init++;
+				}
+			}
+			$totalArray = [];
+			$totalArray = [
+				'id' => $init,
+				'qualification_title' => 'Total',
+				'name' => '',
+				'number_of_staff' => $totalStaff,
+			];
+			$entity[] = $totalArray;
             return $entity;
         }
     }
