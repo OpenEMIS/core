@@ -26,6 +26,7 @@ webroot/css/themes/layout.min.css
 *.mo
 *.po
 
+
 # IDE and editor specific files #
 #################################
 /nbproject

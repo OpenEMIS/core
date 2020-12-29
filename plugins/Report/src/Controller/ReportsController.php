@@ -46,6 +46,15 @@ class ReportsController extends AppController
         $this->set('contentHeader', $header);
     }
 
+    public function getInstitutionStatusOptions($module)
+    {
+        $options = [
+                'Active' => __('Active'),
+                'Inactive' => __('Inactive')
+            ];
+            return $options;
+    }
+
     public function getFeatureOptions($module)
     {
         $options = [];
@@ -82,8 +91,10 @@ class ReportsController extends AppController
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionCommittees' => __('Committees'),
                 'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),
-                'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report')
-				
+                'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
+                'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
+                'Report.Income' => __('Income Report'),
+                'Report.Expenditure' => __('Expenditure Report')
             ];
         } elseif ($module == 'Students') {
             $options = [

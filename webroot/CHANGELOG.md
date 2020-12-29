@@ -1,3 +1,52 @@
+### [3.61.1] - 2020-12-24
+- Implemented: Enable Changes in the Education Structure across school years
+- Bug Fixed: Institution > Performance > Assessment: Only show assigned subjects
+- Bug Fixed: Issues with Archive feature
+
+### [3.61.0] - 2020-12-22
+- Implemented: Education System setup
+- Bug Fixed: Webhook Institution Create/Update: To include institution_area_education_id and institution_area_administrative_id
+- Bug Fixed: Webhook Subject create/update: To include institution_classes_name,institution_classes_id,education_grades_id,education_subjects_id
+- Bug Fixed: Webhook Class Create/Update: To include education_grade_id
+- Bug Fixed: Webhook Security User delete
+- Bug Fixed: Webhook Student/Staff Delete: To include institution_id
+- Bug Fixed: API endpoints to return JSON response and not redirects to the sign-in page
+- Bug Fixed: Institution > Report Cards > Comments: Total Mark for Assessment is not reflecting even though Total Mark is filled up in Assessment page
+
+### [3.60.0] - 2020-12-11
+- Implemented: Devlop a function to show percentage of user profile data completion
+- Implemented: Develop Data Archiving feature
+- Implemented: Enhancement of the OpenEMIS mapping features
+- Bug Fixed: Reports > Institution > Add > WASH Report : Changes in WASH report page
+- Bug Fixed: Administrations > System Setup > APIs : Unable to change User Authentication API security permission
+
+### [3.59.1] - 2020-12-05
+- Implemented: Quick Search and Advanced Search option for Institution > Students List > Withdrawn
+- Implemented: Enable Guardians to access their pupil's records
+- Bug Fixed: Institution > Performance > Assessments > Edit: Marks are not displaying for Assessments with more than one Assessment Period
+- Bug Fixed: Reports > Survey: Data reflected incorrectly upon generating and downloading the report
+- Bug Fixed: Institutions > Performance > Assessment: Edit Permission do not work for Homeroom Teacher role
+- Bug Fixed: Remove the InsitutionClassSubjects shell script as it keeps running in the background
+- Bug Fixed: Validate Report Cards / Outcome / Competency Comments - Comments cannot start with special characters
+
+### [3.59.0] - 2020-12-02
+- Implemented: Enhancement of the Core survey report module
+- Implemneted: Reports for the Infrastructure module
+- Implemented: Automation of a revised WebGIS input file and API for user authentification
+- Bug Fixed: Student Attendance POST API
+
+### [3.58.3] - 2020-11-27
+- Implemented: Add Results and Comments tabs under Institution > Student > Academic Outcomes
+- Implemented: Add a chart for student/staff attendance to institution dashboard
+- Implemented: Reports > Institution > Finance (Income and Expenditure) Report
+- Bug Fixed: Import Extracurriculars: Changes to the Import Template
+- Bug Fixed: Institutions > Students > Academic > Competencies tab: Competencies filter list down all Competencies even though student is not taking all
+- Bug Fixed: Institutions > Attendance > Students: Add an Education Grade field
+- Bug Fixed: Institutions > Attendance > Students: Disable edit for future date attendances
+- Bug Fixed: Reports > Institutions > Special Needs Facilities: Changes to the report and filters
+- Bug Fixed: Reports > Students > Guardians: Add an Institution filter option and an Institution column in Guardians report
+- Bug Fixed: Institution > Academic > Schedules: Schedules not found even though user has been given the Permission rights
+
 ### [3.58.2] - 2020-11-19
 - Data Archiving feature in OpenEMIS Core
 - Develop Reports > Directoty > User List
