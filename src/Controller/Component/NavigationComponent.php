@@ -928,7 +928,7 @@ class NavigationComponent extends Component
             'Institutions.Committees' => [
                     'title' => 'Test Committees',
                     'parent' => 'Institutions.Institutions.index',
-                    'selected' => ['Institutions.Committees'],
+                    'selected' => ['Institutions.Committees','InstitutionCommitteeAttachments.add', 'InstitutionCommitteeAttachments.edit', 'InstitutionCommitteeAttachments.view', 'InstitutionCommitteeAttachments.index','InstitutionCommitteeAttachments.delete'],
                     'params' => ['plugin' => 'Institution']
                 ],
 
