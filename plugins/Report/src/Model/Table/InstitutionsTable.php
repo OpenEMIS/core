@@ -184,6 +184,15 @@ class InstitutionsTable extends AppTable
         return $validator;
     }
 
+
+    public function validationInfrastructureNeeds(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator->notEmpty('institution_id');
+        return $validator;
+    }
+
+
     public function beforeAction(Event $event)
     { 
         $this->fields = [];
@@ -243,6 +252,8 @@ class InstitutionsTable extends AppTable
             $options['validate'] = 'guardians';
         } elseif ($data[$this->alias()]['feature'] == 'Report.InstitutionInfrastructures') {
             $options['validate'] = 'institutionInfrastructures';
+        } elseif ($data[$this->alias()]['feature'] == 'Report.InfrastructureNeeds') {
+            $options['validate'] = 'infrastructureNeeds';
         }
 
     }
@@ -563,15 +574,16 @@ class InstitutionsTable extends AppTable
                           'Report.WashReports', 
                           'Report.InstitutionClasses',
                           'Report.InstitutionCommittees',
-                          'Report.ClassAttendanceMarkedSummaryReport'
-                        ]
+                          'Report.ClassAttendanceMarkedSummaryReport',  
+                          'Report.Income',
+                          'Report.Expenditure'
+                         ]
                     )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
 
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();
-
                 $attr['options'] = $academicPeriodOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
@@ -707,7 +719,9 @@ class InstitutionsTable extends AppTable
                             'Report.BodyMasses', 
                             'Report.WashReports',
                             'Report.Guardians',
-                            'Report.InstitutionInfrastructures','Report.SubjectsBookLists'
+                            'Report.InstitutionInfrastructures',
+                            'Report.SubjectsBookLists',
+                            'Report.SpecialNeedsFacilities'
                         ])
                 ) {
                 
@@ -722,7 +736,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
 
-                if($feature == 'Report.StudentAttendanceSummary') {
+                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports') {
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
@@ -801,7 +815,10 @@ class InstitutionsTable extends AppTable
 				'Report.SpecialNeedsFacilities', 
 				'Report.InstitutionCommittees',
 				'Report.SubjectsBookLists',
-                'Report.StudentAbsences'
+                'Report.StudentAbsences',
+                'Report.InfrastructureNeeds',
+                'Report.Income',
+                'Report.Expenditure'
             ];
 
             
@@ -860,11 +877,11 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-					
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
-                        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                        //add All Institution task POCOR 5698
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     }
 
                     $attr['type'] = 'chosenSelect';

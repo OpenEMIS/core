@@ -14,6 +14,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
 use Cake\Core\Exception\Exception;
 use Cake\Log\Log;
+use Cake\Utility\Security;
 
 /**
  * DeletedLogs Model
@@ -102,7 +103,9 @@ use Cake\Log\Log;
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id', ['type' => 'select']);
+        $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+        $this->field('academic_period_id', ['type' => 'select', 'options' => $academicPeriodOptions]);
         
         $this->field('id', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
@@ -116,12 +119,48 @@ use Cake\Log\Log;
     {
         $this->Alert->info('Archive.backupReminder');
         try {
-            $connection = ConnectionManager::get('prd_cor_arc');
+
+            $transferConnections = TableRegistry::get('TransferConnections.TransferConnections');
+            $transferConnectionsData = $transferConnections->find('all')
+                ->select([
+                    'TransferConnections.host','TransferConnections.db_name','TransferConnections.host','TransferConnections.username','TransferConnections.password','TransferConnections.db_name'
+                ])
+                ->first();
+            if ( base64_encode(base64_decode($transferConnectionsData['password'], true)) === $transferConnectionsData['password']){
+            $db_password = $this->decrypt($transferConnectionsData['password'], Security::salt());
+            }
+            else {
+            $db_password = $dbConnection['db_password'];
+            }
+            $connectiontwo = ConnectionManager::config($transferConnectionsData['db_name'], [
+                'className' => 'Cake\Database\Connection',
+                'driver' => 'Cake\Database\Driver\Mysql',
+                'persistent' => false,
+                'host' => $transferConnectionsData['host'],
+                'username' => $transferConnectionsData['username'],
+                'password' => $db_password,
+                'database' => $transferConnectionsData['db_name'],
+                'encoding' => 'utf8mb4',
+                'timezone' => 'UTC',
+                'cacheMetadata' => true,
+            ]);
+            $connection = ConnectionManager::get($transferConnectionsData['db_name']);
             $connected = $connection->connect();
 
         }catch (Exception $connectionError) {
-            $this->Alert->warning('Connection.transferConnectionFail');
+            $this->Alert->warning('Connection.archiveConfigurationFail');
         }
+    }
+
+    public function decrypt($encrypted_string, $secretHash) {
+
+        $iv = substr($secretHash, 0, 16);
+        $data = base64_decode($encrypted_string);
+        $decryptedMessage = openssl_decrypt($data, "AES-256-CBC", $secretHash, $raw_input = false, $iv);
+        $decrypted = rtrim(
+            $decryptedMessage
+        );
+        return $decrypted;
     }
 
     public function onGetGeneratedBy(Event $event, Entity $entity)
@@ -137,36 +176,68 @@ use Cake\Log\Log;
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
-
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $session = $this->Session;
+        $superAdmin = $session->read('Auth.User.super_admin');
+        $is_connection_is_online = $session->read('is_connection_stablished');
+        if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriodsData = $AcademicPeriods->find()
+                ->where(['current'=> 1])
+                ->first();  
         
-        $AcademicPeriodsData = $AcademicPeriods->find()
-            ->where(['current'=> 1])
-            ->first();  
-       
-        if($entity['academic_period_id'] == $AcademicPeriodsData->id){
-            $this->Alert->error('Archive.currentAcademic');
-        }else{
-            $entity->academic_period_id = $entity['academic_period_id'];
-            $entity->generated_on = date("Y-m-d H:i:s");
-            $entity->generated_by = $this->Session->read('Auth.User.id');
+            if($entity['academic_period_id'] == $AcademicPeriodsData->id){
+                $this->Alert->error('Archive.currentAcademic');
+            }else{
+                $entity->academic_period_id = $entity['academic_period_id'];
+                $entity->generated_on = date("Y-m-d H:i:s");
+                $entity->generated_by = $this->Session->read('Auth.User.id');
+            }
+            // return $this->Alert->warning('Connection.transferConnectionFail');
+            // return true;
         }
+        else{
+            $this->Alert->error('Connection.archiveConfigurationFail', ['reset' => true]);
+            return false;
+        }
+        
+
+        // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        
+        // $AcademicPeriodsData = $AcademicPeriods->find()
+        //     ->where(['current'=> 1])
+        //     ->first();  
+       
+        // if($entity['academic_period_id'] == $AcademicPeriodsData->id){
+        //     $this->Alert->error('Archive.currentAcademic');
+        // }else{
+        //     $entity->academic_period_id = $entity['academic_period_id'];
+        //     $entity->generated_on = date("Y-m-d H:i:s");
+        //     $entity->generated_by = $this->Session->read('Auth.User.id');
+        // }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
 
         /*flag the academic period table
             academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $AcademicPeriods->updateAll(
-            ['editable' => 0, 'visible' => 0],    //field
-            ['id' => $entity->academic_period_id, 'current'=> 0] //condition
-        );
+        
+        $session = $this->Session;
+        $superAdmin = $session->read('Auth.User.super_admin');
+        $is_connection_is_online = $session->read('is_connection_stablished');
+        if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriods->updateAll(
+                ['editable' => 0, 'visible' => 0],    //field
+                ['id' => $entity->academic_period_id, 'current'=> 0] //condition
+            );
 
-        $this->log('=======>Before triggerDatabaseTransferShell', 'debug');
-        $this->triggerDatabaseTransferShell('DatabaseTransfer',$entity->academic_period_id);
-        $this->log(' <<<<<<<<<<======== After triggerDatabaseTransferShell', 'debug');
-
+            $this->log('=======>Before triggerDatabaseTransferShell', 'debug');
+            $this->triggerDatabaseTransferShell('DatabaseTransfer',$entity->academic_period_id);
+            $this->log(' <<<<<<<<<<======== After triggerDatabaseTransferShell', 'debug');
+        }
+        else{
+            $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+        }
     }
 
     public function triggerDatabaseTransferShell($shellName,$academicPeriodId = null)

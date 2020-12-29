@@ -310,7 +310,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
      
                             } else {
                                 assessmentSubjects = assessmentSubjects
-                                    .find('StaffSubjects', {class_id: classId, staff_id: securityUserId})
+                                    .find('CopyStaffSubjects', {class_id: classId, staff_id: securityUserId})
                                     .ajax({success: success, defer: true});
                                   
                             }
@@ -1081,7 +1081,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
                                 }
                             } else if (isGradesType) {
-                                if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null) {
+                                if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null && subjectStudent.AssessmentItemResults.marks == null) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
                                 }
                             } else if (isDurationType) {

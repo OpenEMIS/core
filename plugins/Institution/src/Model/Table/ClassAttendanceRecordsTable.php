@@ -33,6 +33,7 @@ class ClassAttendanceRecordsTable extends AppTable
     public function markedRecordAfterSave(Event $event, Entity $entity)
     {
         $institutionClassId = $entity->institution_class_id;
+        $educationGradeId = $entity->education_grade_id;
         $institutionId = $entity->institution_id;
         $academicPeriodId = $entity->academic_period_id;
         $date = $entity->date;
@@ -41,14 +42,15 @@ class ClassAttendanceRecordsTable extends AppTable
         $month = $date->format('n');
         $day = $date->format('j');
 
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
-        $totalMarkedCount = $StudentAttendanceMarkTypes
+        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+        $totalMarkedCount = $StudentAttendanceMarkedRecords
             ->find()
             ->where([
-                $StudentAttendanceMarkTypes->aliasField('institution_id') => $institutionId,
-                $StudentAttendanceMarkTypes->aliasField('academic_period_id') => $academicPeriodId,
-                $StudentAttendanceMarkTypes->aliasField('institution_class_id') => $institutionClassId,
-                $StudentAttendanceMarkTypes->aliasField('date') => $date 
+                $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
+                $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
+                $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
+                $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
+                $StudentAttendanceMarkedRecords->aliasField('date') => $date 
             ])
             ->count();
 
