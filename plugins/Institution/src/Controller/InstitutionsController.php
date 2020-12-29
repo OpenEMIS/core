@@ -64,6 +64,7 @@ class InstitutionsController extends AppController
         'InstitutionStaffAttendances',
         'InstitutionStudentAbsences',
         'StudentAttendances',
+        'StudentMeals',
 
         // behaviours
         'StaffBehaviours',
@@ -367,6 +368,10 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
     }
+    public function MealProgramme()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionMealProgrammes']);
+    }
     public function ReportCardStatuses()
     {
         $classId = $this->request->query['class_id'];
@@ -571,6 +576,22 @@ class InstitutionsController extends AppController
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
     }
+    }
+
+    public function StudentMeals($pass='')
+    {
+       // $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
+
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        //$this->set('_edit', $_edit);
+        $this->set('institution_id', $institutionId);
+        $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
     }
 
     public function Results()
@@ -1185,7 +1206,7 @@ class InstitutionsController extends AppController
             } elseif ($this->request->param('institutionId')) {
                 $id = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
 
-                // Remove writing to session once model has been converted to institution plugin
+               // Remove writing to session once model has been converted to institution plugin
                 $session->write('Institution.Institutions.id', $id);
             } elseif ($session->check('Institution.Institutions.id')) {
                 $id = $session->read('Institution.Institutions.id');
@@ -1251,6 +1272,12 @@ class InstitutionsController extends AppController
                 $this->Angular->addModules([
                     'institution.student.attendances.ctrl',
                     'institution.student.attendances.svc'
+                ]);
+                break;
+            case 'StudentMeals':
+                $this->Angular->addModules([
+                    'institution.student.meals.ctrl',
+                    'institution.student.meals.svc'
                 ]);
                 break;
             case 'Results':
