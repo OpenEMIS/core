@@ -240,16 +240,17 @@ class SubjectExcelBehavior extends Behavior
 					]),
 					'gender' => 'Genders.name',
 					'student_status' => 'StudentStatuses.name',
-                    //'identity_type' => $IdentityTypes->alias().'.name',//POCOR-5852 starts
-                    'identity_type' => '(CASE
+                    'identity_type' => $IdentityTypes->alias().'.name',//POCOR-5852 starts
+                    'identity_number' => $UserIdentities->alias().'.number'
+                    /*'identity_type' => '(CASE
                                             WHEN '.$IdentityTypes->alias().'.default = 0 THEN " "
                                             ELSE '.$IdentityTypes->alias().'.name
                                         END)',
                     'identity_number' => '(CASE
                                             WHEN '.$IdentityTypes->alias().'.default = 0 THEN " "
                                             ELSE '.$UserIdentities->alias().'.number
-                                        END)'
-                    //'identity_number' => $UserIdentities->alias().'.number'//POCOR-5852 ends
+                                        END)'*/
+                    //POCOR-5852 ends
                 ])
 				->contain([
 					'AcademicPeriods' => [
