@@ -273,7 +273,7 @@ class ProfilesController extends AppController
             $studentId = $this->request->pass[1];
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId);
-                $student_id = $sId['id'];
+                $student_id = $sId['student_id'];
                 $entity = $this->Profiles->get($student_id);
                 $name = $entity->name;
             } else {
