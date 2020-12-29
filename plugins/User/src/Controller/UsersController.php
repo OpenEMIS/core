@@ -14,6 +14,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
 use Firebase\JWT\JWT;
+use Cake\Datasource\ConnectionManager;
 
 class UsersController extends AppController
 {

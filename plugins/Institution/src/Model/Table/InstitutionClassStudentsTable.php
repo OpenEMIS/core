@@ -1098,7 +1098,8 @@ class InstitutionClassStudentsTable extends AppTable
                         $subjectStudentsEntities = $SubjectStudents->find()
                             ->select([
                                 $SubjectStudents->aliasField('student_id'),
-                                $SubjectStudents->aliasField('institution_subject_id')
+                                $SubjectStudents->aliasField('institution_subject_id'),
+                                $SubjectStudents->aliasField('education_subject_id')
                             ])
                             ->where([
                                 $SubjectStudents->aliasField('student_id') => $studentId,

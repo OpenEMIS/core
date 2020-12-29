@@ -51,7 +51,30 @@ class SurveysTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('survey_form', ['type' => 'hidden']);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_status');
         $this->ControllerAction->field('status', ['type' => 'hidden']);
+    }
+
+    public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+           $attr['options'] = $this->controller->getInstitutionStatusOptions($this->alias());
+
+            if (!(isset($this->request->data[$this->alias()]['institution_status']))) {
+                $option = $attr['options'];
+                $options = [
+                    'Active' => __('Active'),
+                    'Inactive' => __('Inactive'),
+                ];
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $options;
+                
+                //reset($option);
+                //$this->request->data[$this->alias()]['institution_status'] = key($option);
+            }
+            return $attr;
+        }
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -69,14 +92,22 @@ class SurveysTable extends AppTable
     }
 
     public function onExcelAfterHeader(Event $event, ArrayObject $settings)
-    {  
-    
+    {      
        if ($settings['renderNotComplete'] || $settings['renderNotOpen']) {
             $fields = $settings['sheet']['fields'];
             $requestData = json_decode($settings['process']['params']);
             $surveyFormId = $requestData->survey_form;
             $academicPeriodId = $requestData->academic_period_id;
-            
+            $institutionStatus = $requestData->institution_status;
+
+            $institutionFormStatus = [];
+            if ($institutionStatus == "Active") {
+                $institutionFormStatus = 1;
+            }
+            if ($institutionStatus == "Inactive") {
+                $institutionFormStatus = 2;
+            }
+
             $surveyFormName = $this->SurveyForms->get($surveyFormId)->name;
             $academicPeriodName = $this->AcademicPeriods->get($academicPeriodId)->name;
             $userId = $requestData->user_id;
@@ -100,6 +131,9 @@ class SurveysTable extends AppTable
                         $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id')
                     ])
                 .')'])
+                ->where([
+                            $InstitutionsTable->aliasField('institution_status_id') => $institutionFormStatus
+                        ])
                 ->innerJoinWith('Areas')
                 ->leftJoinWith('AreaAdministratives')
                 ->select([
@@ -153,6 +187,8 @@ class SurveysTable extends AppTable
                     $record->status_id = __('Open');
                 }
                 
+
+                
                 $record->academic_period_id = $academicPeriodName;
                 $record->survey_form_id = $surveyFormName;
                 
@@ -164,9 +200,16 @@ class SurveysTable extends AppTable
                         $row[] = __($record->{$field['field']});
                     } else if ($field['field'] == 'area') {
                         $row[] = __($record->area);
-                    } else if ($field['field'] == 'area_administrative') {
+                    } else if ($field['field'] == 'institution_statusActive') {
+                        $row[] = __('Active');
+                    } 
+                    else if ($field['field'] == 'institution_statusInactive') {
+                        $row[] = __('Inactive');
+                    } 
+                    else if ($field['field'] == 'area_administrative') {
                         $row[] = __($record->area_administrative);
-                    } else {
+                    }
+                    else {
                         $row[] = '';
                     }
                 }
@@ -183,7 +226,10 @@ class SurveysTable extends AppTable
                         $this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id'),
                         $this->aliasField('status_id').' IN ('.self::SURVEY_DISABLED.','.self::OPEN.','.self::PENDINGAPPROVAL.')'
                     ])
-                .')'])
+                .')'])                
+                ->where([
+                            $InstitutionsTable->aliasField('institution_status_id') => $institutionFormStatus
+                        ])
                 ->innerJoinWith('Areas')
                 ->leftJoinWith('AreaAdministratives')
                 ->select([
@@ -235,7 +281,13 @@ class SurveysTable extends AppTable
                         $row[] = __($record->{$field['field']});
                     } else if ($field['field'] == 'area') {
                         $row[] = __($record->area);
-                    } else if ($field['field'] == 'area_administrative') {
+                    }else if ($field['field'] == 'institution_statusActive') {
+                        $row[] = __('Active');
+                    } 
+                    else if ($field['field'] == 'institution_statusInactive') {
+                        $row[] = __('Inactive');
+                    } 
+                    else if ($field['field'] == 'area_administrative') {
                         $row[] = __($record->area_administrative);
                     } else {
                         $row[] = '';
@@ -255,12 +307,12 @@ class SurveysTable extends AppTable
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
-
         // Setting request data and modifying fetch condition
         $requestData = json_decode($settings['process']['params']);
         $surveyFormId = $requestData->survey_form;
         $academicPeriodId = $requestData->academic_period_id;
         $status = $requestData->status;
+        $institutionStatus = $requestData->institution_status;
        
         $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
         
@@ -356,12 +408,17 @@ class SurveysTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
+        $requestData = json_decode($settings['process']['params']);
+        
+        $institutionStatus = $requestData->institution_status;
+
 
         // To update to this code when upgrade server to PHP 5.5 and above
         // unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 
         foreach ($fields as $key => $field) {
             if ($field['field'] == 'institution_id') {
+
                 unset($fields[$key]);
                 break;
             }
@@ -394,6 +451,14 @@ class SurveysTable extends AppTable
             'type' => 'string',
             'label' => '',
         ];
+
+        $fields[] = [
+            'key' => 'institution_status'. $institutionStatus,
+            'field' =>'institution_status'. $institutionStatus,
+            'type' => 'string',
+            'label' => __('Institution Status')
+        ];
+
     }
 
     public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, Request $request)

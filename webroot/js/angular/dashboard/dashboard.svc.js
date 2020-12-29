@@ -114,6 +114,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
     var service = {
         init: init,
         extractModels: extractModels,
+        getProfileCompletness: getProfileCompletness,
         getNotices: getNotices,
         getWorkbenchItems: getWorkbenchItems,
         getWorkbenchItemsCount: getWorkbenchItemsCount,
@@ -128,19 +129,26 @@ function DashboardSvc($q, $filter, KdDataSvc) {
     function init(baseUrl) {
         KdDataSvc.base(baseUrl);
         KdDataSvc.controllerAction('Dashboard');
-        KdDataSvc.init({NoticesTable: 'Notices'});
+        KdDataSvc.init({
+            NoticesTable: 'Notices'
+        });
 
         var models = this.extractModels();
         KdDataSvc.init(this.extractModels());
     };
 
     function translate(data) {
-        KdDataSvc.init({translation: 'translate'});
+        KdDataSvc.init({
+            translation: 'translate'
+        });
         var success = function(response, deferred) {
             var translated = response.data.translated;
             deferred.resolve(translated);
         };
-        return translation.translate(data, {success:success, defer: true});
+        return translation.translate(data, {
+            success: success,
+            defer: true
+        });
     }
 
     function extractModels() {
@@ -152,6 +160,33 @@ function DashboardSvc($q, $filter, KdDataSvc) {
 
         return models;
     };
+
+    function getProfileCompletness() {
+        var success = function(response, deferred) {
+            var notices = response.data.data;
+
+            if (angular.isObject(notices) && notices.length > 0) {
+                var order = 0;
+                angular.forEach(notices, function(notice, key) {
+                    notice['message'] = notice.created + ': ' + notice.message;
+                    notice['order'] = order;
+                    properties.notices[notice.order] = notice;
+                    order++;
+                });
+
+                deferred.resolve(properties.notices);
+            } else {
+                deferred.reject('No Notices');
+            }
+        };
+
+        return NoticesTable
+            .order(['-created'])
+            .ajax({
+                success: success,
+                defer: true
+            });
+    }
 
     function getNotices() {
         var success = function(response, deferred) {
@@ -174,12 +209,15 @@ function DashboardSvc($q, $filter, KdDataSvc) {
 
         return NoticesTable
             .order(['-created'])
-            .ajax({success: success, defer: true});
+            .ajax({
+                success: success,
+                defer: true
+            });
     };
 
     function getWorkbenchItems() {
         var order = 1;
-        var workbenchItems = [];// convert object to Array - Required by Angular
+        var workbenchItems = []; // convert object to Array - Required by Angular
         angular.forEach(configModels, function(obj, key) {
             var modelObj = {
                 code: key,
@@ -269,7 +307,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                         return eCell;
                     }
                     // width: 500
-                 }
+                }
             });
         }
 
@@ -297,7 +335,8 @@ function DashboardSvc($q, $filter, KdDataSvc) {
 
         if (cols.indexOf('requester') !== -1) {
             columnDefs.push({
-                headerName: "Requester", field: "requester",
+                headerName: "Requester",
+                field: "requester",
                 filter: 'text',
                 menuTabs: menuTabs
             });
@@ -320,6 +359,9 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             .find('workbench')
             .limit(limit)
             .page(page)
-            .ajax({success: success, defer: true});
+            .ajax({
+                success: success,
+                defer: true
+            });
     };
 }
