@@ -532,6 +532,16 @@ class InstitutionsController extends AppController
     public function InstitutionStatus()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStatus']);
+
+        /*$institutionId = $this->request->pass[1];
+       
+        $backUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institution',
+            'action' => 'view',
+            'institutionId' => $institutionId,
+            'view'
+        ];*/
     }
 
     // AngularJS
