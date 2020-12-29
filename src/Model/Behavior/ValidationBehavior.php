@@ -2948,8 +2948,8 @@ class ValidationBehavior extends Behavior
         if($field == 1){
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $external_data = $ConfigItems->findByCode('external_data_source_type')->first();
-            $type = $external_data->default_value;
-            if($type == 'None'){
+            $type = $external_data->value;
+            if($type == 'None' || $type == ''){
                 return false;
             }
         }
