@@ -209,7 +209,7 @@ class StaffTable extends AppTable  {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 
-            if (in_array($feature, ['Report.StaffPositions',
+            if (in_array($feature, ['Report.StaffPositions', 'Report.PositionSummary',
                   ])) { 
                     $Areas = TableRegistry::get('Area.Areas');
                     $entity = $attr['entity'];
@@ -238,7 +238,7 @@ class StaffTable extends AppTable  {
             $feature = $this->request->data[$this->alias()]['feature'];
 
             if (in_array($feature, ['Report.StaffPositions',
-                                    'Report.StaffLeaveReport','Report.StaffDuties'])) { 
+                                    'Report.StaffLeaveReport','Report.StaffDuties','Report.PositionSummary'])) { 
                 $area_id = $this->request->data[$this->alias()]['area_id'];
                 $institutionList = [];
 
@@ -297,7 +297,8 @@ class StaffTable extends AppTable  {
                     if (in_array($feature, [
                         'Report.StaffPositions',
                         'Report.StaffLeaveReport',
-                        'Report.StaffDuties'
+                        'Report.StaffDuties',
+                        'Report.PositionSummary'
                     ])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     }else {
