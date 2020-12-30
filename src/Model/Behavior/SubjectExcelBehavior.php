@@ -208,8 +208,6 @@ class SubjectExcelBehavior extends Behavior
 			$InstitutionStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 			$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 			$InstitutionSubjectsRooms = TableRegistry::get('Institution.InstitutionSubjectsRooms');
-            $UserIdentities = TableRegistry::get('user_identities');//POCOR-5852 starts
-            $IdentityTypes = TableRegistry::get('identity_types');//POCOR-5852 ends
 		
 			$query = $Query
 				->select([
@@ -240,17 +238,6 @@ class SubjectExcelBehavior extends Behavior
 					]),
 					'gender' => 'Genders.name',
 					'student_status' => 'StudentStatuses.name',
-                    'identity_type' => $IdentityTypes->alias().'.name',//POCOR-5852 starts
-                    'identity_number' => $UserIdentities->alias().'.number'
-                    /*'identity_type' => '(CASE
-                                            WHEN '.$IdentityTypes->alias().'.default = 0 THEN " "
-                                            ELSE '.$IdentityTypes->alias().'.name
-                                        END)',
-                    'identity_number' => '(CASE
-                                            WHEN '.$IdentityTypes->alias().'.default = 0 THEN " "
-                                            ELSE '.$UserIdentities->alias().'.number
-                                        END)'*/
-                    //POCOR-5852 ends
                 ])
 				->contain([
 					'AcademicPeriods' => [
@@ -292,20 +279,7 @@ class SubjectExcelBehavior extends Behavior
 				[
 					'SubjectStudents.id = '. $InstitutionStudents->aliasField('student_id')
 				]
-				)//POCOR-5852 starts
-                ->leftJoin(
-                [$UserIdentities->alias() => $UserIdentities->table()],
-                [
-                    $UserIdentities->aliasField('security_user_id = '). $InstitutionStudents->aliasField('student_id')
-                ]
-                )
-                ->leftJoin(
-                [$IdentityTypes->alias() => $IdentityTypes->table()],
-                [
-                    $IdentityTypes->aliasField('id = '). $UserIdentities->aliasField('identity_type_id'),
-                    //$IdentityTypes->aliasField('default') => 1
-                ]
-                )//POCOR-5852 ends
+				)
 				->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()], [
 					$InstitutionSubjects->aliasField('id =') . $InstitutionSubjectStaff->aliasField('institution_subject_id')
 				])
@@ -349,7 +323,58 @@ class SubjectExcelBehavior extends Behavior
 						return $row;
 					});
 				});
-				
+                //POCOR-5852 starts
+                $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                    return $results->map(function ($row) {
+                        $Users = TableRegistry::get('security_users');
+                        $user_data= $Users
+                                    ->find()
+                                    ->where(['security_users.openemis_no' => $row->openEMIS_ID])
+                                    ->first();
+                        $UserIdentities = TableRegistry::get('user_identities');//POCOR-5852 starts
+                        $IdentityTypes = TableRegistry::get('identity_types');//POCOR-5852 ends
+                        $conditions = [
+                            $UserIdentities->aliasField('security_user_id') => $user_data->id,
+                        ];
+                        $data = $UserIdentities
+                                    ->find()    
+                                    ->select([
+                                        'identity_type' => $IdentityTypes->alias().'.name',//POCOR-5852 starts
+                                        'identity_number' => $UserIdentities->alias().'.number',
+                                        'default' => $IdentityTypes->alias().'.default'
+                                        //POCOR-5852 ends
+                                    ])
+                                    ->leftJoin(
+                                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                                        [
+                                            $IdentityTypes->aliasField('id = '). $UserIdentities->aliasField('identity_type_id')
+                                        ]
+                                    )
+                                    ->where($conditions)->toArray();
+                        $row['identity_type'] = '';            
+                        $row['identity_number'] = '';            
+                        if(!empty($data)){
+                            $identity_type_name = '';
+                            $identity_type_number = '';
+                            foreach ($data as $key => $value) {
+                                if($value->default == 1){
+                                   $identity_type_name =  $value->identity_type;    
+                                   $identity_type_number =  $value->identity_number;   
+                                   break; 
+                                }
+                            }
+                            if(!empty($identity_type_name) && !empty($identity_type_number)){
+                                $row['identity_type'] = $identity_type_name;
+                                $row['identity_number'] = $identity_type_number;
+                            }else{
+                                $row['identity_type'] = $data[0]->identity_type;
+                                $row['identity_number'] = $data[0]->identity_number;
+                            }
+                        }
+                        return $row;           
+                    });
+                });
+				//POCOR-5852 ends
             $this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
             $sheetName = $sheet['name'];
 
