@@ -39,7 +39,19 @@ class InstitutionCommitteesTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-
+		
+		$academicPeriodId = $requestData->academic_period_id;
+        $institutionId = $requestData->institution_id;
+		$conditions = [];
+		
+		if (!empty($academicPeriodId)) {
+            $conditions['AcademicPeriods.id'] = $academicPeriodId;
+        }
+        
+        if (!empty($institutionId)) {
+            $conditions[$this->aliasField('id')] = $institutionId;
+        }
+		
         $query
             ->select([
                 'name' => $this->aliasField('name'),
@@ -70,10 +82,7 @@ class InstitutionCommitteesTable extends AppTable
                     ]
                 ]
             ])
-            ->where([
-                $this->aliasField('academic_period_id') => $requestData->academic_period_id,
-                $this->aliasField('institution_id') => $requestData->institution_id
-            ]);
+            ->where($conditions);
     }
 
     public function onExcelRenderStartTime(Event $event, Entity $entity, array $attr)
