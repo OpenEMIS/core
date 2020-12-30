@@ -1,3 +1,8 @@
+### [3.61.2] - 2020-12-30
+- Bug Fixed: Student Profiles > Report Cards feature
+- Bug Fixed: Institutions > Students > Undo feature
+- Implemented: Improve management of student nationalities
+
 ### [3.61.1] - 2020-12-24
 - Implemented: Enable Changes in the Education Structure across school years
 - Bug Fixed: Institution > Performance > Assessment: Only show assigned subjects
