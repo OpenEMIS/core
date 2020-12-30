@@ -577,7 +577,7 @@ class StudentsTable extends ControllerActionTable
             'institution_student_id' => !empty($entity->student_id) ? $entity->student_id : NULL,
             'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
         ];
-        if($this->action == 'remove') {
+        if(!empty($this->action) && $this->action == 'remove') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $username = $this->Auth->user()['username']; 
