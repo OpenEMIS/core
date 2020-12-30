@@ -128,8 +128,10 @@ class UserBehavior extends Behavior
             $this->_table->fields['birthplace_area_id']['type'] = 'areapicker';
             $this->_table->fields['birthplace_area_id']['source_model'] = 'Area.AreaAdministratives';
             $this->_table->fields['gender_id']['type'] = 'select';
-            $this->_table->fields['nationality_id']['visible'] = ['index' => false, 'view' => true, 'edit' => true, 'add' => false];
-            $this->_table->fields['identity_type_id']['visible'] = ['index' => false, 'view' => true, 'edit' => true, 'add' => false];
+            //POCOR-5668 remove nationality, identity type, identity number if show view=>false else view=>true 
+            $this->_table->fields['nationality_id']['visible'] = ['index' => false, 'view' => false, 'edit' => false, 'add' => false];
+            $this->_table->fields['identity_type_id']['visible'] = ['index' => false, 'view' => false, 'edit' => false, 'add' => false];
+            $this->_table->fields['identity_number']['visible'] = ['index' => false, 'view' => false, 'edit' => false, 'add' => false];
 
             $i = 10;
             $this->_table->fields['first_name']['order'] = $i++;
@@ -156,10 +158,9 @@ class UserBehavior extends Behavior
             }
 
             $this->_table->fields['date_of_birth']['order'] = $i++;
-            //POCOR-5668 remove nationality, identity type, identity number
-            //$this->_table->fields['nationality_id']['order'] = $i++;
-            //$this->_table->fields['identity_type_id']['order'] = $i++;
-            //$this->_table->fields['identity_number']['order'] = $i++;
+            $this->_table->fields['nationality_id']['order'] = $i++;
+            $this->_table->fields['identity_type_id']['order'] = $i++;
+            $this->_table->fields['identity_number']['order'] = $i++;
             $this->_table->fields['email']['order'] = $i++;
 
             $this->_table->fields['address']['order'] = $i++;
@@ -200,7 +201,7 @@ class UserBehavior extends Behavior
                 if ($this->isCAv4()) {
                     $this->_table->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     //POCOR-5668 add identity section starts
-                    $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => false]]);
                     $security_users_id = '';
                     $model = $this->_table;
                     if($this->_table->controller->request->params['pass'][0] == 'view'){
@@ -228,7 +229,7 @@ class UserBehavior extends Behavior
                 } else {
                     $this->_table->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     //POCOR-5668 add identity section starts
-                    $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => false]]);
                     $security_users_id = '';
                     $model = $this->_table;
                     if($this->_table->controller->request->params['pass'][0] == 'view'){
@@ -294,6 +295,7 @@ class UserBehavior extends Behavior
                 )
                 ->where([
                     $UserIdentities->aliasField('security_user_id') => $security_users_id,
+                    $Nationalities->aliasField('identity_type_id != ') => '',
                 ])
                 ->toArray();
         return $data;
