@@ -64,7 +64,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         columnDefs: [],
         rowData: [],
         headerHeight: 38,
-        // rowHeight: 125,
+        rowHeight: 80,
         minColWidth: 200,
         enableColResize: true,
         enableSorting: true,
@@ -81,7 +81,9 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         },
         onGridReady: function() {
             if (angular.isDefined(vm.gridOptions.api)) {
-                vm.setGridData();
+                setTimeout(function() {
+                    vm.setGridData();
+                })
                 vm.setColumnDef();
             }
         },
@@ -98,7 +100,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             subject_id: vm.selectedSubject,
             education_grade_id: vm.selectedEducationGrade
         },
-        getRowHeight: getRowHeight,
+        // getRowHeight: getRowHeight,
     };
 
     // ready
