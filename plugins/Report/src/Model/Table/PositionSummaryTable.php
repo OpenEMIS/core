@@ -55,18 +55,17 @@ class PositionSummaryTable extends AppTable
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
         
-        $query
-            ->select([
+		$query
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('staff_position_title_id'),
+				'institution_id' => 'Institutions.id',
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',               
                 'area_code' => 'Areas.code',
                 'area_name' => 'Areas.name',
-                'openemis_no' => $Staff->aliasField('openemis_no'),
-                'first_name' => $Staff->aliasField('first_name'),
-                'last_name' => $Staff->aliasField('last_name'),
-                'gender' => $Genders->aliasField('name'),
-            ])
-            ->contain([
+			])
+			->contain([
                 'StaffPositionTitles' => [
                     'fields' => [
                         'StaffPositionTitles.id',
@@ -88,27 +87,72 @@ class PositionSummaryTable extends AppTable
                     ]
                 ]
             ])
-            ->leftJoin(
-                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
-                    [
-                        $InstitutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id'),
-                        $InstitutionStaff->aliasField('institution_id = ') . $this->aliasField('institution_id')
-                    ]
-                )
-            ->leftJoin(
-                    [$Staff->alias() => $Staff->table()],
-                    [
-                        $Staff->aliasField('id = ') . $InstitutionStaff->aliasField('staff_id')
-                    ]
-                )
-            ->leftJoin(
-                    [$Genders->alias() => $Genders->table()],
-                    [
-                        $Genders->aliasField('id = ') . $Staff->aliasField('gender_id')
-                    ]
-                )
-            ->where([$where])
-            ->order(['institution_name']);
+			->where([$where])
+			->group(['institution_id',$this->aliasField('staff_position_title_id')])
+			->order(['institution_name']);
+			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+				return $results->map(function ($row) {
+					
+					$InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+					$InstitutionPositions = TableRegistry::get('institution_positions');
+					$Staff = TableRegistry::get('Security.Users');
+					$Genders = TableRegistry::get('User.Genders');
+					
+					$positionData = $InstitutionPositions->find()
+						->select([
+							$InstitutionPositions->aliasField('id'),
+							$InstitutionPositions->aliasField('staff_position_title_id')
+						])
+						->where([$InstitutionPositions->aliasField('institution_id') => $row['institution_id']])
+						->where([$InstitutionPositions->aliasField('staff_position_title_id') => $row['staff_position_title_id']])
+						->toArray();
+						
+					$positionIds = [];
+					foreach($positionData as $data) {
+						$positionIds[] = $data->id;
+					}
+					
+					$staffData = $InstitutionStaff
+						->find()
+						->select([
+							'gender_id' => $Genders->aliasField('id'),
+							'gender' => $Genders->aliasField('name'),
+						])
+						->where([
+							$InstitutionStaff->aliasField('institution_id') => $row['institution_id'],
+							$InstitutionStaff->aliasField('institution_position_id').' IN' => $positionIds
+						])
+						->innerJoin(
+							[$Staff->alias() => $Staff->table()],
+							[
+								$Staff->aliasField('id = ') . $InstitutionStaff->aliasField('staff_id')
+							]
+						)
+						->innerJoin(
+							[$Genders->alias() => $Genders->table()],
+							[
+								$Genders->aliasField('id = ') . $Staff->aliasField('gender_id')
+							]
+						)
+						->toArray();
+						
+						foreach($staffData as $staff) {
+							if($staff->gender_id == 1) {
+								$male_occupancy[] = $staff->gender;
+							}
+							if($staff->gender_id == 2) {
+								$female_occupancy[] = $staff->gender;
+							}
+						}
+						$male_count = count($male_occupancy);
+						$female_count = count($female_occupancy);
+					
+					$row['male_count'] = !empty($male_count) ? $male_count : 0;
+					$row['female_count'] = !empty($female_count) ? $female_count : 0;
+					return $row;
+				});
+			});
+		
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -152,28 +196,16 @@ class PositionSummaryTable extends AppTable
 
         $newFields[] = [
             'key' => '',
-            'field' => 'openemis_no',
-            'type' => 'string',
-            'label' => __('OpenEMIS ID')
+            'field' => 'male_count',
+            'type' => 'integer',
+            'label' => __('Male Occupancy')
         ];
+		
         $newFields[] = [
             'key' => '',
-            'field' => 'first_name',
-            'type' => 'string',
-            'label' => __('First Name')
-        ];
-
-        $newFields[] = [
-            'key' => '',
-            'field' => 'last_name',
-            'type' => 'string',
-            'label' => __('Last Name')
-        ];
-        $newFields[] = [
-            'key' => '',
-            'field' => 'gender',
-            'type' => 'string',
-            'label' => __('Gender')
+            'field' => 'female_count',
+            'type' => 'integer',
+            'label' => __('Female Occupancy')
         ];
 
         $fields->exchangeArray($newFields);
