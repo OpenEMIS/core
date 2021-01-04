@@ -115,6 +115,8 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'A' => 
         array (
             'Aura\\Intl\\_Config\\' => 18,
+            'Archive\\Test\\' => 13,
+            'Archive\\' => 8,
             'App\\Test\\' => 9,
             'App\\' => 4,
             'ADmad\\JwtAuth\\' => 14,
@@ -327,6 +329,14 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'Aura\\Intl\\_Config\\' => 
         array (
             0 => __DIR__ . '/..' . '/aura/intl/config',
+        ),
+        'Archive\\Test\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Archive/tests',
+        ),
+        'Archive\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Archive/src',
         ),
         'App\\Test\\' => 
         array (

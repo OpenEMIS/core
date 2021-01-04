@@ -87,6 +87,13 @@ class StaffTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('HighChart', [
+			'staff_attendance' => [
+                '_function' => 'getNumberOfStaffByAttendanceType',
+                '_defaultColors' => false,
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => ['text' => __('Years')]],
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
             'number_of_staff_by_type' => [
                 '_function' => 'getNumberOfStaffByType',
                 '_defaultColors' => false,
@@ -332,7 +339,7 @@ class StaffTable extends ControllerActionTable
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => __('BEMIS ID')
+            'label' => __('OpenEMIS ID')
         ];
 
         $extraField[] = [
@@ -762,7 +769,7 @@ class StaffTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    {	
         $institutionPositionId = $entity->institution_position_id;
         $staffId = $entity->staff_id;
         $institutionId = $entity->institution_id;
@@ -817,7 +824,7 @@ class StaffTable extends ControllerActionTable
             } else {
                 $this->updateStaffStatus($entity, $this->endOfAssignment);
             }
-        }
+		}
 
         $listeners = [
             TableRegistry::get('Institution.InstitutionSubjectStaff'),
@@ -1135,7 +1142,7 @@ class StaffTable extends ControllerActionTable
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
-    {
+    {  
         $broadcaster = $this;
         $listeners = [
             TableRegistry::get('Institution.StaffLeave')    // Staff Leave associated to institution must be deleted.
@@ -1245,6 +1252,21 @@ class StaffTable extends ControllerActionTable
             $this->removeStaffRole($entity);
         } catch (InvalidPrimaryKeyException $ex) {
             Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
+        }
+
+        $body = array();
+
+        $body = [  
+            'institution_staff_id' => !empty($entity->staff_id) ? $entity->staff_id : NULL,
+             'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
+        ];
+
+        if($this->action == 'remove') {
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $username = $this->Auth->user()['username']; 
+                $Webhooks->triggerShell('staff_delete', ['username' => $username], $body);
+            } 
         }
     }
 
@@ -1514,6 +1536,101 @@ class StaffTable extends ControllerActionTable
         }
 
         $params['dataSet'] = $dataSet->getArrayCopy();
+        return $params;
+    }
+	
+	public function getNumberOfStaffByAttendanceType($params = [])
+    {
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->alias().'.'.$key] = $value;
+        }
+
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $currentYearId = $AcademicPeriod->getCurrent();
+		
+		if (!empty($currentYearId)) {
+            $currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+        } else {
+            $currentYear = __('Not Defined');
+        }
+		
+		if (!empty($currentYearId)) {
+            $currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+        } else {
+            $currentYear = __('Not Defined');
+        }
+		
+		$institutionStaff = TableRegistry::get('institution_staff');
+
+        $staffAttendances = $institutionStaff->find('all')
+            ->select([
+				'date' => 'CURDATE()',
+				'start_time' => 'MIN(institutionShifts.start_time)',
+				'institution_staff.start_date',
+				'institution_staff.end_date',
+				'present' => '(IF((institutionStaffAttendances.time_in <= start_time) OR (institutionStaffAttendances.time_in > start_time),1,0))',
+				'absent' => '(IF(institutionStaffAttendances.time_in IS NULL,1,0))',
+				'late' => '(IF(institutionStaffAttendances.time_in > start_time, 1,0))',
+            ])
+			->innerJoin(
+			['institutionStaffShifts' => 'institution_staff_shifts'],
+			[
+				'institutionStaffShifts.staff_id = institution_staff.staff_id ',
+			]
+			)
+			->innerJoin(
+			['institutionShifts' => 'institution_shifts'],
+			[
+				'institutionShifts.id = institutionStaffShifts.shift_id ',
+				'institution_staff.institution_id = institutionShifts.institution_id',
+			]
+			)
+			->leftJoin(
+			['institutionStaffAttendances' => 'institution_staff_attendances'],
+			[
+				'institutionStaffAttendances.date' => date('Y-m-d'),
+				'institutionStaffAttendances.staff_id = institutionStaffShifts.staff_id '
+			]
+			)
+			->where([
+				//'institutionStaffAttendances.academic_period_id' => $currentYearId,
+                'institutionShifts.institution_id' => $conditions['institution_id'],
+                'institution_staff.start_date <= CURDATE() AND (institution_staff.end_date IS NULL OR institution_staff.end_date >= CURDATE())',
+            ])
+			->group([
+				'institutionShifts.institution_id',
+				'institutionStaffShifts.staff_id',
+            ])
+			->toArray()
+            ;
+
+        $attendanceData = [];
+
+        $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
+        $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
+        $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
+		
+		$total_present = $total_absent = $total_late = 0;
+		
+        foreach ($staffAttendances as $key => $attendance) {
+		
+			$total_present = $attendance->present + $total_present;
+			$total_absent = $attendance->absent + $total_absent;
+			$total_late = $attendance->late + $total_late;
+        }
+		if(!empty($currentYear)) {
+			$attendanceData[$currentYear] = $currentYear;
+			$dataSet['Present']['data'][$currentYear] = $total_present;
+			$dataSet['Absent']['data'][$currentYear] = $total_absent;
+			$dataSet['Late']['data'][$currentYear] = $total_late;
+		}
+		
+        // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+        $params['options']['subtitle'] = array('text' => __('For Today'));
+        $params['options']['xAxis']['categories'] = array_values($attendanceData);
+        $params['dataSet'] = $dataSet;
         return $params;
     }
 

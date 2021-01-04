@@ -42,12 +42,28 @@ class EducationLevelsTable extends ControllerActionTable
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		list($systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
-		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
-        $this->controller->set(compact('systemOptions', 'selectedSystem'));
-		$query->where([$this->aliasField('education_system_id') => $selectedSystem])
-                        ->order([$this->aliasField('order')]);
+		// Academic period filter
+	    $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $academicPeriodOptions = $this->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationSystems->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
+        // Education System filter
+        $systemOptions = $this->EducationSystems->getSystemOptions($selectedAcademicPeriod);
+        if (!empty($systemOptions )) {
+        	$selectedSystem = !empty($this->request->query('system')) ? $this->request->query('system') : key($systemOptions);
+        } else {
+        	$systemOptions = ['0' => '-- '.__('No Education System').' --'] + $systemOptions;
+        	$selectedSystem = !empty($this->request->query('system')) ? $this->request->query('system') : 0;
+        }
+        
+        $this->controller->set(compact('systemOptions', 'selectedSystem'));
+        $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
+        $query->where([$this->aliasField('education_system_id') => $selectedSystem])
+                        ->order([$this->aliasField('order')]);
+        
+        //sort
 		$sortList = ['name', 'EducationLevelIsced.name', 'EducationSystems.name'];
 		if (array_key_exists('sortWhitelist', $extra['options'])) {
 			$sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
@@ -81,7 +97,7 @@ class EducationLevelsTable extends ControllerActionTable
 
 	public function getSelectOptions()
 	{
-		//Return all required options and their key
+		 //Return all required options and their key
 		$systemOptions = $this->EducationSystems
 			->find('list')
 			->find('visible')
@@ -90,6 +106,24 @@ class EducationLevelsTable extends ControllerActionTable
 		$selectedSystem = !is_null($this->request->query('system')) ? $this->request->query('system') : key($systemOptions);
 
 		return compact('systemOptions', 'selectedSystem');
+	}
+
+	public function getEducationLevelOptions($selectedAcademicPeriod)
+	{
+		$educationSystems = TableRegistry::get('Education.EducationSystems');
+
+		$list = $this
+			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
+			->find('visible')
+			->contain(['EducationSystems'])
+			->where([$educationSystems->aliasField('academic_period_id') => $selectedAcademicPeriod])
+			->order([
+				$this->EducationSystems->aliasField('order'),
+				$this->aliasField('order')
+			])
+			->toArray();
+
+		return $list;
 	}
 
 	public function getLevelOptions()
@@ -129,4 +163,17 @@ class EducationLevelsTable extends ControllerActionTable
 
         return $returnList;
     }
+
+    //updating type of academic period
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        list(,,  $systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
+        $attr['options'] = $cycleOptions;
+        if ($action == 'add') {
+            $attr['default'] = $selectedCycle;
+        }
+
+        return $attr;
+    }
+
 }
