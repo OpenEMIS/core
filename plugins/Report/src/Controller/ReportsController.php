@@ -15,6 +15,7 @@ class ReportsController extends AppController
         $this->ControllerAction->models = [
             'Directory'  => ['className' => 'Report.Directory', 'actions' => ['index', 'add']],
             'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
+            'Profiles'	=> ['className' => 'Report.Profiles', 'actions' => ['index', 'add']],
             'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
             'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
             'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
@@ -253,4 +254,10 @@ class ReportsController extends AppController
         echo json_encode($dataSet);
         die;
     }
+	
+	public function Profiles()
+    { 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
+    }
+	
 }
