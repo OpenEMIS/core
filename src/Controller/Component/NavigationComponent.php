@@ -487,6 +487,13 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Attachments'],
                 'params' => ['plugin' => 'Institution']
             ],
+			
+			'Institutions.Profiles.index' => [
+				'title' => 'Profiles',
+				'parent' => 'Institution.General',
+				'selected' => ['Institutions.Profiles'],
+				'params' => ['plugin' => 'Institution']
+			],
 
             'Institution.Academic' => [
                 'title' => 'Academic',
@@ -1436,6 +1443,11 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            'Reports.Profiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
             'Reports.Students' => [
                 'title' => 'Students',
                 'parent' => 'Reports',
@@ -1521,6 +1533,7 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'link' => false,
             ],
+
             'Areas.Areas' => [
                 'title' => 'Administrative Boundaries',
                 'parent' => 'SystemSetup',
@@ -1632,6 +1645,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Risk'],
                 'selected' => ['Risks.Risks']
             ],
+			'ProfileTemplates.Templates' => [
+				'title' => 'Profiles',
+				'parent' => 'SystemSetup',
+				'params' => ['plugin' => 'ProfileTemplate'],
+				'selected' => ['ProfileTemplates.Templates']
+			],
 
             'Security' => [
                 'title' => 'Security',
