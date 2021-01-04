@@ -80,38 +80,6 @@ class InstitutionStatusTable extends ControllerActionTable
         $this->hasMany('Students', ['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentBehaviours', ['className' => 'Institution.StudentBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStudentAbsences', ['className' => 'Institution.InstitutionStudentAbsences', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-        $this->hasMany('InstitutionBankAccounts', ['className' => 'Institution.InstitutionBankAccounts', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionGrades', ['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-        $this->hasMany('StudentPromotion', ['className' => 'Institution.StudentPromotion', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentWithdraw', ['className' => 'Institution.StudentWithdraw', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentTransferOut', ['className' => 'Institution.StudentTransferOut', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'previous_institution_id']);
-        $this->hasMany('StudentTransferIn', ['className' => 'Institution.StudentTransferIn', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'previous_institution_id']);
-        $this->hasMany('AssessmentItemResults', ['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionQualityVisits', ['className' => 'Quality.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-        $this->belongsToMany('ExaminationCentresExaminations', [
-            'className' => 'Examination.ExaminationCentresExaminations',
-            'joinTable' => 'examination_centres_examinations_institutions',
-            'foreignKey' => 'institution_id',
-            'targetForeignKey' => ['examination_centre_id', 'examination_id'],
-            'through' => 'Examination.ExaminationCentresExaminationsInstitutions',
-            'dependent' => true,
-            'cascadeCallbacks' => true
-        ]);
         $this->belongsToMany('SecurityGroups', [
             'className' => 'Security.SystemGroups',
             'joinTable' => 'security_group_institutions',
@@ -134,6 +102,7 @@ class InstitutionStatusTable extends ControllerActionTable
             'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
+
         $this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'logo_name',
@@ -305,6 +274,315 @@ class InstitutionStatusTable extends ControllerActionTable
 
     }
 
+    public function getSelectOptions()
+    {
+    //Return all required options and their key
+        $withdrawStudentsOptions = [];
+        foreach ($this->withdrawStudents as $key => $databaseType) {
+            $withdrawStudentsOptions[$databaseType['id']] = __($databaseType['name']);
+        }
+        $selectedDatabaseType = key($withdrawStudentsOptions);
+
+        return compact('withdrawStudentsOptions', 'selectedDatabaseType');
+    }
+
+    public function getViewShiftDetail($institutionId, $academicPeriod)
+    {
+        $data = $this->InstitutionShifts->find()
+        ->innerJoinWith('Institutions')
+        ->innerJoinWith('LocationInstitutions')
+        ->innerJoinWith('ShiftOptions')
+        ->select([
+            'Owner' => 'Institutions.name',
+            'OwnerId' => 'Institutions.id',
+            'Occupier' => 'LocationInstitutions.name',
+            'OccupierId' => 'LocationInstitutions.id',
+            'Shift' => 'ShiftOptions.name',
+            'ShiftId' => 'ShiftOptions.id',
+            'StartTime' => 'InstitutionShifts.start_time',
+            'EndTime' => 'InstitutionShifts.end_time'
+        ])
+        ->where([
+            'OR' => [
+                [$this->InstitutionShifts->aliasField('location_institution_id') => $institutionId],
+                [$this->InstitutionShifts->aliasField('institution_id') => $institutionId]
+            ],
+            $this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
+        ])
+        ->toArray();
+
+        return $data;
+    }
+
+    public function getDefaultImgMsg()
+    {
+        $width = 200;
+        $height = 200;
+        $photoMsg = __($this->photoMessage);
+        $photoMsg = str_replace('%width', $width, $photoMsg);
+        $photoMsg = str_replace('%height', $height, $photoMsg);
+        $formatSupported = '.jpg, .jpeg, .png, .gif';
+        $formatMsg = sprintf(__($this->formatSupport), $formatSupported);
+        return sprintf($this->defaultImgMsg, $photoMsg, $formatMsg);
+    }
+
+    public function getDefaultImgIndexClass()
+    {
+        return $this->defaultImgIndexClass;
+    }
+
+    public function getDefaultImgViewClass()
+    {
+        return $this->defaultImgViewClass;
+    }
+
+    public function getDefaultImgView()
+    {
+        $value = "";
+        $controllerName = $this->controller->name;
+
+        $value = $this->defaultLogoView;
+
+        return $value;
+    }
+
+    public function onGetLogoContent(Event $event, Entity $entity)
+    {
+        $fileContent = $entity->logo_content;
+        $value = "";
+        if (empty($fileContent) && is_null($fileContent)) {
+            $value = $this->defaultLogoView;
+        } else {
+            $value = base64_encode(stream_get_contents($fileContent));//$fileContent;
+        }
+
+        return $value;
+    }
+
+    /******************************************************************************************************************
+    **
+    ** view action methods
+    **
+    ******************************************************************************************************************/
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder([
+            'information_section',
+            'logo_content',
+            'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
+            'institution_ownership_id', 'institution_gender_id', 'date_opened', 'date_closed', 'institution_status_id',
+
+            'shift_section',
+            'shift_type', 'shift_details',
+
+            'location_section',
+            'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
+
+            'area_section',
+            'area_id',
+
+            'area_administrative_section',
+            'area_administrative_id',
+
+            'contact_section',
+            'contact_person', 'telephone', 'fax', 'email', 'website',
+
+            'map_section',
+            'map',
+        ]);
+
+        // update button
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        
+        $session = $this->request->session();
+        $institutionId = $this->request->pass[1];
+        
+        $extraButtons = [
+            'close' => [
+                'Institution' => ['Institutions', 'edit', $institutionId],
+                'action' => 'InstitutionStatus',
+                'icon' => '<i class="fa fa-times"></i>',
+                'title' => __('Update')
+            ]
+        ];
+        foreach ($extraButtons as $key => $attr) {
+            if ($this->AccessControl->check($attr['permission'])) {
+                $button = [
+                    'type' => 'button',
+                    'attr' => $btnAttr,
+                    'url' => [0 => 'edit', 1 => $institutionId] 
+                ];
+                $button['url']['action'] = $attr['action'];
+                $button['attr']['title'] = $attr['title'];
+                $button['label'] = $attr['icon'];
+
+                $extra['toolbarButtons'][$key] = $button;
+            }
+        }
+        // update button
+
+        // overwrite back button
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        
+        $extraButtons = [
+            'back' => [
+                'Institution' => ['Institutions', 'Institutions', 'index'],
+                'action' => 'Institutions',
+                'icon' => '<i class="fa kd-back"></i>',
+                'title' => __('Back')
+            ]
+        ];
+        foreach ($extraButtons as $key => $attr) {
+            if ($this->AccessControl->check($attr['permission'])) {
+                $button = [
+                    'type' => 'button',
+                    'attr' => $btnAttr,
+                    'url' => [0 => 'index'] 
+                ];
+                $button['url']['action'] = $attr['action'];
+                $button['attr']['title'] = $attr['title'];
+                $button['label'] = $attr['icon'];
+
+                $extra['toolbarButtons'][$key] = $button;
+            }
+        }
+        // back button
+        
+    }
+
+    /******************************************************************************************************************
+    **
+    ** index action methods
+    **
+    ******************************************************************************************************************/
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->Session->delete('Institutions.id');
+
+        $plugin = $this->controller->plugin;
+        $name = $this->controller->name;
+        $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->alias(), 'image'];
+        $imageDefault = 'fa kd-institutions';
+        $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
+
+        $this->setFieldOrder([
+            'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
+        ]);
+
+        $this->setFieldVisible(['index'], [
+            'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
+        ]);
+        $this->controller->set('ngController', 'AdvancedSearchCtrl');
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        //the query options are setup so that Security.InstitutionBehavior can reuse it
+        $extra['query'] = [
+            'contain' => ['Types', 'Areas','Statuses'],
+            'select' => [
+                $this->aliasField('id'),
+                $this->aliasField('code'),
+                $this->aliasField('name'),
+                $this->aliasField('area_id'),
+                $this->aliasField('institution_status_id'),
+                'Areas.name',
+                'Types.name',
+                'Statuses.name'
+            ],
+        ];
+        $extra['auto_contain'] = false;
+        $query->contain($extra['query']['contain']);
+        $query->select($extra['query']['select']);
+
+        // POCOR-3983 if no sort, active status will be followed by inactive status
+        if (!isset($this->request->query['sort'])) {
+            $query->order([
+                $this->aliasField('institution_status_id') => 'ASC',
+                $this->aliasField('name') => 'ASC'
+            ]);
+        }
+        // end POCOR-3983
+    }
+
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $this->dashboardQuery = clone $query;
+        $search = $this->getSearchKey();
+        if (empty($search) && !$this->isAdvancedSearchEnabled()) {
+            // redirect to school dashboard if it is only one record and no add access
+            $addAccess = $this->AccessControl->check(['Institutions', 'add']);
+            if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
+                $entity = $data->first();
+                $event->stopPropagation();
+                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
+                return $this->controller->redirect($action);
+            } elseif ($data->count() == 0 && Configure::read('schoolMode')) {
+                $event->stopPropagation();
+                $this->Alert->info('Institutions.noInstitution', ['reset' => true]);
+                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Institutions', 'add'];
+                return $this->controller->redirect($action);
+            }
+        }
+
+        // to display message after redirect
+        $sessionKey = 'HideButton.warning';
+        if ($this->Session->check($sessionKey)) {
+            $this->Alert->warning('security.noAccess');
+            $this->Session->delete($sessionKey);
+        }
+    }
+
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        if ($this->action == 'index') {
+            $institutionCount = $this->find();
+            $conditions = [];
+
+            $institutionCount = clone $this->dashboardQuery;
+            $cloneClass = clone $this->dashboardQuery;
+
+            $models = [
+                ['Types', $this->aliasField('institution_type_id'), 'Type', 'query' => $this->dashboardQuery],
+                ['Sectors', $this->aliasField('institution_sector_id'), 'Sector', 'query' => $this->dashboardQuery],
+                ['Localities', $this->aliasField('institution_locality_id'), 'Locality', 'query' => $this->dashboardQuery],
+            ];
+
+            foreach ($models as $key => $model) {
+                $institutionArray[$key] = $this->getDonutChart('institutions', $model);
+            }
+
+            $indexDashboard = 'dashboard';
+            $count = $institutionCount->count();
+            unset($institutionCount);
+
+            if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+                $extra['elements']['mini_dashboard'] = [
+                    'name' => $indexDashboard,
+                    'data' => [
+                        'model' => 'institutions',
+                        'modelCount' => $count,
+                        'modelArray' => $institutionArray,
+                    ],
+                    'options' => [],
+                    'order' => 1
+                ];
+            }
+        }
+        $extra['formButtons'] = false;
+    }
+
+
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $data = $this->find()->where(['id' => $entity->id])->first();
@@ -338,15 +616,38 @@ class InstitutionStatusTable extends ControllerActionTable
             $this->field('institution_status_id', ['type' => 'readonly', 'attr' => ['label' => __('New Status'), 'value' => $newStatus]]);
         }
     }
-    $institutionId = $this->request->pass[1];
-    $extra['redirect'] = [
-        'plugin' => 'Institution',
-        'controller' => 'Institutions',
-        'action' => 'Institutions',
-        'view',
-        0 => $institutionId
-    ];
 
+    // hide list button
+    $btnAttr = [
+        'class' => 'btn btn-xs btn-default',
+        'data-toggle' => 'tooltip',
+        'data-placement' => 'bottom',
+        'escape' => false
+    ];
+    
+    $extraButtons = [
+        'list' => [
+            'Institution' => ['Institutions', 'Institutions', 'index'],
+            'action' => 'Institutions',
+            'icon' => '<i class="fa kd-lists"></i>',
+            'title' => __('List')
+        ]
+    ];
+    foreach ($extraButtons as $key => $attr) {
+        if ($this->AccessControl->check($attr['permission'])) {
+            $button = [
+                'type' => 'hidden',
+                'attr' => $btnAttr,
+                'url' => [0 => 'index'] 
+            ];
+            $button['url']['action'] = $attr['action'];
+            $button['attr']['title'] = $attr['title'];
+            $button['label'] = $attr['icon'];
+
+            $extra['toolbarButtons'][$key] = $button;
+        }
+    }
+        // back button
 }
 
 public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -406,18 +707,6 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
     }
 }
 
-public function getSelectOptions()
-{
-    //Return all required options and their key
-    $withdrawStudentsOptions = [];
-    foreach ($this->withdrawStudents as $key => $databaseType) {
-        $withdrawStudentsOptions[$databaseType['id']] = __($databaseType['name']);
-    }
-    $selectedDatabaseType = key($withdrawStudentsOptions);
-
-    return compact('withdrawStudentsOptions', 'selectedDatabaseType');
-}
-
 public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Request $request)
 {
     $session = $this->request->session();
@@ -460,111 +749,5 @@ public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Requ
 
     return $attr;
 }
-
-public function getViewShiftDetail($institutionId, $academicPeriod)
-{
-    $data = $this->InstitutionShifts->find()
-    ->innerJoinWith('Institutions')
-    ->innerJoinWith('LocationInstitutions')
-    ->innerJoinWith('ShiftOptions')
-    ->select([
-        'Owner' => 'Institutions.name',
-        'OwnerId' => 'Institutions.id',
-        'Occupier' => 'LocationInstitutions.name',
-        'OccupierId' => 'LocationInstitutions.id',
-        'Shift' => 'ShiftOptions.name',
-        'ShiftId' => 'ShiftOptions.id',
-        'StartTime' => 'InstitutionShifts.start_time',
-        'EndTime' => 'InstitutionShifts.end_time'
-    ])
-    ->where([
-        'OR' => [
-            [$this->InstitutionShifts->aliasField('location_institution_id') => $institutionId],
-            [$this->InstitutionShifts->aliasField('institution_id') => $institutionId]
-        ],
-        $this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
-    ])
-    ->toArray();
-
-    return $data;
-}
-
-public function getDefaultImgMsg()
-{
-    $width = 200;
-    $height = 200;
-    $photoMsg = __($this->photoMessage);
-    $photoMsg = str_replace('%width', $width, $photoMsg);
-    $photoMsg = str_replace('%height', $height, $photoMsg);
-    $formatSupported = '.jpg, .jpeg, .png, .gif';
-    $formatMsg = sprintf(__($this->formatSupport), $formatSupported);
-    return sprintf($this->defaultImgMsg, $photoMsg, $formatMsg);
-}
-
-public function getDefaultImgIndexClass()
-{
-    return $this->defaultImgIndexClass;
-}
-
-public function getDefaultImgViewClass()
-{
-    return $this->defaultImgViewClass;
-}
-
-public function getDefaultImgView()
-{
-    $value = "";
-    $controllerName = $this->controller->name;
-
-    $value = $this->defaultLogoView;
-
-    return $value;
-}
-
-public function onGetLogoContent(Event $event, Entity $entity)
-{
-    $fileContent = $entity->logo_content;
-    $value = "";
-    if (empty($fileContent) && is_null($fileContent)) {
-        $value = $this->defaultLogoView;
-    } else {
-            $value = base64_encode(stream_get_contents($fileContent));//$fileContent;
-        }
-
-        return $value;
-    }
-
-    /******************************************************************************************************************
-    **
-    ** view action methods
-    **
-    ******************************************************************************************************************/
-     public function viewBeforeAction(Event $event, ArrayObject $extra)
-     {
-        $this->setFieldOrder([
-            'information_section',
-            'logo_content',
-            'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_gender_id', 'date_opened', 'date_closed', 'institution_status_id',
-
-            'shift_section',
-            'shift_type', 'shift_details',
-
-            'location_section',
-            'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
-
-            'area_section',
-            'area_id',
-
-            'area_administrative_section',
-            'area_administrative_id',
-
-            'contact_section',
-            'contact_person', 'telephone', 'fax', 'email', 'website',
-
-            'map_section',
-            'map',
-        ]);
-    }
 
 }
