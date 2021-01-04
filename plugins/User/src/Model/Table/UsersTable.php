@@ -534,7 +534,7 @@ class UsersTable extends AppTable
         $latest = $this->find()
             ->order($this->aliasField('id').' DESC')
             ->first();
-
+        
         if (is_array($latest)) {
             $latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
         } else {
@@ -545,9 +545,11 @@ class UsersTable extends AppTable
         } else {
             $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
         }
-
+        
+        $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
+        
         $currentStamp = time();
-        if ($latestDbStamp <= $currentStamp) {
+        if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
             $newStamp = $latestDbStamp + 1;
         } else {
             $newStamp = $currentStamp;
@@ -564,8 +566,8 @@ class UsersTable extends AppTable
            $resultOpenemisTemp = $openemisTemps->find('all')                
                 ->order(['id' => 'DESC'])
                 ->first();
-           
-           $newOpenemisNo = $resultOpenemisTemp->openemis_no + 1;
+           $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
+           $newOpenemisNo = $resultOpenemisNoTemp + 1;
         }       
         
         $openemisTemp = $openemisTemps->newEntity();
@@ -1269,5 +1271,31 @@ class UsersTable extends AppTable
 		}
         
         die;
+    }
+    
+    public function findStudents($institutionId = 0){
+       
+        $query = TableRegistry::get('Institution.Students');
+        $studentQuery = $query->find()
+                ->contain(['Users'])                
+                ->where(['institution_id' => $institutionId])
+                ;
+        
+        
+        $student = $studentQuery->select(['id' =>'Users.openemis_no','openemis_no' =>'Users.openemis_no', 
+                    'first_name' =>"Users.first_name",
+                    'middle_name' =>"Users.middle_name",
+                    'third_name' =>"Users.third_name",
+                    'last_name' => "Users.last_name"
+                ]);
+        
+        $students = $student->formatResults(function($results) {
+                return $results->map(function($row) { 
+                    $row->name = preg_replace('/\s+/', ' ',$row->first_name.' '.$row->middle_name.' '.$row->third_name.' '.$row->last_name);
+                    return $row;
+                });
+            })->toArray();
+            
+        return $students;
     }
 }

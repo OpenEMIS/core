@@ -94,10 +94,22 @@ class FieldOptionBehavior extends Behavior {
                     ]
                 ]);
         }
-
+        //POCOR-5668 add external validation starts
+        if($this->_table->alias == 'Nationalities'){
+            $validator
+                ->requirePresence('external_validation')
+                ->add('external_validation', [
+                    'externalVal' => [
+                        'rule' => 'check_external_validation',
+                        //'provider' => 'table',
+                        'message' => __('Please configure External Data Source in System Configurations to enable External Validation.')
+                    ]
+                ]); 
+        }
+        //POCOR-5668 add external validation ends
         $validator
             ->requirePresence('visible')
-            ->requirePresence('default')
+            ->requirePresence('default')            
             ;
     }
 
@@ -156,6 +168,11 @@ class FieldOptionBehavior extends Behavior {
         $this->addFieldOptionControl($extra, ['fieldOptions' => $fieldOptions, 'selectedOption' => $selectedOption]);
 
         $model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);
+        //POCOR-5668 add external validation starts
+        if($model->alias == 'Nationalities'){
+            $model->field('external_validation', ['options' => $model->getSelectOptions('general.enabledisable'), 'after' => 'default', 'default'=>0]);
+        }
+        //POCOR-5668 add external validation ends
         $model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true], 'after' => 'default']);
 
         $extra['config']['selectedLink'] = ['controller' => 'FieldOptions', 'action' => 'index'];
@@ -169,6 +186,9 @@ class FieldOptionBehavior extends Behavior {
             $model->fields['visible']['type'] = 'disabled';
             $model->fields['international_code']['type'] = 'disabled';
             $model->fields['national_code']['type'] = 'disabled';
+            //POCOR-5668 starts
+            $model->fields['external_validation']['type'] = 'disabled';
+            //POCOR-5668 ends
         }
     }
 
@@ -176,7 +196,7 @@ class FieldOptionBehavior extends Behavior {
     {
         $model = $this->_table;
         $model->field('name', ['after' => 'editable']);
-        $fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code'];
+        $fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code','external_validation'];
         foreach ($fields as $field) {
             if (array_key_exists($field, $model->fields)) {
                 if (is_array($model->fields[$field]['visible'])) {

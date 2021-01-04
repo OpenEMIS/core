@@ -43,7 +43,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     var translateText = {
         'original': {
-            'OpenEmisId': 'BEMIS ID',
+            'OpenEmisId': 'OpenEMIS ID',
             'Name': 'Name',
             'Attendance': 'Attendance',
             'ReasonComment': 'Reason / Comment',
@@ -65,6 +65,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         StudentAttendances: 'Institution.StudentAttendances',
         InstitutionClasses: 'Institution.InstitutionClasses',
+        InstitutionClassGrades: 'Institution.InstitutionClassGrades',
         StudentAttendanceTypes: 'Attendance.StudentAttendanceTypes',
         InstitutionClassSubjects: 'Institution.InstitutionClassSubjects',
         AbsenceTypes: 'Institution.AbsenceTypes',
@@ -87,6 +88,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getWeekListOptions: getWeekListOptions,
         getDayListOptions: getDayListOptions,
         getClassOptions: getClassOptions,
+        getEducationGradeOptions: getEducationGradeOptions,
         getSubjectOptions: getSubjectOptions,
         getPeriodOptions: getPeriodOptions,
         getIsMarked: getIsMarked,
@@ -254,6 +256,32 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         return [];
     }
+    
+    function getEducationGradeOptions(institutionId, academicPeriodId, classId) {
+        var success = function(response, deferred) {
+            var educationGradeList = response.data.data;
+            if (angular.isObject(educationGradeList)) {
+                if (educationGradeList.length > 0) {
+                    deferred.resolve(educationGradeList);
+                } else {
+                    AlertSvc.warning(controllerScope, 'You do not have any education grade');
+                    deferred.reject('You do not have any education grades');
+                }
+            } else {
+                deferred.reject('There was an error when retrieving the education grade list');
+            }
+        };
+
+        return InstitutionClasses
+            .find('gradesByInstitutionAndAcademicPeriodAndInstitutionClass', {
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId,
+                institution_class_id: classId
+            })
+            .ajax({success: success, defer: true});
+
+        return [];
+    }
 
     function getSubjectOptions(institutionId,institutionClassId,academicPeriodId,day_id) {
         var success = function(response, deferred) {
@@ -277,7 +305,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return [];
     }
 
-    function getPeriodOptions(institutionClassId, academicPeriodId) {
+    function getPeriodOptions(institutionClassId, academicPeriodId,day_id, educationGradeId) {
         var success = function(response, deferred) {
             var attendancePeriodList = response.data.data;
             if (angular.isObject(attendancePeriodList) && attendancePeriodList.length > 0) {
@@ -290,7 +318,9 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return StudentAttendanceMarkTypes
             .find('periodByClass', {
                 institution_class_id: institutionClassId,
-                academic_period_id: academicPeriodId
+                academic_period_id: academicPeriodId,
+                day_id: day_id,
+                education_grade_id: educationGradeId
             })
             .ajax({success: success, defer: true});
     }
@@ -299,6 +329,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
+            education_grade_id: params.education_grade_id,
             academic_period_id: params.academic_period_id,
             attendance_period_id: params.attendance_period_id,
             day_id: params.day_id,
@@ -330,6 +361,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
+            education_grade_id: params.education_grade_id,
             academic_period_id: params.academic_period_id,
             day_id: params.day_id,
             attendance_period_id: params.attendance_period_id,
@@ -378,13 +410,14 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             student_id: data.student_id,
             institution_id: data.institution_id,
             academic_period_id: data.academic_period_id,
-            institution_class_id: data.institution_class_id,
+            institution_class_id: data.institution_class_id,            
             absence_type_id: data.institution_student_absences.absence_type_id,
             student_absence_reason_id: data.institution_student_absences.student_absence_reason_id,
             comment: data.institution_student_absences.comment,
             period: context.period,
             date: context.date,
-            subject_id: context.subject_id
+            subject_id: context.subject_id,
+            education_grade_id: context.education_grade_id
         };
 
         return StudentAbsencesPeriodDetails.save(studentAbsenceData);
@@ -394,6 +427,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
+            education_grade_id: params.education_grade_id,
             academic_period_id: params.academic_period_id,
             date: params.day_id,
             period: params.attendance_period_id,
@@ -633,6 +667,9 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         eSelect.value = data.institution_student_absences[dataKey];
         eSelect.addEventListener('change', function () {
+            setTimeout(function(){
+                setRowDatas(context, data)
+            }, 200)
             var oldValue = data.institution_student_absences[dataKey];
             var newValue = eSelect.value;
 
@@ -720,6 +757,18 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         eCell.appendChild(eSelect);
         return eCell;
+    }
+
+    function setRowDatas(context, data) {
+        var studentList = context.scope.$ctrl.classStudentList;
+        studentList.forEach(function (dataItem, index) {
+            if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
+                dataItem.rowHeight = 60;
+            } else {
+                dataItem.rowHeight = 120;
+            }
+        });
+        context.scope.$ctrl.gridOptions.api.setRowData(studentList);
     }
 
     function getEditCommentElement(data, context, api) {
@@ -922,7 +971,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return html;
     }
 
-    function isMarkableSubjectAttendance(institutionId,academicPeriodId,selectedClass) {
+    function isMarkableSubjectAttendance(institutionId,academicPeriodId,selectedClass,selectedDay) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.data[0].code)) {
                 var isMarkableSubjectAttendance = false;
@@ -941,7 +990,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             .find('attendanceTypeCode', {
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId,
-                institution_class_id: selectedClass                
+                institution_class_id: selectedClass,
+                day_id: selectedDay                
             })
             .ajax({success: success, defer: true});
 

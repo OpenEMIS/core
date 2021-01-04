@@ -123,7 +123,7 @@ class MapBehavior extends Behavior
             ];
             $attr['mapConfig'] = json_encode($mapConfig);
             $attr['mapPosition'] = json_encode($mapPosition);
-                
+            
             return $event->subject()->renderElement('OpenEmis.map', ['attr' => $attr]);
         }
 
