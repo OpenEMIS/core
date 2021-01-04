@@ -600,11 +600,11 @@ class UserNationalitiesTable extends ControllerActionTable {
 
             $fieldMapping = [
                 '{page}' => 1,
-                '{limit}' => $this->request->query('limit'),
-                '{first_name}' => $this->request->query('first_name'),
-                '{last_name}' => $this->request->query('last_name'),
-                '{identity_number}' => $this->request->query('identity_number'),
-                '{date_of_birth}' => $this->request->query('date_of_birth')
+                '{limit}' => trim($this->request->query('limit')),
+                '{first_name}' => trim($this->request->query('first_name')),
+                '{last_name}' => trim($this->request->query('last_name')),
+                '{identity_number}' => trim($this->request->query('identity_number')),
+                '{date_of_birth}' => trim($this->request->query('date_of_birth'))
             ];
 
             $http = new Client();
@@ -748,14 +748,15 @@ class UserNationalitiesTable extends ControllerActionTable {
 
         //$count =1;//for testing purpose   
         //check nationality has default 1 or 0, if 1 than show identity type/number
-        if($this->request->params['pass'][0] == 'edit'){ //when edit nationality
+        $nationalityId ='';
+        if(isset($this->request->params['pass'][0]) && $this->request->params['pass'][0] == 'edit'){ //when edit nationality
             $nationalityId = $this->paramsDecode($this->request->params['pass']['1'])['nationality_id'];
-        }else{
+        }else if(isset($this->request['data']['UserNationalities']['nationality_id'])){
             $nationalityId = $this->request['data']['UserNationalities']['nationality_id'];
         } 
         $nationalityData = $this->getNationalityTableData($nationalityId);  
         
-        if($nationalityData->default == 1 && $count ==1){
+        if($nationalityData->default == 1 && $count > 1){
             return $count; 
         } else{
             return 0;   
