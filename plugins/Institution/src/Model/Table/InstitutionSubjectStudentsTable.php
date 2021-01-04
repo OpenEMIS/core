@@ -245,6 +245,90 @@ class InstitutionSubjectStudentsTable extends AppTable
             });
     }
 
+    //copy for POCOR-5758
+    public function findStudentResults(Query $query, array $options)
+    {   
+                $institutionId = $options['institution_id'];
+                $classId = $options['class_id'];
+                $assessmentId = $options['assessment_id'];
+                $periodId = $options['academic_period_id'];
+                $subjectId = $options['subject_id'];
+                $gradeId = $options['grade_id'];
+
+                $Users = $this->Users;
+                $InstitutionSubjects = $this->InstitutionSubjects;
+                $StudentStatuses = $this->StudentStatuses;
+                $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+                
+                $educationId = $InstitutionSubjects->find()->select('education_subject_id')->where(['id' => $subjectId])->first();
+
+                return $query
+                    ->select([
+                        $ItemResults->aliasField('id'),
+                        $ItemResults->aliasField('marks'),
+                        $ItemResults->aliasField('assessment_grading_option_id'),
+                        $ItemResults->aliasField('assessment_period_id'),
+                        $this->aliasField('student_id'),
+                        $this->aliasField('student_status_id'),
+                        $this->aliasField('total_mark'),
+                        $Users->aliasField('openemis_no'),
+                        $Users->aliasField('first_name'),
+                        $Users->aliasField('middle_name'),
+                        $Users->aliasField('third_name'),
+                        $Users->aliasField('last_name'),
+                        $Users->aliasField('preferred_name'),
+                        $StudentStatuses->aliasField('code'),
+                        $StudentStatuses->aliasField('name')
+                    ])
+                    ->matching('Users')
+                    ->contain('StudentStatuses')
+                    ->innerJoin(
+                        [$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
+                        [
+                            $InstitutionSubjects->aliasField('id') => $subjectId,
+                            $InstitutionSubjects->aliasField('institution_id') => $institutionId,
+                            $InstitutionSubjects->aliasField('academic_period_id') => $periodId,
+                        ]
+                    )
+                    ->leftJoin(
+                        [$ItemResults->alias() => $ItemResults->table()],
+                        [
+                            $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
+                            $ItemResults->aliasField('assessment_id') => $assessmentId,
+                            $ItemResults->aliasField('academic_period_id') => $periodId,
+                            $ItemResults->aliasField('education_subject_id') => $educationId->education_subject_id,
+                            $ItemResults->aliasField('education_grade_id') => $gradeId
+                        ]
+                    )
+                    ->leftJoin(
+                        [$StudentStatuses->alias() => $StudentStatuses->table()],
+                        [
+                           $this->aliasField('student_status_id') => $StudentStatuses->aliasField('id')
+                        ]
+                    )
+                    ->where([
+                        $this->aliasField('institution_subject_id') => $subjectId,
+                        $this->aliasField('institution_class_id') => $classId,
+                        $InstitutionSubjects->aliasField('institution_id') => $institutionId,
+                        /*$InstitutionSubjects->aliasField('institution_id') => $institutionId,
+                        $this->aliasField('institution_class_id') => $classId,*/
+                        //$StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']
+                    ])
+                    ->group([
+                        $this->aliasField('student_id')
+                    ])
+                    ->order([
+                        $this->aliasField('student_id')
+                    ])
+                    ->formatResults(function ($results) {
+                        $arrResults = is_array($results) ? $results : $results->toArray();
+                        foreach ($arrResults as &$result) {
+                            $result['student_status']['name'] = __($result['student_status']['name']);
+                        }
+                        return $arrResults;
+                    });
+    }
+
     public function findAssessmentResults(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];

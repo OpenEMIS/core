@@ -1,3 +1,128 @@
+### [3.61.2] - 2020-12-30
+- Bug Fixed: Student Profiles > Report Cards feature
+- Bug Fixed: Institutions > Students > Undo feature
+- Implemented: Improve management of student nationalities
+
+### [3.61.1] - 2020-12-24
+- Implemented: Enable Changes in the Education Structure across school years
+- Bug Fixed: Institution > Performance > Assessment: Only show assigned subjects
+- Bug Fixed: Issues with Archive feature
+
+### [3.61.0] - 2020-12-22
+- Implemented: Education System setup
+- Bug Fixed: Webhook Institution Create/Update: To include institution_area_education_id and institution_area_administrative_id
+- Bug Fixed: Webhook Subject create/update: To include institution_classes_name,institution_classes_id,education_grades_id,education_subjects_id
+- Bug Fixed: Webhook Class Create/Update: To include education_grade_id
+- Bug Fixed: Webhook Security User delete
+- Bug Fixed: Webhook Student/Staff Delete: To include institution_id
+- Bug Fixed: API endpoints to return JSON response and not redirects to the sign-in page
+- Bug Fixed: Institution > Report Cards > Comments: Total Mark for Assessment is not reflecting even though Total Mark is filled up in Assessment page
+
+### [3.60.0] - 2020-12-11
+- Implemented: Devlop a function to show percentage of user profile data completion
+- Implemented: Develop Data Archiving feature
+- Implemented: Enhancement of the OpenEMIS mapping features
+- Bug Fixed: Reports > Institution > Add > WASH Report : Changes in WASH report page
+- Bug Fixed: Administrations > System Setup > APIs : Unable to change User Authentication API security permission
+
+### [3.59.1] - 2020-12-05
+- Implemented: Quick Search and Advanced Search option for Institution > Students List > Withdrawn
+- Implemented: Enable Guardians to access their pupil's records
+- Bug Fixed: Institution > Performance > Assessments > Edit: Marks are not displaying for Assessments with more than one Assessment Period
+- Bug Fixed: Reports > Survey: Data reflected incorrectly upon generating and downloading the report
+- Bug Fixed: Institutions > Performance > Assessment: Edit Permission do not work for Homeroom Teacher role
+- Bug Fixed: Remove the InsitutionClassSubjects shell script as it keeps running in the background
+- Bug Fixed: Validate Report Cards / Outcome / Competency Comments - Comments cannot start with special characters
+
+### [3.59.0] - 2020-12-02
+- Implemented: Enhancement of the Core survey report module
+- Implemneted: Reports for the Infrastructure module
+- Implemented: Automation of a revised WebGIS input file and API for user authentification
+- Bug Fixed: Student Attendance POST API
+
+### [3.58.3] - 2020-11-27
+- Implemented: Add Results and Comments tabs under Institution > Student > Academic Outcomes
+- Implemented: Add a chart for student/staff attendance to institution dashboard
+- Implemented: Reports > Institution > Finance (Income and Expenditure) Report
+- Bug Fixed: Import Extracurriculars: Changes to the Import Template
+- Bug Fixed: Institutions > Students > Academic > Competencies tab: Competencies filter list down all Competencies even though student is not taking all
+- Bug Fixed: Institutions > Attendance > Students: Add an Education Grade field
+- Bug Fixed: Institutions > Attendance > Students: Disable edit for future date attendances
+- Bug Fixed: Reports > Institutions > Special Needs Facilities: Changes to the report and filters
+- Bug Fixed: Reports > Students > Guardians: Add an Institution filter option and an Institution column in Guardians report
+- Bug Fixed: Institution > Academic > Schedules: Schedules not found even though user has been given the Permission rights
+
+### [3.58.2] - 2020-11-19
+- Data Archiving feature in OpenEMIS Core
+- Develop Reports > Directoty > User List
+- Develop API Feature student assessment (write)
+- Develop API Feature student assessment (read)
+- Develop Staff Duties feature
+- Develop Export Subject List in Institutions > Subjects Page
+- Develop Export Class List Institutions > Class Page
+- Develop Reports > Staff > Duties Report
+- Develop Reports > Institution > Summary Report
+- Bug Fix in Institution > Finance > Expenditure > Add page
+- Bug Fix in Institution > Finance > Income > Add page
+- Bug Fix in Institutions > Performance > Assessments page
+- Bug Fix in Institution > Attendance > Students page
+- Bug Fix in Institutions > Students > Academic > Extracurricular page
+- Bug Fix in Institution > Students > Import > Import Extracurricular feature
+- Bug Fix in student overview page
+
+### [3.58.1] - 2020-11-03
+- Implemented: Webhook Feature class (delete)
+- Implemented: Webhook Feature staff (delete)
+- Implemented: Webhook Feature student (delete)
+- Implemented: Webhook Feature subject (delete)
+- Implemented: Develop a function to view students report cards online
+- Bug Fixed: Institutions > Forms > Survey : System does not save mandatory dropdown fields when user clicks on save
+- Bug Fixed: Administration > Survey > Forms: Survey created with "Open" status is still resulting in Institutions having "Not Completed" status in the Survey report
+- Bug Fixed: Institution > Attendance > Staff/Student : Replace BEMIS ID with OpenEMIS ID
+- Bug Fixed: Administration > Survey > Forms > Forms tab: To allow Repeater questions in Surveys
+- Bug Fixed: Institutions > Attendance : Set default height for table row
+- Bug Fixed: Institutions > Attendance : Set default height for table row
+
+### [3.58.0] - 2020-10-27
+- Implemented: Allow students from different class to be combined into the same subjects / Allow students from same class to split across multiple subjects
+- Implemented: Administration > System Setup > Attendance - Student Mark Types: reorder function
+- Implemented: Webhook Feature staff (update)	
+- Implemented: Webhook Feature programme (delete)
+- Implemented: Webhook Feature programme (update)
+- Implemented: Webhook Feature programme (create)
+- Implemented: Webhook Feature institution (delete)
+- Implemented: Webhook Feature institution (update)
+- Implemented: Allow user to set dates to Administrations > Attendance configurations
+- Implemented: Add Subject filter to Class Attendance Marked Report 
+- Implemented: Add a case workflow for unmarked attendance
+- Bug Fixed: Webhooks: Missing field output after Update Programme has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Create Programme has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Update Staff has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Create Staff has been triggered in Core
+- Bug Fixed: Webhooks Institution Delete: To remove some Webhooks field output
+- Bug Fixed: Webhooks Programme Delete: To remove some Webhooks field output
+- Bug Fixed: Webhooks Update Programme: Updated Webhooks fields
+- Bug Fixed: Webhooks Create Programme: Updated Webhooks fields
+- Bug Fixed: Webhooks: When Class is created in Core and Subjects are automatically created, Create Subject was not triggered in Webhooks
+- Bug Fixed: Webhooks: Missing field output after Create Staff has been triggered in Core
+- Bug Fixed: Login: 404 Error Message encountered upon successful login
+- Bug Fixed: Institution > Attendance > Students: When changing Class dropdown, the page loads and it keeps loading
+
+### [3.57.10] - 2020-10-02
+- Implemented: Webhook Feature student (update)
+- Implemented: Webhook Feature student (create)
+- Implemented: Webhook Feature subject (update)
+- Implemented: Webhook Feature subject (create)
+- Implemented: Webhook Feature staff (create)
+- Bug Fixed: Institution > Academic > Schedules > Timetable > Timetable tab: Rooms field has no option
+- Bug Fixed: Administration > System Configuration > Webhooks : Add id to Class Create output
+- Bug Fixed: Webhooks Output for Create Class: Missing fields in Webhooks Output
+- Bug Fixed: Administration > System Configuration > Webhooks : Add institution id to Institutions Create output
+- Bug Fixed: Administration > System Configuration > Webhooks : Add id to Class Update output
+- Bug Fixed: Institutions > Attendance > Students: View and Edit permissions
+- Bug Fixed: Institutions > Students/Staff > Add : Unable to create users as OpenEMIS ID is showing 1 or 2 digits.
+- Bug Fixed: Institutions > Academic > Subjects : Subject list should follow Institution > Programme subject list
+
 ### [3.57.9] - 2020-09-25
 - Bug Fixed: Webhooks Output for Update Class: Missing fields in Webhooks Output
 - Bug Fixed: Administration > Security > Groups : 404 error when creating group that is linked to an institution
