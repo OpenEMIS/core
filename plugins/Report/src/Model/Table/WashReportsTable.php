@@ -490,8 +490,8 @@ class WashReportsTable extends AppTable
         
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                
-                $areaLevel = '';
+                //POCOR-5865 starts
+                /*$areaLevel = '';
                 $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
                 $areaLevelId = $ConfigItems->value('institution_area_level_id');
                 
@@ -502,9 +502,10 @@ class WashReportsTable extends AppTable
             
                 if (!empty($value->name)) {
                     $areaLevel = $value->name;
-                }
+                }*/
 
-                $row['area_level'] = $areaLevel;
+                $row['area_level'] = $row->area_code;
+                //POCOR-5865 ends
                 return $row;
             });
         });
@@ -595,21 +596,21 @@ class WashReportsTable extends AppTable
             'label' => __('Region Name')
         ];
         //add columns  POCOR-5865 ends
-        
+        //update label  POCOR-5865 starts
         $extraFields[] = [
             'key' => 'area_level',
             'field' => 'area_level',
             'type' => 'string',
-            'label' => __('Area Level')
+            'label' => __('District Code')
         ];
         
         $extraFields[] = [
             'key' => 'area_name',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('Area Education')
+            'label' => __('District Name')
         ];
-        
+        //update label POCOR-5865 ends
         $extraFields[] = [
             'key' => 'AcademicPeriods.name',
             'field' => 'academic_period',
