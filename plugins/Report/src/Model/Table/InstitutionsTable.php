@@ -721,7 +721,8 @@ class InstitutionsTable extends AppTable
                             'Report.Guardians',
                             'Report.InstitutionInfrastructures',
                             'Report.SubjectsBookLists',
-                            'Report.SpecialNeedsFacilities'
+                            'Report.SpecialNeedsFacilities',
+                            'Report.InstitutionSubjects'
                         ])
                 ) {
                 
@@ -736,7 +737,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
 
-                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports') {
+                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.InstitutionSubjects') {
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
