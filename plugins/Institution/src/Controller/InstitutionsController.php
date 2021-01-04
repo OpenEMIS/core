@@ -192,6 +192,11 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAttachments']);
     }
+	
+	public function Profiles()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Profiles']);
+    }
 
     public function StaffAppraisals()
     {
@@ -434,6 +439,10 @@ class InstitutionsController extends AppController
     public function InstitutionStudentsReportCards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
+    }
+	public function InstitutionReportCards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionReportCards']);
     }
     public function StaffTransferIn()
     {
