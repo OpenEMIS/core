@@ -15,6 +15,7 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\OptionsTrait;
 use Cake\Http\Client;
+use Cake\Network\Session;
 
 class UserNationalitiesTable extends ControllerActionTable {
     use OptionsTrait;
@@ -612,11 +613,11 @@ class UserNationalitiesTable extends ControllerActionTable {
 
             $fieldMapping = [
                 '{page}' => 1,
-                '{limit}' => $this->request->query('limit'),
-                '{first_name}' => $this->request->query('first_name'),
-                '{last_name}' => $this->request->query('last_name'),
-                '{identity_number}' => $this->request->query('identity_number'),
-                '{date_of_birth}' => $this->request->query('date_of_birth')
+                '{limit}' => trim($this->request->query('limit')),
+                '{first_name}' => trim($this->request->query('first_name')),
+                '{last_name}' => trim($this->request->query('last_name')),
+                '{identity_number}' => trim($this->request->query('identity_number')),
+                '{date_of_birth}' => trim($this->request->query('date_of_birth'))
             ];
 
             $http = new Client();
@@ -747,31 +748,56 @@ class UserNationalitiesTable extends ControllerActionTable {
     }
     
     public function showIdentityTypeAndNumber(){
-
+        $count = 0;
+        $nationalityId = $identityName ='';
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $arr = array('StudentIdentities', 'StaffIdentities','GuardianIdentities','OtherIdentities');
-        $conditions = [
-            'code IN ' => $arr,
-            'value' => 1,
-        ];
+        //$arr = array('StudentIdentities', 'StaffIdentities','GuardianIdentities','OtherIdentities');
+        if(isset($this->request)){
+            if($this->request->params['controller'] == 'Students'){
+                $identityName = 'StudentIdentities';
+            } elseif ($this->request->params['controller'] == 'Staff') {
+                $identityName = 'StaffIdentities';
+            } else {
+                $session = $this->request->session();
+                $isStudent = $session->read('Directory.Directories.is_student');
+                $isStaff = $session->read('Directory.Directories.is_staff');
+                $isGuardian = $session->read('Directory.Directories.is_guardian');
+                if($this->request->params['controller'] == 'Directories'){
+                    if($isStudent == 1){
+                        $identityName = 'StudentIdentities';    
+                    }elseif ($isStaff == 1) {
+                        $identityName = 'StaffIdentities'; 
+                    }elseif ($is_guardian == 1) {
+                        $identityName = 'GuardianIdentities'; 
+                    }else{
+                        $identityName = 'OtherIdentities';
+                    }
+                }
+            }
+            
+            $conditions = [
+                    'code' => $identityName,
+                    'value' => 1,
+                ];
+            $count = $ConfigItems->find()
+                ->where($conditions)
+                ->count();
 
-        $count = $ConfigItems->find()
-            ->where($conditions)
-            ->count();
-
-        //$count =1;//for testing purpose   
-        //check nationality has default 1 or 0, if 1 than show identity type/number
-        if($this->request->params['pass'][0] == 'edit'){ //when edit nationality
-            $nationalityId = $this->paramsDecode($this->request->params['pass']['1'])['nationality_id'];
-        }else{
-            $nationalityId = $this->request['data']['UserNationalities']['nationality_id'];
-        } 
-        $nationalityData = $this->getNationalityTableData($nationalityId);  
-        if($nationalityData->default == 1 && $count ==1){
-            return $count; 
-        } else{
-            return 0;   
+            //$count =1;//for testing purpose   
+            //check nationality has default 1 or 0, if 1 than show identity type/number
+            if(isset($this->request->params['pass'][0]) && $this->request->params['pass'][0] == 'edit'){ //when edit nationality
+                $nationalityId = $this->paramsDecode($this->request->params['pass']['1'])['nationality_id'];
+            }else if(isset($this->request['data']['UserNationalities']['nationality_id'])){
+                $nationalityId = $this->request['data']['UserNationalities']['nationality_id'];
+            } 
+            $nationalityData = $this->getNationalityTableData($nationalityId);  
+            if($nationalityData->default == 1 && $count >= 1){
+                return $count; 
+            } else{
+                return 0;   
+            }    
         }
+        return 0;
     }
     // task POCOR-5668 ends
 }
