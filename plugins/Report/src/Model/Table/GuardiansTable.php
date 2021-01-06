@@ -222,6 +222,7 @@ class GuardiansTable extends AppTable {
             'student_first_name' => 'Users.first_name',
             'student_last_name' => 'Users.last_name',
             'openemis_no' => 'Users.openemis_no',
+            'date_of_birth' => 'Users.date_of_birth',
             'institution_name' => 'Institutions.name',
             'education_grade_name' => 'EducationGrades.name',
             'institution_class_name' => 'InstitutionClasses.name',
