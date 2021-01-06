@@ -60,7 +60,8 @@ class InstitutionSubjectsTable extends AppTable  {
                 'institution_code' => 'Institutions.code',
                 'institution_name' => $query->func()->concat(['Institutions.code' => 'literal', ' - ', 'Institutions.name' => 'literal']),
                 'area_code' => 'Areas.code',
-                'area_name' => $query->func()->concat(['Areas.code' => 'literal', ' - ', 'Areas.name' => 'literal']),
+                // 'area_name' => $query->func()->concat(['Areas.code' => 'literal', ' - ', 'Areas.name' => 'literal']),
+                'area_name' => 'Areas.name',
                 'area_administrative_code' => 'AreaAdministratives.code',
                 'area_administrative_name' => 'AreaAdministratives.name',
                 'EducationGrades.name',
@@ -95,7 +96,54 @@ class InstitutionSubjectsTable extends AppTable  {
             ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
                 $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
             ])
-            ->where($conditions);  
+            ->where($conditions);
+            
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                
+                $areas1 = TableRegistry::get('areas');
+                $areasData = $areas1
+                            ->find()
+                            ->where([$areas1->alias('code')=>$row->area_code])
+                            ->first();
+                $row['region_code'] = '';            
+                $row['region_name'] = '';
+                if(!empty($areasData)){
+                    $areas = TableRegistry::get('areas');
+                    $areaLevels = TableRegistry::get('area_levels');
+                    $institutions = TableRegistry::get('institutions');
+                    $val = $areas
+                                ->find()
+                                ->select([
+                                    $areas1->aliasField('code'),
+                                    $areas1->aliasField('name'),
+                                    ])
+                                ->leftJoin(
+                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [
+                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
+                                    ]
+                                )
+                                ->leftJoin(
+                                    [$institutions->alias() => $institutions->table()],
+                                    [
+                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
+                                    ]
+                                )    
+                                ->where([
+                                    $areaLevels->aliasField('level !=') => 1,
+                                    $areas->aliasField('id') => $areasData->parent_id
+                                ])->first();
+                    
+                    if (!empty($val->name) && !empty($val->code)) {
+                        $row['region_code'] = $val->code;
+                        $row['region_name'] = $val->name;
+                    }
+                }            
+                
+                return $row;
+            });
+        });
                
     }
 
@@ -181,12 +229,33 @@ class InstitutionSubjectsTable extends AppTable  {
                     'type' => 'string',
                     'label' => __('Institution')
                 ];
+
+                $newFields[] = [
+                    'key' => '',
+                    'field' => 'region_code',
+                    'type' => 'string',
+                    'label' => 'Region Code'
+                ];
+        
+                $newFields[] = [
+                    'key' => '',
+                    'field' => 'region_name',
+                    'type' => 'string',
+                    'label' => 'Region Name'
+                ];
                 
+                $newFields[] = [
+                    'key' => 'area_code',
+                    'field' => 'area_code',
+                    'type' => 'string',
+                    'label' => __('District Code')
+                ];
+
                 $newFields[] = [
                     'key' => 'area_name',
                     'field' => 'area_name',
                     'type' => 'string',
-                    'label' => __('Area Education')
+                    'label' => __('District Name')
                 ];
                 
                 $newFields[] = [
