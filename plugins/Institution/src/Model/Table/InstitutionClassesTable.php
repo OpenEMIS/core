@@ -200,7 +200,18 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+        //POCOR-5852 starts
+        if (empty($this->request->query['academic_period_id'])) {
+            $this->request->query['academic_period_id'] = $selectedAcademicPeriodId;
+            $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
+            if (!empty($gradeOptions)) {
+                $gradeOptions = [-1 => __('All Grades')] + $gradeOptions;
+            }
 
+            $selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
+            $this->request->query['education_grade_id'] = $selectedEducationGradeId;
+        }
+        //POCOR-5852 ends
         $this->field('class_number', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
