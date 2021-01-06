@@ -128,19 +128,20 @@ class StaffLeaveReportTable extends AppTable {
 						->toArray();
 					
 					foreach($customFieldData as $data) {
-						if($data->custom_field_value) {
-							$row[$data->custom_field] = $data->custom_field_value;
-						} else if($data->number_value) {
-							$row[$data->custom_field] = $data->custom_field_value;
-							
-						} else if($data->decimal_value) {
-							$row[$data->custom_field] = $data->custom_field_value;
-							
-						} else if($data->textarea_value) {
-							$row[$data->custom_field] = $data->custom_field_value;
-							
-						} else if($data->date_value) {
-							$row[$data->custom_field] = $data->custom_field_value;
+						if(!empty($data->text_value)) {
+							$row[$data->custom_field_id] = $data->text_value;
+						} 
+						if(!empty($data->number_value)) {
+							$row[$data->custom_field_id] = $data->number_value;
+						}
+						if(!empty($data->decimal_value)) {
+							$row[$data->custom_field] = $data->decimal_value;
+						}
+						if(!empty($data->textarea_value)) {
+							$row[$data->custom_field] = $data->textarea_value;
+						}
+						if(!empty($data->date_value)) {
+							$row[$data->custom_field] = $data->date_value;
 							
 						}
 						
@@ -325,15 +326,17 @@ class StaffLeaveReportTable extends AppTable {
 					
 		$customFieldData = $StaffCustomFields->find()
 			->select([
+				'custom_field_id' => 'staff_custom_fields.id',
 				'custom_field' => 'staff_custom_fields.name'
 			])
 			->toArray();
 		
 		foreach($customFieldData as $data) {
+			$custom_field_id = $data->custom_field_id;
 			$custom_field = $data->custom_field;
 			$extraFields[] = [
 				'key' => '',
-				'field' => $custom_field,
+				'field' => $custom_field_id,
 				'type' => 'string',
 				'label' => __($custom_field)
 			];
