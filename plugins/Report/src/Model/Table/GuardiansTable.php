@@ -211,6 +211,11 @@ class GuardiansTable extends AppTable {
         $institutionId = $requestData->institution_id;
         $institutionsTable = TableRegistry::get('institutions');
 
+        $conditions = [];
+        if (!empty($institutionId)) {
+            $conditions['Institutions.id'] = $institutionId;
+        }
+
         $query
         ->select([
             'student_id' => 'Users.id',
@@ -220,13 +225,27 @@ class GuardiansTable extends AppTable {
             'institution_name' => 'Institutions.name',
             'education_grade_name' => 'EducationGrades.name',
             'institution_class_name' => 'InstitutionClasses.name',
-            'institution_code' => 'Institutions.code'
+            'institution_code' => 'Institutions.code',
+            'gender_name' => 'Genders.name',
+            'guardian_relation_name' => 'GuardianRelations.name',
+            'guardian_first_name' => 'Guardian.first_name',
+            'guardian_last_name' => 'Guardian.last_name',
+            'address' => 'Guardian.address',
+            'email' => 'Guardian.email',
+            'area_code' => 'Areas.code',
+            'area_name' => 'Areas.name'
         ])
         ->leftJoin(['Users' => 'security_users'], [
             'Users.id = ' . 'Guardians.student_id'
         ])
         ->leftJoin(['Guardian' => 'security_users'], [
             'Guardian.id = ' . 'Guardians.guardian_id',
+        ])
+        ->leftJoin(['GuardianRelations' => 'guardian_relations'], [
+            'GuardianRelations.id = ' . 'Guardians.guardian_relation_id',
+        ])
+        ->leftJoin(['Genders' => 'genders'], [
+                    'Users.gender_id = ' . 'Genders.id'
         ])
         ->leftJoin(['InstitutionStudents' => 'institution_students'], [
             'Users.id = ' . 'InstitutionStudents.student_id'
@@ -236,6 +255,9 @@ class GuardiansTable extends AppTable {
         ])
         ->leftJoin(['Institutions' => 'institutions'], [
             'InstitutionStudents.institution_id = ' . 'Institutions.id'
+        ])
+        ->leftJoin(['Areas' => 'areas'], [
+            'Institutions.area_id = ' . 'Areas.id'
         ])
         ->leftJoin(['InstitutionClassStudents' => 'institution_class_students'], [
             'InstitutionClassStudents.student_id = ' . 'Users.id'
@@ -249,13 +271,12 @@ class GuardiansTable extends AppTable {
         ->leftJoin(['UserContacts' => 'user_contacts'], [
             'Guardian.id = ' . 'UserContacts.security_user_id'
         ])
-        ->group('Guardians.student_id')
+        ->group('Users.first_name')
         ->where(['StudentStatuses.code' => 'CURRENT',
             'InstitutionClassStudents.student_status_id = ' . 'StudentStatuses.id',
-            'Users.id = ' . 'Guardians.student_id',
-            'Institutions.id = ' . $institutionId
-        ])
-        ;
+            'Areas.area_level_id !=' . 1,
+             $conditions
+        ]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
@@ -273,6 +294,20 @@ class GuardiansTable extends AppTable {
             'field' => 'institution_name',
             'type' => 'string',
             'label' => __('Institution Name')
+        ];
+
+        $extraFields[] = [
+            'key' => 'Areas.code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Code')
+        ];
+
+        $extraFields[] = [
+            'key' => 'Areas.name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Name')
         ];
 
         $extraFields[] = [
@@ -318,28 +353,35 @@ class GuardiansTable extends AppTable {
         ];
 
         $extraFields[] = [
-            'key' => 'Guardians.first_name',
+            'key' => 'Guardian.first_name',
             'field' => 'guardian_first_name',
             'type' => 'string',
             'label' => __('Guardians First Name')
         ];
 
         $extraFields[] = [
-            'key' => 'Guardians.last_name',
+            'key' => 'Guardian.last_name',
             'field' => 'guardian_last_name',
             'type' => 'string',
             'label' => __('Guardians Last Name')
         ];
 
         $extraFields[] = [
-            'key' => 'Guardians.address',
+            'key' => 'GuardianRelations.name',
+            'field' => 'guardian_relation_name',
+            'type' => 'string',
+            'label' => __('Guardian Relationship')
+        ];
+
+        $extraFields[] = [
+            'key' => 'Guardian.address',
             'field' => 'address',
             'type' => 'string',
             'label' => __('Guardians Address')
         ];
 
         $extraFields[] = [
-            'key' => 'Guardians.email',
+            'key' => 'Guardian.email',
             'field' => 'email',
             'type' => 'string',
             'label' => __('Guardians Email')
