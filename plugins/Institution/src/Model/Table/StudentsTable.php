@@ -849,7 +849,7 @@ class StudentsTable extends ControllerActionTable
 
 
                 if($value['student_status']->name == "Enrolled"){
-                    if($InstitutionStudentsPreviousData->student_status_id == 7 || $InstitutionStudentsPreviousData->student_status_id == 8)
+                    if($InstitutionStudentsPreviousData->student_status_id == 8)
                     $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
                 }
             }
