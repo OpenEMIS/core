@@ -13,7 +13,8 @@ use Cake\I18n\I18n;
 use Cake\Utility\Hash;
 use XLSXWriter;
 use Cake\ORM\TableRegistry;
-
+use Cake\Network\Request;
+use Cake\Network\Session;
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
 // public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
@@ -170,7 +171,33 @@ class ClassExcelBehavior extends Behavior
         }
 
         $sheetNameArr = [];
+        //POCOR-5852 starts
+        $session = $this->_table->request->session();
+        $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
+        $education_grade_id = $academic_period_id = '';
+        $condition = [];
+        if(isset($this->_table->request->query['education_grade_id']) && isset($this->_table->request->query['academic_period_id'])){
+            $education_grade_id = $this->_table->request->query['education_grade_id'];
+            $academic_period_id = $this->_table->request->query['academic_period_id'];
 
+            $InstitutionClassGrades = TableRegistry::get('institution_class_grades');
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+
+            if($this->_table->request->query['education_grade_id'] > 0){
+                $conditions = [
+                    $InstitutionClassGrades->aliasField('InstitutionClassGrades.education_grade_id') => $education_grade_id,
+                    $InstitutionClasses->aliasField('InstitutionClasses.academic_period_id') => $academic_period_id,
+                    $InstitutionClasses->aliasField('InstitutionClasses.institution_id') => $institution_id
+                    
+                ];
+            }else{ //option for all grades
+                $conditions = [
+                    $InstitutionClasses->aliasField('InstitutionClasses.academic_period_id') => $academic_period_id,
+                    $InstitutionClasses->aliasField('InstitutionClasses.institution_id') => $institution_id
+                ];
+            }
+        }
+        //POCOR-5852 ends
         foreach ($sheets as $sheet) {
             $table = $sheet['table'];
             // sheet info added to settings to avoid adding more parameters to event
@@ -188,7 +215,7 @@ class ClassExcelBehavior extends Behavior
 			$InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
 			$InstitutionStudents = TableRegistry::get('Institution.InstitutionClassesStudents');
 			$InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-		
+
 			$query = $Query
 				->select([
 					'academic_period_id' => 'InstitutionClasses.academic_period_id',
@@ -222,7 +249,7 @@ class ClassExcelBehavior extends Behavior
 					'special_need' => '(CASE
 											WHEN SpecailNeed.id IS NULL THEN "No"
 											ELSE "Yes"
-										END)',
+										END)'
 				])
 				->contain([
 					'AcademicPeriods' => [
@@ -296,6 +323,9 @@ class ClassExcelBehavior extends Behavior
 					'ClassesStudents.gender_id = Genders.id'
 				]
 				)
+                //POCOR-5852 starts
+                ->where($conditions)
+                //POCOR-5852 ends
 				->group([
 					'ClassesStudents.id'
 				])
@@ -304,7 +334,58 @@ class ClassExcelBehavior extends Behavior
 					'Institutions.code',
 					'InstitutionClasses.id'
 				]);
-
+                //POCOR-5852 starts
+                $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                    return $results->map(function ($row) {
+                        $Users = TableRegistry::get('security_users');
+                        $user_data= $Users
+                                    ->find()
+                                    ->where(['security_users.openemis_no' => $row->openEMIS_ID])
+                                    ->first();
+                        $UserIdentities = TableRegistry::get('user_identities');//POCOR-5852 starts
+                        $IdentityTypes = TableRegistry::get('identity_types');//POCOR-5852 ends
+                        $conditions = [
+                            $UserIdentities->aliasField('security_user_id') => $user_data->id,
+                        ];
+                        $data = $UserIdentities
+                                    ->find()    
+                                    ->select([
+                                        'identity_type' => $IdentityTypes->alias().'.name',//POCOR-5852 starts
+                                        'identity_number' => $UserIdentities->alias().'.number',
+                                        'default' => $IdentityTypes->alias().'.default'
+                                        //POCOR-5852 ends
+                                    ])
+                                    ->leftJoin(
+                                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                                        [
+                                            $IdentityTypes->aliasField('id = '). $UserIdentities->aliasField('identity_type_id')
+                                        ]
+                                    )
+                                    ->where($conditions)->toArray();
+                        $row['identity_type'] = '';            
+                        $row['identity_number'] = '';            
+                        if(!empty($data)){
+                            $identity_type_name = '';
+                            $identity_type_number = '';
+                            foreach ($data as $key => $value) {
+                                if($value->default == 1){
+                                   $identity_type_name =  $value->identity_type;    
+                                   $identity_type_number =  $value->identity_number;   
+                                   break; 
+                                }
+                            }
+                            if(!empty($identity_type_name) && !empty($identity_type_number)){
+                                $row['identity_type'] = $identity_type_name;
+                                $row['identity_number'] = $identity_type_number;
+                            }else{
+                                $row['identity_type'] = $data[0]->identity_type;
+                                $row['identity_number'] = $data[0]->identity_number;
+                            }
+                        }
+                        return $row;           
+                    });
+                });
+                //POCOR-5852 ends
             $this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
             $sheetName = $sheet['name'];
 
@@ -344,12 +425,13 @@ class ClassExcelBehavior extends Behavior
 
             // To auto include the default fields. Using select will turn off autoFields by default
             // This is set so that the containable data will still be in the array.
-            $autoFields = $this->config('autoFields');
+            //POCOR-5852 starts
+            /*$autoFields = $this->config('autoFields');
 
             if (!isset($autoFields) || $autoFields == true) {
                 $query->autoFields(true);
-            }
-
+            }*/
+            //POCOR-5852 ends
             $count = $query->count();
             $rowCount = 0;
             $sheetCount = 1;
@@ -520,12 +602,13 @@ class ClassExcelBehavior extends Behavior
     {
         $schema = $table->schema();
         //$columns = $schema->columns();
+        //POCOR-5852 added 'identity_type', 'identity_number' starts
 		$columns = ['institution_code','institution_name','academic_period_id',
 					'class_name','shift','education_grade','homeroom_teacher','secondary_teacher',
 					'openEMIS_ID','student_name','gender','student_status',
-					'special_need'
+					'special_need', 'identity_type', 'identity_number'
 					];
-
+        //POCOR-5852 ends                  
         $excludes = $this->config('excludes');
 
         if (!is_array($table->primaryKey())) { //if not composite key
@@ -740,7 +823,8 @@ class ClassExcelBehavior extends Behavior
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
-        if (in_array($action, $this->config('pages'))) {
+        //POCOR-5852 starts add  || $action == 'index' condition
+        if (in_array($action, $this->config('pages')) || $action == 'index') {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
                 'class' => 'btn btn-xs btn-default',
@@ -762,6 +846,7 @@ class ClassExcelBehavior extends Behavior
             $toolbarButtons['export']['url'] = $url;
             $extra['toolbarButtons'] = $toolbarButtons;
         }
+        //POCOR-5852 ends
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
