@@ -111,7 +111,7 @@ class StaffLeaveReportTable extends AppTable {
 					
 					$customFieldData = $StaffCustomFieldValues->find()
 						->select([
-							'custom_field' => 'StaffCustomFields.name',
+							'custom_field_id' => 'StaffCustomFields.id',
 							'staff_custom_field_values.text_value',
 							'staff_custom_field_values.number_value',
 							'staff_custom_field_values.decimal_value',
@@ -135,13 +135,13 @@ class StaffLeaveReportTable extends AppTable {
 							$row[$data->custom_field_id] = $data->number_value;
 						}
 						if(!empty($data->decimal_value)) {
-							$row[$data->custom_field] = $data->decimal_value;
+							$row[$data->custom_field_id] = $data->decimal_value;
 						}
 						if(!empty($data->textarea_value)) {
-							$row[$data->custom_field] = $data->textarea_value;
+							$row[$data->custom_field_id] = $data->textarea_value;
 						}
 						if(!empty($data->date_value)) {
-							$row[$data->custom_field] = $data->date_value;
+							$row[$data->custom_field_id] = $data->date_value;
 							
 						}
 						
