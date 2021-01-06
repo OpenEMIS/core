@@ -65,6 +65,7 @@ class StaffLeaveReportTable extends AppTable {
                     " ",
                     'Users.last_name' => 'literal'
                     ]),
+                'staff_id' => 'Staffs.id',
                 'openemis_number' => 'Staffs.openemis_no',
                 'staff_name' =>  $query->func()->concat([
                     'Staffs.first_name' => 'literal',
@@ -103,6 +104,31 @@ class StaffLeaveReportTable extends AppTable {
                            $this->aliasfield('staff_leave_type_id') . ' = StaffLeaveTypes.id'
                         ])
             ->where($conditions); 
+			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+				return $results->map(function ($row) {
+					
+					$StaffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
+					
+					$customFieldData = $StaffCustomFieldValues->find()
+						->select([
+							'custom_field' => 'StaffCustomFields.name',
+							'custom_field_value' => 'staff_custom_field_values.text_value'
+						])
+						->innerJoin(
+							['StaffCustomFields' => 'staff_custom_fields'],
+							[
+								'StaffCustomFields.id = staff_custom_field_values.staff_custom_field_id'
+							]
+						)
+						->where(['staff_custom_field_values.staff_id' => $row['staff_id']])
+						->toArray();
+					
+					foreach($customFieldData as $data) {
+						$row[$data->custom_field] = $data->custom_field_value;
+					}
+					return $row;
+				});
+			});
     }
 
     public function onExcelRenderDateFrom(Event $event, Entity $entity, $attr)
@@ -274,7 +300,26 @@ class StaffLeaveReportTable extends AppTable {
             'field' => 'comments',
             'type' => 'string',
             'label' => __('Comments')
-        ];     
+        ];
+		
+		$StaffCustomFields = TableRegistry::get('staff_custom_fields');
+					
+		$customFieldData = $StaffCustomFields->find()
+			->select([
+				'custom_field' => 'staff_custom_fields.name'
+			])
+			->toArray();
+		
+		foreach($customFieldData as $data) {
+			$custom_field = $data->custom_field;
+			$extraFields[] = [
+				'key' => '',
+				'field' => $custom_field,
+				'type' => 'string',
+				'label' => __($custom_field)
+			];
+		}
+					
         $newFields = $extraFields;
         
         $fields->exchangeArray($newFields);
