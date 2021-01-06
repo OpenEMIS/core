@@ -1,4 +1,9 @@
 <?php
+$this->Html->css('ControllerAction.../plugins/datepicker/css/bootstrap-datepicker.min', ['block' => true]);
+$this->Html->css('ControllerAction.../plugins/timepicker/css/bootstrap-timepicker.min.css', ['block' => true]);
+$this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepicker.min', ['block' => true]);
+$this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min.js', ['block' => true]);  
+
     $alias = $ControllerAction['table']->alias();
     $fieldKey = 'meeting';
     $action = $ControllerAction['action'];
@@ -7,12 +12,11 @@
     if ($ControllerAction['action'] == 'add') {
         $this->Form->unlockField($alias . '.' . $fieldKey);
     }
-    // pr($data);
-    // die;
 
-    if ($ControllerAction['action'] == 'view') {
+    if ($ControllerAction['action'] == 'view' || $ControllerAction['action'] == 'edit') {
             $viewRenderData = $data;
     }
+
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>
@@ -51,11 +55,6 @@
             'aria-expanded' => 'true',
             'onclick' => "$('#reload').val('addTimeslot').click();"
         ];
-
-        // if (!$data->has('institution_shift_id') || $ControllerAction['action'] == 'edit') {
-        //     $addButtonAttr['disabled'] = 'disabled';
-        // }
-
         echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add Meeting').'</span>', $addButtonAttr);
     ?>
 <div class="table-responsive">
@@ -86,18 +85,13 @@
                     <?php
                         $fieldPrefix = "$alias.$fieldKey.$i";
                         $joinDataPrefix = $fieldPrefix . '._joinData';
+                        $meetingDateId = $alias.$i.'_meeting_date';
+                        $meetingStartTimeId = $alias.$i.'_start_time';
+                        $meetingEndTimeId = $alias.$i.'_end_time';
                     ?>
                     <tr>
                         <td>
-                        <!-- <div class="input-group date  " id="InstitutionTestCommittees_meeting_date" style="">
-		                    <div class="input text">
-                                <input type="text" name="InstitutionTestCommittees[meeting_date]" class="form-control" id="institutiontestcommittees-meeting-date" value="23-12-2020">
-                            </div>		
-                            <span class="input-group-addon">
-                            <i class="glyphicon glyphicon-calendar"></i>
-                            </span>
-	                    </div> -->
-                        <div class="input-group date" id="InstitutionTestCommittees_meeting_date" style="">
+                        <div class="input-group date" id="<?= $meetingDateId;?>" style="">
 		                    <div class="input text">
                                 <?php
                                 echo $this->Form->input("$fieldPrefix.meeting_date", [
@@ -111,15 +105,7 @@
                         </div>
                         </td>
                         <td>
-                        <!-- <div class="input-group time " id="InstitutionTestCommittees_start_time">
-                            <div class="input text">
-                                <input type="text" name="InstitutionTestCommittees[start_time]" class="form-control" id="institutiontestcommittees-start-time" value="02:27 PM">
-                            </div>        
-                            <span class="input-group-addon">
-                                <i class="glyphicon glyphicon-time"></i>
-                            </span>
-                        </div> -->
-                        <div class="input-group time " id="InstitutionTestCommittees_start_time">
+                        <div class="input-group time" id="<?= $meetingStartTimeId;?>">
                             <div class="input text">
                                 <?php
                                 echo $this->Form->input("$fieldPrefix.start_time", [
@@ -133,15 +119,7 @@
                         </div>
                         </td>
                         <td>
-                        <!--<div class="input-group time " id="InstitutionTestCommittees_start_time">
-                                <div class="input text">
-                                    <input type="text" name="InstitutionTestCommittees[start_time]" class="form-control" id="institutiontestcommittees-start-time" value="02:27 PM">
-                                </div>        
-                                <span class="input-group-addon">
-                                    <i class="glyphicon glyphicon-time"></i>
-                                </span>
-                        </div> -->
-                        <div class="input-group time " id="InstitutionTestCommittees_end_time">
+                        <div class="input-group time " id="<?= $meetingEndTimeId;?>">
                             <div class="input text">
                             <?php
                                 echo $this->Form->input("$fieldPrefix.end_time", [
@@ -170,6 +148,29 @@
                             ?>
                         </td>
                     </tr>
+                    <script>
+                        $(function () {
+                            var datepicker<?= $i;?> = $('#<?= $meetingDateId;?>').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
+                            $(document).on('DOMMouseScroll mousewheel scroll', function() {
+                                window.clearTimeout(t);
+                                t = window.setTimeout(function() {
+                                    datepicker<?= $i;?>.datepicker('place');
+
+                                });
+                            });
+                            var <?=$meetingStartTimeId;?> = $('#<?=$meetingStartTimeId;?>').timepicker({"defaultTime":"12:00 AM"});
+                            var <?=$meetingEndTimeId;?> = $('#<?=$meetingEndTimeId;?>').timepicker({"defaultTime":"12:00 AM"});
+                            $(document).on('DOMMouseScroll mousewheel scroll', function() {
+                                window.clearTimeout(t);
+                                t = window.setTimeout(function() {
+                                    <?=$meetingStartTimeId;?>.timepicker('place');
+                                    <?=$meetingEndTimeId;?>.timepicker('place');
+
+                                });
+                            });
+                        });
+
+                    </script>
                 <?php endforeach ?>
             </tbody>
         <?php endif ?>
@@ -189,7 +190,7 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
         echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add Meeting').'</span>', $addButtonAttr);
     ?>
 <div class="table-responsive">
-    <table class="table">
+    <table class="table" id= 'tbUser'>
         <thead>
             <th><?= __('Date of Meeting') ?>
             <div class="tooltip-desc" style="display: inline-block;">
@@ -210,39 +211,207 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
             <th></th>
             <th class="cell-delete"></th>
         </thead>
+            <?php if ($viewRenderData->has('institution_committee_meeting') && !empty($viewRenderData->institution_committee_meeting)) : ?>
+                <tbody>
+                    <?php foreach ($viewRenderData->institution_committee_meeting as $i => $timeslot) : ?>
+                    <tr>
+                        <td>
+                        <div class="input-group date" id="InstitutionTestCommittees_meeting_date_edit" style="">
+		                    <div class="input text">
+                                <?php
+                                echo $this->Form->input("meeting_date", [
+                                    'type' => 'text',
+                                    'label' => false,
+                                    'value' => $timeslot->meeting_date,
+                                    'disabled' =>'disabled'
+                                ]);
+                                ?>
+                            </div>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i>
+                        </div>
+                        </td>
+                        <td>
+                        <div class="input-group time " id="InstitutionTestCommittees_start_time_edit">
+                            <div class="input text">
+                                <?php
+                                echo $this->Form->input("start_time", [
+                                    'type' => 'text',
+                                    'label' => false,
+                                    'value' => date('h:i A',strtotime($timeslot->start_time)),
+                                    'disabled' =>'disabled'
+                                ]);
+                            ?>
+                            </div>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span>
+                        </div>
+                        </td>
+                        <td>
+                        <div class="input-group time " id="InstitutionTestCommittees_end_time_edit">
+                            <div class="input text">
+                            <?php
+                                echo $this->Form->input("end_time", [
+                                    'type' => 'text',
+                                    'label' => false,
+                                    'value' => date('h:i A',strtotime($timeslot->end_time)),
+                                    'disabled' =>'disabled'
+                                ]);
+                            ?>
+                            </div>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span>
+                        </div>
+                        </td>
+                        <td>
+                            <?php
+                                echo $this->Form->input("comment", [
+                                    'type' => 'text',
+                                    'label' => false,
+                                    'value' => $timeslot->comment,
+                                    'disabled' =>'disabled'
+                                ]);
+                            ?>
+                        </td>
+                        <td>
+                        <button  onclick="deleteMeetingOnClick(<?php echo $timeslot->id;?>)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action">
+                            <i class="fa fa-trash"></i>&nbsp;<span>Delete</span>
+                        </button>
+                        </td>
+                        
+                    </tr>
+                    
+                    <?php endforeach ?>
+                </tbody>
+            <?php endif ?>
         <?php if (isset($data[$fieldKey])) : ?>
             <tbody>
                 <?php foreach ($data[$fieldKey] as $i => $slot) : ?>
-                <?php  echo '<pre>';print_r($slot);die;?>
                     <?php
                         $fieldPrefix = "$alias.$fieldKey.$i";
                         $joinDataPrefix = $fieldPrefix . '._joinData';
+                        $meetingDateEditId = $alias.$i.'_meeting_date_edit';
+                        $meetingStartTimeEditId = $alias.$i.'_start_time_edit';
+                        $meetingEndTimeEditId = $alias.$i.'_end_time_edit';
                     ?>
-                    <tr>
+                    <tr id= 'tr1'>
                         <td>
-                            <?php
-                                echo $slot->meeting_date;
+                        <div class="input-group date" id="<?= $meetingDateEditId ;?>" style="">
+		                    <div class="input text">
+                                <?php
+                                echo $this->Form->input("$fieldPrefix.meeting_date", [
+                                    'type' => 'text',
+                                    'label' => false,
+                                    'value' => date('d-m-Y')
+                                ]);
+                                ?>
+                            </div>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i>
+                        </div>
+                        </td>
+                        <td>
+                        <div class="input-group time " id="<?= $meetingStartTimeEditId ;?>">
+                            <div class="input text">
+                                <?php
+                                echo $this->Form->input("$fieldPrefix.start_time", [
+                                    'type' => 'text',
+                                    'label' => false,
+                                    'value' => date("h:i A")
+                                ]);
                             ?>
+                            </div>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span>
+                        </div>
+                        </td>
+                        <td>
+                        <div class="input-group time " id="<?= $meetingEndTimeEditId ;?>">
+                            <div class="input text">
+                            <?php
+                                echo $this->Form->input("$fieldPrefix.end_time", [
+                                    'type' => 'text',
+                                    'label' => false,
+                                     'value' => date("h:i A")
+                                ]);
+                            ?>
+                            </div>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span>
+                        </div>
                         </td>
                         <td>
                             <?php
-                                echo $slot->start_time;
+                                echo $this->Form->input("$fieldPrefix.comment", [
+                                    'type' => 'text',
+                                    'label' => false
+                                ]);
                             ?>
                         </td>
                         <td>
-                            <?php
-                                echo $slot->end_time;
-                            ?>
-                        </td>
-                         <td>
-                            <?php
-                                echo $slot->comment;
-                            ?>
+                        <!-- <button id= "btnDelete" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action">
+                            <i class="fa fa-trash"></i>&nbsp;
+                            <span>Delete</span>
+                        </button> -->
+                         <?php
+                            // if ($i == (count($data[$fieldKey]) - 1)) {
+                            //     echo '<button onclick="deleteJsRow(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>' . __('Delete') .'</span></button>';
+                            // }
+                        ?>
+                        <?php
+                            if ($i == (count($data[$fieldKey]) - 1)) {
+                                echo '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>' . __('Delete') .'</span></button>';
+                            }
+                        ?>
                         </td>
                     </tr>
+                    <script>
+                        $(function () {
+                            var datepicker<?= $i;?> = $('#<?= $meetingDateEditId;?>').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
+                            $(document).on('DOMMouseScroll mousewheel scroll', function() {
+                                window.clearTimeout(t);
+                                t = window.setTimeout(function() {
+                                    datepicker<?= $i;?>.datepicker('place');
+
+                                });
+                            });
+                            var <?=$meetingStartTimeEditId;?> = $('#<?=$meetingStartTimeEditId;?>').timepicker({"defaultTime":"12:00 AM"});
+                            var <?=$meetingEndTimeEditId;?> = $('#<?=$meetingEndTimeEditId;?>').timepicker({"defaultTime":"12:00 AM"});
+                            $(document).on('DOMMouseScroll mousewheel scroll', function() {
+                                window.clearTimeout(t);
+                                t = window.setTimeout(function() {
+                                    <?=$meetingStartTimeEditId;?>.timepicker('place');
+                                    <?=$meetingEndTimeEditId;?>.timepicker('place');
+
+                                });
+                            });
+                        });
+
+
+                        $("#tbUser").on('click', '#btnDelete', function () {
+    $(this).closest('tr').remove();
+    //window.location.reload();
+});
+                        // function deleteJsRow(elem) {
+                        //       $(elem).closest('tr').remove()
+                        //       window.location.reload();
+                        // }
+
+                    </script>
                 <?php endforeach ?>
             </tbody>
         <?php endif ?>
     </table>
 </div>
 <?php endif ?>
+<script>
+    function deleteMeetingOnClick(meetingId){
+        var targeturl = '<?= \Cake\Routing\Router::url(["controller"=>"Institutions","action"=>"deleteCommiteeMeetingById"]); ?>';
+        var request = $.ajax({
+                url: targeturl,
+                type: "GET",
+                data: {meetingId : meetingId}, 
+                cache: false,
+                success: function(data){
+                    window.location.reload();
+                }
+            });
+            request.fail(function(jqXHR, textStatus) {
+                alert( "Request failed: " + textStatus );
+            });
+    }  
+</script>

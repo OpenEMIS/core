@@ -39,7 +39,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         $this->hasMany('InstitutionCommitteeMeeting', [
             'className' => 'Institutions.InstitutionCommitteeMeeting',
             'dependent' => true,
-            'cascadeCallbacks' => true
+            'cascadeCallbacks' => false
         ]);
         $this->behaviors()->get('ControllerAction')->config([
             'actions' => ['search' => false],
@@ -99,13 +99,6 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
 
         $extra['selectedCommiteeTypeOption'] = $selectedTypeId;
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
-        
-        // $extra['selectedCommiteeTypeOptions'] = $InstitutionCommitteeTypesTypes
-        // ->find()
-        // ->select([$InstitutionCommitteeTypesTypes->aliasField('id'),$InstitutionCommitteeTypesTypes->aliasField('name')])
-        // ->toArray();
-  
-        //echo '<pre>';print_r($extra['selectedCommiteeTypeOptions']);die;
         $extra['elements']['control'] = [
             'name' => 'Institution.CommitteeMeeting/controls',
             'data' => [
@@ -156,8 +149,11 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        
         $this->field('academic_period_id', ['entity' => $entity]);
-        $this->field('institution_committee_type_id', ['type' => 'select']);
+        $this->field('institution_committee_type_id', ['type' => 'select','entity' => $entity]);
+        $this->field('name', ['entity' => $entity]);
+       // $this->field('comment', ['type' => 'textarea''entity' => $entity]);
         $this->field('meeting_section', [
             'type' => 'element',
             'element' => 'Institution.CommitteeMeeting/committee_meeting'
@@ -168,20 +164,64 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     // OnUpdate Events
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($attr['entity']->academic_period_id));
         if ($action == 'add') {
             $attr['type'] = 'select';
             $attr['select'] = false;
             $attr['options'] = $this->AcademicPeriods->getYearList();
             $attr['default'] = $this->AcademicPeriods->getCurrent();
-            $attr['onChangeReload'] = 'changeAcademicPeriod';
+            // $attr['onChangeReload'] = 'changeAcademicPeriod';
         } elseif ($action == 'edit') {
             $attr['type'] = 'readonly';
+            $attr['attr']['value'] = $periodOptions[$attr['entity']->academic_period_id];
+            $attr['value'] = $attr['entity']->academic_period_id;
+        }
+        return $attr;
+    }
+    // OnUpdate Events
+    public function onUpdateFieldInstitutionCommitteeTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+
+        if ($action == 'edit') {
+
+                $committeType = $this->InstitutionCommitteeTypes->get($attr['entity']->institution_committee_type_id);
+               
+                $attr['type'] = 'readonly';
+                $attr['attr']['value'] =  $committeType->name;
+                $attr['value'] = $attr['entity']->institution_committee_type_id;
+
+            }
+        }
+        return $attr;
+    }
+     // OnUpdate Events
+    public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $attr['entity']->name;
+            }
+        }
+        return $attr;
+    }
+    // OnUpdate Events
+    public function onUpdateFieldComment(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
+            $attr['type'] = 'textarea';
+        } else if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $attr['entity']->comment;
+            }
         }
         return $attr;
     }
 
     // Change Events
-    public function addOnAddTimeslot(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddTimeslot(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $fieldKey = 'meeting';
 
@@ -215,27 +255,24 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         ]);
 
         $this->setFieldOrder(['academic_period_id', 'institution_committee_type_id', 'name', 'chairperson', 'telephone','email','comment','meeting_section']);
-        $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-        $this->setupTabElements($encodedInstitutionId, $id);
+        
+        $query = $this->request->pass[1]; 
+        $this->setupTabElements($encodedInstitutionId, $query);
     }
 
     public function setupTabElements($encodedInstitutionId, $query)
     {
-        //$page = $this->Page;
         $tabElements = [];
-    
-        $encodeCommitteeId = '007b00220069006e0073007400690074007500740069006f006e005f0063006f006d006d00690074007400650065005f006900640022003a0031007d';
+        $decodeCommitteeId = $this->paramsDecode($query);
+        $committeeId = $decodeCommitteeId['id'];
+        $encodeCommitteeId = $this->paramsEncode(['institution_committee_id' => $committeeId]);
 
-        // $decodeCommitteeId = $page->decode($query);
-        // $committeeId = $decodeCommitteeId['id'];
-        // $encodeCommitteeId = $page->encode(['institution_committee_id' => $committeeId]);
-        //print_r($this->alias());die;
         $tabElements = [
             'InstitutionCommittees' => [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'InstitutionCommittees', 'action' => 'view', $query],
+                 'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Committees','view', $query],
                 'text' => __('Overview')
             ],
             'Attachments' => [
@@ -243,92 +280,54 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
                 'text' => __('Attachments')
             ]
         ];
-       $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction','InstitutionCommittees');
     }
 
-    private function setupTabElements222($entity)
-    {
-        $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+    public function afterSave(Event $event, Entity $entity, ArrayObject $data) {
 
-        $options = [
-            // 'userRole' => 'Student',
-            // 'action' => $this->action,
-            // 'id' => $id,
-            // 'userId' => $entity->id
-        ];
-
-        $tabElements = $this->controller->getUserTabElements($options);
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
-    }
-
-
-     public function beforeMarshal22(Event $event, ArrayObject $data, ArrayObject $options)
-    {
- echo '<pre>';print_r($data);
-        // for adding timeslots end time validation as here will have all the informations needed to do the validations
-        if (array_key_exists('submit', $data) && $data['submit'] == 'save') {
-            $options['associated'] = [
-                'Timeslots' => ['validate' => true]
-            ];
-
-            $timeslotList = [];
-            if (array_key_exists('meeting', $data) && !empty($data['meeting'])) {
-                $hasEmpty = false;
-                $totalInterval = 0;
-                foreach ($data['meeting'] as $i => $timeslot) {
-                    if (!$hasEmpty) {
-                        if (array_key_exists('meeting_date', $timeslot) && !empty($timeslot['meeting_date'])) {
-                            $timeslotList['meeting_date'] = $timeslot['meeting_date'];
-                            $timeslotList['start_time'] = $timeslot['start_time'];
-                            $timeslotList['end_time'] = $timeslot['end_time'];
-                            $timeslotList['comment'] = $timeslot['comment'];
-                        } else {
-                            $hasEmpty = true;
-                        }
-                    } 
-
-                    if ($hasEmpty) {
-                        $timeslotList['meeting_date'] = null;
-                        $timeslotList['start_time'] = null;
-                        $timeslotList['end_time'] = null;
-                        $timeslotList['comment'] = null;
+        $newEntities = [];
+        
+        if (isset($entity['meeting']) && $entity['meeting'] != ''){
+             $textbooks = $entity['meeting'];     
+                if (count($textbooks)) {
+                    foreach ($textbooks as $key => $textbook) {
+                        $obj['meeting_date'] = $textbook['meeting_date'];
+                        $obj['start_time'] = $textbook['start_time'];
+                        $obj['end_time'] = $textbook['end_time'];
+                        $obj['comment'] = $textbook['comment'];
+                        $obj['institution_committee_id'] = $entity['id'];
+                        $obj['counterNo'] = $key;
+                        $newEntities[] = $obj;
                     }
+ 
+                    $meetingTable = \Cake\ORM\TableRegistry::get('InstitutionCommitteeMeeting', array('table' => 'institution_committee_meeting'));
+                    $success = $this->connection()->transactional(function() use ($newEntities, $entity ,$meetingTable) {
+                        $return = true;
+                        foreach ($newEntities as $key => $newEntity) {
+                            $textbookStudentEntity = $meetingTable->newEntity($newEntity);
+                            if (!$meetingTable->save($textbookStudentEntity)) {
+                                $return = false;
+                            } 
+                        }
+                        return $return;
+                    });
+                    return $success;
                 }
-            }
-        echo '<pre>';print_r($timeslotList);die;
-            $timeslotValidator = $this->Timeslots->validator();
-            $timeslotValidator
-                ->add('interval', 'checkEndTime', [
-                    'rule' => function($value, $context) use ($shiftStartTime, $shiftEndTime, $timeslotList) {
-                        $order = $context['data']['order'];
-                        $totalInterval = $timeslotList[$order];
-                        if (!is_null($totalInterval)) {
-                            $intervalStartTime = clone $shiftStartTime;
-                            $modifyString = '+' . $totalInterval . ' minutes';
-                            $intervalEndTime = $intervalStartTime->modify($modifyString);
-                            return $intervalEndTime <= $shiftEndTime;
-                        } 
-                        //return true;
-                    },
-                    'on' => 'create',
-                    'message' => __('Value entered exceed the end time of the shift selected.')
-                ])
-                ->requirePresence('institution_schedule_interval_id', false);
-
-        } else {
-            // for non-save actions so the timeslot entity can be patched
-            $options['associated'] = [
-                'Timeslots' => ['validate' => false]
-            ];
-        }
+        } 
     }
-
-
-     
-
     
-   
+    public function getAcademicPeriodOptions($querystringPeriod)
+    {
+        $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+
+        if ($querystringPeriod) {
+            $selectedPeriod = $querystringPeriod;
+        } else {
+            $selectedPeriod = $this->AcademicPeriods->getCurrent();
+        }
+
+        return compact('periodOptions', 'selectedPeriod');
+    }
 }

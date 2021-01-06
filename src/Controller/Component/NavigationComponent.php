@@ -926,17 +926,10 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution']
             ],
             'Institutions.Committees' => [
-                    'title' => 'Test Committees',
+                    'title' => 'Committees',
                     'parent' => 'Institutions.Institutions.index',
                     'selected' => ['Institutions.Committees','InstitutionCommitteeAttachments.add', 'InstitutionCommitteeAttachments.edit', 'InstitutionCommitteeAttachments.view', 'InstitutionCommitteeAttachments.index','InstitutionCommitteeAttachments.delete'],
                     'params' => ['plugin' => 'Institution']
-                ],
-
-            'InstitutionCommittees.index' => [
-                    'title' => 'Committees',
-                    'parent' => 'Institutions.Institutions.index',
-                    'params' => ['plugin' => 'Institution'],
-                    'selected' => ['InstitutionCommittees.view', 'InstitutionCommittees.edit','InstitutionCommittees.delete','InstitutionCommittees.add','InstitutionCommitteeAttachments.add', 'InstitutionCommitteeAttachments.edit', 'InstitutionCommitteeAttachments.view', 'InstitutionCommitteeAttachments.index','InstitutionCommitteeAttachments.delete']
                 ],
         ];
 

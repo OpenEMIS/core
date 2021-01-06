@@ -2113,4 +2113,17 @@ class InstitutionsController extends AppController
         echo json_encode($dataSet);
         die;
     }
+    // Delete commitee meeting
+    public function deleteCommiteeMeetingById() {
+        if (isset($this->request->query['meetingId'])) {
+            $meetingId = $this->request->query['meetingId'];
+
+            $users_table = TableRegistry::get('institution_committee_meeting');
+            $users = $users_table->get($meetingId);
+            $users_table->delete($users);
+            echo "Meeting deleted successfully.";
+            die;
+        }
+    }   
+
 }
