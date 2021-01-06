@@ -15,6 +15,7 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\OptionsTrait;
 use Cake\Http\Client;
+use Cake\Network\Session;
 
 class UserNationalitiesTable extends ControllerActionTable {
     use OptionsTrait;
@@ -282,21 +283,33 @@ class UserNationalitiesTable extends ControllerActionTable {
             if ($action == 'add') {
                 if(!empty($userId)){
                     //nationality_id
-                    $nationalityId = $request->query['nationality_id'];
+                    if(!empty($request->query['nationality_id'])){
+                        $nationalityId = $request->query['nationality_id'];
+                    }else{
+                        $nationalityId = $attr['entity']->nationality_id;
+                    }
                     $IdentityTypes = TableRegistry::get('identity_types')->find('list',
                                         ['keyField' => 'id','valueField' => 'name'
                                     ])->toArray();
 
-                    $attr['type'] = 'select';
                     $attr['options'] = $IdentityTypes;
                     if(!empty($nationalityId)){
                         //get nationality using national id
                         $nationalityTable = $this->getNationalityTableData($nationalityId);
-                        if(!empty($nationalityTable) && !empty($nationalityTable->identity_types['id'])){
+
+                        if(!empty($nationalityTable) && !empty($nationalityTable->identity_types['id']) && $nationalityTable->default == 1){
+                            $attr['type'] = 'readonly';
+                            $attr['value'] = $nationalityTable->identity_types['id'];
+                            $attr['attr']['value'] = $nationalityTable->identity_types['name'];
+                        }else if(!empty($nationalityTable) && !empty($nationalityTable->identity_types['id']) && $nationalityTable->default == 0){
+                            $attr['type'] = 'select';
                             $attr['attr']['value'] = $nationalityTable->identity_types['id'];
                         }else{
+                            $attr['type'] = 'select';
                             $attr['attr']['value'] = '';
                         }
+                    }else{
+                        $attr['type'] = 'select';
                     }
                 }
             } else if ($action == 'edit') {
@@ -624,6 +637,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
                 $response = $http->get($recordUri);
                 $resultArr = $response->body('json_decode')->data;
+                
                 if(!empty($resultArr)){
                     $countVal = 0;
                     foreach ($resultArr as $arr) {
