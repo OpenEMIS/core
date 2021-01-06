@@ -240,7 +240,51 @@ class StaffTable extends AppTable  {
             if (in_array($feature, ['Report.StaffPositions',
                                     'Report.StaffLeaveReport','Report.StaffDuties','Report.PositionSummary'])) { 
                 $area_id = $this->request->data[$this->alias()]['area_id'];
-                $institutionList = [];
+                $area_ids = [];
+				
+				if(!empty($area_id)) {
+					$AreaTable = TableRegistry::get('Area.Areas');
+					$areaData = [];
+					$areaData = $AreaTable
+						->find()
+						->select([
+							$AreaTable->aliasField('id'),
+						])
+						->where([
+							$AreaTable->aliasField('parent_id') => $area_id,
+						])
+						->hydrate(false)
+						->toArray();
+					
+					if(!empty($areaData)) {
+						foreach($areaData as $data) {
+							$area_ids[] = $data['id'];
+						}
+						
+						$areaIds = [];
+						if(!empty($area_ids)) {
+							$areaIds = $AreaTable
+								->find()
+								->select([
+									$AreaTable->aliasField('id'),
+								])
+								->where([
+									$AreaTable->aliasField('parent_id').' IN'  => $area_ids,
+								])
+								->hydrate(false)
+								->toArray();
+						}
+						if(!empty($areaIds)) {
+							foreach($areaIds as $area) {
+								$area_ids[] = $area['id'];
+							}
+						}
+					} else {
+						$area_ids[] = $area_id;
+					}
+				}
+				
+				$institutionList = [];
 
                 if ($area_id == 0) {
                     $InstitutionsTable = TableRegistry::get('Institution.Institutions');
@@ -270,7 +314,7 @@ class StaffTable extends AppTable  {
                             'valueField' => 'code_name'
                         ])
                         ->where([
-                             $InstitutionsTable->aliasField('area_id') => $area_id
+                             $InstitutionsTable->aliasField('area_id').' IN' => $area_ids
                         ])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
