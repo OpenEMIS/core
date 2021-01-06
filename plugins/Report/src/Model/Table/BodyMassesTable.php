@@ -251,8 +251,8 @@ class BodyMassesTable extends AppTable
         ];
 
 
-        $extraFieldsFirst[] = [
-            'key' => 'openemis_no',
+        $extraFields[] = [
+            'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
             'label' => __('OpenEMIS ID')
@@ -351,5 +351,18 @@ class BodyMassesTable extends AppTable
 
         $newFields = array_merge($extraFieldsFirst, $extraFields);
         $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetStudentName(Event $event, Entity $entity)
+    {
+        //cant use $this->Users->get() since it will load big data and cause memory allocation problem
+
+        $studentName = [];
+        ($entity->student_first_name) ? $studentName[] = $entity->student_first_name : '';
+        ($entity->student_middle_name) ? $studentName[] = $entity->student_middle_name : '';
+        ($entity->student_third_name) ? $studentName[] = $entity->student_third_name : '';
+        ($entity->student_last_name) ? $studentName[] = $entity->student_last_name : '';
+
+        return implode(' ', $studentName);
     }
 }
