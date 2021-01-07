@@ -877,7 +877,7 @@ class InstitutionReportCardsTable extends AppTable
 			}
 			$totalArray = [];
 			$totalArray = [
-				'id' => $data['id'] + 1,
+				'id' => (!empty($data['id']) ? $data['id'] : 0)  + 1,
 				'name' => 'Total',
 				'education_grade_name' => '',
 				'total_students' => $total_students,
