@@ -55,26 +55,33 @@ class StudentNotAssignedClassTable extends AppTable
        $academicPeriodId = $requestData->academic_period_id;
        $institutionId = $requestData->institution_id;
        $insClassStudent = TableRegistry::get('Institution.InstitutionClassStudents');
-        
-       $subquery = $insClassStudent
-            ->find()
-            ->select(['InstitutionClassStudents.student_id'])
-            ->where(['InstitutionClassStudents.academic_period_id' => $academicPeriodId, 'InstitutionClassStudents.institution_id'=> $institutionId]);
-       
-       $query
+       $analysis = '';
+
+       $conditions = [];
+        if (!empty($academicPeriodId)) {
+            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+        }
+        if (!empty($institutionId)) {
+            $conditions['Institutions.id'] = $institutionId;
+        }
+
+        $query
             ->select([   
                 'student_id' =>'Users.id',             
                 'student_first_name' => 'Users.first_name',
                 'student_last_name' => 'Users.last_name',
                 'openemis_no' => 'Users.openemis_no',
+                'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
                 'education_grade_name' => 'EducationGrades.name',
-                
                 'gender_name' => 'Genders.name',
-                'date_of_birth' => 'Users.date_of_birth'
+                'date_of_birth' => 'Users.date_of_birth',
+                'class_id' => 'InstitutionClassStudents.institution_class_id'
             ])
-             
-           ->InnerJoin(['Users' => 'security_users'], [
+            ->leftJoin(['InstitutionClassStudents' => 'institution_class_students'], [
+                        'InstitutionClassStudents.student_id = ' . 'StudentNotAssignedClass.student_id'
+                    ])
+           ->leftJoin(['Users' => 'security_users'], [
                             'Users.id = ' . 'StudentNotAssignedClass.student_id'
                        ])
 
@@ -82,22 +89,21 @@ class StudentNotAssignedClassTable extends AppTable
                         'Users.gender_id = ' . 'Genders.id'
                     ])
 
-           ->InnerJoin(['Institutions' => 'institutions'], [
+           ->leftJoin(['Institutions' => 'institutions'], [
                       'StudentNotAssignedClass.institution_id = ' . 'Institutions.id'
                        ])
 
-           ->InnerJoin(['StudentStatuses' => 'student_statuses'], [
+           ->leftJoin(['StudentStatuses' => 'student_statuses'], [
                        'StudentNotAssignedClass.student_status_id = ' . 'StudentStatuses.id'
                       ])
 
-            ->InnerJoin(['EducationGrades' => 'education_grades'], [
+            ->leftJoin(['EducationGrades' => 'education_grades'], [
                      'StudentNotAssignedClass.education_grade_id = ' . 'EducationGrades.id'
                     ])
 
-            ->where(['student_id NOT IN' => $subquery])
-            ->where(['StudentNotAssignedClass.academic_period_id' => $academicPeriodId, 
-                    'StudentNotAssignedClass.institution_id' => $institutionId,
+            ->where([
                     'StudentStatuses.code' => 'CURRENT',
+                    $conditions
                     ]);
        }
 
@@ -110,6 +116,13 @@ class StudentNotAssignedClassTable extends AppTable
             'field' => 'openemis_no',
             'type' => 'string',
             'label' => __('OpenEMIS ID')
+        ];
+
+        $extraFields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
         ];
 
         $extraFields[] = [
@@ -154,6 +167,22 @@ class StudentNotAssignedClassTable extends AppTable
             'label' => __('Education Grade')
         ];
 
+        $extraFields[] = [
+            'key' => 'analysis',
+            'field' => 'analysis',
+            'type' => 'string',
+            'label' => __('Analysis')
+        ];
+
        $fields->exchangeArray($extraFields);
-     }
+    }
+
+    public function onExcelGetAnalysis(Event $event, Entity $entity)
+    {
+        if ($entity->class_id) {
+           return $analysis = 'Yes';
+        } else {
+            return $analysis = '#N/A';
+        }
+    }
 }
