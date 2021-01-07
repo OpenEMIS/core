@@ -25,10 +25,19 @@ class StudentBehavioursTable extends AppTable {
 
 		$this->ControllerAction->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
 	}
+        
+        public function beforeFind( Event $event, Query $query )
+        {   
+            if ($this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
+                $studentId = $this->Session->read('Auth.User.id');
+                $conditions[$this->aliasField('student_id')] = $studentId;
+                $query->where($conditions, [], true);
+            }            
+        }
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		parent::onUpdateActionButtons($event, $entity, $buttons);
-
+                
 		if (array_key_exists('view', $buttons)) {
 			$url = [
 				'plugin' => 'Institution',
