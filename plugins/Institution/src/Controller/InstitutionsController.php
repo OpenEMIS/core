@@ -598,6 +598,7 @@ class InstitutionsController extends AppController
             'SecurityFunctions.name' => 'Student Attendance Archive'
         ])
         ->first();
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
 
         $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
         $securityRoleFunctionsData = $securityRoleFunctions
@@ -606,11 +607,15 @@ class InstitutionsController extends AppController
             'SecurityRoleFunctions._view'
         ])
         ->where([
-            'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id
+            'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+            'SecurityRoleFunctions.security_role_id' => $permission_id,
         ])
         ->first();
         $is_button_accesible = 0;
         if( (!empty($securityRoleFunctionsData) && $securityRoleFunctionsData->_view == 1) ){
+            $is_button_accesible = 1;
+        }
+        if($this->Auth->user('super_admin') == 1){
             $is_button_accesible = 1;
         }
 
