@@ -783,7 +783,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
                 $this->StudentsReportCards->aliasField('status IN ') => $statusArray,
                 $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
-                $this->StudentsReportCards->aliasField('file_content IS NOT NULL')
+                $this->StudentsReportCards->aliasField('file_content IS NOT NULL'),
+                $this->StudentsReportCards->aliasField('file_content_pdf IS NOT NULL')
             ])
             ->toArray();
             
