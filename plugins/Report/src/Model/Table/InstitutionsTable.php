@@ -739,7 +739,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
 
-                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.InstitutionSubjects') {
+                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.InstitutionSubjects' || $feature == 'Report.InstitutionInfrastructures') {
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
@@ -792,7 +792,7 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
-                $attr['options'] = $typeOptions;
+                $attr['options'] = ['0' => __('All Infrastructure Type')] + $typeOptions;
                 //$attr['attr']['required'] = true;
             }
             return $attr;
