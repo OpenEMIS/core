@@ -41,7 +41,6 @@ class StudentsTable extends AppTable
             'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
-		$this->addBehavior('Area.Areapicker');
     }
 
 
@@ -79,16 +78,8 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
-        
-		if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-			if (in_array($feature, ['Report.StudentsEnrollmentSummary'])) {
-				$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
-			}
-		}
-		
-		$this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
+         $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']);
@@ -453,7 +444,7 @@ class StudentsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, [])) {
+            if (in_array($feature, ['Report.StudentsEnrollmentSummary'])) {
                 $TypesTable = TableRegistry::get('Area.Areas');
                 $typeOptions = $TypesTable
                     ->find('list')
