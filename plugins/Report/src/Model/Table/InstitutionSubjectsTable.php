@@ -60,7 +60,8 @@ class InstitutionSubjectsTable extends AppTable  {
                 'institution_code' => 'Institutions.code',
                 'institution_name' => $query->func()->concat(['Institutions.code' => 'literal', ' - ', 'Institutions.name' => 'literal']),
                 'area_code' => 'Areas.code',
-                'area_name' => $query->func()->concat(['Areas.code' => 'literal', ' - ', 'Areas.name' => 'literal']),
+                // 'area_name' => $query->func()->concat(['Areas.code' => 'literal', ' - ', 'Areas.name' => 'literal']),
+                'area_name' => 'Areas.name',
                 'area_administrative_code' => 'AreaAdministratives.code',
                 'area_administrative_name' => 'AreaAdministratives.name',
                 'EducationGrades.name',
@@ -244,10 +245,17 @@ class InstitutionSubjectsTable extends AppTable  {
                 ];
                 
                 $newFields[] = [
+                    'key' => 'area_code',
+                    'field' => 'area_code',
+                    'type' => 'string',
+                    'label' => __('District Code')
+                ];
+
+                $newFields[] = [
                     'key' => 'area_name',
                     'field' => 'area_name',
                     'type' => 'string',
-                    'label' => __('Area Education')
+                    'label' => __('District Name')
                 ];
                 
                 $newFields[] = [
