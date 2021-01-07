@@ -12,12 +12,22 @@ class POCOR5783 extends AbstractMigration
      */
     public function up()
     {
+        // Backup institution_committees table
         $this->execute('CREATE TABLE `z_5783_institution_committees` LIKE `institution_committees`');
+        $this->execute('INSERT INTO `z_5783_institution_committees` SELECT * FROM `institution_committees`');
+         // End
+
         $table = $this->table('institution_committees');
         $table->removeColumn('meeting_date');
         $table->removeColumn('start_time');
         $table->removeColumn('end_time')
               ->save();
+
+        $this->execute("ALTER TABLE `institution_committees` 
+            ADD `chairperson` VARCHAR(225) NULL DEFAULT NULL  
+            AFTER `name`,  ADD `telephone` INT(11) NOT NULL 
+            AFTER `chairperson`, ADD `email` VARCHAR(225) NOT NULL  
+            AFTER `telephone`;");
 
         //meeting_table
         $this->execute("CREATE TABLE `institution_committee_meeting` ( `id` int(11) NOT NULL AUTO_INCREMENT,

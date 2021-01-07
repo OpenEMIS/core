@@ -49,6 +49,7 @@ class InstitutionCommitteeAttachmentsController extends PageController
         // //echo '<pre>';print_r($queryString);die;
         // $institutionCommitteeId = $queryString['institution_committee_id'];
         // $page->setQueryString('institution_committee_id', $institutionCommitteeId);
+        $page->setQueryOption('order', [$this->InstitutionCommitteeAttachments->aliasField('created') => 'DESC']);
         parent::index();
     }
 
