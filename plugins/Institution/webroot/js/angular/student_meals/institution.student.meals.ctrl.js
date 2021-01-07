@@ -289,7 +289,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
 
     
     vm.setGridData = function() {
-        console.log('rahulll');
+        console.log(vm.classStudentList);
         if (angular.isDefined(vm.gridOptions.api)) {
             // vm.gridOptions.api.setRowData(vm.classStudentList);
             vm.setRowDatas(vm.classStudentList);
@@ -298,8 +298,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     }
 
     vm.setRowDatas = function(studentList) {
-        console.log(studentList);
-       
+        console.log(studentList);       
         vm.gridOptions.api.setRowData(studentList);
         
     }
@@ -471,9 +470,13 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 return InstitutionStudentMealsSvc.getEducationGradeOptions(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass);
             }, vm.error)
         .then(function(isMarked) {
+                vm.updateIsMarked(isMarked);
+                return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+            }, vm.error)
+        /*.then(function(isMarked) {
             vm.updateIsMarked(isMarked);
             return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
-        }, vm.error)
+        }, vm.error)*/
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
         }, vm.error)
@@ -493,9 +496,13 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId)
        
         .then(function(isMarked) {
+                vm.updateIsMarked(isMarked);
+                return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+            }, vm.error)       
+        /*.then(function(isMarked) {
             vm.updateIsMarked(isMarked);
             return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
-        }, vm.error)
+        }, vm.error)*/
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
         }, vm.error)
@@ -523,9 +530,13 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId)
 
         .then(function(isMarked) {
+                vm.updateIsMarked(isMarked);
+                return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+            }, vm.error)
+        /*.then(function(isMarked) {
             vm.updateIsMarked(isMarked);
             return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
-        }, vm.error)
+        }, vm.error)*/
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
             }, vm.error)
@@ -544,14 +555,21 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         InstitutionStudentMealsSvc.getEducationGradeOptions(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass)            
         
         .then(function(isMarked) {
+                vm.updateIsMarked(isMarked);
+                return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+            }, vm.error)
+        /*.then(function(isMarked) {
             vm.updateIsMarked(isMarked);
             return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
-        }, vm.error)
+        }, vm.error)*/
+         .then(function(classStudents) {
+            vm.updateClassStudentList(classStudents);
+            }, vm.error)
         
         .finally(function() {
+            UtilsSvc.isAppendLoader(false);
             vm.setGridData();
             vm.setColumnDef();
-            UtilsSvc.isAppendLoader(false);
         }); 
     }
     
