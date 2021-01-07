@@ -580,7 +580,7 @@ class InstitutionsController extends AppController
 
     public function StudentMeals($pass='')
     {
-       // $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
+        $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
 
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
@@ -589,7 +589,7 @@ class InstitutionsController extends AppController
             $institutionId = $session->read('Institution.Institutions.id');
         }
 
-        //$this->set('_edit', $_edit);
+        $this->set('_edit', $_edit);
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
     }

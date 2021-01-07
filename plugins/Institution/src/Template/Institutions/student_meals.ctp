@@ -259,6 +259,13 @@ $panelHeader = $this->fetch('panelHeader');
                             <option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
+                    <h5><?= __('Meal Programme') ?>: </h5>
+                    <div class="input-select-wrapper">
+
+                        <select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="class.id as class.name for class in $ctrl.classListOptions" ng-model="$ctrl.selectedClass" ng-change="$ctrl.changeClass();">
+                            <option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
+                        </select>
+                    </div>
                                        
                 </div>
             </bg-pane>
