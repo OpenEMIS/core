@@ -184,7 +184,7 @@ class PositionSummaryTable extends AppTable
             'key' => 'Areas.name',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('Area')
+            'label' => __('Area Name')
         ];
 
         $newFields[] = [
