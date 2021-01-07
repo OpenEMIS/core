@@ -487,28 +487,76 @@ class WashReportsTable extends AppTable
                 )
                 ->where($conditions);
         }
-		
-		$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-			return $results->map(function ($row) {
-				
-				$areaLevel = '';
-				$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-				$areaLevelId = $ConfigItems->value('institution_area_level_id');
-				
-				$AreaTable = TableRegistry::get('Area.AreaLevels');
-				$value = $AreaTable->find()
-							->where([$AreaTable->aliasField('level') => $areaLevelId])
-							->first();
-			
-				if (!empty($value->name)) {
-					$areaLevel = $value->name;
-				}
-
-				$row['area_level'] = $areaLevel;
-				return $row;
-			});
-		});
         
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                //POCOR-5865 starts
+                /*$areaLevel = '';
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $areaLevelId = $ConfigItems->value('institution_area_level_id');
+                
+                $AreaTable = TableRegistry::get('Area.AreaLevels');
+                $value = $AreaTable->find()
+                            ->where([$AreaTable->aliasField('level') => $areaLevelId])
+                            ->first();
+            
+                if (!empty($value->name)) {
+                    $areaLevel = $value->name;
+                }*/
+
+                $row['area_level'] = $row->area_code;
+                //POCOR-5865 ends
+                return $row;
+            });
+        });
+        //POCOR-5865 starts
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                
+                $areas1 = TableRegistry::get('areas');
+                $areasData = $areas1
+                            ->find()
+                            ->where([$areas1->alias('code')=>$row->area_code])
+                            ->first();
+                $row['region_code'] = '';            
+                $row['region_name'] = '';
+                if(!empty($areasData)){
+                    $areas = TableRegistry::get('areas');
+                    $areaLevels = TableRegistry::get('area_levels');
+                    $institutions = TableRegistry::get('institutions');
+                    $val = $areas
+                                ->find()
+                                ->select([
+                                    $areas->aliasField('code'),
+                                    $areas->aliasField('name'),
+                                    ])
+                                ->leftJoin(
+                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [
+                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
+                                    ]
+                                )
+                                ->leftJoin(
+                                    [$institutions->alias() => $institutions->table()],
+                                    [
+                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
+                                    ]
+                                )    
+                                ->where([
+                                    $areaLevels->aliasField('level !=') => 1,
+                                    $areas->aliasField('id') => $areasData->parent_id
+                                ])->first();
+                    
+                    if (!empty($val->name) && !empty($val->code)) {
+                        $row['region_code'] = $val->code;
+                        $row['region_name'] = $val->name;
+                    }
+                }            
+                
+                return $row;
+            });
+        });
+        //POCOR-5865 ends
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -532,21 +580,37 @@ class WashReportsTable extends AppTable
             'type' => 'string',
             'label' => __('Name')
         ];
+
+        //add columns  POCOR-5865 starts
+        $extraFields[] = [
+            'key' => 'region_code',
+            'field' => 'region_code',
+            'type' => 'string',
+            'label' => __('Region Code')
+        ];
         
-		$extraFields[] = [
+        $extraFields[] = [
+            'key' => 'region_name',
+            'field' => 'region_name',
+            'type' => 'string',
+            'label' => __('Region Name')
+        ];
+        //add columns  POCOR-5865 ends
+        //update label  POCOR-5865 starts
+        $extraFields[] = [
             'key' => 'area_level',
             'field' => 'area_level',
             'type' => 'string',
-            'label' => __('Area Level')
+            'label' => __('District Code')
         ];
-		
+        
         $extraFields[] = [
             'key' => 'area_name',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('Area Education')
+            'label' => __('District Name')
         ];
-        
+        //update label POCOR-5865 ends
         $extraFields[] = [
             'key' => 'AcademicPeriods.name',
             'field' => 'academic_period',
