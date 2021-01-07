@@ -166,7 +166,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             }
         }
         // task POCOR-5668 starts
-        if($this->request->params['pass'][0] == 'add'){ 
+        if(isset($this->request->params['pass'][0]) && $this->request->params['pass'][0] == 'add'){ 
             if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
             {
                 if($entity->validate_number == 1){
@@ -508,7 +508,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         $nationalityId = '';
         if(array_key_exists('nationality_id',$this->request->query)){ //when add nationality
             $nationalityId = $this->request->query['nationality_id'];
-        } else if($this->request->params['pass'][0] == 'edit'){ //when edit nationality
+        } else if(isset($this->request->params['pass'][0]) && $this->request->params['pass'][0] == 'edit'){ //when edit nationality
             $nationalityId = $this->paramsDecode($this->request->params['pass']['1'])['nationality_id'];
         }else { //when add nationality
             $nationalityId = $this->request->data['UserNationalities']['nationality_id'];
