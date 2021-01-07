@@ -33,7 +33,7 @@ $session = $this->Session;
 $superAdmin = $session->read('Auth.User.super_admin');
 $is_connection_is_online = $session->read('is_connection_stablished');
 ?>
-<?php if(($superAdmin == 1 && $is_connection_is_online == 1)) :  ?>
+<?php if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  ?>
 <?php if ($archiveUrl) : ?>
     <a href="<?=$archiveUrl ?>" ng-show="$ctrl.action == 'view'">
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>" >

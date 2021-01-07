@@ -129,6 +129,9 @@ class HealthReportsTable extends AppTable
                         " ",
                         'Users.last_name' => 'literal'
                     ]),
+                    'first_name' =>'Users.first_name',
+                    'middle_name' => 'Users.middle_name',
+                    'last_name' => 'Users.last_name',
                     'blood_type' => 'UserHealths.blood_type',
                     'doctor_name' => 'UserHealths.doctor_name',
                     'doctor_contact' => 'UserHealths.doctor_contact',
@@ -203,6 +206,9 @@ class HealthReportsTable extends AppTable
                         " ",
                         'Users.last_name' => 'literal'
                     ]),
+                    'first_name' =>'Users.first_name',
+                    'middle_name' => 'Users.middle_name',
+                    'last_name' => 'Users.last_name',
                     'description' => 'UserHealthAllergies.description',
                     'severe' => 'UserHealthAllergies.severe',
                     'comment' => 'UserHealthAllergies.comment',
@@ -282,6 +288,9 @@ class HealthReportsTable extends AppTable
                         " ",
                         'Users.last_name' => 'literal'
                     ]),
+                    'first_name' =>'Users.first_name',
+                    'middle_name' => 'Users.middle_name',
+                    'last_name' => 'Users.last_name',
                     'health_consultation_date' => 'UserHealthConsultations.date',
                     'health_consultation_description' => 'UserHealthConsultations.description',
                     'health_consultation_treatment' => 'UserHealthConsultations.treatment',
@@ -361,6 +370,9 @@ class HealthReportsTable extends AppTable
                         " ",
                         'Users.last_name' => 'literal'
                     ]),
+                    'first_name' =>'Users.first_name',
+                    'middle_name' => 'Users.middle_name',
+                    'last_name' => 'Users.last_name',
                     'current' => 'UserHealthFamilies.current',
                     'user_health_family_comment' => 'UserHealthFamilies.comment',
                     'user_health_family_relationship_name' => 'HealthRelationships.name',
@@ -445,6 +457,9 @@ class HealthReportsTable extends AppTable
                         " ",
                         'Users.last_name' => 'literal'
                     ]),
+                    'first_name' =>'Users.first_name',
+                    'middle_name' => 'Users.middle_name',
+                    'last_name' => 'Users.last_name',
                     'current' => 'UserHealthHistories.current',
                     'user_health_history_comment' => 'UserHealthHistories.comment',
                     'user_health_history_condition_name' => 'HealthConditions.name'
@@ -522,6 +537,9 @@ class HealthReportsTable extends AppTable
                         " ",
                         'Users.last_name' => 'literal'
                     ]),
+                    'first_name' =>'Users.first_name',
+                    'middle_name' => 'Users.middle_name',
+                    'last_name' => 'Users.last_name',
                     'user_health_immunization_current' => 'UserHealthImmunizations.date',
                     'user_health_immunization_comment' => 'UserHealthImmunizations.comment',
                     'user_health_immunization_dosage' => 'UserHealthImmunizations.dosage',
@@ -600,6 +618,9 @@ class HealthReportsTable extends AppTable
                         " ",
                         'Users.last_name' => 'literal'
                     ]),
+                    'first_name' =>'Users.first_name',
+                    'middle_name' => 'Users.middle_name',
+                    'last_name' => 'Users.last_name',
                     'user_health_medication_name' => 'UserHealthMedications.name',
                     'user_health_medication_dosage' => 'UserHealthMedications.dosage',
                     'user_health_medication_start_date' => 'UserHealthMedications.start_date',
@@ -672,6 +693,9 @@ class HealthReportsTable extends AppTable
                         " ",
                         'Users.last_name' => 'literal'
                     ]),
+                    'first_name' =>'Users.first_name',
+                    'middle_name' => 'Users.middle_name',
+                    'last_name' => 'Users.last_name',
                     'user_health_test_date' => 'UserHealthTests.date',
                     'user_health_test_result' => 'UserHealthTests.result',
                     'user_health_test_comment' => 'UserHealthTests.comment',
@@ -750,6 +774,9 @@ class HealthReportsTable extends AppTable
                         " ",
                         'Users.last_name' => 'literal'
                     ]),
+                    'first_name' =>'Users.first_name',
+                    'middle_name' => 'Users.middle_name',
+                    'last_name' => 'Users.last_name',
                     'user_insurance_start_date' => 'UserInsurances.start_date',
                     'user_insurance_end_date' => 'UserInsurances.end_date',
                     'user_insurance_comment' => 'UserInsurances.comment',
@@ -831,17 +858,18 @@ class HealthReportsTable extends AppTable
         
         $extraFields = [];
         $extraFields[] = [
-            'key' => 'HealthReports.institution_id',
-            'field' => 'institution_id',
-            'type' => 'string',
-            'label' => __('Name')
-        ];
-        
-        $extraFields[] = [
             'key' => 'HealthReports.code_name',
             'field' => 'code_name',
             'type' => 'string',
             'label' => __('Code')
+        ];
+
+
+        $extraFields[] = [
+            'key' => 'HealthReports.institution_id',
+            'field' => 'institution_id',
+            'type' => 'string',
+            'label' => __('Name')
         ];
         
         $extraFields[] = [
@@ -865,11 +893,32 @@ class HealthReportsTable extends AppTable
             'label' => __('OpenEMIS ID')
         ];
         
+        // $extraFields[] = [
+        //     'key' => 'student_name',
+        //     'field' => 'student_name',
+        //     'type' => 'string',
+        //     'label' => __('Student Name')
+        // ];
+
         $extraFields[] = [
-            'key' => 'student_name',
-            'field' => 'student_name',
+            'key' => 'first_name',
+            'field' => 'first_name',
             'type' => 'string',
-            'label' => __('Student Name')
+            'label' => __('First Name')
+        ];
+
+        $extraFields[] = [
+            'key' => 'middle_name',
+            'field' => 'middle_name',
+            'type' => 'string',
+            'label' => __('Middle Name')
+        ];
+
+        $extraFields[] = [
+            'key' => 'last_name',
+            'field' => 'last_name',
+            'type' => 'string',
+            'label' => __('Last Name')
         ];
         
         $extraFields[] = [
@@ -1037,7 +1086,7 @@ class HealthReportsTable extends AppTable
                 'key' => 'user_health_immunization_current',
                 'field' => 'user_health_immunization_current',
                 'type' => 'date',
-                'label' => __('Current')
+                'label' => __('Date')
             ];
             
             $extraFields[] = [
@@ -1045,6 +1094,13 @@ class HealthReportsTable extends AppTable
                 'field' => 'user_health_immunization_dosage',
                 'type' => 'string',
                 'label' => __('Dosage')
+            ];
+
+            $extraFields[] = [
+                'key' => 'user_health_immunization_comment',
+                'field' => 'user_health_immunization_comment',
+                'type' => 'string',
+                'label' => __('Comment')
             ];
 
             $extraFields[] = [
