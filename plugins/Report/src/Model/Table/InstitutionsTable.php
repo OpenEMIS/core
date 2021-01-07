@@ -612,7 +612,8 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, 
                         [
-                            'Report.InstitutionStudents'
+                            'Report.InstitutionStudents',
+                            'Report.InstitutionSubjects'
                         ])
                 ) {
                 
@@ -630,6 +631,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['options'] = ['0' => __('All Programmes')] + $programmeOptions;
+                $attr['onChangeReload'] = true;
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -721,7 +723,8 @@ class InstitutionsTable extends AppTable
                             'Report.Guardians',
                             'Report.InstitutionInfrastructures',
                             'Report.SubjectsBookLists',
-                            'Report.SpecialNeedsFacilities'
+                            'Report.SpecialNeedsFacilities',
+                            'Report.InstitutionSubjects'
                         ])
                 ) {
                 
@@ -735,8 +738,8 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
-                
-                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.Guardians') {
+
+                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.InstitutionSubjects' || $feature == 'Report.Guardians') {
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
@@ -1167,7 +1170,47 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
+
+                if($feature == 'Report.InstitutionSubjects') {
+                    $educationProgrammeid = $this->request->data['Institutions']['education_programme_id'];
+                    if($educationProgrammeid == 0){
+                        $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
+                    }else{
+                        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+                        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                        $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+                        $subjectOptions = $EducationProgrammes
+                            ->find()
+                            ->select([
+                                'EducationSubjects.name','EducationSubjects.id'
+                            ])
+                            ->innerJoin(
+                                ['EducationGrades' => 'education_grades'],
+                                ['EducationGrades.education_programme_id = ' . $EducationProgrammes->aliasField('id')]
+                            )
+                            ->innerJoin(
+                                ['EducationGradesSubjects' => 'education_grades_subjects'],
+                                ['EducationGradesSubjects.education_grade_id = ' . $EducationGrades->aliasField('id')]
+                            )
+                            ->innerJoin(
+                                ['EducationSubjects' => 'education_subjects'],
+                                ['EducationSubjects.id = ' . $EducationGradesSubjects->aliasField('education_subject_id')]
+                            )
+                            ->where([
+                                $EducationProgrammes->aliasField('id') => $educationProgrammeid
+                            ])
+                            ->toArray();
+                            $attr['type'] = 'select';
+                            $attr['select'] = false; 
+                            foreach($subjectOptions AS $value){
+                                $filteredSubjectOptions[$value->EducationSubjects['id']] = $value->EducationSubjects['name'];
+                            }
+                        $attr['options'] = $filteredSubjectOptions;
+                    }
+                } else {
+                    $attr['options'] = $typeOptions;
+                }
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
