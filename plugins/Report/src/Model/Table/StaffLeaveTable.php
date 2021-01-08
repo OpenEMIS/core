@@ -51,10 +51,24 @@ class StaffLeaveTable extends AppTable {
                     'area_name' => 'Areas.name',
                     'area_code' => 'Areas.code',
                     'area_administrative_code' => 'AreaAdministratives.code',
-                    'area_administrative_name' => 'AreaAdministratives.name'
+                    'area_administrative_name' => 'AreaAdministratives.name',
+					'position_title' =>  $query->func()->concat([
+						'InstitutionPositions.position_no' => 'literal',
+						" - ",
+						'StaffPositionTitles.name' => 'literal'
+					]),
             ])
             ->contain(['Users', 'Institutions', 'Institutions.Areas', 'Institutions.AreaAdministratives'])
-            ->order([$this->aliasField('date_from')]);
+            ->leftJoin(['InstitutionStaffs' => 'institution_staff'], [
+				'InstitutionStaffs.staff_id = ' . $this->aliasfield('staff_id'),
+			])
+			->leftJoin(['InstitutionPositions' => 'institution_positions'], [
+				'InstitutionPositions.id = InstitutionStaffs.institution_position_id',
+			])
+			->leftJoin(['StaffPositionTitles' => 'staff_position_titles'], [
+				'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
+			])
+			->order([$this->aliasField('date_from')]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -72,14 +86,14 @@ class StaffLeaveTable extends AppTable {
             'key' => 'Institutions.code',
             'field' => 'code',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Institution Code')
         ];
 
         $newFields[] = [
             'key' => 'StaffLeave.institution_id',
             'field' => 'institution_id',
             'type' => 'integer',
-            'label' => ''
+            'label' => __('Institution Name')
         ];
 
         $newFields[] = [
@@ -157,6 +171,13 @@ class StaffLeaveTable extends AppTable {
             'field' => 'comments',
             'type' => 'string',
             'label' => ''
+        ];
+		
+		$newFields[] = [
+            'key' => '',
+            'field' => 'position_title',
+            'type' => 'string',
+            'label' => __('Position Title')
         ];
 
         $fields->exchangeArray($newFields);
