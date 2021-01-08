@@ -65,6 +65,7 @@ class SpecialNeedsTable extends AppTable
         $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
+        $UserContact = TableRegistry::get('user_contacts');
         if ($institution_id != 0) {
             $where = [$this->aliasField('institution_id') => $institution_id];
         } else {
@@ -97,6 +98,7 @@ class SpecialNeedsTable extends AppTable
                     'GuardianUser.first_name' => 'literal',
                     " - ",
                     'GuardianUser.last_name' => 'literal']),
+                'guardian_contact_number' => $UserContact->aliasField('value'),
             ])
             ->leftJoin(
                     [$Users->alias() => $Users->table()],
@@ -167,6 +169,9 @@ class SpecialNeedsTable extends AppTable
             ->leftJoin(['GuardianUser' => 'security_users'], [
                         'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
                     ])
+            ->leftJoin([$UserContact->alias() => $UserContact->table()], [
+                $UserContact->aliasField('security_user_id = ') . $this->aliasField('student_id')
+            ])
             ->contain([
                 'Institutions',
                 'AcademicPeriods',
@@ -305,6 +310,12 @@ class SpecialNeedsTable extends AppTable
             'field' => 'guardian_name',
             'type' => 'string',
             'label' => __('Guardian Name')
+        ];
+        $newFields[] = [
+            'key' => '',
+            'field' => 'guardian_contact_number',
+            'type' => 'string',
+            'label' => __('Guardian Contact Number')
         ];
 
         $fields->exchangeArray($newFields);
