@@ -66,18 +66,18 @@ class InstitutionInfrastructuresTable extends AppTable
         $newFields = [];
         
         $newFields[] = [
-            'key' => 'InstitutionsInfrastructure.name',
-            'field' => 'name',
-            'type' => 'string',
-            'label' => __('Institution Name')
-        ];
-
-        $newFields[] = [
             'key' => 'InstitutionsInfrastructure.code',
             'field' => 'code',
             'type' => 'string',
             'alias' => 'institution_code',
             'label' => __('Institution Code')
+        ];
+        
+        $newFields[] = [
+            'key' => 'InstitutionsInfrastructure.name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => __('Institution Name')
         ];
 
         //POCOR-5698 two new columns added here
