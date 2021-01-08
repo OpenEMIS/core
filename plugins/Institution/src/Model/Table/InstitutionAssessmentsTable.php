@@ -112,7 +112,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $buttons = $extra['indexButtons'];
         $superAdmin = $session->read('Auth.User.super_admin');
         $is_connection_is_online = $session->read('is_connection_stablished');
-        if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+        if( ($is_connection_is_online == 1) ){
             $extraButtons = [
                 'archive' => [
                     'AssessmentsArchive' => ['Institutions', 'AssessmentsArchive', 'index'],
