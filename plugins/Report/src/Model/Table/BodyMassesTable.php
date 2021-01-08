@@ -169,7 +169,8 @@ class BodyMassesTable extends AppTable
                         'student_preferred_name' => 'Users.preferred_name',
                         'date_of_birth' => 'Users.date_of_birth',
                         'identity_number' => 'Users.identity_number',
-                        'identity_type' => 'Users.identity_type_id'
+                        'identity_type' => 'Users.identity_type_id',
+                        'gender_name' => 'Genders.name'
                     ]
                 ],
                 'EducationGrades' => [
@@ -195,7 +196,7 @@ class BodyMassesTable extends AppTable
                 ],
                 'Institutions.Areas'
             ])
-             ->innerJoin(
+             ->leftJoin(
                 ['UserBodyMasses' => 'user_body_masses'],
                 [
                     'UserBodyMasses.security_user_id = ' . $this->aliasField('student_id'),
@@ -301,8 +302,8 @@ class BodyMassesTable extends AppTable
             ];
 
         $extraFields[] = [
-            'key' => 'Users.gender',
-            'field' => 'gender',
+            'key' => 'Genders.gender',
+            'field' => 'gender_name',
             'type' => 'string',
             'label' => __('Gender')
         ];
