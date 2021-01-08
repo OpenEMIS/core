@@ -57,6 +57,8 @@ class StaffLeaveTable extends AppTable {
 						" - ",
 						'StaffPositionTitles.name' => 'literal'
 					]),
+					'identity_type' => 'IdentityTypes.name',
+					'identity_number' => 'UserIdentity.number',
             ])
             ->contain(['Users', 'Institutions', 'Institutions.Areas', 'Institutions.AreaAdministratives'])
             ->leftJoin(['InstitutionStaffs' => 'institution_staff'], [
@@ -67,6 +69,21 @@ class StaffLeaveTable extends AppTable {
 			])
 			->leftJoin(['StaffPositionTitles' => 'staff_position_titles'], [
 				'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
+			])
+			->leftJoin(['UserNationalities' => 'user_nationalities'], [
+				'UserNationalities.security_user_id = ' . $this->aliasfield('staff_id'),
+			])
+			->leftJoin(['Nationalities' => 'nationalities'], [
+			   'Nationalities.id = UserNationalities.nationality_id',
+			   'AND' => [
+					'Nationalities.default = 1',
+				]
+			])
+			->leftJoin(['IdentityTypes' => 'identity_types'], [
+				'IdentityTypes.id = Nationalities.identity_type_id',
+			])
+			->leftJoin(['UserIdentity' => 'user_identities'], [
+				'UserIdentity.security_user_id = ' . $this->aliasfield('staff_id'),
 			])
 			->order([$this->aliasField('date_from')]);
     }
@@ -178,6 +195,19 @@ class StaffLeaveTable extends AppTable {
             'field' => 'position_title',
             'type' => 'string',
             'label' => __('Position Title')
+        ];
+		
+		$newFields[] = [
+            'key' => '',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Default Identity Type')
+        ];
+        $newFields[] = [
+            'key' => '',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
         ];
 
         $fields->exchangeArray($newFields);
