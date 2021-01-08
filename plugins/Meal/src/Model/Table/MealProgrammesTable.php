@@ -32,6 +32,9 @@ class MealProgrammesTable extends ControllerActionTable
         $this->belongsTo('MealTargetTypes', ['className' => 'Meal.MealTargetTypes','foreignKey' => 'trageting']);
         $this->belongsTo('MealImplementers', ['className' => 'Meal.MealImplementers','foreignKey' => 'implementer']);
         $this->belongsTo('MealNutritions', ['className' => 'Meal.MealNutritions','foreignKey' => 'nutritional_content']);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StudentMeals' => ['index', 'view']
+        ]);
 
     }
 
