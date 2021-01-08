@@ -110,6 +110,8 @@ class StaffAttendancesTable extends ControllerActionTable
 					" - ",
 					'StaffPositionTitles.name' => 'literal'
 				]),
+				'identity_type' => 'IdentityTypes.name',
+				'identity_number' => 'UserIdentity.number',
 			])
 			->leftJoin(['Institutions' => 'institutions'], [
 				'Institutions.id = ' . $this->aliasfield('institution_id'),
@@ -119,6 +121,21 @@ class StaffAttendancesTable extends ControllerActionTable
 			])
 			->leftJoin(['StaffPositionTitles' => 'staff_position_titles'], [
 				'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
+			])
+			->leftJoin(['UserNationalities' => 'user_nationalities'], [
+				'UserNationalities.security_user_id = ' . $this->aliasfield('staff_id'),
+			])
+			->leftJoin(['Nationalities' => 'nationalities'], [
+			   'Nationalities.id = UserNationalities.nationality_id',
+			   'AND' => [
+					'Nationalities.default = 1',
+				]
+			])
+			->leftJoin(['IdentityTypes' => 'identity_types'], [
+				'IdentityTypes.id = Nationalities.identity_type_id',
+			])
+			->leftJoin(['UserIdentity' => 'user_identities'], [
+				'UserIdentity.security_user_id = ' . $this->aliasfield('staff_id'),
 			])
             ->where([$this->aliasField('institution_id') => $institutionId])
             ->distinct([$this->aliasField('staff_id')])
@@ -142,6 +159,18 @@ class StaffAttendancesTable extends ControllerActionTable
             'label' => __('Institution Name')
         ];
         $newArray[] = [
+            'key' => '',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Default Identity Type')
+        ];
+        $newArray[] = [
+            'key' => '',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+		$newArray[] = [
             'key' => '',
             'field' => 'position_title',
             'type' => 'string',
