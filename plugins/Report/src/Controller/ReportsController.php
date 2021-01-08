@@ -84,7 +84,7 @@ class ReportsController extends AppController
                 'Report.InstitutionCases' => __('Cases'),
                 'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
                 //'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
-                'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
+                // 'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
                 'Report.WashReports' => __('Wash Report'),
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
