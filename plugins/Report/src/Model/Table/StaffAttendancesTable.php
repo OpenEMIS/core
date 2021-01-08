@@ -102,6 +102,24 @@ class StaffAttendancesTable extends ControllerActionTable
         $institutionId = $requestData->institution_id;
         
         $query
+			->select([
+				'institution_code' => 'Institutions.code',
+				'institution_name' => 'Institutions.name',
+				'position_title' =>  $query->func()->concat([
+					'InstitutionPositions.position_no' => 'literal',
+					" - ",
+					'StaffPositionTitles.name' => 'literal'
+				]),
+			])
+			->leftJoin(['Institutions' => 'institutions'], [
+				'Institutions.id = ' . $this->aliasfield('institution_id'),
+			])
+			->leftJoin(['InstitutionPositions' => 'institution_positions'], [
+				'InstitutionPositions.id = ' . $this->aliasfield('institution_position_id'),
+			])
+			->leftJoin(['StaffPositionTitles' => 'staff_position_titles'], [
+				'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
+			])
             ->where([$this->aliasField('institution_id') => $institutionId])
             ->distinct([$this->aliasField('staff_id')])
             // ->find('academicPeriod', ['academic_period_id' => $academicPeriodId])
@@ -111,7 +129,25 @@ class StaffAttendancesTable extends ControllerActionTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $newArray = [];
+		$newArray[] = [
+            'key' => '',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
         $newArray[] = [
+            'key' => '',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution Name')
+        ];
+        $newArray[] = [
+            'key' => '',
+            'field' => 'position_title',
+            'type' => 'string',
+            'label' => __('Position Title')
+        ];
+		$newArray[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
