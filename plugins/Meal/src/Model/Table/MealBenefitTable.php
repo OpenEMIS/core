@@ -10,5 +10,9 @@ class MealBenefitTable extends ControllerActionTable
         $this->table('meal_benefits');
         parent::initialize($config);        
         $this->addBehavior('FieldOption.FieldOption');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['index'],
+            'StudentMeals' => ['index', 'view']
+        ]);
     }
 }
