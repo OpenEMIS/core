@@ -144,9 +144,16 @@ class PositionSummaryTable extends AppTable
 								$female_occupancy[] = $staff->gender;
 							}
 						}
+						
+					$male_count = 0;
+					$female_count = 0;
+					if(!empty($male_occupancy)) {
 						$male_count = count($male_occupancy);
+					}
+					if(!empty($female_occupancy)) {
 						$female_count = count($female_occupancy);
-					
+					}
+						
 					$row['male_count'] = !empty($male_count) ? $male_count : 0;
 					$row['female_count'] = !empty($female_count) ? $female_count : 0;
 					return $row;
