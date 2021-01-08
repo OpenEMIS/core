@@ -76,8 +76,8 @@ class POCOR5851 extends AbstractMigration
     // rollback
     public function down()
     {
-        $this->execute('DROP TABLE IF EXISTS `security_roles`');
-        $this->execute('RENAME TABLE `zz_5851_security_roles` TO `security_roles`');
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('RENAME TABLE `zz_5851_security_functions` TO `security_functions`');
         $this->execute('DROP TABLE IF EXISTS `security_role_functions`');
         $this->execute('RENAME TABLE `zz_5851_security_role_functions` TO `security_role_functions`');
     }
