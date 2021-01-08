@@ -103,7 +103,7 @@ class ReportsController extends AppController
                 'Report.StudentIdentities' => __('Identities'),
                 'Report.StudentContacts' => __('Contacts'),
                 'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
-                'Report.StudentGuardians' => __('Guardians'),
+                //'Report.StudentGuardians' => __('Guardians'), //POCOR-5393
                 'Report.HealthReports' => __('Student Health Report'),
                 'Report.BodyMassStatusReports' => __('BMI Status Report'), 
                 'Report.StudentsRiskAssessment' => __('Risk Assessment Report') ,
