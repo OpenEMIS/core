@@ -34,6 +34,7 @@ class StudentsEnrollmentSummaryTable extends AppTable  {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $areaEducationId = $requestData->area_education_id;
+        //pocor 5863 start
         $area_id_array=[];
         if(!empty($areaEducationId)){
             $area_id_array[$areaEducationId] = $areaEducationId;
@@ -59,7 +60,8 @@ class StudentsEnrollmentSummaryTable extends AppTable  {
                 }
             }
         }
-        $areaEducationId = $area_id_array;       
+        $areaEducationId = $area_id_array;      
+        //pocor 5863 ends 
         $query
             ->select([
                 'institution_name' => 'Institutions.name',
@@ -91,8 +93,10 @@ class StudentsEnrollmentSummaryTable extends AppTable  {
             ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                             'InstitutionStudents.academic_period_id = ' . 'AcademicPeriods.id'
                         ])
-            ->where(['Genders.id IS NOT NULL','AcademicPeriods.id' => $academicPeriodId,'Areas.id IN ' =>  $areaEducationId])
-            ->group('Genders.id');
+            //pocor 5863 start
+            ->where(['Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId, 'Areas.id IN ' =>  $areaEducationId])
+            ->group(['Institutions.id', 'EducationGrades.id', 'Genders.id']);
+            //pocor 5863 ends
     }
             
         
