@@ -41,9 +41,6 @@ class StudentsTable extends AppTable
             'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
-        //pocor 5863 start
-        $this->addBehavior('Area.Areapicker');
-        //pocor 5863 end
     }
 
 
@@ -82,13 +79,7 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         //pocor 5863 start
-         //$this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.StudentsEnrollmentSummary'])) {
-                $this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false, 'label'=> 'Area Education']);
-            }
-        }
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         //pocor 5863 end
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
@@ -122,13 +113,7 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('position_filter', ['type' => 'hidden']);       
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         //pocor 5863 start
-        // $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.StudentsEnrollmentSummary'])) {
-                $this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false, 'label'=> 'Area Education','required'=>true]);
-            }
-        }
+         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         //pocor 5863 end
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('risk_type', ['type' => 'hidden']); 
@@ -463,21 +448,27 @@ class StudentsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.StudentsEnrollmentSummary'])) {
-                $TypesTable = TableRegistry::get('Area.Areas');
-                $typeOptions = $TypesTable
-                    ->find('list')
-                    ->find('visible')
-                    ->find('order')
-                    ->toArray();
 
-                $attr['type'] = 'select';
-                $attr['onChangeReload'] = true;
-                $attr['options'] = $typeOptions;
-                $attr['attr']['required'] = true;
+            if (in_array($feature, ['Report.StudentsEnrollmentSummary'])) {
+                    $Areas = TableRegistry::get('Area.Areas');
+                    $entity = $attr['entity'];
+
+                    if ($action == 'add') {
+                        $areaOptions = $Areas
+                            ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                            ->order([$Areas->aliasField('order')]);
+
+                        $attr['type'] = 'chosenSelect';
+                        $attr['attr']['multiple'] = false;
+                        $attr['select'] = true;
+                        $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions->toArray();
+                        $attr['onChangeReload'] = true;
+                    } else {
+                        $attr['type'] = 'hidden';
+                    }
             }
-            return $attr;
         }
+        return $attr;
     }
     
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
