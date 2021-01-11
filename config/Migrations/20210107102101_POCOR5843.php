@@ -39,7 +39,7 @@ class POCOR5843 extends AbstractMigration
         $table->saveData();
     }
 
-    // rollback
+    //  rollback
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
