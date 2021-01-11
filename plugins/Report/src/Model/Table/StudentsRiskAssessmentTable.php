@@ -104,7 +104,7 @@ public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields
     $extraFields[] = [
         'key' => 'risk_criterias',
         'field' => 'risk_criterias',
-        'type' => 'string',
+        'type' => 'array',
         'label' => __('Risk Criterias')
     ];
 
