@@ -88,13 +88,6 @@ class AreapickerBehavior extends Behavior
             $areaKeys = array_merge($areaKeys, [$entity->{$attr['field']}]);
             // Temporary disabled for further investigation
             // $session->write('FormTampering.'.$fieldName, $areaKeys);
-            //pocor 5863 start
-            if($data[$this->_table->alias()]['feature'] == 'Report.StudentsEnrollmentSummary'){
-                $attr['label'] = 'Area Education';
-                $attr['fieldName'] = 'Students'.'.'.'area_education_id';
-                $attr['null'] = false;
-            }
-            //pocor 5863 ends
             return $event->subject()->renderElement('Area.sg_tree', ['attr' => $attr]);
         }
         return $value;
