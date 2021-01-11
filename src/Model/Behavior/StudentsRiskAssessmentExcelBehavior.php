@@ -230,24 +230,15 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
     		'risk_id' => 'InstitutionRisks.risk_id',
     		'risk_generated_by' => 'Users.first_name',
     		'risk_index' => 'Risks.id',
-    		'total_risk' => 'InstitutionStudentRisks.total_risk',
+    		//'total_risk' => 'InstitutionStudentRisks.total_risk',
     		'risk_type' => 'Risks.name',
-    		'criteria' => 'RiskCriterias.criteria'
+    		//'criteria' => 'RiskCriterias.criteria'
     	])
     	->leftJoin(['Users' => 'security_users'], [
     		'Users.id = ' . $institutionStudents->aliasfield('student_id')
     	])
     	->leftJoin(['InstitutionStudents' => 'institution_students'], [
     		'Users.id = ' . 'InstitutionStudents.student_id'
-    	])
-    	->leftJoin(['InstitutionStudentRisks' => 'institution_student_risks'], [
-    		'InstitutionStudentRisks.student_id = ' . 'InstitutionStudents.student_id',
-    	])
-    	->leftJoin(['StudentRisksCriterias' => 'student_risks_criterias'], [
-    		'StudentRisksCriterias.institution_student_risk_id = ' . 'InstitutionStudentRisks.id'
-    	])
-    	->leftJoin(['RiskCriterias' => 'risk_criterias'], [
-    		'RiskCriterias.id = ' . 'StudentRisksCriterias.risk_criteria_id'
     	])
     	->leftJoin(['AcademicPeriods' => 'academic_periods'], [
     		'InstitutionStudents.academic_period_id = ' . 'AcademicPeriods.id'
@@ -265,7 +256,7 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
     	])
     	->group([$institutionStudents->aliasField('student_id')])
 		->where([$conditions]);
-
+//echo "<pre>";print_r($query);die();
 		$result = [];
                         if (!empty($query)) {
                             foreach ($query as $key => $value) {
@@ -279,10 +270,11 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
                                $result[$key][] = $value->student_identity_number;
                                $result[$key][] = $value->first_name . ' ' . $value->middle_name . ' ' . $value->third_name . ' ' . $value->last_name;
                                $result[$key][] = isset($value->total_risk) ? $value->total_risk : 0;
-                                $result[$key][] = isset($value->criteria) ? $value->criteria : ' ';
-                           } 
-                            //getting risk criteria
-                           /*$institutionStudentRisksData = $institutionStudentRisks
+                               $result[$key][] = isset($value->criteria) ? $value->criteria : ' ';
+
+                                //getting risk criteria
+                               $data = [];
+                           $institutionStudentRisksData = $institutionStudentRisks
                                     ->find()
                                     ->select([$riskCriterias->aliasField('criteria'), 
                                     $institutionStudentRisks->aliasField('student_id')])
@@ -294,18 +286,23 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
                                     ])
                                     ->where([
                                         $institutionStudentRisks->aliasField('student_id = ') . $value->student_id,
-                                        $newConditions])
-                                    ->toArray();
-                                    foreach ($institutionStudentRisksData as $val) {
-                                        $result[$key][] = $val->criteria;
+                                        $newConditions]);
+                                    
+                                    foreach ($institutionStudentRisksData as $k => $val) {
+                                        //echo "<pre>";print_r();die();
+                                        $data[$key][] = $val['risk_criterias']['criteria'];
                                     }
+                                    echo "<pre>";print_r($data);die(); 
+                           } 
+                         
+                                     
                       }
-		echo "<pre>";print_r($result);die();*/
+                      return $result;
+		
 	}
-		return $result;
+		
                        
 
-    }
 
     private function getFields($table, $settings, $label)
     {
