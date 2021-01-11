@@ -490,7 +490,10 @@ class StudentsTable extends AppTable
                         $EducationGrades->aliasField('name') => 'ASC'
                     ])
                     ->toArray();
-
+                //POCOR-5740 starts
+                if (in_array($feature, ['Report.SubjectsBookLists'])) {
+                    $attr['onChangeReload'] = true;
+                } //POCOR-5740 ends   
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
@@ -559,12 +562,15 @@ class StudentsTable extends AppTable
 
    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
     {
+
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, 
                         [
-                            'Report.InstitutionSubjects',
-                            'Report.SubjectsBookLists'
+                            'Report.InstitutionSubjects'
+                            //POCOR-5740 starts
+                            //'Report.SubjectsBookLists'
+                            //POCOR-5740 ends
                         ])
                 ) {
 
@@ -580,6 +586,39 @@ class StudentsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
+            } elseif(in_array($feature, ['Report.SubjectsBookLists'])){ //POCOR-5740 starts
+                
+                $EducationGradesSubjects = TableRegistry::get('education_grades_subjects');
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                $subjectOptions = $EducationGradesSubjects
+                                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                                    ->select([
+                                        'education_subject_id' => $EducationGradesSubjects->aliasField('education_subject_id'),
+                                        'education_grade_id' => $EducationGradesSubjects->aliasField('education_grade_id'),
+                                        'id' => $EducationSubjects->aliasField('id'),
+                                        'name' => $EducationSubjects->aliasField('name')
+                                    ])
+                                    ->leftJoin(
+                                        [$EducationSubjects->alias() => $EducationSubjects->table()],
+                                        [
+                                            $EducationSubjects->aliasField('id = ') . $EducationGradesSubjects->aliasField('education_subject_id')
+                                        ]
+                                    )
+                                    ->where([
+                                        $EducationGradesSubjects->aliasField('education_grade_id') => $this->request->data[$this->alias()]['education_grade_id']
+                                    ])
+                                    ->order([
+                                        $EducationSubjects->aliasField('order') => 'ASC'
+                                    ])->toArray();
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+
+                if($this->request->data[$this->alias()]['education_grade_id'] == -1){ //for all grades
+                    $attr['options'] = ['' => __('All Subjects')];
+                }else{
+                    $attr['options'] = $subjectOptions;
+                }
+                //POCOR-5740 ends
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
