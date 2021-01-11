@@ -40,12 +40,8 @@ class PositionSummaryTable extends AppTable
         $area_id = $requestData->area_id;
         $institution_id = $requestData->institution_id;
 
-        if ($area_id == 0 && $institution_id != 0) {
+        if ($institution_id != 0) {
             $where = ['Institutions.id' => $institution_id];
-        } else if ($area_id != 0 && $institution_id != 0) {           
-            $where = ['Institutions.id' => $institution_id,'Institutions.area_id' => $area_id]; 
-        } else if ($area_id !=0 && $institution_id == 0) {
-            $where = ['Institutions.area_id' => $area_id];
         } else {
             $where = [];
         }
@@ -154,8 +150,8 @@ class PositionSummaryTable extends AppTable
 						$female_count = count($female_occupancy);
 					}
 						
-					$row['male_count'] = !empty($male_count) ? $male_count : 0;
-					$row['female_count'] = !empty($female_count) ? $female_count : 0;
+					$row['male_count'] = !empty($male_count) ? $male_count : ' 0';
+					$row['female_count'] = !empty($female_count) ? $female_count : ' 0';
 					return $row;
 				});
 			});
@@ -204,15 +200,15 @@ class PositionSummaryTable extends AppTable
         $newFields[] = [
             'key' => '',
             'field' => 'male_count',
-            'type' => 'integer',
-            'label' => __('Male Occupancy')
+            'type' => 'string',
+            'label' => __('Male')
         ];
 		
         $newFields[] = [
             'key' => '',
             'field' => 'female_count',
-            'type' => 'integer',
-            'label' => __('Female Occupancy')
+            'type' => 'string',
+            'label' => __('Female')
         ];
 
         $fields->exchangeArray($newFields);
