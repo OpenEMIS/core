@@ -41,6 +41,9 @@ class StudentsTable extends AppTable
             'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
+        //pocor 5863 start
+        $this->addBehavior('Area.Areapicker');
+        //pocor 5863 end
     }
 
 
@@ -78,7 +81,15 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
-         $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
+        //pocor 5863 start
+         //$this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.StudentsEnrollmentSummary'])) {
+                $this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false, 'label'=> 'Area Education']);
+            }
+        }
+        //pocor 5863 end
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
@@ -110,7 +121,15 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('position_filter', ['type' => 'hidden']);       
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
-         $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
+        //pocor 5863 start
+        // $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.StudentsEnrollmentSummary'])) {
+                $this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false, 'label'=> 'Area Education','required'=>true]);
+            }
+        }
+        //pocor 5863 end
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('risk_type', ['type' => 'hidden']); 
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']); 
@@ -490,7 +509,10 @@ class StudentsTable extends AppTable
                         $EducationGrades->aliasField('name') => 'ASC'
                     ])
                     ->toArray();
-
+                //POCOR-5740 starts
+                if (in_array($feature, ['Report.SubjectsBookLists'])) {
+                    $attr['onChangeReload'] = true;
+                } //POCOR-5740 ends   
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
@@ -559,12 +581,15 @@ class StudentsTable extends AppTable
 
    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
     {
+
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, 
                         [
-                            'Report.InstitutionSubjects',
-                            'Report.SubjectsBookLists'
+                            'Report.InstitutionSubjects'
+                            //POCOR-5740 starts
+                            //'Report.SubjectsBookLists'
+                            //POCOR-5740 ends
                         ])
                 ) {
 
@@ -580,6 +605,39 @@ class StudentsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
+            } elseif(in_array($feature, ['Report.SubjectsBookLists'])){ //POCOR-5740 starts
+                
+                $EducationGradesSubjects = TableRegistry::get('education_grades_subjects');
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                $subjectOptions = $EducationGradesSubjects
+                                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                                    ->select([
+                                        'education_subject_id' => $EducationGradesSubjects->aliasField('education_subject_id'),
+                                        'education_grade_id' => $EducationGradesSubjects->aliasField('education_grade_id'),
+                                        'id' => $EducationSubjects->aliasField('id'),
+                                        'name' => $EducationSubjects->aliasField('name')
+                                    ])
+                                    ->leftJoin(
+                                        [$EducationSubjects->alias() => $EducationSubjects->table()],
+                                        [
+                                            $EducationSubjects->aliasField('id = ') . $EducationGradesSubjects->aliasField('education_subject_id')
+                                        ]
+                                    )
+                                    ->where([
+                                        $EducationGradesSubjects->aliasField('education_grade_id') => $this->request->data[$this->alias()]['education_grade_id']
+                                    ])
+                                    ->order([
+                                        $EducationSubjects->aliasField('order') => 'ASC'
+                                    ])->toArray();
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+
+                if($this->request->data[$this->alias()]['education_grade_id'] == -1){ //for all grades
+                    $attr['options'] = ['' => __('All Subjects')];
+                }else{
+                    $attr['options'] = $subjectOptions;
+                }
+                //POCOR-5740 ends
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
