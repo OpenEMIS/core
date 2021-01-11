@@ -126,7 +126,8 @@ class ReportsController extends AppController
                 'Report.StaffSystemUsage' => __('System Usage'),
                 'Report.StaffTrainingReports' => __('Training Courses Report'),
                 'Report.StaffLeaveReport' => __('Staff Leave'),
-                'Report.StaffPositions' => __('Position Summary Report'),
+                'Report.StaffPositions' => __('Staff Positions Report'),
+                'Report.PositionSummary' => __('Position Summary Report'),
                 'Report.StaffDuties' => __('Duties Report')
 				
             ];
