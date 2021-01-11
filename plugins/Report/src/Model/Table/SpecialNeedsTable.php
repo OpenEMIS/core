@@ -66,6 +66,7 @@ class SpecialNeedsTable extends AppTable
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
         $UserContact = TableRegistry::get('user_contacts');
+        $UserSpecialNeedsReferrals = TableRegistry::get('user_special_needs_referrals');
         if ($institution_id != 0) {
             $where = [$this->aliasField('institution_id') => $institution_id];
         } else {
@@ -99,6 +100,7 @@ class SpecialNeedsTable extends AppTable
                     " - ",
                     'GuardianUser.last_name' => 'literal']),
                 'guardian_contact_number' => $UserContact->aliasField('value'),
+                'referred_user_id' => $UserSpecialNeedsReferrals->aliasField('security_user_id'),
             ])
             ->leftJoin(
                     [$Users->alias() => $Users->table()],
@@ -172,6 +174,9 @@ class SpecialNeedsTable extends AppTable
             ->leftJoin([$UserContact->alias() => $UserContact->table()], [
                 $UserContact->aliasField('security_user_id = ') . $this->aliasField('student_id')
             ])
+            ->leftJoin([$UserSpecialNeedsReferrals->alias() => $UserSpecialNeedsReferrals->table()], [
+                $UserSpecialNeedsReferrals->aliasField('security_user_id = ') . $this->aliasField('student_id')
+            ])
             ->contain([
                 'Institutions',
                 'AcademicPeriods',
@@ -189,6 +194,36 @@ class SpecialNeedsTable extends AppTable
             ->order([
                 'EducationGrades.name'
             ]);
+
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    
+                    $UserSpecialNeedsReferrals = TableRegistry::get('user_special_needs_referrals');
+                    $staff_user_data = $UserSpecialNeedsReferrals
+                                ->find()
+                                ->where([$UserSpecialNeedsReferrals->alias('security_user_id')=>$row->referred_user_id])
+                                ->toArray();
+                    $security_users = TableRegistry::get('security_users');
+                    foreach($staff_user_data AS $staff_user){
+                        $val = $security_users
+                                    ->find()
+                                    ->select([
+                                        $security_users->aliasField('first_name'),
+                                        $security_users->aliasField('middle_name'),
+                                        $security_users->aliasField('last_name'),
+                                        ])  
+                                    ->where([
+                                        $security_users->aliasField('id') => $staff_user->referrer_id
+                                    ])->first();
+                        $name[] = $val->first_name." ".$val->middle_name." ".$val->last_name;
+                    }
+                    $implodedArr = implode(",",$name);
+                    $row['staff_name'] = $implodedArr;
+                              
+                    
+                    return $row;
+                });
+            });
     }
 
     public function onExcelGetAge(Event $event, Entity $entity)
@@ -316,6 +351,13 @@ class SpecialNeedsTable extends AppTable
             'field' => 'guardian_contact_number',
             'type' => 'string',
             'label' => __('Guardian Contact Number')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'staff_name',
+            'type' => 'string',
+            'label' => __('Staff Name')
         ];
 
         $fields->exchangeArray($newFields);
