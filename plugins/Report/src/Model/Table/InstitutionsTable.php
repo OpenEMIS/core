@@ -739,8 +739,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
 
-                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.InstitutionSubjects' || $feature == 'Report.Guardians' || $feature == 'Report.BodyMasses' || $feature == 'Report.InstitutionInfrastructures') {
-
+                if($feature == 'Report.StaffAttendances' || 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.InstitutionSubjects' || $feature == 'Report.Guardians' || $feature == 'Report.BodyMasses' || $feature == 'Report.InstitutionInfrastructures') {
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
