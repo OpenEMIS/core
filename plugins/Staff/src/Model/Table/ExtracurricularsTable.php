@@ -32,8 +32,6 @@ class ExtracurricularsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('start_date', $order++);
 		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
 		$this->ControllerAction->setFieldOrder('name', $order++);
-		$this->ControllerAction->setFieldOrder(['openemis_no', 'academic_period', 'extracurricular_type_id']);
-
 	}
 
 	public function addEditBeforeAction(Event $event) {
