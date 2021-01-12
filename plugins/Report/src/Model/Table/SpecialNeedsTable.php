@@ -101,6 +101,7 @@ class SpecialNeedsTable extends AppTable
                     'GuardianUser.last_name' => 'literal']),
                 'guardian_contact_number' => $UserContact->aliasField('value'),
                 'referred_user_id' => $UserSpecialNeedsReferrals->aliasField('security_user_id'),
+                'referred_staff_id' => $UserSpecialNeedsReferrals->aliasField('referrer_id'),
             ])
             ->leftJoin(
                     [$Users->alias() => $Users->table()],
@@ -172,7 +173,7 @@ class SpecialNeedsTable extends AppTable
                         'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
                     ])
             ->leftJoin([$UserContact->alias() => $UserContact->table()], [
-                $UserContact->aliasField('security_user_id = ') . $this->aliasField('student_id')
+                $UserContact->aliasField('security_user_id = ') . 'GuardianUser.id'
             ])
             ->leftJoin([$UserSpecialNeedsReferrals->alias() => $UserSpecialNeedsReferrals->table()], [
                 $UserSpecialNeedsReferrals->aliasField('security_user_id = ') . $this->aliasField('student_id')
@@ -222,21 +223,25 @@ class SpecialNeedsTable extends AppTable
 
 
                     $UserContact = TableRegistry::get('user_contacts');
+
                     foreach($staff_user_data AS $staff_user){
-                        $val = $security_users
+                        $val = $UserContact
                                     ->find()
                                     ->select([
-                                        $security_users->aliasField('first_name'),
-                                        $security_users->aliasField('middle_name'),
-                                        $security_users->aliasField('last_name'),
+                                        $UserContact->aliasField('value'),
                                         ])  
                                     ->where([
-                                        $security_users->aliasField('id') => $staff_user->referrer_id
+                                        $UserContact->aliasField('security_user_id') => $staff_user->referrer_id
                                     ])->first();
-                        $name[] = $val->first_name." ".$val->middle_name." ".$val->last_name;
+                        if(empty($val->value)){
+                            $contact[] = "N/A";
+                        }
+                        else{
+                            $contact[] = $val->value;
+                        }
                     }
-                    $implodedArr = implode(",",$name);
-                    $row['staff_contact'] = $implodedArr;
+                    $implodedContactArr = implode(",",$contact);
+                    $row['staff_contact'] = $implodedContactArr;
                               
                     
                     return $row;
@@ -376,6 +381,13 @@ class SpecialNeedsTable extends AppTable
             'field' => 'staff_name',
             'type' => 'string',
             'label' => __('Staff Name')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'staff_contact',
+            'type' => 'string',
+            'label' => __('Staff Contact')
         ];
 
         $fields->exchangeArray($newFields);
