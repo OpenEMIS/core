@@ -380,14 +380,14 @@ class SpecialNeedsTable extends AppTable
             'key' => '',
             'field' => 'staff_name',
             'type' => 'string',
-            'label' => __('Staff Name')
+            'label' => __('Referrer Staff Name')
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'staff_contact',
             'type' => 'string',
-            'label' => __('Staff Contact')
+            'label' => __('Referrer Staff Contact number')
         ];
 
         $fields->exchangeArray($newFields);
