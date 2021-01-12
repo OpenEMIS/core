@@ -219,6 +219,24 @@ class SpecialNeedsTable extends AppTable
                     }
                     $implodedArr = implode(",",$name);
                     $row['staff_name'] = $implodedArr;
+
+
+                    $UserContact = TableRegistry::get('user_contacts');
+                    foreach($staff_user_data AS $staff_user){
+                        $val = $security_users
+                                    ->find()
+                                    ->select([
+                                        $security_users->aliasField('first_name'),
+                                        $security_users->aliasField('middle_name'),
+                                        $security_users->aliasField('last_name'),
+                                        ])  
+                                    ->where([
+                                        $security_users->aliasField('id') => $staff_user->referrer_id
+                                    ])->first();
+                        $name[] = $val->first_name." ".$val->middle_name." ".$val->last_name;
+                    }
+                    $implodedArr = implode(",",$name);
+                    $row['staff_contact'] = $implodedArr;
                               
                     
                     return $row;
