@@ -262,7 +262,8 @@ private function getData($settings)
             $result[$key][] = $value->student_openemis_no;
             $result[$key][] = $value->student_identity_type_id;
             $result[$key][] = $value->student_identity_number;
-            $result[$key][] = $value->first_name . ' ' . $value->middle_name . ' ' . $value->third_name . ' ' . $value->last_name;
+            $name = $value->first_name.' '.$value->middle_name.' '.$value->third_name.' '.$value->last_name;
+            $result[$key][] = preg_replace('/^\s+|\s+$|\s+(?=\s)/', '', $name);
         
             //getting risk criteria
             $data = [];
