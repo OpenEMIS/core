@@ -101,6 +101,12 @@ class StaffAttendancesTable extends ControllerActionTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         
+		$conditions = [];
+		
+		if (!empty($institutionId)) {
+			$query->where([$this->aliasField('institution_id') => $institutionId]);
+		}
+
         $query
 			->select([
 				'institution_code' => 'Institutions.code',
@@ -137,7 +143,6 @@ class StaffAttendancesTable extends ControllerActionTable
 			->leftJoin(['UserIdentity' => 'user_identities'], [
 				'UserIdentity.security_user_id = ' . $this->aliasfield('staff_id'),
 			])
-            ->where([$this->aliasField('institution_id') => $institutionId])
             ->distinct([$this->aliasField('staff_id')])
             // ->find('academicPeriod', ['academic_period_id' => $academicPeriodId])
             ;
