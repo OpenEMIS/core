@@ -149,21 +149,21 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
 
         foreach($data as $row) {
           if(array_filter($row)) {
-           $writer->writeSheetRow('StudentsRiskAssessment', $row);
-       }
-   }
-   $blankRow[] = [];
-   $footer = $this->getFooter();
-   $writer->writeSheetRow('StudentsRiskAssessment', $blankRow);
-   $writer->writeSheetRow('StudentsRiskAssessment', $footer);
+             $writer->writeSheetRow('StudentsRiskAssessment', $row);
+         }
+     }
+     $blankRow[] = [];
+     $footer = $this->getFooter();
+     $writer->writeSheetRow('StudentsRiskAssessment', $blankRow);
+     $writer->writeSheetRow('StudentsRiskAssessment', $footer);
 
 
-   $filepath = $_settings['path'] . $_settings['file'];
-   $_settings['file_path'] = $filepath;
-   $writer->writeToFile($_settings['file_path']);
-   $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerateComplete'), 'onExcelGenerateComplete', [$_settings]);
+     $filepath = $_settings['path'] . $_settings['file'];
+     $_settings['file_path'] = $filepath;
+     $writer->writeToFile($_settings['file_path']);
+     $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerateComplete'), 'onExcelGenerateComplete', [$_settings]);
 
-   if ($_settings['download']) {
+     if ($_settings['download']) {
       $this->download($filepath);
   }
 
@@ -177,18 +177,18 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
 
 private function getData($settings) 
 {
-     $requestData = json_decode($settings['process']['params']);
-     $academicPeriodId = $requestData->academic_period_id;
-     $institutionId = $requestData->institution_id;
-     $riskType = $requestData->risk_type;
+   $requestData = json_decode($settings['process']['params']);
+   $academicPeriodId = $requestData->academic_period_id;
+   $institutionId = $requestData->institution_id;
+   $riskType = $requestData->risk_type;
 
-     $institutionStudents = TableRegistry::get('institution_students');
-     $institutionStudentRisks = TableRegistry::get('institution_student_risks');
-     $studentRisksCriterias = TableRegistry::get('student_risks_criterias');
-     $riskCriterias = TableRegistry::get('risk_criterias');
-     $conditions = [];
+   $institutionStudents = TableRegistry::get('institution_students');
+   $institutionStudentRisks = TableRegistry::get('institution_student_risks');
+   $studentRisksCriterias = TableRegistry::get('student_risks_criterias');
+   $riskCriterias = TableRegistry::get('risk_criterias');
+   $conditions = [];
 
-         if (!empty($academicPeriodId)) {
+        if (!empty($academicPeriodId)) {
           $conditions['InstitutionStudents.academic_period_id'] = $academicPeriodId;
         }
 
@@ -197,10 +197,11 @@ private function getData($settings)
         }
 
         if (!empty($riskType)) {
-          $conditions['InstitutionRisks.risk_id'] = $riskType;
+            $conditions['InstitutionRisks.risk_id'] = $riskType;
         }
 
         $newConditions = [];
+
         if (!empty($academicPeriodId)) {
             $newConditions[$institutionStudentRisks->aliasField('academic_period_id')] = $academicPeriodId;
         }
@@ -208,7 +209,7 @@ private function getData($settings)
             $newConditions[$institutionStudentRisks->aliasField('institution_id')] = $institutionId;
         }
         if (!empty($riskType)) {
-         $newConditions[$institutionStudentRisks->aliasField('risk_id')] = $riskType;
+            $newConditions[$institutionStudentRisks->aliasField('risk_id')] = $riskType;
         }
 
         $query = $institutionStudents
@@ -226,74 +227,76 @@ private function getData($settings)
                   'institution_name' => 'Institutions.name',
                   'institution_code' => 'Institutions.code',
                   'academic_period_name' => 'AcademicPeriods.name',
-                  'risk_generated_on' => 'InstitutionRisks.generated_on',
                   'risk_id' => 'InstitutionRisks.risk_id',
-                  'risk_generated_by' => 'Users.first_name',
                   'risk_index' => 'Risks.id',
-                    		//'total_risk' => 'InstitutionStudentRisks.total_risk',
-                  'risk_type' => 'Risks.name',
-                    		//'criteria' => 'RiskCriterias.criteria'
+                  'risk_type' => 'Risks.name'
                 ])
                 ->leftJoin(['Users' => 'security_users'], [
-                  'Users.id = ' . $institutionStudents->aliasfield('student_id')
+                      'Users.id = ' . $institutionStudents->aliasfield('student_id')
                 ])
                 ->leftJoin(['InstitutionStudents' => 'institution_students'], [
-                  'Users.id = ' . 'InstitutionStudents.student_id'
+                      'Users.id = ' . 'InstitutionStudents.student_id'
                 ])
                 ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
-                  'InstitutionStudents.academic_period_id = ' . 'AcademicPeriods.id'
+                      'InstitutionStudents.academic_period_id = ' . 'AcademicPeriods.id'
                 ])           
                 ->leftJoin(['Institutions' => 'institutions'], [
-                  'InstitutionStudents.institution_id = ' . 'Institutions.id'
+                      'InstitutionStudents.institution_id = ' . 'Institutions.id'
                 ])
                 ->leftJoin(['InstitutionRisks' => 'institution_risks'], [
-                  'Institutions.id = ' . 'InstitutionRisks.institution_id'
-                ],
-                ['Users.id = ' . 'InstitutionRisks.generated_by'
-                ])
+                      'Institutions.id = ' . 'InstitutionRisks.institution_id'
+                    ])
                 ->leftJoin(['Risks' => 'risks'], [
-                  'InstitutionRisks.risk_id = ' . 'Risks.id'
+                      'InstitutionRisks.risk_id = ' . 'Risks.id'
                 ])
                 ->group([$institutionStudents->aliasField('student_id')])
                 ->where([$conditions]);
-                //echo "<pre>";print_r($query);die();
-        $result = [];
-        if (!empty($query)) {
-            foreach ($query as $key => $value) {
-                $result[$key][] = $value->institution_code;
-                $result[$key][] = $value->institution_name;
-                $result[$key][] = $value->academic_period_name;
-                $result[$key][] = $value->risk_type;
-                $result[$key][] = $value->student_openemis_no;
-                $result[$key][] = $value->student_identity_type_id;
-                $result[$key][] = $value->student_identity_number;
-                $result[$key][] = $value->first_name . ' ' . $value->middle_name . ' ' . $value->third_name . ' ' . $value->last_name;
-                $result[$key][] = isset($value->total_risk) ? $value->total_risk : 0;
 
-                //getting risk criteria
-               $data = [];
-               $institutionStudentRisksData = $institutionStudentRisks
-               ->find()
-               ->select([$riskCriterias->aliasField('criteria'), 
-                $institutionStudentRisks->aliasField('student_id')])
-               ->leftJoin([$studentRisksCriterias->alias() => $studentRisksCriterias->table()], [
+    $result = [];
+    if (!empty($query)) {
+        foreach ($query as $key => $value) {
+            $result[$key][] = $value->institution_code;
+            $result[$key][] = $value->institution_name;
+            $result[$key][] = $value->academic_period_name;
+            $result[$key][] = $value->risk_type;
+            $result[$key][] = $value->student_openemis_no;
+            $result[$key][] = $value->student_identity_type_id;
+            $result[$key][] = $value->student_identity_number;
+            $result[$key][] = $value->first_name . ' ' . $value->middle_name . ' ' . $value->third_name . ' ' . $value->last_name;
+        
+            //getting risk criteria
+            $data = [];
+            $institutionStudentRisksData = $institutionStudentRisks
+            ->find()
+            ->select([$riskCriterias->aliasField('criteria'), 
+                $institutionStudentRisks->aliasField('total_risk')])
+            ->leftJoin([$studentRisksCriterias->alias() => $studentRisksCriterias->table()], [
                 $studentRisksCriterias->aliasField('institution_student_risk_id = ') . $institutionStudentRisks->aliasField('id')
             ])
-               ->leftJoin([$riskCriterias->alias() => $riskCriterias->table()], [
+            ->leftJoin([$riskCriterias->alias() => $riskCriterias->table()], [
                 $studentRisksCriterias->aliasField('risk_criteria_id = ') . $riskCriterias->aliasField('id')
             ])
-               ->where([
+            ->where([
                 $institutionStudentRisks->aliasField('student_id = ') . $value->student_id,
                 $newConditions])->toArray();
-
-               foreach ($institutionStudentRisksData as $val) {
-                $data[] = $val['risk_criterias']['criteria'];
-            }
             
-            $result[$key][] = isset($data) ? $data : ' ';
+            if (empty($institutionStudentRisksData)) {
+               $result[$key][] =  0;
+            } else {
+                foreach ($institutionStudentRisksData as $val) {
+                    $result[$key][] =  $val['total_risk'];
+                    $data[] = $val['risk_criterias']['criteria'];
+                }
+            }
+        
+            $str = '';
+            if (isset($data)) {
+                $str  = implode(',', $data);
+            }
+
+            $result[$key][] = $str;
         } 
     }
-        echo "<pre>";print_r($result);die();
         return $result;
 }
 
@@ -302,62 +305,62 @@ private function getData($settings)
 
 private function getFields($table, $settings, $label)
 {
- $language = I18n::locale();
- $module = $this->_table->alias();
+   $language = I18n::locale();
+   $module = $this->_table->alias();
 
- $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
- return $event->result;
+   $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
+   return $event->result;
 }
 
 private function getFooter()
 {
- $footer = [__("Report Generated") . ": "  . date("Y-m-d H:i:s")];
- return $footer;
+   $footer = [__("Report Generated") . ": "  . date("Y-m-d H:i:s")];
+   return $footer;
 }
 
 private function getValue($entity, $table, $attr)
 {
- $value = '';
- $field = $attr['field'];
- $type = $attr['type'];
- $style = [];
+   $value = '';
+   $field = $attr['field'];
+   $type = $attr['type'];
+   $style = [];
 
- if (!empty($entity)) {
-  if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
-   $method = 'onExcelRender' . Inflector::camelize($type);
-   if (!$this->eventMap($method)) {
-    $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity, $attr]);
-} else {
-    $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
-}
-if ($event->result) {
-    $returnedResult = $event->result;
-    if (is_array($returnedResult)) {
-     $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
-     $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
- } else {
-     $value = $returnedResult;
- }
-}
-} else {
-   $method = 'onExcelGet' . Inflector::camelize($field);
-   $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-   if ($event->result) {
-    $returnedResult = $event->result;
-    if (is_array($returnedResult)) {
-     $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
-     $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
- } else {
-     $value = $returnedResult;
- }
-} elseif ($entity->has($field)) {
+   if (!empty($entity)) {
+      if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
+         $method = 'onExcelRender' . Inflector::camelize($type);
+         if (!$this->eventMap($method)) {
+            $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity, $attr]);
+        } else {
+            $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
+        }
+        if ($event->result) {
+            $returnedResult = $event->result;
+            if (is_array($returnedResult)) {
+               $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
+               $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
+           } else {
+               $value = $returnedResult;
+           }
+       }
+   } else {
+     $method = 'onExcelGet' . Inflector::camelize($field);
+     $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
+     if ($event->result) {
+        $returnedResult = $event->result;
+        if (is_array($returnedResult)) {
+           $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
+           $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
+       } else {
+           $value = $returnedResult;
+       }
+   } elseif ($entity->has($field)) {
     if ($this->isForeignKey($table, $field)) {
-     $associatedField = $this->getAssociatedKey($table, $field);
-     if ($entity->has($associatedField)) {
-      $value = $entity->{$associatedField}->name;
-  }
-} else {
- $value = $entity->{$field};
+       $associatedField = $this->getAssociatedKey($table, $field);
+       if ($entity->has($associatedField)) {
+          $value = $entity->{$associatedField}->name;
+      }
+  } else {
+   $value = $entity->{$field};
 }
 }
 }
@@ -375,7 +378,7 @@ return ['rowData' => __($value), 'style' => $style];
 
 private function isForeignKey($table, $field)
 {
- foreach ($table->associations() as $assoc) {
+   foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
             	if ($field === $assoc->foreignKey()) {
             		return true;
