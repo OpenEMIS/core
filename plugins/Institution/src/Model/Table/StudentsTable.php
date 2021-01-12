@@ -831,27 +831,12 @@ class StudentsTable extends ControllerActionTable
             ->where([
                 $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id
             ])
-            ->order([$InstitutionStudents->aliasField('InstitutionStudents.id') => 'DESC'])
+            ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
             ->autoFields(true)
             ->first();
-            if(!empty($InstitutionStudentsCurrentData->previous_institution_student_id)){
-                $InstitutionStudentsPreviousData = $InstitutionStudents
-                ->find()
-                ->select([
-                    'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
-                ])
-                ->where([
-                    $InstitutionStudents->aliasField('InstitutionStudents.id') => $InstitutionStudentsCurrentData->previous_institution_student_id
-                ])
-                ->order([$InstitutionStudents->aliasField('InstitutionStudents.id') => 'DESC'])
-                ->autoFields(true)
-                ->first();
-
-
-                if($value['student_status']->name == "Enrolled"){
-                    if($InstitutionStudentsPreviousData->student_status_id == 8)
+            if($value['student_status']->name == "Enrolled"){
+                if($InstitutionStudentsCurrentData->student_status_id == 8)
                     $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
-                }
             }
         }
         $this->dashboardQuery = clone $query;
