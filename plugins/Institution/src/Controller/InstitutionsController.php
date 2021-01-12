@@ -535,6 +535,11 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Schedule.ScheduleTerms']);
     }
+
+    public function Committees()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTestCommittees']);
+    }
     // Timetable - END
 
     //POCOR-5669 added InstitutionMaps
@@ -3017,4 +3022,17 @@ class InstitutionsController extends AppController
         echo json_encode($dataSet);
         die;
     }
+    // Delete commitee meeting
+    public function deleteCommiteeMeetingById() {
+        if (isset($this->request->query['meetingId'])) {
+            $meetingId = $this->request->query['meetingId'];
+
+            $users_table = TableRegistry::get('institution_committee_meeting');
+            $users = $users_table->get($meetingId);
+            $users_table->delete($users);
+            echo "Meeting deleted successfully.";
+            die;
+        }
+    }   
+
 }

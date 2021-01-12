@@ -37,12 +37,19 @@ class StudentsEnrollmentSummaryTable extends AppTable  {
         //pocor 5863 start
         $area_id_array=[];
         if(!empty($areaEducationId)){
-            $area_id_array[$areaEducationId] = $areaEducationId;
-            $conditions = ['parent_id' => $areaEducationId];
             $Areas = TableRegistry::get('Areas');
-            $regionAreaArr = $Areas->find()
-                        ->where($conditions)
-                        ->All();
+            if($areaEducationId == -1){
+                $regionAreaArr = $Areas->find()
+                            ->where($conditions)
+                            ->All();
+            }else{
+                $area_id_array[$areaEducationId] = $areaEducationId;
+                $conditions = ['parent_id' => $areaEducationId];
+                $regionAreaArr = $Areas->find()
+                            ->where($conditions)
+                            ->All();
+            }
+            
             if(!empty($regionAreaArr)){
                 foreach ($regionAreaArr as $reg_val) {
                     $area_id_array[$reg_val->id] = $reg_val->id;
