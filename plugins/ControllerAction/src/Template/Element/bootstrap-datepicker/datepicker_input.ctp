@@ -18,6 +18,9 @@
 	<div class="input-group date <?= isset($attr['class']) ? $attr['class'] : '' ?> <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>" style="<?= $inputWrapperStyle; ?>">
 		<?php
 			$fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'.'.$attr['field'];
+			
+			if (($fieldName == 'Identities.issue_date') || ($fieldName == 'Identities.expiry_date')) { $attr['value'] = '' ; }
+
 			$inputAttr = [
 				'class' => 'form-control '.$inputErrorCSS,
 				'value' => isset($attr['value']) ? $attr['value'] : '',
