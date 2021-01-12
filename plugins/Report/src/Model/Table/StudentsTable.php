@@ -544,7 +544,13 @@ class StudentsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
-                $attr['options'] = $typeOptions;
+
+                if($feature == 'Report.StudentNotAssignedClass') {
+                    $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
+                } else {
+                    $attr['options'] = $typeOptions;
+                }
+
                 $attr['attr']['required'] = true;
             }
             return $attr;
