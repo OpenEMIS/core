@@ -1258,6 +1258,7 @@ class StaffTable extends ControllerActionTable
 
         $body = [  
             'institution_staff_id' => !empty($entity->staff_id) ? $entity->staff_id : NULL,
+             'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
         ];
 
         if($this->action == 'remove') {
