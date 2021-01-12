@@ -66,7 +66,7 @@ class SubjectsBookListsTable extends AppTable
         if (!empty($institutionId)) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
-
+       
        $query
             ->select([   
                 'student_id' =>'Users.id',             
@@ -82,6 +82,7 @@ class SubjectsBookListsTable extends AppTable
                 'education_subject_name' => 'EducationSubjects.name',
                 'textbook_code' => 'Textbooks.code',
                 'textbook_name' => 'Textbooks.title',
+                'start_date' => 'InstitutionStudents.start_date',//POCOR-5740 
             ])
              
            ->InnerJoin(['Users' => 'security_users'], [
@@ -99,7 +100,11 @@ class SubjectsBookListsTable extends AppTable
             ->leftJoin(['InstitutionClasses' => 'institution_classes'], [
                     'InstitutionClasses.id = ' . 'SubjectsBookLists.institution_class_id'
                       ])
-
+            //POCOR-5740 starts
+            ->InnerJoin(['InstitutionStudents' => 'institution_students'], [
+                      'InstitutionStudents.student_id = ' . 'SubjectsBookLists.student_id'
+                    ])
+            //POCOR-5740 ends
             ->leftJoin(['EducationSubjects' => 'education_subjects'], [
                     'EducationSubjects.id = ' . 'SubjectsBookLists.education_subject_id'
                      ])
@@ -107,9 +112,12 @@ class SubjectsBookListsTable extends AppTable
             ->leftJoin(['Textbooks' => 'textbooks'], [
                     'Textbooks.education_subject_id = ' . 'SubjectsBookLists.education_subject_id'
                     ])
-
-            ->where($conditions);
-           
+            ->where($conditions)
+            //POCOR-5740 starts
+            ->order([
+                'InstitutionStudents.start_date' => 'DESC'
+            ]);
+            //POCOR-5740 ends
         }
 
 
@@ -200,7 +208,14 @@ class SubjectsBookListsTable extends AppTable
             'type' => 'string',
             'label' => __('Textbook name')
         ];
-
+        //POCOR-5740 starts
+        $extraFields[] = [
+            'key' => 'institution_students.start_date',
+            'field' => 'start_date',
+            'type' => 'string',
+            'label' => __('Date of Admission')
+        ];
+        //POCOR-5740 ends
         $fields->exchangeArray($extraFields);
      }
 }
