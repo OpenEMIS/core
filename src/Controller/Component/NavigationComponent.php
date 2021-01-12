@@ -444,7 +444,7 @@ class NavigationComponent extends Component
             'Institutions.Institutions.view' => [
                 'title' => 'Overview',
                 'parent' => 'Institution.General',
-                'selected' => ['Institutions.Institutions.edit'],
+                'selected' => ['Institutions.Institutions.edit', 'Institutions.InstitutionStatus.edit', 'Institutions.InstitutionStatus.view'],
                 'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
             'Institutions.InstitutionMaps.view' => [
