@@ -827,7 +827,7 @@ class InstitutionClassesTable extends ControllerActionTable
             if (array_key_exists('education_grade_id', $query)) {
                 unset($action['education_grade_id']);
             }
-            $this->controller->redirect($action);
+            //$this->controller->redirect($action);
         }
 
         $this->field('total_students', ['visible' => true]);
@@ -1063,7 +1063,7 @@ class InstitutionClassesTable extends ControllerActionTable
             if (array_key_exists('education_grade_id', $query)) {
                 unset($action['education_grade_id']);
             }
-            $this->controller->redirect($action);
+            //$this->controller->redirect($action);
         }
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
         if (array_key_exists($this->alias(), $this->request->data)) {

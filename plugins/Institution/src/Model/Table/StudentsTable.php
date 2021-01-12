@@ -819,6 +819,41 @@ class StudentsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
     { 
+        foreach ($query->toArray() as $key => $value)
+        {
+            $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+
+            $InstitutionStudentsCurrentData = $InstitutionStudents
+            ->find()
+            ->select([
+                'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
+            ])
+            ->where([
+                $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id
+            ])
+            ->order([$InstitutionStudents->aliasField('InstitutionStudents.id') => 'DESC'])
+            ->autoFields(true)
+            ->first();
+            if(!empty($InstitutionStudentsCurrentData->previous_institution_student_id)){
+                $InstitutionStudentsPreviousData = $InstitutionStudents
+                ->find()
+                ->select([
+                    'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
+                ])
+                ->where([
+                    $InstitutionStudents->aliasField('InstitutionStudents.id') => $InstitutionStudentsCurrentData->previous_institution_student_id
+                ])
+                ->order([$InstitutionStudents->aliasField('InstitutionStudents.id') => 'DESC'])
+                ->autoFields(true)
+                ->first();
+
+
+                if($value['student_status']->name == "Enrolled"){
+                    if($InstitutionStudentsPreviousData->student_status_id == 8)
+                    $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
+                }
+            }
+        }
         $this->dashboardQuery = clone $query;
     }
 
