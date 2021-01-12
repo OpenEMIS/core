@@ -73,12 +73,14 @@ class StudentsTable extends AppTable
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
+        $this->ControllerAction->field('start_date',['type'=>'hidden']);
+        $this->ControllerAction->field('end_date',['type'=>'hidden']);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
-         $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
@@ -635,5 +637,29 @@ class StudentsTable extends AppTable
         $cmd  = ROOT . DS . 'bin' . DS . 'cake StudentsPhotoDownload';
         $logs = ROOT . DS . 'logs' . DS . 'StudentsPhotoDownload.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
+    }
+
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+			
+            if ((in_array($feature, ['Report.BodyMassStatusReports']))) {   
+                $attr['type'] = 'date';
+                return $attr;
+            }
+        }
+    }
+
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+			
+            if ((in_array($feature, ['Report.BodyMassStatusReports']))) {
+                $attr['type'] = 'date';
+                return $attr;
+            }
+        }
     }
 }
