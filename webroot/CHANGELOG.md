@@ -1,3 +1,41 @@
+### [3.61.4] - 2021-01-08
+- Bug Fixed: Reports > Institutions > Body Masses : Remove Type filter from report generation to enable user to generate report for all schools
+- Bug Fixed: Reports > Institution > Infrastructure Report
+- Bug Fixed: Institution > Appointment > Duties: 404 error
+- Bug Fixed: Security > Roles > Permissions : Allow users to enabled/disable View for Assessment/Attendance Archive buttons
+- Bug Fixed: Reports > Students > Student Health Reports : Changes in report
+- Bug Fixed: Reports > Institution > Staff Leave: To add Custom Fields on the report
+- Bug Fixed: Institution > Academic > Classes: Unable to View/Edit record
+
+### [3.61.3] - 2021-01-06
+- Bug Fixed: Profile > Student > Academic > Behaviour tab: Student is able to see all Behaviour records in the system even though the records do not belong to the student
+- Bug Fixed: Directory > Add: Encountered 404 error
+- Bug Fixed: Institution > Students > Nationalities: Identity is not read-through even though the identity has been linked to the Nationality selected
+- Bug Fixed: Reports > Institution > WASH Report
+- Bug Fixed: Reports > Institutions > Classes/Subjects Report is not generating report
+- Bug Fixed: Report > Institution > Classes
+- Bug Fixed: 1.04 Reports > Institution > Subject Report
+
+### [3.61.2] - 2020-12-30
+- Bug Fixed: Student Profiles > Report Cards feature
+- Bug Fixed: Institutions > Students > Undo feature
+- Implemented: Improve management of student nationalities
+
+### [3.61.1] - 2020-12-24
+- Implemented: Enable Changes in the Education Structure across school years
+- Bug Fixed: Institution > Performance > Assessment: Only show assigned subjects
+- Bug Fixed: Issues with Archive feature
+
+### [3.61.0] - 2020-12-22
+- Implemented: Education System setup
+- Bug Fixed: Webhook Institution Create/Update: To include institution_area_education_id and institution_area_administrative_id
+- Bug Fixed: Webhook Subject create/update: To include institution_classes_name,institution_classes_id,education_grades_id,education_subjects_id
+- Bug Fixed: Webhook Class Create/Update: To include education_grade_id
+- Bug Fixed: Webhook Security User delete
+- Bug Fixed: Webhook Student/Staff Delete: To include institution_id
+- Bug Fixed: API endpoints to return JSON response and not redirects to the sign-in page
+- Bug Fixed: Institution > Report Cards > Comments: Total Mark for Assessment is not reflecting even though Total Mark is filled up in Assessment page
+
 ### [3.60.0] - 2020-12-11
 - Implemented: Devlop a function to show percentage of user profile data completion
 - Implemented: Develop Data Archiving feature

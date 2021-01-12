@@ -2382,7 +2382,13 @@ trait MessagesTrait
         'Connection' => [
             'testConnectionSuccess' => 'Connection has been established successfully.',
             'testConnectionFail' => 'Please configure correct Connection to Archive Database.',
-            'transferConnectionFail' => 'Please configure connection to Archive Database.'
+            'transferConnectionFail' => 'Please configure connection to Archive Database.',
+            'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.'
+        ],
+        'UserNationalities' => [
+            'ValidateNumberSuccess' => 'Identity number validate successfully.',
+            'ValidateNumberFail' => 'Please enter correct identity number.',
+            'IdentityNumberNotExist' => 'Identity number should not be blank.',
         ]
 
     ];

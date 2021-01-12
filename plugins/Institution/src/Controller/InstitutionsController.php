@@ -59,6 +59,7 @@ class InstitutionsController extends AppController
         'StaffTrainingResults',
         'StaffTransferIn',
         'StaffTransferOut',
+        'StaffDuties',
         // 'StaffPositionProfiles',
 
         // attendances
@@ -192,6 +193,11 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAttachments']);
     }
+	
+	public function Profiles()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Profiles']);
+    }
 
     public function StaffAppraisals()
     {
@@ -212,6 +218,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']);
     }
+
+    public function StaffDuties()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffDuties']);
+    }
+
     public function Shifts()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']);
@@ -435,6 +447,10 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
     }
+	public function InstitutionReportCards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionReportCards']);
+    }
     public function StaffTransferIn()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferIn']);
@@ -519,6 +535,11 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Schedule.ScheduleTerms']);
     }
+
+    public function Committees()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTestCommittees']);
+    }
     // Timetable - END
 
     //POCOR-5669 added InstitutionMaps
@@ -595,6 +616,37 @@ class InstitutionsController extends AppController
             $institutionId = $session->read('Institution.Institutions.id');
         }
 
+        $securityFunctions = TableRegistry::get('SecurityFunctions');
+        $securityFunctionsData = $securityFunctions
+        ->find()
+        ->select([
+            'SecurityFunctions.id'
+        ])
+        ->where([
+            'SecurityFunctions.name' => 'Student Attendance Archive'
+        ])
+        ->first();
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+
+        $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+        $securityRoleFunctionsData = $securityRoleFunctions
+        ->find()
+        ->select([
+            'SecurityRoleFunctions._view'
+        ])
+        ->where([
+            'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+            'SecurityRoleFunctions.security_role_id' => $permission_id,
+        ])
+        ->first();
+        $is_button_accesible = 0;
+        if( (!empty($securityRoleFunctionsData) && $securityRoleFunctionsData->_view == 1) ){
+            $is_button_accesible = 1;
+        }
+        if($this->Auth->user('super_admin') == 1){
+            $is_button_accesible = 1;
+        }
+
         // issue
         $excelUrl = [
             'plugin' => 'Institution',
@@ -630,6 +682,7 @@ class InstitutionsController extends AppController
         $this->set('excelUrl', Router::url($excelUrl));
         $this->set('importUrl', Router::url($importUrl));
         $this->set('archiveUrl', Router::url($archiveUrl));
+        $this->set('is_button_accesible', $is_button_accesible);
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
     }
@@ -2985,4 +3038,17 @@ class InstitutionsController extends AppController
         echo json_encode($dataSet);
         die;
     }
+    // Delete commitee meeting
+    public function deleteCommiteeMeetingById() {
+        if (isset($this->request->query['meetingId'])) {
+            $meetingId = $this->request->query['meetingId'];
+
+            $users_table = TableRegistry::get('institution_committee_meeting');
+            $users = $users_table->get($meetingId);
+            $users_table->delete($users);
+            echo "Meeting deleted successfully.";
+            die;
+        }
+    }   
+
 }
