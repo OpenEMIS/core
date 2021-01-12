@@ -103,7 +103,7 @@ class StaffAttendancesTable extends ControllerActionTable
         
 		$conditions = [];
 		
-		if (!empty($institution_id)) {
+		if (!empty($institutionId)) {
 			$query->where([$this->aliasField('institution_id') => $institutionId]);
 		}
 
