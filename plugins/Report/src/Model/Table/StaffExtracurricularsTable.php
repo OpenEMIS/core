@@ -16,16 +16,19 @@ class StaffExtracurricularsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('staff_extracurriculars');
 		parent::initialize($config);
-	       
-		$this->addBehavior('Excel', ['excludes' => ['id', 'comment', 'start_year', 'end_year', 'institution_programme_id']]);
+	    $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);   
+		$this->addBehavior('Excel');
 		$this->addBehavior('Report.ReportList');
-		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
-
+		
+		$Staff = TableRegistry::get('Security.Users');
+		
          $query
             ->select([
                 'name' =>  $this->aliasfield('name'),
@@ -35,13 +38,33 @@ class StaffExtracurricularsTable extends AppTable  {
 				'comment' =>  $this->aliasfield('comment'),
 				'start_date' =>  $this->aliasfield('start_date'),
                 'end_date' =>  $this->aliasfield('end_date'),
-             ]);
+				'openemis_no' => $Staff->aliasfield('openemis_no'),
+				'staff_name' => $Staff->find()->func()->concat([
+                    $Staff->aliasfield('first_name') => 'literal',
+                    " - ",
+                    $Staff->aliasfield('last_name') => 'literal']),
+            ])
+			->contain([
+				'ExtracurricularTypes' => [
+                    'fields' => [
+                        'extracurricular_type' => 'ExtracurricularTypes.name'
+                    ]
+                ],
+				'AcademicPeriods' => [
+                    'fields' => [
+                        'academic_period' => 'AcademicPeriods.name'
+                    ]
+                ]
+			])
+			->leftJoin(
+				[$Staff->alias() => $Staff->table()],
+				[
+					$Staff->aliasField('id = ') . $this->aliasField('staff_id')
+				]
+			)
+			;
+			 
     }
-	
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->controller->getFeatureOptions('Institutions');
-		return $attr;
-	}
 	
 	public function onExcelRenderStartDate(Event $event, Entity $entity, $attr)
     {
@@ -61,6 +84,34 @@ class StaffExtracurricularsTable extends AppTable  {
     {   
         $cloneFields = $fields->getArrayCopy();
 
+        $extraFields[] = [
+            'key' => 'openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+		
+        $extraFields[] = [
+            'key' => 'staff_name',
+            'field' => 'staff_name',
+            'type' => 'string',
+            'label' => __('Staff Name')
+        ];
+		
+        $extraFields[] = [
+            'key' => 'AcademicPeriods.name',
+            'field' => 'academic_period',
+            'type' => 'string',
+            'label' => __('Academic Period')
+        ];
+		
+        $extraFields[] = [
+            'key' => 'ExtracurricularTypes.name',
+            'field' => 'extracurricular_type',
+            'type' => 'string',
+            'label' => __('Extracurricular Type')
+        ];
+		
         $extraFields[] = [
             'key' => '',
             'field' => 'name',
