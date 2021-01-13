@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\I18n\Date;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -24,7 +25,8 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Subjects', ['className' => 'Institution.InstitutionSubjects', 'foreignKey' => 'institution_subject_id']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'foreignKey' => 'institution_subject_id']);
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -36,6 +38,10 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->addBehavior('Quality.Visit');
+        $this->addBehavior('Excel', [
+            'pages' => ['index'],
+            'autoFields' => false
+        ]);
 
         // setting this up to be overridden in viewAfterAction(), this code is required
         $this->behaviors()->get('ControllerAction')->config(
@@ -52,6 +58,145 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 
         return $validator
             ->allowEmpty('file_content');
+    }
+
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $periodId = $this->request->query['academic_period_id'];
+
+        $query
+            ->where([$this->aliasField('institution_id') => $institutionId])
+            ->contain([
+                'Institutions',
+                'AcademicPeriods',
+                'InstitutionSubjects',
+                'Institutions.Areas',
+                'Staff',
+                'QualityVisitTypes'
+            ])
+            ->select([
+                'code' => 'Institutions.code',
+                'institution_name' => 'Institutions.name',
+                'area_code' => 'Areas.code',
+                'area_name' => 'Areas.name',
+                'academic_periods' => 'AcademicPeriods.name',
+                'date' => $this->aliasField('date'),
+                'subject' => 'InstitutionSubjects.name',
+                'staff_name' => $query->func()->concat([
+                    'Staff.first_name' => 'literal',
+                    " ",
+                    'Staff.last_name' => 'literal'
+                ]),
+                'visit_type' => 'QualityVisitTypes.name',
+                'comment' => $this->aliasField('comment'),
+            ]);
+
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+
+                    $firstName = $this->Auth->user('first_name');
+                    $lastName = $this->Auth->user('last_name');
+                    $evaluator = $firstName . " " . $lastName;
+                              
+                    $row['evaluator'] = $evaluator;
+                    return $row;
+                });
+            });
+
+        if ($periodId > 0) {
+            $query->where([$this->aliasField('academic_period_id') => $periodId]);
+        }
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity = $IdentityType->getDefaultEntity();
+
+        $extraField[] = [
+            'key' => 'Institutions.code',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => 'Institution Code',
+        ];
+
+        $extraField[] = [
+            'key' => 'Institutions.name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution Name')
+        ];
+
+        $extraField[] = [
+            'key' => 'Areas.code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Code')
+        ];
+
+        $extraField[] = [
+            'key' => 'Areas.name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Name')
+        ];
+
+        $extraField[] = [
+            'key' => 'AcademicPeriods.name',
+            'field' => 'academic_periods',
+            'type' => 'string',
+            'label' => __('Academic Period')
+        ];
+
+        $extraField[] = [
+            'key' => 'date',
+            'field' => 'date',
+            'type' => 'date',
+            'label' => __('Date')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionSubjects.name',
+            'field' => 'subject',
+            'type' => 'string',
+            'label' => __('Subject')
+        ];
+
+        $extraField[] = [
+            'key' => 'staff_name',
+            'field' => 'staff_name',
+            'type' => 'string',
+            'label' => __('Staff')
+        ];
+
+        $extraField[] = [
+            'key' => 'evaluator',
+            'field' => 'evaluator',
+            'type' => 'string',
+            'label' => __('Evaluator')
+        ];
+
+        $extraField[] = [
+            'key' => 'QualityVisitTypes.name',
+            'field' => 'visit_type',
+            'type' => 'string',
+            'label' => __('Visit Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'comment',
+            'field' => 'comment',
+            'type' => 'string',
+            'label' => __('Comment')
+        ];
+        
+
+        $fields->exchangeArray($extraField);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
