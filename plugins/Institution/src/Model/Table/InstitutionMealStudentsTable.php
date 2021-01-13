@@ -19,6 +19,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
         $this->table('institution_meal_students');
         parent::initialize($config);     
         $this->belongsTo('MealBenefit', ['className' => 'Meal.MealBenefits', 'foreignKey' =>'benefit_type_id']); 
+        $this->belongsTo('MealReceived', ['className' => 'Meal.MealReceived', 'foreignKey' =>'meal_received_id']);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentMeals' => ['index', 'view', 'add']
@@ -27,6 +28,9 @@ class InstitutionMealStudentsTable extends ControllerActionTable
 
      public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        // echo "<pre>";
+        // print_r($entity);
+        // die();
     	$InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
     	$classId = $entity->institution_class_id;
         $academicPeriodId = $entity->academic_period_id;
@@ -36,6 +40,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
         $studentId = $entity->student_id;
         $benefitTypeId = $entity->benefit_type_id;
         $paid = $entity->paid;
+        $mealReceived = $entity->meal_received_id;
 
     	$conditions = [
 	        $InstitutionMealStudents->aliasField('academic_period_id = ') => $academicPeriodId,
@@ -55,11 +60,12 @@ class InstitutionMealStudentsTable extends ControllerActionTable
         	$mealEntity = $data->first();
         	        	
               $InstitutionMealStudents
-                ->updateAll(['benefit_type_id' => $benefitTypeId,'paid' => $paid],['id' => $mealEntity->id]);
+                ->updateAll(['benefit_type_id' => $benefitTypeId,'paid' => $paid,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
                 $event->stopPropagation();
        			 return;
                 
             } else {
+                $entity->meal_received_id = $mealReceived;
                 $mealEntity = $InstitutionMealStudents->newEntity();
             }
 
