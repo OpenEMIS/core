@@ -218,6 +218,7 @@ class SpecialNeedsTable extends AppTable
                                     ])->first();
                         $name[] = $val->first_name." ".$val->middle_name." ".$val->last_name;
                     }
+                    $name = array_unique($name);
                     $implodedArr = implode(",",$name);
                     $row['staff_name'] = $implodedArr;
 
@@ -234,12 +235,12 @@ class SpecialNeedsTable extends AppTable
                                         $UserContact->aliasField('security_user_id') => $staff_user->referrer_id
                                     ])->first();
                         if(empty($val->value)){
-                            $contact[] = "N/A";
                         }
                         else{
                             $contact[] = $val->value;
                         }
                     }
+                    $contact = array_unique($contact);
                     $implodedContactArr = implode(",",$contact);
                     $row['staff_contact'] = $implodedContactArr;
                               
