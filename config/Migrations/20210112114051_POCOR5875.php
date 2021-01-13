@@ -14,8 +14,11 @@ class POCOR5875 extends AbstractMigration
     {
         // Backup table
         $this->execute('CREATE TABLE `zz_5875_institution_budgets` LIKE `institution_budgets`');
+        $this->execute('INSERT INTO `zz_5875_institution_budgets` SELECT * FROM `institution_budgets`');
         $this->execute('CREATE TABLE `zz_5875_institution_incomes` LIKE `institution_incomes`');
+        $this->execute('INSERT INTO `zz_5875_institution_incomes` SELECT * FROM `institution_incomes`');
         $this->execute('CREATE TABLE `zz_5875_institution_expenditures` LIKE `institution_expenditures`');
+        $this->execute('INSERT INTO `zz_5875_institution_expenditures` SELECT * FROM `institution_expenditures`');
         // End
         //budget
         $this->execute('ALTER TABLE `institution_budgets` ADD `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL AFTER `amount`');
