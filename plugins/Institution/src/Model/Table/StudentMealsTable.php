@@ -29,6 +29,7 @@ class StudentMealsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('MealBenefit', ['className' => 'Meal.MealBenefits', 'foreignKey' =>'benefit_type_id']); 
+        $this->belongsTo('MealReceived', ['className' => 'Meal.MealReceived', 'foreignKey' =>'meal_received_id']); 
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -119,10 +120,12 @@ class StudentMealsTable extends ControllerActionTable
                 
                 $areasData = $InstitutionMealStudents
                             ->find()
-                            ->contain('MealBenefit')
+                            ->contain(['MealBenefit','MealReceived'])
                             ->select([
                                 $InstitutionMealStudents->aliasField('date'),
                                 $InstitutionMealStudents->aliasField('paid'),
+                                $InstitutionMealStudents->aliasField('meal_received_id'),
+                                'MealReceived.name',
                                 $InstitutionMealStudents->aliasField('benefit_type_id'),
                                 'MealBenefit.name'
                             ])
@@ -133,7 +136,9 @@ class StudentMealsTable extends ControllerActionTable
                     'date' => $areasData->date,
                     'paid' => $areasData->paid,                    
                     'meal_benefit_id' => $areasData->benefit_type_id,
-                    'meal_benefit' => $areasData->meal_benefit->name
+                    'meal_benefit' => $areasData->meal_benefit->name,
+                    'meal_received_id' => !empty($areasData->meal_received_id) ? $areasData->meal_received_id : "1",
+                    'meal_received' => !empty($areasData->meal_received->name) ? $areasData->meal_received->name : "None"
                 ];  
                             
                 $row->institution_student_meal = $data;
