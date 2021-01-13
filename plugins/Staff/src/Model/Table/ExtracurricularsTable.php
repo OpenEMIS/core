@@ -75,6 +75,8 @@ class ExtracurricularsTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
+		$session = $this->request->session();
+        $staffId = $session->read('Staff.Staff.id');
 		
 		$Staff = TableRegistry::get('Security.Users');
 		
@@ -111,6 +113,9 @@ class ExtracurricularsTable extends AppTable {
 					$Staff->aliasField('id = ') . $this->aliasField('staff_id')
 				]
 			)
+			->where([
+				$this->aliasField('staff_id') => $staffId,
+			])
 			;
 			 
     }
