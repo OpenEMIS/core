@@ -44,6 +44,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     vm.classListOptions = [];
     vm.subjectListOptions = [];
     vm.selectedClass = '';
+    vm.selectedmealPrograme = '';
     
     vm.educationGradeListOptions = [];
     vm.selectedEducationGrade = '';
@@ -52,6 +53,9 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     vm.selectedAttendancePeriod = '';
 
     vm.classStudentList = [];
+    vm.mealProgrameOptions = [];
+    vm.mealBenefitTypeOptions = [];
+    vm.mealTypes = [];
     
 
     vm.superAdmin = 1;
@@ -90,8 +94,9 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         context: {
             scope: $scope,
             mode: vm.action,
-            absenceTypes: vm.absenceTypeOptions,
-            studentAbsenceReasons: vm.studentAbsenceReasonOptions,
+            mealBenefitTypeOptions: vm.mealBenefitTypeOptions,
+            mealTypes : vm.mealTypes,
+            // studentAbsenceReasons: vm.studentAbsenceReasonOptions,
             date: vm.selectedDay,
             schoolClosed: vm.schoolClosed,
             week: vm.selectedWeek,
@@ -115,14 +120,35 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         InstitutionStudentMealsSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';
         vm.gridOptions.context.mode = vm.action;
+        vm.gridOptions.context.mealTypes = [
+            {id: 0, name: "Free", code: "FREE"},
+            {id: 1, name: "Paid", code: "PAID"}
+        ]
 
         UtilsSvc.isAppendLoader(true);
         if (vm.institutionId != null) {
             //debugger;
             InstitutionStudentMealsSvc.getTranslatedText()
-            .then(function(studentAbsenceReasonOptions) {
-                vm.studentAbsenceReasonOptions = studentAbsenceReasonOptions;
-                vm.gridOptions.context.studentAbsenceReasons = vm.studentAbsenceReasonOptions;
+
+            .then(function(isTranslated) {
+                return InstitutionStudentMealsSvc.mealBenefitOptions();
+            }, vm.error)
+            .then(function(mealBenefitTypeOptions) {
+                vm.mealBenefitTypeOptions = mealBenefitTypeOptions;
+                vm.gridOptions.context.mealBenefitTypeOptions = vm.mealBenefitTypeOptions;
+                return InstitutionStudentMealsSvc.mealProgrameOptions();
+            }, vm.error)
+            // .then(function(studentAbsenceReasonOptions) {
+            //     vm.studentAbsenceReasonOptions = studentAbsenceReasonOptions;
+            //     vm.gridOptions.context.studentAbsenceReasons = vm.studentAbsenceReasonOptions;
+            //     return InstitutionStudentAttendancesSvc.getAcademicPeriodOptions(vm.institutionId);
+            // }, vm.error)
+
+
+            .then(function(mealPrograme) {
+                vm.updateMealPrograme(mealPrograme)
+                // vm.studentAbsenceReasonOptions = studentAbsenceReasonOptions;
+                // vm.gridOptions.context.studentAbsenceReasons = vm.studentAbsenceReasonOptions;
                 return InstitutionStudentMealsSvc.getAcademicPeriodOptions(vm.institutionId);
             }, vm.error)
             .then(function(academicPeriodOptions) {
@@ -134,6 +160,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 return InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
             }, vm.error)
             .then(function(dayListOptions) {
+                console.log("dayListOptions", dayListOptions)
                 vm.updateDayList(dayListOptions);
                 return InstitutionStudentMealsSvc.getClassOptions(vm.institutionId, vm.selectedAcademicPeriod);
             }, vm.error)
@@ -141,12 +168,40 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 vm.updateClassList(classListOptions);                
                 return InstitutionStudentMealsSvc.getEducationGradeOptions(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass);
             }, vm.error)
+            .then(function(educationGradeListOptions) {
+                console.log("educationGradeListOptions", educationGradeListOptions)
+                vm.updateEducationGradeList(educationGradeListOptions);                
+                return InstitutionStudentMealsSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay);
+            }, vm.error)
+            .then(function(attendanceType) { 
+                console.log("attendanceType", attendanceType)
+                vm.isMarkableSubjectAttendance = attendanceType;                     
+                return InstitutionStudentMealsSvc.getSubjectOptions(vm.institutionId,vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
+            }, vm.error)
+            .then(function(subjectListOptions) {
+                console.log("subjectListOptions", subjectListOptions)
+                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
+                return InstitutionStudentMealsSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade);
+                }, vm.error)
+            .then(function(attendancePeriodOptions) {
+                // attendancePeriodOptions = {id: 1, name: "Period 1"} //static data
+                console.log("attendancePeriodOptions", attendancePeriodOptions)
+                vm.updateAttendancePeriodList(attendancePeriodOptions);
+                return InstitutionStudentMealsSvc.getIsMarked(vm.getIsMarkedParams());
+            }, vm.error)
             .then(function(isMarked) {
+                console.log("isMarked", isMarked)
                 vm.updateIsMarked(isMarked);
                 return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
             }, vm.error)
-            .then(function(isresponse) {
-               vm.classStudentList = isresponse;
+            // .then(function(isresponse) {
+            //    vm.classStudentList = isresponse;
+            // }, vm.error)
+            .then(function(classStudents) {
+                if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
+                    classStudents = [];
+                }
+                vm.updateClassStudentList(classStudents);
             }, vm.error)
             // .then(function(isMarked) {
             //     vm.updateIsMarked(isMarked);
@@ -234,6 +289,11 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             }
             }
     }
+
+    vm.updateMealPrograme = function(mealPrograme) {
+        vm.mealProgrameOptions = mealPrograme;
+        vm.selectedmealPrograme = vm.mealProgrameOptions[0].id
+    }
     
     vm.updateEducationGradeList = function(educationGradeListOptions) {
         vm.educationGradeListOptions = educationGradeListOptions;
@@ -243,6 +303,18 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         }
     }
 
+    vm.updateSubjectList = function(subjectListOptions, isMarkableSubjectAttendance) {
+        vm.subjectListOptions = subjectListOptions;
+        if (vm.isMarkableSubjectAttendance == true) {
+            if (subjectListOptions.length > 0) {
+            vm.selectedSubject = subjectListOptions[0].id;
+            vm.gridOptions.context.subject_id = vm.selectedSubject;
+            }
+        } else {
+            vm.selectedSubject = 0;
+            vm.gridOptions.context.subject_id = vm.selectedSubject;
+        }
+    }
     
 
     vm.subjectListOptions = function(subjectListOptions) {
@@ -439,15 +511,30 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         };
     }
 
+    vm.getIsMarkedParams = function() {
+        return {
+            // institution_id: vm.institutionId,
+            // institution_class_id: vm.selectedClass,
+            // education_grade_id: vm.selectedEducationGrade,
+            // academic_period_id: vm.selectedAcademicPeriod,
+            // day_id: vm.selectedDay,
+            // attendance_period_id: vm.selectedAttendancePeriod,
+            // subject_id: vm.selectedSubject
+            institution_id: vm.institutionId,
+            institution_class_id: vm.selectedClass,
+            meal_programmes_id: vm.selectedmealPrograme,
+            academic_period_id: vm.selectedAcademicPeriod,
+            day_id: vm.selectedDay,
+        };
+    }
+
     vm.getPeriodMarkedParams = function() {
         return {
             institution_id: vm.institutionId,
             academic_period_id: vm.selectedAcademicPeriod,
             institution_class_id: vm.selectedClass,
-            education_grade_id: vm.selectedEducationGrade,
-            day_id: vm.selectedDay,
-            attendance_period_id: vm.selectedAttendancePeriod,
-            subject_id: vm.selectedSubject
+            meal_programmes_id: vm.selectedmealPrograme,
+            day: vm.selectedDay,
         };
     }
 
@@ -579,7 +666,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         vm.action = 'edit';
         vm.gridOptions.context.mode = vm.action;
         vm.setColumnDef();
-        AlertSvc.info($scope, 'Attendances will be automatically saved.');
+        AlertSvc.info($scope, 'Meal will be automatically saved.');
         InstitutionStudentMealsSvc.savePeriodMarked(vm.getPeriodMarkedParams(), $scope);
     };
 
