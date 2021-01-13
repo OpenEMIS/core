@@ -262,8 +262,8 @@ $panelHeader = $this->fetch('panelHeader');
                     <h5><?= __('Meal Programme') ?>: </h5>
                     <div class="input-select-wrapper">
 
-                        <select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="class.id as class.name for class in $ctrl.classListOptions" ng-model="$ctrl.selectedClass" ng-change="$ctrl.changeClass();">
-                            <option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
+                        <select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="meal.id as meal.name for meal in $ctrl.mealProgrameOptions" ng-model="$ctrl.selectedmealPrograme" ng-change="$ctrl.changeMealPrograme();">
+                            <option value="" ng-if="$ctrl.mealProgrameOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
                                        
