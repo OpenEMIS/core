@@ -9,7 +9,7 @@ $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepic
     $action = $ControllerAction['action'];
 
 
-    if ($ControllerAction['action'] == 'add') {
+    if ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') {
         $this->Form->unlockField($alias . '.' . $fieldKey);
     }
 
@@ -97,7 +97,8 @@ $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepic
                                 echo $this->Form->input("$fieldPrefix.meeting_date", [
                                     'type' => 'text',
                                     'label' => false,
-                                    'value' => date('d-m-Y')
+                                    'autocomplete' =>'off'
+                                    //'value' => date('d-m-Y')
                                 ]);
                             ?>
                             </div>
@@ -111,7 +112,8 @@ $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepic
                                 echo $this->Form->input("$fieldPrefix.start_time", [
                                     'type' => 'text',
                                     'label' => false,
-                                   'value' => date("h:i A")
+                                    'autocomplete' =>'off'
+                                   //'value' => date("h:i A")
                                 ]);
                             ?>
                             </div>
@@ -125,7 +127,8 @@ $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepic
                                 echo $this->Form->input("$fieldPrefix.end_time", [
                                     'type' => 'text',
                                     'label' => false,
-                                     'value' => date("h:i A")
+                                    'autocomplete' =>'off'
+                                     //'value' => date("h:i A")
                                 ]);
                             ?>
                             </div>
@@ -150,7 +153,7 @@ $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepic
                     </tr>
                     <script>
                         $(function () {
-                            var datepicker<?= $i;?> = $('#<?= $meetingDateId;?>').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
+                            var datepicker<?= $i;?> = $('#<?= $meetingDateId;?>').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true,"defaultDate": new Date()});
                             $(document).on('DOMMouseScroll mousewheel scroll', function() {
                                 window.clearTimeout(t);
                                 t = window.setTimeout(function() {
@@ -158,8 +161,8 @@ $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepic
 
                                 });
                             });
-                            var <?=$meetingStartTimeId;?> = $('#<?=$meetingStartTimeId;?>').timepicker({"defaultTime":"12:00 AM"});
-                            var <?=$meetingEndTimeId;?> = $('#<?=$meetingEndTimeId;?>').timepicker({"defaultTime":"12:00 AM"});
+                            var <?=$meetingStartTimeId;?> = $('#<?=$meetingStartTimeId;?>').timepicker({defaultTime: false});
+                            var <?=$meetingEndTimeId;?> = $('#<?=$meetingEndTimeId;?>').timepicker({defaultTime: false });
                             $(document).on('DOMMouseScroll mousewheel scroll', function() {
                                 window.clearTimeout(t);
                                 t = window.setTimeout(function() {
@@ -190,7 +193,7 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
         echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add Meeting').'</span>', $addButtonAttr);
     ?>
 <div class="table-responsive">
-    <table class="table" id= 'tbUser'>
+    <table class="table">
         <thead>
             <th><?= __('Date of Meeting') ?>
             <div class="tooltip-desc" style="display: inline-block;">
@@ -299,7 +302,8 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
                                 echo $this->Form->input("$fieldPrefix.meeting_date", [
                                     'type' => 'text',
                                     'label' => false,
-                                    'value' => date('d-m-Y')
+                                    'autocomplete' =>'off'
+                                    //'value' => date('d-m-Y')
                                 ]);
                                 ?>
                             </div>
@@ -313,7 +317,8 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
                                 echo $this->Form->input("$fieldPrefix.start_time", [
                                     'type' => 'text',
                                     'label' => false,
-                                    'value' => date("h:i A")
+                                    'autocomplete' =>'off'
+                                    //'value' => date("h:i A")
                                 ]);
                             ?>
                             </div>
@@ -327,7 +332,8 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
                                 echo $this->Form->input("$fieldPrefix.end_time", [
                                     'type' => 'text',
                                     'label' => false,
-                                     'value' => date("h:i A")
+                                    'autocomplete' =>'off'
+                                     //'value' => date("h:i A")
                                 ]);
                             ?>
                             </div>
@@ -338,20 +344,12 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
                             <?php
                                 echo $this->Form->input("$fieldPrefix.comment", [
                                     'type' => 'text',
-                                    'label' => false
+                                    'label' => false,
+                                    'autocomplete' =>'off'
                                 ]);
                             ?>
                         </td>
                         <td>
-                        <!-- <button id= "btnDelete" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action">
-                            <i class="fa fa-trash"></i>&nbsp;
-                            <span>Delete</span>
-                        </button> -->
-                         <?php
-                            // if ($i == (count($data[$fieldKey]) - 1)) {
-                            //     echo '<button onclick="deleteJsRow(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>' . __('Delete') .'</span></button>';
-                            // }
-                        ?>
                         <?php
                             if ($i == (count($data[$fieldKey]) - 1)) {
                                 echo '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>' . __('Delete') .'</span></button>';
@@ -361,7 +359,7 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
                     </tr>
                     <script>
                         $(function () {
-                            var datepicker<?= $i;?> = $('#<?= $meetingDateEditId;?>').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
+                            var datepicker<?= $i;?> = $('#<?= $meetingDateEditId;?>').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true,"defaultDate": new Date()});
                             $(document).on('DOMMouseScroll mousewheel scroll', function() {
                                 window.clearTimeout(t);
                                 t = window.setTimeout(function() {
@@ -369,8 +367,8 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
 
                                 });
                             });
-                            var <?=$meetingStartTimeEditId;?> = $('#<?=$meetingStartTimeEditId;?>').timepicker({"defaultTime":"12:00 AM"});
-                            var <?=$meetingEndTimeEditId;?> = $('#<?=$meetingEndTimeEditId;?>').timepicker({"defaultTime":"12:00 AM"});
+                            var <?=$meetingStartTimeEditId;?> = $('#<?=$meetingStartTimeEditId;?>').timepicker({defaultTime: false});
+                            var <?=$meetingEndTimeEditId;?> = $('#<?=$meetingEndTimeEditId;?>').timepicker({defaultTime: false});
                             $(document).on('DOMMouseScroll mousewheel scroll', function() {
                                 window.clearTimeout(t);
                                 t = window.setTimeout(function() {
@@ -380,17 +378,6 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
                                 });
                             });
                         });
-
-
-                        $("#tbUser").on('click', '#btnDelete', function () {
-    $(this).closest('tr').remove();
-    //window.location.reload();
-});
-                        // function deleteJsRow(elem) {
-                        //       $(elem).closest('tr').remove()
-                        //       window.location.reload();
-                        // }
-
                     </script>
                 <?php endforeach ?>
             </tbody>
