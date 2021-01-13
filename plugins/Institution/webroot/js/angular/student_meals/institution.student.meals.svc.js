@@ -288,17 +288,17 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             .ajax({success: success, defer: true});
     }
 
-    function getClassStudent(institutionId,institutionClassId, academicPeriodId,day_id,week_id,week_start_day,week_end_day,subject_id ) {
+    function getClassStudent(params) {
         
         var extra = {
-            institution_id: institutionId,
-            institution_class_id: institutionClassId,
-            academic_period_id: academicPeriodId,
-            day_id: day_id,
-            week_id: week_id,
-            week_start_day: week_start_day,
-            week_end_day: week_end_day,
-            subject_id : subject_id
+            institution_id: params.institution_id,
+            institution_class_id: params.institution_class_id,
+            academic_period_id: params.academic_period_id,
+            day_id: params.day_id,
+            week_id: params.week_id,
+            week_start_day: params.week_start_day,
+            week_end_day: params.week_end_day,
+            subject_id : params.subject_id
         };
 
         if (extra.institution_class_id == '' || extra.academic_period_id == '') {
