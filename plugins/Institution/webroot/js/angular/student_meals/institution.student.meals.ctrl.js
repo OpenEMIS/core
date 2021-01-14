@@ -106,7 +106,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             education_grade_id: vm.selectedEducationGrade,
             mealPrograme: vm.selectedmealPrograme
         },
-        // getRowHeight: getRowHeight,
+        getRowHeight: getRowHeight,
     };
 
     // ready
@@ -121,11 +121,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         InstitutionStudentMealsSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';
         vm.gridOptions.context.mode = vm.action;
-        // vm.gridOptions.context.mealTypes = [
-        //     {id: 0, name: "Free", code: "FREE"},
-        //     {id: 1, name: "Paid", code: "PAID"}
-        // ]
-
+       
         UtilsSvc.isAppendLoader(true);
         if (vm.institutionId != null) {
             //debugger;
@@ -364,7 +360,14 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     }
 
     vm.setRowDatas = function(studentList) {
-        console.log(studentList);       
+        console.log(studentList);
+        studentList.forEach(function (dataItem, index) {
+            if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 0 || dataItem.institution_student_meal.meal_received_id == 1) {
+                dataItem.rowHeight = 60;
+            } else {
+                dataItem.rowHeight = 120;
+            }
+        });       
         vm.gridOptions.api.setRowData(studentList);
         
     }
