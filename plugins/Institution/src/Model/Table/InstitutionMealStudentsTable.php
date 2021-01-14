@@ -28,9 +28,6 @@ class InstitutionMealStudentsTable extends ControllerActionTable
 
      public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        // echo "<pre>";
-        // print_r($entity);
-        // die();
     	$InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
     	$classId = $entity->institution_class_id;
         $academicPeriodId = $entity->academic_period_id;
@@ -58,11 +55,20 @@ class InstitutionMealStudentsTable extends ControllerActionTable
        
         if (!$data->isEmpty()) {
         	$mealEntity = $data->first();
-        	        	
-              $InstitutionMealStudents
+            if ($mealReceived == "1" || $mealReceived == "2") {
+                 $data = $InstitutionMealStudents
+                ->updateAll(['benefit_type_id' => NULL,'paid' => NULL,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
+                $event->stopPropagation();
+                 return $data;
+            }
+            else{
+                 $InstitutionMealStudents
                 ->updateAll(['benefit_type_id' => $benefitTypeId,'paid' => $paid,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
                 $event->stopPropagation();
-       			 return;
+                 return;
+            }
+        	        	
+             
                 
             } else {
                 $entity->meal_received_id = $mealReceived;
