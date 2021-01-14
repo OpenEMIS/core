@@ -27,7 +27,7 @@ class StudentNotAssignedClassTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
         $this->addBehavior('Report.ReportList');
-		$this->addBehavior('Excel', [
+        $this->addBehavior('Excel', [
             'pages' => false
         ]);
     }
@@ -65,6 +65,11 @@ class StudentNotAssignedClassTable extends AppTable
             $conditions['Institutions.id'] = $institutionId;
         }
 
+        $subquery = $insClassStudent
+            ->find()
+            ->select(['InstitutionClassStudents.student_id'])
+            ->where([$conditions]);
+
         $query
             ->select([   
                 'student_id' =>'Users.id',             
@@ -76,11 +81,7 @@ class StudentNotAssignedClassTable extends AppTable
                 'education_grade_name' => 'EducationGrades.name',
                 'gender_name' => 'Genders.name',
                 'date_of_birth' => 'Users.date_of_birth',
-                'class_id' => 'InstitutionClassStudents.institution_class_id'
             ])
-            ->leftJoin(['InstitutionClassStudents' => 'institution_class_students'], [
-                        'InstitutionClassStudents.student_id = ' . 'StudentNotAssignedClass.student_id'
-                    ])
            ->leftJoin(['Users' => 'security_users'], [
                             'Users.id = ' . 'StudentNotAssignedClass.student_id'
                        ])
@@ -100,8 +101,9 @@ class StudentNotAssignedClassTable extends AppTable
             ->leftJoin(['EducationGrades' => 'education_grades'], [
                      'StudentNotAssignedClass.education_grade_id = ' . 'EducationGrades.id'
                     ])
-
+            ->group(['StudentNotAssignedClass.student_id'])
             ->where([
+                    'student_id NOT IN' => $subquery,
                     'StudentStatuses.code' => 'CURRENT',
                     $conditions
                     ]);
@@ -179,10 +181,9 @@ class StudentNotAssignedClassTable extends AppTable
 
     public function onExcelGetAnalysis(Event $event, Entity $entity)
     {
-        if ($entity->class_id) {
-           return $analysis = 'Yes';
-        } else {
-            return $analysis = '#N/A';
-        }
+        $value = '#N/A';
+        
+        return $value;
     }
+
 }
