@@ -73,14 +73,16 @@ class StudentsTable extends AppTable
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
+        $this->ControllerAction->field('start_date',['type'=>'hidden']);
+        $this->ControllerAction->field('end_date',['type'=>'hidden']);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         //pocor 5863 start
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         //pocor 5863 end
+        $this->ControllerAction->field('format');
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
@@ -636,53 +638,53 @@ class StudentsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldRiskId(Event $event, array $attr, $action, Request $request)
-    {
+    // public function onUpdateFieldRiskId(Event $event, array $attr, $action, Request $request)
+    // {
         
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+    //     if (isset($this->request->data[$this->alias()]['feature'])) {
+    //         $feature = $this->request->data[$this->alias()]['feature'];
 
-            if (in_array($feature, ['Report.SpecialNeeds'])) {
-                $InstitutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks');
-                $Risks = TableRegistry::get('Risk.Risks');
-                $academic_period_id = $request->data['Students']['academic_period_id'];
-                $institution_id = $request->data['Students']['institution_id'];
-                if ($institution_id != 0) {
-                    $where = [$InstitutionStudentRisks->aliasField('institution_id') => $institution_id];
-                } else {
-                    $where = [];
-                }
+    //         if (in_array($feature, ['Report.SpecialNeeds'])) {
+    //             $InstitutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks');
+    //             $Risks = TableRegistry::get('Risk.Risks');
+    //             $academic_period_id = $request->data['Students']['academic_period_id'];
+    //             $institution_id = $request->data['Students']['institution_id'];
+    //             if ($institution_id != 0) {
+    //                 $where = [$InstitutionStudentRisks->aliasField('institution_id') => $institution_id];
+    //             } else {
+    //                 $where = [];
+    //             }
                 
-                $InstitutionStudentRisksData = $InstitutionStudentRisks
-                ->find('list', [
-                            'keyField' => $Risks->aliasField('id'),
-                            'valueField' => $Risks->aliasField('name')
-                        ])
-                ->select([$Risks->aliasField('id'),
-                    $Risks->aliasField('name')])
-                ->leftJoin(
-                    [$Risks->alias() => $Risks->table()],
-                    [
-                        $Risks->aliasField('id = ') . $InstitutionStudentRisks->aliasField('risk_id')
-                    ]
-                )
-                ->where([$InstitutionStudentRisks->aliasField('academic_period_id') => $academic_period_id,
-                    $where
-                        ])
-                ->toArray();
-                if (empty($InstitutionStudentRisksData)) {
-                    $noOptions = ['' => $this->getMessage('general.select.noOptions')];
-                    $attr['type'] = 'select';
-                    $attr['options'] = $noOptions;
-                } else {
-                $attr['options'] = $InstitutionStudentRisksData;
-                $attr['type'] = 'select';
-                $attr['select'] = false;                
-                }
-                return $attr;
-            }
-        }
-    }
+    //             $InstitutionStudentRisksData = $InstitutionStudentRisks
+    //             ->find('list', [
+    //                         'keyField' => $Risks->aliasField('id'),
+    //                         'valueField' => $Risks->aliasField('name')
+    //                     ])
+    //             ->select([$Risks->aliasField('id'),
+    //                 $Risks->aliasField('name')])
+    //             ->leftJoin(
+    //                 [$Risks->alias() => $Risks->table()],
+    //                 [
+    //                     $Risks->aliasField('id = ') . $InstitutionStudentRisks->aliasField('risk_id')
+    //                 ]
+    //             )
+    //             ->where([$InstitutionStudentRisks->aliasField('academic_period_id') => $academic_period_id,
+    //                 $where
+    //                     ])
+    //             ->toArray();
+    //             if (empty($InstitutionStudentRisksData)) {
+    //                 $noOptions = ['' => $this->getMessage('general.select.noOptions')];
+    //                 $attr['type'] = 'select';
+    //                 $attr['options'] = $noOptions;
+    //             } else {
+    //             $attr['options'] = $InstitutionStudentRisksData;
+    //             $attr['type'] = 'select';
+    //             $attr['select'] = false;                
+    //             }
+    //             return $attr;
+    //         }
+    //     }
+    // }
 
 
     public function startStudentsPhotoDownload() {
@@ -690,5 +692,29 @@ class StudentsTable extends AppTable
         $cmd  = ROOT . DS . 'bin' . DS . 'cake StudentsPhotoDownload';
         $logs = ROOT . DS . 'logs' . DS . 'StudentsPhotoDownload.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
+    }
+
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+			
+            if ((in_array($feature, ['Report.BodyMassStatusReports']))) {   
+                $attr['type'] = 'date';
+                return $attr;
+            }
+        }
+    }
+
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+			
+            if ((in_array($feature, ['Report.BodyMassStatusReports']))) {
+                $attr['type'] = 'date';
+                return $attr;
+            }
+        }
     }
 }
