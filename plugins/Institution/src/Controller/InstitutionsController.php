@@ -575,23 +575,44 @@ class InstitutionsController extends AppController
         $this->set('importUrl', Router::url($importUrl));
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
-    }
+        }
     }
 
     public function StudentMeals($pass='')
     {
-        $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
-
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
-        } else {
-            $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
+        if($pass=='excel'){
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentMeals']);
         }
+        else{
+            $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
+            $_excel = $this->AccessControl->check(['Institutions', 'StudentMeals', 'excel']);
+            $_excel = true;
 
-        $this->set('_edit', $_edit);
-        $this->set('institution_id', $institutionId);
-        $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
+            if (!empty($this->request->param('institutionId'))) {
+                $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            } else {
+                $session = $this->request->session();
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+
+            $excelUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentMeals',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+                'excel'
+            ];
+
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+                $this->Navigation->addCrumb($crumbTitle);
+
+            $this->set('_edit', $_edit);
+            $this->set('_excel', $_excel);
+            $this->set('excelUrl', Router::url($excelUrl));
+            $this->set('institution_id', $institutionId);
+            $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
+        }
+        
     }
 
     public function Results()
