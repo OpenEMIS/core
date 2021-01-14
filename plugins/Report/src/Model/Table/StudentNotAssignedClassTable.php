@@ -107,7 +107,6 @@ class StudentNotAssignedClassTable extends AppTable
                     'StudentStatuses.code' => 'CURRENT',
                     $conditions
                     ]);
-            echo "<pre>";print_r($query);die();
        }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
