@@ -652,9 +652,6 @@ class InstitutionStatusTable extends ControllerActionTable
 
 public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
 {
-    $session = $this->request->session();
-    $institutionId = $this->request->pass[1];
-    $id = $this->controller->paramsDecode($institutionId)['id'];
     if (!$entity->isNew()) {
         $this->validator()->remove('area_id', 'required');
         $this->validator()->remove('institution_locality_id', 'required');
@@ -665,35 +662,35 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
         $this->validator()->remove('institution_gender_id', 'required');
 
         if ($options['InstitutionStatus']['current_status'] == 'Active') {
-            if($options['withdraw_students'] == 1) {
+            if(!empty($options['InstitutionStatus']['withdraw_students']) && $options['InstitutionStatus']['withdraw_students'] == 1) {
                 $institutionStudents = TableRegistry::get('institution_students');
                 $query = $institutionStudents->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'student_status_id' => 4])
-                ->where(['institution_id' => $id])
+                ->where(['institution_id' => $entity->id])
                 ->execute();
             } 
-            if($options['end_staff_positions'] == 1) {
+            if(!empty($options['InstitutionStatus']['end_staff_positions']) && $options['InstitutionStatus']['end_staff_positions'] == 1) {
                 $institutionStaff = TableRegistry::get('institution_staff');
                 $query = $institutionStaff->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'staff_status_id' => 2]) 
-                ->where(['institution_id' => $id])
+                ->where(['institution_id' => $entity->id])
                 ->execute();
             }
-            if($options['end_infrastructure_usage'] == 1) {
+            if(!empty($options['InstitutionStatus']['end_infrastructure_usage']) && $options['InstitutionStatus']['end_infrastructure_usage'] == 1) {
                 $institutionRoom = TableRegistry::get('institution_rooms');
                 $query = $institutionRoom->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'room_status_id' => 2])
-                ->where(['institution_id' => $id])
+                ->where(['institution_id' => $entity->id])
                 ->execute();
             }
 
             $query = $this->query();
             $query->update()
             ->set(['date_closed' => date('Y-m-d'), 'institution_status_id' => 2])
-            ->where(['id' => $id])
+            ->where(['id' => $entity->id])
             ->execute();
         }
     //when status is inactive
@@ -701,7 +698,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
             $query = $this->query();
             $query->update()
             ->set(['date_opened' => date('Y-m-d'), 'date_closed' => NULL, 'institution_status_id' => 1])
-            ->where(['id' => $id])
+            ->where(['id' => $entity->id])
             ->execute();
         }  
     }
