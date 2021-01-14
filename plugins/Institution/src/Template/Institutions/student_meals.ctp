@@ -24,7 +24,7 @@ $this->start('toolbar');
         <i class="fa kd-edit"></i> 
     </button>
 
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back')?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
         <i class="fa kd-back"></i>
     </button>
 <?php endif; ?>
@@ -200,7 +200,7 @@ $panelHeader = $this->fetch('panelHeader');
 
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-       <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;" float-btn="true">
+       <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;$ctrl.exportexcel='<?=$excelUrl ?>';" float-btn="true">
            
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">

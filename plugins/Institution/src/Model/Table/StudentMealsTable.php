@@ -28,12 +28,27 @@ class StudentMealsTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('MealBenefit', ['className' => 'Meal.MealBenefits', 'foreignKey' =>'benefit_type_id']); 
+        $this->belongsTo('MealReceived', ['className' => 'Meal.MealReceived', 'foreignKey' =>'meal_received_id']); 
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('NextInstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' =>'next_institution_class_id']);
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
+        $this->addBehavior('Excel', [
+            'excludes' => [
+                'start_date',
+                'end_date',
+                'start_year',
+                'end_year',
+                'FTE',
+                'staff_type_id',
+                'staff_status_id',
+                'institution_id',
+                'institution_position_id',
+                'security_group_user_id'
+            ],
+            'pages' => ['index']
+        ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentMeals' => ['index', 'view']
         ]);
@@ -88,7 +103,7 @@ class StudentMealsTable extends ControllerActionTable
           
         }
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
+            return $results->map(function ($row) use ($InstitutionMealStudents, $findDay, $attendancePeriodId, $subjectId, $educationGradeId) {
                 $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
 
                 $academicPeriodId = $row->academic_period_id;
@@ -105,10 +120,12 @@ class StudentMealsTable extends ControllerActionTable
                 
                 $areasData = $InstitutionMealStudents
                             ->find()
-                            ->contain('MealBenefit')
+                            ->contain(['MealBenefit','MealReceived'])
                             ->select([
                                 $InstitutionMealStudents->aliasField('date'),
                                 $InstitutionMealStudents->aliasField('paid'),
+                                $InstitutionMealStudents->aliasField('meal_received_id'),
+                                'MealReceived.name',
                                 $InstitutionMealStudents->aliasField('benefit_type_id'),
                                 'MealBenefit.name'
                             ])
@@ -119,7 +136,9 @@ class StudentMealsTable extends ControllerActionTable
                     'date' => $areasData->date,
                     'paid' => $areasData->paid,                    
                     'meal_benefit_id' => $areasData->benefit_type_id,
-                    'meal_benefit' => $areasData->meal_benefit->name
+                    'meal_benefit' => $areasData->meal_benefit->name,
+                    'meal_received_id' => !empty($areasData->meal_received_id) ? $areasData->meal_received_id : "1",
+                    'meal_received' => !empty($areasData->meal_received->name) ? $areasData->meal_received->name : "None"
                 ];  
                             
                 $row->institution_student_meal = $data;
@@ -129,6 +148,175 @@ class StudentMealsTable extends ControllerActionTable
          return $query;
         
 
+    }
+
+    public function onExcelGetBenefit(Event $event, Entity $entity)
+    {
+        
+        $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
+
+        $conditions = [
+                            $InstitutionMealStudents->aliasField('academic_period_id = ') => $entity->academic_period_id,
+                            $InstitutionMealStudents->aliasField('institution_class_id = ') => $entity->institution_class_id,
+                            $InstitutionMealStudents->aliasField('student_id = ') => $entity->student_id,
+                            $InstitutionMealStudents->aliasField('institution_id = ') => $entity->institution_id,
+                        ];
+
+        $benefit = '';
+        $benefit = $InstitutionMealStudents
+                            ->find()
+                            ->contain('MealBenefit')
+                         
+                            ->select([
+                                $InstitutionMealStudents->aliasField('benefit_type_id'),
+                                'meal_benefit' => 'MealBenefit.name'
+                            ])
+                            ->where($conditions)
+                            ->first();
+                            if (!empty($benefit)) {
+                                $benefit = $benefit->meal_benefit;
+                            }
+                            else{
+                                $benefit = "Null";
+                            }
+    
+        return $benefit;
+    } 
+
+    public function onExcelGetMealReceived(Event $event, Entity $entity)
+    {
+        
+        $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
+
+        $conditions = [
+                            $InstitutionMealStudents->aliasField('academic_period_id = ') => $entity->academic_period_id,
+                            $InstitutionMealStudents->aliasField('institution_class_id = ') => $entity->institution_class_id,
+                            $InstitutionMealStudents->aliasField('student_id = ') => $entity->student_id,
+                            $InstitutionMealStudents->aliasField('institution_id = ') => $entity->institution_id,
+                        ];
+
+        $mealReceived = '';
+        $mealReceived = $InstitutionMealStudents
+                            ->find()
+                            ->contain('MealBenefit')
+                         
+                            ->select([
+                                $InstitutionMealStudents->aliasField('benefit_type_id'),
+                                'meal_benefit' => 'MealBenefit.name'
+                            ])
+                            ->where($conditions)
+                            ->first();
+                            if (!empty($mealReceived)) {
+                                $mealReceived = "Paid";
+                            }
+                            else{
+                                $mealReceived = "Free";
+                            }
+    
+        return $mealReceived;
+    } 
+
+    
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
+        ini_set("memory_limit", "-1");
+
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $classId = !empty($this->request->query['institution_class_id']) ? $this->request->query['institution_class_id'] : 0 ;
+        $weekId = $this->request->query['week_id'];
+        $weekStartDay = $this->request->query['week_start_day'];
+        $weekEndDay = $this->request->query['week_end_day'];
+        $dayId = $this->request->query['day_id'];
+
+        $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
+               
+
+        $sheetName = 'StudentMeals';
+        $sheets[] = [
+            'name' => $sheetName,
+            'table' => $this,
+            'query' => $this
+                ->find()
+                ->select(['name' => 'Users.first_name',
+                    'openemis_no' => 'Users.openemis_no'
+                ]),
+            'institutionId' => $institutionId,
+            'classId' => $classId,
+            'academicPeriodId' => $this->request->query['academic_period_id'],
+            'weekId' => $weekId,
+            'weekStartDay' => $weekStartDay,
+            'weekEndDay' => $weekEndDay,
+            'dayId' => $dayId,
+            'orientation' => 'landscape'
+        ];
+        
+
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $day_id = $this->request->query('day_id');
+        $newArray[] = [
+            'key' => 'StudentMeals.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => 'Name'
+        ];
+
+        $newArray[] = [
+            'key' => 'StudentMeals.name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => 'Name'
+        ];
+
+        $newArray[] = [
+                'key' => 'StudentMeals.meal_received',
+                'field' => 'mealReceived',
+                'type' => 'string',
+                'label' => ''
+        ];
+
+        $newArray[] = [
+                'key' => 'StudentMeals.meal_benefit',
+                'field' => 'benefit',
+                'type' => 'string',
+                'label' => ''
+        ];
+           
+
+
+        $fields_arr = $fields->getArrayCopy();
+        
+        $field_show = array();
+        $filter_key = array('StudentMeals.id','StudentMeals.student_id','StudentMeals.institution_class_id','StudentMeals.academic_period_id','StudentMeals.student_status_id','InstitutionMealStudents.meal_benefit');
+
+        // foreach ($fields_arr as $field){
+        //     if (in_array($field['key'], $filter_key)) {
+        //         unset($field);
+        //     }
+        //     else {
+        //         array_push($field_show,$field);
+        //     }
+        // }
+        
+        //$newFields = array_merge($newArray, $field_show);
+        $fields->exchangeArray($newArray);
+        $sheet = $settings['sheet'];
+        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
+        // Set data into a temporary variable
+        $options['institution_id'] = $sheet['institutionId'];
+        $options['institution_class_id'] = $sheet['classId'];
+        $options['academic_period_id'] = $sheet['academicPeriodId'];
+        $options['week_id'] = $sheet['weekId'];
+        $options['week_start_day'] = $sheet['weekStartDay'];
+        $options['week_end_day'] = $sheet['weekEndDay'];
+        $options['day_id'] = $sheet['dayId'];
+       
+        $this->_absenceData = $this->findClassStudentsWithMeal($sheet['query'], $options);
+        //echo "<pre>";
+        ///print_r($this->_absenceData); die();
     }
     
 }

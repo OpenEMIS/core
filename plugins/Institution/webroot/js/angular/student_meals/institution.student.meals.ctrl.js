@@ -192,7 +192,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             .then(function(isMarked) {
                 console.log("isMarked", isMarked)
                 vm.updateIsMarked(isMarked);
-                return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+                //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+                return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
             // .then(function(isresponse) {
             //    vm.classStudentList = isresponse;
@@ -203,10 +204,6 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 }
                 vm.updateClassStudentList(classStudents);
             }, vm.error)
-            // .then(function(isMarked) {
-            //     vm.updateIsMarked(isMarked);
-            //     return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
-            // }, vm.error)
             .finally(function() {
                 vm.initGrid();
                 UtilsSvc.isAppendLoader(false);
@@ -485,7 +482,6 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
 
     // params
     vm.getClassStudentParams = function() {
-
         vm.excelExportAUrl = vm.exportexcel
                              +'?institution_id='+ vm.institutionId+
                             '&institution_class_id='+ vm.selectedClass+
@@ -496,6 +492,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                             '&week_start_day='+ vm.selectedWeekStartDate+
                             '&week_end_day='+ vm.selectedWeekEndDate+
                             '&week_id='+ vm.selectedWeek
+        console.log(vm.excelExportAUrl);
+        console.log(vm.exportexcel);
         
         return {
             institution_id: vm.institutionId,
@@ -558,7 +556,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             }, vm.error)
         .then(function(isMarked) {
                 vm.updateIsMarked(isMarked);
-                return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+                //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+                return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
         /*.then(function(isMarked) {
             vm.updateIsMarked(isMarked);
@@ -584,7 +583,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
        
         .then(function(isMarked) {
                 vm.updateIsMarked(isMarked);
-                return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+                //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+                return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)       
         /*.then(function(isMarked) {
             vm.updateIsMarked(isMarked);
@@ -618,7 +618,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
 
         .then(function(isMarked) {
                 vm.updateIsMarked(isMarked);
-                return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+                //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+                return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
         /*.then(function(isMarked) {
             vm.updateIsMarked(isMarked);
@@ -643,7 +644,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         
         .then(function(isMarked) {
                 vm.updateIsMarked(isMarked);
-                return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+                //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
+                return InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
         /*.then(function(isMarked) {
             vm.updateIsMarked(isMarked);

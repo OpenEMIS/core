@@ -26,16 +26,59 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
         $this->belongsTo('MealStatus', ['className' => 'Meal.MealStatusTypes','foreignKey' => 'delivery_status_id']);
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
+        $this->MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {    
+
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+
+
+        $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
+
+        $extra['elements']['control'] = [
+            'name' => 'Institution.MealProgramme/controls',
+            'data' => [
+                'periodOptions'=> $academicPeriodOptions,
+                'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions']
+            ],
+            'order' => 3
+        ];
+        
+        
+        
+
+
         $this->field('academic_period_id',['visible' => false]);   
         $this->field('meal_programmes_id');   
         $this->field('date_received');
         $this->field('quantity');
         $this->field('comment',['visible' => false]);
          $this->setFieldOrder(['meal_programmes_id','date_received','quantity','delivery_status']);
+    }
+
+     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        /*$hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
+         $conditions = [];
+
+        if (!$hasSearchKey) {
+            //filter
+            if (array_key_exists('selectedPeriod', $extra)) {
+                if ($extra['selectedPeriod']) {
+                    $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+                }
+            }
+
+            $query->where([$conditions]);
+        }*/
+        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+            $query->where([
+                       
+                        $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
+                    ], [], true); 
+        }
     }
 
     public function BeforeAction(Event $event, ArrayObject $extra)
@@ -129,5 +172,23 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
         $entity->date_received = date("Y-m-d H:i:s");
     }
+
+    private function getSelectedAcademicPeriod($request)
+    {
+        $selectedAcademicPeriod = '';
+
+        if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
+            if (isset($request->query) && array_key_exists('period', $request->query)) {
+                $selectedAcademicPeriod = $request->query['period'];
+            } else {
+                $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+            }
+        } elseif ($this->action == 'add') {
+            $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        }
+
+        return $selectedAcademicPeriod;
+    }
+
     
 }
