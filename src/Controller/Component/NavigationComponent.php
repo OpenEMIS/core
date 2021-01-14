@@ -1850,12 +1850,12 @@ class NavigationComponent extends Component
                 'selected' => ['Textbooks.Textbooks', 'Textbooks.ImportTextbooks']
             ],
 
-            /*'Meals.programme' => [
+            'Meals.programme' => [
                'title' => 'Meals',
                 'parent' => 'Administration',
                 'params' => ['plugin' => 'Meal'],
                 'selected' => ['Meals.programme']
-            ],*/
+            ],
             
             'Workflows.Workflows' => [
                 'title' => 'Workflow',

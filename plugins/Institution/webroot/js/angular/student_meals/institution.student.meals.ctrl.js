@@ -103,7 +103,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             period: vm.selectedAttendancePeriod,
             isMarked: vm.isMarked,
             subject_id: vm.selectedSubject,
-            education_grade_id: vm.selectedEducationGrade
+            education_grade_id: vm.selectedEducationGrade,
+            mealPrograme: vm.selectedmealPrograme
         },
         // getRowHeight: getRowHeight,
     };
@@ -120,10 +121,10 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         InstitutionStudentMealsSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';
         vm.gridOptions.context.mode = vm.action;
-        vm.gridOptions.context.mealTypes = [
-            {id: 0, name: "Free", code: "FREE"},
-            {id: 1, name: "Paid", code: "PAID"}
-        ]
+        // vm.gridOptions.context.mealTypes = [
+        //     {id: 0, name: "Free", code: "FREE"},
+        //     {id: 1, name: "Paid", code: "PAID"}
+        // ]
 
         UtilsSvc.isAppendLoader(true);
         if (vm.institutionId != null) {
@@ -138,17 +139,13 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 vm.gridOptions.context.mealBenefitTypeOptions = vm.mealBenefitTypeOptions;
                 return InstitutionStudentMealsSvc.mealProgrameOptions();
             }, vm.error)
-            // .then(function(studentAbsenceReasonOptions) {
-            //     vm.studentAbsenceReasonOptions = studentAbsenceReasonOptions;
-            //     vm.gridOptions.context.studentAbsenceReasons = vm.studentAbsenceReasonOptions;
-            //     return InstitutionStudentAttendancesSvc.getAcademicPeriodOptions(vm.institutionId);
-            // }, vm.error)
-
-
             .then(function(mealPrograme) {
+                vm.gridOptions.context.mealPrograme = mealPrograme[0].id
                 vm.updateMealPrograme(mealPrograme)
-                // vm.studentAbsenceReasonOptions = studentAbsenceReasonOptions;
-                // vm.gridOptions.context.studentAbsenceReasons = vm.studentAbsenceReasonOptions;
+                return InstitutionStudentMealsSvc.mealReceviedOptionsOptions();
+            }, vm.error)
+            .then(function(mealReceviedOptions) {
+                vm.gridOptions.context.mealTypes = mealReceviedOptions;
                 return InstitutionStudentMealsSvc.getAcademicPeriodOptions(vm.institutionId);
             }, vm.error)
             .then(function(academicPeriodOptions) {
@@ -505,7 +502,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             week_start_day: vm.selectedWeekStartDate,
             week_end_day: vm.selectedWeekEndDate,
             week_id: vm.selectedWeek,
-            subject_id: vm.selectedSubject
+            subject_id: vm.selectedSubject,
+            meal_programmes_id: vm.selectedmealPrograme
         };
     }
 
