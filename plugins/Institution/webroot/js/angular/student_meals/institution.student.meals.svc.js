@@ -630,13 +630,14 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                     var mode = context.mode;
 
                     if (angular.isDefined(params.data.institution_student_meal)) {
-                        var studentMealTypeId = (params.data.institution_student_meal.meal_received_id == null) ? 1 : params.data.institution_student_meal.meal_received_id;
+                        var studentMealTypeId = (params.data.institution_student_meal.meal_received_id == null) ? null : params.data.institution_student_meal.meal_received_id;
+                        console.log("studentMealTypeId", studentMealTypeId)
                         var mealTypeObj = mealTypes.find(obj => obj.id == studentMealTypeId);
-
+                        console.log("mealTypeObj1", mealTypeObj)
                         if (mode == 'view') {
-                            if(studentMealTypeId == null) {
+                            if(studentMealTypeId == 1 || studentMealTypeId == 2) {
                                 return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                            } else if(studentMealTypeId != null) {
+                            } else if(studentMealTypeId == 3) {
                                 var html = '';
                                 html += getViewMealReasonElement(data, mealBenefitTypeOptions);
                                 html += getViewCommentsElement(data);
@@ -645,23 +646,27 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                             return html;
                         } else if (mode == 'edit') {
                             var api = params.api;
-                            switch (mealTypeObj.name) {
-                                case 'None':
-                                    return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                                case attendanceType.LATE.code:
-                                case 'Free':
-                                    return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                                case 'Paid':
-                                    var eCell = document.createElement('div');
-                                    eCell.setAttribute("class", "reason-wrapper");
-                                    var eSelect = getEditMealBenefiteElement(data, mealBenefitTypeOptions, context, api);
-                                    var eTextarea = getEditCommentElement(data, context, api);
-                                    eCell.appendChild(eSelect);
-                                    eCell.appendChild(eTextarea);
-                                    return eCell;
-                                default:
-                                    break;
+                            if(mealTypeObj != undefined) {
+                                switch (mealTypeObj.name) {
+                                    case 'None':
+                                        return '<i style="color: #999999;" class="fa fa-minus"></i>';
+                                    case 'Free':
+                                        return '<i style="color: #999999;" class="fa fa-minus"></i>';
+                                    case 'Paid':
+                                        var eCell = document.createElement('div');
+                                        eCell.setAttribute("class", "reason-wrapper");
+                                        var eSelect = getEditMealBenefiteElement(data, mealBenefitTypeOptions, context, api);
+                                        var eTextarea = getEditCommentElement(data, context, api);
+                                        eCell.appendChild(eSelect);
+                                        eCell.appendChild(eTextarea);
+                                        return eCell;
+                                    default:
+                                        break;
+                                }
+                            } else {
+                                return '<i style="color: #999999;" class="fa fa-minus"></i>';
                             }
+                            
 
                             
                         }
@@ -789,6 +794,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
     function setRowDatas(context, data) {
         var studentList = context.scope.$ctrl.classStudentList;
+        console.log("studentList", studentList)
         studentList.forEach(function (dataItem, index) {
             if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 0 || dataItem.institution_student_meal.meal_received_id == 1) {
                 dataItem.rowHeight = 60;
@@ -929,7 +935,6 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             html = data.institution_student_meal.meal_received
         }
         
-
         return html;
 
     }
