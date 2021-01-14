@@ -68,7 +68,7 @@ class StudentNotAssignedClassTable extends AppTable
         $subquery = $insClassStudent
             ->find()
             ->select(['InstitutionClassStudents.student_id'])
-            ->where(['InstitutionClassStudents.academic_period_id' => $academicPeriodId, 'InstitutionClassStudents.institution_id'=> $institutionId]);
+            ->where([$conditions]);
 
         $query
             ->select([   
@@ -107,6 +107,7 @@ class StudentNotAssignedClassTable extends AppTable
                     'StudentStatuses.code' => 'CURRENT',
                     $conditions
                     ]);
+            echo "<pre>";print_r($query);die();
        }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
