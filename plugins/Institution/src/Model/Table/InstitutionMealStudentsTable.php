@@ -55,11 +55,18 @@ class InstitutionMealStudentsTable extends ControllerActionTable
        
         if (!$data->isEmpty()) {
         	$mealEntity = $data->first();
+
             if ($mealReceived == "1" || $mealReceived == "2") {
                  $data = $InstitutionMealStudents
                 ->updateAll(['benefit_type_id' => NULL,'paid' => NULL,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
                 $event->stopPropagation();
                  return $data;
+            }
+            if ($mealReceived == "3" && empty($benefitTypeId)) {
+                $InstitutionMealStudents
+                ->updateAll(['benefit_type_id' => "1",'paid' => "0",'meal_received_id' => NULL],['id' => $mealEntity->id]);
+                $event->stopPropagation();
+                 return;
             }
             else{
                  $InstitutionMealStudents
