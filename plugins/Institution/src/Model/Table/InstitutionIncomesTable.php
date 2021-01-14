@@ -46,6 +46,13 @@ class InstitutionIncomesTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'income_source_id', 'income_type_id', 'amount', 'file_name','file_content', 'description']);
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->allowEmpty('file_content');
+    }
+
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
     }
