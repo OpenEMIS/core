@@ -540,6 +540,11 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTestCommittees']);
     }
+
+    public function CommitteeAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.CommitteeAttachments']);
+    }
     // Timetable - END
 
     //POCOR-5669 added InstitutionMaps
@@ -1589,7 +1594,15 @@ class InstitutionsController extends AppController
                     // header name
                     $header = $studentName;
                 }
-            } else {
+            } elseif ($model->alias() == 'CommitteeAttachments') {
+                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+                $institutionName = $session->read('Institution.Institutions.name');
+                $this->Navigation->addCrumb('Committees', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Committees']);
+                $this->Navigation->addCrumb('Attachments');
+                $header = __($institutionName) ;
+                $this->set('contentHeader', $header);
+            } 
+            else {
                 $this->Navigation->addCrumb($crumbTitle, $crumbOptions);
                 $header = $this->activeObj->name;
             }
@@ -1625,7 +1638,7 @@ class InstitutionsController extends AppController
                 $header .= ' - '. __('Institution Student Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
             } else {
-                $header .= ' - ' . $model->getHeader($alias);
+                 $header .= ' - ' . $model->getHeader($alias);
             }
 
             $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);

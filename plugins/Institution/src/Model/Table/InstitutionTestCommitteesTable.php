@@ -276,9 +276,13 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
                 'text' => __('Overview')
             ],
             'Attachments' => [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'InstitutionCommitteeAttachments', 'action' => 'index', 'querystring' => $encodeCommitteeId],
+                'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'CommitteeAttachments', 'querystring' => $encodeCommitteeId],
                 'text' => __('Attachments')
             ]
+            // 'Attachments' => [
+            //     'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'InstitutionCommitteeAttachments', 'action' => 'index', 'querystring' => $encodeCommitteeId],
+            //     'text' => __('Attachments')
+            // ]
         ];
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
