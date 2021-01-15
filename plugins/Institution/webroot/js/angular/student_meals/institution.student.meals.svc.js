@@ -763,7 +763,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                         AlertSvc.error(scope, 'There was an error when saving the record');
                     } else {
                         data.save_error[dataKey] = false;
-                        AlertSvc.info(scope, 'Attendances will be automatically saved.');
+                        AlertSvc.info(scope, 'Meal will be automatically saved.');
                     }
                 },
                 function(error) {
@@ -796,7 +796,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         var studentList = context.scope.$ctrl.classStudentList;
         console.log("studentList", studentList)
         studentList.forEach(function (dataItem, index) {
-            if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 0 || dataItem.institution_student_meal.meal_received_id == 1) {
+            if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 1 || dataItem.institution_student_meal.meal_received_id == 2) {
                 dataItem.rowHeight = 60;
             } else {
                 dataItem.rowHeight = 120;
@@ -808,19 +808,23 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     function getEditCommentElement(data, context, api) {
         var dataKey = 'paid';
         var scope = context.scope;
-        var eTextarea = document.createElement("textarea");
-        eTextarea.setAttribute("placeholder", "Comments");
-        eTextarea.setAttribute("id", dataKey);
+        var inputValue = document.createElement("input");
+        inputValue.setAttribute("placeholder", "Enter value");
+        inputValue.setAttribute("id", dataKey);
 
         if (hasError(data, dataKey)) {
-            eTextarea.setAttribute("class", "error");
+            inputValue.setAttribute("class", "error");
         }
 
-        eTextarea.value = data.institution_student_meal[dataKey];
-        eTextarea.addEventListener('blur', function () {
+        inputValue.value = data.institution_student_meal[dataKey];
+        inputValue.addEventListener('blur', function () {
+            if (isNaN(inputValue.value)) { 
+                AlertSvc.error(scope, 'Please enter Numeric value');
+                return false
+            } 
             var oldValue = data.institution_student_meal.comment;
-            data.institution_student_meal[dataKey] = eTextarea.value;
-
+            data.institution_student_meal[dataKey] = inputValue.value;
+            
             UtilsSvc.isAppendSpinner(true, 'institution-student-attendances-table');
             saveMealBenifiet(data, context)
             .then(
@@ -832,7 +836,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                         AlertSvc.error(scope, 'There was an error when saving the record');
                     } else {
                         data.save_error[dataKey] = false;
-                        AlertSvc.info(scope, 'Attendances will be automatically saved.');
+                        AlertSvc.info(scope, 'Meal will be automatically saved.');
                     }
                 },
                 function(error) {
@@ -855,7 +859,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             });
         });
 
-        return eTextarea;
+        return inputValue;
     }
 
     function getEditMealBenefiteElement(data, mealBenefitTypeOptions, context, api) {
@@ -898,7 +902,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                         AlertSvc.error(scope, 'There was an error when saving the record');
                     } else {
                         data.save_error[dataKey] = false;
-                        AlertSvc.info(scope, 'Attendances will be automatically saved.');
+                        AlertSvc.info(scope, 'Meal will be automatically saved.');
                     }
                 },
                 function(error) {
