@@ -88,6 +88,13 @@ $panelHeader = $this->fetch('panelHeader');
         margin-bottom: 15px;
     }
 
+    #institution-student-attendances-table .ag-cell .reason-wrapper input {
+        width: 100%;
+        padding: 4px;
+        border: 1px solid #c5c1c1;
+        border-radius: 3px;
+    }
+
     #institution-student-attendances-table .ag-cell textarea#comment.error,
     #institution-student-attendances-table .ag-cell #student_absence_reason_id select.error,
     #institution-student-attendances-table .ag-cell #absence_type_id select.error {

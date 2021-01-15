@@ -362,7 +362,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     vm.setRowDatas = function(studentList) {
         console.log(studentList);
         studentList.forEach(function (dataItem, index) {
-            if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 0 || dataItem.institution_student_meal.meal_received_id == 1) {
+            if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 1 || dataItem.institution_student_meal.meal_received_id == 2) {
                 dataItem.rowHeight = 60;
             } else {
                 dataItem.rowHeight = 120;
@@ -662,6 +662,21 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             vm.setColumnDef();
         }); 
     }
+
+    vm.changeMealPrograme = function() {
+        UtilsSvc.isAppendLoader(true);
+        InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams())              
+        .then(function(classStudents) {
+            vm.updateClassStudentList(classStudents);
+            }, vm.error)
+        
+        .finally(function() {
+            UtilsSvc.isAppendLoader(false);
+            vm.setGridData();
+            vm.setColumnDef();
+        }); 
+
+    }
     
 
     // button events
@@ -671,6 +686,23 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         vm.setColumnDef();
         AlertSvc.info($scope, 'Meal will be automatically saved.');
         InstitutionStudentMealsSvc.savePeriodMarked(vm.getPeriodMarkedParams(), $scope);
+    };
+
+    vm.onBackClick = function() {
+        vm.action = 'view';
+        vm.gridOptions.context.mode = vm.action;
+        UtilsSvc.isAppendLoader(true);
+        UtilsSvc.isAppendLoader(true);
+        InstitutionStudentMealsSvc.getClassStudent(vm.getClassStudentParams())              
+        .then(function(classStudents) {
+            vm.updateClassStudentList(classStudents);
+            }, vm.error)
+        
+        .finally(function() {
+            UtilsSvc.isAppendLoader(false);
+            vm.setGridData();
+            vm.setColumnDef();
+        }); 
     };
 
     vm.onExcelClick = function() {
