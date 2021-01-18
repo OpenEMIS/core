@@ -259,5 +259,9 @@ class ReportsController extends AppController
     { 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
     }
+
+    public function viewReport() {
+        die('sssssssssss');
+    }
 	
 }
