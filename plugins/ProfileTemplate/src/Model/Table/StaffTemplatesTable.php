@@ -18,9 +18,6 @@ class StaffTemplatesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    CONST ALL_SUBJECTS = 2;
-    CONST SELECT_SUBJECTS = 1;
-
     public function initialize(array $config)
     {
 		$this->table('staff_profile_templates');
@@ -79,8 +76,8 @@ class StaffTemplatesTable extends ControllerActionTable
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'generate_start_date', false]
                 ]
-            ])
-            ->allowEmpty('excel_template');
+            ]);
+            //->allowEmpty('excel_template');
     }
 
     public function validationSubjects(Validator $validator) {
@@ -203,15 +200,6 @@ class StaffTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        if (empty($entity->errors())) {
-            if ($entity->teacher_comments_required == self::ALL_SUBJECTS) {
-                $entity->teacher_comments_required = 1;
-            }
-        }
-    }
-
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
        
@@ -231,7 +219,7 @@ class StaffTemplatesTable extends ControllerActionTable
 
     public function downloadTemplate()
     {
-        $filename = 'profile_template';
+        $filename = 'staff_profile_template';
         $fileType = 'xlsx';
         $filepath = WWW_ROOT . 'export' . DS . 'customexcel'. DS . 'default_templates'. DS . $filename . '.' . $fileType;
 
