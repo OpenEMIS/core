@@ -65,10 +65,18 @@ class StudentNotAssignedClassTable extends AppTable
             $conditions['Institutions.id'] = $institutionId;
         }
 
+        $newConditions = [];
+        if (!empty($academicPeriodId)) {
+            $newConditions[$insClassStudent->aliasField('academic_period_id')] = $academicPeriodId;
+        }
+        if (!empty($institutionId)) {
+            $newConditions['Institutions.id'] = $institutionId;
+        }
+
         $subquery = $insClassStudent
             ->find()
             ->select(['InstitutionClassStudents.student_id'])
-            ->where([$conditions]);
+            ->where([$newConditions]);
 
         $query
             ->select([   
@@ -103,7 +111,7 @@ class StudentNotAssignedClassTable extends AppTable
                     ])
             ->group(['StudentNotAssignedClass.student_id'])
             ->where([
-                    'student_id NOT IN' => $subquery,
+                    $this->aliasfield('student_id NOT IN ') => $subquery,
                     'StudentStatuses.code' => 'CURRENT',
                     $conditions
                     ]);
