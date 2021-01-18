@@ -17,8 +17,12 @@ class InstitutionMealStudentsTable extends ControllerActionTable
     public function initialize(array $config)
     {
         $this->table('institution_meal_students');
-        parent::initialize($config);     
-        $this->belongsTo('MealBenefit', ['className' => 'Meal.MealBenefits', 'foreignKey' =>'benefit_type_id']); 
+        parent::initialize($config); 
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);    
+        $this->belongsTo('MealBenefit', ['className' => 'Meal.MealBenefits', 'foreignKey' =>'meal_benefit_id']); 
         $this->belongsTo('MealReceived', ['className' => 'Meal.MealReceived', 'foreignKey' =>'meal_received_id']);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -35,7 +39,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
         $date = $entity->date;
         $institutionId = $entity->institution_id;
         $studentId = $entity->student_id;
-        $benefitTypeId = $entity->benefit_type_id;
+        $benefitTypeId = $entity->meal_benefit_id;
         $paid = $entity->paid;
         $mealReceived = $entity->meal_received_id;
 
@@ -58,19 +62,19 @@ class InstitutionMealStudentsTable extends ControllerActionTable
 
             if ($mealReceived == "1" || $mealReceived == "2") {
                  $data = $InstitutionMealStudents
-                ->updateAll(['benefit_type_id' => NULL,'paid' => NULL,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
+                ->updateAll(['meal_benefit_id' => NULL,'paid' => NULL,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
                 $event->stopPropagation();
                  return $data;
             }
             if ($mealReceived == "3" && empty($benefitTypeId)) {
                 $InstitutionMealStudents
-                ->updateAll(['benefit_type_id' => "1",'paid' => "0",'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
+                ->updateAll(['meal_benefit_id' => "1",'paid' => "0",'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
                 $event->stopPropagation();
                  return;
             }
             else{
                  $InstitutionMealStudents
-                ->updateAll(['benefit_type_id' => $benefitTypeId,'paid' => $paid,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
+                ->updateAll(['meal_benefit_id' => $benefitTypeId,'paid' => $paid,'meal_received_id' => $mealReceived],['id' => $mealEntity->id]);
                 $event->stopPropagation();
                  return;
             }
