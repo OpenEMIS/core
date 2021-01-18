@@ -1,8 +1,7 @@
 <?php
-namespace Staff\Model\Table;
+namespace Report\Model\Table;
 
 use ArrayObject;
-use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
@@ -11,72 +10,22 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 
-class ExtracurricularsTable extends AppTable {
+class StaffExtracurricularsTable extends AppTable  {
+	use OptionsTrait;
+
 	public function initialize(array $config) {
 		$this->table('staff_extracurriculars');
 		parent::initialize($config);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+	    $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);
+		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);   
 		$this->addBehavior('Excel');
+		$this->addBehavior('Report.ReportList');
 	}
 
-	public function beforeAction() {
-		$this->fields['academic_period_id']['type'] = 'select';
-		$this->fields['extracurricular_type_id']['type'] = 'select';
-	}
-
-	public function indexBeforeAction(Event $event) {
-		$this->fields['end_date']['visible'] = false;
-		$this->fields['hours']['visible'] = false;
-		$this->fields['points']['visible'] = false;
-		$this->fields['location']['visible'] = false;
-		$this->fields['comment']['visible'] = false;
-
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('academic_period_id', $order++);
-		$this->ControllerAction->setFieldOrder('start_date', $order++);
-		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
-		$this->ControllerAction->setFieldOrder('name', $order++);
-	}
-
-	public function addEditBeforeAction(Event $event) {
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('academic_period_id', $order++);
-		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
-		$this->ControllerAction->setFieldOrder('name', $order++);
-		$this->ControllerAction->setFieldOrder('start_date', $order++);
-		$this->ControllerAction->setFieldOrder('end_date', $order++);
-		$this->ControllerAction->setFieldOrder('hours', $order++);
-		$this->ControllerAction->setFieldOrder('points', $order++);
-		$this->ControllerAction->setFieldOrder('location', $order++);
-		$this->ControllerAction->setFieldOrder('comment', $order++);
-	}
-
-	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-
-		return $validator
-			->add('start_date', 'ruleCompareDate', [
-				'rule' => ['compareDate', 'end_date', false]
-			])
-		;
-	}
-	private function setupTabElements() {
-		$tabElements = $this->controller->getProfessionalTabElements();
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
-	}
-
-	public function afterAction(Event $event, $data) {
-		$this->setupTabElements();
-	}
-	
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
-		$session = $this->request->session();
-        $staffId = $session->read('Staff.Staff.id');
 		
 		$Staff = TableRegistry::get('Security.Users');
 		
@@ -113,11 +62,22 @@ class ExtracurricularsTable extends AppTable {
 					$Staff->aliasField('id = ') . $this->aliasField('staff_id')
 				]
 			)
-			->where([
-				$this->aliasField('staff_id') => $staffId,
-			])
 			;
 			 
+    }
+	
+	public function onExcelRenderStartDate(Event $event, Entity $entity, $attr)
+    {
+        $start_date = $entity->date_from->format('Y-m-d');
+        $entity->start_date = $start_date;
+        return $entity->start_date;
+    }
+
+    public function onExcelRenderEndDate(Event $event, Entity $entity, $attr)
+    {
+        $end_date = $entity->end_date->format('Y-m-d');
+        $entity->end_date = $end_date;
+        return $entity->end_date;
     }
 	
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
@@ -205,5 +165,5 @@ class ExtracurricularsTable extends AppTable {
        $fields->exchangeArray($newFields);
        
    }
-   
+	
 }
