@@ -245,6 +245,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         vm.dayListOptions = dayListOptions;
         console.log(vm.dayListOptions);
         var hasSelected = false;
+        vm.dayListOptions.splice(0, 1); // uncomment when All day needed in dropdown
         if (dayListOptions.length > 0) {
             for (var i = 0; i < dayListOptions.length; ++i) {
                 if (angular.isDefined(dayListOptions[i]['selected']) && dayListOptions[i]['selected']) {
@@ -391,6 +392,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     // dashboard count
     vm.countStudentData = function() {
         var attendanceType = InstitutionStudentMealsSvc.getAttendanceTypeList();
+        var mealType = InstitutionStudentMealsSvc.getMealTypeList();
         if (vm.selectedDay != -1) {
             // single day
             vm.totalStudents = vm.classStudentList.length;
@@ -401,21 +403,22 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
 
                 if (vm.totalStudents > 0) {
                     angular.forEach(vm.classStudentList, function(obj, key) {
-                        if (angular.isDefined(obj['institution_student_absences']) && angular.isDefined(obj['institution_student_absences']['absence_type_code'])) {
-                            var code = obj['institution_student_absences']['absence_type_code'];
-
+                        if (angular.isDefined(obj['institution_student_meal']) && angular.isDefined(obj['institution_student_meal']['meal_received'])) {
+                            var code = obj['institution_student_meal']['meal_received'];
+                            // console.log(mealType)
+                            // console.log(code);
                             switch (code) {
                                 case null:
-                                case attendanceType.PRESENT.code:
+                                case mealType.Free.code:
                                     ++presentCount;
                                      break;
-                                case attendanceType.LATE.code:
+                                case mealType.Paid.code:
                                     ++presentCount;
-                                    ++lateCount;
+                                    // ++lateCount;
                                     break;
-                                case attendanceType.UNEXCUSED.code:
-                                case attendanceType.EXCUSED.code:
-                                    ++absenceCount;
+                                
+                                case mealType.None.code:
+                                    // ++absenceCount;
                                     break;
                             }
                         } 
