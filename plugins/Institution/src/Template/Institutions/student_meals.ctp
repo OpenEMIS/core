@@ -225,7 +225,7 @@ $panelHeader = $this->fetch('panelHeader');
                     </div>
                     <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Students Meals') ?></h4>
+                            <h4><?= __('No. of Students received Meal') ?></h4>
                             <h1 class="data-header">{{$ctrl.presentCount}}</h1>
                         </div>
                     </div>
