@@ -31,23 +31,37 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {    
+        
 
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $request = $this->request;
+
+        //academic period filter
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+
+        
+        $extra['selectedPeriod'] = $selectedPeriod;
+        $data['periodOptions'] = $periodOptions;
+        $data['selectedPeriod'] = $selectedPeriod;
 
 
-        $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
+        list($mealOptions, $selectedMeal) = array_values($this->getMealProgrammeOptions($this->request->query('meal')));
 
+        
+        $extra['selectedMeal'] = $selectedMeal;
+        $data['mealOptions'] = $mealOptions;
+        $data['selectedMeal'] = $selectedMeal;
+        
+
+
+
+        
+        
+        
         $extra['elements']['control'] = [
             'name' => 'Institution.MealProgramme/controls',
-            'data' => [
-                'periodOptions'=> $academicPeriodOptions,
-                'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions']
-            ],
+            'data' => $data,
             'order' => 3
         ];
-        
-        
-        
 
 
         $this->field('academic_period_id',['visible' => false]);   
@@ -55,12 +69,14 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
         $this->field('date_received');
         $this->field('quantity');
         $this->field('comment',['visible' => false]);
-         $this->setFieldOrder(['meal_programmes_id','date_received','quantity','delivery_status']);
+        $this->setFieldOrder(['meal_programmes_id','date_received','quantity','delivery_status']);
     }
 
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        /*$hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
+       
+
+         $hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
          $conditions = [];
 
         if (!$hasSearchKey) {
@@ -71,14 +87,29 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
                 }
             }
 
+            if (array_key_exists('selectedMeal', $extra)) {
+                if ($extra['selectedMeal']) {
+                    $url = $_SERVER['REQUEST_URI'];
+                    $queryString = parse_url($url);
+                    $name = $queryString['query'];
+                    $domain = explode('=',$name);
+                   
+
+                    if ($domain[0] == "meal" ) {
+                       $conditions[] = $this->aliasField('meal_programmes_id = ') . $domain[1];            
+                   }
+                    else{
+                      $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+                    }
+                }
+            }
+            
+
             $query->where([$conditions]);
-        }*/
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
-            $query->where([
-                       
-                        $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
-                    ], [], true); 
         }
+                
+        $query->where([$conditions]);
+        
     }
 
     public function BeforeAction(Event $event, ArrayObject $extra)
@@ -122,6 +153,21 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
 
         return compact('periodOptions', 'selectedPeriod');
     }
+
+    public function getMealProgrammeOptions($querystringMeal)
+    {
+        $mealOptions = $this->MealProgrammes->getMealOptions($querystringMeal);
+
+        if (!empty($querystringPeriod)) {
+            $selectedMeal = $querystringPeriod;
+        } else {
+            $selectedMeal = $this->AcademicPeriods->getCurrent();
+        }
+
+
+        return compact('mealOptions', 'selectedMeal');
+    } 
+
 
     public function onUpdateFieldMealProgrammesId(Event $event, array $attr, $action, $request)
     {

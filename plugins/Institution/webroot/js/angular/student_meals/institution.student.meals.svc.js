@@ -494,7 +494,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             cellRenderer: function(params) {
                 if (angular.isDefined(params.value)) {
                     console.log(params);
-                    if(params.value != null){
+                    if(params.value == "3"){
                         return 'paid';
                     }
                     else{
