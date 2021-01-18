@@ -476,7 +476,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             institution_id: data.institution_id,
             academic_period_id: data.academic_period_id,
             institution_class_id: data.institution_class_id,
-            benefit_type_id:data.institution_student_meal.meal_benefit_id,            
+            meal_benefit_id:data.institution_student_meal.meal_benefit_id,            
             meal_received_id: data.institution_student_meal.meal_received_id,
             paid: data.institution_student_meal.paid,
             period: context.period,
