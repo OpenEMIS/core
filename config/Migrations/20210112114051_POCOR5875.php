@@ -24,14 +24,17 @@ class POCOR5875 extends AbstractMigration
         $this->execute('ALTER TABLE `institution_budgets` ADD `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL AFTER `amount`');
         $this->execute('ALTER TABLE `institution_budgets` ADD `institution_id` INT(11) NULL DEFAULT NULL AFTER `id`');
         $this->execute("ALTER TABLE `institution_budgets` CHANGE `attachment` `file_content` LONGBLOB NULL DEFAULT NULL"); 
+        $this->execute("ALTER TABLE `institution_budgets` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT ''"); 
 
         //incomes
         $this->execute('ALTER TABLE `institution_incomes` ADD `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL AFTER `amount`');
         $this->execute("ALTER TABLE `institution_incomes` CHANGE `attachment` `file_content` LONGBLOB NULL DEFAULT NULL"); 
+        $this->execute("ALTER TABLE `institution_incomes` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT ''"); 
 
         //expenditures
         $this->execute('ALTER TABLE `institution_expenditures` ADD `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL AFTER `amount`');
         $this->execute("ALTER TABLE `institution_expenditures` CHANGE `attachment` `file_content` LONGBLOB NULL DEFAULT NULL"); 
+        $this->execute("ALTER TABLE `institution_expenditures` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT ''"); 
     }
 
     // rollback
