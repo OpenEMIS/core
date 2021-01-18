@@ -1645,13 +1645,21 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Risk'],
                 'selected' => ['Risks.Risks']
             ],
-			'ProfileTemplates.Templates' => [
-				'title' => 'Profiles',
-				'parent' => 'SystemSetup',
-				'params' => ['plugin' => 'ProfileTemplate'],
-				'selected' => ['ProfileTemplates.Templates']
-			],
-
+			'ProfileTemplates' => [
+                'title' => 'Profiles',
+                'parent' => 'SystemSetup',
+                'link' => false
+            ],
+            'ProfileTemplates.Templates' => [
+                'title' => 'Profiles',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['ProfileTemplates.view', 'ProfileTemplates.add', 'ProfileTemplates.edit', 'ProfileTemplates.delete']
+            ],
+            'ProfileTemplates.StaffTemplates' => [
+                'title' => 'Staff',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['StaffTemplates.view', 'StaffTemplates.add', 'StaffTemplates.edit', 'StaffTemplates.delete']
+            ],
             'Security' => [
                 'title' => 'Security',
                 'parent' => 'Administration',
