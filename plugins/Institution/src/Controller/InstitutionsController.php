@@ -164,6 +164,7 @@ class InstitutionsController extends AppController
             'ImportInstitutions'        => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
             'ImportStaffAttendances'    => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
             'ImportStudentAttendances'  => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
+            'ImportStudentMeals'  => ['className' => 'Institution.ImportStudentMeals', 'actions' => ['add']],
             'ImportInstitutionSurveys'  => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
             'ImportStudentAdmission'    => ['className' => 'Institution.ImportStudentAdmission', 'actions' => ['add']],
             'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
@@ -586,6 +587,8 @@ class InstitutionsController extends AppController
         else{
             $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
             $_excel = $this->AccessControl->check(['Institutions', 'StudentMeals', 'excel']);
+            $_import = $this->AccessControl->check(['Institutions', 'ImportStudentMeals', 'add']);
+
             $_excel = true;
 
             if (!empty($this->request->param('institutionId'))) {
@@ -603,12 +606,22 @@ class InstitutionsController extends AppController
                 'excel'
             ];
 
+            $importUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'ImportStudentMeals',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+            'add'
+        ];
+
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
                 $this->Navigation->addCrumb($crumbTitle);
 
             $this->set('_edit', $_edit);
             $this->set('_excel', $_excel);
+            $this->set('_import', $_import);
             $this->set('excelUrl', Router::url($excelUrl));
+            $this->set('importUrl', Router::url($importUrl));
             $this->set('institution_id', $institutionId);
             $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
         }

@@ -45,7 +45,7 @@ class MealProgrammesTable extends ControllerActionTable
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
 
         $extra['elements']['control'] = [
-            'name' => 'Institution.Shifts/controls',
+            'name' => 'Institution.MealProgramme/controls',
             'data' => [
                 'periodOptions'=> $academicPeriodOptions,
                 'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions']
@@ -135,6 +135,23 @@ class MealProgrammesTable extends ControllerActionTable
         return $attr;
     }
 
+    public function getMealOptions($querystringMeal)
+    {
+        if (!empty($querystringMeal)) {
+            $list = $this
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                 ->where([ $this->aliasField('academic_period_id') => $querystringMeal ])
+                ->toArray();
+        }
+        else{
+            $list = $this
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->toArray();
+        }
+
+        return $list;
+    }
+
     public function getTragetingOptions()
     {
         $MealTrageting = TableRegistry::get('Meal.MealTargetTypes');
@@ -221,7 +238,6 @@ class MealProgrammesTable extends ControllerActionTable
         }
 
         return $selectedAcademicPeriod;
-    }
-    
+    }    
     
 }

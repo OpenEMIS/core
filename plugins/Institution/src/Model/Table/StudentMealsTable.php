@@ -28,7 +28,7 @@ class StudentMealsTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-        $this->belongsTo('MealBenefit', ['className' => 'Meal.MealBenefits', 'foreignKey' =>'benefit_type_id']); 
+        $this->belongsTo('MealBenefit', ['className' => 'Meal.MealBenefits', 'foreignKey' =>'meal_benefit_id']); 
         $this->belongsTo('MealReceived', ['className' => 'Meal.MealReceived', 'foreignKey' =>'meal_received_id']); 
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -102,7 +102,6 @@ class StudentMealsTable extends ControllerActionTable
             ]);
           
         }
-        //print_r($day); die();
         //$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
         $query ->formatResults(function (ResultSetInterface $results) use ($findDay) {              
             return $results->map(function ($row) use ($findDay) {
@@ -128,7 +127,7 @@ class StudentMealsTable extends ControllerActionTable
                                 $InstitutionMealStudents->aliasField('paid'),
                                 $InstitutionMealStudents->aliasField('meal_received_id'),
                                 'MealReceived.name',
-                                $InstitutionMealStudents->aliasField('benefit_type_id'),
+                                $InstitutionMealStudents->aliasField('meal_benefit_id'),
                                 'MealBenefit.name'
                             ])
                             ->where($conditions)
@@ -137,7 +136,7 @@ class StudentMealsTable extends ControllerActionTable
                  $data = [
                     'date' => $areasData->date,
                     'paid' => $areasData->paid,                    
-                    'meal_benefit_id' => $areasData->benefit_type_id,
+                    'meal_benefit_id' => $areasData->meal_benefit_id,
                     'meal_benefit' => $areasData->meal_benefit->name,
                     'meal_received_id' => !empty($areasData->meal_received_id) ? $areasData->meal_received_id : "1",
                     'meal_received' => !empty($areasData->meal_received->name) ? $areasData->meal_received->name : "None"
@@ -170,7 +169,7 @@ class StudentMealsTable extends ControllerActionTable
                             ->contain('MealBenefit')
                          
                             ->select([
-                                $InstitutionMealStudents->aliasField('benefit_type_id'),
+                                $InstitutionMealStudents->aliasField('meal_benefit_id'),
                                 'meal_benefit' => 'MealBenefit.name'
                             ])
                             ->where($conditions)
@@ -203,7 +202,7 @@ class StudentMealsTable extends ControllerActionTable
                             ->contain('MealBenefit')
                          
                             ->select([
-                                $InstitutionMealStudents->aliasField('benefit_type_id'),
+                                $InstitutionMealStudents->aliasField('meal_benefit_id'),
                                 'meal_benefit' => 'MealBenefit.name'
                             ])
                             ->where($conditions)
@@ -317,8 +316,6 @@ class StudentMealsTable extends ControllerActionTable
         $options['day_id'] = $sheet['dayId'];
        
         $this->_absenceData = $this->findClassStudentsWithMeal($sheet['query'], $options);
-        //echo "<pre>";
-        ///print_r($this->_absenceData); die();
     }
     
 }
