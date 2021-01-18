@@ -33,6 +33,24 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         },
     };
 
+    const mealType = {
+        'Paid': {
+            code: 'Paid',
+            icon: 'fa fa-minus',
+            color: '#999999'
+        },
+        'Free': {
+            code: 'Free',
+            icon: 'fa fa-check',
+            color: '#77B576'
+        },
+        'None': {
+            code: 'None',
+            icon: 'fa fa-check-circle-o',
+            color: '#999'
+        }
+    };
+
     const icons = {
         'REASON': 'kd kd-reason',
         'COMMENT': 'kd kd-comment',
@@ -83,7 +101,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     var service = {
         init: init,
         translate: translate,
-
+        getMealTypeList:getMealTypeList,
         getAttendanceTypeList: getAttendanceTypeList,
         getStudentAbsenceReasonOptions: getStudentAbsenceReasonOptions,
 
@@ -129,6 +147,10 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
     function getAttendanceTypeList() {
         return attendanceType;
+    }
+
+    function getMealTypeList(){
+        return mealType;
     }
 
     // data service
@@ -964,7 +986,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         var mealReasonObj = studentMealReasonList.find(obj => obj.id == mealReasonId);
         var html = '';
 
-        if (mealReasonObj === null) {
+        if (mealReasonObj === null || mealReasonObj == undefined) {
             html = '<i style="color: #999999;" class="fa fa-minus"></i>';
         } else {
             var reasonName = mealReasonObj.name;
