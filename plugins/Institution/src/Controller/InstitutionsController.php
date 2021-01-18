@@ -60,6 +60,7 @@ class InstitutionsController extends AppController
         'StaffTransferIn',
         'StaffTransferOut',
         'StaffDuties',
+        'StaffSalaries',
         // 'StaffPositionProfiles',
 
         // attendances
@@ -149,6 +150,7 @@ class InstitutionsController extends AppController
         $this->ControllerAction->models = [
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
             'Staff'             => ['className' => 'Institution.Staff'],
+            'StaffSalaries'     => ['className' => 'Institution.StaffSalaries'],
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
 
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
@@ -170,6 +172,7 @@ class InstitutionsController extends AppController
             'ImportInstitutionSurveys'  => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
             'ImportStudentAdmission'    => ['className' => 'Institution.ImportStudentAdmission', 'actions' => ['add']],
             'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
+            'ImportStaffSalaries'       => ['className' => 'Institution.ImportStaffSalaries', 'actions' => ['add']],
             'ImportInstitutionTextbooks'=> ['className' => 'Institution.ImportInstitutionTextbooks', 'actions' => ['add']],
             'ImportOutcomeResults'      => ['className' => 'Institution.ImportOutcomeResults', 'actions' => ['add']],
             'ImportCompetencyResults'   => ['className' => 'Institution.ImportCompetencyResults', 'actions' => ['add']],
@@ -543,6 +546,13 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionMaps']);
     }
     //POCOR-5669 added InstitutionMaps
+
+    //POCOR-5182 added StaffSalaries
+    public function StaffSalaries()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffSalaries']);
+    }
+    //POCOR-5182 added StaffSalaries
 
     // AngularJS
     public function ScheduleTimetable($action = 'view')
