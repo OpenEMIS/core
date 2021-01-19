@@ -65,6 +65,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.generate'] = 'generate';
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
+        $events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
@@ -411,12 +412,20 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ];
 
                 // Download all button
+                 if ($generatedCount > 0 || $publishedCount > 0) {
+                    $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
+                    $downloadButtonPdf['type'] = 'button';
+                    $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                    $downloadButtonPdf['attr'] = $toolbarAttr;
+                    $downloadButtonPdf['attr']['title'] = __('Download All PDF');
+                    $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
+                }
                 if ($generatedCount > 0 || $publishedCount > 0) {
                     $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
                     $downloadButton['type'] = 'button';
                     $downloadButton['label'] = '<i class="fa kd-download"></i>';
                     $downloadButton['attr'] = $toolbarAttr;
-                    $downloadButton['attr']['title'] = __('Download All');
+                    $downloadButton['attr']['title'] = __('Download All Excel');
                     $extra['toolbarButtons']['downloadAll'] = $downloadButton;
                 }
 
@@ -731,11 +740,69 @@ class ReportCardStatusesTable extends ControllerActionTable
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
             $zipName = 'ReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
-
+           
             $zip = new ZipArchive;
             $zip->open($filepath, ZipArchive::CREATE);
             foreach ($files as $file) {
               $zip->addFromString($file->file_name,  $this->getFile($file->file_content));
+            }
+            $zip->close();
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/zip");
+            header("Content-Length: ".filesize($filepath));
+            header("Content-Disposition: attachment; filename=".$zipName);
+            readfile($filepath);
+
+            // delete file after download
+            unlink($filepath);
+        } else {
+            $event->stopPropagation();
+            $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
+            return $this->controller->redirect($this->url('index'));
+        }
+    }
+    /*
+     *  Download pdf in bulk
+     * */
+    public function downloadAllPdf(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
+
+        // only download report cards with generated or published status
+        $statusArray = [self::GENERATED, self::PUBLISHED];
+
+        $files = $this->StudentsReportCards->find()
+            ->contain(['Students', 'ReportCards'])
+            ->where([
+                $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
+                $this->StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
+                $this->StudentsReportCards->aliasField('status IN ') => $statusArray,
+                $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
+                $this->StudentsReportCards->aliasField('file_content IS NOT NULL'),
+                $this->StudentsReportCards->aliasField('file_content_pdf IS NOT NULL')
+            ])
+            ->toArray();
+            
+        if (!empty($files)) {
+            $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
+            $zipName = 'ReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $filepath = $path . $zipName;
+           
+            $zip = new ZipArchive;
+            $zip->open($filepath, ZipArchive::CREATE);
+            
+            foreach ($files as $file) {
+            $fileName = $file->file_name;
+            $fileNameData = explode(".",$fileName);
+            $fileName = $fileNameData[0].'.pdf';
+                
+              $zip->addFromString($fileName,  $this->getFile($file->file_content_pdf));
+             
             }
             $zip->close();
 
