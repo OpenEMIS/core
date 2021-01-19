@@ -244,16 +244,16 @@ class ImportStudentMealsTable extends AppTable {
         $columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [
-            $columnHeader,
-            $nameHeader
+            $nameHeader,
+            $columnHeader
         ];
         
 
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
-                    $row->{$lookupColumn},
-                    $row->name
+                    $row->name,
+                    $row->{$lookupColumn}
                 ];
             }
         }
