@@ -100,8 +100,10 @@ $this->start('panelBody');
 							];
 							$viewUrl = ['plugin' => $params['plugin'],
 								'controller' => $params['controller'],
-								'action' => 'viewReport',
+								'action' => 'ViewReport',
 								'report_process_id' => $obj->id,
+								'file_path' => $obj->file_path,
+								'module' => $obj->module,
 							];
 						?>	
 											
