@@ -42,7 +42,7 @@ class POCOR5883 extends AbstractMigration
         //Altering table staff_salary_additions
         $this->execute('ALTER TABLE `staff_salary_additions` ADD `salary_deduction_type_id` INT NOT NULL AFTER `staff_salary_id`');
         
-        $this->execute("ALTER TABLE `staff_salary_additions` CHANGE `salary_deduction_type_id` `salary_deduction_type_id` INT(11) NOT NULL COMMENT 'links to salary_deduction_types.id'");
+        $this->execute("ALTER TABLE `staff_salary_additions` CHANGE `salary_deduction_type_id` `salary_deduction_type_id` INT(11) NOT NULL DEFAULT '0' COMMENT 'links to salary_deduction_types.id'");
          
         $this->execute("ALTER TABLE `staff_salary_additions` ADD KEY `salary_deduction_type_id` (`salary_deduction_type_id`)");
     }
