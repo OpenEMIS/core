@@ -1243,10 +1243,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         InstitutionsStudentsSvc.getUniqueOpenEmisId()
             .then(function(response) {
                 var username = StudentController.selectedStudentData.username;
-                if (username == StudentController.selectedStudentData.openemis_no || username == '' || typeof username == 'undefined') {
-                    StudentController.selectedStudentData.username = response;
+                //POCOR-5878 starts
+                if(username != StudentController.selectedStudentData.openemis_no && (username == '' || typeof username == 'undefined')){
+                    StudentController.selectedStudentData.username = StudentController.selectedStudentData.openemis_no;
+                    StudentController.selectedStudentData.openemis_no = StudentController.selectedStudentData.openemis_no;
+                }else{
+                    if(username == StudentController.selectedStudentData.openemis_no){
+                        StudentController.selectedStudentData.username = response;
+                    }
+                    StudentController.selectedStudentData.openemis_no = response;
                 }
-                StudentController.selectedStudentData.openemis_no = response;
+                //POCOR-5878 ends
                 UtilsSvc.isAppendLoader(false);
             }, function(error) {
                 console.log(error);
