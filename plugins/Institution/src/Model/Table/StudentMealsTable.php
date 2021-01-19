@@ -133,8 +133,8 @@ class StudentMealsTable extends ControllerActionTable
                             ->where($conditions)
                             ->first();
                  
-                 $data = [
-                    'date' => $areasData->date,
+                 $data = [                    
+                    'date' =>!empty($areasData->date) ? $areasData->date : $findDay,
                     'paid' => $areasData->paid,                    
                     'meal_benefit_id' => $areasData->meal_benefit_id,
                     'meal_benefit' => $areasData->meal_benefit->name,
@@ -161,24 +161,28 @@ class StudentMealsTable extends ControllerActionTable
                             $InstitutionMealStudents->aliasField('institution_class_id = ') => $entity->institution_class_id,
                             $InstitutionMealStudents->aliasField('student_id = ') => $entity->student_id,
                             $InstitutionMealStudents->aliasField('institution_id = ') => $entity->institution_id,
+                            $InstitutionMealStudents->aliasField('date = ') => $entity->institution_student_meal['date'],
                         ];
 
         $benefit = '';
         $benefit = $InstitutionMealStudents
                             ->find()
-                            ->contain('MealBenefit')
-                         
+                            ->contain(['MealBenefit','MealReceived'])
                             ->select([
+                                $InstitutionMealStudents->aliasField('meal_received_id'),
+                                'MealReceived.name',
                                 $InstitutionMealStudents->aliasField('meal_benefit_id'),
-                                'meal_benefit' => 'MealBenefit.name'
+                                'MealBenefit.name'
                             ])
                             ->where($conditions)
                             ->first();
-                            if (!empty($benefit)) {
-                                $benefit = $benefit->meal_benefit;
+                     
+                            if ($benefit->meal_received_id == "1" || $benefit->meal_received_id == "2" || empty($benefit->meal_received_id)) {
+                                 $benefit = "Null";
+                                
                             }
                             else{
-                                $benefit = "Null";
+                                $benefit = $benefit->meal_benefit->name;
                             }
     
         return $benefit;
@@ -194,25 +198,29 @@ class StudentMealsTable extends ControllerActionTable
                             $InstitutionMealStudents->aliasField('institution_class_id = ') => $entity->institution_class_id,
                             $InstitutionMealStudents->aliasField('student_id = ') => $entity->student_id,
                             $InstitutionMealStudents->aliasField('institution_id = ') => $entity->institution_id,
+                             $InstitutionMealStudents->aliasField('date = ') => $entity->institution_student_meal['date'],
                         ];
+           
 
         $mealReceived = '';
         $mealReceived = $InstitutionMealStudents
                             ->find()
-                            ->contain('MealBenefit')
-                         
+                            ->contain(['MealBenefit','MealReceived'])
                             ->select([
+                                $InstitutionMealStudents->aliasField('meal_received_id'),
+                                'MealReceived.name',
                                 $InstitutionMealStudents->aliasField('meal_benefit_id'),
-                                'meal_benefit' => 'MealBenefit.name'
+                                'MealBenefit.name'
                             ])
                             ->where($conditions)
                             ->first();
-                            if (!empty($mealReceived)) {
-                                $mealReceived = "Paid";
+                            if (empty($mealReceived)) {
+                                $mealReceived = "None";
                             }
                             else{
-                                $mealReceived = "Free";
+                                $mealReceived = $mealReceived->meal_received->name;
                             }
+                            
     
         return $mealReceived;
     } 
