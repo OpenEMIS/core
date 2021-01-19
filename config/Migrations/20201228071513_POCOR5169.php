@@ -66,25 +66,25 @@ class POCOR5169 extends AbstractMigration
         ->addColumn('file_name', 'string', [
             'limit' => 250,
 			'default' => null,
-            'null' => false
+            'null' => true
         ])
 		->addColumn('file_content', 'blob', [
 			'limit' => '4294967295',
 			'default' => null,
-			'null' => false
+			'null' => true
 		])
 		->addColumn('file_content_pdf', 'blob', [
 			'limit' => '4294967295',
 			'default' => null,
-			'null' => false
+			'null' => true
 		])
 		->addColumn('started_on', 'datetime', [
             'default' => null,
-            'null' => false
+            'null' => true
         ])
 		->addColumn('completed_on', 'datetime', [
             'default' => null,
-            'null' => false
+            'null' => true
         ])
         ->addColumn('report_card_id', 'integer', [
             'limit' => 11,
