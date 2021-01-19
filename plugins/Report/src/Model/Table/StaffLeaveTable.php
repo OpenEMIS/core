@@ -52,10 +52,41 @@ class StaffLeaveTable extends AppTable {
                     'area_name' => 'Areas.name',
                     'area_code' => 'Areas.code',
                     'area_administrative_code' => 'AreaAdministratives.code',
-                    'area_administrative_name' => 'AreaAdministratives.name'
+                    'area_administrative_name' => 'AreaAdministratives.name',
+					'position_title' =>  $query->func()->concat([
+						'InstitutionPositions.position_no' => 'literal',
+						" - ",
+						'StaffPositionTitles.name' => 'literal'
+					]),
+					'identity_type' => 'IdentityTypes.name',
+					'identity_number' => 'UserIdentity.number',
             ])
             ->contain(['Users', 'Institutions', 'Institutions.Areas', 'Institutions.AreaAdministratives'])
-            ->order([$this->aliasField('date_from')]);
+            ->leftJoin(['InstitutionStaffs' => 'institution_staff'], [
+				'InstitutionStaffs.staff_id = ' . $this->aliasfield('staff_id'),
+			])
+			->leftJoin(['InstitutionPositions' => 'institution_positions'], [
+				'InstitutionPositions.id = InstitutionStaffs.institution_position_id',
+			])
+			->leftJoin(['StaffPositionTitles' => 'staff_position_titles'], [
+				'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
+			])
+			->leftJoin(['UserNationalities' => 'user_nationalities'], [
+				'UserNationalities.security_user_id = ' . $this->aliasfield('staff_id'),
+			])
+			->leftJoin(['Nationalities' => 'nationalities'], [
+			   'Nationalities.id = UserNationalities.nationality_id',
+			   'AND' => [
+					'Nationalities.default = 1',
+				]
+			])
+			->leftJoin(['IdentityTypes' => 'identity_types'], [
+				'IdentityTypes.id = Nationalities.identity_type_id',
+			])
+			->leftJoin(['UserIdentity' => 'user_identities'], [
+				'UserIdentity.security_user_id = ' . $this->aliasfield('staff_id'),
+			])
+			->order([$this->aliasField('date_from')]);
 			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
 				return $results->map(function ($row) {
 					
@@ -118,14 +149,14 @@ class StaffLeaveTable extends AppTable {
             'key' => 'Institutions.code',
             'field' => 'code',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Institution Code')
         ];
 
         $newFields[] = [
             'key' => 'StaffLeave.institution_id',
             'field' => 'institution_id',
             'type' => 'integer',
-            'label' => ''
+            'label' => __('Institution Name')
         ];
 
         $newFields[] = [
@@ -203,6 +234,26 @@ class StaffLeaveTable extends AppTable {
             'field' => 'comments',
             'type' => 'string',
             'label' => ''
+        ];
+		
+		$newFields[] = [
+            'key' => '',
+            'field' => 'position_title',
+            'type' => 'string',
+            'label' => __('Position Title')
+        ];
+		
+		$newFields[] = [
+            'key' => '',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Default Identity Type')
+        ];
+        $newFields[] = [
+            'key' => '',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
         ];
 		
 		$StaffCustomFields = TableRegistry::get('staff_custom_fields');
