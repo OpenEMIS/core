@@ -488,10 +488,10 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         vm.excelExportAUrl = vm.exportexcel
                              +'?institution_id='+ vm.institutionId+
                             '&institution_class_id='+ vm.selectedClass+
-                            '&education_grade_id='+ vm.selectedEducationGrade+
+                            // '&education_grade_id='+ vm.selectedEducationGrade+
                             '&academic_period_id='+ vm.selectedAcademicPeriod+
                             '&day_id='+ vm.selectedDay+
-                            '&attendance_period_id='+ vm.selectedAttendancePeriod+
+                            // '&attendance_period_id='+ vm.selectedAttendancePeriod+
                             '&week_start_day='+ vm.selectedWeekStartDate+
                             '&week_end_day='+ vm.selectedWeekEndDate+
                             '&week_id='+ vm.selectedWeek
