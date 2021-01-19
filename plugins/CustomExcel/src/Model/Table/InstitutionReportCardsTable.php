@@ -716,16 +716,24 @@ class InstitutionReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseEducationGrades(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $InstitutionGrades = TableRegistry::get('institution_grades');
 
-            $entity = $EducationGrades->find()
+            $entity = $InstitutionGrades->find()
 				->select([
-					$EducationGrades->aliasField('id'),
-					$EducationGrades->aliasField('name'),
+					'id' => 'EducationGrades.id',
+					'name' => 'EducationGrades.name',
 				])
+				->innerJoin(
+				['EducationGrades' => 'education_grades'],
+				[
+					'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
+				]
+				)
+				->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])	
 				->hydrate(false)
 				->toArray()
 			;
+			//echo '<pre>';print_r($entity);die;
 			$totalArray = [];
 			$totalArray = [
 				'id' => count($entity) + 1,
@@ -740,12 +748,19 @@ class InstitutionReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionStudents = TableRegistry::get('institution_students');
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $InstitutionGrades = TableRegistry::get('institution_grades');
 
-            $EducationGradesData = $EducationGrades->find()
+            $EducationGradesData = $InstitutionGrades->find()
 				->select([
-					$EducationGrades->aliasField('id'),
+					'EducationGrades.id'
 				])
+				->innerJoin(
+				['EducationGrades' => 'education_grades'],
+				[
+					'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
+				]
+				)
+				->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])	
 				->hydrate(false)
 				->toArray()
 			;
@@ -788,12 +803,19 @@ class InstitutionReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionClasses = TableRegistry::get('institution_classes');
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $InstitutionGrades = TableRegistry::get('institution_grades');
 
-            $EducationGradesData = $EducationGrades->find()
+            $EducationGradesData = $InstitutionGrades->find()
 				->select([
-					$EducationGrades->aliasField('id'),
+					'EducationGrades.id'
 				])
+				->innerJoin(
+				['EducationGrades' => 'education_grades'],
+				[
+					'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
+				]
+				)
+				->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])	
 				->hydrate(false)
 				->toArray()
 			;
