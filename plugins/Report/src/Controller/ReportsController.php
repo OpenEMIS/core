@@ -6,6 +6,9 @@ use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
+use Cake\ORM\ResultSet;
+use PHPExcel_IOFactory;
 
 class ReportsController extends AppController
 {
@@ -29,6 +32,7 @@ class ReportsController extends AppController
             'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
         ];
+        $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
     }
 
@@ -260,8 +264,57 @@ class ReportsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
     }
 
-    public function viewReport() {
-        die('sssssssssss');
+    public function ViewReport()
+    {
+        $data = $_GET;
+        $explode_data = explode("/", $data['file_path']);
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+        $header = __('Reports') . ' - ' .$data['module'];
+
+        $inputFileName = WWW_ROOT. 'export/'.$explode_data[10];
+
+        $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
+        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+        $objPHPExcel = $objReader->load($inputFileName);
+
+        $sheet = $objPHPExcel->getSheet(0); 
+        $highestRow = $sheet->getHighestRow(); 
+        $highestColumn = $sheet->getHighestColumn();
+
+        for ($row = 1; $row <= 1; $row++){
+            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
+                                            NULL,
+                                            TRUE,
+                                            FALSE);
+        }
+        for ($row = 2; $row <= $highestRow; $row++){ 
+            //  Read a row of data into an array
+            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
+                                            NULL,
+                                            TRUE,
+                                            FALSE);
+            if($this->isEmptyRow(reset($rowData))) { continue; }
+            //  Insert row data array into your database of choice here
+        }
+        $this->set('rowHeader', $rowHeader);
+        $this->set('rowData', $rowData);
+
+        $this->set('contentHeader', $header);
+    }
+
+    function isEmptyRow($row) {
+        foreach($row as $cell){
+            if (null !== $cell) return false;
+        }
+        return true;
     }
 	
 }
