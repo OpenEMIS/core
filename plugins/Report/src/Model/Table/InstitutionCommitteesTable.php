@@ -10,6 +10,9 @@ use Cake\ORM\Query;
 use Cake\Log\Log;
 use Cake\I18n\Time;
 
+use Cake\Network\Request;
+use Cake\ORM\TableRegistry;
+
 class InstitutionCommitteesTable extends AppTable
 {
     use OptionsTrait;
@@ -48,29 +51,30 @@ class InstitutionCommitteesTable extends AppTable
             $conditions['AcademicPeriods.id'] = $academicPeriodId;
         }
         
-        if (!empty($institutionId)) {
+        if ($institutionId > 0) {
             $conditions[$this->aliasField('id')] = $institutionId;
         }
-		
+
         $query
             ->select([
-                'name' => $this->aliasField('name'),
+                /*'name' => $this->aliasField('name'),
                 'meeting_date' => $this->aliasField('meeting_date'),
                 'start_time' => $this->aliasField('start_time'),
                 'end_time' => $this->aliasField('end_time'),
                 'comment' => $this->aliasField('comment'),
                 'academic_period_id' => $this->aliasField('academic_period_id'),
-                'committee_type' => 'InstitutionCommitteeTypes.name',
+                'committee_type' => 'InstitutionCommitteeTypes.name',*/
                 'code' => 'Institutions.code',
-                'instituion_name' => 'Institutions.name'
+                'instituion_name' => 'Institutions.name',
+                'area_id' => 'Institutions.area_id'
             ])
             ->contain([
-                'Institutions' => [
+                'Institutions'/* => [
                     'fields' => [
                         'Institutions.code',
                         'Institutions.name'
                     ]
-                ],
+                ]*/,
                 'AcademicPeriods' => [
                     'fields' => [
                         'AcademicPeriods.name'
@@ -83,6 +87,75 @@ class InstitutionCommitteesTable extends AppTable
                 ]
             ])
             ->where($conditions);
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                
+                $areaLevel = '';
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $areaLevelId = $ConfigItems->value('institution_area_level_id');
+                $row['area_level'] = '';
+                if($areaLevelId != 2){
+                    $AreaTable = TableRegistry::get('Area.AreaLevels');
+                    $value = $AreaTable->find()
+                                ->where([$AreaTable->aliasField('level') => $areaLevelId])
+                                ->first();
+                
+                    if (!empty($value->name)) {
+                        $areaLevel = $value->name;
+                    }
+
+                    $row['area_level'] = $areaLevel;
+                }
+                return $row;
+            });
+        });
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $areas1 = TableRegistry::get('areas');
+                $areasData = $areas1
+                            ->find()
+                            ->where([$areas1->alias('id')=>$row->area_id])
+                            ->first();
+                $row['area_code'] = '';            
+                $row['area_name'] = '';
+                if(!empty($areasData)){
+                    $areas = TableRegistry::get('areas');
+                    $areaLevels = TableRegistry::get('area_levels');
+                    $institutions = TableRegistry::get('institutions');
+                    $val = $areas
+                                ->find()
+                                ->select([
+                                    $areas->aliasField('code'),
+                                    $areas->aliasField('name'),
+                                    ])
+                                ->leftJoin(
+                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [
+                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
+                                    ]
+                                )
+                                ->leftJoin(
+                                    [$institutions->alias() => $institutions->table()],
+                                    [
+                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
+                                    ]
+                                )    
+                                ->where([
+                                    $areaLevels->aliasField('level !=') => 2,
+                                    $areas->aliasField('id') => $areasData->parent_id
+                                ])->first();
+                    
+                    if (!empty($val->name) && !empty($val->code)) {
+                        $row['area_code'] = $val->code;
+                        $row['area_name'] = $val->name;
+                    }
+                }            
+                
+                return $row;
+            });
+        });
+
     }
 
     public function onExcelRenderStartTime(Event $event, Entity $entity, array $attr)
@@ -116,6 +189,30 @@ class InstitutionCommitteesTable extends AppTable
         ];
 
         $newFields[] = [
+            'key' => 'area_level',
+            'field' => 'area_level',
+            'type' => 'string',
+            'label' => __('Area Level')
+        ];
+        //add columns starts
+        $newFields[] = [
+            'key' => 'area_code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Code')
+        ];
+        
+        $newFields[] = [
+            'key' => 'area_name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Name')
+        ];
+        //add columns ends
+        
+        
+
+        /*$newFields[] = [
             'key' => '',
             'field' => 'academic_period_id',
             'type' => 'integer',
@@ -162,7 +259,7 @@ class InstitutionCommitteesTable extends AppTable
             'field' => 'comment',
             'type' => 'string',
             'label' => __('Comment')
-        ];
+        ];*/
               
         $fields->exchangeArray($newFields);
     }    
