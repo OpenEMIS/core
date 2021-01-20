@@ -43,19 +43,13 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
         $data['periodOptions'] = $periodOptions;
         $data['selectedPeriod'] = $selectedPeriod;
 
-
-        list($mealOptions, $selectedMeal) = array_values($this->getMealProgrammeOptions($this->request->query('meal')));
+        /*list($mealOptions, $selectedMeal) = array_values($this->getMealProgrammeOptions($this->request->query('meal')));
 
         
         $extra['selectedMeal'] = $selectedMeal;
         $data['mealOptions'] = $mealOptions;
-        $data['selectedMeal'] = $selectedMeal;
-        
+        $data['selectedMeal'] = $selectedMeal;*/      
 
-
-
-        
-        
         
         $extra['elements']['control'] = [
             'name' => 'Institution.MealProgramme/controls',

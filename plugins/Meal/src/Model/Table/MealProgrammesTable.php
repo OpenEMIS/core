@@ -48,7 +48,7 @@ class MealProgrammesTable extends ControllerActionTable
             'name' => 'Institution.MealProgramme/controls',
             'data' => [
                 'periodOptions'=> $academicPeriodOptions,
-                'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions']
+                'selectedPeriod'=> $extra['selectedAcademicPeriodOptions']
             ],
             'order' => 3
         ];
@@ -67,6 +67,15 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('amount');
         $this->field('nutritional_content',['visible' => false]);
         $this->field('implementer',['visible' => false]);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+            $query->where([
+                        $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
+                    ], [], true); //this parameter will remove all where before this and replace it with new where.
+        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
