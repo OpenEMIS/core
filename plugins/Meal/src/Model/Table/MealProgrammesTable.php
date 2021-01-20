@@ -71,6 +71,8 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {    
+        $typeOptions = $this->MealNutritions->find('list')->toArray();
+     
         $this->field('academic_period_id',['select' => false]);
         $this->field('code');
         $this->field('name');
@@ -79,7 +81,8 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('start_date');
         $this->field('end_date');
         $this->field('amount');
-        $this->field('nutritional_content',['chosenSelect' => false]);
+
+        $this->field('nutritional_content', ['type' => 'chosenSelect', 'options' => $typeOptions]);
         $this->field('implementer');
     }
    

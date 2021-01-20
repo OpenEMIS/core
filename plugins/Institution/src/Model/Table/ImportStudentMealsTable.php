@@ -47,10 +47,7 @@ class ImportStudentMealsTable extends AppTable {
             'Model.import.onImportPopulateMealReceivedData' => 'onImportPopulateMealReceivedData',
             'Model.import.onImportPopulateMealBenefitData' => 'onImportPopulateMealBenefitData',
             'Model.import.onImportPopulateMealProgrammeData' => 'onImportPopulateMealProgrammeData',
-            //'Model.import.onImportPopulateAbsenceTypesData' => 'onImportPopulateAbsenceTypesData',
-            //'Model.import.onImportPopulatePeriodData' => 'onImportPopulatePeriodData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
-            //'Model.import.onImportGetPeriodId' => 'onImportGetPeriodId',
             'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
         ];
         $events = array_merge($events, $newEvent);
