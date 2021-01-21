@@ -413,6 +413,7 @@ class InstitutionsController extends AppController
             $this->Navigation->addCrumb($crumbTitle);
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
+    }
 
     public function MealProgramme()
     {
