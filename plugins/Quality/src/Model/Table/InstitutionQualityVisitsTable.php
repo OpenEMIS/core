@@ -206,6 +206,38 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        // from onUpdateToolbarButtons
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default icon-big',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $buttons = $extra['indexButtons'];
+
+        $extraButtons = [
+            'export' => [
+                'permission' => ['Institutions', 'Promotion', 'excel'],
+                'action' => 'Visits',
+                'icon' => '<i class="fa kd-export"></i>',
+                'title' => __('Promotion / Graduation')
+            ]
+        ];
+
+        // foreach ($extraButtons as $key => $attr) {
+        //     if ($this->AccessControl->check($attr['permission'])) {
+        //         $button = [
+        //             'type' => 'button',
+        //             'attr' => $btnAttr,
+        //             'url' => [0 => 'add']
+        //         ];
+        //         $button['url']['action'] = $attr['action'];
+        //         $button['attr']['title'] = $attr['title'];
+        //         $button['label'] = $attr['icon'];
+
+        //         $extra['toolbarButtons'][$key] = $button;
+        //     }
+        // }
         $this->field('comment', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
