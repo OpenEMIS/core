@@ -295,6 +295,7 @@ class ReportsController extends AppController
                                             TRUE,
                                             FALSE);
         }
+        $rowHeaderNew = $this->array_flatten($rowHeader);
         for ($row = 2; $row <= $highestRow; $row++){ 
             //  Read a row of data into an array
             $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
@@ -304,11 +305,33 @@ class ReportsController extends AppController
             if($this->isEmptyRow(reset($rowData))) { continue; }
             //  Insert row data array into your database of choice here
         }
+        foreach($rowData as $newKey => $newDataVal){
+        	foreach($newDataVal as $kay2 => $new_data_arr){
+        		if(isset($new_data_arr)){
+        			$newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+        		}
+        	}
+        }
         $this->set('rowHeader', $rowHeader);
-        $this->set('rowData', $rowData);
+        $this->set('newArr2', $newArr2);
 
         $this->set('contentHeader', $header);
     }
+
+    function array_flatten($array) { 
+        if (!is_array($array)) { 
+          return false; 
+        } 
+        $result = array(); 
+        foreach ($array as $key => $value) { 
+          if (is_array($value)) { 
+            $result = array_merge($result, $this->array_flatten($value)); 
+          } else { 
+            $result = array_merge($result, array($key => $value));
+          } 
+        } 
+        return $result; 
+      }
 
     function isEmptyRow($row) {
         foreach($row as $cell){
