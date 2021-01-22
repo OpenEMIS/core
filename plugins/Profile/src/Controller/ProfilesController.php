@@ -336,6 +336,11 @@ class ProfilesController extends AppController
         $header = $session->read('Auth.User.name');
 
         $alias = $model->alias;
+        //POCOR-5890 starts
+        if($alias == 'HealthImmunizations'){
+           $alias = __('Vaccinations');     
+        }
+        //POCOR-5890 ends
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
         $action = $this->request->params['action'];
