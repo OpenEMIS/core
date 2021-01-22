@@ -26,66 +26,68 @@ foreach ($rowHeader as $key => $value) {
 	}
 }
 // $headerCount = count($newArr);
-$newCounter = 0;
-function getValueData($obj, $newArr){
-	$headerCount = count($newArr);
-	if($headerCount > 10 && $headerCount <=11){
-		$extraValue .= "<td>".$obj[$newArr[10]]."</td>";
-	}
-	if($headerCount > 11 && $headerCount <=12){
-		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
-	}
-	if($headerCount > 12 && $headerCount <=13){
-		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
-	}
-	if($headerCount > 13 && $headerCount <=14){
-		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
-	}
-	if($headerCount > 14 && $headerCount <=15){
-		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[14]]."</td>";
-	}
-	if($headerCount > 15 && $headerCount <=16){
-		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[14]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[15]]."</td>";
-	}
-	if($headerCount > 16 && $headerCount <=17){
-		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[14]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[15]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[16]]."</td>";
-	}
-	if($headerCount > 17 && $headerCount <=18){
-		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[14]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[15]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[16]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[17]]."</td>";
-	}
-	if($headerCount > 18 && $headerCount <=19){
-		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[14]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[15]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[16]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[17]]."</td>";
-		$extraValue .= "<td>".$obj[$newArr[18]]."</td>";
-	}
-	return $extraValue;
-}
+// $newCounter = 0;
+// function getValueData($obj, $newArr){
+// 	$headerCount = count($newArr);
+// 	if($headerCount > 10 && $headerCount <=11){
+// 		$extraValue .= "<td>".$obj[$newArr[10]]."</td>";
+// 	}
+// 	if($headerCount > 11 && $headerCount <=12){
+// 		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
+// 	}
+// 	if($headerCount > 12 && $headerCount <=13){
+// 		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
+// 	}
+// 	if($headerCount > 13 && $headerCount <=14){
+// 		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
+// 	}
+// 	if($headerCount > 14 && $headerCount <=15){
+// 		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[14]]."</td>";
+// 	}
+// 	if($headerCount > 15 && $headerCount <=16){
+// 		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[14]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[15]]."</td>";
+// 	}
+// 	if($headerCount > 16 && $headerCount <=17){
+// 		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[14]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[15]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[16]]."</td>";
+// 	}
+// 	if($headerCount > 17 && $headerCount <=18){
+// 		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[14]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[15]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[16]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[17]]."</td>";
+// 	}
+// 	if($headerCount > 18 && $headerCount <=19){
+// 		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[14]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[15]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[16]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[17]]."</td>";
+// 		$extraValue .= "<td>".$obj[$newArr[18]]."</td>";
+// 	}
+// 	return $extraValue;
+// }
+
+// echo "<pre>";print_r($newArr2);exit;
 $params = $this->request->params;
 $url = ['plugin' => $params['plugin'], 'controller' => $params['controller'], 'action' => 'ajaxGetReportProgress'];
 $url = $this->Url->build($url);
@@ -110,23 +112,15 @@ $(document).ready( function () {
 			<?php endforeach; ?>
 			</thead>
 			<tbody>
-				<?php foreach ($newArr2 as $obj) :?>
-				<?php $newdata = getValueData($obj, $newArr); ?>
-				<tr>
-					<td><?= $obj[$newArr[0]] ?></td>
-					<td><?= $obj[$newArr[1]] ?></td>
-					<td><?= $obj[$newArr[2]] ?></td>
-					<td><?= $obj[$newArr[3]] ?></td>
-					<td><?= $obj[$newArr[4]] ?></td>
-					<td><?= $obj[$newArr[5]] ?></td>
-					<td><?= $obj[$newArr[6]] ?></td>
-					<td><?= $obj[$newArr[7]] ?></td>
-					<td><?= $obj[$newArr[8]] ?></td>
-					<td><?= $obj[$newArr[9]] ?></td>
-					<td><?= $obj[$newArr[10]] ?></td>
-					<?= $newdata ?>
-				</tr>
+				<?php $i = 0; foreach ($newArr2 as $obj) :
+					$extraValue .= "<td>".$obj[$newArr[$i]]."</td>";
+					$i++; 
+				?>
+				
 				<?php endforeach; ?>
+				<tr>
+					<td><?= $extraValue ?></td>
+				</tr>
 			</tbody>
 		</table>
 	</div>
