@@ -20,8 +20,18 @@ class ImmunizationsTable extends ControllerActionTable
         $this->addBehavior('Health.Health');
     }
 
+    //POCOR-5890 starts remain work
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('health_immunization_type_id', ['type' => 'select', 'after' => 'comment']);
+        $this->field('health_immunization_type_id', ['attr'=>['label'=>'sss'],'type' => 'select', 'after' => 'comment']);
     }
+
+    public function indexAfterAction(Event $event, $data)
+    {
+      // echo "<pre>"; print_r($extra); die;
+
+        $this->field('dosage',['type'=>'hidden']);
+
+    }
+    //POCOR-5890 ends
 }
