@@ -266,6 +266,7 @@ class ReportsController extends AppController
 
     public function ViewReport()
     {
+        ini_set('memory_limit', '-1');
         $data = $_GET;
         $explode_data = explode("/", $data['file_path']);
         if (!empty($this->request->param('institutionId'))) {
