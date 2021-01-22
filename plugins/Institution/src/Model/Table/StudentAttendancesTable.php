@@ -77,6 +77,7 @@ class StudentAttendancesTable extends ControllerActionTable
         $subjectId = $options['subject_id'];      
 
         $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
         $this->Users = TableRegistry::get('Security.Users');
 
         if ($day == -1) {
@@ -114,6 +115,19 @@ class StudentAttendancesTable extends ControllerActionTable
                         $InstitutionSubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     ]
                 )
+            //POCOR-5750 start (Filter for check start date of student)
+            ->innerJoin(
+                [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                [
+                    $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $InstitutionStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $InstitutionStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    $InstitutionStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $InstitutionStudents->aliasField('start_date >= ') => $weekStartDay,
+                    $InstitutionStudents->aliasField('start_date <= ') => $weekEndDay
+                ]
+            )
+            //POCOR-5750 end
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionClassId,
@@ -148,6 +162,19 @@ class StudentAttendancesTable extends ControllerActionTable
                     $this->StudentStatuses->aliasField('code') => 'CURRENT'
                 ]);
             })
+            //POCOR-5750 start (Filter for check start date of student)
+            ->innerJoin(
+                [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                [
+                    $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $InstitutionStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $InstitutionStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    $InstitutionStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $InstitutionStudents->aliasField('start_date >= ') => $weekStartDay,
+                    $InstitutionStudents->aliasField('start_date <= ') => $weekEndDay
+                ]
+            )
+            //POCOR-5750 end
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionClassId,
@@ -392,7 +419,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         $StudentAttendanceMarkedRecords->aliasField('date <= ') => $weekEndDay
                     ])
                     ->toArray();
-
+                
                 $studentAttenanceData = [];
                 foreach ($studentList as $value) {
                     $studentId = $value;
