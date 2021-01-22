@@ -276,7 +276,7 @@ class ReportsController extends AppController
         }
 
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-        $this->Navigation->addCrumb($crumbTitle);
+        $this->Navigation->addCrumb($data['module']);
         $header = __('Reports') . ' - ' .$data['module'];
 
         $inputFileName = WWW_ROOT. 'export/'.$explode_data[10];
@@ -296,7 +296,7 @@ class ReportsController extends AppController
                                             FALSE);
         }
         $rowHeaderNew = $this->array_flatten($rowHeader);
-        for ($row = 2; $row <= $highestRow; $row++){ 
+        for ($row = 2; $row <= $highestRow -1; $row++){ 
             //  Read a row of data into an array
             $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
                                             NULL,
