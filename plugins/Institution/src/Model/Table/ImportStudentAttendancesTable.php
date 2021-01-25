@@ -46,7 +46,7 @@ class ImportStudentAttendancesTable extends AppTable {
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
             'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
             'Model.import.onImportPopulateAbsenceTypesData' => 'onImportPopulateAbsenceTypesData',
-            //'Model.import.onImportPopulateStudentAttendanceTypesData' => 'onImportPopulateStudentAttendanceTypesData',
+            'Model.import.onImportPopulateStudentAttendanceTypesData' => 'onImportPopulateStudentAttendanceTypesData',
             'Model.import.onImportPopulateSubjectData' => 'onImportPopulateSubjectData',
             'Model.import.onImportPopulatePeriodData' => 'onImportPopulatePeriodData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',

@@ -12,6 +12,9 @@ class POCOR5754 extends AbstractMigration
      */
     public function up()
     {
+        $this->execute('CREATE TABLE `zz_5754_import_mapping` LIKE `import_mapping`');
+        $this->execute('INSERT INTO `zz_5754_import_mapping` SELECT * FROM `import_mapping`');
+
         //import_mapping
         $data = [
             [
@@ -50,8 +53,8 @@ class POCOR5754 extends AbstractMigration
     // rollback
     public function down()
     {
-        $this->execute("DELETE FROM import_mapping WHERE `model`='Institution.StudentAbsencesPeriodDetails' AND `column_name` = 'student_attendance_types' ");
-
-        $this->execute("DELETE FROM import_mapping WHERE `model`='Institution.StudentAbsencesPeriodDetails' AND `column_name` = 'subject_id' ");
+        $this->execute('DROP TABLE IF EXISTS `import_mapping`');
+        $this->execute('RENAME TABLE `zz_5754_import_mapping` TO `import_mapping`');
     }
 }
+
