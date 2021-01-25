@@ -470,6 +470,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                             '&attendance_period_id='+ vm.selectedAttendancePeriod+
                             '&week_start_day='+ vm.selectedWeekStartDate+
                             '&week_end_day='+ vm.selectedWeekEndDate+
+                            '&subject_id='+ vm.selectedSubject+
                             '&week_id='+ vm.selectedWeek
         
         return {

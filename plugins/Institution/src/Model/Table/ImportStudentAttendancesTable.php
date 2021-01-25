@@ -46,6 +46,8 @@ class ImportStudentAttendancesTable extends AppTable {
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
             'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
             'Model.import.onImportPopulateAbsenceTypesData' => 'onImportPopulateAbsenceTypesData',
+            //'Model.import.onImportPopulateStudentAttendanceTypesData' => 'onImportPopulateStudentAttendanceTypesData',
+            'Model.import.onImportPopulateSubjectData' => 'onImportPopulateSubjectData',
             'Model.import.onImportPopulatePeriodData' => 'onImportPopulatePeriodData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.import.onImportGetPeriodId' => 'onImportGetPeriodId',
@@ -105,7 +107,9 @@ class ImportStudentAttendancesTable extends AppTable {
     }
 
     public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
+
             $tempRow['entity'] = $this->StudentAbsencesPeriodDetails->newEntity();
+           
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
@@ -222,6 +226,54 @@ class ImportStudentAttendancesTable extends AppTable {
     //  }
     // }
 
+    public function onImportPopulateSubjectData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        $classId = !empty($this->request->query('class')) ? $this->request->query('class') : '';
+
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $modelData = $InstitutionSubjects->getSubjectsByClass($classId);
+
+        $nameHeader = $this->getExcelLabel($InstitutionSubjects, 'Subject');
+        $columnHeader = $this->getExcelLabel($InstitutionSubjects, $lookupColumn);
+
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [
+            $nameHeader,
+            $columnHeader
+        ];
+
+        if (!empty($modelData)) {
+            foreach($modelData as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->institution_subject->name,
+                    $row->institution_subject->id
+                ];
+            }
+        }
+
+    }
+
+    public function onImportPopulateStudentAttendanceTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $modelData = $lookedUpTable->find('all')->select(['id', 'name', $lookupColumn]);
+
+        $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
+        $columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [
+            $nameHeader,
+            $columnHeader
+        ];
+
+        if (!empty($modelData)) {
+            foreach($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->name,
+                    $row->{$lookupColumn}
+                ];
+            }
+        }
+    }
+
     public function onImportPopulateAbsenceTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')->select(['id', 'name', $lookupColumn]);
@@ -253,21 +305,36 @@ class ImportStudentAttendancesTable extends AppTable {
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($classId,$academicPeriodId);
 
-        $nameHeader = $this->getExcelLabel($StudentAttendanceMarkTypes, 'Number of Periods');
+        
 
-        $data[$columnOrder]['lookupColumn'] = 1;
+        $nameHeader = $this->getExcelLabel($StudentAttendanceMarkTypes, 'Number of Periods');
+        $columnHeader = $this->getExcelLabel($StudentAttendanceMarkTypes, 'Id');
+
+        $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [
-            'Number of Periods'
+            $nameHeader,
+            $columnHeader
         ];
 
+
         //Set the select options in excel base on the number of attendance per day that class needs to mark
-        for ($i = 1; $i <= $attendancePerDay; $i++) {
-            $data[$columnOrder]['data'][] = [$i];
+        if (!empty($attendancePerDay)) {
+            foreach($attendancePerDay as $row) {
+                $name = isset($row->name) ? $row->name : $row['name'];
+                $id = isset($row->id) ? $row->id : $row['id'];
+                $data[$columnOrder]['data'][] = [
+                    $name,
+                    $id
+                ];
+            }
         }
+
+        
     }
 
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+
         if (empty($tempRow['student_id'])) {
             $rowInvalidCodeCols['student_id'] = __('OpenEMIS ID was not defined');
             return false;
@@ -317,11 +384,13 @@ class ImportStudentAttendancesTable extends AppTable {
             'institution_id' => $tempRow['institution_id'],
             'student_id' => $tempRow['student_id'],
         ])->first();
+
         if (!$student) {
             $rowInvalidCodeCols['student_id'] = __('No such student in the institution');
             $tempRow['student_id'] = false;
             return false;
         }
+       
 
         //Check if period column is empty and value is within range of valid period
         if (empty($tempRow['period'])) {
