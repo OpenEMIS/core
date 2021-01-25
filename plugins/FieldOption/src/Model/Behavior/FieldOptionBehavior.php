@@ -95,7 +95,7 @@ class FieldOptionBehavior extends Behavior {
                 ]);
         }
         //POCOR-5668 add external validation starts
-        if($this->_table->alias == 'Nationalities'){
+        if(isset($this->_table->alias) && $this->_table->alias == 'Nationalities'){
             $validator
                 ->requirePresence('external_validation')
                 ->add('external_validation', [
