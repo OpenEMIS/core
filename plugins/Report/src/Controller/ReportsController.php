@@ -128,7 +128,8 @@ class ReportsController extends AppController
                 'Report.StaffLeaveReport' => __('Staff Leave'),
                 'Report.StaffPositions' => __('Staff Positions Report'),
                 'Report.PositionSummary' => __('Position Summary Report'),
-                'Report.StaffDuties' => __('Duties Report')
+                'Report.StaffDuties' => __('Duties Report'),
+                'Report.StaffExtracurriculars' => __('Staff Extracurricular')
 				
             ];
         } elseif ($module == 'Textbooks') {
@@ -213,7 +214,6 @@ class ReportsController extends AppController
                 'ReportProgress.total_records'
             );
             $ReportProgress = TableRegistry::get('Report.ReportProgress');
-            echo '<pre>';print_r($ReportProgress);die;
             if (!empty($ids)) {
                 $results = $ReportProgress
                     ->find()

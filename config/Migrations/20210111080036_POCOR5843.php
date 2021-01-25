@@ -43,6 +43,6 @@ class POCOR5843 extends AbstractMigration
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
-        $this->execute('RENAME TABLE `z_5843_security_functions` TO `security_functions`');
+        $this->execute('RENAME TABLE `zz_5843_security_functions` TO `security_functions`');
     }
 }
