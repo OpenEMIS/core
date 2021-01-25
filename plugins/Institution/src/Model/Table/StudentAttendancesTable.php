@@ -123,8 +123,8 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $InstitutionStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $InstitutionStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $InstitutionStudents->aliasField('start_date >= ') => $weekStartDay,
-                    $InstitutionStudents->aliasField('start_date <= ') => $weekEndDay
+                    $InstitutionStudents->aliasField('start_date = ') => $day,
+                    //$InstitutionStudents->aliasField('start_date <= ') => $weekEndDay
                 ]
             )
             //POCOR-5750 end
@@ -170,8 +170,8 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $InstitutionStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $InstitutionStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $InstitutionStudents->aliasField('start_date >= ') => $weekStartDay,
-                    $InstitutionStudents->aliasField('start_date <= ') => $weekEndDay
+                    $InstitutionStudents->aliasField('start_date = ') => $day,
+                    //$InstitutionStudents->aliasField('start_date <= ') => $weekEndDay
                 ]
             )
             //POCOR-5750 end
