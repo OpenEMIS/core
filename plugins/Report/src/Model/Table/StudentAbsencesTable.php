@@ -184,7 +184,7 @@ class StudentAbsencesTable extends AppTable
             'label' => __('Student')
         ];
         $newArray[] = [
-            'key' => 'Institutions.institution',
+            'key' => 'Institutions.name',
             'field' => 'institution_name',
             'type' => 'string',
             'label' => ''
@@ -209,6 +209,25 @@ class StudentAbsencesTable extends AppTable
             'label' => __('Area Education')
         ];
 
+        $newArray[] = [
+            'key' => 'AreaAdministratives.code',
+            'field' => 'area_administrative_code',
+            'type' => 'string',
+            'label' => __('Area Administrative Code')
+        ];
+
+        $newArray[] = [
+            'key' => 'AreaAdministratives.name',
+            'field' => 'area_administrative_name',
+            'type' => 'string',
+            'label' => __('Area Administrative')
+        ];
+        $newArray[] = [
+            'key' => 'AreaLevels.name',
+            'field' => 'area_level_name',
+            'type' => 'string',
+            'label' => __('Area Level')
+        ];
         $newArray[] = [
             'key' => 'StudentAbsences.date',
             'field' => 'date',
