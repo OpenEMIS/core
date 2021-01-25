@@ -809,6 +809,26 @@ class NavigationComponent extends Component
                 'selected' => ['InfrastructureProjects.view', 'InfrastructureProjects.add', 'InfrastructureProjects.edit', 'InfrastructureProjects.delete']
             ],
 
+            'Meals' => [
+                'title' => 'Meals',
+                'parent' => 'Institutions.Institutions.index',
+                'link' => false
+            ],
+
+            'Institutions.MealProgramme' => [
+               'title' => 'Programme',
+                'parent' => 'Meals',
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['Institutions.MealProgramme']
+            ],
+
+            'Institutions.StudentMeals.index' => [
+                'title' => 'Students',
+                'parent' => 'Meals',
+                'selected' => ['Institutions.StudentMeals'],
+                'params' => ['plugin' => 'Institution']
+            ],
+
             'Wash' => [
                 'title' => 'WASH',
                 'parent' => 'Infrastructures',
@@ -1854,6 +1874,13 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Textbook'],
                 'selected' => ['Textbooks.Textbooks', 'Textbooks.ImportTextbooks']
             ],
+
+            'Meals.programme' => [
+               'title' => 'Meals',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'Meal'],
+                'selected' => ['Meals.programme']
+            ],
             
             'Workflows.Workflows' => [
                 'title' => 'Workflow',
@@ -1882,6 +1909,7 @@ class NavigationComponent extends Component
                 'selected' => ['MoodleApiLog.index'],
                 'params' => ['plugin' => 'MoodleApi', 'controller' => 'MoodleApiLog', 'action' => 'index']
             ],
+            
             'Administration.Archive' => [
                 'title' => 'Archive',
                 'parent' => 'Administration',
