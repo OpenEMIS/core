@@ -1,3 +1,27 @@
+### [3.61.5] - 2021-01-21
+- Implemented: Improve readability of the student status in the current year
+- Implemented: Improvement of the school closing process
+- Implemented: Export staff extracurricular activities
+- Implemented: Reports > School Profile Report
+- Bug Fixed: Institutions > Students > Nationalities tab > Add/Edit: Validate button is not validating Identity Number correctly
+- Bug Fixed: Reports > Student > Subject and Book List: Issues
+- Bug Fixed: Institutions > Students > General > Identities tab: Issue Date and Expiry Date to remove default date
+- Bug Fixed: Institutions > Performance > Report Cards: No Download PDF for bulk download
+- Bug Fixed: Reports > Staff > Position Summary Report : Changes
+- Bug Fixed: Reports > Students > BMI Status Report : Issues
+- Bug Fixed: Reports > Students > Risk Assessment Report : Changes
+- Bug Fixed: Institutions > Committees Add/Edit page
+- Bug Fixed: Add User from External Source: OpenEMIS ID should be the same as from OpenEMIS Identity for the same user
+- Bug Fixed: Reports > Institution > Guardians Report: Changes
+- Bug Fixed: Reports > Institutions > Staff Attendance/Staff Leave: Include columns
+- Bug Fixed: Reports > Students > Students with Special Needs: Changes
+- Bug Fixed: Reports > Students > Not Assigned to a Class: Changes
+- Bug Fixed: Reports > Students > Enrolment Summary: Changes
+- Bug Fixed: Institutions > Finances > Budget/Income/Expenditure : Budget appears across all Schools and user unable to view attachments
+- Bug Fixed: Institutions > Staff > Salaries : Remove additions, deductions column from staff_salaries table
+- Bug Fixed: Profiles > Students > Guardian : Slow query when accessing this page
+- Bug Fixed: Institutions > Students > Import: To allow other users besides System Administrator to Import Extracurricular
+
 ### [3.61.4] - 2021-01-08
 - Bug Fixed: Reports > Institutions > Body Masses : Remove Type filter from report generation to enable user to generate report for all schools
 - Bug Fixed: Reports > Institution > Infrastructure Report

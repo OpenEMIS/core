@@ -86,12 +86,22 @@ class GuardiansTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //POCOR-5881 starts
+        $studentId = '';
+        if ($this->controller->name == 'Profiles') {
+            $studentId = $this->Session->read('Auth.User.id');
+        }
+        //POCOR-5881 ends
         $search = $this->getSearchKey();
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
         }
-
+        //POCOR-5881 starts
+        if(!empty($studentId)){
+            $query->where(['Guardians.student_id'=>$studentId]);
+        }
+        //POCOR-5881 ends
         if (!isset($this->request->query['sort'])) {
             $orders = [
                 $this->Users->aliasField('first_name'),
