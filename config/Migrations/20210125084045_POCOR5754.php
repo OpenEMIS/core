@@ -55,10 +55,6 @@ class POCOR5754 extends AbstractMigration
     {
         $this->execute('DROP TABLE IF EXISTS `import_mapping`');
         $this->execute('RENAME TABLE `zz_5754_import_mapping` TO `import_mapping`');
-        
-        $this->execute("DELETE FROM import_mapping WHERE `model`='Institution.StudentAbsencesPeriodDetails' AND `column_name` = 'student_attendance_types' ");
-
-        $this->execute("DELETE FROM import_mapping WHERE `model`='Institution.StudentAbsencesPeriodDetails' AND `column_name` = 'subject_id' ");
     }
 }
 
