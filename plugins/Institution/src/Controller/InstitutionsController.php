@@ -66,8 +66,12 @@ class InstitutionsController extends AppController
         'InstitutionStaffAttendances',
         'InstitutionStudentAbsences',
         'StudentAttendances',
+
         'StudentArchive',
         'AssessmentsArchive',
+
+        'StudentMeals',
+
 
         // behaviours
         'StaffBehaviours',
@@ -167,6 +171,7 @@ class InstitutionsController extends AppController
             'ImportInstitutions'        => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
             'ImportStaffAttendances'    => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
             'ImportStudentAttendances'  => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
+            'ImportStudentMeals'  => ['className' => 'Institution.ImportStudentMeals', 'actions' => ['add']],
             'ImportInstitutionSurveys'  => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
             'ImportStudentAdmission'    => ['className' => 'Institution.ImportStudentAdmission', 'actions' => ['add']],
             'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
@@ -384,6 +389,7 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
     }
+
     public function AssessmentsArchive()
     {
         if (!empty($this->request->param('institutionId'))) {
@@ -407,6 +413,11 @@ class InstitutionsController extends AppController
             $this->Navigation->addCrumb($crumbTitle);
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
+    }
+
+    public function MealProgramme()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionMealProgrammes']);
     }
     public function ReportCardStatuses()
     {
@@ -539,6 +550,11 @@ class InstitutionsController extends AppController
     public function Committees()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTestCommittees']);
+    }
+
+    public function CommitteeAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.CommitteeAttachments']);
     }
     // Timetable - END
 
@@ -685,7 +701,56 @@ class InstitutionsController extends AppController
         $this->set('is_button_accesible', $is_button_accesible);
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
+        }
     }
+
+    public function StudentMeals($pass='')
+    {
+        if($pass=='excel'){
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentMeals']);
+        }
+        else{
+            $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
+            $_excel = $this->AccessControl->check(['Institutions', 'StudentMeals', 'excel']);
+            $_import = $this->AccessControl->check(['Institutions', 'ImportStudentMeals', 'add']);
+
+            $_excel = true;
+
+            if (!empty($this->request->param('institutionId'))) {
+                $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            } else {
+                $session = $this->request->session();
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+
+            $excelUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentMeals',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+                'excel'
+            ];
+
+            $importUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'ImportStudentMeals',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+            'add'
+        ];
+
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+                $this->Navigation->addCrumb($crumbTitle);
+
+            $this->set('_edit', $_edit);
+            $this->set('_excel', $_excel);
+            $this->set('_import', $_import);
+            $this->set('excelUrl', Router::url($excelUrl));
+            $this->set('importUrl', Router::url($importUrl));
+            $this->set('institution_id', $institutionId);
+            $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
+        }
+        
     }
 
     public function StudentArchive(){
@@ -1336,7 +1401,7 @@ class InstitutionsController extends AppController
             } elseif ($this->request->param('institutionId')) {
                 $id = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
 
-                // Remove writing to session once model has been converted to institution plugin
+               // Remove writing to session once model has been converted to institution plugin
                 $session->write('Institution.Institutions.id', $id);
             } elseif ($session->check('Institution.Institutions.id')) {
                 $id = $session->read('Institution.Institutions.id');
@@ -1412,6 +1477,12 @@ class InstitutionsController extends AppController
                 $this->Angular->addModules([
                     'institution.student.attendances.ctrl',
                     'institution.student.attendances.svc'
+                ]);
+                break;
+            case 'StudentMeals':
+                $this->Angular->addModules([
+                    'institution.student.meals.ctrl',
+                    'institution.student.meals.svc'
                 ]);
                 break;
             case 'Results':
@@ -1589,7 +1660,15 @@ class InstitutionsController extends AppController
                     // header name
                     $header = $studentName;
                 }
-            } else {
+            } elseif ($model->alias() == 'CommitteeAttachments') {
+                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+                $institutionName = $session->read('Institution.Institutions.name');
+                $this->Navigation->addCrumb('Committees', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Committees']);
+                $this->Navigation->addCrumb('Attachments');
+                $header = __($institutionName) ;
+                $this->set('contentHeader', $header);
+            } 
+            else {
                 $this->Navigation->addCrumb($crumbTitle, $crumbOptions);
                 $header = $this->activeObj->name;
             }
@@ -1625,7 +1704,7 @@ class InstitutionsController extends AppController
                 $header .= ' - '. __('Institution Student Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
             } else {
-                $header .= ' - ' . $model->getHeader($alias);
+                 $header .= ' - ' . $model->getHeader($alias);
             }
 
             $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
