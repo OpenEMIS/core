@@ -1,6 +1,6 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/student_attendances/institution.student.attendances.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/student_attendances/institution.student.attendances.ctrl', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/student_meals/institution.student.meals.svc', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/student_meals/institution.student.meals.ctrl', ['block' => true]); ?>
 
 <?php
 $this->start('toolbar');
@@ -24,24 +24,9 @@ $this->start('toolbar');
         <i class="fa kd-edit"></i> 
     </button>
 
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back')?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
         <i class="fa kd-back"></i>
     </button>
-<?php endif; ?>
-<?php 
-$session = $this->Session;
-$superAdmin = $session->read('Auth.User.super_admin');
-$is_connection_is_online = $session->read('is_connection_stablished');
-?>
-<?php if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  ?>
-<?php if ($archiveUrl) : ?>
-    <a href="<?=$archiveUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>" >
-            <i class="fa fa-folder"></i>
-        </button>
-    </a>
-</button>
-<?php endif; ?>
 <?php endif; ?>
 
 <?php
@@ -101,6 +86,13 @@ $panelHeader = $this->fetch('panelHeader');
 
     #institution-student-attendances-table .ag-cell .reason-wrapper .input-select-wrapper {
         margin-bottom: 15px;
+    }
+
+    #institution-student-attendances-table .ag-cell .reason-wrapper input {
+        width: 100%;
+        padding: 4px;
+        border: 1px solid #c5c1c1;
+        border-radius: 3px;
     }
 
     #institution-student-attendances-table .ag-cell textarea#comment.error,
@@ -215,7 +207,7 @@ $panelHeader = $this->fetch('panelHeader');
 
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;$ctrl.exportexcel='<?=$excelUrl ?>';" float-btn="true">
+       <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;$ctrl.exportexcel='<?=$excelUrl ?>';" float-btn="true">
            
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">
@@ -224,7 +216,7 @@ $panelHeader = $this->fetch('panelHeader');
 
                 <div class="overview-box alert attendance-dashboard" ng-class="disableElement" ng-show="$ctrl.action == 'view'">
                     <a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
-                    <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
+                    <div class="data-section" ng-show="$ctrl.selectedDay != -1">
                         <i class="kd-students icon"></i>
                         <div class="data-field">
                             <h4><?= __('Total Students') ?>:</h4>
@@ -233,52 +225,16 @@ $panelHeader = $this->fetch('panelHeader');
                     </div>
                     <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Students Present') ?></h4>
+                            <h4><?= __('No. of Students received Meal') ?></h4>
                             <h1 class="data-header">{{$ctrl.presentCount}}</h1>
                         </div>
                     </div>
-                    <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
-                        <div class="data-field">
-                            <h4><?= __('No. of Students Absent') ?></h4>
-                            <h1 class="data-header">{{$ctrl.absenceCount}}</h1>
-                        </div>
-                    </div>
-                    <div class="data-section single-day" ng-show="$ctrl.selectedDay != -1">
-                        <div class="data-field">
-                            <h4><?= __('No. of Students Late') ?></h4>
-                            <h1 class="data-header">{{$ctrl.lateCount}}</h1>
-                        </div>
-                    </div>
-                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
-                        <i class="fa fa-address-book-o"></i>
-                        <div class="data-field">
-                            <h4><?= __('Total Attendance') ?></h4>
-                            <h1 class="data-header">{{$ctrl.allAttendances}}</h1>
-                        </div>
-                    </div>
-                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
-                        <div class="data-field">
-                            <h4><?= __('No. of Present') ?></h4>
-                            <h1 class="data-header">{{$ctrl.allPresentCount}}</h1>
-                        </div>
-                    </div>
-                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
-                        <div class="data-field">
-                            <h4><?= __('No. of Absence') ?></h4>
-                            <h1 class="data-header">{{$ctrl.allAbsenceCount}}</h1>
-                        </div>
-                    </div>
-                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
-                        <div class="data-field">
-                            <h4><?= __('No. of Late') ?></h4>
-                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
-                        </div>
-                    </div>
+                    
                 </div>
                 <div id="institution-student-attendances-table" class="table-wrapper">
                     <div ng-if="$ctrl.gridReady" kd-ag-grid="$ctrl.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
                 </div>
-            </bg-pane>
+            </bg-pane>z
 
             <bg-pane class="split-content splitter-slide-out splitter-filter" min-size-p="20" max-size-p="30" size-p="20">
                 <div class="split-content-header">
@@ -310,27 +266,14 @@ $panelHeader = $this->fetch('panelHeader');
                             <option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
-                    <h5><?= __('Education Grade') ?>: </h5>
+                    <h5><?= __('Meal Programme') ?>: </h5>
                     <div class="input-select-wrapper">
 
-                        <select ng-disabled="$ctrl.action=='edit'" name="education_grade" ng-options="education_grade.id as education_grade.name for education_grade in $ctrl.educationGradeListOptions" ng-model="$ctrl.selectedEducationGrade" ng-change="$ctrl.changeEducationGrade();">
-                            <option value="" ng-if="$ctrl.educationGradeListOptions.length == 0"><?= __('No Options') ?></option>
+                        <select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="meal.id as meal.name for meal in $ctrl.mealProgrameOptions" ng-model="$ctrl.selectedmealPrograme" ng-change="$ctrl.changeMealPrograme();">
+                            <option value="" ng-if="$ctrl.mealProgrameOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
-                    <h5 ng-if="$ctrl.isMarkableSubjectAttendance==true"><?= __('Subjects') ?>: </h5>
-                    <div class="input-select-wrapper" ng-if="$ctrl.isMarkableSubjectAttendance==true">
-                        <select ng-disabled="$ctrl.action=='edit'" name="subject" ng-options="subject.id as subject.name for subject in $ctrl.subjectListOptions" ng-model="$ctrl.selectedSubject" ng-change="$ctrl.changeSubject();">
-                            <option value="" ng-if="$ctrl.subjectListOptions.length == 0"><?= __('No Options') ?></option>
-                        </select>
-                    </div>
-                    <h5 ng-if="$ctrl.isMarkableSubjectAttendance==''"><?= __('Attendance per day') ?>: </h5>
-                    <div class="input" ng-if="$ctrl.isMarkableSubjectAttendance==''">
-                        <div class="input-selection attendance" ng-class="{'disabled': $ctrl.action=='edit' || $ctrl.selectedDay==-1}">
-                            <div class="input" ng-repeat="attendance_period in $ctrl.attendancePeriodOptions">
-                                <input ng-disabled="$ctrl.action=='edit' || $ctrl.selectedDay==-1" kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
-                            </div>
-                        </div>
-                    </div>
+                                       
                 </div>
             </bg-pane>
         </bg-splitter>
