@@ -388,7 +388,11 @@ class StudentsController extends AppController
             $idKey = $this->ControllerAction->getPrimaryKey($model);
             $primaryKey = $model->primaryKey();
 
-            $alias = $model->alias;
+            //POCOR-5890 starts
+            if($model->getHeader($alias) == 'Immunizations'){
+                $alias = __('Vaccinations');     
+            }
+            //POCOR-5890 ends
             $this->Navigation->addCrumb($model->getHeader($alias));
             $header = $header . ' - ' . $model->getHeader($alias);
 
