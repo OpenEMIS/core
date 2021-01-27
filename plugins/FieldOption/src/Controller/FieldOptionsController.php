@@ -30,6 +30,11 @@ class FieldOptionsController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $alias = $model->alias;
+        //POCOR-5890 starts
+        if($alias == 'ImmunizationTypes'){
+            $alias = __('Vaccinations Type');     
+        }
+        //POCOR-5890 ends
         $header = __('Field Options') . ' - ' . $model->getHeader($alias);
 
         $this->Navigation->addCrumb(str_replace ('Wash', 'WASH', $model->getHeader($alias)));
