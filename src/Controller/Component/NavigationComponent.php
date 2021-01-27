@@ -1650,15 +1650,15 @@ class NavigationComponent extends Component
                 'parent' => 'SystemSetup',
                 'link' => false
             ],
-            'ProfileTemplates.Templates' => [
-                'title' => 'Profiles',
+            'ProfileTemplates.Institutions' => [
+                'title' => 'Institutions',
                 'parent' => 'ProfileTemplates',
                 'selected' => ['ProfileTemplates.view', 'ProfileTemplates.add', 'ProfileTemplates.edit', 'ProfileTemplates.delete']
             ],
-            'ProfileTemplates.StaffTemplates' => [
-                'title' => 'Staff',
+            'ProfileTemplates.Staffs' => [
+                'title' => 'Staffs',
                 'parent' => 'ProfileTemplates',
-                'selected' => ['StaffTemplates.view', 'StaffTemplates.add', 'StaffTemplates.edit', 'StaffTemplates.delete']
+                'selected' => ['ProfileTemplates.StaffProfiles', 'Staffs.view', 'Staffs.add', 'Staffs.edit', 'Staffs.delete']
             ],
             'Security' => [
                 'title' => 'Security',
