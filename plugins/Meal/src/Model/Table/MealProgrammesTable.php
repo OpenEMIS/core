@@ -29,11 +29,18 @@ class MealProgrammesTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('MealProgrammeTypes', ['className' => 'Meal.MealProgrammeTypes','foreignKey' => 'type']);
-        $this->belongsTo('MealTargetTypes', ['className' => 'Meal.MealTargetTypes','foreignKey' => 'trageting']);
+        $this->belongsTo('MealTargetTypes', ['className' => 'Meal.MealTargetTypes','foreignKey' => 'targeting']);
         $this->belongsTo('MealImplementers', ['className' => 'Meal.MealImplementers','foreignKey' => 'implementer']);
-        $this->belongsTo('MealNutritions', ['className' => 'Meal.MealNutritions','foreignKey' => 'nutritional_content']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentMeals' => ['index', 'view']
+        ]);
+        $this->belongsToMany('MealNutritions', [
+            'className' => 'Meal.MealNutritions',
+            'joinTable' => 'meal_nutritional_records',
+            'foreignKey' => 'meal_programmes_id',
+            'targetForeignKey' => 'nutritional_content_id',
+            'through' => 'Meal.MealNutritionalRecords',
+            'dependent' => true
         ]);
 
     }
@@ -61,11 +68,11 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('code');
         $this->field('name');
         $this->field('type');
-        $this->field('trageting');
+        $this->field('targeting');
         $this->field('start_date');
         $this->field('end_date');
         $this->field('amount');
-        $this->field('nutritional_content',['visible' => false]);
+        $this->field('meal_nutritions',['visible' => false]);
         $this->field('implementer',['visible' => false]);
     }
 
@@ -86,13 +93,20 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('code');
         $this->field('name');
         $this->field('type',['select' => false]);
-        $this->field('trageting');
+        $this->field('targeting');
         $this->field('start_date');
         $this->field('end_date');
         $this->field('amount');
+        $this->field('meal_nutritions', [
+            'type' => 'chosenSelect',
+            'attr' => [
+                'label' => __('Nutritional Content')
+            ],
+            'options' => $typeOptions
+        ]);
 
-        $this->field('nutritional_content', ['type' => 'chosenSelect', 'options' => $typeOptions]);
         $this->field('implementer');
+        
     }
    
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -136,9 +150,9 @@ class MealProgrammesTable extends ControllerActionTable
          return compact('levelOptions', 'selectedLevel');
     }
 
-    public function onUpdateFieldTrageting(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTargeting(Event $event, array $attr, $action, Request $request)
     {
-        list($levelOptions, $selectedLevel) = array_values($this->getTragetingOptions());
+        list($levelOptions, $selectedLevel) = array_values($this->getTargetingOptions());
         $attr['options'] = $levelOptions;
         if ($action == 'add') {
             $attr['default'] = $selectedLevel;
@@ -164,7 +178,7 @@ class MealProgrammesTable extends ControllerActionTable
         return $list;
     }
 
-    public function getTragetingOptions()
+    public function getTargetingOptions()
     {
         $MealTrageting = TableRegistry::get('Meal.MealTargetTypes');
         $levelOptions = $MealTrageting
@@ -176,7 +190,7 @@ class MealProgrammesTable extends ControllerActionTable
          return compact('levelOptions', 'selectedLevel');
     }
 
-    public function onUpdateFieldNutritionalContent(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldMealNutritions(Event $event, array $attr, $action, Request $request)
     {
         list($levelOptions, $selectedLevel) = array_values($this->getNutritionalOptions());
         $attr['options'] = $levelOptions;
@@ -186,6 +200,64 @@ class MealProgrammesTable extends ControllerActionTable
 
         return $attr;
     }
+
+     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'MealNutritions'
+        ]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity) {
+ 
+        $this->setupFields($entity);
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {        
+        $this->setupFields($entity);
+    }
+
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $extra)
+    {
+            $MealNutritions = TableRegistry::get('meal_nutritional_records');
+            $conditions = [
+                $MealNutritions->aliasField('meal_programmes_id') => $extra['MealProgrammes']['id']
+            ];    
+
+            $MealNutritions->deleteAll($conditions);
+            $MealNutritions->newEntity();
+
+    }
+  
+
+
+    private function setupFields(Entity $entity = null) {
+        $attr = [];
+        if (!is_null($entity)) {
+            $attr['attr'] = ['entity' => $entity];
+        }
+
+        $this->field('academic_period_id',['select' => false]);
+        $this->field('code');
+        $this->field('name');
+        $this->field('type',['select' => false]);
+        $this->field('targeting');
+        $this->field('start_date');
+        $this->field('end_date');
+        $this->field('amount');
+        $this->field('meal_nutritions', [
+            'type' => 'chosenSelect',
+            'attr' => [
+                'label' => __('Nutritional Content')
+            ],
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+        ]);
+
+        $this->field('implementer');
+    }
+
+
 
     public function getNutritionalOptions()
     {
