@@ -583,7 +583,7 @@ class StudentAttendancesTable extends ControllerActionTable
             'key' => 'StudentAttendances.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => 'Openemis No'
+            'label' => 'Openemis ID'
         ];
 
         $newArray[] = [
