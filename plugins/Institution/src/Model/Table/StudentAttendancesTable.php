@@ -79,7 +79,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
              
         $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
         $this->Users = TableRegistry::get('Security.Users');
 
         if ($day == -1) {
@@ -119,12 +119,9 @@ class StudentAttendancesTable extends ControllerActionTable
                 )
             //POCOR-5750 start (Filter for check start date of student)
             ->innerJoin(
-                [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                [$InstitutionStudentTransfers->alias() => $InstitutionStudentTransfers->table()],
                 [
-                    $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $InstitutionStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    $InstitutionStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $InstitutionStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
+                    $InstitutionStudentTransfers->aliasField('student_id = ') . $this->aliasField('student_id'),
                 ]
             )
             //POCOR-5750 end
@@ -132,7 +129,10 @@ class StudentAttendancesTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionClassId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
-                $InstitutionSubjectStudents->aliasField('institution_subject_id') => $subjectId
+                $InstitutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
+                //POCOR-5750 condition
+                $InstitutionStudentTransfers->aliasField('start_date').' <= ' => $weekStartDay ,
+                $InstitutionStudentTransfers->aliasField('end_date').' >= ' => $weekEndDay 
             ])
             ->group([
                 $InstitutionSubjectStudents->aliasField('student_id')
@@ -164,12 +164,9 @@ class StudentAttendancesTable extends ControllerActionTable
             })
             //POCOR-5750 start (Filter for check start date of student)
             ->innerJoin(
-                [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                [$InstitutionStudentTransfers->alias() => $InstitutionStudentTransfers->table()],
                 [
-                    $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $InstitutionStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    $InstitutionStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $InstitutionStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
+                    $InstitutionStudentTransfers->aliasField('student_id = ') . $this->aliasField('student_id'),
                 ]
             )
             //POCOR-5750 end
@@ -177,7 +174,9 @@ class StudentAttendancesTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionClassId,
                 $this->aliasField('education_grade_id') => $educationGradeId ,
-                $InstitutionStudents->aliasField('start_date') >= $weekStartDay AND $InstitutionStudents->aliasField('end_date')  <= $weekEndDay //POCOR-5750 condition              
+                //POCOR-5750 condition
+                $InstitutionStudentTransfers->aliasField('start_date').' <= ' => $weekStartDay ,
+                $InstitutionStudentTransfers->aliasField('end_date').' >= ' => $weekEndDay               
             ])
             ->order([
                 $this->Users->aliasField('first_name')
