@@ -7,6 +7,8 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Chronos\Date;
+use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionMealProgrammesTable extends ControllerActionTable
@@ -26,33 +28,76 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
         $this->belongsTo('MealStatus', ['className' => 'Meal.MealStatusTypes','foreignKey' => 'delivery_status_id']);
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
+
         $this->MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
+        
     }
+
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {    
         
-
         $request = $this->request;
 
         //academic period filter
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
-        
         $extra['selectedPeriod'] = $selectedPeriod;
         $data['periodOptions'] = $periodOptions;
         $data['selectedPeriod'] = $selectedPeriod;
 
-        /*list($mealOptions, $selectedMeal) = array_values($this->getMealProgrammeOptions($this->request->query('meal')));
+        // meal programmes filter
+        $levelOptions = $this->MealProgrammes->getMealProgrammesOptions();
+        //    echo "<pre>";
+        // print_r($levelOptions); die();
 
-        
-        $extra['selectedMeal'] = $selectedMeal;
-        $data['mealOptions'] = $mealOptions;
-        $data['selectedMeal'] = $selectedMeal;*/      
+        if ($levelOptions) {
+            $levelOptions = array(-1 => __('-- Select Programmes Meal --')) + $levelOptions;
+        }
 
-        
+        if ($request->query('level')) {
+            $selectedLevel = $request->query('level');
+        } else {
+            $selectedLevel = -1;
+        }
+
+        $extra['selectedLevel'] = $selectedLevel;
+        $data['levelOptions'] = $levelOptions;
+        $data['selectedLevel'] = $selectedLevel;
+
+        //week
+
+        if ($selectedPeriod) {
+            $programmeOptions = $this->getMealWeekOptions($selectedPeriod);
+            //$programmeOptions = $this->AcademicPeriods->getMealWeeksForPeriod($selectedPeriod);
+
+            $programmeOptions = array(-1 => __('-- Please Select week --')) + $programmeOptions;
+
+            if ($request->query('programme')) {
+                $selectedProgramme = $request->query('programme');
+            } else {
+                $selectedProgramme = -1;
+            }
+
+
+            $extra['selectedProgramme'] = $selectedProgramme;
+            $extra['programmeOptions'] = $programmeOptions;
+            $data['programmeOptions'] = $programmeOptions;
+            $data['selectedProgramme'] = $selectedProgramme;
+
+
+        //         echo "<pre>";
+        // print_r($programmeOptions); die();
+
+        }
+
+        // echo "<pre>";
+        // print_r($request->query('level')); die();
+
+
+        //build up the control filter
         $extra['elements']['control'] = [
-            'name' => 'Institution.MealProgramme/controls',
+            'name' => 'Institution.InstitutionsMealProgramme/controls',
             'data' => $data,
             'order' => 3
         ];
@@ -61,17 +106,16 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
         $this->field('academic_period_id',['visible' => false]);   
         $this->field('meal_programmes_id');   
         $this->field('date_received');
-        $this->field('quantity');
+        $this->field('quantity_received');
         $this->field('comment',['visible' => false]);
-        $this->setFieldOrder(['meal_programmes_id','date_received','quantity','delivery_status']);
+        $this->setFieldOrder(['meal_programmes_id','date_received','quantity_received','delivery_status']);
     }
 
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-       
+    { 
+        $hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
 
-         $hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
-         $conditions = [];
+        $conditions = [];
 
         if (!$hasSearchKey) {
             //filter
@@ -81,29 +125,51 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
                 }
             }
 
-            if (array_key_exists('selectedMeal', $extra)) {
-                if ($extra['selectedMeal']) {
-                    $url = $_SERVER['REQUEST_URI'];
-                    $queryString = parse_url($url);
-                    $name = $queryString['query'];
-                    $domain = explode('=',$name);
-                   
-
-                    if ($domain[0] == "meal" ) {
-                       $conditions[] = $this->aliasField('meal_programmes_id = ') . $domain[1];            
-                   }
-                    else{
-                      $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
-                    }
+            if (array_key_exists('selectedLevel', $extra)) {
+                if ($extra['selectedLevel']) {
+                    $query->innerJoinWith('MealProgrammes');
+                    $conditions[] = 'MealProgrammes.id = ' . $extra['selectedLevel'];
                 }
             }
-            
 
-            $query->where([$conditions]);
+            if (array_key_exists('selectedProgramme', $extra)) {
+
+  
+                if ($extra['selectedProgramme'] > 0) {
+                    $list = $this->AcademicPeriods->getMealWeeksForPeriod($extra['selectedPeriod']);
+                    if (!empty($list)) {
+                        $data = $list[$extra['selectedProgramme']];
+
+                //$conditions[] = $this->aliasField('delivery_status_id = ') . $extra['selectedProgramme'];
+
+                 $start_day= "2020-02-03";
+                $conditions[] = $this->aliasField('comment = ') . '".$start_day."';
+                //$conditions[] = $this->aliasField('date_received') . ' = ' => $start_day;
+                // echo "<pre>";
+                // print_r($conditions); die();
+                 //   $query->where([$conditions,
+                 // $this->aliasField('date_received') >= $data['start_day'] AND $this->aliasField('date_received')  <= $data['end_day']]);
+                    
+     
+                    }
+
+                }
+            }
+
+//             $start_day= "2020-01-01";
+//             $end_day= "2020-01-10";
+echo "<pre>";
+             print_r($conditions); die();
+
+//             $query->where([
+//                  $this->aliasField('date_received') >= "2020-02-03"]);
+            // echo "<pre>";
+            //  print_r($data); die();
+
+           
+
+           $query->where([$conditions]);
         }
-                
-        $query->where([$conditions]);
-        
     }
 
     public function BeforeAction(Event $event, ArrayObject $extra)
@@ -113,7 +179,8 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
         $this->field('delivery_status_id',['select' => false]);
         $this->field('date_received',['type' => 'date']);
         $this->field('comment');
-         $this->setFieldOrder(['academic_period_id', 'meal_programmes_id','quantity','date_received','delivery_status', 'comment']);
+        $this->field('quantity_received');
+         $this->setFieldOrder(['academic_period_id', 'meal_programmes_id','quantity_received','delivery_status_id','date_received', 'comment']);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
@@ -229,6 +296,17 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
 
         return $selectedAcademicPeriod;
     }
+
+    public function getMealWeekOptions($selectedPeriod)
+    {
+        $list = $this->AcademicPeriods->getMealWeeksForPeriod($selectedPeriod);
+         if (!empty($list)) {
+                        foreach($list as $data){                         
+                            $result[$data['id']] = $data['name']; 
+                        }
+                    }
+        return $result;
+    } 
 
     
 }

@@ -229,8 +229,6 @@ class MealProgrammesTable extends ControllerActionTable
             $MealNutritions->newEntity();
 
     }
-  
-
 
     private function setupFields(Entity $entity = null) {
         $attr = [];
@@ -256,8 +254,6 @@ class MealProgrammesTable extends ControllerActionTable
 
         $this->field('implementer');
     }
-
-
 
     public function getNutritionalOptions()
     {
@@ -322,6 +318,14 @@ class MealProgrammesTable extends ControllerActionTable
         }
 
         return $selectedAcademicPeriod;
-    }    
+    } 
+
+    public function getMealProgrammesOptions()
+    {
+        $list = $this
+            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+            ->toArray();
+        return $list;
+    }   
     
 }
