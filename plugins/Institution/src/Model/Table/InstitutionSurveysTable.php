@@ -721,6 +721,12 @@ class InstitutionSurveysTable extends ControllerActionTable
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
         $doneStatus = WorkflowSteps::DONE;
+        $roles = TableRegistry::get('Security.SecurityGroupUsers');
+        $userRole = $roles->find()
+                    ->select([$roles->aliasField('security_role_id')])
+                    ->where([ $roles->aliasField('security_user_id')  => $userId ])->first();
+        $roleId = $userRole['security_role_id'];
+        $workflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
 
         $query
             ->select([
@@ -745,7 +751,16 @@ class InstitutionSurveysTable extends ControllerActionTable
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
-            ->where([$this->aliasField('assignee_id') => $userId])
+            /*->innerJoin(
+                [$workflowStepsRoles->alias() => $workflowStepsRoles->table()],
+                [
+                    $workflowStepsRoles->aliasField('workflow_step_id = ') . $this->aliasField('status_id')
+                ]
+            )*/
+            ->where([
+                $this->aliasField('assignee_id') => $userId,
+                //$workflowStepsRoles->aliasField('security_role_id') => $roleId
+            ])
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
@@ -774,7 +789,6 @@ class InstitutionSurveysTable extends ControllerActionTable
                     return $row;
                 });
             });
-
         return $query;
     }
     
