@@ -751,15 +751,15 @@ class InstitutionSurveysTable extends ControllerActionTable
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
-            /*->innerJoin(
+            ->innerJoin(
                 [$workflowStepsRoles->alias() => $workflowStepsRoles->table()],
                 [
                     $workflowStepsRoles->aliasField('workflow_step_id = ') . $this->aliasField('status_id')
                 ]
-            )*/
+            )
             ->where([
-                $this->aliasField('assignee_id') => $userId,
-                //$workflowStepsRoles->aliasField('security_role_id') => $roleId
+                //$this->aliasField('assignee_id') => $userId,
+                $workflowStepsRoles->aliasField('security_role_id') => $roleId
             ])
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
