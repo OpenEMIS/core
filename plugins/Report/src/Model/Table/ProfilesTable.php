@@ -1,5 +1,5 @@
 <?php
-namespace Report\Model\Table;
+namespace ProfileTemplate\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
@@ -196,6 +196,30 @@ class ProfilesTable extends ControllerActionTable
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
+		$this->setupTabElements();
+    }
+	
+	private function setupTabElements() {
+		$options['type'] = 'StaffTemplates';
+		$tabElements = $this->getStaffTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Profiles');
+	}
+
+	public function getStaffTabElements($options = [])
+    {
+        $tabElements = [];
+        $tabUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
+        $templateUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
+        $tabElements = [
+            'Profiles' => ['text' => __('Profiles')],
+            'Templates' => ['text' => __('Templates')]
+        ];
+		
+        $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'InstitutionProfiles']);
+        $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Institutions']);
+
+		return $tabElements;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)

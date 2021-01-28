@@ -1443,11 +1443,6 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
-            'Reports.Profiles' => [
-                'title' => 'Profiles',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Report'],
-            ],
             'Reports.Students' => [
                 'title' => 'Students',
                 'parent' => 'Reports',
@@ -1653,7 +1648,7 @@ class NavigationComponent extends Component
             'ProfileTemplates.Institutions' => [
                 'title' => 'Institutions',
                 'parent' => 'ProfileTemplates',
-                'selected' => ['ProfileTemplates.view', 'ProfileTemplates.add', 'ProfileTemplates.edit', 'ProfileTemplates.delete']
+                'selected' => ['ProfileTemplates.InstitutionProfiles', 'ProfileTemplates.view', 'ProfileTemplates.add', 'ProfileTemplates.edit', 'ProfileTemplates.delete']
             ],
             'ProfileTemplates.Staffs' => [
                 'title' => 'Staffs',
