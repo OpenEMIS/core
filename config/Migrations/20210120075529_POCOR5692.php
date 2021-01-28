@@ -831,12 +831,8 @@ class POCOR5692 extends AbstractMigration
             ])  
         ->save();
 
-        $this->execute("ALTER TABLE `meal_nutritional_records` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT");
-
-
-   
-         
-
+         $this->execute("ALTER TABLE `institution_meal_programmes` CHANGE `quantity` `quantity_received` INT(11) NOT NULL"); 
+         $this->execute("ALTER TABLE `institution_meal_programmes` CHANGE `date_received` `date_received` DATE NULL DEFAULT NULL");     
     }
 
     // rollback
