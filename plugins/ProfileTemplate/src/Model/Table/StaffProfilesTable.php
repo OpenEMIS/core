@@ -49,9 +49,10 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
-        $this->table('institutions');
-        parent::initialize($config);
-		
+        $this->table('institution_staff');
+		parent::initialize($config);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+
 		$this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -187,8 +188,10 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('institution_name', ['sort' => ['field' => 'name']]);
-        $this->field('institution_code', ['sort' => ['field' => 'code']]);
+		$this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->field('staff_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
+        //$this->field('institution_name', ['sort' => ['field' => 'name']]);
+        //$this->field('institution_code', ['sort' => ['field' => 'code']]);
         $this->field('profile_name');
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
@@ -225,8 +228,8 @@ class StaffProfilesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
-        $this->setFieldOrder(['institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
-		$this->setFieldVisible(['index'], ['institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
+        $this->setFieldOrder(['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
+		$this->setFieldVisible(['index'], ['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->StaffReportCardProcesses
@@ -254,20 +257,10 @@ class StaffProfilesTable extends ControllerActionTable
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        //$where[$this->StaffReportCards->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-        //End     
+        //$where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        //End 
 		
-        // Institution filter
-		$institutionOptions = [];
-		$institutionOptions = $this->find('list')->toArray();
-       
-        $institutionOptions = ['-1' => '-- '.__('Select Institution').' --'] + $institutionOptions;
-        $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
-        $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
-		//$where[$this->StaffReportCards->aliasField('staff_profile_template_id')] = $selectedReportCard;
-        //End
-		
-        // Report Cards filter
+		// Report Cards filter
         $reportCardOptions = [];
 		$reportCardOptions = $this->StaffTemplates->find('list')
 			->where([
@@ -279,13 +272,24 @@ class StaffProfilesTable extends ControllerActionTable
         $reportCardOptions = ['-1' => '-- '.__('Select Staff Template').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->query('staff_profile_template_id')) ? $this->request->query('staff_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-		//$where[$this->StaffReportCards->aliasField('staff_profile_template_id')] = $selectedReportCard;
+        //End	
+		
+        // Institution filter
+		$Institutions = TableRegistry::get('Institutions');
+
+		$institutionOptions = [];
+		$institutionOptions = $Institutions->find('list')->toArray();
+       
+        $institutionOptions = ['-1' => '-- '.__('Select Institution').' --'] + $institutionOptions;
+        $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
+        $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
+		$where[$this->aliasField('institution_id')] = $selectedInstitution;
         //End
-	
+		
         $query
             ->select([
-                'institution_name' => $this->aliasField('name'),
-                'institution_code' => $this->aliasField('code'),
+                //'institution_name' => $this->aliasField('name'),
+                //'institution_code' => $this->aliasField('code'),
                 'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
                 'report_card_status' => $this->StaffReportCards->aliasField('status'),
                 'report_card_started_on' => $this->StaffReportCards->aliasField('started_on'),
@@ -293,21 +297,25 @@ class StaffProfilesTable extends ControllerActionTable
             ])
             ->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
                 [
-                    $this->StaffReportCards->aliasField('institution_id = ') . $this->aliasField('id'),
+                    $this->StaffReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $this->StaffReportCards->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
                     $this->StaffReportCards->aliasField('staff_profile_template_id = ') . $selectedReportCard
                 ]
             )
             ->autoFields(true)
-			->order([
-                $this->aliasField('name'),
-            ])
+			->where($where)
             ->all();
-
+		
+		if (is_null($this->request->query('sort'))) {
+            $query
+                ->contain('Users')
+                ->order(['Users.first_name', 'Users.last_name']);
+        }
+		
         $extra['elements']['controls'] = ['name' => 'ProfileTemplate.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
 
         // sort
-        $sortList = ['report_card_status', 'institution_name', 'institution_code'];
+        $sortList = ['report_card_status', 'first_name', 'openemis_no'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
@@ -437,34 +445,25 @@ class StaffProfilesTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $params = $this->request->query;
-		
-		if(!empty($params['staff_profile_template_id'])) {
 
-			$query
-				->select([
-					'institution_name' => $this->aliasField('name'),
-					'institution_code' => $this->aliasField('code'),
-					'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
-					'report_card_status' => $this->StaffReportCards->aliasField('status'),
-					'report_card_started_on' => $this->StaffReportCards->aliasField('started_on'),
-					'report_card_completed_on' => $this->StaffReportCards->aliasField('completed_on'),
-				])
-				->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
-					[
-						$this->StaffReportCards->aliasField('institution_id = ') . $this->aliasField('id'),
-						$this->StaffReportCards->aliasField('academic_period_id = ') . $params['academic_period_id'],
-						$this->StaffReportCards->aliasField('staff_profile_template_id = ') . $params['staff_profile_template_id']
-					]
-				)
-				->autoFields(true);
-		} else {
-			$query
-				->select([
-					'institution_name' => $this->aliasField('name'),
-					'institution_code' => $this->aliasField('code'),
-				])
-				->autoFields(true);
-		}
+		$query
+			->select([
+				//'institution_name' => $this->aliasField('name'),
+				//'institution_code' => $this->aliasField('code'),
+				'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
+				'report_card_status' => $this->StaffReportCards->aliasField('status'),
+				'report_card_started_on' => $this->StaffReportCards->aliasField('started_on'),
+				'report_card_completed_on' => $this->StaffReportCards->aliasField('completed_on'),
+			])
+			->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
+				[
+					$this->StaffReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+					$this->StaffReportCards->aliasField('academic_period_id = ') . $params['academic_period_id'],
+					$this->StaffReportCards->aliasField('staff_profile_template_id = ') . $params['staff_profile_template_id']
+				]
+			)
+			->autoFields(true);
+		
     }
 
     public function onGetStatus(Event $event, Entity $entity)
