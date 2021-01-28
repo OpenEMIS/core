@@ -33,6 +33,7 @@ class AreapickerBehavior extends Behavior
         $HtmlField = $event->subject();
         $data = $HtmlField->request->data;
         $value = isset($data[$this->_table->alias()][$attr['field']]) ? $data[$this->_table->alias()][$attr['field']] : $entity->{$attr['field']};
+
         if ($action == 'edit') {
             $Url = $HtmlField->Url;
             $Form = $HtmlField->Form;
@@ -87,7 +88,6 @@ class AreapickerBehavior extends Behavior
             $areaKeys = array_merge($areaKeys, [$entity->{$attr['field']}]);
             // Temporary disabled for further investigation
             // $session->write('FormTampering.'.$fieldName, $areaKeys);
-
             return $event->subject()->renderElement('Area.sg_tree', ['attr' => $attr]);
         }
         return $value;
