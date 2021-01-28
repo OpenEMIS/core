@@ -23,7 +23,10 @@ class StaffTemplatesTable extends ControllerActionTable
 		$this->table('staff_profile_templates');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Institutions', ['className' => 'Institutions']);
 
+		$this->addBehavior('User.AdvancedNameSearch');
+		
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'excel_template_name',
             'content' => 'excel_template',
@@ -65,6 +68,10 @@ class StaffTemplatesTable extends ControllerActionTable
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                 'provider' => 'table'
+            ]) 
+			->add('code', 'ruleUniqueCode', [
+                'rule' => ['validateUnique', ['scope' => 'institution_id']],
+                'provider' => 'table'
             ])
             ->add('generate_start_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
@@ -92,15 +99,16 @@ class StaffTemplatesTable extends ControllerActionTable
         $this->field('generate_start_date', ['type' => 'date']);
         $this->field('generate_end_date', ['type' => 'date']);
         $this->field('excel_template');
-		$this->setupTabElements();
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['academic_period_id']['visible'] = false;
+        $this->fields['institution_id']['visible'] = false;
         $this->fields['description']['visible'] = false;
         $this->setFieldOrder(['code', 'name', 'generate_start_date', 'generate_end_date', 'excel_template']);
-    }
+		$this->setupTabElements();
+	}
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -121,6 +129,7 @@ class StaffTemplatesTable extends ControllerActionTable
         $this->field('name');
         $this->field('description');
         $this->field('academic_period_id', ['entity' => $entity]);
+		$this->field('institution_id', ['entity' => $entity]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -137,7 +146,7 @@ class StaffTemplatesTable extends ControllerActionTable
         // End
 
         $this->setupFields($entity);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'institution_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
     }
 
     public function onGetExcelTemplate(Event $event, Entity $entity)
@@ -157,7 +166,7 @@ class StaffTemplatesTable extends ControllerActionTable
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'institution_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -170,7 +179,7 @@ class StaffTemplatesTable extends ControllerActionTable
         $this->setupFields($entity);
         $this->fields['code']['type'] = 'readonly';
         $this->fields['name']['type'] = 'readonly';
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'institution_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
     }
 
     public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
@@ -197,6 +206,28 @@ class StaffTemplatesTable extends ControllerActionTable
             $attr['type'] = 'readonly';
             $attr['value'] = $attr['entity']->academic_period_id;
             $attr['attr']['value'] = $this->AcademicPeriods->get($attr['entity']->academic_period_id)->name;
+        }
+        return $attr;
+    }
+	
+	
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        $Institutions = TableRegistry::get('Institutions');
+
+        if ($action == 'add') {
+            $institutionOptions = $Institutions
+                ->find('list')
+                ->order([$Institutions->aliasField('name')])
+                ->toArray();
+            $attr['type'] = 'select';
+            $attr['options'] = $institutionOptions;
+            $attr['onChangeReload'] = true;
+
+        } else if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $attr['entity']->institution_id;
+            $attr['attr']['value'] = $Institutions->get($attr['entity']->institution_id)->name;
         }
         return $attr;
     }
