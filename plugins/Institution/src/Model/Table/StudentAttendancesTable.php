@@ -124,9 +124,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $InstitutionStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $InstitutionStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $InstitutionStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $InstitutionStudents->aliasField('start_date = ') => $day,
-                    //$InstitutionStudents->aliasField('start_date <= ') => $weekEndDay
+                    $InstitutionStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
                 ]
             )
             //POCOR-5750 end
@@ -171,16 +169,15 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $InstitutionStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $InstitutionStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $InstitutionStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $InstitutionStudents->aliasField('start_date = ') => $day,
-                    //$InstitutionStudents->aliasField('start_date <= ') => $weekEndDay
+                    $InstitutionStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
                 ]
             )
             //POCOR-5750 end
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionClassId,
-                $this->aliasField('education_grade_id') => $educationGradeId                
+                $this->aliasField('education_grade_id') => $educationGradeId ,
+                $InstitutionStudents->aliasField('start_date') >= $weekStartDay AND $InstitutionStudents->aliasField('end_date')  <= $weekEndDay //POCOR-5750 condition              
             ])
             ->order([
                 $this->Users->aliasField('first_name')
@@ -583,7 +580,7 @@ class StudentAttendancesTable extends ControllerActionTable
             'key' => 'StudentAttendances.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => 'Openemis No'
+            'label' => 'Openemis ID'
         ];
 
         $newArray[] = [
