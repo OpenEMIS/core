@@ -95,6 +95,7 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->field('generate_start_date', ['type' => 'date']);
         $this->field('generate_end_date', ['type' => 'date']);
         $this->field('excel_template');
+		$this->setupTabElements();
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -258,5 +259,28 @@ class ProfileTemplatesTable extends ControllerActionTable
         }        
 
     } 
+	
+	private function setupTabElements() {
+		$options['type'] = 'StaffTemplates';
+		$tabElements = $this->getStaffTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Templates');
+	}
+
+	public function getStaffTabElements($options = [])
+    {
+        $tabElements = [];
+        $tabUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
+        $templateUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
+        $tabElements = [
+            'Profiles' => ['text' => __('Profiles')],
+            'Templates' => ['text' => __('Templates')]
+        ];
+		
+        $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'InstitutionProfiles']);
+        $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Institutions']);
+
+		return $tabElements;
+    }
 
 }
