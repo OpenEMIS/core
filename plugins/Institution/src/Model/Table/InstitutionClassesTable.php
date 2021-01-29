@@ -1369,7 +1369,7 @@ class InstitutionClassesTable extends ControllerActionTable
         return $studentOptions;
     }
 
-    public function getStaffOptions($institutionId, $action = 'edit', $academicPeriodId = 0, $staffIds = [], $institutionShiftId = 0)
+    public function getStaffOptions($institutionId, $action = 'edit', $academicPeriodId = 0, $staffIds = [], $institutionShiftId = 0,$homeTeacher = null)
     {
         if (in_array($action, ['edit', 'add'])) {
             $options = [0 => '-- ' . $this->getMessage($this->aliasField('selectTeacherOrLeaveBlank')) . ' --'];
@@ -1402,12 +1402,10 @@ class InstitutionClassesTable extends ControllerActionTable
                                 $Staff->Users->aliasField('preferred_name')
                             ])
                             ->contain(['Users'])
-                            // ->matching('Positions', function ($q) {
-                            //     return $q->where(['Positions.is_homeroom' => 1]);
-                            // })
+                           
                             ->find('byInstitution', ['Institutions.id'=>$institutionId])
                             ->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
-                            ->innerJoin(
+                            ->join(
                                 ['InstitutionStaffShifts' => 'institution_staff_shifts'],
                                 ['InstitutionStaffShifts.staff_id = ' . $Staff->aliasField('staff_id')]
                             )
@@ -1423,8 +1421,13 @@ class InstitutionClassesTable extends ControllerActionTable
 
                             ->order([
                                 $Staff->Users->aliasField('first_name')
-                            ])
-                            ->formatResults(function ($results) {
+                            ]);
+                            if($homeTeacher) {
+                                $query  ->matching('Positions', function ($q) {
+                                    return $q->where(['Positions.is_homeroom' => 1]);
+                                });
+                            }
+                            $query->formatResults(function ($results) {
                                 $returnArr = [];
                                 foreach ($results as $result) {
                                     if ($result->has('Users')) {
