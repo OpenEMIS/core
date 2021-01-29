@@ -58,7 +58,9 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
         {
             var success = function(response, deferred) {
                 if (angular.isDefined(response.data)) {
-                    deferred.resolve(response.data.total > 0);
+                    console.log(response);
+                    // deferred.resolve(response.data.total > 0);
+                    deferred.resolve(response.data.total);
                 } else {
                     deferred.reject('There is an error retrieving the permission for the subject');
                 }
