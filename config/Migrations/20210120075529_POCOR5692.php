@@ -12,8 +12,8 @@ class POCOR5692 extends AbstractMigration
      */
      public function up()
     {
-        $this->execute('CREATE TABLE `zz_5692_meal_programmes` LIKE `meal_programmes`');
-        $this->execute('INSERT INTO `zz_5692_meal_programmes` SELECT * FROM `meal_programmes`');
+        //$this->execute('CREATE TABLE `zz_5692_meal_programmes` LIKE `meal_programmes`');
+        //$this->execute('INSERT INTO `zz_5692_meal_programmes` SELECT * FROM `meal_programmes`');
         $this->execute('CREATE TABLE `zz_5692_import_mapping` LIKE `import_mapping`');
         $this->execute('INSERT INTO `zz_5692_import_mapping` SELECT * FROM `import_mapping`');
         // meal_target_types
@@ -810,7 +810,7 @@ class POCOR5692 extends AbstractMigration
         ];
 
         $this->insert('import_mapping', $data); 
-        $this->execute("ALTER TABLE `meal_programmes` CHANGE `trageting` `targeting` INT(11) NOT NULL COMMENT 'links to meal_target_types.id"); 
+        $this->execute("ALTER TABLE `meal_programmes` CHANGE `trageting` `targeting` INT(11) NOT NULL COMMENT 'links to meal_target_types.id'"); 
 
         $this->execute("ALTER TABLE `meal_programmes` DROP `nutritional_content`"); 
 
