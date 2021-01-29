@@ -33,6 +33,12 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
         
     }
 
+    // public function validationDefault(Validator $validator)
+    // {
+    //    $validator = parent::validationDefault($validator);
+
+    // }
+
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {    
@@ -48,9 +54,7 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
 
         // meal programmes filter
         $levelOptions = $this->MealProgrammes->getMealProgrammesOptions();
-        //    echo "<pre>";
-        // print_r($levelOptions); die();
-
+    
         if ($levelOptions) {
             $levelOptions = array(-1 => __('-- Select Programmes Meal --')) + $levelOptions;
         }
@@ -69,7 +73,7 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
 
         if ($selectedPeriod) {
             $programmeOptions = $this->getMealWeekOptions($selectedPeriod);
-            //$programmeOptions = $this->AcademicPeriods->getMealWeeksForPeriod($selectedPeriod);
+
 
             $programmeOptions = array(-1 => __('-- Please Select week --')) + $programmeOptions;
 
@@ -84,15 +88,8 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
             $extra['programmeOptions'] = $programmeOptions;
             $data['programmeOptions'] = $programmeOptions;
             $data['selectedProgramme'] = $selectedProgramme;
-
-
-        //         echo "<pre>";
-        // print_r($programmeOptions); die();
-
         }
 
-        // echo "<pre>";
-        // print_r($request->query('level')); die();
 
 
         //build up the control filter
@@ -138,46 +135,26 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
                 if ($extra['selectedProgramme'] > 0) {
                     $list = $this->AcademicPeriods->getMealWeeksForPeriod($extra['selectedPeriod']);
                     if (!empty($list)) {
-                        $data = $list[$extra['selectedProgramme']];
+                        $data = $list[$extra['selectedProgramme'] - 1];
 
-                //$conditions[] = $this->aliasField('delivery_status_id = ') . $extra['selectedProgramme'];
-
-                 $start_day= "2020-02-03";
-                $conditions[] = $this->aliasField('comment = ') . '".$start_day."';
-                //$conditions[] = $this->aliasField('date_received') . ' = ' => $start_day;
-                // echo "<pre>";
-                // print_r($conditions); die();
-                 //   $query->where([$conditions,
-                 // $this->aliasField('date_received') >= $data['start_day'] AND $this->aliasField('date_received')  <= $data['end_day']]);
-                    
-     
+                        $conditions[] = $this->aliasField('date_received >= ') . '"'. $data['start_day'] . '"';
+                        $conditions[] = $this->aliasField('date_received <= ') . '"'. $data['end_day'] . '"';
                     }
 
                 }
             }
-
-//             $start_day= "2020-01-01";
-//             $end_day= "2020-01-10";
-echo "<pre>";
-             print_r($conditions); die();
-
-//             $query->where([
-//                  $this->aliasField('date_received') >= "2020-02-03"]);
-            // echo "<pre>";
-            //  print_r($data); die();
-
            
-
            $query->where([$conditions]);
         }
     }
 
-    public function BeforeAction(Event $event, ArrayObject $extra)
-    {    
+    public function beforeAction(Event $event, ArrayObject $extra)
+    { 
         $this->field('academic_period_id', ['select' => false]);
         $this->field('meal_programmes_id',['select' => false]);
         $this->field('delivery_status_id',['select' => false]);
         $this->field('date_received',['type' => 'date']);
+
         $this->field('comment');
         $this->field('quantity_received');
          $this->setFieldOrder(['academic_period_id', 'meal_programmes_id','quantity_received','delivery_status_id','date_received', 'comment']);
@@ -190,13 +167,14 @@ echo "<pre>";
 
             $attr['options'] = $periodOptions;
 
-            $attr['default'] = $selectedPeriod;
+            $attr['onChangeReload'] = $selectedPeriod;
         } else if ($action == 'edit') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->academic_period_id;
             $attr['attr']['value'] = $entity->academic_period->name;
+            $attr['onChangeReload'] = 'changeShiftOption';
         }
 
         return $attr;
@@ -241,6 +219,20 @@ echo "<pre>";
         return $attr;
     }
 
+    public function onUpdateFieldDateReceived(Event $event, array $attr, $action, $request){
+
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $data = $request->data[$this->alias()];
+        if($data['delivery_status_id'] == 4){
+             $attr['type'] = 'hidden';          
+             $attr['value'] = Null;          
+        }
+
+
+        return $attr;
+
+    }
+
     public function getNameOptions()
     {
         $MealProgramme = TableRegistry::get('Meal.MealProgrammes');
@@ -255,10 +247,12 @@ echo "<pre>";
 
     public function onUpdateFieldDeliveryStatusId(Event $event, array $attr, $action, $request)
     {
+
         list($levelOptions, $selectedLevel) = array_values($this->getDeliveryStatusOptions());
         $attr['options'] = $levelOptions;
+        
         if ($action == 'add') {
-            $attr['default'] = $selectedLevel;
+            $attr['onChangeReload'] = $selectedLevel;
         }
 
         return $attr;
@@ -276,7 +270,11 @@ echo "<pre>";
         return compact('levelOptions', 'selectedLevel');
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
+    public function afterSave(Event $event, Entity $entity, ArrayObject $data){
+        if($entity->delivery_status_id == 4){
+             $this->updateAll(['date_received' => NULL],['id' => $entity->id]);
+                 return;
+        }
         $entity->date_received = date("Y-m-d H:i:s");
     }
 

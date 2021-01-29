@@ -47,16 +47,6 @@
                     'data-named-group' => 'period, level'
                 ));
 
-                echo $this->Form->input('education_subject_id', array(
-                    'type' => 'select',
-                    'class' => 'form-control',
-                    'label' => false,
-                    'options' => $subjectOptions,
-                    'default' => $selectedSubject,
-                    'url' => $baseUrl,
-                    'data-named-key' => 'subject',
-                    'data-named-group' => 'period, level, programme, grade'
-                ));
             ?>
         </div>
     </div>

@@ -812,7 +812,7 @@ class NavigationComponent extends Component
             'Institutions.StudentMeals.index' => [
                 'title' => 'Students',
                 'parent' => 'Meals',
-                'selected' => ['Institutions.StudentMeals'],
+                'selected' => ['Institutions.StudentMeals','Institutions.ImportStudentMeals'],
                 'params' => ['plugin' => 'Institution']
             ],
 
