@@ -398,7 +398,7 @@ class AcademicPeriodsTable extends AppTable
                         ->first();
                     $current = $request->query('current');
 
-                    if ($academicPeriodLevelId == $level->id && !is_null($current) && $current == 1) {
+                    if (!is_null($current) && $current == 1) {
                         $where = [$this->aliasField('academic_period_level_id') => $level->id];
                         if (array_key_exists('id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['id'])) {
                             $currentAcademicPeriodId = $request->data[$this->alias()]['id'];
