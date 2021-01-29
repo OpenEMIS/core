@@ -12,6 +12,8 @@ class POCOR5692 extends AbstractMigration
      */
      public function up()
     {
+        $this->execute('CREATE TABLE `zz_5692_meal_programmes` LIKE `meal_programmes`');
+        $this->execute('INSERT INTO `zz_5692_meal_programmes` SELECT * FROM `meal_programmes`');
         // meal_target_types
        $this->execute('CREATE TABLE `meal_target_types` (
                       `id` int(11) NOT NULL,
@@ -805,8 +807,32 @@ class POCOR5692 extends AbstractMigration
             ]
         ];
 
-        $this->insert('import_mapping', $data);       
+        $this->insert('import_mapping', $data); 
+        $this->execute("ALTER TABLE `meal_programmes` CHANGE `trageting` `targeting` INT(11) NOT NULL COMMENT 'links to meal_target_types.id"); 
 
+        $this->execute("ALTER TABLE `meal_programmes` DROP `nutritional_content`"); 
+
+        // meal_nutritional_records
+        $table = $this->table('meal_nutritional_records', [
+                'collation' => 'utf8mb4_unicode_ci',
+                'comment' => 'This field options table contains types of meal nutritional records'
+            ]);
+        $table->addColumn('meal_programmes_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'comment' => 'links to meal_programmes.id',
+                'null' => true
+            ])
+            ->addColumn('nutritional_content_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'comment' =>'links to meal_nutritions.id',
+                'null' => true
+            ])  
+        ->save();
+
+         $this->execute("ALTER TABLE `institution_meal_programmes` CHANGE `quantity` `quantity_received` INT(11) NOT NULL"); 
+         $this->execute("ALTER TABLE `institution_meal_programmes` CHANGE `date_received` `date_received` DATE NULL DEFAULT NULL");     
     }
 
     // rollback
@@ -823,7 +849,12 @@ class POCOR5692 extends AbstractMigration
         $this->execute('DROP TABLE institution_meal_programmes');
         $this->execute('DROP TABLE institution_meal_students');
         $this->execute('DROP TABLE student_meal_marked_records');
+        $this->execute('DROP TABLE meal_nutritional_records');
         $this->execute("DELETE FROM import_mapping WHERE model = 'Institution.InstitutionMealStudents'");
+
+        $this->execute('DROP TABLE IF EXISTS `meal_programmes`');
+        $this->execute('RENAME TABLE `zz_5692_meal_programmes` TO `meal_programmes`');
+
     }
     
 }
