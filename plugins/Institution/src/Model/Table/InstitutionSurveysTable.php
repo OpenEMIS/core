@@ -758,7 +758,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ]
             )
             ->where([
-                //$this->aliasField('assignee_id') => $userId,
+                $this->aliasField('assignee_id') => $userId,
                 $workflowStepsRoles->aliasField('security_role_id') => $roleId
             ])
             ->order([$this->aliasField('created') => 'DESC'])
