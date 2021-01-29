@@ -1386,7 +1386,10 @@ class InstitutionClassesTable extends ControllerActionTable
             $startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
             $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
             $todayDate = new Date();
-
+            // where condition for shift 
+            if(!empty($institutionShiftId) && $institutionShiftId!=0) {
+                $where = ['InstitutionStaffShifts.shift_id' => $institutionShiftId];
+            }
             $Staff = $this->Institutions->Staff;
             $query = $Staff->find('all')
                             ->select([
@@ -1399,24 +1402,25 @@ class InstitutionClassesTable extends ControllerActionTable
                                 $Staff->Users->aliasField('preferred_name')
                             ])
                             ->contain(['Users'])
-                            ->matching('Positions', function ($q) {
-                                return $q->where(['Positions.is_homeroom' => 1]);
-                            })
+                            // ->matching('Positions', function ($q) {
+                            //     return $q->where(['Positions.is_homeroom' => 1]);
+                            // })
                             ->find('byInstitution', ['Institutions.id'=>$institutionId])
                             ->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
                             ->innerJoin(
                                 ['InstitutionStaffShifts' => 'institution_staff_shifts'],
                                 ['InstitutionStaffShifts.staff_id = ' . $Staff->aliasField('staff_id')]
                             )
-                ->where([
+                            ->where($where)
+                            ->where([
                                 $Staff->aliasField('staff_id NOT IN') => $staffIds,
                                 $Staff->aliasField('start_date <= ') => $todayDate,
-                 'InstitutionStaffShifts.shift_id' => $institutionShiftId,
                                 'OR' => [
                                     [$Staff->aliasField('end_date >= ') => $todayDate],
                                     [$Staff->aliasField('end_date IS NULL')]
                                 ]
                             ])
+
                             ->order([
                                 $Staff->Users->aliasField('first_name')
                             ])
@@ -1429,7 +1433,6 @@ class InstitutionClassesTable extends ControllerActionTable
                                 }
                                 return $returnArr;
                             });
-
             $options = $options + $query->toArray();
         }
 
