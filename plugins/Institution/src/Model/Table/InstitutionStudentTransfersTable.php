@@ -351,6 +351,9 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                 }
             }
         }
+        else{
+            $this->updateAll(['all_visible' => 1], ['id' => $entity->id]);            
+        }
     }
 
     public function addSections()
