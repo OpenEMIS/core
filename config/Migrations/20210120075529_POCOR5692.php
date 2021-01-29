@@ -14,6 +14,8 @@ class POCOR5692 extends AbstractMigration
     {
         $this->execute('CREATE TABLE `zz_5692_meal_programmes` LIKE `meal_programmes`');
         $this->execute('INSERT INTO `zz_5692_meal_programmes` SELECT * FROM `meal_programmes`');
+        $this->execute('CREATE TABLE `zz_5692_import_mapping` LIKE `import_mapping`');
+        $this->execute('INSERT INTO `zz_5692_import_mapping` SELECT * FROM `import_mapping`');
         // meal_target_types
        $this->execute('CREATE TABLE `meal_target_types` (
                       `id` int(11) NOT NULL,
@@ -850,7 +852,9 @@ class POCOR5692 extends AbstractMigration
         $this->execute('DROP TABLE institution_meal_students');
         $this->execute('DROP TABLE student_meal_marked_records');
         $this->execute('DROP TABLE meal_nutritional_records');
-        $this->execute("DELETE FROM import_mapping WHERE model = 'Institution.InstitutionMealStudents'");
+      
+        $this->execute('DROP TABLE IF EXISTS `import_mapping`');
+        $this->execute('RENAME TABLE `zz_5692_import_mapping` TO `import_mapping`');
 
         $this->execute('DROP TABLE IF EXISTS `meal_programmes`');
         $this->execute('RENAME TABLE `zz_5692_meal_programmes` TO `meal_programmes`');
