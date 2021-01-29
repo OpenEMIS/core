@@ -81,9 +81,6 @@ class TextbooksTable extends ControllerActionTable {
             $levelOptions = array(-1 => __('-- Select Education Level --')) + $levelOptions;
         }
 
-        // echo "<pre>";
-        // print_r($request->query('level')); die();
-
         if ($request->query('level')) {
             $selectedLevel = $request->query('level');
         } else {
