@@ -82,13 +82,28 @@ class StudentAttendanceMarkTypesTable extends AppTable
                     $StudentMarkTypeStatusGrades->aliasField('education_grade_id') => $gradeId,
                     $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId
                 ])
-                ->extract('attendance_per_day')
+                //->extract('attendance_per_day')
                 ->first();
 
             if (!is_null($attendancePerDay)) {
-                return $attendancePerDay;
+                $attendancePerDayId = $attendancePerDay->id;
+                $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+                $modelData = $StudentAttendancePerDayPeriods
+                             ->find()
+                             ->select(['id', 'name'])
+                             ->where([$StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id') => $attendancePerDayId,
+                    
+                                ])
+                             ->toArray();
+                
+                return $modelData;
             } else {
-                return self::DEFAULT_ATTENDANCE_PER_DAY;
+                $data[] = [
+                    'id' => 1,
+                    'name' => 'Period 1'
+                ];
+             
+                return $data;
             }
         } else {
             Log::write('error', 'Error extracting education_grade_id for class_id ' . $classId);
