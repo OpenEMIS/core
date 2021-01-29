@@ -100,10 +100,24 @@ class StudentClassesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+		$userData = $this->Session->read();
+		$studentId = $userData['Auth']['User']['id'];
+
+		$condition = [];
+		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
+			$condition = [];
+		} else {
+			if (!empty($studentId)) {
+				$conditions[$this->aliasField('student_id')] = $studentId;
+			}
+		}
+		
         $query->contain([
             'InstitutionClasses',
             'StudentStatuses'
-        ]);
+        ])
+		->where($conditions)
+        ->toArray();
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)

@@ -128,6 +128,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     function getTranslatedText() {
         var success = function(response, deferred) {
             var translatedObj = response.data;
+            console.log("response.data", response.data)
             if (angular.isDefined(translatedObj)) {
                 translateText = translatedObj;
             }
@@ -260,6 +261,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     function getEducationGradeOptions(institutionId, academicPeriodId, classId) {
         var success = function(response, deferred) {
             var educationGradeList = response.data.data;
+            console.log("educationGradeList", educationGradeList)
             if (angular.isObject(educationGradeList)) {
                 if (educationGradeList.length > 0) {
                     deferred.resolve(educationGradeList);
@@ -271,7 +273,6 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 deferred.reject('There was an error when retrieving the education grade list');
             }
         };
-
         return InstitutionClasses
             .find('gradesByInstitutionAndAcademicPeriodAndInstitutionClass', {
                 institution_id: institutionId,
@@ -308,6 +309,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     function getPeriodOptions(institutionClassId, academicPeriodId,day_id, educationGradeId) {
         var success = function(response, deferred) {
             var attendancePeriodList = response.data.data;
+            console.log("attendancePeriodList", attendancePeriodList)
             if (angular.isObject(attendancePeriodList) && attendancePeriodList.length > 0) {
                 deferred.resolve(attendancePeriodList);
             } else {
@@ -358,6 +360,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     }
 
     function getIsMarked(params) {
+        console.log("parms", params)
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
@@ -374,6 +377,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         var success = function(response, deferred) {
             var count = response.data.total;
+            console.log("response.data", response.data)
             if (angular.isDefined(count)) {
                 var isMarked = count > 0;
                 deferred.resolve(isMarked);
@@ -674,6 +678,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             var newValue = eSelect.value;
 
             var absenceTypeObj = absenceTypeList.find(obj => obj.id == newValue);
+            console.log("absenceTypeObj", absenceTypeObj)
             // data.institution_student_absences.absence_type_id = newValue;
 
             if (newValue != oldValue) {
@@ -761,6 +766,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     function setRowDatas(context, data) {
         var studentList = context.scope.$ctrl.classStudentList;
+        console.log("studentList", studentList)
         studentList.forEach(function (dataItem, index) {
             if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
                 dataItem.rowHeight = 60;

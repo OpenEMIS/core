@@ -43,6 +43,7 @@ class SingleGradeBehavior extends Behavior
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
         $selectedEducationGradeId = $extra['selectedEducationGradeId'];
         $institutionShiftId = $extra['institution_shift_id'];
+        
         $numberOfClasses = 1;
 
         if ($request->is(['post']) && array_key_exists($model->alias(), $request->data)) {
@@ -75,7 +76,7 @@ class SingleGradeBehavior extends Behavior
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $gradeOptions = [0 => '-- '.__('Select').' --'] + $gradeOptions;
-
+//echo 'ssssss';print_r($institutionShiftId);die;
         $this->_table->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [
             'message' => '{{label}} - ' . $this->_table->getMessage($this->_table->aliasField('expiredGrade')),
             'callable' => function ($id) use ($InstitutionGrades, $institutionId, $AcademicPeriodTable, $selectedAcademicPeriodId) {
@@ -119,7 +120,7 @@ class SingleGradeBehavior extends Behavior
         $staffOptions = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId);
         $secondaryStaffOptions = $staffOptions;
         $secondaryPlaceholderText = '';
-
+        $homeTeacher = true;
         if (array_key_exists(0, $secondaryStaffOptions)) {
             $secondaryPlaceholderText = $secondaryStaffOptions[0];
             unset($secondaryStaffOptions[0]);
@@ -129,7 +130,7 @@ class SingleGradeBehavior extends Behavior
             'type'      => 'element',
             'element'   => 'Institution.Classes/single_grade',
             'data'      => [    'numberOfClasses'   => $numberOfClasses,
-                                'staffOptions'      => $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId,0, $institutionShiftId),
+                                'staffOptions'      => $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId,0, $institutionShiftId,$homeTeacher),
                                 'existedClasses'    => $model->getExistedClasses($institutionId, $selectedAcademicPeriodId, $selectedEducationGradeId),
                                 'grade'             => $grade,
                                 'secondaryStaffAttr' => [
