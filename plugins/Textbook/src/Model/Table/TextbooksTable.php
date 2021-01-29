@@ -76,6 +76,7 @@ class TextbooksTable extends ControllerActionTable {
         //education level filter
         $levelOptions = $this->EducationLevels->getLevelOptions();
 
+
         if ($levelOptions) {
             $levelOptions = array(-1 => __('-- Select Education Level --')) + $levelOptions;
         }
