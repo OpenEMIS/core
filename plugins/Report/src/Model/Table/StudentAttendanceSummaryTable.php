@@ -1252,12 +1252,13 @@ public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
                 'sheetData' => [
                     'education_grade_id' => $gradeId
                 ],
-                'name' => $gradeName,
+                'name' => preg_replace("/\([^)]+\)/","",$gradeName),
                 'table' => $this,
                 'query' => $query,
                 'orientation' => 'landscape'
             ];
         }
+        
         return $sheets;
     }
 }

@@ -148,22 +148,27 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                 return InstitutionStudentAttendancesSvc.getEducationGradeOptions(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass);
             }, vm.error)
             .then(function(educationGradeListOptions) {
+                console.log("educationGradeListOptions", educationGradeListOptions)
                 vm.updateEducationGradeList(educationGradeListOptions);                
                 return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay);
             }, vm.error)
-            .then(function(attendanceType) { 
+            .then(function(attendanceType) {
+                console.log("attendanceType", attendanceType) 
                 vm.isMarkableSubjectAttendance = attendanceType;                     
                 return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId,vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay);
             }, vm.error)
             .then(function(subjectListOptions) {
+                console.log("subjectListOptions", subjectListOptions)
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
                 return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade);
                 }, vm.error)
             .then(function(attendancePeriodOptions) {
+                console.log("attendancePeriodOptions", attendancePeriodOptions)
                 vm.updateAttendancePeriodList(attendancePeriodOptions);
                 return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
             }, vm.error)
             .then(function(isMarked) {
+                console.log("isMarked", isMarked)
                 vm.updateIsMarked(isMarked);
                 return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
@@ -465,6 +470,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                             '&attendance_period_id='+ vm.selectedAttendancePeriod+
                             '&week_start_day='+ vm.selectedWeekStartDate+
                             '&week_end_day='+ vm.selectedWeekEndDate+
+                            '&subject_id='+ vm.selectedSubject+
                             '&week_id='+ vm.selectedWeek
         
         return {
@@ -579,6 +585,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
         }, vm.error)
         .then(function(isMarked) {
+            console.log("isMarked", isMarked)
             vm.updateIsMarked(isMarked);
             return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
         }, vm.error)

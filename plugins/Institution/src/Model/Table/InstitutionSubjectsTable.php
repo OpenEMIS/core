@@ -1741,4 +1741,18 @@ class InstitutionSubjectsTable extends ControllerActionTable
  
         return $data;
     }
+
+    public function getSubjectsByClass($classId){
+
+        $classSubjects = $this->ClassSubjects
+            ->find()
+            ->contain(['InstitutionSubjects'])
+            ->where([
+                $this->ClassSubjects->aliasField('institution_class_id') => $classId,
+                $this->ClassSubjects->aliasField('status') => 1
+            ])
+            ->toArray();
+        return $classSubjects;
+          
+    }
 }
