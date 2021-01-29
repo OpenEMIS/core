@@ -932,6 +932,55 @@ class AcademicPeriodsTable extends AppTable
 
         return $academicPeriodId;
     }
+
+    public function getMealWeeksForPeriod($academicPeriodId){
+        $model = $this;
+        $query = $this->AcademicPeriods->find()
+                ->where([$this->aliasField('id') => $academicPeriodId])
+                 ->all();
+     
+
+
+         $todayDate = date("Y-m-d");
+                    $weekOptions = [];
+                    $selectedIndex = 0;
+
+                    $weeks = $model->getAttendanceWeeks($academicPeriodId);
+
+                    $weekStr = __('Week') . ' %d (%s - %s)';
+                    $currentWeek = null;
+
+                    foreach ($weeks as $index => $dates) {
+                        $startDay = $dates[0]->format('Y-m-d');
+                        $endDay = $dates[1]->format('Y-m-d');
+                        $weekAttr = [];
+                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                            $weekStr = __('Current Week') . ' %d (%s - %s)';
+                            // $weekAttr['selected'] = true;
+                            $currentWeek = $index;
+                        } else {
+                            $weekStr = __('Week') . ' %d (%s - %s)';
+                        }
+
+                        $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+                        $weekAttr['start_day'] = $startDay;
+                        $weekAttr['end_day'] = $endDay;
+                        $weekAttr['id'] = $index;
+                        $weekOptions[] = $weekAttr;
+
+                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                            end($weekOptions);
+                            $selectedIndex = key($weekOptions);
+                        }
+                    }
+
+                    $weekOptions[$selectedIndex]['selected'] = true;
+                   
+                    
+            return $weekOptions;
+       
+    }
+
     
     public function findWeeksForPeriod(Query $query, array $options)
     {
