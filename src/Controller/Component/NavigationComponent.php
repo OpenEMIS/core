@@ -875,7 +875,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['InfrastructureUtilityTelephones.view', 'InfrastructureUtilityTelephones.add', 'InfrastructureUtilityTelephones.edit', 'InfrastructureUtilityTelephones.delete']
             ],
-
+			
             'InstitutionAssets.index' => [
                 'title' => 'Assets',
                 'parent' => 'Infrastructures',
@@ -1640,21 +1640,6 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Risk'],
                 'selected' => ['Risks.Risks']
             ],
-			'ProfileTemplates' => [
-                'title' => 'Profiles',
-                'parent' => 'SystemSetup',
-                'link' => false
-            ],
-            'ProfileTemplates.Institutions' => [
-                'title' => 'Institutions',
-                'parent' => 'ProfileTemplates',
-                'selected' => ['ProfileTemplates.InstitutionProfiles', 'ProfileTemplates.view', 'ProfileTemplates.add', 'ProfileTemplates.edit', 'ProfileTemplates.delete']
-            ],
-            'ProfileTemplates.Staffs' => [
-                'title' => 'Staffs',
-                'parent' => 'ProfileTemplates',
-                'selected' => ['ProfileTemplates.StaffProfiles', 'Staffs.view', 'Staffs.add', 'Staffs.edit', 'Staffs.delete']
-            ],
             'Security' => [
                 'title' => 'Security',
                 'parent' => 'Administration',
@@ -1680,6 +1665,22 @@ class NavigationComponent extends Component
                 'parent' => 'Security',
                 'params' => ['plugin' => 'Security'],
                 'selected' => ['Securities.Roles', 'Securities.Permissions']
+            ],
+			
+			'ProfileTemplates' => [
+                'title' => 'Profiles',
+                'parent' => 'Administration',
+                'link' => false
+            ],
+            'ProfileTemplates.Institutions' => [
+                'title' => 'Institutions',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['ProfileTemplates.InstitutionProfiles', 'ProfileTemplates.view', 'ProfileTemplates.add', 'ProfileTemplates.edit', 'ProfileTemplates.delete']
+            ],
+            'ProfileTemplates.Staffs' => [
+                'title' => 'Staffs',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['ProfileTemplates.StaffProfiles', 'Staffs.view', 'Staffs.add', 'Staffs.edit', 'Staffs.delete']
             ],
 
             'Administration.Survey' => [

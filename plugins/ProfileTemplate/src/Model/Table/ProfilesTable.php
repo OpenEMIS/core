@@ -531,7 +531,7 @@ class ProfilesTable extends ControllerActionTable
         if (!empty($reportCardId)) {
             $reportCardEntity = $this->ReportCards->find()->where(['id' => $reportCardId])->first();
             if (!empty($reportCardEntity)) {
-                $value = $reportCardEntity->code_name;
+                $value = $reportCardEntity->name;
             }
         }
         return $value;
