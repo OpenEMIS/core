@@ -99,8 +99,8 @@ class StudentMealsTable extends ControllerActionTable
         ->order([
             $this->Users->aliasField('first_name')
         ]);
-        if ($day == -1) {  
-        // if ($day != -1) {     
+        // if ($day == -1) {  
+        if ($day != -1) {     
           
             //$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             $query ->formatResults(function (ResultSetInterface $results) use ($findDay) {              
@@ -218,41 +218,21 @@ class StudentMealsTable extends ControllerActionTable
                             if (!isset($studentMealsData[$studentId][$dayId])) {
                                 $studentMealsData[$studentId][$dayId] = [];
                             }
-
-                            //foreach ($periodList as $period) {
-                                // $periodId = $period['id'];
-
-                                // if (!isset($studentAttenanceData[$studentId][$dayId][$periodId])) {
-                                //     $studentAttenanceData[$studentId][$dayId][$periodId] = 'NOTMARKED';
-                                //     foreach ($isMarkedRecords as $entity) {
-                                //         $entityDate = $entity->date->format('Y-m-d');
-                                //         $entityPeriod = $entity->period;
-
-                                //         if ($entityDate == $date && $entityPeriod == $periodId) {
-                                //             $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
-                                //             break;
-                                //         }
-                                //     }
-                                // }
                                 foreach ($result as $entity) {
                                     $entityDateFormat = $entity->date->format('Y-m-d');
                                     $entityStudentId = $entity->student_id;
-                                             echo "<pre>";
-                print_r($entityStudentId); die();
                                     if ($studentId == $entityStudentId && $entityDateFormat == $date)
                                     {
-                                        $studentMealsData[$studentId][$dayId] = $entity->code;
+                                        $studentMealsData[$studentId][$dayId] = 
+                                        !empty($entity->meal_received->name) ? $entity->meal_received->name : "None";
                                         break;
                                     }
                                 }
-                            //}
                          }
                     }
 
                     $query
                     ->formatResults(function (ResultSetInterface $results) use ($studentMealsData) {
-                //          echo "<pre>";
-                // print_r($studentMealsData); die();
                         return $results->map(function ($row) use ($studentMealsData) {
                             $studentId = $row->student_id;
                             if (isset($studentMealsData[$studentId])) {
@@ -261,14 +241,7 @@ class StudentMealsTable extends ControllerActionTable
                             return $row;
                         });
                     });
-
-
-                //     echo "<pre>";
-                // print_r($query); die();
                 }
-                // echo "<pre>";
-                // print_r($dayList); die();
-            //die('asdf');
         }
 
     return $query;
