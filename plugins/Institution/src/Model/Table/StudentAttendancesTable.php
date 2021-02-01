@@ -131,8 +131,11 @@ class StudentAttendancesTable extends ControllerActionTable
                 $this->aliasField('education_grade_id') => $educationGradeId,
                 $InstitutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
                 //POCOR-5900 condition
-                $InstitutionStudents->aliasField('start_date').' <= ' => $weekStartDay ,
-                $InstitutionStudents->aliasField('end_date').' >= ' => $weekEndDay 
+                $InstitutionStudents->aliasField('institution_id') => $institutionId,
+                $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
+                $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+                $InstitutionStudents->aliasField('start_date').' <= ' => $weekStartDay,
+                $InstitutionStudents->aliasField('end_date').' >= ' => $weekEndDay,
             ])
             ->group([
                 $InstitutionSubjectStudents->aliasField('student_id')
@@ -173,16 +176,18 @@ class StudentAttendancesTable extends ControllerActionTable
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionClassId,
-                $this->aliasField('education_grade_id') => $educationGradeId ,
+                $this->aliasField('education_grade_id') => $educationGradeId,
                 //POCOR-5900 condition
-                $InstitutionStudents->aliasField('start_date').' <= ' => $weekStartDay ,
-                $InstitutionStudents->aliasField('end_date').' >= ' => $weekEndDay               
-            ])
-            ->order([
-                $this->Users->aliasField('first_name')
-            ]);
+                $InstitutionStudents->aliasField('institution_id') => $institutionId,
+                $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
+                $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+                $InstitutionStudents->aliasField('start_date').' <= ' => $weekStartDay,
+                $InstitutionStudents->aliasField('end_date').' >= ' => $weekEndDay,        
+                ])
+                ->order([
+                    $this->Users->aliasField('first_name')
+                ]);
         }
-
 
         if ($day != -1) {
             // single day
@@ -192,10 +197,11 @@ class StudentAttendancesTable extends ControllerActionTable
 
 
                     $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+                    $InstitutionStudents = TableRegistry::get('Institution.Students');
                    
-                    return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId, $subjectId, $educationGradeId) {
+                    return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId, $subjectId, $educationGradeId, $InstitutionStudents) {
                                         
-
+                        
                         $academicPeriodId = $row->academic_period_id;
                         $institutionClassId = $row->institution_class_id;
                         $studentId = $row->student_id;
@@ -280,7 +286,7 @@ class StudentAttendancesTable extends ControllerActionTable
                             
                             }
                         } else {
-                           // die('adsfad');
+                           //die('adsfad');
                                 $StudentAttendanceMarkedRecords = TableRegistry::get('Institution.StudentAttendanceMarkedRecords');
 
                                     $isMarkedRecords = $StudentAttendanceMarkedRecords
@@ -289,16 +295,25 @@ class StudentAttendancesTable extends ControllerActionTable
                                         $StudentAttendanceMarkedRecords->aliasField('date'),
                                         $StudentAttendanceMarkedRecords->aliasField('period')
                                     ])
+                                    //POCOR-5900 start (Filter for check start date of student)
+                                    ->leftJoin(
+                                        [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                                        [
+                                            $InstitutionStudents->aliasField('institution_id = ') . $StudentAttendanceMarkedRecords->aliasField('institution_id'),
+                                        ]
+                                    )
+                                    //POCOR-5900 end
                                     ->where([
                                         $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
                                         $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
                                         $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
                                         $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
                                         $StudentAttendanceMarkedRecords->aliasField('date = ') => $findDay,
-                                        $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId
+                                        $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId,
+                                        $InstitutionStudents->aliasField('start_date').' <= ' => $findDay
                                     ])
                                     ->toArray();
-
+                                    
                                     if (!empty($isMarkedRecords)) {
                                         $data = [
                                             'date' => $findDay,
