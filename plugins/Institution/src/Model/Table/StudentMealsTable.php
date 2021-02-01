@@ -236,7 +236,7 @@ class StudentMealsTable extends ControllerActionTable
                         return $results->map(function ($row) use ($studentMealsData) {
                             $studentId = $row->student_id;
                             if (isset($studentMealsData[$studentId])) {
-                                $row->week_attendance = $studentMealsData[$studentId];
+                                $row->week_meals = $studentMealsData[$studentId];
                             }
                             return $row;
                         });
