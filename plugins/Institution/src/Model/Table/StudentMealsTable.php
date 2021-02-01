@@ -72,81 +72,206 @@ class StudentMealsTable extends ControllerActionTable
             $findDay = $day;
         }
 
-        if ($day != -1) {      
-            $query
-            ->select([
-                $this->aliasField('academic_period_id'),
-                $this->aliasField('institution_class_id'),
-                $this->aliasField('institution_id'),
-                $this->aliasField('student_id'),
-                $this->Users->aliasField('id'),
-                $this->Users->aliasField('openemis_no'),
-                $this->Users->aliasField('first_name'),
-                $this->Users->aliasField('middle_name'),
-                $this->Users->aliasField('third_name'),
-                $this->Users->aliasField('last_name'),
-                $this->Users->aliasField('preferred_name')
-            ])
-            ->contain([$this->Users->alias()])
-            ->matching($this->StudentStatuses->alias(), function($q) {
-                return $q->where([
-                    $this->StudentStatuses->aliasField('code') => 'CURRENT'
-                ]);
-            })
-            ->where([
-                $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('institution_class_id') => $institutionClassId,
-            ])
-            ->order([
-                $this->Users->aliasField('first_name')
+        $query
+        ->select([
+            $this->aliasField('academic_period_id'),
+            $this->aliasField('institution_class_id'),
+            $this->aliasField('institution_id'),
+            $this->aliasField('student_id'),
+            $this->Users->aliasField('id'),
+            $this->Users->aliasField('openemis_no'),
+            $this->Users->aliasField('first_name'),
+            $this->Users->aliasField('middle_name'),
+            $this->Users->aliasField('third_name'),
+            $this->Users->aliasField('last_name'),
+            $this->Users->aliasField('preferred_name')
+        ])
+        ->contain([$this->Users->alias()])
+        ->matching($this->StudentStatuses->alias(), function($q) {
+            return $q->where([
+                $this->StudentStatuses->aliasField('code') => 'CURRENT'
             ]);
+        })
+        ->where([
+            $this->aliasField('academic_period_id') => $academicPeriodId,
+            $this->aliasField('institution_class_id') => $institutionClassId,
+        ])
+        ->order([
+            $this->Users->aliasField('first_name')
+        ]);
+        if ($day == -1) {  
+        // if ($day != -1) {     
           
-        }
-        //$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-        $query ->formatResults(function (ResultSetInterface $results) use ($findDay) {              
-            return $results->map(function ($row) use ($findDay) {
-                $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
-                $academicPeriodId = $row->academic_period_id;
-                $institutionClassId = $row->institution_class_id;
-                $studentId = $row->student_id;
-                $institutionId = $row->institution_id;
+            //$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            $query ->formatResults(function (ResultSetInterface $results) use ($findDay) {              
+                return $results->map(function ($row) use ($findDay) {
+                    $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
+                    $academicPeriodId = $row->academic_period_id;
+                    $institutionClassId = $row->institution_class_id;
+                    $studentId = $row->student_id;
+                    $institutionId = $row->institution_id;
 
-                $conditions = [
-                            $InstitutionMealStudents->aliasField('academic_period_id = ') => $academicPeriodId,
-                            $InstitutionMealStudents->aliasField('institution_class_id = ') => $institutionClassId,
-                            $InstitutionMealStudents->aliasField('student_id = ') => $studentId,
-                            $InstitutionMealStudents->aliasField('institution_id = ') => $institutionId,
-                            $InstitutionMealStudents->aliasField('date = ') => $findDay,
-                        ];
-                
-                $areasData = $InstitutionMealStudents
-                            ->find()
-                            ->contain(['MealBenefit','MealReceived'])
-                            ->select([
-                                $InstitutionMealStudents->aliasField('date'),
-                                $InstitutionMealStudents->aliasField('paid'),
-                                $InstitutionMealStudents->aliasField('meal_received_id'),
-                                'MealReceived.name',
-                                $InstitutionMealStudents->aliasField('meal_benefit_id'),
-                                'MealBenefit.name'
-                            ])
-                            ->where($conditions)
-                            ->first();
-                 
-                 $data = [                    
-                    'date' =>!empty($areasData->date) ? $areasData->date : $findDay,
-                    'paid' => $areasData->paid,                    
-                    'meal_benefit_id' => $areasData->meal_benefit_id,
-                    'meal_benefit' => $areasData->meal_benefit->name,
-                    'meal_received_id' => !empty($areasData->meal_received_id) ? $areasData->meal_received_id : "1",
-                    'meal_received' => !empty($areasData->meal_received->name) ? $areasData->meal_received->name : "None"
-                ];  
-                            
-                $row->institution_student_meal = $data;
-                return $row;
+                    $conditions = [
+                                $InstitutionMealStudents->aliasField('academic_period_id = ') => $academicPeriodId,
+                                $InstitutionMealStudents->aliasField('institution_class_id = ') => $institutionClassId,
+                                $InstitutionMealStudents->aliasField('student_id = ') => $studentId,
+                                $InstitutionMealStudents->aliasField('institution_id = ') => $institutionId,
+                                $InstitutionMealStudents->aliasField('date = ') => $findDay,
+                            ];
+                    
+                    $areasData = $InstitutionMealStudents
+                                ->find()
+                                ->contain(['MealBenefit','MealReceived'])
+                                ->select([
+                                    $InstitutionMealStudents->aliasField('date'),
+                                    $InstitutionMealStudents->aliasField('paid'),
+                                    $InstitutionMealStudents->aliasField('meal_received_id'),
+                                    'MealReceived.name',
+                                    $InstitutionMealStudents->aliasField('meal_benefit_id'),
+                                    'MealBenefit.name'
+                                ])
+                                ->where($conditions)
+                                ->first();
+                     
+                     $data = [                    
+                        'date' =>!empty($areasData->date) ? $areasData->date : $findDay,
+                        'paid' => $areasData->paid,                    
+                        'meal_benefit_id' => $areasData->meal_benefit_id,
+                        'meal_benefit' => $areasData->meal_benefit->name,
+                        'meal_received_id' => !empty($areasData->meal_received_id) ? $areasData->meal_received_id : "1",
+                        'meal_received' => !empty($areasData->meal_received->name) ? $areasData->meal_received->name : "None"
+                    ];  
+                                
+                    $row->institution_student_meal = $data;
+                    return $row;
+                });
             });
-        });
-         return $query;
+        }
+        else{
+
+            $AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
+            $dayList = $AcademicPeriodsTable
+                ->find('DaysForPeriodWeek', [
+                    'academic_period_id' => $academicPeriodId,
+                    'week_id' => $weekId,
+                    'institution_id' => $institutionId,
+                    'exclude_all' => true
+                ])
+                ->toArray();
+
+            $studentListResult = $this
+                ->find('list', [
+                    'keyField' => 'student_id',
+                    'valueField' => 'student_id'
+                ])
+                ->matching($this->StudentStatuses->alias(), function($q) {
+                    return $q->where([
+                        $this->StudentStatuses->aliasField('code') => 'CURRENT'
+                    ]);
+                })
+                ->where([
+                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->aliasField('institution_class_id') => $institutionClassId,
+                ])
+                ->all();
+
+                if (!$studentListResult->isEmpty()) {
+                    $studentList = $studentListResult->toArray();
+                    $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
+
+                    $result = $InstitutionMealStudents
+                    ->find()
+                    ->contain(['MealBenefit','MealReceived'])
+                    ->select([
+                        $InstitutionMealStudents->aliasField('student_id'),
+                        $InstitutionMealStudents->aliasField('date'),
+                        $InstitutionMealStudents->aliasField('paid'),
+                        $InstitutionMealStudents->aliasField('meal_received_id'),
+                                    'MealReceived.name',
+                        $InstitutionMealStudents->aliasField('meal_benefit_id'),
+                                    'MealBenefit.name'
+                    ])
+                    ->where([
+                        $InstitutionMealStudents->aliasField('academic_period_id = ') => $academicPeriodId,
+                        $InstitutionMealStudents->aliasField('institution_class_id = ') => $institutionClassId,                        
+                        $InstitutionMealStudents->aliasField('student_id IN ') => $studentList,
+                        $InstitutionMealStudents->aliasField('institution_id = ') => $institutionId,
+                        'AND' => [
+                            $InstitutionMealStudents->aliasField('date >= ') => $weekStartDay,
+                            $InstitutionMealStudents->aliasField('date <= ') => $weekEndDay,
+
+                        ]
+                    ])
+                    ->toArray();
+
+                    $studentMealsData = [];
+                    foreach ($studentList as $value) {
+                        $studentId = $value;
+                         if (!isset($studentMealsData[$studentId])) {
+                            $studentMealsData[$studentId] = [];
+                         }
+                         foreach ($dayList as $day) {
+                            $dayId = $day['day'];
+                            $date = $day['date'];
+
+                            if (!isset($studentMealsData[$studentId][$dayId])) {
+                                $studentMealsData[$studentId][$dayId] = [];
+                            }
+
+                            //foreach ($periodList as $period) {
+                                // $periodId = $period['id'];
+
+                                // if (!isset($studentAttenanceData[$studentId][$dayId][$periodId])) {
+                                //     $studentAttenanceData[$studentId][$dayId][$periodId] = 'NOTMARKED';
+                                //     foreach ($isMarkedRecords as $entity) {
+                                //         $entityDate = $entity->date->format('Y-m-d');
+                                //         $entityPeriod = $entity->period;
+
+                                //         if ($entityDate == $date && $entityPeriod == $periodId) {
+                                //             $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
+                                //             break;
+                                //         }
+                                //     }
+                                // }
+                                foreach ($result as $entity) {
+                                    $entityDateFormat = $entity->date->format('Y-m-d');
+                                    $entityStudentId = $entity->student_id;
+                                             echo "<pre>";
+                print_r($entityStudentId); die();
+                                    if ($studentId == $entityStudentId && $entityDateFormat == $date)
+                                    {
+                                        $studentMealsData[$studentId][$dayId] = $entity->code;
+                                        break;
+                                    }
+                                }
+                            //}
+                         }
+                    }
+
+                    $query
+                    ->formatResults(function (ResultSetInterface $results) use ($studentMealsData) {
+                //          echo "<pre>";
+                // print_r($studentMealsData); die();
+                        return $results->map(function ($row) use ($studentMealsData) {
+                            $studentId = $row->student_id;
+                            if (isset($studentMealsData[$studentId])) {
+                                $row->week_attendance = $studentMealsData[$studentId];
+                            }
+                            return $row;
+                        });
+                    });
+
+
+                //     echo "<pre>";
+                // print_r($query); die();
+                }
+                // echo "<pre>";
+                // print_r($dayList); die();
+            //die('asdf');
+        }
+
+    return $query;
         
 
     }
