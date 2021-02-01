@@ -144,7 +144,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 $this->Users->aliasField('id')
             ]);
         } else {
-
+        
         $query
             ->select([
                 $this->aliasField('academic_period_id'),
@@ -181,8 +181,8 @@ class StudentAttendancesTable extends ControllerActionTable
                 $InstitutionStudents->aliasField('institution_id') => $institutionId,
                 $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                $InstitutionStudents->aliasField('start_date').' <= ' => $weekStartDay,
-                $InstitutionStudents->aliasField('end_date').' >= ' => $weekEndDay,        
+                $InstitutionStudents->aliasField('start_date') . ' <= ' => $weekStartDay,
+                $InstitutionStudents->aliasField('end_date') . ' >= ' => $weekEndDay    
                 ])
                 ->order([
                     $this->Users->aliasField('first_name')
