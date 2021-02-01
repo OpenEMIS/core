@@ -29,6 +29,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             'orientation' => 'landscape'
         ]);
 
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportAssessmentItemResults']);
+
         $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
