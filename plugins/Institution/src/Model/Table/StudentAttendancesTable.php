@@ -118,7 +118,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     ]
                 )
             //POCOR-5900 start (Filter for check start date of student)
-            ->innerJoin(
+            ->leftJoin(
                 [$InstitutionStudents->alias() => $InstitutionStudents->table()],
                 [
                     $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
@@ -134,8 +134,13 @@ class StudentAttendancesTable extends ControllerActionTable
                 $InstitutionStudents->aliasField('institution_id') => $institutionId,
                 $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                $InstitutionStudents->aliasField('start_date').' <= ' => $weekStartDay,
-                $InstitutionStudents->aliasField('end_date').' >= ' => $weekEndDay,
+                'OR' => [
+                    $InstitutionStudents->aliasField('start_date').' <= ' => $weekEndDay,
+                    'AND' => [        
+                        $InstitutionStudents->aliasField('start_date').' >= ' => $weekStartDay,
+                        $InstitutionStudents->aliasField('start_date').' <= ' => $weekEndDay,  
+                    ]
+                ]
             ])
             ->group([
                 $InstitutionSubjectStudents->aliasField('student_id')
@@ -166,7 +171,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 ]);
             })
             //POCOR-5900 start (Filter for check start date of student)
-            ->innerJoin(
+            ->leftJoin(
                 [$InstitutionStudents->alias() => $InstitutionStudents->table()],
                 [
                     $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
@@ -181,8 +186,13 @@ class StudentAttendancesTable extends ControllerActionTable
                 $InstitutionStudents->aliasField('institution_id') => $institutionId,
                 $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                $InstitutionStudents->aliasField('start_date') . ' <= ' => $weekStartDay,
-                $InstitutionStudents->aliasField('end_date') . ' >= ' => $weekEndDay    
+                'OR' => [
+                    $InstitutionStudents->aliasField('start_date').' <= ' => $weekEndDay,
+                    'AND' => [        
+                        $InstitutionStudents->aliasField('start_date').' >= ' => $weekStartDay,
+                        $InstitutionStudents->aliasField('start_date').' <= ' => $weekEndDay,  
+                    ]
+                ]
                 ])
                 ->order([
                     $this->Users->aliasField('first_name')
