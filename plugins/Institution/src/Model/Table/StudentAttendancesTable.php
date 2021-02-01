@@ -79,7 +79,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
              
         $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $InstitutionStudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
         $this->Users = TableRegistry::get('Security.Users');
 
         if ($day == -1) {
@@ -117,22 +117,22 @@ class StudentAttendancesTable extends ControllerActionTable
                         $InstitutionSubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     ]
                 )
-            //POCOR-5750 start (Filter for check start date of student)
+            //POCOR-5900 start (Filter for check start date of student)
             ->innerJoin(
-                [$InstitutionStudentTransfers->alias() => $InstitutionStudentTransfers->table()],
+                [$InstitutionStudents->alias() => $InstitutionStudents->table()],
                 [
-                    $InstitutionStudentTransfers->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 ]
             )
-            //POCOR-5750 end
+            //POCOR-5900 end
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionClassId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
                 $InstitutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
-                //POCOR-5750 condition
-                $InstitutionStudentTransfers->aliasField('start_date').' <= ' => $weekStartDay ,
-                $InstitutionStudentTransfers->aliasField('end_date').' >= ' => $weekEndDay 
+                //POCOR-5900 condition
+                $InstitutionStudents->aliasField('start_date').' <= ' => $weekStartDay ,
+                $InstitutionStudents->aliasField('end_date').' >= ' => $weekEndDay 
             ])
             ->group([
                 $InstitutionSubjectStudents->aliasField('student_id')
@@ -162,21 +162,21 @@ class StudentAttendancesTable extends ControllerActionTable
                     $this->StudentStatuses->aliasField('code') => 'CURRENT'
                 ]);
             })
-            //POCOR-5750 start (Filter for check start date of student)
+            //POCOR-5900 start (Filter for check start date of student)
             ->innerJoin(
-                [$InstitutionStudentTransfers->alias() => $InstitutionStudentTransfers->table()],
+                [$InstitutionStudents->alias() => $InstitutionStudents->table()],
                 [
-                    $InstitutionStudentTransfers->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 ]
             )
-            //POCOR-5750 end
+            //POCOR-5900 end
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_class_id') => $institutionClassId,
                 $this->aliasField('education_grade_id') => $educationGradeId ,
-                //POCOR-5750 condition
-                $InstitutionStudentTransfers->aliasField('start_date').' <= ' => $weekStartDay ,
-                $InstitutionStudentTransfers->aliasField('end_date').' >= ' => $weekEndDay               
+                //POCOR-5900 condition
+                $InstitutionStudents->aliasField('start_date').' <= ' => $weekStartDay ,
+                $InstitutionStudents->aliasField('end_date').' >= ' => $weekEndDay               
             ])
             ->order([
                 $this->Users->aliasField('first_name')
