@@ -644,11 +644,63 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['academic_period_id'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-            if (in_array($feature, [
+            
+            if (in_array($feature, ['Report.StudentAttendanceSummary'])
+                ) {
+
+                $gradeList = [];
+                if (array_key_exists('institution_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_id']) && array_key_exists('academic_period_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['academic_period_id'])) {
+                    $institutionId = $request->data[$this->alias()]['institution_id'];
+                    $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+
+                    $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
+                    $gradeList = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId);
+
+                    if (empty($gradeList)) {
+                        $gradeOptions = ['-1' => $this->getMessage('general.select.noOptions')];
+                    } else {
+                        $gradeOptions = ['-1' => __('All Grades')] + $gradeList;
+                    }
+                    $grade_opt = $gradeOptions;
+                }else{ //when all institution selected
+                   
+                    $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
+                    //$EducationGrades = TableRegistry::get('Education.EducationGrades');
+                    $EducationGrades = TableRegistry::get('education_grades');
+                    $EducationProgrammes = TableRegistry::get('education_programmes');
+                    
+                    $gradeOptions = $InstitutionGradesTable
+                                        ->find('list', [
+                                            'keyField' => 'id',
+                                            'valueField' => 'name'
+                                        ])
+                                        ->select([
+                                            'id' => $EducationGrades->aliasField('id'),
+                                            'name' => $EducationGrades->aliasField('name')
+                                        ])
+                                        ->leftJoin(
+                                            [$EducationGrades->alias() => 'education_grades'],
+                                            [
+                                                $InstitutionGradesTable->aliasField('education_grade_id').' = '.$EducationGrades->aliasField('id')
+                                        ])
+                                        ->order([
+                                            $EducationGrades->aliasField('name') => 'ASC'
+                                        ])
+                                        ->toArray();
+                    
+                        $grade_opt = ['-1' => __('All Grades')] + $gradeOptions;
+                }
+
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $grade_opt;
+                $attr['onChangeReload'] = true;
+
+            }else if (in_array($feature, [
                             'Report.ClassAttendanceNotMarkedRecords',
                             'Report.SubjectsBookLists',
                             'Report.InstitutionSubjectsClasses',
-                            'Report.StudentAttendanceSummary',
+                            //'Report.StudentAttendanceSummary',
                             'Report.ClassAttendanceMarkedSummaryReport'
                         ])
                 ) {
