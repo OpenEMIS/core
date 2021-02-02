@@ -435,6 +435,11 @@ class InstitutionSurveysTable extends ControllerActionTable
                         'name'
                     ]
                 ],
+                'Institutions' => [
+                    'fields' => [
+                        'institution_status_id'
+                    ]
+                ],
                 'SurveyForms' => [
                     'fields' => [
                         'name', 'description'
@@ -447,7 +452,11 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ]
             ])
             ->where([
-            $this->aliasField('status_id <> ') => self::EXPIRED
+            $this->aliasField('status_id <> ') => self::EXPIRED,
+            //POCOR-5666 Condition[START]
+            //Survey should only show for the active institution
+            $this->aliasField('Institutions.institution_status_id = ') => 1
+            //POCOR-5666 Condition[END]
         ]);
 
         // POCOR-4027 fixed search function (search assignee and survey form)
