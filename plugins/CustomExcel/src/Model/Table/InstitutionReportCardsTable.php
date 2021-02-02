@@ -752,7 +752,7 @@ class InstitutionReportCardsTable extends AppTable
 
             $EducationGradesData = $InstitutionGrades->find()
 				->select([
-					'EducationGrades.id'
+					'id' => 'EducationGrades.id'
 				])
 				->innerJoin(
 				['EducationGrades' => 'education_grades'],
@@ -807,7 +807,7 @@ class InstitutionReportCardsTable extends AppTable
 
             $EducationGradesData = $InstitutionGrades->find()
 				->select([
-					'EducationGrades.id'
+					'id' => 'EducationGrades.id'
 				])
 				->innerJoin(
 				['EducationGrades' => 'education_grades'],
