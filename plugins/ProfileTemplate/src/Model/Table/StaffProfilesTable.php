@@ -74,18 +74,21 @@ class StaffProfilesTable extends ControllerActionTable
 
         // check if report card request is valid
         $reportCardId = $this->request->query('staff_profile_template_id');
-        if (!is_null($reportCardId) && $this->StaffTemplates->exists([$this->StaffTemplates->primaryKey() => $reportCardId])) {
+        $institutionId = $this->request->query('institution_id');
+        $academicPeriodId = $this->request->query('academic_period_id');
+        
+		if (!is_null($reportCardId) && $this->StaffTemplates->exists([$this->StaffTemplates->primaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
                 'staff_profile_template_id' => $reportCardId,
                 'staff_id' => $entity->staff_id,
-                'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId,
             ];
-
+			
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['Institutions', 'InstitutionStudentsReportCards', 'download']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+            if ($this->AccessControl->check(['ProfileTemplate', 'StaffProfiles', 'download']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 $downloadUrl = [
                     'plugin' => 'ProfileTemplate',
                     'controller' => 'ProfileTemplates',
@@ -623,8 +626,8 @@ class StaffProfilesTable extends ControllerActionTable
                die;
             }
 
-            $this->addReportCardsToProcesses($params['institution_id'], $params['institution_id'], $params['staff_profile_template_id'], $params['staff_id']);
-            $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_id'], $params['staff_profile_template_id'], $params['staff_id']);
+            $this->addReportCardsToProcesses($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
+            $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
             $this->Alert->warning('ReportCardStatuses.generate');
         } else {
             $url = $this->url('index');
@@ -816,44 +819,41 @@ class StaffProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    private function addReportCardsToProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
+    private function addReportCardsToProcesses($institutionId, $academicPeriodId, $reportCardId, $staffId = null)
     {
-        Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
+        Log::write('debug', 'Initialize Add All Staff Profile Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
 
-        $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
-        $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $StaffReportCardProcesses = TableRegistry::get('ReportCard.StaffReportCardProcesses');
+        $staffTable = TableRegistry::get('institution_staff');
         $where = [];
-        $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
-        if (!is_null($studentId)) {
-            $where[$classStudentsTable->aliasField('staff_id')] = $studentId;
+        $where[$staffTable->aliasField('institution_id')] = $institutionId;
+        if (!is_null($staffId)) {
+            $where[$staffTable->aliasField('staff_id')] = $staffId;
         }
-        $classStudents = $classStudentsTable->find()
+        $institutionStaffs = $staffTable->find()
             ->select([
-                $classStudentsTable->aliasField('staff_id'),
-                $classStudentsTable->aliasField('institution_id'),
-                $classStudentsTable->aliasField('academic_period_id'),
+                $staffTable->aliasField('staff_id'),
+                $staffTable->aliasField('institution_id'),
             ])
             ->where($where)
             ->toArray();
 
-        foreach ($classStudents as $student) {
+        foreach ($institutionStaffs as $staff) {
             // Report card processes
             $idKeys = [
                 'staff_profile_template_id' => $reportCardId,
-                'institution_class_id' => $student->institution_class_id,
-                'staff_id' => $student->staff_id
+                'institution_id' => $staff->institution_id,
+                'staff_id' => $staff->staff_id
             ];
 
             $data = [
-                'status' => $ReportCardProcesses::NEW_PROCESS,
-                'institution_id' => $student->institution_id,
-                'education_grade_id' => $student->education_grade_id,
-                'academic_period_id' => $student->academic_period_id,
+                'status' => $StaffReportCardProcesses::NEW_PROCESS,
+                'academic_period_id' => $academicPeriodId,
                 'created' => date('Y-m-d H:i:s')
             ];
             $obj = array_merge($idKeys, $data);
-            $newEntity = $ReportCardProcesses->newEntity($obj);
-            $ReportCardProcesses->save($newEntity);
+            $newEntity = $StaffReportCardProcesses->newEntity($obj);
+            $StaffReportCardProcesses->save($newEntity);
             // end
 
             // Report card email processes
@@ -866,17 +866,15 @@ class StaffProfilesTable extends ControllerActionTable
             }
             // end
 
-            // Student report card
+            // staff report card
             $recordIdKeys = [
                 'staff_profile_template_id' => $reportCardId,
-                'staff_id' => $student->staff_id,
-                'institution_id' => $student->institution_id,
-                'academic_period_id' => $student->academic_period_id,
-                'education_grade_id' => $student->education_grade_id,
-                'institution_class_id' => $student->institution_class_id,
+                'staff_id' => $staff->staff_id,
+                'institution_id' => $staff->institution_id,
+                'academic_period_id' => $academicPeriodId,
             ];
             if ($this->StaffReportCards->exists($recordIdKeys)) {
-                $studentsReportCardEntity = $this->StaffReportCards->find()
+                $staffsReportCardEntity = $this->StaffReportCards->find()
                     ->where($recordIdKeys)
                     ->first();
 
@@ -886,22 +884,23 @@ class StaffProfilesTable extends ControllerActionTable
                     'completed_on' => NULL,
                     'file_name' => NULL,
                     'file_content' => NULL,
-                    'institution_class_id' => $studentsReportCardEntity->institution_class_id
+                    'staff_id' => $staff->staff_id
                 ];
-                $newEntity = $this->StaffReportCards->patchEntity($studentsReportCardEntity, $newData);
+				
+                $newEntity = $this->StaffReportCards->patchEntity($staffsReportCardEntity, $newData);
 
                 if (!$this->StaffReportCards->save($newEntity)) {
-                    Log::write('debug', 'Error Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
+                    Log::write('debug', 'Error Add All staff profile Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
                     Log::write('debug', $newEntity->errors());
                 }
             }
             // end
         }
 
-        Log::write('debug', 'End Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
+        Log::write('debug', 'End Add All staff profile Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
     }
 
-    private function triggerGenerateAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
+    private function triggerGenerateAllReportCardsShell($institutionId, $academicPeriodId, $reportCardId, $staffId = null)
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
@@ -925,18 +924,17 @@ class StaffProfilesTable extends ControllerActionTable
             $processModel = $this->registryAlias();
             $passArray = [
                 'institution_id' => $institutionId,
-                'institution_class_id' => $institutionClassId,
                 'staff_profile_template_id' => $reportCardId
             ];
-            if (!is_null($studentId)) {
-                $passArray['staff_id'] = $studentId;
+            if (!is_null($staffId)) {
+                $passArray['staff_id'] = $staffId;
             }
             $params = json_encode($passArray);
 
             $args = $processModel . " " . $params;
 
-            $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllInstitutionReportCards '.$args;
-            $logs = ROOT . DS . 'logs' . DS . 'GenerateAllInstitutionReportCards.log & echo $!';
+            $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllStaffReportCards '.$args;
+            $logs = ROOT . DS . 'logs' . DS . 'GenerateAllStaffReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
             try {
                 $pid = exec($shellCmd);
@@ -947,7 +945,7 @@ class StaffProfilesTable extends ControllerActionTable
         }
     }
 
-    private function addReportCardsToEmailProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
+    private function addReportCardsToEmailProcesses($institutionId, $institutionClassId, $reportCardId, $staffId = null)
     {
         Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
 
@@ -955,8 +953,8 @@ class StaffProfilesTable extends ControllerActionTable
 
         $where = [];
         $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
-        if (!is_null($studentId)) {
-            $where[$classStudentsTable->aliasField('staff_id')] = $studentId;
+        if (!is_null($staffId)) {
+            $where[$classStudentsTable->aliasField('staff_id')] = $staffId;
         }
         $classStudents = $classStudentsTable->find()
             ->select([
@@ -1004,7 +1002,7 @@ class StaffProfilesTable extends ControllerActionTable
         Log::write('debug', 'End Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
     }
 
-    private function triggerEmailAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
+    private function triggerEmailAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $staffId = null)
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->StaffReportCardEmailProcesses->registryAlias());
@@ -1021,9 +1019,9 @@ class StaffProfilesTable extends ControllerActionTable
                 'institution_class_id' => $institutionClassId,
                 'staff_profile_template_id' => $reportCardId
             ];
-            if (!is_null($studentId)) {
+            if (!is_null($staffId)) {
                 $name = 'EmailReportCards';
-                $passArray['staff_id'] = $studentId;
+                $passArray['staff_id'] = $staffId;
             }
             $params = json_encode($passArray);
             $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
