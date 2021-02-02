@@ -1,3 +1,6 @@
+### [3.61.7] - 2021-02-02
+- Bug Fixed: Institution > Attendance > Students: Unable to view attendance and Secondary Teacher should be able to view and mark attendance
+
 ### [3.61.6] - 2021-01-30
 - Implemented: Export Institutions > Visits
 - Bug Fixed: Institution > Staff > Professional > Qualifications/License tab > Add: 404 error
