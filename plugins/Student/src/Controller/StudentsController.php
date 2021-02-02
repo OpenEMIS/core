@@ -153,6 +153,11 @@ class StudentsController extends AppController
         }        
     }
 
+    public function Meals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionMealStudents']);
+    }
+
     // health
     public function Healths()
     {
