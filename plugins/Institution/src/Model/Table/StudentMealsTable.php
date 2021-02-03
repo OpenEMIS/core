@@ -57,6 +57,7 @@ class StudentMealsTable extends ControllerActionTable
     public function findClassStudentsWithMeal(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
+        $mealPogrammesId = $options['meal_programmes_id'];
         $institutionClassId = $options['institution_class_id'];
         $academicPeriodId = $options['academic_period_id'];
         $weekId = $options['week_id'];
@@ -103,8 +104,9 @@ class StudentMealsTable extends ControllerActionTable
           
         }
         //$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-        $query ->formatResults(function (ResultSetInterface $results) use ($findDay) {              
-            return $results->map(function ($row) use ($findDay) {
+        $query ->formatResults(function (ResultSetInterface $results) use ($findDay,$mealPogrammesId) {              
+            return $results->map(function ($row) use ($findDay,$mealPogrammesId) {
+              
                 $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
                 $academicPeriodId = $row->academic_period_id;
                 $institutionClassId = $row->institution_class_id;
@@ -116,6 +118,7 @@ class StudentMealsTable extends ControllerActionTable
                             $InstitutionMealStudents->aliasField('institution_class_id = ') => $institutionClassId,
                             $InstitutionMealStudents->aliasField('student_id = ') => $studentId,
                             $InstitutionMealStudents->aliasField('institution_id = ') => $institutionId,
+                            $InstitutionMealStudents->aliasField('meal_programmes_id = ') => $mealPogrammesId,
                             $InstitutionMealStudents->aliasField('date = ') => $findDay,
                         ];
                 
