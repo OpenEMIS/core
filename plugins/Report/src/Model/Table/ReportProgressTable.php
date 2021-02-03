@@ -1,6 +1,10 @@
 <?php
 namespace Report\Model\Table;
-
+ini_set('memory_limit', '1024M');
+ini_set('upload_max_size', '1024M');
+ini_set('upload_max_filesize', '1024M');
+ini_set('post_max_size', '1024M');
+ini_set('max_execution_time', '50000');
 use ArrayObject;
 use Cake\I18n\Time;
 use Cake\ORM\Entity;
@@ -65,7 +69,11 @@ class ReportProgressTable extends AppTable  {
 	}
 
 	public function generate($id, $fileFormat) {
-		
+		ini_set('memory_limit', '1024M');
+		ini_set('upload_max_size', '1024M');
+		ini_set('upload_max_filesize', '1024M');
+		ini_set('post_max_size', '1024M');
+		ini_set('max_execution_time', '50000');
 		if($fileFormat == 'zip'){
 			//$cmd = ROOT . DS . 'bin' . DS . 'cake StudentsPhotoDownload ' . $id;
 		    $logs = ROOT . DS . 'logs' . DS . 'student-photo-reports.log & echo $!';

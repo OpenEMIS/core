@@ -1,6 +1,10 @@
 <?php
 namespace Report\Model\Table;
-
+ini_set('memory_limit', '1024M');
+ini_set('upload_max_size', '1024M');
+ini_set('upload_max_filesize', '1024M');
+ini_set('post_max_size', '1024M');
+ini_set('max_execution_time', '50000');
 use ArrayObject;
 use DateInterval;
 use DatePeriod;
