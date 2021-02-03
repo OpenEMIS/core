@@ -188,9 +188,7 @@ class StudentMealsTable extends ControllerActionTable
                         $InstitutionMealStudents->aliasField('date'),
                         $InstitutionMealStudents->aliasField('paid'),
                         $InstitutionMealStudents->aliasField('meal_received_id'),
-                                    'MealReceived.name',
-                        $InstitutionMealStudents->aliasField('meal_benefit_id'),
-                                    'MealBenefit.name'
+                        'code' => 'MealReceived.name'
                     ])
                     ->where([
                         $InstitutionMealStudents->aliasField('academic_period_id = ') => $academicPeriodId,
@@ -204,7 +202,7 @@ class StudentMealsTable extends ControllerActionTable
                         ]
                     ])
                     ->toArray();
-
+                   
                     $studentMealsData = [];
                     foreach ($studentList as $value) {
                         $studentId = $value;
@@ -215,16 +213,19 @@ class StudentMealsTable extends ControllerActionTable
                             $dayId = $day['day'];
                             $date = $day['date'];
 
+                            $keyId = 1;
+
                             if (!isset($studentMealsData[$studentId][$dayId])) {
                                 $studentMealsData[$studentId][$dayId] = [];
                             }
-                                foreach ($result as $entity) {
+                            $studentMealsData[$studentId][$dayId][$keyId] = 'NOTMARKED';
+                         
+                                foreach ($result as $key => $entity) {
                                     $entityDateFormat = $entity->date->format('Y-m-d');
                                     $entityStudentId = $entity->student_id;
                                     if ($studentId == $entityStudentId && $entityDateFormat == $date)
                                     {
-                                        $studentMealsData[$studentId][$dayId] = 
-                                        !empty($entity->meal_received->name) ? $entity->meal_received->name : "None";
+                                        $studentMealsData[$studentId][$dayId][$keyId] = $entity->code;
                                         break;
                                     }
                                 }
@@ -243,9 +244,7 @@ class StudentMealsTable extends ControllerActionTable
                     });
                 }
         }
-
-    return $query;
-        
+        return $query;       
 
     }
 
