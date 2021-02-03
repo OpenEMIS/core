@@ -218,7 +218,7 @@ class StudentMealsTable extends ControllerActionTable
                             if (!isset($studentMealsData[$studentId][$dayId])) {
                                 $studentMealsData[$studentId][$dayId] = [];
                             }
-                            $studentMealsData[$studentId][$dayId][$keyId] = 'NOTMARKED';
+                            $studentMealsData[$studentId][$dayId][$keyId] = 'None';
                          
                                 foreach ($result as $key => $entity) {
                                     $entityDateFormat = $entity->date->format('Y-m-d');
