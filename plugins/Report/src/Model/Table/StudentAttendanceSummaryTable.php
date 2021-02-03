@@ -72,10 +72,10 @@ class StudentAttendanceSummaryTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        //echo "<pre>"; print_r($settings); die;
+        
         $requestData = json_decode($settings['process']['params']);
-       // $sheetData = $settings['sheet']['sheetData'];
-       // $gradeId = $sheetData['education_grade_id'];
+        //$sheetData = $settings['sheet']['sheetData'];
+        //$gradeId = $sheetData['education_grade_id'];
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
         $institutionId = $requestData->institution_id;
@@ -188,8 +188,7 @@ class StudentAttendanceSummaryTable extends AppTable
                     $formattedDateResults[] = $cloneResult;
                 }
             }
-/*echo "<pre>"; print_r($formattedDateResults);
-die;*/
+
             // To get the student absent count for each date
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
            
@@ -1050,7 +1049,7 @@ die;*/
         }
         return $date;
     }
-    public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
+public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
     {
         $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
         $periodId = $entity->StudentAttendanceMarkedRecords['period'];
@@ -1230,7 +1229,29 @@ die;*/
 
         $gradeOptions = [];
         if ($educationGradeId != -1) {
-            $gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
+            if(in_array($educationGradeId, $institutionGradeResults)){
+                $gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
+            }else{
+                $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                $educationGradesOptions = $EducationGrades
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'name'
+                    ])
+                    ->select([
+                        'id' => $EducationGrades->aliasField('id'),
+                        'name' => $EducationGrades->aliasField('name'),
+                        'education_programme_name' => 'EducationProgrammes.name'
+                    ])
+                    ->contain(['EducationProgrammes'])
+                    ->order([
+                        'EducationProgrammes.order' => 'ASC',
+                        $EducationGrades->aliasField('name') => 'ASC'
+                    ])
+                    ->toArray();
+
+                $gradeOptions[$educationGradeId] = $educationGradesOptions[$educationGradeId];
+            }
         } else {
             $gradeOptions = $institutionGradeResults;
         }
