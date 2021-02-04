@@ -214,6 +214,9 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('status', ['type' => 'hidden']);
         $this->ControllerAction->field('module', ['type' => 'hidden']);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('from_date',['type'=>'hidden']);
+        $this->ControllerAction->field('to_date',['type'=>'hidden']);
+        
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_programme_id', ['type' => 'hidden']);
@@ -906,7 +909,7 @@ class InstitutionsTable extends AppTable
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 
                                     'Report.InstitutionCases',
                                     'Report.StudentAttendanceSummary',
-                                    'Report.ClassAttendanceMarkedSummaryReport'
+                                    'Report.ClassAttendanceMarkedSummaryReport',
                 ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
                 ) {
 
@@ -1216,6 +1219,38 @@ class InstitutionsTable extends AppTable
                 $attr['value'] = self::NO_FILTER;
             }
             return $attr;
+        }
+    }
+ public function onUpdateFieldFromDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            
+            if ((in_array($feature, ['Report.Income']))) {   
+                $attr['type'] = 'date';
+                return $attr;
+            }
+            if ((in_array($feature, ['Report.Expenditure']))) {   
+                $attr['type'] = 'date';
+                return $attr;
+            }
+        }
+    }
+
+
+    public function onUpdateFieldToDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            
+            if ((in_array($feature, ['Report.Income']))) {
+                $attr['type'] = 'date';
+                return $attr;
+            }
+            if ((in_array($feature, ['Report.Expenditure']))) {   
+                $attr['type'] = 'date';
+                return $attr;
+            }
         }
     }
 }
