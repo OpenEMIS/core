@@ -161,7 +161,19 @@ class StudentSubjectsTable extends ControllerActionTable
             $where['ClassGrades.education_grade_id'] = $selectedGrade;
         }
         // End
+		
+		
+		$userData = $this->Session->read();
+		$studentId = $userData['Auth']['User']['id'];
 
+		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
+
+		} else {
+			if (!empty($studentId)) {
+				$where[$this->aliasField('student_id')] = $studentId;
+			}
+		}
+		
         $query
             ->matching('InstitutionClasses.ClassGrades')
             ->where($where);

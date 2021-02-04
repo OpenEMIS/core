@@ -1,3 +1,6 @@
+### [3.61.8] - 2021-02-04
+- Bug Fixed: Profile > Student > Academic > Subjects, Absence, Outcomes, Competencies tab : System should not show record for ALL students
+
 ### [3.61.7] - 2021-02-02
 - Bug Fixed: Institution > Attendance > Students: Unable to view attendance and Secondary Teacher should be able to view and mark attendance
 
