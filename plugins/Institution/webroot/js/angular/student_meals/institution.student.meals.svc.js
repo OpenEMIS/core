@@ -42,12 +42,12 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         'Free': {
             code: 'Free',
             icon: 'fa fa-check',
-            color: '#77B576'
+            color: '#999999'
         },
         'None': {
             code: 'None',
-            icon: 'fa fa-check-circle-o',
-            color: '#999'
+            icon: 'fa fa-minus',
+            color: '#999999'
         }
     };
 
@@ -429,7 +429,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             institution_class_id: params.institution_class_id,
             meal_programmes_id: params.meal_programmes_id,
             academic_period_id: params.academic_period_id,
-            day: params.day_id,
+            day_id: params.day_id,
         };
         if (extra.day_id == ALL_DAY_VALUE) {
             return $q.resolve(false);
@@ -446,7 +446,8 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             }
         };
 
-        return StudentAttendanceMarkedRecords
+        // return StudentAttendanceMarkedRecords
+        return StudentMealMarkedRecords
             .find('MealIsMarked', extra)
             .ajax({success: success, defer: true});
     }
@@ -548,9 +549,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             if (dayObj.id != -1) {
                 var childrenColDef = [];
                 angular.forEach(attendancePeriodList, function(periodObj, periodKey) {
-                    childrenColDef.push({
+                   childrenColDef.push({
                         headerName: periodObj.id,
-                        field: 'week_attendance.' + dayObj.day + '.' + periodObj.id,
+                        field: 'week_meals.' + dayObj.day + '.' + periodObj.id,
                         suppressSorting: true,
                         suppressResize: true,
                         menuTabs: [],
@@ -558,7 +559,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                         headerClass: 'children-period',
                         cellClass: 'children-cell',
                         cellRenderer: function(params) {
-                            if (angular.isDefined(params.value)) {
+                           if (angular.isDefined(params.value)) {
                                 var code = params.value;
                                 return getViewAllDayAttendanceElement(code);
                             }
@@ -619,6 +620,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             suppressSorting: true,
             menuTabs: [],
             cellRenderer: function(params) {
+               
                 if (angular.isDefined(params.value)) {
                     var context = params.context;
                     var mealTypes = context.mealTypes;
@@ -816,7 +818,6 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
     function setRowDatas(context, data) {
         var studentList = context.scope.$ctrl.classStudentList;
-        console.log("studentList", studentList)
         studentList.forEach(function (dataItem, index) {
             if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 1 || dataItem.institution_student_meal.meal_received_id == 2) {
                 dataItem.rowHeight = 60;
@@ -951,6 +952,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     }
 
     function getViewMealElement(data) {
+        if (angular.isDefined(data.institution_student_meal)) {
         var html = '';
        
         if(data.institution_student_meal.meal_received_id == 1) {
@@ -962,7 +964,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         }
         
         return html;
-
+    }
     }
 
     function getViewAbsenceReasonElement(data, studentAbsenceReasonList) {
@@ -1007,24 +1009,21 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
     function getViewAllDayAttendanceElement(code) {
         var html = '';
+        // console.log(mealType)
         switch (code) {
-            case attendanceType.NOTMARKED.code:
-                html = '<i class="' + attendanceType.NOTMARKED.icon + '"></i>';
+            case mealType.Paid.code:
+                html = '<i>paid</i>';
                 break;
-            case attendanceType.PRESENT.code:
-                html = '<i style="color: ' + attendanceType.PRESENT.color + ';" class="' + attendanceType.PRESENT.icon + '"></i>';
+            case mealType.Free.code:
+                html = '<i style="color: ' + mealType.Free.color + ';">Free</i>';
                 break;
-            case attendanceType.LATE.code:
-                html = '<i style="color: ' + attendanceType.LATE.color + ';" class="' + attendanceType.LATE.icon + '"></i>';
+            case mealType.None.code:
+                html = '<i style="color: ' + mealType.None.color + ';" class="' + attendanceType.NOTMARKED.icon + '"></i>';
                 break;
-            case attendanceType.UNEXCUSED.code:
-                html = '<i style="color: ' + attendanceType.UNEXCUSED.color + ';" class="' + attendanceType.UNEXCUSED.icon + '"></i>';
-                break;
-            case attendanceType.EXCUSED.code:
-                html = '<i style="color: ' + attendanceType.EXCUSED.color + ';" class="' + attendanceType.EXCUSED.icon + '"></i>';
-                break;
+            
             default:
                 break;
+           
         }
         return html;
     }

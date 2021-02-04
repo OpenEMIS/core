@@ -229,6 +229,27 @@ $panelHeader = $this->fetch('panelHeader');
                             <h1 class="data-header">{{$ctrl.presentCount}}</h1>
                         </div>
                     </div>
+
+                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                        <i class="fa fa-address-book-o"></i>
+                        <div class="data-field">
+                            <h4><?= __('Total Meals') ?></h4>
+                            <h1 class="data-header">{{$ctrl.allMeals}}</h1>
+                        </div>
+                    </div>
+                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                        <div class="data-field">
+                            <h4><?= __('No. of Free Meals') ?></h4>
+                            <h1 class="data-header">{{$ctrl.allFreeMealCount}}</h1>
+                        </div>
+                    </div>
+                    <div class="data-section" ng-show="$ctrl.selectedDay == -1">
+                        <div class="data-field">
+                            <h4><?= __('No. of Paid Meals') ?></h4>
+                            <h1 class="data-header">{{$ctrl.allPaidMealCount}}</h1>
+                        </div>
+                    </div>
+                   
                     
                 </div>
                 <div id="institution-student-attendances-table" class="table-wrapper">
