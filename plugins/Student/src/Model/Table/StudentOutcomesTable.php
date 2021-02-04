@@ -150,6 +150,17 @@ class StudentOutcomesTable extends ControllerActionTable
             'OutcomeGradingOptions' => ['code']
         ];
 
+		$userData = $this->Session->read();
+		$studentId = $userData['Auth']['User']['id'];
+		
+		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
+
+		} else {
+			if (!empty($studentId)) {
+				$conditions[$this->aliasField('student_id')] = $studentId;
+			}
+		}
+
         $query->where($conditions);
     }
 
