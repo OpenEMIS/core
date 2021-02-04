@@ -32,6 +32,11 @@ class IncomeTable extends AppTable  {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
+
+
+        $startDate = (!empty($requestData->from_date))? date('Y-m-d',strtotime($requestData->from_date)): null;
+        $endDate = (!empty($requestData->to_date))? date('Y-m-d',strtotime($requestData->to_date)): null;
+      
         
         $conditions = [];
         if (!empty($academicPeriodId)) {
@@ -63,7 +68,9 @@ class IncomeTable extends AppTable  {
 			->innerJoin(['AcademicPeriods' => 'academic_periods'], [
                 'AcademicPeriods.id =' . $this->aliasField('academic_period_id')
             ])
-            ->where($conditions);  
+            ->where($conditions)
+
+            ->andWhere([$this->aliasField('date').' >= ' => $startDate, $this->aliasField('date').' <= ' => $endDate]);  
                
     }
 
