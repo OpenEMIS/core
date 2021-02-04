@@ -137,8 +137,11 @@ class StudentAttendanceSummaryTable extends AppTable
                         
                         ->where(['InstitutionClassStudents.student_status_id' => $enrolledStatus]);
                 }
-            ])  
-            
+            ])
+
+            ->leftJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
+                        'InstitutionClassGrades.institution_class_id = '. $this->aliasField('id'),
+                    ])
             ->leftJoin(['StudentAttendanceMarkedRecords' => 'institution_student_absence_details'], [
                         'StudentAttendanceMarkedRecords.institution_class_id = '. $this->aliasField('id'),
                         'StudentAttendanceMarkedRecords.academic_period_id = '.$this->aliasField('academic_period_id'),
@@ -151,6 +154,7 @@ class StudentAttendanceSummaryTable extends AppTable
                 $this->aliasField('name'),
                 $this->aliasField('institution_id'),
                 $this->aliasField('academic_period_id'),
+                'InstitutionClassGrades.education_grade_id',
                 'StudentAttendanceMarkedRecords.period',
                 'StudentAttendanceMarkedRecords.subject_id' 
             ])
@@ -1071,6 +1075,7 @@ public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
     {
         $periodId = $entity->StudentAttendanceMarkedRecords['period'];
         $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        $educationGradeId = $entity->InstitutionClassGrades['education_grade_id'];
         
         $periodName = '';
         
@@ -1082,7 +1087,7 @@ public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
 
             $studentAttendanceMarkTypesTable = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
             $studentAttendanceMarkTypes = $studentAttendanceMarkTypesTable->getAttendancePerDayOptionsByClass(
-                    $institionClassId, $academicPeriodId, $dayId 
+                    $institionClassId, $academicPeriodId, $dayId , $educationGradeId
                     );
 
             foreach ($studentAttendanceMarkTypes as $studentAttendanceMarkTypes){
