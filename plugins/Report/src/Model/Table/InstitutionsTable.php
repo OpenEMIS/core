@@ -676,7 +676,11 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+				if (!in_array($feature, ['Report.StudentAttendanceSummary'])) {
+					$attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+				} else {
+					$attr['options'] = $gradeOptions;
+				}
                 $attr['onChangeReload'] = true;
             } elseif (in_array($feature,
                                [
@@ -697,7 +701,11 @@ class InstitutionsTable extends AppTable
                 if (empty($gradeList)) {
                     $gradeOptions = ['' => $this->getMessage('general.select.noOptions')];
                 } else {
-                    $gradeOptions = ['' => __('All Grades')] + $gradeList;
+					if (!in_array($feature, ['Report.StudentAttendanceSummary'])) {
+						$gradeOptions = ['' => __('All Grades')] + $gradeList;
+                    } else {
+                        $gradeOptions = $gradeList;
+                    }
                 }
 
                 $attr['type'] = 'select';
@@ -884,11 +892,11 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         //add All Institution task POCOR 5698
-                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                        $institutionOptions = $institutionList;
                     }
 
                     $attr['type'] = 'chosenSelect';
