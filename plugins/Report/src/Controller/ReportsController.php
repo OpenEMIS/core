@@ -199,8 +199,8 @@ class ReportsController extends AppController
 
     public function ajaxGetReportProgress()
     {
-        $this->autoRender = false;
 
+        $this->autoRender = false;
         $userId = $this->Auth->user('id');
         $dataSet = [];
 
