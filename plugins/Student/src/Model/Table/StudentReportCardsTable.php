@@ -50,11 +50,14 @@ class StudentReportCardsTable extends ControllerActionTable
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
+    {   
+        $user = $this->Auth->user();
         $InstitutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+
         $query
-            ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')
-            ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
+            ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
+            ->where([$this->aliasField('student_id') => $user['id']])   //  POCOR-5910
+            //->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
             ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
     }
 
