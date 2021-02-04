@@ -1,10 +1,6 @@
 <?php
 namespace Report\Controller;
-ini_set('memory_limit', '1024M');
-ini_set('upload_max_size', '1024M');
-ini_set('upload_max_filesize', '1024M');
-ini_set('post_max_size', '1024M');
-ini_set('max_execution_time', '50000');
+
 use ArrayObject;
 use App\Controller\AppController;
 use Cake\Event\Event;
@@ -203,11 +199,7 @@ class ReportsController extends AppController
 
     public function ajaxGetReportProgress()
     {
-        ini_set('memory_limit', '1024M');
-        ini_set('upload_max_size', '1024M');
-        ini_set('upload_max_filesize', '1024M');
-        ini_set('post_max_size', '1024M');
-        ini_set('max_execution_time', '50000');
+
         $this->autoRender = false;
         $userId = $this->Auth->user('id');
         $dataSet = [];
