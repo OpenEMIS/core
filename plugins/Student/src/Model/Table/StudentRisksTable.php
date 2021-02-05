@@ -133,20 +133,34 @@ class StudentRisksTable extends ControllerActionTable
         $conditions = [];
 
         $conditions[$this->aliasField('academic_period_id')] = $extra['selectedAcademicPeriodId'];
+        $user = $this->Auth->user();
 
+        $session = $this->request->session();
+        $studentId = $session->read('Student.Students.id');
+/*
         if ($this->controller->name == 'Profiles' && $this->action == 'index') {
-            if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
-
-            } else {
-                if (!empty($studentId)) {
-                    $conditions[$this->aliasField('student_id')] = $studentId;
-                }
-            }
+            $session = $this->request->session();
+            $studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
+        }*/
+         
+        if ($user['is_student'] == 1) {
+            $query = $query
+            ->where([
+                $this->aliasField('student_id') => $user['id'],
+                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']
+            ])
+            ->order(['risk_id']);
         }
-        $query = $query
-        ->where($conditions)
-        ->order(['risk_id']);
-
+        else{
+            $query = $query
+                ->where([
+                    $this->aliasField('student_id') => $studentId,
+                    $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']
+                ])
+                ->order(['risk_id']);
+        }
+     
+        
         return $query;
     }
 
