@@ -12,43 +12,42 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use DateTime;
 use PHPExcel_Worksheet;
-use Cake\I18n\Time;
-use Workflow\Model\Behavior\WorkflowBehavior;
 
-class ImportAssessmentItemResultsTable extends AppTable
-{
-     private $institutionId = false;
+class ImportAssessmentItemResultsTable extends AppTable {
+    private $institutionId = false;
 
-    public function initialize(array $config)
-    {
+    public function initialize(array $config) {
         $this->table('import_mapping');
         parent::initialize($config);
+
         $this->addBehavior('Import.Import', ['plugin'=>'Assessment', 'model'=>'AssessmentItemResults']);
         
         // register table once
         $this->AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $this->InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $this->EducationSubjects = TableRegistry::get('Education.EducationSubjects');
         $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $this->Assessments = TableRegistry::get('Assessment.Assessments');
+        $this->AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+    }
+
+    public function beforeAction($event) {
+        $session = $this->request->session();
+        if ($session->check('Institution.Institutions.id')) {
+            $this->institutionId = $session->read('Institution.Institutions.id');
+        }
     }
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
-            'Model.import.onImportPopulateAssessmentPeriodsData' => 'onImportPopulateAssessmentPeriodsData',
-            'Model.import.onImportPopulateEducationSubjectsData' => 'onImportPopulateEducationSubjectsData',
-            'Model.import.addAfterAction' => 'addAfterAction',
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
             'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
         ];
         $events = array_merge($events, $newEvent);
         return $events;
-    }
-    public function beforeAction($event) {
-        $this->institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
@@ -66,25 +65,13 @@ class ImportAssessmentItemResultsTable extends AppTable
         unset($request->query['education_grade']);
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
-        $crumbTitle = $this->getHeader($this->alias());
-        $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
-    }
-
-    /*public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
-            $tempRow['entity'] = $this->AssessmentItemResults->newEntity();
-    }
-
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}*/
-
     public function addAfterAction(Event $event, Entity $entity)
-    { 
+    {
         $this->dependency = [];
         $this->dependency["education_grade"] = ["select_file"];
-        $this->dependency["academic_period_id"] = $academicPeriod;
 
         $this->ControllerAction->field('education_grade', ['type' => 'select']);
-        $this->ControllerAction->field('select_file', ['visible' => true]);
+        $this->ControllerAction->field('select_file', ['visible' => false]);
         $this->ControllerAction->setFieldOrder(['education_grade', 'select_file']);
 
         //Assumption - onChangeReload must be named in this format: change<field_name>. E.g changeClass
@@ -104,7 +91,7 @@ class ImportAssessmentItemResultsTable extends AppTable
                     }
                 }
             }
-        }    
+        }
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
@@ -115,33 +102,16 @@ class ImportAssessmentItemResultsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldEducationGrade(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
-
-            $educationGradeOptions = $this->InstitutionGrades
-            ->find('list', [
-                'keyField' => 'education_grade_id',
-                'valueField' => 'EducationGrades'
-            ])
-            ->leftJoin(['EducationGrades' => 'education_grades'], [
-                'EducationGrades.id = ' . $this->InstitutionGrades->aliasField('education_grade_id')
-            ])
-            ->select(['EducationGrades' => 'EducationGrades.name', 'education_grade_id' => 'EducationGrades.id'])
-            ->where([$this->InstitutionGrades->aliasField('institution_id') => $institutionId])
-            ->group([
-                'EducationGrades.id',
-            ])
-            ->toArray();
-
-            $attr['options'] = $educationGradeOptions;
-                // useing onChangeReload to do visible
-            $attr['onChangeReload'] = 'changeEducationGrade';
-        }
-        
-        return $attr;
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+        $crumbTitle = $this->getHeader($this->alias());
+        $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
+
+    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
+            $tempRow['entity'] = $this->AssessmentItemResults->newEntity();
+    }
+
+    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
 
     public function onImportPopulateAssessmentPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
@@ -231,22 +201,38 @@ class ImportAssessmentItemResultsTable extends AppTable
         }
     }
 
+
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-        $requestData = $this->request->data[$this->alias()];
-        echo "<pre>";print_r($requestData );die("poonam");
+        //echo "<pre>";print_r($tempRow );die("poonam");
         return true;
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData) {
-        $process = function($model, $entity) use ($requestData) {
-            $errors = $entity->errors();
-            if (empty($errors)) {
-                $this->_generate($requestData);
-                return true;
-            } else {
-                return false;
-            }
-        };
+    public function onUpdateFieldEducationGrade(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $academicPeriodId =  !empty($request->query['academic_period_id']) ? $request->query['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+            
+            $educationGradeOptions = $this->Assessments
+            ->find('list', [
+                'keyField' => 'education_grade_id',
+                'valueField' => 'EducationGrades'
+            ])
+            ->leftJoin(['EducationGrades' => 'education_grades'], [
+                'EducationGrades.id = ' . $this->Assessments->aliasField('education_grade_id')
+            ])
+            ->select(['EducationGrades' => 'EducationGrades.name', 'education_grade_id' => 'EducationGrades.id'])
+            ->where([$this->Assessments->aliasField('academic_period_id') => $academicPeriodId])
+            ->group([
+                'EducationGrades.id',
+            ])
+            ->toArray();
+            
+            $attr['options'] = $educationGradeOptions;
+                // using onChangeReload to do visible
+            $attr['onChangeReload'] = 'changeEducationGrade';
+        }
         
+        return $attr;
     }
-}    
+
+}
