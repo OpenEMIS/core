@@ -1012,7 +1012,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         // console.log(mealType)
         switch (code) {
             case mealType.Paid.code:
-                html = '<i>paid</i>';
+                html = '<i>Paid</i>';
                 break;
             case mealType.Free.code:
                 html = '<i style="color: ' + mealType.Free.color + ';">Free</i>';
