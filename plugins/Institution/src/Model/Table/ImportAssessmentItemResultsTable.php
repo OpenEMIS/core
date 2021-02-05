@@ -1,30 +1,32 @@
 <?php
 namespace Institution\Model\Table;
 
+use App\Model\Table\AppTable;
 use ArrayObject;
-use Cake\Event\Event;
-use Cake\Network\Request;
-use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
+use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
+use DateTime;
 use PHPExcel_Worksheet;
-use Cake\Log\Log;
-
-use App\Model\Table\AppTable;
+use Cake\I18n\Time;
+use Workflow\Model\Behavior\WorkflowBehavior;
 
 class ImportAssessmentItemResultsTable extends AppTable
 {
-    private $institutionId;
+     private $institutionId = false;
 
     public function initialize(array $config)
     {
         $this->table('import_mapping');
         parent::initialize($config);
-        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'InstitutionAssessments']);
+        $this->addBehavior('Import.Import', ['plugin'=>'Assessment', 'model'=>'AssessmentItemResults']);
         
         // register table once
-        $this->InstitutionAssessments = TableRegistry::get('Institution.InstitutionAssessments');
+        $this->AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $this->InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $this->EducationSubjects = TableRegistry::get('Education.EducationSubjects');
@@ -35,10 +37,11 @@ class ImportAssessmentItemResultsTable extends AppTable
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $newEvent = [
-            'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
-            'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
-            'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
+            'Model.import.onImportPopulateAssessmentPeriodsData' => 'onImportPopulateAssessmentPeriodsData',
+            'Model.import.onImportPopulateEducationSubjectsData' => 'onImportPopulateEducationSubjectsData',
+            'Model.import.addAfterAction' => 'addAfterAction',
+            'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
             'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
         ];
         $events = array_merge($events, $newEvent);
@@ -48,7 +51,7 @@ class ImportAssessmentItemResultsTable extends AppTable
         $this->institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
     }
 
-    /*public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         $request = $this->request;
         if (empty($request->query('education_grade'))) {
@@ -60,21 +63,19 @@ class ImportAssessmentItemResultsTable extends AppTable
     public function addOnInitialize(Event $event, Entity $entity)
     {
         $request = $this->request;
-
         unset($request->query['education_grade']);
-    }*/
+    }
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
         $crumbTitle = $this->getHeader($this->alias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
-            $columns = new Collection($columns);
-            $tempRow['entity'] = $this->InstitutionAssessments->newEntity();
+    /*public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
+            $tempRow['entity'] = $this->AssessmentItemResults->newEntity();
     }
 
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
+    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}*/
 
     public function addAfterAction(Event $event, Entity $entity)
     { 
@@ -231,7 +232,21 @@ class ImportAssessmentItemResultsTable extends AppTable
     }
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-        //echo "<pre>";print_r($tempRow);die("Shiva");
+        $requestData = $this->request->data[$this->alias()];
+        echo "<pre>";print_r($requestData );die("poonam");
         return true;
+    }
+
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData) {
+        $process = function($model, $entity) use ($requestData) {
+            $errors = $entity->errors();
+            if (empty($errors)) {
+                $this->_generate($requestData);
+                return true;
+            } else {
+                return false;
+            }
+        };
+        
     }
 }    
