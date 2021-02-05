@@ -90,10 +90,15 @@ class AssessmentItemResultsTable extends AppTable
         $controller = $options['_controller'];
         $session = $controller->request->session();
 
+        
         $studentId = -1;
         if ($session->check('Student.Results.student_id')) {
             $studentId = $session->read('Student.Results.student_id');
         }
+
+       if ($options['user']['is_student'] == 1) {
+             $studentId = $options['user']['id'];
+       }
 
         return $query
             ->select([
