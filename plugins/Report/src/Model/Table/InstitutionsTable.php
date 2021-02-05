@@ -95,6 +95,14 @@ class InstitutionsTable extends AppTable
                     },
                     'message' => __('Report End Date should be earlier than Academic Period End Date')
                 ],
+                'ruleForOneMonthDate' => [
+                    'rule' => ['forOneMonthDate'],
+                    'on' => function ($context) {
+                        $feature = $context['data']['feature'];
+                        return in_array($feature, ['Report.StudentAttendanceSummary']);
+                    },
+                    'message' => __('Date range should be one month only')
+                ]
             ]);
 
         return $validator;
