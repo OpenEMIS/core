@@ -267,7 +267,7 @@ class ImportStudentAttendancesTable extends AppTable {
     }
 
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {die("ee");
         if (empty($tempRow['student_id'])) {
             $rowInvalidCodeCols['student_id'] = __('OpenEMIS ID was not defined');
             return false;
