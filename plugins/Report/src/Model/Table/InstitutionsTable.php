@@ -946,9 +946,13 @@ class InstitutionsTable extends AppTable
                 $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
                 if ($academicPeriodId != $AcademicPeriods->getCurrent()) {
                     $attr['value'] = $selectedPeriod->end_date;
-                } else {
+                } 
+                else {
                     $attr['value'] = Time::now();
                 }
+                //POCOR-5907[START]
+                $attr['value'] = $selectedPeriod->end_date;
+                //POCOR-5907[END]
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
