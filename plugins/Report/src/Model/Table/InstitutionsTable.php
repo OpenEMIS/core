@@ -603,7 +603,8 @@ class InstitutionsTable extends AppTable
                                 'Report.ClassAttendanceNotMarkedRecords', 
                                 'Report.InstitutionCases', 
                                 'Report.StudentAttendanceSummary', 
-                                'Report.StaffAttendances'
+                                'Report.StaffAttendances',
+                                'Report.ClassAttendanceMarkedSummaryReport'
                             ])
                     ) {
                     $attr['onChangeReload'] = true;
