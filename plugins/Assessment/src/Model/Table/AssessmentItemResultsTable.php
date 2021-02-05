@@ -15,6 +15,7 @@ class AssessmentItemResultsTable extends AppTable
 {
     public function initialize(array $config)
     {
+        $this->table('assessment_item_results');
         parent::initialize($config);
 
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
@@ -40,7 +41,7 @@ class AssessmentItemResultsTable extends AppTable
 
         return $validator
             ->requirePresence('student_id')
-            ->requirePresence('assessment_id')
+            //->requirePresence('assessment_id')
             ->requirePresence('education_subject_id')
             ->requirePresence('education_grade_id')
             ->requirePresence('academic_period_id')
