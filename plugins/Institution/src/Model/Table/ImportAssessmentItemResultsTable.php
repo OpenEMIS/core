@@ -22,7 +22,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $this->table('import_mapping');
         parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin'=>'Assessment', 'model'=>'AssessmentItemResults']);
+        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'AssessmentItemResults']);
         // register table once
         $this->AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -233,7 +233,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return true;
     }
 
-    public function template()
+    /*public function template()
     {
         $folder = $this->prepareDownload();
         $modelName = 'ImportAssessmentItemResults';
@@ -258,5 +258,5 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
         $this->performDownload($excelFile);
         die;
-    }
+    }*/
 }
