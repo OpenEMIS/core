@@ -175,9 +175,9 @@ class InstitutionReportCardsTable extends AppTable
             'file_content' => $fileContent
         ], $params);
 
-        // delete report card process
-        $ReportCardProcesses = TableRegistry::Get('ReportCard.ReportCardProcesses');
-        $ReportCardProcesses->deleteAll([
+        // delete institution report card process
+        $InstitutionReportCardProcesses = TableRegistry::Get('ReportCard.InstitutionReportCardProcesses');
+        $InstitutionReportCardProcesses->deleteAll([
             'report_card_id' => $params['report_card_id'],
             'institution_id' => $params['institution_id']
         ]);
@@ -187,9 +187,9 @@ class InstitutionReportCardsTable extends AppTable
     {
         $params = $extra['params'];
         $url = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'ReportCardStatuses',
+            'plugin' => 'ProfileTemplate',
+            'controller' => 'ProfileTemplates',
+            'action' => 'InstitutionProfiles',
             'index',
             'report_card_id' => $params['report_card_id'],
             'academic_period_id' => $params['academic_period_id']
@@ -791,7 +791,7 @@ class InstitutionReportCardsTable extends AppTable
 			}
 			$totalArray = [];
 			$totalArray = [
-				'education_grade_id' => $value['id'] + 1,
+				'education_grade_id' => (!empty($value['id']) ? $value['id'] : 0) + 1,
 				'count' => $total_count,
 			];
 			$entity[] = $totalArray;
@@ -852,7 +852,7 @@ class InstitutionReportCardsTable extends AppTable
 			}
 			$totalArray = [];
 			$totalArray = [
-				'education_grade_id' => $value['id'] + 1,
+				'education_grade_id' => (!empty($value['id']) ? $value['id'] : 0) + 1,
 				'count' => $total_count,
 			];
 			$entity[] = $totalArray;

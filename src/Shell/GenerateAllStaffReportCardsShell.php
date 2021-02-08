@@ -49,7 +49,7 @@ class GenerateAllStaffReportCardsShell extends Shell
                     'institution_id' => $recordToProcess['institution_id'],
                     'staff_id' => $recordToProcess['staff_id'],
                 ]);
-
+				
                 $excelParams = new ArrayObject([]);
                 $excelParams['className'] = 'CustomExcel.StaffReportCards';
                 $excelParams['requestQuery'] = $recordToProcess;
@@ -57,7 +57,7 @@ class GenerateAllStaffReportCardsShell extends Shell
                 try {
                     $this->StaffReportCards->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
-                    $this->out('Error generating Report Card for Staff ' . $recordToProcess['institution_id']);
+                    $this->out('Error generating Report Card for Staff ' . $recordToProcess['staff_id']);
                     $this->out($e->getMessage());
                 }
 

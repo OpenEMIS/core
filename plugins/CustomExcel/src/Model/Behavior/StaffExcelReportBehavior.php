@@ -23,7 +23,7 @@ use PhpOffice\PhpSpreadsheet\Cell\DataType;
 
 class StaffExcelReportBehavior extends Behavior
 {
-    use InstitutionPdfReportTrait;
+    use StaffPdfReportTrait;
 
     protected $_defaultConfig = [
         'folder' => 'export',
@@ -124,10 +124,10 @@ class StaffExcelReportBehavior extends Behavior
         $objSpreadsheet = $this->loadExcelTemplate($extra);
         $this->generateExcel($objSpreadsheet, $extra);
 
-        Log::write('debug', 'InstitutionExcelReportBehavior >>> renderExcelTemplate');
+        Log::write('debug', 'StaffExcelReportBehavior >>> renderExcelTemplate');
 		
 		
-        $this->saveFile($objSpreadsheet, $temppath, $format, $params['institution_id']);
+        $this->saveFile($objSpreadsheet, $temppath, $format, $params['staff_id']);
 		
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
@@ -142,7 +142,7 @@ class StaffExcelReportBehavior extends Behavior
             // delete temporary excel template file after save
             $this->deleteFile($extra['tmp_file_path']);
         }
-
+		
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
 	
         if (!empty($params['staff_id'])) {
@@ -375,17 +375,17 @@ class StaffExcelReportBehavior extends Behavior
         }
     }
 
-    public function saveFile($objSpreadsheet, $filepath, $format, $institution_id)
+    public function saveFile($objSpreadsheet, $filepath, $format, $staff_id)
     {
-        Log::write('debug', 'InstitutionExcelReportBehavior >>> saveFile: '.$format);
+        Log::write('debug', 'StaffExcelReportBehavior >>> saveFile: '.$format);
         $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
 
         if ($format == 'pdf') {
-            $this->savePDF($objSpreadsheet, $filepath, $institution_id);
+            $this->savePDF($objSpreadsheet, $filepath, $staff_id);
         } else {
 			// pdf
-			if(!empty($institution_id)) {
-				$this->savePDF($objSpreadsheet, $filepath, $institution_id);
+			if(!empty($staff_id)) {
+				$this->savePDF($objSpreadsheet, $filepath, $staff_id);
 			}
             // xlsx
             $objWriter->save($filepath);
