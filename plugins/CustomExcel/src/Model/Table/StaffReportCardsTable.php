@@ -49,7 +49,7 @@ class StaffReportCardsTable extends AppTable
     {
         $StaffReportCards = TableRegistry::get('Institution.StaffReportCards');
         if (!$StaffReportCards->exists($params)) {
-            // insert student report card record if it does not exist
+            // insert staff report card record if it does not exist
             $params['status'] = $StaffReportCards::IN_PROGRESS;
             $params['started_on'] = date('Y-m-d H:i:s');
             $newEntity = $StaffReportCards->newEntity($params);
@@ -97,15 +97,16 @@ class StaffReportCardsTable extends AppTable
                 $StaffReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
                 $StaffReportCards->aliasField('institution_id') => $params['institution_id'],
                 $StaffReportCards->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
+                $StaffReportCards->aliasField('staff_id') => $params['staff_id'],
             ])
             ->first();
 			
         // set filename
-        $fileName = $StaffReportCardData->academic_period->name . '_' . $StaffReportCardData->profile_template->code. '_' . $StaffReportCardData->institution->name . '.' . $this->fileType;
+        $fileName = $StaffReportCardData->academic_period->name . '_' . $StaffReportCardData->staff_template->code. '_' . $StaffReportCardData->institution->name . '.' . $this->fileType;
         $filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
         $status = $StaffReportCards::GENERATED;
-	
+		//echo '<pre>';print_r($fileContent);die;
         // save file
         $StaffReportCards->updateAll([
             'status' => $status,
@@ -114,9 +115,9 @@ class StaffReportCardsTable extends AppTable
             'file_content' => $fileContent
         ], $params);
 
-        // delete report card process
-        $ReportCardProcesses = TableRegistry::Get('ReportCard.ReportCardProcesses');
-        $ReportCardProcesses->deleteAll([
+        // delete staff report card process
+        $StaffReportCardProcesses = TableRegistry::Get('ReportCard.StaffReportCardProcesses');
+        $StaffReportCardProcesses->deleteAll([
             'staff_profile_template_id' => $params['staff_profile_template_id'],
             'institution_id' => $params['institution_id'],
             'staff_id' => $params['staff_id']
@@ -127,10 +128,11 @@ class StaffReportCardsTable extends AppTable
     {
         $params = $extra['params'];
         $url = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'ReportCardStatuses',
+            'plugin' => 'ProfileTemplate',
+            'controller' => 'ProfileTemplates',
+            'action' => 'StaffProfiles',
             'index',
+            'institution_id' => $params['institution_id'],
             'staff_profile_template_id' => $params['staff_profile_template_id'],
             'academic_period_id' => $params['academic_period_id']
         ];
@@ -144,7 +146,7 @@ class StaffReportCardsTable extends AppTable
         if (array_key_exists('staff_profile_template_id', $params)) {
             $StaffTemplates = TableRegistry::get('ProfileTemplate.StaffTemplates');
             $entity = $StaffTemplates->get($params['staff_profile_template_id'], ['contain' => ['AcademicPeriods']]);
-
+			
             $extra['report_card_start_date'] = $entity->start_date;
             $extra['report_card_end_date'] = $entity->end_date;
 
