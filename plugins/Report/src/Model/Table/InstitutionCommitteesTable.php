@@ -10,6 +10,8 @@ use Cake\ORM\Query;
 use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
+
 
 class InstitutionCommitteesTable extends AppTable
 {
@@ -40,10 +42,8 @@ class InstitutionCommitteesTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        //POCOR-5905 starts
-        $institutionCommitteeMeeting = TableRegistry::get('institution_committee_meeting');
+        //POCOR-5394 starts
         $institutions = TableRegistry::get('institutions');
-
         if($requestData->institution_id == 0){
             $institutions_Arr = $institutions
                                     ->find('list', [
@@ -63,23 +63,16 @@ class InstitutionCommitteesTable extends AppTable
 
         $query
             ->select([
-                'name' => $this->aliasField('name'),
-                'meeting_date' => $institutionCommitteeMeeting->aliasField('meeting_date'),
-                'start_time' => $institutionCommitteeMeeting->aliasField('start_time'),
-                'end_time' => $institutionCommitteeMeeting->aliasField('end_time'),
-                'comment' => $institutionCommitteeMeeting->aliasField('comment'),
-                'academic_period_id' => $this->aliasField('academic_period_id'),
-                'committee_type' => 'InstitutionCommitteeTypes.name',
                 'code' => 'Institutions.code',
-                'instituion_name' => 'Institutions.name'
+                'instituion_name' => 'Institutions.name',
+                'name' => $this->aliasField('name'),
+                'chairperson' => $this->aliasField('chairperson'),
+                'telephone' => $this->aliasField('telephone'),
+                'instituion_name' => 'Institutions.name',
+                'area_id' => 'Institutions.area_id'
             ])
             ->contain([
-                'Institutions' => [
-                    'fields' => [
-                        'Institutions.code',
-                        'Institutions.name'
-                    ]
-                ],
+                'Institutions',
                 'AcademicPeriods' => [
                     'fields' => [
                         'AcademicPeriods.name'
@@ -91,14 +84,79 @@ class InstitutionCommitteesTable extends AppTable
                     ]
                 ]
             ])
-            ->leftJoin([$institutionCommitteeMeeting->alias() => $institutionCommitteeMeeting->table()], [
-                $institutionCommitteeMeeting->aliasField('institution_committee_id = ') . $this->aliasField('id')
-            ])
             ->where([
                 $this->aliasField('academic_period_id') => $requestData->academic_period_id,
                 $this->aliasField('institution_id').' IN ('.$institutions. ')'
             ]);
-            //POCOR-5905 ends
+            
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                
+                $areaLevel = '';
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $areaLevelId = $ConfigItems->value('institution_area_level_id');
+                $row['area_level'] = '';
+                if($areaLevelId != 1){
+                    $AreaTable = TableRegistry::get('Area.AreaLevels');
+                    $value = $AreaTable->find()
+                                ->where([$AreaTable->aliasField('level') => $areaLevelId])
+                                ->first();
+                
+                    if (!empty($value->name)) {
+                        $areaLevel = $value->name;
+                    }
+
+                    $row['area_level'] = $areaLevel;
+                }
+                return $row;
+            });
+        });
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $areas1 = TableRegistry::get('areas');
+                $areasData = $areas1
+                            ->find()
+                            ->where([$areas1->alias('id')=>$row->area_id])
+                            ->first();
+                $row['area_code'] = '';            
+                $row['area_name'] = '';
+                if(!empty($areasData)){
+                    $areas = TableRegistry::get('areas');
+                    $areaLevels = TableRegistry::get('area_levels');
+                    $institutions = TableRegistry::get('institutions');
+                    $val = $areas
+                                ->find()
+                                ->select([
+                                    $areas->aliasField('code'),
+                                    $areas->aliasField('name'),
+                                    ])
+                                ->leftJoin(
+                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [
+                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
+                                    ]
+                                )
+                                ->leftJoin(
+                                    [$institutions->alias() => $institutions->table()],
+                                    [
+                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
+                                    ]
+                                )    
+                                ->where([
+                                    $areaLevels->aliasField('level !=') => 1,
+                                    $areas->aliasField('id') => $areasData->parent_id
+                                ])->first();
+                    
+                    if (!empty($val->name) && !empty($val->code)) {
+                        $row['area_code'] = $val->code;
+                        $row['area_name'] = $val->name;
+                    }
+                }            
+                
+                return $row;
+            });
+        });
+        //POCOR-5394 ends
     }
 
     public function onExcelRenderStartTime(Event $event, Entity $entity, array $attr)
@@ -116,7 +174,7 @@ class InstitutionCommitteesTable extends AppTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
-        $institutionCommitteeMeeting = TableRegistry::get('institution_committee_meeting');
+        //add columns POCOR-5394 starts
         $newFields[] = [
             'key' => 'Institutions.code',
             'field' => 'code',
@@ -130,56 +188,49 @@ class InstitutionCommitteesTable extends AppTable
             'type' => 'string',
             'label' => __('Institution Name')
         ];
-        //POCOR-5905 starts
+
         $newFields[] = [
-            'key' => 'AcademicPeriods.name',
-            'field' => 'academic_period_id',
+            'key' => 'area_level',
+            'field' => 'area_level',
             'type' => 'string',
-            'label' => __('Academic Period')
+            'label' => __('Area Level')
+        ];
+
+        $newFields[] = [
+            'key' => 'area_code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Code')
         ];
         
         $newFields[] = [
-            'key' => 'InstitutionCommitteeTypes.name',
-            'field' => 'committee_type',
+            'key' => 'area_name',
+            'field' => 'area_name',
             'type' => 'string',
-            'label' => __('Type')
+            'label' => __('Area Name')
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'name',
             'type' => 'string',
-            'label' => __('Name')
+            'label' => __('School Board Name')
         ];
 
         $newFields[] = [
-            'key' => $institutionCommitteeMeeting->aliasField('meeting_date'),
-            'field' => 'meeting_date',
-            'type' => 'date',
-            'label' => __('Date of Meeting')
-        ];
-
-        $newFields[] = [
-            'key' => $institutionCommitteeMeeting->aliasField('start_time'),
-            'field' => 'start_time',
+            'key' => '',
+            'field' => 'chairperson',
             'type' => 'string',
-            'label' => __('Start Time')
+            'label' => __('Chairperson')
         ];
 
         $newFields[] = [
-            'key' => $institutionCommitteeMeeting->aliasField('end_time'),
-            'field' => 'end_time',
+            'key' => '',
+            'field' => 'telephone',
             'type' => 'string',
-            'label' => __('End Time')
+            'label' => __('Contact No')
         ];
-
-        $newFields[] = [
-            'key' => $institutionCommitteeMeeting->aliasField('comment'),
-            'field' => 'comment',
-            'type' => 'string',
-            'label' => __('Comment')
-        ];
-        //POCOR-5905 ends      
+        //add columns POCOR-5394 ends 
         $fields->exchangeArray($newFields);
     }    
 }
