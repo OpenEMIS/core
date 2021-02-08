@@ -326,6 +326,9 @@ Plugin::load('SpecialNeeds', ['routes' => true, 'autoload' => true]);
 Plugin::load('MoodleApi', ['routes' => true, 'autoload' => true]);
 Plugin::load('Historical', ['autoload' => true]);
 Plugin::load('Schedule', ['autoload' => true]);
+Plugin::load('ProfileTemplate', ['routes' => true, 'autoload' => true]);
+Plugin::load('Meal', ['routes' => true, 'autoload' => true]);
+
 
 $pluginPath = Configure::read('plugins');
 foreach ($pluginPath as $key => $path) {

@@ -233,10 +233,20 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $this->Alert->warning('InstitutionSubjects.noProgrammes');
             $extra['noProgrammes'] = true;
         }
-
+        //POCOR-5852 starts
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+            $Classes = $this->Classes;
+            $classOptions = $Classes->find('list')
+                                ->where([
+                                    $Classes->aliasField('academic_period_id') => $this->request->query['academic_period_id'],
+                                    $Classes->aliasField('institution_id') => $extra['institution_id']
+                                ])
+                                ->toArray();
+            $selectedClassId = $this->queryString('class_id', $classOptions);
+            $this->request->query['class_id'] = $selectedClassId;
         }
+        //POCOR-5852 ends
         $extra['selectedAcademicPeriodId'] = $this->queryString('academic_period_id', $academicPeriodOptions);
         $extra['selectedClassId'] = 0;
     }
@@ -1730,5 +1740,19 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
  
         return $data;
+    }
+
+    public function getSubjectsByClass($classId){
+
+        $classSubjects = $this->ClassSubjects
+            ->find()
+            ->contain(['InstitutionSubjects'])
+            ->where([
+                $this->ClassSubjects->aliasField('institution_class_id') => $classId,
+                $this->ClassSubjects->aliasField('status') => 1
+            ])
+            ->toArray();
+        return $classSubjects;
+          
     }
 }

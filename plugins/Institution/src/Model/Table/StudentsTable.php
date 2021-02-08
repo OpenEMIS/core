@@ -577,7 +577,7 @@ class StudentsTable extends ControllerActionTable
             'institution_student_id' => !empty($entity->student_id) ? $entity->student_id : NULL,
             'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
         ];
-        if($this->action == 'remove') {
+        if(!empty($this->action) && $this->action == 'remove') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $username = $this->Auth->user()['username']; 
@@ -819,6 +819,26 @@ class StudentsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
     { 
+        foreach ($query->toArray() as $key => $value)
+        {
+            $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+
+            $InstitutionStudentsCurrentData = $InstitutionStudents
+            ->find()
+            ->select([
+                'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
+            ])
+            ->where([
+                $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id
+            ])
+            ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
+            ->autoFields(true)
+            ->first();
+            if($value['student_status']->name == "Enrolled"){
+                if($InstitutionStudentsCurrentData->student_status_id == 8)
+                    $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
+            }
+        }
         $this->dashboardQuery = clone $query;
     }
 

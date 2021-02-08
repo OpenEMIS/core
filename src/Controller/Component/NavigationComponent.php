@@ -444,7 +444,7 @@ class NavigationComponent extends Component
             'Institutions.Institutions.view' => [
                 'title' => 'Overview',
                 'parent' => 'Institution.General',
-                'selected' => ['Institutions.Institutions.edit'],
+                'selected' => ['Institutions.Institutions.edit', 'Institutions.InstitutionStatus.edit', 'Institutions.InstitutionStatus.view'],
                 'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
             'Institutions.InstitutionMaps.view' => [
@@ -487,6 +487,13 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Attachments'],
                 'params' => ['plugin' => 'Institution']
             ],
+			
+			'Institutions.Profiles.index' => [
+				'title' => 'Profiles',
+				'parent' => 'Institution.General',
+				'selected' => ['Institutions.Profiles'],
+				'params' => ['plugin' => 'Institution']
+			],
 
             'Institution.Academic' => [
                 'title' => 'Academic',
@@ -579,7 +586,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Students.add', 'Institutions.Students.addExisting', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
                 'Institutions.StudentAdmission', 'Institutions.StudentTransferIn', 'Institutions.StudentTransferOut', 'Institutions.StudentWithdraw', 'Institutions.WithdrawRequests', 'Institutions.StudentUser.add',
-                'Institutions.ImportStudentAdmission', 'Institutions.Students','StudentHistories.index', 'Institutions.BulkStudentAdmission', 'Institutions.ImportStudentBodyMasses', 'Institutions.ImportStudentGuardians', 'Institutions.StudentStatusUpdates'],
+                'Institutions.ImportStudentAdmission', 'Institutions.Students','StudentHistories.index', 'Institutions.BulkStudentAdmission', 'Institutions.ImportStudentBodyMasses', 'Institutions.ImportStudentGuardians', 'Institutions.StudentStatusUpdates','Institutions.ImportStudentExtracurriculars'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -802,6 +809,26 @@ class NavigationComponent extends Component
                 'selected' => ['InfrastructureProjects.view', 'InfrastructureProjects.add', 'InfrastructureProjects.edit', 'InfrastructureProjects.delete']
             ],
 
+            'Meals' => [
+                'title' => 'Meals',
+                'parent' => 'Institutions.Institutions.index',
+                'link' => false
+            ],
+
+            'Institutions.MealProgramme' => [
+               'title' => 'Programme',
+                'parent' => 'Meals',
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['Institutions.MealProgramme']
+            ],
+
+            'Institutions.StudentMeals.index' => [
+                'title' => 'Students',
+                'parent' => 'Meals',
+                'selected' => ['Institutions.StudentMeals','Institutions.ImportStudentMeals'],
+                'params' => ['plugin' => 'Institution']
+            ],
+
             'Wash' => [
                 'title' => 'WASH',
                 'parent' => 'Infrastructures',
@@ -934,13 +961,13 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution']
             ],
-
-            'InstitutionCommittees.index' => [
-                'title' => 'Committees',
-                'parent' => 'Institutions.Institutions.index',
-                'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionCommittees.view', 'InstitutionCommittees.edit','InstitutionCommittees.delete','InstitutionCommittees.add','InstitutionCommitteeAttachments.add', 'InstitutionCommitteeAttachments.edit', 'InstitutionCommitteeAttachments.view', 'InstitutionCommitteeAttachments.index','InstitutionCommitteeAttachments.delete']
-            ],
+            'Institutions.Committees' => [
+                    'title' => 'Committees',
+                    'parent' => 'Institutions.Institutions.index',
+                    //'selected' => ['Institutions.Committees','InstitutionCommitteeAttachments.add', 'InstitutionCommitteeAttachments.edit', 'InstitutionCommitteeAttachments.view', 'InstitutionCommitteeAttachments.index','InstitutionCommitteeAttachments.delete'],
+                    'selected' => ['Institutions.Committees','Institutions.CommitteeAttachments'],
+                    'params' => ['plugin' => 'Institution']
+                ],
         ];
 
         foreach ($navigation as &$n) {
@@ -1129,11 +1156,16 @@ class NavigationComponent extends Component
 
     public function getProfileNavigation()
     {
+        //POCOR-5886 starts
+        $session = $this->request->session();
+        $profileUserId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        //POCOR-5886 ends
         $navigation = [
             'Profiles.Profiles.view' => [
                 'title' => 'General',
                 'parent' => 'Profiles.Profiles',
-                'params' => ['plugin' => 'Profile'],
+                //POCOR-5886 starts
+                'params' => ['plugin' => 'Profile', 'action' => 'Profiles', 0 => $profileUserId],//POCOR-5886 ends
                 'selected' => ['Profiles.Profiles.view', 'Profiles.Profiles.edit', 'Profiles.Profiles.pull', 'Profiles.Accounts', 'Profiles.Demographic', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'ProfileComments.index', 'ProfileComments.view', 'Profiles.Attachments', 'Profiles.History', 'Profiles.Contacts']
             ],
             'Profiles.Healths' => [
@@ -1166,11 +1198,16 @@ class NavigationComponent extends Component
 
     public function getDirectoryNavigation()
     {
+        //POCOR-5886 starts
+        $session = $this->request->session();
+        $directorUserId = $this->controller->paramsEncode(['id' => $session->read('Directory.Directories.id')]);
+        //POCOR-5886 ends
         $navigation = [
             'Directories.Directories.view' => [
                 'title' => 'General',
                 'parent' => 'Directories.Directories.index',
-                'params' => ['plugin' => 'Directory'],
+                //POCOR-5886 starts
+                'params' => ['plugin' => 'Directory', 'action' => 'Directories', 0=> $directorUserId],//POCOR-5886 ends
                 'selected' => ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments',
                 'Directories.History', 'Directories.Contacts', 'Directories.Demographic']
             ],
@@ -1194,7 +1231,6 @@ class NavigationComponent extends Component
             ]
         ];
 
-        $session = $this->request->session();
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
         $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
         if (!empty($studentToGuardian) || !empty($guardianToStudent)) {
@@ -1260,7 +1296,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Student',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours',
-                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes']
+                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes','Profiles.StudentRisks']
             ],
             'Profiles.StudentScheduleTimetable' => [
                 'title' => 'Timetables',
@@ -1436,6 +1472,11 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            'Reports.Profiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
             'Reports.Students' => [
                 'title' => 'Students',
                 'parent' => 'Reports',
@@ -1521,6 +1562,7 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'link' => false,
             ],
+
             'Areas.Areas' => [
                 'title' => 'Administrative Boundaries',
                 'parent' => 'SystemSetup',
@@ -1632,6 +1674,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Risk'],
                 'selected' => ['Risks.Risks']
             ],
+			'ProfileTemplates.Templates' => [
+				'title' => 'Profiles',
+				'parent' => 'SystemSetup',
+				'params' => ['plugin' => 'ProfileTemplate'],
+				'selected' => ['ProfileTemplates.Templates']
+			],
 
             'Security' => [
                 'title' => 'Security',
@@ -1835,6 +1883,13 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Textbook'],
                 'selected' => ['Textbooks.Textbooks', 'Textbooks.ImportTextbooks']
             ],
+
+            'Meals.programme' => [
+               'title' => 'Meals',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'Meal'],
+                'selected' => ['Meals.programme']
+            ],
             
             'Workflows.Workflows' => [
                 'title' => 'Workflow',
@@ -1863,6 +1918,7 @@ class NavigationComponent extends Component
                 'selected' => ['MoodleApiLog.index'],
                 'params' => ['plugin' => 'MoodleApi', 'controller' => 'MoodleApiLog', 'action' => 'index']
             ],
+            
             'Administration.Archive' => [
                 'title' => 'Archive',
                 'parent' => 'Administration',
