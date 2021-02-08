@@ -68,11 +68,12 @@ class WorkflowReportBehavior extends Behavior
         $requestData = json_decode($settings['process']['params']);
 
         $category = $requestData->category;
+        $institution_id = $requestData->institution_id;
 
         if ($category != -1) {
             $query
                 ->contain('Statuses')
-                ->where(['Statuses.category' => $category]);
+                ->where(['Statuses.category' => $category, 'WorkflowStudentTransferIn.institution_id'=>$institution_id]);
         }
     }
 }
