@@ -194,6 +194,9 @@ class StudentAttendancesTable extends ControllerActionTable
                     ]
                 ]
                 ])
+                ->group([
+                    $InstitutionStudents->aliasField('student_id')
+                ])
                 ->order([
                     $this->Users->aliasField('first_name')
                 ]);
