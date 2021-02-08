@@ -176,6 +176,10 @@ class StaffController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']);
     }
+    public function Payslips()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Payslips']);
+    }
     public function Behaviours()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']);
@@ -518,6 +522,7 @@ class StaffController extends AppController
         $studentTabElements = [
             'BankAccounts' => ['text' => __('Bank Accounts')],
             'Salaries' => ['text' => __('Salaries')],
+            'Payslips' => ['text' => __('Payslips')],
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);

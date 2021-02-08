@@ -1259,7 +1259,7 @@ class NavigationComponent extends Component
                 'title' => 'Finance',
                 'parent' => 'Profiles.Staff',
                 'params' => ['plugin' => 'Profile', 'type' => 'staff'],
-                'selected' => ['Profiles.StaffBankAccounts', 'Profiles.StaffSalaries', 'Profiles.ImportSalaries']
+                'selected' => ['Profiles.StaffBankAccounts', 'Profiles.StaffSalaries', 'Profiles.ImportSalaries','Profiles.StaffPayslips']
             ],
             'Profiles.TrainingNeeds' => [
                 'title' => 'Training',
