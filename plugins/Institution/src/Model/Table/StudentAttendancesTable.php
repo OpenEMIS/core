@@ -165,11 +165,11 @@ class StudentAttendancesTable extends ControllerActionTable
                 $this->Users->aliasField('preferred_name')
             ])
             ->contain([$this->Users->alias(),'InstitutionClasses'])
-            ->matching($this->StudentStatuses->alias(), function($q) {
+            /*->matching($this->StudentStatuses->alias(), function($q) {
                 return $q->where([
                     $this->StudentStatuses->aliasField('code') => 'CURRENT'
                 ]);
-            })
+            })*/
             //POCOR-5900 start (Filter for check start date of student)
             ->leftJoin(
                 [$InstitutionStudents->alias() => $InstitutionStudents->table()],
@@ -192,7 +192,14 @@ class StudentAttendancesTable extends ControllerActionTable
                         $InstitutionStudents->aliasField('start_date').' >= ' => $weekStartDay,
                         $InstitutionStudents->aliasField('start_date').' <= ' => $weekEndDay,  
                     ]
-                ]
+                ],
+                /*'OR' => [
+                    $InstitutionStudents->aliasField('end_date').' <= ' => $weekStartDay,
+                    'AND' => [        
+                        $InstitutionStudents->aliasField('end_date').' >= ' => $weekEndDay,
+                        $InstitutionStudents->aliasField('end_date').' <= ' => $weekStartDay,  
+                    ]
+                ]*/
                 ])
                 ->group([
                     $InstitutionStudents->aliasField('student_id')
@@ -200,6 +207,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 ->order([
                     $this->Users->aliasField('first_name')
                 ]);
+                //echo "<pre>";print_r($query);die();
         }
 
         if ($day != -1) {
