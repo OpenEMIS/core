@@ -14,7 +14,7 @@ class StaffReportCardProcessesTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->belongsTo('StaffTemplates', ['className' => 'ProfileTemplate.StaffTemplates']);
+        $this->belongsTo('StaffTemplates', ['className' => 'ProfileTemplate.StaffTemplates', 'foreignKey' => 'staff_profile_template_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
     }
 }
