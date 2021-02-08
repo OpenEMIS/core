@@ -15,6 +15,7 @@ class ReportsController extends AppController
         $this->ControllerAction->models = [
             'Directory'  => ['className' => 'Report.Directory', 'actions' => ['index', 'add']],
             'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
+            'Profiles'	=> ['className' => 'Report.Profiles', 'actions' => ['index', 'add']],
             'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
             'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
             'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
@@ -83,13 +84,13 @@ class ReportsController extends AppController
                 'Report.InstitutionCases' => __('Cases'),
                 'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
                 //'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
-                'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
+                // 'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
                 'Report.WashReports' => __('Wash Report'),
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionCommittees' => __('Committees'),
-                'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),
+                //'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),//POCOR-5852 
                 'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
                 'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
                 'Report.Income' => __('Income Report'),
@@ -102,7 +103,7 @@ class ReportsController extends AppController
                 'Report.StudentIdentities' => __('Identities'),
                 'Report.StudentContacts' => __('Contacts'),
                 'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
-                'Report.StudentGuardians' => __('Guardians'),
+                //'Report.StudentGuardians' => __('Guardians'), //POCOR-5393
                 'Report.HealthReports' => __('Student Health Report'),
                 'Report.BodyMassStatusReports' => __('BMI Status Report'), 
                 'Report.StudentsRiskAssessment' => __('Risk Assessment Report') ,
@@ -125,8 +126,10 @@ class ReportsController extends AppController
                 'Report.StaffSystemUsage' => __('System Usage'),
                 'Report.StaffTrainingReports' => __('Training Courses Report'),
                 'Report.StaffLeaveReport' => __('Staff Leave'),
-                'Report.StaffPositions' => __('Position Summary Report'),
-                'Report.StaffDuties' => __('Duties Report')
+                'Report.StaffPositions' => __('Staff Positions Report'),
+                'Report.PositionSummary' => __('Position Summary Report'),
+                'Report.StaffDuties' => __('Duties Report'),
+                'Report.StaffExtracurriculars' => __('Staff Extracurricular')
 				
             ];
         } elseif ($module == 'Textbooks') {
@@ -196,8 +199,8 @@ class ReportsController extends AppController
 
     public function ajaxGetReportProgress()
     {
-        $this->autoRender = false;
 
+        $this->autoRender = false;
         $userId = $this->Auth->user('id');
         $dataSet = [];
 
@@ -211,7 +214,6 @@ class ReportsController extends AppController
                 'ReportProgress.total_records'
             );
             $ReportProgress = TableRegistry::get('Report.ReportProgress');
-            echo '<pre>';print_r($ReportProgress);die;
             if (!empty($ids)) {
                 $results = $ReportProgress
                     ->find()
@@ -253,4 +255,10 @@ class ReportsController extends AppController
         echo json_encode($dataSet);
         die;
     }
+	
+	public function Profiles()
+    { 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
+    }
+	
 }

@@ -1,3 +1,85 @@
+### [3.61.9] - 2021-02-05
+- Bug Fixed: Reports > Institutions > Committees: Not generating
+- Bug Fixed: Reports > Institutions > Class Attendance Marked Summary: the selectable date range is incorrect
+- Bug Fixed: Reports > Institutions > Student Absence report: Changes to optimise generation
+- Bug Fixed: Reports > Institutions > Students > Import Extracurricular: Remove OpenEMIS ID in reference tab
+- Bug Fixed: Reports > Institutions > Student Absence report: changes
+- Bug Fixed: Reports > Institutions > Student Attendance Summary: Not generating
+- Bug Fixed: Reports > Institutions > Income and Expenditure report: To add From Date and To Date on the report generation page
+- Bug Fixed: Reports > Institutions > Infrastructure > Room: Progress bar moves but does not complete
+- Bug Fixed: Profile > Student > Academic > Report card and Risks tab : System should not show record for all students
+- Bug Fixed: Profile > Student > Academic > Risk tab: 404 error
+
+### [3.61.8] - 2021-02-04
+- Bug Fixed: Profile > Student > Academic > Subjects, Absence, Outcomes, Competencies tab : System should not show record for ALL students
+
+### [3.61.7] - 2021-02-02
+- Bug Fixed: Institution > Attendance > Students: Unable to view attendance and Secondary Teacher should be able to view and mark attendance
+
+### [3.61.6] - 2021-01-30
+- Implemented: Export Institutions > Visits
+- Bug Fixed: Institution > Staff > Professional > Qualifications/License tab > Add: 404 error
+- Bug Fixed: Profile and Directory pages: Encountered 404 error
+- Bug Fixed: Administration > Training > Courses > Add: 404 error
+- Bug Fixed: Reports > Institutions > Student Attendance Summary: Excel tab do not tally with the data on the Excel sheet
+- Bug Fixed: Institution > Students > Pending Transfer In/Out: Student awaiting for transfer with Open status not appearing in Pending Transfer In/Out
+- Bug Fixed: Institutions > Performance > Assessments : Students that are transferred out of school and get transferred back into same school status is not showing enrolled
+- Bug Fixed: Institutions > Attendance > Students > Export: Export file is not reflecting data correctly
+- Bug Fixed: Profiles > Students > Academic > Classes tab : System should not show record for ALL students
+- Bug Fixed: Administration > Academic Periods : Setting academic period to current should copy data from previous years
+- Bug Fixed: Institutions > Attendance > Students: Transferred student appeared in the Attendance list even before her Start Date
+- Bug Fixed: Workbench> Survey: Survey does not appear in workbench until user access institutions survey manually
+- Bug Fixed: Institution > Assessments : Missing marks for a specific class/subject
+- Bug Fixed: Institutions > Classes > Add : List of Homeroom/Secondary teacher is not populated
+- Bug Fixed: Institution > Attendance > Staff > Edit: Time in reverted to default time which is 7am after editing the Time In and Time Out
+
+### [3.61.5] - 2021-01-21
+- Implemented: Improve readability of the student status in the current year
+- Implemented: Improvement of the school closing process
+- Implemented: Export staff extracurricular activities
+- Implemented: Reports > School Profile Report
+- Bug Fixed: Institutions > Students > Nationalities tab > Add/Edit: Validate button is not validating Identity Number correctly
+- Bug Fixed: Reports > Student > Subject and Book List: Issues
+- Bug Fixed: Institutions > Students > General > Identities tab: Issue Date and Expiry Date to remove default date
+- Bug Fixed: Institutions > Performance > Report Cards: No Download PDF for bulk download
+- Bug Fixed: Reports > Staff > Position Summary Report : Changes
+- Bug Fixed: Reports > Students > BMI Status Report : Issues
+- Bug Fixed: Reports > Students > Risk Assessment Report : Changes
+- Bug Fixed: Institutions > Committees Add/Edit page
+- Bug Fixed: Add User from External Source: OpenEMIS ID should be the same as from OpenEMIS Identity for the same user
+- Bug Fixed: Reports > Institution > Guardians Report: Changes
+- Bug Fixed: Reports > Institutions > Staff Attendance/Staff Leave: Include columns
+- Bug Fixed: Reports > Students > Students with Special Needs: Changes
+- Bug Fixed: Reports > Students > Not Assigned to a Class: Changes
+- Bug Fixed: Reports > Students > Enrolment Summary: Changes
+- Bug Fixed: Institutions > Finances > Budget/Income/Expenditure : Budget appears across all Schools and user unable to view attachments
+- Bug Fixed: Institutions > Staff > Salaries : Remove additions, deductions column from staff_salaries table
+- Bug Fixed: Profiles > Students > Guardian : Slow query when accessing this page
+- Bug Fixed: Institutions > Students > Import: To allow other users besides System Administrator to Import Extracurricular
+
+### [3.61.4] - 2021-01-08
+- Bug Fixed: Reports > Institutions > Body Masses : Remove Type filter from report generation to enable user to generate report for all schools
+- Bug Fixed: Reports > Institution > Infrastructure Report
+- Bug Fixed: Institution > Appointment > Duties: 404 error
+- Bug Fixed: Security > Roles > Permissions : Allow users to enabled/disable View for Assessment/Attendance Archive buttons
+- Bug Fixed: Reports > Students > Student Health Reports : Changes in report
+- Bug Fixed: Reports > Institution > Staff Leave: To add Custom Fields on the report
+- Bug Fixed: Institution > Academic > Classes: Unable to View/Edit record
+
+### [3.61.3] - 2021-01-06
+- Bug Fixed: Profile > Student > Academic > Behaviour tab: Student is able to see all Behaviour records in the system even though the records do not belong to the student
+- Bug Fixed: Directory > Add: Encountered 404 error
+- Bug Fixed: Institution > Students > Nationalities: Identity is not read-through even though the identity has been linked to the Nationality selected
+- Bug Fixed: Reports > Institution > WASH Report
+- Bug Fixed: Reports > Institutions > Classes/Subjects Report is not generating report
+- Bug Fixed: Report > Institution > Classes
+- Bug Fixed: 1.04 Reports > Institution > Subject Report
+
+### [3.61.2] - 2020-12-30
+- Bug Fixed: Student Profiles > Report Cards feature
+- Bug Fixed: Institutions > Students > Undo feature
+- Implemented: Improve management of student nationalities
+
 ### [3.61.1] - 2020-12-24
 - Implemented: Enable Changes in the Education Structure across school years
 - Bug Fixed: Institution > Performance > Assessment: Only show assigned subjects

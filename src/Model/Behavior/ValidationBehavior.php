@@ -566,7 +566,7 @@ class ValidationBehavior extends Behavior
         $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
         $contactOptionOther = $ContactOptionsTable->getIdByCode('OTHER');
 
-    	$flag = false;
+        $flag = false;
         $contactOption = $globalData['data']['contact_option_id'];
         $userId = $globalData['data']['security_user_id'];
         $currentField = $globalData['field'];
@@ -588,7 +588,7 @@ class ValidationBehavior extends Behavior
         if ($currentField == 'preferred') {
             $preferred = $field;
 
-        	if ($preferred == "0" && $contactOption != $contactOptionOther) { //during not preferred set ot contact type is 'others'
+            if ($preferred == "0" && $contactOption != $contactOptionOther) { //during not preferred set ot contact type is 'others'
                 $query->where([$Contacts->aliasField('preferred') => 1]);
                 $count = $query->count();
 
@@ -2954,8 +2954,9 @@ class ValidationBehavior extends Behavior
         //$field is for external variable
         if($field == 1){
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-            $type = $ConfigItems->value('external_data_source_type');
-            if($type == 'None'){
+            $external_data = $ConfigItems->findByCode('external_data_source_type')->first();
+            $type = $external_data->value;
+            if($type == 'None' || $type == ''){
                 return false;
             }
         }
@@ -3033,4 +3034,19 @@ class ValidationBehavior extends Behavior
         return false;
     }
     //POCOR-5668 ends
+
+    public static function forOneMonthDate($field, array $globalData)
+    {   
+        //$field is start date for student attandance summary report
+        if(!empty($field)){
+            $report_start_date =  strtotime($globalData['data']['report_start_date']);
+            $report_end_date =  strtotime($globalData['data']['report_end_date']);
+            $datediff = $report_end_date - $report_start_date;
+            $days = round($datediff / (60 * 60 * 24));  
+            if($days <= 31){
+                return true;
+            }
+        }
+        return false;
+    }
 }
