@@ -46,6 +46,14 @@ class WorkflowsTable extends AppTable
     public function initialize(array $config) 
     {
         $this->table("workflow_models");
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.CustomFieldList', [
+            'model' => 'Institution.Institutions',
+            'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+            'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+        ]);
         parent::initialize($config);
 
         $this->addBehavior('Report.ReportList');
@@ -63,9 +71,14 @@ class WorkflowsTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('model', [
             'select' => false,
+            'attr' => ['label'=>'Workflow'],
             'type' => 'select'
         ]);
         $this->ControllerAction->field('category', [
+            'select' => false,
+            'type' => 'select'
+        ]);
+        $this->ControllerAction->field('institution_id', [
             'select' => false,
             'type' => 'select'
         ]);
@@ -98,6 +111,40 @@ class WorkflowsTable extends AppTable
         $categoryOptions = ['-1' => __('All Categories')] + $categoryOptions;
         $attr['options'] = $categoryOptions;
         return $attr;
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                           'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->order([
+                           $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+        $institutionList = $institutionQuery->toArray();
+        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;//POCOR-5906 ends
+        $attr['type'] = 'chosenSelect';
+        $attr['onChangeReload'] = true;
+        $attr['attr']['multiple'] = false;
+        $attr['options'] = $institutionOptions;
+        $attr['attr']['required'] = true;
+        return $attr;
+    }
+
+    public function addAfterAction(Event $event, Entity $entity)
+    {
+        
+        $fieldsOrder[] = 'feature';
+        $fieldsOrder[] = 'model';
+        $fieldsOrder[] = 'category';
+        $fieldsOrder[] = 'institution_id';
+        $fieldsOrder[] = 'format';
+        $this->ControllerAction->setFieldOrder($fieldsOrder);
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
