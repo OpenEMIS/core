@@ -200,7 +200,18 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+        //POCOR-5852 starts
+        if (empty($this->request->query['academic_period_id'])) {
+            $this->request->query['academic_period_id'] = $selectedAcademicPeriodId;
+            $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
+            if (!empty($gradeOptions)) {
+                $gradeOptions = [-1 => __('All Grades')] + $gradeOptions;
+            }
 
+            $selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
+            $this->request->query['education_grade_id'] = $selectedEducationGradeId;
+        }
+        //POCOR-5852 ends
         $this->field('class_number', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
@@ -816,7 +827,7 @@ class InstitutionClassesTable extends ControllerActionTable
             if (array_key_exists('education_grade_id', $query)) {
                 unset($action['education_grade_id']);
             }
-            $this->controller->redirect($action);
+            //$this->controller->redirect($action);
         }
 
         $this->field('total_students', ['visible' => true]);
@@ -1052,7 +1063,7 @@ class InstitutionClassesTable extends ControllerActionTable
             if (array_key_exists('education_grade_id', $query)) {
                 unset($action['education_grade_id']);
             }
-            $this->controller->redirect($action);
+            //$this->controller->redirect($action);
         }
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
         if (array_key_exists($this->alias(), $this->request->data)) {
@@ -1358,7 +1369,7 @@ class InstitutionClassesTable extends ControllerActionTable
         return $studentOptions;
     }
 
-    public function getStaffOptions($institutionId, $action = 'edit', $academicPeriodId = 0, $staffIds = [], $institutionShiftId = 0)
+    public function getStaffOptions($institutionId, $action = 'edit', $academicPeriodId = 0, $staffIds = [], $institutionShiftId = 0,$homeTeacher = null)
     {
         if (in_array($action, ['edit', 'add'])) {
             $options = [0 => '-- ' . $this->getMessage($this->aliasField('selectTeacherOrLeaveBlank')) . ' --'];
@@ -1375,7 +1386,10 @@ class InstitutionClassesTable extends ControllerActionTable
             $startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
             $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
             $todayDate = new Date();
-
+            // where condition for shift 
+            if(!empty($institutionShiftId) && $institutionShiftId!=0) {
+                $where = ['InstitutionStaffShifts.shift_id' => $institutionShiftId];
+            }
             $Staff = $this->Institutions->Staff;
             $query = $Staff->find('all')
                             ->select([
@@ -1388,28 +1402,32 @@ class InstitutionClassesTable extends ControllerActionTable
                                 $Staff->Users->aliasField('preferred_name')
                             ])
                             ->contain(['Users'])
-                            ->matching('Positions', function ($q) {
-                                return $q->where(['Positions.is_homeroom' => 1]);
-                            })
+                           
                             ->find('byInstitution', ['Institutions.id'=>$institutionId])
                             ->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
-                            ->innerJoin(
+                            ->join(
                                 ['InstitutionStaffShifts' => 'institution_staff_shifts'],
                                 ['InstitutionStaffShifts.staff_id = ' . $Staff->aliasField('staff_id')]
                             )
-                ->where([
+                            ->where($where)
+                            ->where([
                                 $Staff->aliasField('staff_id NOT IN') => $staffIds,
                                 $Staff->aliasField('start_date <= ') => $todayDate,
-                 'InstitutionStaffShifts.shift_id' => $institutionShiftId,
                                 'OR' => [
                                     [$Staff->aliasField('end_date >= ') => $todayDate],
                                     [$Staff->aliasField('end_date IS NULL')]
                                 ]
                             ])
+
                             ->order([
                                 $Staff->Users->aliasField('first_name')
-                            ])
-                            ->formatResults(function ($results) {
+                            ]);
+                            if($homeTeacher) {
+                                $query  ->matching('Positions', function ($q) {
+                                    return $q->where(['Positions.is_homeroom' => 1]);
+                                });
+                            }
+                            $query->formatResults(function ($results) {
                                 $returnArr = [];
                                 foreach ($results as $result) {
                                     if ($result->has('Users')) {
@@ -1418,7 +1436,6 @@ class InstitutionClassesTable extends ControllerActionTable
                                 }
                                 return $returnArr;
                             });
-
             $options = $options + $query->toArray();
         }
 

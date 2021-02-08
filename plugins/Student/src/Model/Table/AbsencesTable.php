@@ -136,6 +136,17 @@ class AbsencesTable extends AppTable
 
     public function beforeFind( Event $event, Query $query )
     {
+		$userData = $this->Session->read();
+		$studentId = $userData['Auth']['User']['id'];
+
+		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
+
+		} else {
+			if (!empty($studentId)) {
+				$where[$this->aliasField('student_id')] = $studentId;
+			}
+		}
+		
         $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
             $query
                 ->find('all')
@@ -152,7 +163,8 @@ class AbsencesTable extends AppTable
                     $InstitutionStudentAbsenceDetails->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $InstitutionStudentAbsenceDetails->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
                 ]
-            );
+            )
+			->where($where);
     }
     
 }

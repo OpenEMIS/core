@@ -9,9 +9,9 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Log\Log;
 use Cake\I18n\Time;
-
-use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
+
 
 class InstitutionCommitteesTable extends AppTable
 {
@@ -42,39 +42,37 @@ class InstitutionCommitteesTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-		
-		$academicPeriodId = $requestData->academic_period_id;
-        $institutionId = $requestData->institution_id;
-		$conditions = [];
-		
-		if (!empty($academicPeriodId)) {
-            $conditions['AcademicPeriods.id'] = $academicPeriodId;
-        }
-        
-        if ($institutionId > 0) {
-            $conditions[$this->aliasField('id')] = $institutionId;
+        //POCOR-5394 starts
+        $institutions = TableRegistry::get('institutions');
+        if($requestData->institution_id == 0){
+            $institutions_Arr = $institutions
+                                    ->find('list', [
+                                        'keyField' => 'id',
+                                        'valueField' => 'name',
+                                    ])
+                                    ->select([
+                                        'id' => $institutions->aliasField('id'), 
+                                        'name' => $institutions->aliasField('name')])
+                                    ->toArray();
+            if(!empty($institutions_Arr)){
+                $institutions = implode(',', array_keys($institutions_Arr));
+            }
+        }else{
+            $institutions = $requestData->institution_id;
         }
 
         $query
             ->select([
-                /*'name' => $this->aliasField('name'),
-                'meeting_date' => $this->aliasField('meeting_date'),
-                'start_time' => $this->aliasField('start_time'),
-                'end_time' => $this->aliasField('end_time'),
-                'comment' => $this->aliasField('comment'),
-                'academic_period_id' => $this->aliasField('academic_period_id'),
-                'committee_type' => 'InstitutionCommitteeTypes.name',*/
                 'code' => 'Institutions.code',
+                'instituion_name' => 'Institutions.name',
+                'name' => $this->aliasField('name'),
+                'chairperson' => $this->aliasField('chairperson'),
+                'telephone' => $this->aliasField('telephone'),
                 'instituion_name' => 'Institutions.name',
                 'area_id' => 'Institutions.area_id'
             ])
             ->contain([
-                'Institutions'/* => [
-                    'fields' => [
-                        'Institutions.code',
-                        'Institutions.name'
-                    ]
-                ]*/,
+                'Institutions',
                 'AcademicPeriods' => [
                     'fields' => [
                         'AcademicPeriods.name'
@@ -86,8 +84,11 @@ class InstitutionCommitteesTable extends AppTable
                     ]
                 ]
             ])
-            ->where($conditions);
-
+            ->where([
+                $this->aliasField('academic_period_id') => $requestData->academic_period_id,
+                $this->aliasField('institution_id').' IN ('.$institutions. ')'
+            ]);
+            
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 
@@ -95,7 +96,7 @@ class InstitutionCommitteesTable extends AppTable
                 $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
                 $areaLevelId = $ConfigItems->value('institution_area_level_id');
                 $row['area_level'] = '';
-                if($areaLevelId != 2){
+                if($areaLevelId != 1){
                     $AreaTable = TableRegistry::get('Area.AreaLevels');
                     $value = $AreaTable->find()
                                 ->where([$AreaTable->aliasField('level') => $areaLevelId])
@@ -142,7 +143,7 @@ class InstitutionCommitteesTable extends AppTable
                                     ]
                                 )    
                                 ->where([
-                                    $areaLevels->aliasField('level !=') => 2,
+                                    $areaLevels->aliasField('level !=') => 1,
                                     $areas->aliasField('id') => $areasData->parent_id
                                 ])->first();
                     
@@ -155,7 +156,7 @@ class InstitutionCommitteesTable extends AppTable
                 return $row;
             });
         });
-
+        //POCOR-5394 ends
     }
 
     public function onExcelRenderStartTime(Event $event, Entity $entity, array $attr)
@@ -173,7 +174,7 @@ class InstitutionCommitteesTable extends AppTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
-
+        //add columns POCOR-5394 starts
         $newFields[] = [
             'key' => 'Institutions.code',
             'field' => 'code',
@@ -194,7 +195,7 @@ class InstitutionCommitteesTable extends AppTable
             'type' => 'string',
             'label' => __('Area Level')
         ];
-        //add columns starts
+
         $newFields[] = [
             'key' => 'area_code',
             'field' => 'area_code',
@@ -208,59 +209,28 @@ class InstitutionCommitteesTable extends AppTable
             'type' => 'string',
             'label' => __('Area Name')
         ];
-        //add columns ends
-        
-        
-
-        /*$newFields[] = [
-            'key' => '',
-            'field' => 'academic_period_id',
-            'type' => 'integer',
-            'label' => __('Academic Period')
-        ];
-        
-        $newFields[] = [
-            'key' => 'InstitutionCommitteeTypes.name',
-            'field' => 'committee_type',
-            'type' => 'string',
-            'label' => __('Type')
-        ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'name',
             'type' => 'string',
-            'label' => __('Name')
+            'label' => __('School Board Name')
         ];
 
         $newFields[] = [
             'key' => '',
-            'field' => 'meeting_date',
-            'type' => 'date',
-            'label' => __('Date of Meeting')
-        ];
-
-        $newFields[] = [
-            'key' => 'start_time',
-            'field' => '',
-            'type' => 'start_time',
-            'label' => __('Start Time')
-        ];
-
-        $newFields[] = [
-            'key' => 'end_time',
-            'field' => '',
-            'type' => 'end_time',
-            'label' => __('End Time')
-        ];
-
-        $newFields[] = [
-            'key' => '',
-            'field' => 'comment',
+            'field' => 'chairperson',
             'type' => 'string',
-            'label' => __('Comment')
-        ];*/
-              
+            'label' => __('Chairperson')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'telephone',
+            'type' => 'string',
+            'label' => __('Contact No')
+        ];
+        //add columns POCOR-5394 ends 
         $fields->exchangeArray($newFields);
     }    
 }

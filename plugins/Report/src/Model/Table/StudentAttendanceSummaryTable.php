@@ -74,8 +74,8 @@ class StudentAttendanceSummaryTable extends AppTable
     {
         
         $requestData = json_decode($settings['process']['params']);
-        $sheetData = $settings['sheet']['sheetData'];
-        $gradeId = $sheetData['education_grade_id'];
+        //$sheetData = $settings['sheet']['sheetData'];
+        //$gradeId = $sheetData['education_grade_id'];
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
         $institutionId = $requestData->institution_id;
@@ -137,8 +137,11 @@ class StudentAttendanceSummaryTable extends AppTable
                         
                         ->where(['InstitutionClassStudents.student_status_id' => $enrolledStatus]);
                 }
-            ])  
-            
+            ])
+
+            ->leftJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
+                        'InstitutionClassGrades.institution_class_id = '. $this->aliasField('id'),
+                    ])
             ->leftJoin(['StudentAttendanceMarkedRecords' => 'institution_student_absence_details'], [
                         'StudentAttendanceMarkedRecords.institution_class_id = '. $this->aliasField('id'),
                         'StudentAttendanceMarkedRecords.academic_period_id = '.$this->aliasField('academic_period_id'),
@@ -151,6 +154,7 @@ class StudentAttendanceSummaryTable extends AppTable
                 $this->aliasField('name'),
                 $this->aliasField('institution_id'),
                 $this->aliasField('academic_period_id'),
+                'InstitutionClassGrades.education_grade_id',
                 'StudentAttendanceMarkedRecords.period',
                 'StudentAttendanceMarkedRecords.subject_id' 
             ])
@@ -1071,6 +1075,7 @@ public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
     {
         $periodId = $entity->StudentAttendanceMarkedRecords['period'];
         $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        $educationGradeId = $entity->InstitutionClassGrades['education_grade_id'];
         
         $periodName = '';
         
@@ -1082,7 +1087,7 @@ public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
 
             $studentAttendanceMarkTypesTable = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
             $studentAttendanceMarkTypes = $studentAttendanceMarkTypesTable->getAttendancePerDayOptionsByClass(
-                    $institionClassId, $academicPeriodId, $dayId 
+                    $institionClassId, $academicPeriodId, $dayId , $educationGradeId
                     );
 
             foreach ($studentAttendanceMarkTypes as $studentAttendanceMarkTypes){
@@ -1229,7 +1234,29 @@ public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
 
         $gradeOptions = [];
         if ($educationGradeId != -1) {
-            $gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
+            if(in_array($educationGradeId, $institutionGradeResults)){
+                $gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
+            }else{
+                $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                $educationGradesOptions = $EducationGrades
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'name'
+                    ])
+                    ->select([
+                        'id' => $EducationGrades->aliasField('id'),
+                        'name' => $EducationGrades->aliasField('name'),
+                        'education_programme_name' => 'EducationProgrammes.name'
+                    ])
+                    ->contain(['EducationProgrammes'])
+                    ->order([
+                        'EducationProgrammes.order' => 'ASC',
+                        $EducationGrades->aliasField('name') => 'ASC'
+                    ])
+                    ->toArray();
+
+                $gradeOptions[$educationGradeId] = $educationGradesOptions[$educationGradeId];
+            }
         } else {
             $gradeOptions = $institutionGradeResults;
         }
@@ -1252,12 +1279,13 @@ public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
                 'sheetData' => [
                     'education_grade_id' => $gradeId
                 ],
-                'name' => $gradeName,
+                'name' => preg_replace("/\([^)]+\)/","",$gradeName),
                 'table' => $this,
                 'query' => $query,
                 'orientation' => 'landscape'
             ];
         }
+        
         return $sheets;
     }
 }

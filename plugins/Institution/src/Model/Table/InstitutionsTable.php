@@ -457,7 +457,11 @@ class InstitutionsTable extends ControllerActionTable
         if ($action == 'add') {
             $attr['visible'] = false;
         }
-
+        //POCOR-5683
+        if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+        }
+        //POCOR-5683
         return $attr;
     }
 
@@ -543,8 +547,6 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('area_administrative_section', ['type' => 'section', 'title' => $areaAdministrativesLabel]);
         $this->field('contact_section', ['type' => 'section', 'title' => __('Contact'), 'after' => $field]);
         $this->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => 'website', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-        //$this->field('map_section', ['type' => 'section', 'title' => __('Map'), 'visible' => ['view'=>true]]);
-        //$this->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
         //pocor-5669
         $this->field('longitude', ['visible' => ['view' => false]]);
         $this->field('latitude', ['visible' => ['view' => false]]);
@@ -958,6 +960,40 @@ class InstitutionsTable extends ControllerActionTable
             'map_section',
             'map',
         ]);
+
+        // from onUpdateToolbarButtons
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        
+        $session = $this->request->session();
+        $institutionId = $this->request->pass[1];
+        
+        $extraButtons = [
+            'close' => [
+                'Institution' => ['Institutions', 'edit', $institutionId],
+                'action' => 'InstitutionStatus',
+                'icon' => '<i class="fa fa-times"></i>',
+                'title' => __('Update')
+            ]
+        ];
+        foreach ($extraButtons as $key => $attr) {
+            if ($this->AccessControl->check($attr['permission'])) {
+                $button = [
+                    'type' => 'button',
+                    'attr' => $btnAttr,
+                    'url' => [0 => 'edit', 1 => $institutionId] 
+                ];
+                $button['url']['action'] = $attr['action'];
+                $button['attr']['title'] = $attr['title'];
+                $button['label'] = $attr['icon'];
+
+                $extra['toolbarButtons'][$key] = $button;
+            }
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
