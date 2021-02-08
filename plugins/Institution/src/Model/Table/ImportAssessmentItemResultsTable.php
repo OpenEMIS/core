@@ -236,19 +236,19 @@ class ImportAssessmentItemResultsTable extends AppTable {
     public function template()
     {
         $folder = $this->prepareDownload();
-        $modelName = 'AssessmentItemResults';
+        $modelName = 'ImportAssessmentItemResults';
         $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
         // Do not lcalize file name as certain non-latin characters might cause issue
         $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
         $excelPath = $folder . DS . $excelFile;
 
-        $mapping = $this->getMapping();
-        $header = $this->getHeader($mapping);
         $dataSheetName = $this->getExcelLabel('general', 'data');
 
         $objPHPExcel = new \PHPExcel();
 
-        $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header, '');
+        $headerRow3 = array("OpenEMIS ID", "Student Name");
+
+        $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $headerRow3, '');
 
         $this->setCodesDataTemplate($objPHPExcel);
 
