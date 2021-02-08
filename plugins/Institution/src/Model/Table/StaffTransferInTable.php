@@ -47,7 +47,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                     return array_key_exists('new_end_date', $context['data']) && !empty($context['data']['new_end_date']);
                 }
             ])
-            ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id','shifts_id']);
+            ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id']);
     }
 
     public function implementedEvents()
@@ -171,7 +171,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('new_FTE', ['type' => 'select']);
         $this->field('new_institution_position_id', ['type' => 'select']);
         $this->field('new_staff_type_id', ['type' => 'select']);
-        $this->field('shifts_id', ['type' => 'chosenSelect','placeholder' => __('Select Shifts'),]);
+        // $this->field('shifts_id', ['type' => 'chosenSelect','placeholder' => __('Select Shifts'),]);
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
         $this->field('comment');
     }
