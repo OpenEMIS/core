@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 use ArrayObject;
 use Cake\I18n\Date;
 use Cake\Collection\Collection;
@@ -14,6 +15,7 @@ use DateTime;
 use PHPExcel_Worksheet;
 
 class ImportAssessmentItemResultsTable extends AppTable {
+    use OptionsTrait;
     private $institutionId = false;
 
     public function initialize(array $config) {
@@ -21,7 +23,6 @@ class ImportAssessmentItemResultsTable extends AppTable {
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', ['plugin'=>'Assessment', 'model'=>'AssessmentItemResults']);
-        
         // register table once
         $this->AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -37,13 +38,18 @@ class ImportAssessmentItemResultsTable extends AppTable {
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
+        $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
     }
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $newEvent = [
+            'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
+            'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
+            'Model.import.onImportPopulateAssessmentPeriodsData' => 'onImportPopulateAssessmentPeriodsData',
+            'Model.import.onImportPopulateEducationSubjectsData' => 'onImportPopulateEducationSubjectsData',
+            'Model.import.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
-            'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
             'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
         ];
         $events = array_merge($events, $newEvent);
@@ -52,6 +58,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
+        //die('3');
         $request = $this->request;
         if (empty($request->query('education_grade'))) {
             unset($buttons[0]);
@@ -67,6 +74,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function addAfterAction(Event $event, Entity $entity)
     {
+        //die('5');
         $this->dependency = [];
         $this->dependency["education_grade"] = ["select_file"];
 
@@ -109,6 +117,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
             $tempRow['entity'] = $this->AssessmentItemResults->newEntity();
+           
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
@@ -157,7 +166,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
     }
 
     public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
+    {die("1");
         $educationGradeId = $this->request->query['education_grade'];
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
         $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
@@ -201,37 +210,36 @@ class ImportAssessmentItemResultsTable extends AppTable {
         }
     }
 
-
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-        //echo "<pre>";print_r($tempRow );die("poonam");
         return true;
     }
 
-    public function onUpdateFieldEducationGrade(Event $event, array $attr, $action, Request $request)
-    {
+    public function onUpdateFieldEducationGrade(Event $event, array $attr, $action, Request $request) {
         if ($action == 'add') {
-            $academicPeriodId =  !empty($request->query['academic_period_id']) ? $request->query['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
             
-            $educationGradeOptions = $this->Assessments
+            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            
+            $educationGradeOptions = $this->InstitutionGrades
             ->find('list', [
                 'keyField' => 'education_grade_id',
                 'valueField' => 'EducationGrades'
             ])
             ->leftJoin(['EducationGrades' => 'education_grades'], [
-                'EducationGrades.id = ' . $this->Assessments->aliasField('education_grade_id')
+                'EducationGrades.id = ' . $this->InstitutionGrades->aliasField('education_grade_id')
             ])
             ->select(['EducationGrades' => 'EducationGrades.name', 'education_grade_id' => 'EducationGrades.id'])
-            ->where([$this->Assessments->aliasField('academic_period_id') => $academicPeriodId])
+            ->where([$this->InstitutionGrades->aliasField('institution_id') => $institutionId])
             ->group([
                 'EducationGrades.id',
             ])
             ->toArray();
             
             $attr['options'] = $educationGradeOptions;
-                // using onChangeReload to do visible
+                // useing onChangeReload to do visible
             $attr['onChangeReload'] = 'changeEducationGrade';
         }
-        
+        //echo "<pre>";print_r($attr);die();
         return $attr;
     }
 
