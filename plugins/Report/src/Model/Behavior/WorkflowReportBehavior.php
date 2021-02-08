@@ -73,7 +73,23 @@ class WorkflowReportBehavior extends Behavior
         if ($category != -1) {
             $query
                 ->contain('Statuses')
+                ->where(['Statuses.category' => $category, 'WorkflowStudentTransferIn.institution_id'=>$institution_id])
+                ->toArray();
+            if(!empty($query)){
+                $query
+                ->contain('Statuses')
                 ->where(['Statuses.category' => $category, 'WorkflowStudentTransferIn.institution_id'=>$institution_id]);
+            }
+            else{
+                return true;
+            }
+        }else if($category == -1){
+            $query
+                ->contain('Statuses')
+                ->where(['WorkflowStudentTransferIn.institution_id'=>$institution_id]);
+        }
+        else{
+            return true;
         }
     }
 }
