@@ -924,6 +924,7 @@ class DirectoriesController extends AppController
         foreach ($staffTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'type' => $type]);
         }
+       
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
