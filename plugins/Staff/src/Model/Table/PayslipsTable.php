@@ -15,10 +15,9 @@ class PayslipsTable extends ControllerActionTable
     use MessagesTrait;
     public function initialize(array $config)
     {
-        $this->table('istaff_payslips');
+        $this->table('staff_payslips');
         
         parent::initialize($config);
-        //$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
         $this->addBehavior('ControllerAction.FileUpload', [
             'size' => '2MB',
