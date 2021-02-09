@@ -88,7 +88,7 @@ class ReportsController extends AppController
                 'Report.InstitutionCases' => __('Cases'),
                 'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
                 //'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
-                'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
+                // 'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
                 'Report.WashReports' => __('Wash Report'),
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
@@ -130,8 +130,10 @@ class ReportsController extends AppController
                 'Report.StaffSystemUsage' => __('System Usage'),
                 'Report.StaffTrainingReports' => __('Training Courses Report'),
                 'Report.StaffLeaveReport' => __('Staff Leave'),
-                'Report.StaffPositions' => __('Position Summary Report'),
-                'Report.StaffDuties' => __('Duties Report')
+                'Report.StaffPositions' => __('Staff Positions Report'),
+                'Report.PositionSummary' => __('Position Summary Report'),
+                'Report.StaffDuties' => __('Duties Report'),
+                'Report.StaffExtracurriculars' => __('Staff Extracurricular')
 				
             ];
         } elseif ($module == 'Textbooks') {
@@ -201,8 +203,8 @@ class ReportsController extends AppController
 
     public function ajaxGetReportProgress()
     {
-        $this->autoRender = false;
 
+        $this->autoRender = false;
         $userId = $this->Auth->user('id');
         $dataSet = [];
 
@@ -216,7 +218,6 @@ class ReportsController extends AppController
                 'ReportProgress.total_records'
             );
             $ReportProgress = TableRegistry::get('Report.ReportProgress');
-            // echo '<pre>';print_r($ReportProgress);die;
             if (!empty($ids)) {
                 $results = $ReportProgress
                     ->find()

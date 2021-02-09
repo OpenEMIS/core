@@ -30,23 +30,27 @@ class InstitutionCommitteeAttachmentsController extends PageController
         // set Breadcrumb
         $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
-        $page->addCrumb('Committees', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'InstitutionCommittees', 'action' => 'index']);
+        $page->addCrumb('Committees', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Committees']);
         $page->addCrumb('Attachments');
 
         // set header
         $page->setHeader($institutionName . ' - ' . __('Committee Attachments'));
 
         $query = $this->request->query['querystring'];
-
+        
         $this->setupTabElements($encodedInstitutionId, $query);
     }
 
     public function index()
     {
-        parent::index();
-        
         $page = $this->Page;
         $page->exclude(['file_content']);
+        // $queryString = $this->paramsDecode($this->request->query['querystring']);
+        // //echo '<pre>';print_r($queryString);die;
+        // $institutionCommitteeId = $queryString['institution_committee_id'];
+        // $page->setQueryString('institution_committee_id', $institutionCommitteeId);
+        $page->setQueryOption('order', [$this->InstitutionCommitteeAttachments->aliasField('created') => 'DESC']);
+        parent::index();
     }
 
     public function view($id)
@@ -64,7 +68,9 @@ class InstitutionCommitteeAttachmentsController extends PageController
         parent::add();
         $page = $this->Page;
         $this->addEdit();
-        $institutionCommitteeId = $page->decode($this->request->query['querystring']);
+        //$institutionCommitteeId = $page->decode($this->request->query['querystring']);
+        $institutionCommitteeId = $this->paramsDecode($this->request->query['querystring']);
+         
         $page->get('institution_committee_id')
              ->setValue($institutionCommitteeId['institution_committee_id']);
         $page->get('file_content')
@@ -96,14 +102,12 @@ class InstitutionCommitteeAttachmentsController extends PageController
     {
         $page = $this->Page;
         $tabElements = [];
-
-        $decodeCommitteeId = $page->decode($query);
+        $decodeCommitteeId = $this->paramsDecode($query);
         $committeeId = $decodeCommitteeId['institution_committee_id'];
-        $encodeCommitteeId = $page->encode(['id' => $committeeId]);
-
+        $encodeCommitteeId = $this->paramsEncode(['id' => $committeeId]);
         $tabElements = [
             'InstitutionCommittees' => [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'InstitutionCommittees', 'action' => 'view', $encodeCommitteeId],
+                'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Committees','view', $encodeCommitteeId],
                 'text' => __('Overview')
             ],
             'Attachments' => [
