@@ -1,3 +1,9 @@
+### [3.61.10] - 2021-02-09
+- Bug Fixed: Institutions > Attendance > Students: Student transferred to a new Institution and then transferred back to the old Institution has double record in Attendance page
+- Bug Fixed: Staff > Institution > Staff > Pending Transfer In > Approve: Encountered 404 error
+- Bug Fixed: Reports > Workflows: Workflow Records - Institutions > Student Transfer > Receiving - Done report does not generate.
+- Bug Fixed: Reports > Institution > Committees Report (PTA and School Board): No data generated and changes to Columns and Filter
+
 ### [3.61.9] - 2021-02-05
 - Bug Fixed: Reports > Institutions > Committees: Not generating
 - Bug Fixed: Reports > Institutions > Class Attendance Marked Summary: the selectable date range is incorrect
