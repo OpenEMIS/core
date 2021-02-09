@@ -81,7 +81,12 @@ class StudentAttendancesTable extends ControllerActionTable
         $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $InstitutionStudents = TableRegistry::get('Institution.Students');
         $this->Users = TableRegistry::get('Security.Users');
-
+        //POCOR-5912
+        $overlapDateCondition['OR'] = [];
+        $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('start_date') . ' >= ' => $weekStartDay, $InstitutionStudents->aliasField('start_date') . ' <= ' => $weekEndDay];
+        $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('end_date'). ' >= ' => $weekStartDay, $InstitutionStudents->aliasField('end_date') . ' <= ' => $weekEndDay];
+        $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('start_date') . ' <= ' => $weekStartDay, $InstitutionStudents->aliasField('end_date') . ' >= ' => $weekEndDay];
+        //POCOR-5912
         if ($day == -1) {
             $findDay[] = $weekStartDay;
             $findDay[] = $weekEndDay;
@@ -105,11 +110,11 @@ class StudentAttendancesTable extends ControllerActionTable
                 $this->Users->aliasField('preferred_name')
             ])
             ->contain([$this->Users->alias(),'InstitutionClasses'])
-            ->matching($this->StudentStatuses->alias(), function($q) {
-                return $q->where([
-                    $this->StudentStatuses->aliasField('code') => 'CURRENT'
-                ]);
-            })
+            //->matching($this->StudentStatuses->alias(), function($q) {
+                //return $q->where([
+                    //$this->StudentStatuses->aliasField('code') => 'CURRENT'
+                //]);
+            //})
             ->leftJoin(
                     [$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()],
                     [
@@ -134,13 +139,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 $InstitutionStudents->aliasField('institution_id') => $institutionId,
                 $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                'OR' => [
-                    $InstitutionStudents->aliasField('start_date').' <= ' => $weekEndDay,
-                    'AND' => [        
-                        $InstitutionStudents->aliasField('start_date').' >= ' => $weekStartDay,
-                        $InstitutionStudents->aliasField('start_date').' <= ' => $weekEndDay,  
-                    ]
-                ]
+                $overlapDateCondition
             ])
             ->group([
                 $InstitutionSubjectStudents->aliasField('student_id')
@@ -149,57 +148,45 @@ class StudentAttendancesTable extends ControllerActionTable
                 $this->Users->aliasField('id')
             ]);
         } else {
-        
-        $query
-            ->select([
-                $this->aliasField('academic_period_id'),
-                $this->aliasField('institution_class_id'),
-                $this->aliasField('institution_id'),
-                $this->aliasField('student_id'),
-                $this->Users->aliasField('id'),
-                $this->Users->aliasField('openemis_no'),
-                $this->Users->aliasField('first_name'),
-                $this->Users->aliasField('middle_name'),
-                $this->Users->aliasField('third_name'),
-                $this->Users->aliasField('last_name'),
-                $this->Users->aliasField('preferred_name')
-            ])
-            ->contain([$this->Users->alias(),'InstitutionClasses'])
-            ->matching($this->StudentStatuses->alias(), function($q) {
-                return $q->where([
-                    $this->StudentStatuses->aliasField('code') => 'CURRENT'
-                ]);
-            })
-            //POCOR-5900 start (Filter for check start date of student)
-            ->leftJoin(
-                [$InstitutionStudents->alias() => $InstitutionStudents->table()],
-                [
-                    $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-                ]
-            )
-            //POCOR-5900 end
-            ->where([
-                $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('institution_class_id') => $institutionClassId,
-                $this->aliasField('education_grade_id') => $educationGradeId,
-                //POCOR-5900 condition
-                $InstitutionStudents->aliasField('institution_id') => $institutionId,
-                $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
-                $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                'OR' => [
-                    $InstitutionStudents->aliasField('start_date').' <= ' => $weekEndDay,
-                    'AND' => [        
-                        $InstitutionStudents->aliasField('start_date').' >= ' => $weekStartDay,
-                        $InstitutionStudents->aliasField('start_date').' <= ' => $weekEndDay,  
+            $query
+                ->select([
+                    $this->aliasField('academic_period_id'),
+                    $this->aliasField('institution_class_id'),
+                    $this->aliasField('institution_id'),
+                    $this->aliasField('student_id'),
+                    $this->Users->aliasField('id'),
+                    $this->Users->aliasField('openemis_no'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name')
+                ])
+                ->contain([$this->Users->alias(),'InstitutionClasses'])
+                //POCOR-5900 start (Filter for check start date of student)
+                ->leftJoin(
+                    [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                    [
+                        $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     ]
-                ]
-                ])
-                ->group([
-                    $InstitutionStudents->aliasField('student_id')
-                ])
-                ->order([
-                    $this->Users->aliasField('first_name')
-                ]);
+                )
+                //POCOR-5900 end
+                ->where([
+                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->aliasField('institution_class_id') => $institutionClassId,
+                    $this->aliasField('education_grade_id') => $educationGradeId,
+                    //POCOR-5900 condition
+                    $InstitutionStudents->aliasField('institution_id') => $institutionId,
+                    $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
+                    $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+                    $overlapDateCondition
+                    ])
+                    ->group([
+                        $InstitutionStudents->aliasField('student_id')
+                    ])
+                    ->order([
+                        $this->Users->aliasField('first_name')
+                    ]);
         }
 
         if ($day != -1) {
