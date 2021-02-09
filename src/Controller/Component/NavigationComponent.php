@@ -1382,7 +1382,7 @@ class NavigationComponent extends Component
                 'title' => 'Finance',
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory', 'type' => 'staff'],
-                'selected' => ['Directories.StaffBankAccounts', 'Directories.StaffSalaries', 'Directories.ImportSalaries']
+                'selected' => ['Directories.StaffBankAccounts', 'Directories.StaffSalaries', 'Directories.ImportSalaries','Directories.StaffPayslips']
             ],
             'Directories.TrainingNeeds' => [
                 'title' => 'Training',
