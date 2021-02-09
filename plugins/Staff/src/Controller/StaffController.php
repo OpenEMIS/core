@@ -359,6 +359,11 @@ class StaffController extends AppController
             $primaryKey = $model->primaryKey();
 
             $alias = $model->alias;
+            //POCOR-5890 starts
+            if($alias == 'HealthImmunizations'){
+                $alias = __('Vaccinations');     
+            }
+            //POCOR-5890 ends
             $this->Navigation->addCrumb($model->getHeader($alias));
             $header = $header . ' - ' . $model->getHeader($alias);
 
