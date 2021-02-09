@@ -307,7 +307,7 @@ class StaffProfilesTable extends ControllerActionTable
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 		$where[$this->aliasField('institution_id')] = $selectedInstitution;
         //End
-        
+		
         $query
             ->select([
                 'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),

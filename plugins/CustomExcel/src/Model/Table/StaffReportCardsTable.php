@@ -30,6 +30,7 @@ class StaffReportCardsTable extends AppTable
                 'Profiles',
                 'StaffReportCards',
 				'Institutions',
+				'StaffUsers',
             ]
         ]);
     }
@@ -42,6 +43,7 @@ class StaffReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseProfiles'] = 'onExcelTemplateInitialiseProfiles';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffUsers'] = 'onExcelTemplateInitialiseStaffUsers';
 		return $events;
     }
 
@@ -106,7 +108,7 @@ class StaffReportCardsTable extends AppTable
         $filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
         $status = $StaffReportCards::GENERATED;
-		//echo '<pre>';print_r($fileContent);die;
+		
         // save file
         $StaffReportCards->updateAll([
             'status' => $status,
@@ -162,4 +164,77 @@ class StaffReportCardsTable extends AppTable
             return $entity;
         }
     }
+	
+	public function onExcelTemplateInitialiseStaffUsers(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+            $Staff = TableRegistry::get('Institution.Staff');
+
+            $entity = $Staff
+                ->find()
+                ->select([
+					'first_name' => 'Users.first_name',
+					'last_name' => 'Users.last_name',
+					'email' => 'Users.email',
+					'photo_name' => 'Users.photo_name',
+					'address' => 'Users.address',
+					'date_of_birth' => 'Users.date_of_birth',
+					'identity_number' => 'Users.identity_number',
+					'staff_position_title' => 'Positions.StaffPositionTitles.staff_position_title',
+					'gender' => 'Genders.name',
+					'demographic_type_name' => 'DemographicTypes.name',
+                ])
+                ->contain([
+                    'Users' => [
+                        'fields' => [
+                            'identity_number',
+                            'first_name',
+                            'last_name',
+                            'photo_name',
+                            'email',
+                            'address',
+                            'date_of_birth',
+                        ]
+                    ],
+					'Positions.StaffPositionTitles'=>[
+						'fields' => [
+							'staff_position_title' => 'StaffPositionTitles.name',
+						]
+					]
+                ])
+				->matching('Users.Genders')
+				->leftJoin(
+				['UserDemographics' => 'user_demographics'],
+				[
+					'UserDemographics.security_user_id ='. $Staff->aliasField('staff_id')
+				]
+				)
+				->leftJoin(
+				['DemographicTypes' => 'demographic_types'],
+				[
+					'DemographicTypes.id = UserDemographics.demographic_types_id'
+				]
+				)
+                ->where([
+                    $Staff->aliasField('institution_id') => $params['institution_id'],
+                    $Staff->aliasField('staff_id') => $params['staff_id'],
+                ])
+                ->first();
+				//echo '<pre>';print_r($entity);die;
+				$result = [];
+				$result = [
+					'name' => $entity->first_name.' '.$entity->last_name,
+					'identity_number' => $entity->identity_number,
+					'photo_name' => $entity->photo_name,
+					'email' => $entity->email,
+					'address' => $entity->address,
+					'date_of_birth' => $entity->date_of_birth,
+					'staff_position_title' => $entity->staff_position_title,
+					'gender' => $entity->gender,
+					'demographic_type_name' => $entity->demographic_type_name,
+				];
+            return $result;
+        }
+    }
+	
 }
