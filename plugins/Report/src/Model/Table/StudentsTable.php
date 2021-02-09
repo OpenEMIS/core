@@ -202,19 +202,19 @@ class StudentsTable extends AppTable
 			
             if ((in_array($feature, ['Report.HealthReports']))
                 ) {
-
+                //POCOR-5890 starts
                 $healthReportTypeOptions = [
                     'Overview' => __('Overview'),
                     'Allergies' => __('Allergies'),
                     'Consultations' => __('Consultations'),
                     'Families' => __('Families'),
                     'Histories' => __('Histories'),
-                    'Immunizations' => __('Immunizations'),
+                    'Immunizations' => __('Vaccinations'),//POCOR-5890
                     'Medications' => __('Medications'),
                     'Tests' => __('Tests'),
                     'Insurance' => __('Insurance'),
                 ];
-                
+                //POCOR-5890 ends
                 $attr['options'] = $healthReportTypeOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
