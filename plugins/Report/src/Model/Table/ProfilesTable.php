@@ -189,7 +189,7 @@ class ProfilesTable extends ControllerActionTable
     {
         $this->field('institution_name', ['sort' => ['field' => 'name']]);
         $this->field('institution_code', ['sort' => ['field' => 'code']]);
-        $this->field('report_card');
+        $this->field('profile_name');
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
         $this->field('completed_on');
@@ -201,8 +201,8 @@ class ProfilesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
-        $this->setFieldOrder(['institution_name', 'institution_code', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue']);
-		$this->setFieldVisible(['index'], ['institution_name', 'institution_code', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue']);
+        $this->setFieldOrder(['institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
+		$this->setFieldVisible(['index'], ['institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->InstitutionReportCardProcesses
@@ -286,7 +286,7 @@ class ProfilesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $reportCardId = $this->request->query('report_card_id');
-		//$institutionId = $this->request->query('institution_id');
+        $academicPeriodId = $this->request->query('academic_period_id');
 		
         if (!is_null($reportCardId)) {
             $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
@@ -315,7 +315,7 @@ class ProfilesTable extends ControllerActionTable
                 ];
 
                 $params = [
-                    //'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
                     'report_card_id' => $reportCardId
                 ];
 
@@ -494,7 +494,7 @@ class ProfilesTable extends ControllerActionTable
         }
     }
 
-    public function onGetReportCard(Event $event, Entity $entity)
+    public function onGetProfileName(Event $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('report_card_id')) {
@@ -623,9 +623,9 @@ class ProfilesTable extends ControllerActionTable
 					if(!empty($institution->id)) {
 						$this->addReportCardsToProcesses($institution->id, $params['report_card_id'], $params['academic_period_id']);
 						$this->triggerGenerateAllReportCardsShell($institution->id, $params['report_card_id'], $params['academic_period_id']);
-						$this->Alert->warning('ReportCardStatuses.generateAll');
 					}
 				}
+				$this->Alert->warning('ReportCardStatuses.generateAll');
 			} 	else {
 					$this->Alert->warning('ReportCardStatuses.inProgress');
 				}
@@ -750,7 +750,6 @@ class ProfilesTable extends ControllerActionTable
 		// Report card processes
 		$idKeys = [
 			'report_card_id' => $reportCardId,
-			'student_id' => $institutionId
 		];
 
 		$data = [

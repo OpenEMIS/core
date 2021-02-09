@@ -3034,4 +3034,19 @@ class ValidationBehavior extends Behavior
         return false;
     }
     //POCOR-5668 ends
+
+    public static function forOneMonthDate($field, array $globalData)
+    {   
+        //$field is start date for student attandance summary report
+        if(!empty($field)){
+            $report_start_date =  strtotime($globalData['data']['report_start_date']);
+            $report_end_date =  strtotime($globalData['data']['report_end_date']);
+            $datediff = $report_end_date - $report_start_date;
+            $days = round($datediff / (60 * 60 * 24));  
+            if($days <= 31){
+                return true;
+            }
+        }
+        return false;
+    }
 }
