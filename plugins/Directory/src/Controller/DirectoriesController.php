@@ -476,6 +476,11 @@ class DirectoriesController extends AppController
             }
 
             $alias = $model->alias;
+            //POCOR-5890 starts
+            if($alias == 'HealthImmunizations'){
+                $alias = __('Vaccinations');     
+            }
+            //POCOR-5890 ends
             $guardianId = $session->read('Guardian.Guardians.id');
             $studentId = $session->read('Student.Students.id');
             $isStudent = $session->read('Directory.Directories.is_student');
