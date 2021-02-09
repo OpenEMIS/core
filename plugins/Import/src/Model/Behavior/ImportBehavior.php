@@ -1227,6 +1227,7 @@ class ImportBehavior extends Behavior
      */
     protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols, ArrayObject $extra)
     {
+        
         // $references = [$sheet, $mapping, $columns, $lookup, $totalColumns, $row, $activeModel, $systemDateFormat];
         $sheet = $references['sheet'];
         $mapping = $references['mapping'];
@@ -1271,10 +1272,14 @@ class ImportBehavior extends Behavior
             $lookupColumnName = $excelMappingObj->column_name;
             $mappingModel = $excelMappingObj->model;
             
-            if($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users' && $lookupColumnName == 'openemis_no'){
+            if($mappingModel == 'Student.Extracurriculars'  && $lookupColumnName == 'openemis_no'){
                 $columnName = 'security_user_id';
                 $securityUser = TableRegistry::get('User.Users')->find()->where(['openemis_no' => $originalValue])->first();
-                
+                if(!$securityUser) {
+                    $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
+                    $rowPass = false;
+                    $extra['entityValidate'] = false;
+                }
                 $originalRow[$col] = $securityUser->id;
                 $cellValue = $securityUser->id;
             }else{

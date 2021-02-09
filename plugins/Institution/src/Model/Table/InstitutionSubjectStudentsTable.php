@@ -186,6 +186,9 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $ItemResults->aliasField('assessment_grading_option_id'),
                 $ItemResults->aliasField('assessment_period_id'),
                 $this->aliasField('student_id'),
+				$this->aliasField('institution_id'),
+				$this->aliasField('academic_period_id'),
+				$this->aliasField('education_grade_id'),
                 $this->aliasField('student_status_id'),
                 $this->aliasField('total_mark'),
                 $Users->aliasField('openemis_no'),
@@ -239,7 +242,34 @@ class InstitutionSubjectStudentsTable extends AppTable
             ->formatResults(function ($results) {
                 $arrResults = is_array($results) ? $results : $results->toArray();
                 foreach ($arrResults as &$result) {
-                    $result['student_status']['name'] = __($result['student_status']['name']);
+					
+					$InstitutionStudents = TableRegistry::get('institution_students');
+					$StudentStatuses = TableRegistry::get('student_statuses');
+					
+					$StudentStatusesData = $InstitutionStudents->find()
+						->select([
+							$InstitutionStudents->aliasField('student_status_id'),
+							$StudentStatuses->aliasField('code'),
+							$StudentStatuses->aliasField('name')
+						])
+						->innerJoin(
+							[$StudentStatuses->alias() => $StudentStatuses->table()],
+							[
+							   $InstitutionStudents->aliasField('student_status_id = ') . $StudentStatuses->aliasField('id')
+							]
+						)
+						->order([
+							$InstitutionStudents->aliasField('created') => 'DESC'
+						])
+						->where([
+							$InstitutionStudents->aliasField('student_id') => $result['student_id'],
+							$InstitutionStudents->aliasField('institution_id') => $result['institution_id'],
+							$InstitutionStudents->aliasField('academic_period_id') => $result['academic_period_id'],
+							$InstitutionStudents->aliasField('education_grade_id') => $result['education_grade_id'],
+						])
+						->first();	
+                    $result['student_status_id'] = $StudentStatusesData->student_status_id;
+                    $result['student_status']['name'] = $StudentStatusesData->student_statuses['name'];
                 }
                 return $arrResults;
             });
