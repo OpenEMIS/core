@@ -95,6 +95,14 @@ class InstitutionsTable extends AppTable
                     },
                     'message' => __('Report End Date should be earlier than Academic Period End Date')
                 ],
+                'ruleForOneMonthDate' => [
+                    'rule' => ['forOneMonthDate'],
+                    'on' => function ($context) {
+                        $feature = $context['data']['feature'];
+                        return in_array($feature, ['Report.StudentAttendanceSummary']);
+                    },
+                    'message' => __('Date range should be one month only')
+                ]
             ]);
 
         return $validator;
@@ -214,6 +222,9 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('status', ['type' => 'hidden']);
         $this->ControllerAction->field('module', ['type' => 'hidden']);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('from_date',['type'=>'hidden']);
+        $this->ControllerAction->field('to_date',['type'=>'hidden']);
+        
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_programme_id', ['type' => 'hidden']);
@@ -592,7 +603,8 @@ class InstitutionsTable extends AppTable
                                 'Report.ClassAttendanceNotMarkedRecords', 
                                 'Report.InstitutionCases', 
                                 'Report.StudentAttendanceSummary', 
-                                'Report.StaffAttendances'
+                                'Report.StaffAttendances',
+                                'Report.ClassAttendanceMarkedSummaryReport'
                             ])
                     ) {
                     $attr['onChangeReload'] = true;
@@ -673,7 +685,11 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+				if (!in_array($feature, ['Report.StudentAttendanceSummary'])) {
+					$attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+				} else {
+					$attr['options'] = $gradeOptions;
+				}
                 $attr['onChangeReload'] = true;
             } elseif (in_array($feature,
                                [
@@ -694,7 +710,11 @@ class InstitutionsTable extends AppTable
                 if (empty($gradeList)) {
                     $gradeOptions = ['' => $this->getMessage('general.select.noOptions')];
                 } else {
-                    $gradeOptions = ['' => __('All Grades')] + $gradeList;
+					if (!in_array($feature, ['Report.StudentAttendanceSummary'])) {
+						$gradeOptions = ['' => __('All Grades')] + $gradeList;
+                    } else {
+                        $gradeOptions = $gradeList;
+                    }
                 }
 
                 $attr['type'] = 'select';
@@ -881,13 +901,15 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.StudentAttendanceSummary', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                    } else if (in_array($feature, ['Report.StudentAttendanceSummary'])) {//POCOR-5906 starts
+                            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;//POCOR-5906 ends
                     } else {
                         //add All Institution task POCOR 5698
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     }
-
+                    
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
                     $attr['attr']['multiple'] = false;
@@ -906,7 +928,7 @@ class InstitutionsTable extends AppTable
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 
                                     'Report.InstitutionCases',
                                     'Report.StudentAttendanceSummary',
-                                    'Report.ClassAttendanceMarkedSummaryReport'
+                                    'Report.ClassAttendanceMarkedSummaryReport',
                 ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
                 ) {
 
@@ -945,9 +967,13 @@ class InstitutionsTable extends AppTable
                 $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
                 if ($academicPeriodId != $AcademicPeriods->getCurrent()) {
                     $attr['value'] = $selectedPeriod->end_date;
-                } else {
+                } 
+                else {
                     $attr['value'] = Time::now();
                 }
+                //POCOR-5907[START]
+                $attr['value'] = $selectedPeriod->end_date;
+                //POCOR-5907[END]
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -1216,6 +1242,38 @@ class InstitutionsTable extends AppTable
                 $attr['value'] = self::NO_FILTER;
             }
             return $attr;
+        }
+    }
+ public function onUpdateFieldFromDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            
+            if ((in_array($feature, ['Report.Income']))) {   
+                $attr['type'] = 'date';
+                return $attr;
+            }
+            if ((in_array($feature, ['Report.Expenditure']))) {   
+                $attr['type'] = 'date';
+                return $attr;
+            }
+        }
+    }
+
+
+    public function onUpdateFieldToDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            
+            if ((in_array($feature, ['Report.Income']))) {
+                $attr['type'] = 'date';
+                return $attr;
+            }
+            if ((in_array($feature, ['Report.Expenditure']))) {   
+                $attr['type'] = 'date';
+                return $attr;
+            }
         }
     }
 }

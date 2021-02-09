@@ -1,3 +1,21 @@
+### [3.61.9] - 2021-02-05
+- Bug Fixed: Reports > Institutions > Committees: Not generating
+- Bug Fixed: Reports > Institutions > Class Attendance Marked Summary: the selectable date range is incorrect
+- Bug Fixed: Reports > Institutions > Student Absence report: Changes to optimise generation
+- Bug Fixed: Reports > Institutions > Students > Import Extracurricular: Remove OpenEMIS ID in reference tab
+- Bug Fixed: Reports > Institutions > Student Absence report: changes
+- Bug Fixed: Reports > Institutions > Student Attendance Summary: Not generating
+- Bug Fixed: Reports > Institutions > Income and Expenditure report: To add From Date and To Date on the report generation page
+- Bug Fixed: Reports > Institutions > Infrastructure > Room: Progress bar moves but does not complete
+- Bug Fixed: Profile > Student > Academic > Report card and Risks tab : System should not show record for all students
+- Bug Fixed: Profile > Student > Academic > Risk tab: 404 error
+
+### [3.61.8] - 2021-02-04
+- Bug Fixed: Profile > Student > Academic > Subjects, Absence, Outcomes, Competencies tab : System should not show record for ALL students
+
+### [3.61.7] - 2021-02-02
+- Bug Fixed: Institution > Attendance > Students: Unable to view attendance and Secondary Teacher should be able to view and mark attendance
+
 ### [3.61.6] - 2021-01-30
 - Implemented: Export Institutions > Visits
 - Bug Fixed: Institution > Staff > Professional > Qualifications/License tab > Add: 404 error
