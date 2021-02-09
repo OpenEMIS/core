@@ -1,6 +1,5 @@
 <?php
 namespace Report\Model\Table;
-
 use ArrayObject;
 use Cake\I18n\Time;
 use Cake\ORM\Entity;
@@ -65,7 +64,7 @@ class ReportProgressTable extends AppTable  {
 	}
 
 	public function generate($id, $fileFormat) {
-		
+
 		if($fileFormat == 'zip'){
 			//$cmd = ROOT . DS . 'bin' . DS . 'cake StudentsPhotoDownload ' . $id;
 		    $logs = ROOT . DS . 'logs' . DS . 'student-photo-reports.log & echo $!';
