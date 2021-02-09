@@ -46,6 +46,16 @@ class WorkflowsTable extends AppTable
     public function initialize(array $config) 
     {
         $this->table("workflow_models");
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('Area', ['className' => 'Area.Areas', 'foreignKey' => 'institution_id']);
+        $this->addBehavior('Area.Areapicker');
+        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.CustomFieldList', [
+            'model' => 'Institution.Institutions',
+            'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+            'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+        ]);
         parent::initialize($config);
 
         $this->addBehavior('Report.ReportList');
@@ -63,12 +73,29 @@ class WorkflowsTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('model', [
             'select' => false,
+            'attr' => ['label'=>'Workflow'],
             'type' => 'select'
         ]);
         $this->ControllerAction->field('category', [
             'select' => false,
             'type' => 'select'
         ]);
+        if (!isset($this->request->data[$this->alias()]['feature'])) {
+            $selectedFeature = key($this->modelList);
+        } else {
+            $selectedFeature = $this->request->data[$this->alias()]['model'];
+        }
+        if (in_array($selectedFeature, 
+        [
+            'Report.WorkflowStudentTransferIn'
+        ])
+        ) {
+        $this->ControllerAction->field('institution_id', [
+            'select' => false,
+            'type' => 'select'
+        ]);
+         $this->ControllerAction->field('area', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
+        }
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -76,7 +103,6 @@ class WorkflowsTable extends AppTable
         $featureOptions = $this->controller->getFeatureOptions($this->alias());
 
         $attr['options'] = $featureOptions;
-        $attr['onChangeReload'] = true;
         return $attr;
     }
 
@@ -89,6 +115,7 @@ class WorkflowsTable extends AppTable
         }
 
         $attr['options'] = $this->modelList[$selectedFeature];
+        $attr['onChangeReload'] = true;
         return $attr;
     }
 
@@ -98,6 +125,91 @@ class WorkflowsTable extends AppTable
         $categoryOptions = ['-1' => __('All Categories')] + $categoryOptions;
         $attr['options'] = $categoryOptions;
         return $attr;
+    }
+
+    public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+        $validator
+            ->notEmpty('institution_id');
+
+        return $validator;
+	}
+
+    public function onUpdateFieldArea(Event $event, array $attr, $action, Request $request)
+    {
+        
+        $AreaTable = TableRegistry::get('Area.Areas');
+        $AreaQuery = $AreaTable
+                        ->find('list', [
+                        'keyField' => 'id',
+                            'valueField' => 'name'
+                        ])
+                        ->order([
+                        $AreaTable->aliasField('code') => 'ASC',
+                            $AreaTable->aliasField('name') => 'ASC'
+                        ]);
+
+        $AreaList = $AreaQuery->toArray();
+        $AreaOptions = ['' => '-- ' . __('Select') . ' --'] + $AreaList;//POCOR-5906 ends
+        $attr['type'] = 'chosenSelect';
+        $attr['onChangeReload'] = true;
+        $attr['attr']['multiple'] = false;
+        $attr['options'] = $AreaOptions;
+        return $attr;
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        $Areaid = $request['data']['Workflows']['area'];
+        if(isset($Areaid)){
+            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $institutionQuery = $InstitutionsTable
+                            ->find('list', [
+                            'keyField' => 'id',
+                                'valueField' => 'code_name'
+                            ])
+                            ->where(['Institutions.area_id' => $Areaid])
+                            ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                                $InstitutionsTable->aliasField('name') => 'ASC'
+                            ]);
+
+            $institutionList = $institutionQuery->toArray();
+        }
+        else{
+            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $institutionQuery = $InstitutionsTable
+                            ->find('list', [
+                            'keyField' => 'id',
+                                'valueField' => 'code_name'
+                            ])
+                            ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                                $InstitutionsTable->aliasField('name') => 'ASC'
+                            ]);
+
+            $institutionList = $institutionQuery->toArray();
+        }
+        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+        $attr['type'] = 'chosenSelect';
+        $attr['onChangeReload'] = true;
+        $attr['attr']['multiple'] = false;
+        $attr['options'] = $institutionOptions;
+        $attr['attr']['required'] = true;
+        // echo "<pre>";print_r($request);exit;
+        return $attr;
+    }
+
+    public function addAfterAction(Event $event, Entity $entity)
+    {
+        
+        $fieldsOrder[] = 'feature';
+        $fieldsOrder[] = 'model';
+        $fieldsOrder[] = 'category';
+        $fieldsOrder[] = 'area';
+        $fieldsOrder[] = 'institution_id';
+        $fieldsOrder[] = 'format';
+        $this->ControllerAction->setFieldOrder($fieldsOrder);
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
