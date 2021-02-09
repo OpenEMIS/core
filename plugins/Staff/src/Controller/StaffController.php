@@ -38,6 +38,7 @@ class StaffController extends AppController
         // finance
         'BankAccounts',
         'Salaries',
+        'Payslips',
 
         // training
         'StaffTrainings',
@@ -525,12 +526,16 @@ class StaffController extends AppController
             'Payslips' => ['text' => __('Payslips')],
         ];
 
+
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
         }
+
         return $this->TabPermission->checkTabPermission($tabElements);
+        // echo "<pre>";
+        // print_r($tabElements); die();
     }
 
     public function getTrainingTabElements($options = [])
