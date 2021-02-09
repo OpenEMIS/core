@@ -999,7 +999,13 @@ class ImportBehavior extends Behavior
                 // end POCOR-3916
 
                 if (!empty($value->description)) {
-                    $label .= ' ' . __($value->description);
+                    //POCOR-5913 starts 
+                    if(($value->lookup_model == 'Users') && ($value->lookup_column == 'identity_number')){
+                        $label = __($value->description);  
+                        //POCOR-5913 ends    
+                    }else{
+                        $label .= ' ' . __($value->description);     
+                    }
                 }
             }
 
