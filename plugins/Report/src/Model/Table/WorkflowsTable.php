@@ -196,7 +196,6 @@ class WorkflowsTable extends AppTable
         $attr['attr']['multiple'] = false;
         $attr['options'] = $institutionOptions;
         $attr['attr']['required'] = true;
-        // echo "<pre>";print_r($request);exit;
         return $attr;
     }
 
