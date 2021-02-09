@@ -11,12 +11,16 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Utility\Text;
 use Cake\Core\Configure;
+use App\Model\Traits\MessagesTrait;
 
 class AssessmentItemResultsTable extends AppTable
 {
     use OptionsTrait;
+    use MessagesTrait;
+
     public function initialize(array $config)
     {
+        $this->table('assessment_item_results');
         parent::initialize($config);
 
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
@@ -34,7 +38,6 @@ class AssessmentItemResultsTable extends AppTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
-        $this->addBehavior('Import.ImportLink');
     }
 
     public function validationDefault(Validator $validator)
@@ -43,32 +46,33 @@ class AssessmentItemResultsTable extends AppTable
 
         return $validator
             ->requirePresence('student_id')
-            ->requirePresence('assessment_id')
+            ->allowEmpty('assessment_id')
             ->requirePresence('education_subject_id')
             ->requirePresence('education_grade_id')
             ->requirePresence('academic_period_id')
             ->requirePresence('assessment_period_id')
             ->requirePresence('institution_id')
             ->allowEmpty('marks')
-            ->add('marks', 'ruleCheckAssessmentMarks', [
+            ->allowEmpty('marks', 'ruleCheckAssessmentMarks', [
                 'rule' => ['checkAssessmentMarks']
             ]);
     }
 
-    // public function implementedEvents()
-    // {
-    //     $events = parent::implementedEvents();
-    //     $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
-    //     return $events;
-    // }
+    /*public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        //$events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
+        //$events['Model.AssessmentItemResults.afterSave'] = 'afterSave';
+        return $events;
+    }*/
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
             $entity->id = Text::uuid();
         }
-
-        $this->getAssessmentGrading($entity);
+    
+        //$this->getAssessmentGrading($entity); // 5664
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -215,7 +219,7 @@ class AssessmentItemResultsTable extends AppTable
     //     return $getValueIndex;
     // }
 
-    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
+    /*public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
     {
         $results = $this
             ->find()
@@ -243,7 +247,7 @@ class AssessmentItemResultsTable extends AppTable
         }
 
         return $reference;
-    }
+    }*/
 
     private function getAssessmentGrading(Entity $entity)
     {

@@ -44,7 +44,7 @@ class POCOR5664 extends AbstractMigration
         $row = [
             [   
                 'model' => 'Institution.AssessmentItemResults',  
-                'column_name' => 'assessment_periods',
+                'column_name' => 'assessment_period_id',
                 'description' => NULL,
                 'order' => 1,
                 'is_optional' => 0,
@@ -56,7 +56,7 @@ class POCOR5664 extends AbstractMigration
             ],
             [
                 'model' => 'Institution.AssessmentItemResults',  
-                'column_name' => 'student_openEMIS_ID',
+                'column_name' => 'student_id',
                 'description' => NULL,
                 'order' => 2,
                 'is_optional' => 0,
@@ -67,7 +67,7 @@ class POCOR5664 extends AbstractMigration
             ],
             [
                 'model' => 'Institution.AssessmentItemResults',  
-                'column_name' => 'subjects',
+                'column_name' => 'education_subject_id',
                 'description' => NULL,
                 'order' => 3,
                 'is_optional' => 0,
@@ -78,7 +78,7 @@ class POCOR5664 extends AbstractMigration
             ],
             [
                 'model' => 'Institution.AssessmentItemResults',  
-                'column_name' => 'Mark',
+                'column_name' => 'marks',
                 'description' => NULL,
                 'order' => 4,
                 'is_optional' => 0,
@@ -86,6 +86,17 @@ class POCOR5664 extends AbstractMigration
                 'lookup_plugin' => NULL,
                 'lookup_model' => NULL,
                 'lookup_column' => NULL
+            ],
+            [
+                'model' => 'Institution.AssessmentItemResults',  
+                'column_name' => 'assessment_id',
+                'description' => NULL,
+                'order' => 5,
+                'is_optional' => 0,
+                'foreign_key' => 3,
+                'lookup_plugin' => NULL,
+                'lookup_model' => 'Assessments',
+                'lookup_column' => 'code'
             ]
         ];
         
