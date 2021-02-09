@@ -22,7 +22,7 @@ class POCOR5901 extends AbstractMigration
                 'model' => 'Institution.InstitutionMealStudents',
                 'column_name' => 'OpenEMIS_ID',
                 'description' => NULL,
-                'order' => ,
+                'order' => 2,
                 'is_optional' => 0,
                 'foreign_key' => 0,
                 'lookup_plugin' => NULL,
