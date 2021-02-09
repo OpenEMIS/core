@@ -66,30 +66,38 @@ class WorkflowReportBehavior extends Behavior
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {   
         $requestData = json_decode($settings['process']['params']);
+        if($requestData->model == 'Report.WorkflowStudentTransferIn'){
+            $category = $requestData->category;
+            $institution_id = $requestData->institution_id;
 
-        $category = $requestData->category;
-        $institution_id = $requestData->institution_id;
-
-        if ($category != -1) {
-            $query
-                ->contain('Statuses')
-                ->where(['Statuses.category' => $category, 'WorkflowStudentTransferIn.institution_id'=>$institution_id])
-                ->toArray();
-            if(!empty($query)){
+            if ($category != -1) {
                 $query
-                ->contain('Statuses')
-                ->where(['Statuses.category' => $category, 'WorkflowStudentTransferIn.institution_id'=>$institution_id]);
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category, 'WorkflowStudentTransferIn.institution_id'=>$institution_id])
+                    ->toArray();
+                if(!empty($query)){
+                    $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category, 'WorkflowStudentTransferIn.institution_id'=>$institution_id]);
+                }
+                else{
+                    return true;
+                }
+            }else if($category == -1){
+                $query
+                    ->contain('Statuses')
+                    ->where(['WorkflowStudentTransferIn.institution_id'=>$institution_id]);
             }
             else{
                 return true;
             }
-        }else if($category == -1){
-            $query
-                ->contain('Statuses')
-                ->where(['WorkflowStudentTransferIn.institution_id'=>$institution_id]);
-        }
-        else{
-            return true;
+        }else{
+            $category = $requestData->category;
+            if ($category != -1) {
+                $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category]);
+            }
         }
     }
 }
