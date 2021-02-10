@@ -103,8 +103,8 @@ class StudentMealsTable extends ControllerActionTable
         // if ($day == -1) {  
         if ($day != -1) {      
             //$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            $query ->formatResults(function (ResultSetInterface $results) use ($findDay) {              
-                return $results->map(function ($row) use ($findDay) {
+            $query ->formatResults(function (ResultSetInterface $results) use ($findDay,$mealPogrammesId) {              
+                 return $results->map(function ($row) use ($findDay,$mealPogrammesId) {
                     $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
                     $academicPeriodId = $row->academic_period_id;
                     $institutionClassId = $row->institution_class_id;
@@ -116,6 +116,7 @@ class StudentMealsTable extends ControllerActionTable
                                 $InstitutionMealStudents->aliasField('institution_class_id = ') => $institutionClassId,
                                 $InstitutionMealStudents->aliasField('student_id = ') => $studentId,
                                 $InstitutionMealStudents->aliasField('institution_id = ') => $institutionId,
+                                $InstitutionMealStudents->aliasField('meal_programmes_id = ') => $mealPogrammesId,
                                 $InstitutionMealStudents->aliasField('date = ') => $findDay,
                             ];
                     
