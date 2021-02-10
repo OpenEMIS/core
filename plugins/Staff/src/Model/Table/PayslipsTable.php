@@ -74,22 +74,47 @@ class PayslipsTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+        $user = $this->Auth->user();
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
         $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
-        $downloadUrl = [
-            'plugin' => 'Staff',
-            'controller' => 'Staff',
-            'action' => $this->alias,
-            'staffId' => $this->paramsEncode(['id' => $entity->staff_id]),
-            '0' => 'download',
-            '1' => $this->paramsEncode(['id' => $entity->id])
-        ];
-        $buttons['download'] = [
-            'label' => '<i class="fa kd-download"></i>'.__('Download'),
-            'attr' => $indexAttr,
-            'url' => $downloadUrl
-        ];
+
+        if ($user['super_admin'] == 1 && $buttons['view']['url']['plugin'] == 'Staff') {
+            $downloadUrl = [
+                'plugin' => 'Staff',
+                'controller' => 'Staff',
+                'action' => $this->alias,
+                'staffId' => $this->paramsEncode(['id' => $entity->staff_id]),
+                '0' => 'download',
+                '1' => $this->paramsEncode(['id' => $entity->id])
+            ];
+
+             $buttons['download'] = [
+                'label' => '<i class="fa kd-download"></i>'.__('Download'),
+                'attr' => $indexAttr,
+                'url' => $downloadUrl
+            ];
+        }
+
+        else{
+             $downloadUrl = [
+                'plugin' => 'Profile',
+                'controller' => 'Profiles',
+                'action' => $this->alias,
+                'staffId' => $this->paramsEncode(['id' => $entity->staff_id]),
+                '0' => 'download',
+                '1' => $this->paramsEncode(['id' => $entity->id])
+            ]; 
+
+            if ($buttons['view']['url']['plugin'] == 'Profile' || $user['super_admin'] == 1){
+                $buttons['download'] = [
+                    'label' => '<i class="fa kd-download"></i>'.__('Download'),
+                    'attr' => $indexAttr,
+                    'url' => $downloadUrl
+                ];
+            }
+        }
+        
+
 
         return $buttons;
     } 
