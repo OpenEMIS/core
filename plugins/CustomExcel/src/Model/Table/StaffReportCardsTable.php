@@ -31,6 +31,12 @@ class StaffReportCardsTable extends AppTable
                 'StaffReportCards',
 				'Institutions',
 				'StaffUsers',
+				'StaffNationalities',
+				'StaffDemographics',
+				'StaffContacts',
+				'StaffSalaries',
+				'StaffAreas',
+				'StaffClasses',
             ]
         ]);
     }
@@ -44,6 +50,12 @@ class StaffReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseProfiles'] = 'onExcelTemplateInitialiseProfiles';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffUsers'] = 'onExcelTemplateInitialiseStaffUsers';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffDemographics'] = 'onExcelTemplateInitialiseStaffDemographics';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffContacts'] = 'onExcelTemplateInitialiseStaffContacts';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffSalaries'] = 'onExcelTemplateInitialiseStaffSalaries';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffNationalities'] = 'onExcelTemplateInitialiseStaffNationalities';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffAreas'] = 'onExcelTemplateInitialiseStaffAreas';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffClasses'] = 'onExcelTemplateInitialiseStaffClasses';
 		return $events;
     }
 
@@ -176,13 +188,12 @@ class StaffReportCardsTable extends AppTable
 					'first_name' => 'Users.first_name',
 					'last_name' => 'Users.last_name',
 					'email' => 'Users.email',
-					'photo_name' => 'Users.photo_name',
+					//'photo_content' => 'Users.photo_content',
 					'address' => 'Users.address',
 					'date_of_birth' => 'Users.date_of_birth',
 					'identity_number' => 'Users.identity_number',
 					'staff_position_title' => 'Positions.StaffPositionTitles.staff_position_title',
 					'gender' => 'Genders.name',
-					'demographic_type_name' => 'DemographicTypes.name',
                 ])
                 ->contain([
                     'Users' => [
@@ -190,7 +201,7 @@ class StaffReportCardsTable extends AppTable
                             'identity_number',
                             'first_name',
                             'last_name',
-                            'photo_name',
+                            //'photo_content',
                             'email',
                             'address',
                             'date_of_birth',
@@ -203,7 +214,38 @@ class StaffReportCardsTable extends AppTable
 					]
                 ])
 				->matching('Users.Genders')
-				->leftJoin(
+                ->where([
+                    $Staff->aliasField('institution_id') => $params['institution_id'],
+                    $Staff->aliasField('staff_id') => $params['staff_id'],
+                ])
+                ->first();
+				//echo '<pre>';print_r($entity);die;
+				$result = [];
+				$result = [
+					'name' => $entity->first_name.' '.$entity->last_name,
+					'identity_number' => $entity->identity_number,
+					//'photo_content' => $entity->photo_content,
+					'email' => $entity->email,
+					'address' => $entity->address,
+					'date_of_birth' => $entity->date_of_birth,
+					'staff_position_title' => $entity->staff_position_title,
+					'gender' => $entity->gender,
+				];
+            return $result;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffDemographics(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+            $Staff = TableRegistry::get('Institution.Staff');
+
+            $entity = $Staff
+                ->find()
+                ->select([
+					'demographic_type_name' => 'DemographicTypes.name',
+                ])
+				->innerJoin(
 				['UserDemographics' => 'user_demographics'],
 				[
 					'UserDemographics.security_user_id ='. $Staff->aliasField('staff_id')
@@ -220,19 +262,185 @@ class StaffReportCardsTable extends AppTable
                     $Staff->aliasField('staff_id') => $params['staff_id'],
                 ])
                 ->first();
-				//echo '<pre>';print_r($entity);die;
-				$result = [];
-				$result = [
-					'name' => $entity->first_name.' '.$entity->last_name,
-					'identity_number' => $entity->identity_number,
-					'photo_name' => $entity->photo_name,
-					'email' => $entity->email,
-					'address' => $entity->address,
-					'date_of_birth' => $entity->date_of_birth,
-					'staff_position_title' => $entity->staff_position_title,
-					'gender' => $entity->gender,
-					'demographic_type_name' => $entity->demographic_type_name,
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffContacts(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+            $UserContacts = TableRegistry::get('user_contacts');
+
+            $entity = $UserContacts
+                ->find()
+                ->select([
+					'contact' => $UserContacts->aliasField('value'),
+                ])
+                ->where([
+                    $UserContacts->aliasField('security_user_id') => $params['staff_id'],
+                    $UserContacts->aliasField('preferred') => 1,
+                ])
+                ->first();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffNationalities(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+            $UserNationalities = TableRegistry::get('user_nationalities');
+
+            $entity = $UserNationalities
+                ->find()
+                ->select([
+					'name' => 'Nationalities.name',
+                ])
+				->innerJoin(
+				['Nationalities' => 'nationalities'],
+				[
+					'Nationalities.id ='. $UserNationalities->aliasField('nationality_id')
+				]
+				)
+                ->where([
+                    $UserNationalities->aliasField('security_user_id') => $params['staff_id'],
+                ])
+                ->first();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffSalaries(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+            $StaffSalaries = TableRegistry::get('staff_salaries');
+
+            $entity = $StaffSalaries
+                ->find()
+                ->select([
+					'gross_salary' => $StaffSalaries->aliasField('gross_salary'),
+                ])
+                ->where([
+                    $StaffSalaries->aliasField('staff_id') => $params['staff_id'],
+                ])
+                ->first();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffAreas(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+            $SecurityUsers = TableRegistry::get('security_users');
+
+            $entity = $SecurityUsers
+                ->find()
+                ->select([
+					'area_administrative_name' => 'AreaAdministratives.name',
+					'area_administrative_level' => 'AreaAdministrativeLevels.name',
+                ])
+				->innerJoin(
+				['AreaAdministratives' => 'area_administratives'],
+				[
+					'AreaAdministratives.id ='. $SecurityUsers->aliasField('address_area_id')
+				]
+				)
+				->innerJoin(
+				['AreaAdministrativeLevels' => 'area_administrative_levels'],
+				[
+					'AreaAdministrativeLevels.id = AreaAdministratives.area_administrative_level_id'
+				]
+				)
+                ->where([
+                    $SecurityUsers->aliasField('id') => $params['staff_id'],
+                ])
+                ->first();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffClasses(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+            $InstitutionClasses = TableRegistry::get('institution_classes');
+            $InstitutionClassesSecondaryStaff = TableRegistry::get('institution_classes_secondary_staff');
+			
+			$InstitutionClassesData = [];
+            $InstitutionClassesData = $InstitutionClasses
+                ->find()
+                ->select([
+					'id' => $InstitutionClasses->aliasField('id'),
+					'class_name' => $InstitutionClasses->aliasField('name'),
+					'total_male_students' => $InstitutionClasses->aliasField('total_male_students'),
+					'total_female_students' => $InstitutionClasses->aliasField('total_female_students'),
+					'education_grade' => 'EducationGrades.name',
+                ])
+				->leftJoin(
+				['InstitutionClassGrades' => 'institution_class_grades'],
+				[
+					'InstitutionClassGrades.institution_class_id ='. $InstitutionClasses->aliasField('id')
+				]
+				)
+				->leftJoin(
+				['EducationGrades' => 'education_grades'],
+				[
+					'EducationGrades.id = InstitutionClassGrades.education_grade_id'
+				]
+				)
+                ->where([
+                    $InstitutionClasses->aliasField('staff_id') => $params['staff_id'],
+                    $InstitutionClasses->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InstitutionClasses->aliasField('institution_id') => $params['institution_id'],
+                ])
+                ->toArray();
+			
+			$SecondaryStaffData = [];	
+            $SecondaryStaffData = $InstitutionClassesSecondaryStaff
+                ->find()
+                ->select([
+					'id' => $InstitutionClasses->aliasField('id'),
+					'class_name' => $InstitutionClasses->aliasField('name'),
+					'total_male_students' => $InstitutionClasses->aliasField('total_male_students'),
+					'total_female_students' => $InstitutionClasses->aliasField('total_female_students'),
+					'education_grade' => 'EducationGrades.name',
+                ])
+				->innerJoin(
+					[$InstitutionClasses->alias() => $InstitutionClasses->table()],
+					[
+						$InstitutionClasses->aliasField('id = ') .  $InstitutionClassesSecondaryStaff->aliasField('institution_class_id'),
+					]
+                )
+				->innerJoin(
+					['InstitutionClassGrades' => 'institution_class_grades'],
+					[
+						'InstitutionClassGrades.institution_class_id ='. $InstitutionClasses->aliasField('id')
+					]
+				)
+				->leftJoin(
+					['EducationGrades' => 'education_grades'],
+					[
+						'EducationGrades.id = InstitutionClassGrades.education_grade_id'
+					]
+				)
+                ->where([
+                    $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $params['staff_id'],
+                    $InstitutionClasses->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InstitutionClasses->aliasField('institution_id') => $params['institution_id'],
+                ])
+                ->toArray();
+				
+			$entity = array_merge($InstitutionClassesData,$SecondaryStaffData);	
+			$result = [];
+			$total_students = 0;
+			foreach ($entity as $value) {
+				$total_students = $value->total_male_students + $value->total_female_students;
+				$result[] = [
+					'id' => $value->id,
+					'class_name' => $value->class_name,
+					'education_grade' => $value->education_grade,
+					'total_students' => $total_students,
 				];
+			}
+			//echo '<pre>';print_r($result);die;	
             return $result;
         }
     }
