@@ -660,7 +660,7 @@ class NavigationComponent extends Component
             'Institutions.Assessments.index' => [
                 'title' => 'Assessments',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive'],
+                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive', 'Institutions.ImportAssessmentItemResults.add', 'Institutions.ImportAssessmentItemResults.results'],
                 'params' => ['plugin' => 'Institution'],
             ],
 
