@@ -31,6 +31,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $this->Assessments = TableRegistry::get('Assessment.Assessments');
         $this->AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+        $this->AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
         $this->InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $this->Student = TableRegistry::get('Security.Users');
     }
@@ -288,7 +289,12 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportGetAssessmentPeriodsId(Event $event, $cellValue)
     {
-        return $cellValue;
+        
+        $dataRecord = $this->AssessmentPeriods->find()->select([$this->AssessmentPeriods->aliasField('id')])->where([$this->AssessmentPeriods->aliasField('code') => $cellValue])->first();
+        
+        $assessmentPeriodsId = $dataRecord->id;
+        
+        return $assessmentPeriodsId;
     }
 
     public function onImportGetAssessmentsId(Event $event, $cellValue)

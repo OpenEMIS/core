@@ -388,11 +388,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
     }
-
-    public function AssessmentItemResults()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResults']);
-    }
     
     public function AssessmentsArchive()
     {
