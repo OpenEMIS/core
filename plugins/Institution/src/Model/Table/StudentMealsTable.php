@@ -145,6 +145,8 @@ class StudentMealsTable extends ControllerActionTable
                     $row->institution_student_meal = $data;
                     return $row;
                 });
+            });
+            
         }
 
         else{
