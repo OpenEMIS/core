@@ -132,6 +132,9 @@ class InstitutionsController extends AppController
         'StudentOutcomes',
         'ImportOutcomeResults',
 
+        //assessment
+        'ImportAssessmentItemResults',
+
         // misc
         // 'IndividualPromotion',
         // 'CourseCatalogue',
@@ -184,7 +187,8 @@ class InstitutionsController extends AppController
             'ImportStudentGuardians'   => ['className' => 'Institution.ImportStudentGuardians', 'actions' => ['add']],
             'ImportStudentExtracurriculars'   => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']],
             'StudentArchive'  => ['className' => 'Institution.StudentArchive', 'actions' => ['add']],
-            'AssessmentsArchive'  => ['className' => 'Institution.AssessmentsArchive', 'actions' => ['index']]
+            'AssessmentsArchive'  => ['className' => 'Institution.AssessmentsArchive', 'actions' => ['index']],
+            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -389,7 +393,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
     }
-
     public function AssessmentsArchive()
     {
         if (!empty($this->request->param('institutionId'))) {

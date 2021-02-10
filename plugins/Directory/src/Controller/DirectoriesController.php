@@ -187,6 +187,10 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']);
     }
+    public function StaffPayslips()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Payslips']);
+    }
     public function StaffBehaviours()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']);
@@ -917,6 +921,7 @@ class DirectoriesController extends AppController
         $staffTabElements = [
             'BankAccounts' => ['text' => __('Bank Accounts')],
             'Salaries' => ['text' => __('Salaries')],
+            'Payslips' => ['text' => __('Payslips')],
         ];
 
         $tabElements = array_merge($tabElements, $staffTabElements);
@@ -924,6 +929,7 @@ class DirectoriesController extends AppController
         foreach ($staffTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'type' => $type]);
         }
+       
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
