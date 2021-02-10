@@ -74,11 +74,16 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
+        if (isset($buttons[1])) {
+            $buttons[1]['url'] = $this->ControllerAction->url('index');
+            $buttons[1]['url']['action'] = 'Assessments';
+        }
         $request = $this->request;
         if (empty($request->query('education_grade'))) {
             unset($buttons[0]);
             unset($buttons[1]);
         }
+        
     }
 
     public function addOnInitialize(Event $event, Entity $entity)
