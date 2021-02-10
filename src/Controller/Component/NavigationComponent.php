@@ -1126,7 +1126,7 @@ class NavigationComponent extends Component
                 'title' => 'Finance',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.BankAccounts', 'Staff.Salaries', 'Staff.ImportSalaries']
+                'selected' => ['Staff.BankAccounts', 'Staff.Salaries', 'Staff.ImportSalaries', 'Staff.Payslips']
             ],
             'Institutions.StaffTrainingNeeds' => [
                 'title' => 'Training',
@@ -1266,7 +1266,7 @@ class NavigationComponent extends Component
                 'title' => 'Finance',
                 'parent' => 'Profiles.Staff',
                 'params' => ['plugin' => 'Profile', 'type' => 'staff'],
-                'selected' => ['Profiles.StaffBankAccounts', 'Profiles.StaffSalaries', 'Profiles.ImportSalaries']
+                'selected' => ['Profiles.StaffBankAccounts', 'Profiles.StaffSalaries', 'Profiles.ImportSalaries','Profiles.StaffPayslips']
             ],
             'Profiles.TrainingNeeds' => [
                 'title' => 'Training',
@@ -1389,7 +1389,7 @@ class NavigationComponent extends Component
                 'title' => 'Finance',
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory', 'type' => 'staff'],
-                'selected' => ['Directories.StaffBankAccounts', 'Directories.StaffSalaries', 'Directories.ImportSalaries']
+                'selected' => ['Directories.StaffBankAccounts', 'Directories.StaffSalaries', 'Directories.ImportSalaries','Directories.StaffPayslips']
             ],
             'Directories.TrainingNeeds' => [
                 'title' => 'Training',
