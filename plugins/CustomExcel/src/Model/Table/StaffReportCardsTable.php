@@ -37,6 +37,9 @@ class StaffReportCardsTable extends AppTable
 				'StaffSalaries',
 				'StaffAreas',
 				'StaffClasses',
+				'StaffSubjects',
+				'StaffQualifications',
+				'StaffAwards',
             ]
         ]);
     }
@@ -56,6 +59,9 @@ class StaffReportCardsTable extends AppTable
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffNationalities'] = 'onExcelTemplateInitialiseStaffNationalities';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffAreas'] = 'onExcelTemplateInitialiseStaffAreas';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffClasses'] = 'onExcelTemplateInitialiseStaffClasses';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffSubjects'] = 'onExcelTemplateInitialiseStaffSubjects';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualifications'] = 'onExcelTemplateInitialiseStaffQualifications';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffAwards'] = 'onExcelTemplateInitialiseStaffAwards';
 		return $events;
     }
 
@@ -188,7 +194,7 @@ class StaffReportCardsTable extends AppTable
 					'first_name' => 'Users.first_name',
 					'last_name' => 'Users.last_name',
 					'email' => 'Users.email',
-					//'photo_content' => 'Users.photo_content',
+					'photo_content' => 'Users.photo_content',
 					'address' => 'Users.address',
 					'date_of_birth' => 'Users.date_of_birth',
 					'identity_number' => 'Users.identity_number',
@@ -201,7 +207,7 @@ class StaffReportCardsTable extends AppTable
                             'identity_number',
                             'first_name',
                             'last_name',
-                            //'photo_content',
+                            'photo_content',
                             'email',
                             'address',
                             'date_of_birth',
@@ -224,7 +230,7 @@ class StaffReportCardsTable extends AppTable
 				$result = [
 					'name' => $entity->first_name.' '.$entity->last_name,
 					'identity_number' => $entity->identity_number,
-					//'photo_content' => $entity->photo_content,
+					'photo_content' => $entity->photo_content,
 					'email' => $entity->email,
 					'address' => $entity->address,
 					'date_of_birth' => $entity->date_of_birth,
@@ -440,8 +446,108 @@ class StaffReportCardsTable extends AppTable
 					'total_students' => $total_students,
 				];
 			}
-			//echo '<pre>';print_r($result);die;	
             return $result;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffSubjects(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+            $InstitutionSubjectStaff = TableRegistry::get('institution_subject_staff');
+			
+			$entity = [];
+            $entity = $InstitutionSubjectStaff
+                ->find()
+                ->select([
+					'id' => 'InstitutionSubjects.id',
+					'subject_name' => 'InstitutionSubjects.name',
+					'total_male_students' => 'InstitutionSubjects.total_male_students',
+					'total_female_students' => 'InstitutionSubjects.total_female_students',
+					'education_grade' => 'EducationGrades.name',
+                ])
+				->innerJoin(
+				['InstitutionSubjects' => 'institution_subjects'],
+				[
+					'InstitutionSubjects.id ='. $InstitutionSubjectStaff->aliasField('institution_subject_id'),
+					'InstitutionSubjects.academic_period_id' => $params['academic_period_id'],
+					'InstitutionSubjects.institution_id' => $params['institution_id'],
+				]
+				)
+				->leftJoin(
+				['EducationGrades' => 'education_grades'],
+				[
+					'EducationGrades.id = InstitutionSubjects.education_grade_id'
+				]
+				)
+                ->where([
+                    $InstitutionSubjectStaff->aliasField('staff_id') => $params['staff_id'],
+                    $InstitutionSubjectStaff->aliasField('institution_id') => $params['institution_id'],
+                ])
+                ->toArray();
+			
+			$result = [];
+			$total_students = 0;
+			foreach ($entity as $value) {
+				$total_students = $value->total_male_students + $value->total_female_students;
+				$result[] = [
+					'id' => $value->id,
+					'subject_name' => $value->subject_name,
+					'education_grade' => $value->education_grade,
+					'total_students' => $total_students,
+				];
+			}
+            return $result;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffQualifications(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+            $StaffQualifications = TableRegistry::get('staff_qualifications');
+
+            $entity = $StaffQualifications->find()
+				->select([
+					'id' => 'QualificationTitles.id',
+					'qualification_title' => 'QualificationTitles.name',
+					'qualification_level' => 'QualificationLevels.name',
+				])
+				->innerJoin(
+				['QualificationTitles' => 'qualification_titles'],
+				[
+					'QualificationTitles.id ='. $StaffQualifications->aliasField('qualification_title_id'),
+				]
+				)
+				->innerJoin(
+				['QualificationLevels' => 'qualification_levels'],
+				[
+					'QualificationLevels.id = QualificationTitles.qualification_level_id',
+				]
+				)
+				->where([
+                    $StaffQualifications->aliasField('staff_id') => $params['staff_id'],
+                ])
+				->toArray()
+			;
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStaffAwards(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+            $UserAwards = TableRegistry::get('user_awards');
+
+            $entity = $UserAwards->find()
+				->select([
+					'id' => $UserAwards->aliasField('id'),
+					'award' => $UserAwards->aliasField('award'),
+				])
+				->where([
+                    $UserAwards->aliasField('security_user_id') => $params['staff_id'],
+                ])
+				->toArray()
+			;
+            return $entity;
         }
     }
 	
