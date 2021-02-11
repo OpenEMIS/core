@@ -3049,4 +3049,18 @@ class ValidationBehavior extends Behavior
         }
         return false;
     }
+
+    //POCOR-5917 starts
+    public static function compareEndDate($field)
+    {   
+        $label = Inflector::humanize($field);
+        $enteredDate = new Date($field);
+        $today = new Date('now');
+        if (strtotime($today) > strtotime($enteredDate)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    //POCOR-5917 ends
 }
