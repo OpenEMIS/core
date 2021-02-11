@@ -1346,12 +1346,11 @@ class StaffExcelReportBehavior extends Behavior
         $attr['imageWidth'] = array_key_exists('imageWidth', $attr) ? $attr['imageWidth'] : 50;
         $attr['imageMarginLeft'] = array_key_exists('imageMarginLeft', $attr) ? $attr['imageMarginLeft'] : 0;
         $attr['imageMarginTop'] = array_key_exists('imageMarginTop', $attr) ? $attr['imageMarginTop'] : 0;
-
+		
         $data = Hash::extract($extra['vars'], $attr['displayValue']);
         $imageContent = current($data);
-
-        //for institution logo
-        if ($attr['displayValue'] == 'Institutions.logo_content' ) {
+        //for staff photo
+        if ($attr['displayValue'] == 'StaffUsers.photo_content' ) {
             if (is_resource($imageContent)) {
                 $institutionId = Hash::extract($extra['vars'], 'Institutions.id');
                 $institutionId = current($institutionId);
