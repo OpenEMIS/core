@@ -280,7 +280,8 @@ class StaffProfilesTable extends ControllerActionTable
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        //End 
+        $where[$AcademicPeriod->aliasField('id')] = $selectedAcademicPeriod;        
+		//End 
 
         // Report Cards filter
         $reportCardOptions = [];
@@ -294,7 +295,7 @@ class StaffProfilesTable extends ControllerActionTable
         $reportCardOptions = ['-1' => '-- '.__('Select Staff Template').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->query('staff_profile_template_id')) ? $this->request->query('staff_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-        //End	
+		//End	
 		
         // Institution filter
 		$Institutions = TableRegistry::get('Institutions');
@@ -317,6 +318,31 @@ class StaffProfilesTable extends ControllerActionTable
                 'email_status_id' => $this->StaffReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->StaffReportCardEmailProcesses->aliasField('error_message')
             ])
+			->innerJoin([$AcademicPeriod->alias() => $AcademicPeriod->table()],
+                [
+					'OR' => [[
+					array(
+						$this->aliasField('end_date').' IS NOT NULL',
+						$this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('start_date'),
+						$this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('start_date'),
+					),
+					array(
+						$this->aliasField('end_date').' IS NOT NULL',
+						$this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
+						$this->aliasField('end_date >= ') . $AcademicPeriod->aliasField('end_date'),
+					),
+					array(
+						$this->aliasField('end_date').' IS NOT NULL',
+						$this->aliasField('start_date >= ') . $AcademicPeriod->aliasField('start_date'),
+						$this->aliasField('end_date <= ') . $AcademicPeriod->aliasField('end_date'),
+					)],
+					array(
+						$this->aliasField('end_date').' IS NULL',
+						$this->aliasField('start_date <= ') . $AcademicPeriod->aliasField('end_date'),
+					)
+					]
+                ]
+            )
             ->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
                 [
                     $this->StaffReportCards->aliasField('staff_id = ') . $this->aliasField('staff_id'),
@@ -336,7 +362,6 @@ class StaffProfilesTable extends ControllerActionTable
             ->autoFields(true)
             ->where($where)
             ->all();
-
         if (is_null($this->request->query('sort'))) {
             $query
                 ->contain('Users')
@@ -364,6 +389,7 @@ class StaffProfilesTable extends ControllerActionTable
     {
         $reportCardId = $this->request->query('staff_profile_template_id');
         $institutionId = $this->request->query('institution_id');
+        $academicPeriodId = $this->request->query('academic_period_id');
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
             $existingReportCard = $this->StaffTemplates->exists([$this->StaffTemplates->primaryKey() => $reportCardId]);
@@ -393,6 +419,7 @@ class StaffProfilesTable extends ControllerActionTable
 
                 $params = [
                     'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
                     'staff_profile_template_id' => $reportCardId
                 ];
 
@@ -708,27 +735,21 @@ class StaffProfilesTable extends ControllerActionTable
         $hasTemplate = $this->StaffTemplates->checkIfHasTemplate($params['staff_profile_template_id']);
         
         if ($hasTemplate) {
-            $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['staff_profile_template_id']);
-                
-               if ($checkReportCard) {
-                   $this->Alert->warning('ReportCardStatuses.checkReportCardTemplatePeriod');
-                  return $this->controller->redirect($this->url('index'));
-                  die;
-               }
-
-            $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
-            $inProgress = $ReportCardProcesses->find()
+            $StaffReportCardProcesses = TableRegistry::get('ReportCard.StaffReportCardProcesses');
+            $inProgress = $StaffReportCardProcesses->find()
                 ->where([
-                    $ReportCardProcesses->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
-                    $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id']
+                    $StaffReportCardProcesses->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
+                    $StaffReportCardProcesses->aliasField('staff_id') => $params['staff_id'],
+                    $StaffReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $StaffReportCardProcesses->aliasField('institution_id') => $params['institution_id'],
                 ])
                 ->count();      
                         
 
             if (!$inProgress) {                   
-                $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['staff_profile_template_id']);
-                $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['staff_profile_template_id']);
-                $this->Alert->warning('ReportCardStatuses.generateAll');
+                $this->addReportCardsToProcesses($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id']);
+				$this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id']);
+				$this->Alert->warning('ReportCardStatuses.generateAll');
             } else {
                 $this->Alert->warning('ReportCardStatuses.inProgress');
             }
