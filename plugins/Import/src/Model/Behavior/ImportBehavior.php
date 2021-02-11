@@ -1325,14 +1325,17 @@ class ImportBehavior extends Behavior
 
                                     ])
                                     ->first();
-                                    //->where(['openemis_no' => $originalValue])
                 if(!$securityUser) {
                     $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
                     $rowPass = false;
                     $extra['entityValidate'] = false;
+
+                    $originalRow[$col] = $originalValue;
+                    $cellValue = $originalValue;
+                }else{
+                    $originalRow[$col] = $securityUser->id;
+                    $cellValue = $securityUser->id;
                 }
-                $originalRow[$col] = $securityUser->id;
-                $cellValue = $securityUser->id;
                 //POCOR-5913 ends
             }else{
                 $columnName = $columns[$col];
@@ -1414,7 +1417,11 @@ class ImportBehavior extends Behavior
                     } else {
                         //POCOR-5913 starts
                         if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id'){
-                            $cellValue = $securityUser->openemis_id;
+                            if($securityUser){
+                                $cellValue = $securityUser->openemis_id;
+                            }else{
+                                $cellValue = $originalValue;
+                            }
                         }//POCOR-5913 ends
                         $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
                         $record = $lookupQuery->first();
