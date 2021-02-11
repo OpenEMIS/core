@@ -135,8 +135,6 @@ class AcademicPeriodsTable extends AppTable
             }
             $this->updateAll(['current' => 0], $where);
         }
-
-
     }
 
     public function onBeforeDelete(Event $event, ArrayObject $options, $ids)
