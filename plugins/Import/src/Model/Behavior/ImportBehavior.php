@@ -1000,12 +1000,13 @@ class ImportBehavior extends Behavior
 
                 if (!empty($value->description)) {
                     //POCOR-5913 starts 
-                    if(($value->lookup_model == 'Users') && ($value->lookup_column == 'identity_number')){
+                    $label .= ' ' . __($value->description);  
+                    /*if(($value->lookup_model == 'Users') && ($value->lookup_column == 'identity_number')){
                         $label = __($value->description);  
                         //POCOR-5913 ends    
                     }else{
                         $label .= ' ' . __($value->description);     
-                    }
+                    }*/
                 }
             }
 
@@ -1288,6 +1289,51 @@ class ImportBehavior extends Behavior
                 }
                 $originalRow[$col] = $securityUser->id;
                 $cellValue = $securityUser->id;
+            }else if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id'){ //POCOR-5913 starts
+                $columnName = 'guardian_id';
+                $userIdentities = TableRegistry::get('user_identities');
+                $identityTypes = TableRegistry::get('identity_types');
+                $User = TableRegistry::get('security_users');
+                $securityUser = $User
+                                    ->find()
+                                    ->select([
+                                        'id' => $User->aliasField('id'), 
+                                        'openemis_id' => $User->aliasField('openemis_no'),
+                                        'user_identities_id' => $userIdentities->aliasField('id'),
+                                        'identity_type_id' => $userIdentities->aliasField('identity_type_id'),
+                                        'number' => $userIdentities->aliasField('number'),
+                                        'security_user_id' => $userIdentities->aliasField('security_user_id'),
+                                        'identityTypes_id' => $identityTypes->aliasField('id'),
+                                        'default' => $identityTypes->aliasField('default')
+                                    ])
+                                    ->leftJoin(
+                                        [$userIdentities->alias() => $userIdentities->table()],
+                                        [$userIdentities->aliasField('security_user_id = ') .$User->aliasField('id')]
+                                    )
+                                    ->leftJoin(
+                                        [$identityTypes->alias() => $identityTypes->table()],
+                                        [$identityTypes->aliasField('id =') .$userIdentities->aliasField('identity_type_id')]
+                                    )
+                                    ->where([
+                                        'OR'=>[
+                                            $User->aliasField('openemis_no') => $originalValue,
+                                            'AND'=>[
+                                                $userIdentities->aliasField('number') => $originalValue,
+                                                $identityTypes->aliasField('default') => 1
+                                            ]
+                                        ]
+
+                                    ])
+                                    ->first();
+                                    //->where(['openemis_no' => $originalValue])
+                if(!$securityUser) {
+                    $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
+                    $rowPass = false;
+                    $extra['entityValidate'] = false;
+                }
+                $originalRow[$col] = $securityUser->id;
+                $cellValue = $securityUser->id;
+                //POCOR-5913 ends
             }else{
                 $columnName = $columns[$col];
                 $originalRow[$col] = $originalValue;
@@ -1337,6 +1383,8 @@ class ImportBehavior extends Behavior
             if (!$isOptional) {
                 $isOptional = substr_count($columnDescription, 'not required');
             }
+
+
             if ($foreignKey == self::FIELD_OPTION) {
                 if (!empty($cellValue)) {
                     if (array_key_exists($cellValue, $lookup[$col])) {
@@ -1364,9 +1412,12 @@ class ImportBehavior extends Behavior
                     if (isset($extra['lookup'][$excelLookupModel->alias()][$cellValue])) {
                         $record = $extra['lookup'][$excelLookupModel->alias()][$cellValue];
                     } else {
+                        //POCOR-5913 starts
+                        if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id'){
+                            $cellValue = $securityUser->openemis_id;
+                        }//POCOR-5913 ends
                         $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
                         $record = $lookupQuery->first();
-
                         $extra['lookup'][$excelLookupModel->alias()][$cellValue] = $record;
                     }
                 } else {
