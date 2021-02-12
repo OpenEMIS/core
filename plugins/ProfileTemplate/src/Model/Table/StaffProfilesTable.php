@@ -249,8 +249,8 @@ class StaffProfilesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
-        $this->setFieldOrder(['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
-		$this->setFieldVisible(['index'], ['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
+        $this->setFieldOrder(['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+		$this->setFieldVisible(['index'], ['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->StaffReportCardProcesses
@@ -587,14 +587,14 @@ class StaffProfilesTable extends ControllerActionTable
         } else if (!is_null($this->request->query('staff_profile_template_id'))) {
             $reportCardId = $this->request->query('staff_profile_template_id');
         }
+		$academicPeriodId = $this->request->query('academic_period_id');
 
         $search = [
             'staff_profile_template_id' => $reportCardId,
             'staff_id' => $entity->staff_id,
             'institution_id' => $entity->institution_id,
-            'academic_period_id' => $entity->academic_period_id
+            'academic_period_id' => $academicPeriodId
         ];
-
         $resultIndex = array_search($search, $this->reportProcessList);
 
         if ($resultIndex !== false) {
@@ -769,20 +769,19 @@ class StaffProfilesTable extends ControllerActionTable
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
         $files = $this->StaffReportCards->find()
-            ->contain(['Students', 'ReportCards'])
+            ->contain(['StaffTemplates'])
             ->where([
                 $this->StaffReportCards->aliasField('institution_id') => $params['institution_id'],
-                $this->StaffReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->StaffReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
                 $this->StaffReportCards->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
                 $this->StaffReportCards->aliasField('status IN ') => $statusArray,
                 $this->StaffReportCards->aliasField('file_name IS NOT NULL'),
                 $this->StaffReportCards->aliasField('file_content IS NOT NULL')
             ])
             ->toArray();
-
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
-            $zipName = 'ReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $zipName = 'StaffReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
            
             $zip = new ZipArchive;
