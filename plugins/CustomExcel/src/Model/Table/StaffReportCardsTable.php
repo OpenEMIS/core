@@ -111,6 +111,16 @@ class StaffReportCardsTable extends AppTable
                         'code',
                         'name'
                     ]
+                ],
+                'Staffs' => [
+                    'fields' => [
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
                 ]
             ])
             ->where([
@@ -122,8 +132,9 @@ class StaffReportCardsTable extends AppTable
             ->first();
 			
         // set filename
-        $fileName = $StaffReportCardData->academic_period->name . '_' . $StaffReportCardData->staff_template->code. '_' . $StaffReportCardData->institution->name . '.' . $this->fileType;
-        $filepath = $extra['file_path'];
+		$fileName = $StaffReportCardData->institution->code . '_' . $StaffReportCardData->staff_template->code. '_' . $StaffReportCardData->staff->openemis_no . '_' . $StaffReportCardData->staff->name . '.' . $this->fileType;
+        //$fileName = $StaffReportCardData->academic_period->name . '_' . $StaffReportCardData->staff_template->code. '_' . $StaffReportCardData->institution->name . '.' . $this->fileType;
+		$filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
         $status = $StaffReportCards::GENERATED;
 		
