@@ -309,6 +309,7 @@ class StaffTable extends AppTable
             'Behaviours' => ['text' => __('Behaviours')],
             'StaffAppraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
+            'Associations' => ['text' => __('Associations')]
         ];
 
         // unset classes and subjects if institution is non-academic

@@ -1221,6 +1221,48 @@ class InstitutionsController extends AppController
         }
     }
 
+    // Assosiation feature 
+    public function Associations($subaction = 'index', $associationId = null)
+    {
+        if ($subaction == 'edit') {
+            $session = $this->request->session();
+            $roles = [];
+            $associationId = $this->ControllerAction->paramsDecode($associationId);
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'Classes';
+            $viewUrl[0] = 'view';
+
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Classes',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $this->set('alertUrl', $alertUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('classId', $associationId['id']);
+            $this->set('institutionId', $institutionId);
+            $this->render('institution_associations_edit');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssociations']);
+        }
+    }
+
+    public function StudentAssociations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);
+    }
+
     public function InstitutionStaffAttendances($pass = 'index')
     {
         if ($pass == 'excel') {
@@ -2819,14 +2861,15 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'Risks' => ['text' => __('Risks')]
+            'Risks' => ['text' => __('Risks')],
+            'Associations' => ['text' => __('Associations')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, ['Programmes', 'Textbooks', 'Risks'])) {
+            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations'])) {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             } else {
