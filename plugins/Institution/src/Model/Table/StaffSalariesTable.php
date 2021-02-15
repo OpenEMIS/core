@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use App\Model\Traits\OptionsTrait;
 
 class StaffSalariesTable extends ControllerActionTable
 {
