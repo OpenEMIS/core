@@ -1308,7 +1308,7 @@ class POCOR5685 extends AbstractMigration
         //
 
         //
-        $getLocaleContents = $this->query("SELECT * FROM locale_contents WHERE `en` = 'Priority'");
+        $getLocaleContents = $this->query("SELECT * FROM locale_contents WHERE `en` = 'Projects'");
         $getLocaleContentsId = $getLocaleContents->fetchAll();
         if(!empty($getLocaleContentsId)){
             $localeContentsId = $getLocaleContentsId[0]['id'];
