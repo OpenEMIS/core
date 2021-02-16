@@ -50,7 +50,7 @@ class ImportStaffSalariesTable extends AppTable
     {
         $plugin = $toolbarButtons['back']['url']['plugin'];
         if ($plugin == 'Institution') {
-            $toolbarButtons['back']['url']['action'] = 'Staff, index';
+            $toolbarButtons['back']['url']['action'] = 'Staff';
         }
     }
 
