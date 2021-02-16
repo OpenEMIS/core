@@ -1124,7 +1124,13 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
                 'selected' => ['Staff.SpecialNeedsReferrals', 'Staff.SpecialNeedsAssessments', 'Staff.SpecialNeedsServices', 'Staff.SpecialNeedsDevices', 'Staff.SpecialNeedsPlans']
-            ]
+            ],
+			'Staff.Profiles.index' => [
+				'title' => 'Profiles',
+				'parent' => 'Institutions.Staff.index',
+				'selected' => ['Staff.Profiles'],
+				'params' => ['plugin' => 'Staff']
+			],
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
