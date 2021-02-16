@@ -20,7 +20,13 @@ class POCOR5192 extends AbstractMigration
                 'model_alias' => 'ReportCard.StaffReportCardEmail',
 				'model_reference' => '0',
 				'subject' => 'Staff Report Card of ${staff.openemis_no} for ${academic_period.name}',
-				'message' => 'Dear ${staff.first_name},\r\n\r\nAttached is your staff report card for ${academic_period.name}.\r\n\r\nThank you.\r\n\r\n[This is an auto-generated email. Please do not reply directly to this email.]',
+				'message' => 'Dear ${student.first_name},
+
+Attached is your student report card for ${academic_period.name}.
+
+Thank you.
+
+[This is an auto-generated email. Please do not reply directly to this email.]',
 				'modified_user_id' => NULL,
 				'modified' => NULL,
 				'created_user_id' => '1',
