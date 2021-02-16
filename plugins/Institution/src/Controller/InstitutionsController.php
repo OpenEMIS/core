@@ -1515,6 +1515,18 @@ class InstitutionsController extends AppController
     {
         $action = $this->request->action;
         switch ($action) {
+            case 'Associations':
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'kd-angular-multi-select',
+                            'institution.associations.ctrl',
+                            'institution.associations.svc'
+                        ]);
+                    }
+                }
+                break;
             case 'StudentAttendances':
                 $this->Angular->addModules([
                     'institution.student.attendances.ctrl',
