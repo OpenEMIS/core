@@ -30,6 +30,7 @@ class ProgrammesTable extends ControllerActionTable
 		$this->toggle('search', false);
 
         $this->addBehavior('User.User');
+
 	}
 
 	public function onGetEducationGradeId(Event $event, Entity $entity)
@@ -89,13 +90,48 @@ class ProgrammesTable extends ControllerActionTable
 	}
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {    	
+    {  	
         $this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
         $this->field('openemis_no',['before' => 'student_id']);
         $this->field('student_status_id',['after' => 'student_id']);
         $this->field('start_year', ['visible' => 'false']);
         $this->field('end_year', ['visible' => 'false']);
         $this->setupTabElements();
+        //POCOR-5671 
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default icon-big',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+ 
+        $extraButtons = [
+            'process' => [
+                'Institution' => ['Institution', 'Institutions'],
+                'action' => 'StudentTransition',
+                'icon' => '<i class="kd-process"></i>',
+                'title' => __('Transition')
+            ]
+        ];
+
+        foreach ($extraButtons as $key => $attr) {
+            if ($this->AccessControl->check($attr['permission'])) {
+                $button = [
+                    'type' => 'button',
+                    'attr' => $btnAttr,
+                    'url' => [0 => 'edit', $this->paramsEncode(['id' => $entity->id]),
+				'institution_id' => $entity->institution->id]
+                ];
+                $button['url']['action'] = $attr['action'];
+                $button['attr']['title'] = $attr['title'];
+                $button['label'] = $attr['icon'];
+
+                $extra['toolbarButtons'][$key] = $button;
+            }
+        }
+        //POCOR-5671
     }
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -130,6 +166,24 @@ class ProgrammesTable extends ControllerActionTable
 				unset($buttons['edit']);
 			}
 		}
+		//POCOR-5671
+		$url = [
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
+				'action' => 'StudentTransition',
+				'edit',
+				$this->paramsEncode(['id' => $entity->id]),
+				'institution_id' => $entity->institution->id
+		];
+		if ($this->AccessControl->check($url['permission']) && $studentStatusId == $statuses['CURRENT']) {
+			$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+		    $buttons['transition']['label'] = '<i class="kd-process"></i>' . __('Transition');
+            $buttons['transition']['attr'] = $indexAttr;
+            $buttons['transition']['url'] = $url;
+            $buttons['transition']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
+		}
+		//POCOR-5671
+		
 		return parent::onUpdateActionButtons($event, $entity, $buttons);
 	}
 	
