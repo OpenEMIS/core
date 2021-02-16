@@ -81,12 +81,21 @@ class StudentAttendancesTable extends ControllerActionTable
         $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $InstitutionStudents = TableRegistry::get('Institution.Students');
         $this->Users = TableRegistry::get('Security.Users');
-        //POCOR-5912
+        /* POCOR-5912 condition for week filter starts */
         $overlapDateCondition['OR'] = [];
         $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('start_date') . ' >= ' => $weekStartDay, $InstitutionStudents->aliasField('start_date') . ' <= ' => $weekEndDay];
         $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('end_date'). ' >= ' => $weekStartDay, $InstitutionStudents->aliasField('end_date') . ' <= ' => $weekEndDay];
         $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('start_date') . ' <= ' => $weekStartDay, $InstitutionStudents->aliasField('end_date') . ' >= ' => $weekEndDay];
-        //POCOR-5912
+        /* POCOR-5912 condition for week filter ends */
+        /* POCOR-5919 condition for day filter starts */
+        $conditionQuery = [$InstitutionStudents->aliasField('start_date <= ') => $day,
+                'OR' => [
+                $InstitutionStudents->aliasField('end_date is ') => null,
+                $InstitutionStudents->aliasField('end_date >= ') => $day
+                ]
+        ];
+        /* POCOR-5919 condition for day filter ends */
+        
         if ($day == -1) {
             $findDay[] = $weekStartDay;
             $findDay[] = $weekEndDay;
@@ -110,11 +119,6 @@ class StudentAttendancesTable extends ControllerActionTable
                 $this->Users->aliasField('preferred_name')
             ])
             ->contain([$this->Users->alias(),'InstitutionClasses'])
-            //->matching($this->StudentStatuses->alias(), function($q) {
-                //return $q->where([
-                    //$this->StudentStatuses->aliasField('code') => 'CURRENT'
-                //]);
-            //})
             ->leftJoin(
                     [$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()],
                     [
@@ -139,7 +143,8 @@ class StudentAttendancesTable extends ControllerActionTable
                 $InstitutionStudents->aliasField('institution_id') => $institutionId,
                 $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                $overlapDateCondition
+                $overlapDateCondition,
+                $conditionQuery
             ])
             ->group([
                 $InstitutionSubjectStudents->aliasField('student_id')
@@ -179,7 +184,8 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('institution_id') => $institutionId,
                     $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                     $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                    $overlapDateCondition
+                    $overlapDateCondition,
+                    $conditionQuery 
                     ])
                     ->group([
                         $InstitutionStudents->aliasField('student_id')
