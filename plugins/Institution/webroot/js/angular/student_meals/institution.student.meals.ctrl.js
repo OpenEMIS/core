@@ -700,6 +700,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     vm.onEditClick = function() {
         vm.action = 'edit';
         vm.gridOptions.context.mode = vm.action;
+        vm.gridOptions.context.mealPrograme=vm.selectedmealPrograme;
         vm.setColumnDef();
         AlertSvc.info($scope, 'Meal will be automatically saved.');
         InstitutionStudentMealsSvc.savePeriodMarked(vm.getPeriodMarkedParams(), $scope);
