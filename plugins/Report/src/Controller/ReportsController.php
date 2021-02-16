@@ -281,7 +281,7 @@ class ReportsController extends AppController
         $this->Navigation->addCrumb($data['module']);
         $header = __('Reports') . ' - ' .$data['module'];
 
-        $inputFileName = WWW_ROOT. 'export/'.$explode_data[10];
+        $inputFileName = WWW_ROOT. 'export/'.end($explode_data);
 
         $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
         $objReader = PHPExcel_IOFactory::createReader($inputFileType);
