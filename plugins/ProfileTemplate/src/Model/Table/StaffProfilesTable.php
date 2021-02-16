@@ -78,6 +78,7 @@ class StaffProfilesTable extends ControllerActionTable
         $events['ControllerAction.Model.generate'] = 'generate';
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
+		$events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
 		$events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
         $events['ControllerAction.Model.downloadPDF'] = 'downloadPDF';
         $events['ControllerAction.Model.publish'] = 'publish';
@@ -422,6 +423,15 @@ class StaffProfilesTable extends ControllerActionTable
                     'academic_period_id' => $academicPeriodId,
                     'staff_profile_template_id' => $reportCardId
                 ];
+				
+				if ($generatedCount > 0 || $publishedCount > 0) {
+                    $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
+                    $downloadButtonPdf['type'] = 'button';
+                    $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                    $downloadButtonPdf['attr'] = $toolbarAttr;
+                    $downloadButtonPdf['attr']['title'] = __('Download All PDF');
+                    $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
+                }
 
                 if ($generatedCount > 0 || $publishedCount > 0) {
                     $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
@@ -655,7 +665,7 @@ class StaffProfilesTable extends ControllerActionTable
         $ids = $this->getQueryString();
 		
         if ($model->exists($ids)) {
-            $data = $model->get($ids);
+            $data = $model->find()->where($ids)->first();
             $fileName = $data->file_name;
             $pathInfo = pathinfo($fileName);
             $file = $this->getFile($data->file_content);
@@ -685,7 +695,7 @@ class StaffProfilesTable extends ControllerActionTable
         $ids = $this->getQueryString();
 		
         if ($model->exists($ids)) {
-            $data = $model->get($ids);
+            $data = $model->find()->where($ids)->first();
             $fileName = $data->file_name;
             $fileNameData = explode(".",$fileName);
 			$fileName = $fileNameData[0].'.pdf';
@@ -760,7 +770,62 @@ class StaffProfilesTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
+	
+	public function downloadAllPdf(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
 
+        // only download report cards with generated or published status
+        $statusArray = [self::GENERATED, self::PUBLISHED];
+
+        $files = $this->StaffReportCards->find()
+            ->contain(['StaffTemplates'])
+            ->where([
+                $this->StaffReportCards->aliasField('institution_id') => $params['institution_id'],
+                $this->StaffReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
+                $this->StaffReportCards->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
+                $this->StaffReportCards->aliasField('status IN ') => $statusArray,
+                $this->StaffReportCards->aliasField('file_name IS NOT NULL'),
+                $this->StaffReportCards->aliasField('file_content IS NOT NULL')
+            ])
+            ->toArray();
+            
+        if (!empty($files)) {
+            $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
+            $zipName = 'StaffReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $filepath = $path . $zipName;
+           
+            $zip = new ZipArchive;
+            $zip->open($filepath, ZipArchive::CREATE);
+            
+            foreach ($files as $file) {
+				$fileName = $file->file_name;
+				$fileNameData = explode(".",$fileName);
+				$fileName = $fileNameData[0].'.pdf';
+                
+				$zip->addFromString($fileName,  $this->getFile($file->file_content_pdf));
+             
+            }
+            $zip->close();
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/zip");
+            header("Content-Length: ".filesize($filepath));
+            header("Content-Disposition: attachment; filename=".$zipName);
+            readfile($filepath);
+
+            // delete file after download
+            unlink($filepath);
+        } else {
+            $event->stopPropagation();
+            $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
+            return $this->controller->redirect($this->url('index'));
+        }
+    }
+	
     public function downloadAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
