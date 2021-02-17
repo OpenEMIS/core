@@ -75,6 +75,7 @@ class ReportsController extends AppController
                 'Report.InstitutionStaff' => __('Staff'),
                 'Report.StudentAbsences' => __('Student Absence'),
                 'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
+                'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
                 'Report.InstitutionSummaryReport' => __('Institution Summary Report'),
                 'Report.BodyMasses' => __('Student Body Masses'),
                 // 'Report.StaffAbsences' => __('Staff Absence'),
