@@ -3,7 +3,7 @@ namespace ReportCard\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 
-class InstitutionReportCardProcessesTable extends ControllerActionTable
+class StaffReportCardProcessesTable extends ControllerActionTable
 {
     const NEW_PROCESS = 1;
     const RUNNING = 2;
@@ -14,7 +14,7 @@ class InstitutionReportCardProcessesTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->belongsTo('ProfileTemplates', ['className' => 'ProfileTemplate.ProfileTemplates', 'foreignKey' => 'report_card_id']);
+        $this->belongsTo('StaffTemplates', ['className' => 'ProfileTemplate.StaffTemplates', 'foreignKey' => 'staff_profile_template_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
     }
 }
