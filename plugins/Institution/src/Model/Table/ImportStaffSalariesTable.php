@@ -39,6 +39,7 @@ class ImportStaffSalariesTable extends AppTable
     {
         $events = parent::implementedEvents();
         $newEvent = [
+            'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
             'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
         ];
@@ -126,5 +127,17 @@ class ImportStaffSalariesTable extends AppTable
                 ];
             }
         }
+    }
+
+    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    {
+        $staffData = TableRegistry::get('Security.Users');
+        $data = $staffData->find()
+                ->where([$staffData->aliasField('openemis_no') => $originalRow[0]])->first();
+
+        $StaffId = $data->id;
+        $tempRow['staff_id'] = $StaffId;
+        
+        return true;
     }
 }    
