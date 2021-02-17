@@ -1,3 +1,23 @@
+### [3.61.7] - 2021-02-02
+- Bug Fixed: Institution > Attendance > Students: Unable to view attendance and Secondary Teacher should be able to view and mark attendance
+
+### [3.61.6] - 2021-01-30
+- Implemented: Export Institutions > Visits
+- Bug Fixed: Institution > Staff > Professional > Qualifications/License tab > Add: 404 error
+- Bug Fixed: Profile and Directory pages: Encountered 404 error
+- Bug Fixed: Administration > Training > Courses > Add: 404 error
+- Bug Fixed: Reports > Institutions > Student Attendance Summary: Excel tab do not tally with the data on the Excel sheet
+- Bug Fixed: Institution > Students > Pending Transfer In/Out: Student awaiting for transfer with Open status not appearing in Pending Transfer In/Out
+- Bug Fixed: Institutions > Performance > Assessments : Students that are transferred out of school and get transferred back into same school status is not showing enrolled
+- Bug Fixed: Institutions > Attendance > Students > Export: Export file is not reflecting data correctly
+- Bug Fixed: Profiles > Students > Academic > Classes tab : System should not show record for ALL students
+- Bug Fixed: Administration > Academic Periods : Setting academic period to current should copy data from previous years
+- Bug Fixed: Institutions > Attendance > Students: Transferred student appeared in the Attendance list even before her Start Date
+- Bug Fixed: Workbench> Survey: Survey does not appear in workbench until user access institutions survey manually
+- Bug Fixed: Institution > Assessments : Missing marks for a specific class/subject
+- Bug Fixed: Institutions > Classes > Add : List of Homeroom/Secondary teacher is not populated
+- Bug Fixed: Institution > Attendance > Staff > Edit: Time in reverted to default time which is 7am after editing the Time In and Time Out
+
 ### [3.61.5] - 2021-01-21
 - Implemented: Improve readability of the student status in the current year
 - Implemented: Improvement of the school closing process

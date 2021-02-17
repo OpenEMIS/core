@@ -809,6 +809,26 @@ class NavigationComponent extends Component
                 'selected' => ['InfrastructureProjects.view', 'InfrastructureProjects.add', 'InfrastructureProjects.edit', 'InfrastructureProjects.delete']
             ],
 
+            'Meals' => [
+                'title' => 'Meals',
+                'parent' => 'Institutions.Institutions.index',
+                'link' => false
+            ],
+
+            'Institutions.MealProgramme' => [
+               'title' => 'Programme',
+                'parent' => 'Meals',
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['Institutions.MealProgramme']
+            ],
+
+            'Institutions.StudentMeals.index' => [
+                'title' => 'Students',
+                'parent' => 'Meals',
+                'selected' => ['Institutions.StudentMeals','Institutions.ImportStudentMeals'],
+                'params' => ['plugin' => 'Institution']
+            ],
+
             'Wash' => [
                 'title' => 'WASH',
                 'parent' => 'Infrastructures',
@@ -1142,11 +1162,16 @@ class NavigationComponent extends Component
 
     public function getProfileNavigation()
     {
+        //POCOR-5886 starts
+        $session = $this->request->session();
+        $profileUserId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        //POCOR-5886 ends
         $navigation = [
             'Profiles.Profiles.view' => [
                 'title' => 'General',
                 'parent' => 'Profiles.Profiles',
-                'params' => ['plugin' => 'Profile'],
+                //POCOR-5886 starts
+                'params' => ['plugin' => 'Profile', 'action' => 'Profiles', 0 => $profileUserId],//POCOR-5886 ends
                 'selected' => ['Profiles.Profiles.view', 'Profiles.Profiles.edit', 'Profiles.Profiles.pull', 'Profiles.Accounts', 'Profiles.Demographic', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'ProfileComments.index', 'ProfileComments.view', 'Profiles.Attachments', 'Profiles.History', 'Profiles.Contacts']
             ],
             'Profiles.Healths' => [
@@ -1179,11 +1204,16 @@ class NavigationComponent extends Component
 
     public function getDirectoryNavigation()
     {
+        //POCOR-5886 starts
+        $session = $this->request->session();
+        $directorUserId = $this->controller->paramsEncode(['id' => $session->read('Directory.Directories.id')]);
+        //POCOR-5886 ends
         $navigation = [
             'Directories.Directories.view' => [
                 'title' => 'General',
                 'parent' => 'Directories.Directories.index',
-                'params' => ['plugin' => 'Directory'],
+                //POCOR-5886 starts
+                'params' => ['plugin' => 'Directory', 'action' => 'Directories', 0=> $directorUserId],//POCOR-5886 ends
                 'selected' => ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.delete', 'Directories.Attachments',
                 'Directories.History', 'Directories.Contacts', 'Directories.Demographic']
             ],
@@ -1207,7 +1237,6 @@ class NavigationComponent extends Component
             ]
         ];
 
-        $session = $this->request->session();
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
         $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
         if (!empty($studentToGuardian) || !empty($guardianToStudent)) {
@@ -1864,6 +1893,13 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Textbook'],
                 'selected' => ['Textbooks.Textbooks', 'Textbooks.ImportTextbooks']
             ],
+
+            'Meals.programme' => [
+               'title' => 'Meals',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'Meal'],
+                'selected' => ['Meals.programme']
+            ],
             
             'Workflows.Workflows' => [
                 'title' => 'Workflow',
@@ -1892,6 +1928,7 @@ class NavigationComponent extends Component
                 'selected' => ['MoodleApiLog.index'],
                 'params' => ['plugin' => 'MoodleApi', 'controller' => 'MoodleApiLog', 'action' => 'index']
             ],
+            
             'Administration.Archive' => [
                 'title' => 'Archive',
                 'parent' => 'Administration',
