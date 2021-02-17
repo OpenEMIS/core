@@ -60,7 +60,11 @@ class StaffClassesTable extends ControllerActionTable
     {
         // POCOR-5914
         $staffId = $this->Session->read('Staff.Staff.id');
-
+        if (!empty($staffId)) {
+            $staffId = $this->Session->read('Staff.Staff.id');
+        } else {
+            $staffId =$this->Session->read('Auth.User.id');
+        }
         $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
         $classData = $InstitutionClassesSecondaryStaff->find()
                     ->select([$InstitutionClassesSecondaryStaff->aliasField('institution_class_id')])
