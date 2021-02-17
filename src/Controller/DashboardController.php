@@ -20,6 +20,7 @@ class DashboardController extends AppController
 
         $this->attachAngularModules();
         $this->triggerUnmarkedAttendanceShell();
+        $this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
 		
     }
@@ -254,6 +255,18 @@ class DashboardController extends AppController
 		$data['percentage'] = $profilePercentage;
         return $data;
     }
+
+    private function triggerAutomatedStudentWithdrawalShell()
+   {
+       $script = 'AutomatedStudentWithdrawalShell';
+       $consoleDir = ROOT . DS . 'bin' . DS;
+       $logs = ROOT . DS . 'logs' . DS . 'AutomatedStudentWithdrawalShell.log & echo $!';
+       $cmd = ROOT . DS . 'bin' . DS . 'cake AutomatedStudentWithdrawalShell';
+       $nohup = 'nohup ' . $cmd . '> /dev/null 2>/dev/null &';
+       exec($nohup);
+       Log::write('debug', $nohup); 
+   }
+
 //    private function triggerInstitutionClassSubjectsShell()
 //    {
 //        $script = 'InstitutionClassSubjects';
@@ -266,3 +279,5 @@ class DashboardController extends AppController
 //    }
     
 }
+////bin/cake/InstitutionClassSubjects 123
+//bin/cake AutomatedStudentWithdrawalShell migrate
