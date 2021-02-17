@@ -1,7 +1,7 @@
 <?php
 use Migrations\AbstractMigration;
 
-class POCOR5913 extends AbstractMigration
+class POCOR5913a extends AbstractMigration
 {
     /**
      * Change Method.
@@ -13,8 +13,8 @@ class POCOR5913 extends AbstractMigration
     public function up()
     {
         // Backup table
-        $this->execute('CREATE TABLE `zz_5913_import_mapping` LIKE `import_mapping`');
-        $this->execute('INSERT INTO `zz_5913_import_mapping` SELECT * FROM `import_mapping`');
+        $this->execute('CREATE TABLE `zz_5913a_import_mapping` LIKE `import_mapping`');
+        $this->execute('INSERT INTO `zz_5913a_import_mapping` SELECT * FROM `import_mapping`');
 
         // End
         $this->execute("UPDATE `import_mapping` SET `description` = 'OpenEMIS ID (Student)' WHERE `model` = 'Student.StudentGuardians' AND `column_name` = 'student_id'");
@@ -43,6 +43,6 @@ class POCOR5913 extends AbstractMigration
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `import_mapping`');
-        $this->execute('RENAME TABLE `zz_5913_import_mapping` TO `import_mapping`');
+        $this->execute('RENAME TABLE `zz_5913a_import_mapping` TO `import_mapping`');
     }
 }
