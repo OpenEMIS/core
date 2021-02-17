@@ -50,24 +50,34 @@ class TransitionTable extends ControllerActionTable
 	}
 
     public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
-    {   $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-
-        if ($action == 'add') {
-            $programmeOptions = $EducationProgrammes
+    {   
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $programmeOptions = $EducationProgrammes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                 ->find('availableProgrammes')
                 ->toArray();
-
+        if ($action == 'add') {
             $attr['type'] = 'select';
             $attr['options'] = $programmeOptions;
             $attr['onChangeReload'] = 'changeEducationProgrammeId';
-        } else if ($action == 'edit') {//echo "<pre>";print_r($attr['entity']);die();
-            $gradeId = $attr['entity']->education_grade_id;
-            $programmeId = $this->EducationGrades->get($gradeId)->education_programme_id;
-
-            $attr['type'] = 'readonly';
+        } else if ($action == 'edit') {
+            $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
+            $data = $EducationProgrammes->find()
+                    ->select([
+                        $EducationProgrammes->aliasField('id'),
+                        $EducationProgrammes->aliasField('code'),
+                        $EducationProgrammes->aliasField('name')
+                    ])
+                    ->where([$EducationProgrammes->aliasField('id') => $programmeId ])
+                    ->first();
+            
+            $attr['type'] = 'select';
+            $attr['options'] = $programmeOptions;
+            $attr['selected'] = $data->name;
             $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
+            $attr['attr']['value']['selected'] = $EducationProgrammes->get($programmeId)->name;
         }
+        //echo "<pre>";print_r($attr);die();
         return $attr;
     }
 
