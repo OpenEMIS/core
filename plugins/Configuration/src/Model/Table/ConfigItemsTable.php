@@ -52,7 +52,7 @@ class ConfigItemsTable extends AppTable
         $this->ControllerAction->field('name', ['visible' => ['index'=>true]]);
         $this->ControllerAction->field('default_value', ['visible' => ['view'=>true]]);
         
-        if ($this->request->query['type'] == 8) {
+        if ($this->request->query['type'] == 9) {
           $this->ControllerAction->field('default_value', ['visible' => ['index'=>true]]);
         }
 
@@ -645,6 +645,18 @@ class ConfigItemsTable extends AppTable
         'bet' => [
             'rule'  => ['range', 1, 10],
             'message' => 'Numeric Value should be between 0 to 11',
+            'last' => true
+        ]
+    ];
+
+    private $validateAutomatedStudentDaysAbsent = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Numeric Value should be between 0 to 365',
+        ],
+        'bet' => [
+            'rule'  => ['range', 1, 365],
+            'message' => 'Numeric Value should be between 0 to 365',
             'last' => true
         ]
     ];
