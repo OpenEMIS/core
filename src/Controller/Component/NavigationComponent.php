@@ -1478,6 +1478,7 @@ class NavigationComponent extends Component
                 'title' => 'Institutions',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
+                'selected' => ['Reports.ViewReport']
             ],
             'Reports.Profiles' => [
                 'title' => 'Profiles',
