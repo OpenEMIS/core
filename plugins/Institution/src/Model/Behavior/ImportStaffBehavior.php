@@ -12,8 +12,8 @@ use Cake\Network\Request;
 class ImportStaffBehavior extends Behavior 
 {
     public $importFeatureList = [
-        'Institution.Institutions.ImportStaff' => 'Import Satff',
-        'Institution.Institutions.ImportStaffSalaries' => 'Import Satff Salaries'
+        'Institution.Institutions.ImportStaff' => 'Import Staff',
+        'Institution.Institutions.ImportStaffSalaries' => 'Import Staff Salaries'
     ];
 
     public function implementedEvents()
