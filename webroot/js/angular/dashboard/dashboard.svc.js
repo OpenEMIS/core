@@ -250,18 +250,26 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         return title;
     };
 
-    function getWorkbenchColumnDefs(cols) {
-        var menuTabs = [];
-        var columnDefs = [];
+   
 
+    function getWorkbenchColumnDefs(cols) {
+        // var menuTabs = [];
+        var columnDefs = [];
+        var menuTabs = [ "filterMenuTab" ];
+        var filterParams = {
+            cellHeight: 30,
+            newRowsAction: 'keep'
+        };
         if (cols.indexOf('status') !== -1) {
             columnDefs.push({
                 headerName: "Status",
                 field: "status",
                 width: 150,
+                filterParams: filterParams,
                 menuTabs: menuTabs,
                 suppressSizeToFit: true,
                 filter: 'text',
+                
             });
         }
 
@@ -270,8 +278,10 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                 headerName: "Request Title",
                 menuTabs: menuTabs,
                 field: "request_title",
+                filterParams: filterParams,
                 filter: 'text',
                 cellRenderer: function(params) {
+                    // console.log(params)
                     if (typeof params.data !== 'undefined') {
                         var urlParams = params.data.url;
 
@@ -315,20 +325,27 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             columnDefs.push({
                 headerName: "Institution",
                 field: "institution",
-                filter: 'text',
+                filter: 'set',
                 menuTabs: menuTabs,
+                filterParams: filterParams,
                 width: 250,
                 suppressSizeToFit: true
             });
         }
 
+
         if (cols.indexOf('received_date') !== -1) {
             columnDefs.push({
                 headerName: "Received Date",
-                filter: 'date',
+                filter: 'set',
+                floatingFilter: true,
+                // valueFormatter: dateFormatter,
+                // comparator: dateComparator,
+                // inRangeInclusive:true,	
                 menuTabs: menuTabs,
                 field: "received_date",
-                width: 150,
+                filterParams: filterParams,
+                 width: 150,
                 suppressSizeToFit: true
             });
         }
@@ -351,6 +368,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
     };
 
     function getWorkbenchRowData(model, limit, page) {
+        // console.log('model', model);
         var success = function(response, deferred) {
             deferred.resolve(response);
         };
