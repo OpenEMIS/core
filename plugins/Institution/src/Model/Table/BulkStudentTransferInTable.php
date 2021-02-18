@@ -46,6 +46,10 @@ class BulkStudentTransferInTable extends ControllerActionTable
                 'WorkflowModels.model' => $this->_modelAlias
             ])
             ->toArray();
+        //remove open status because we are not getting start_date, end_date, institution class     
+        if (($key = array_search('Open', $this->_stepsOptions)) !== false) {
+            unset($this->_stepsOptions[$key]);
+        }
     }
 
     public function validationDefault(Validator $validator)
