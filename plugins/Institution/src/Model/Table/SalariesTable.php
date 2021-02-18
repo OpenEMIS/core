@@ -223,8 +223,7 @@ class SalariesTable extends ControllerActionTable
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'SalaryAdditions',
-            'SalaryDeductions'
+            'StaffSalaryTransactions'
         ]);
     }
 
