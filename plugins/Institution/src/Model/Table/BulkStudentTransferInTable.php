@@ -15,7 +15,8 @@ use App\Model\Table\ControllerActionTable;
 
 class BulkStudentTransferInTable extends ControllerActionTable
 {
-    private $_modelAlias = 'Institution.StudentTransferIn';
+   // private $_modelAlias = 'Institution.StudentTransferIn';
+    private $_modelAlias = 'Institution.StudentTransferOut';
     private $_stepsOptions;
     private $_currentData;
 
@@ -26,7 +27,8 @@ class BulkStudentTransferInTable extends ControllerActionTable
 
         $this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
         $this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentTransferIn', ['className' => 'Institution.StudentTransferIn', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        /*$this->hasMany('StudentTransferIn', ['className' => 'Institution.StudentTransferIn', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);*/
+        $this->hasMany('StudentTransferIn', ['className' => 'Institution.InstitutionStudentTransfers', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->toggle('index', false);
         $this->toggle('add', false);
@@ -85,20 +87,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
         } else {
             $statusId = key($this->_stepsOptions);
         }
-        /*$query->contain([
-            'WorkflowActions',
-            'WorkflowActions.NextWorkflowSteps',
-            'StudentAdmission'=> function ($q) use ($superAdmin, $userId, $institutionId) {
-                $q->where(['StudentAdmission.institution_id' => $institutionId])
-                    ->contain(['Users', 'Assignees', 'AcademicPeriods', 'EducationGrades', 'InstitutionClasses', 'Statuses']);
-                if ($superAdmin) {
-                    return $q;
-                } else {
-                    return $q->where(['StudentAdmission.assignee_id'=> $userId]);
-                }
-            },
-            'Workflows.WorkflowModels'
-        ])*/
+
         $query->contain([
             'WorkflowActions',
             'WorkflowActions.NextWorkflowSteps',
@@ -108,7 +97,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
                 if ($superAdmin) {
                     return $q;
                 } else {
-                    return $q->where(['StudentAdmission.assignee_id'=> $userId]);
+                    return $q->where(['StudentTransferIn.assignee_id'=> $userId]);
                 }
             },
             'Workflows.WorkflowModels'
@@ -117,10 +106,6 @@ class BulkStudentTransferInTable extends ControllerActionTable
             'WorkflowModels.model' => $this->_modelAlias,
             $this->aliasField('id') => $statusId
         ], [], true);
-
-        /*echo "<pre>"; print_r($query);
-die;    */
-
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -242,6 +227,7 @@ die;    */
             default:
                 break;
         }
+       
         return $attr;
     }
 
@@ -313,22 +299,22 @@ die;    */
         return $attr;
     }
 
-    public function onUpdateFieldBulkStudentAdmission(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldBulkStudentTransferIn(Event $event, array $attr, $action, Request $request)
     {
         switch ($this->action) {
             case 'edit':
                 $entity = $attr['entity'];
-                $students = $entity->student_admission;
+                $students = $entity->student_transfer_in;
                 break;
             case 'reconfirm':
-                $students  = $this->_currentData->student_admission;
+                $students  = $this->_currentData->student_transfer_in;
                 $attr['selectedStudents'] = ($this->_currentData->has('students'))? $this->_currentData->students : [];
                 break;
             default:
                 break;
         }
         $attr['type'] = 'element';
-        $attr['element'] = 'Institution.BulkStudentAdmission/students';
+        $attr['element'] = 'Institution.BulkStudentTransferIn/students';
         $attr['data'] = $students;
         return $attr;
     }
@@ -340,7 +326,7 @@ die;    */
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
-            'action' => 'BulkStudentAdmission',
+            'action' => 'BulkStudentTransferIn',
             'edit'
         ];
         $sessionKey = $this->registryAlias() . '.confirm';
@@ -357,7 +343,7 @@ die;    */
                     $currentData = $currentData->getArrayCopy();
                 }
                 $currentEntity = $this->patchEntity($currentEntity, $currentData, []);
-                return $this->saveBulkAdmission($currentEntity, new ArrayObject($currentData));
+                return $this->saveBulkStudentTransferIn($currentEntity, new ArrayObject($currentData));
             }
             $this->controller->set('data', $currentEntity);
         } else {
@@ -389,7 +375,7 @@ die;    */
                         $url = [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
-                            'action' => 'BulkStudentAdmission',
+                            'action' => 'BulkStudentTransferIn',
                             'reconfirm'
                         ];
                         $this->currentEntity = $entity;
@@ -410,20 +396,20 @@ die;    */
         };
         return $process;
     }
-    public function saveBulkAdmission(Entity $entity, ArrayObject $data)
+    public function saveBulkStudentTransferIn(Entity $entity, ArrayObject $data)
     {
-        $primaryKey = $this->StudentAdmission->primaryKey();
+        $primaryKey = $this->StudentTransferIn->primaryKey();
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
-            'action' => 'StudentAdmission',
+            'action' => 'StudentTransferIn',
             'index'
         ];
         $workflowTransitionObj = [];
         foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
             if ($studentObj['selected']) {
                 unset($studentObj['selected']);
-                foreach ($entity->student_admission as $key => $value) {
+                foreach ($entity->student_transfer_in as $key => $value) {
                     if ($value['id'] == $studentObj['id']) {
                         $existingEntityToUpdate = $value;
                         break;
@@ -434,10 +420,10 @@ die;    */
                 $existingEntityToUpdate->assignee_id = $data[$this->alias()]['assignee_id'];
                 $workflowModel = $entity->workflow->id;
                 $workflowAction = $this->getWorkflowActionEntity($entity);
-                if ($this->StudentAdmission->save($existingEntityToUpdate)) {
+                if ($this->StudentTransferIn->save($existingEntityToUpdate)) {
                     if (!empty($workflowAction->event_key)) {
                         $id = $existingEntityToUpdate->$primaryKey;
-                        $subject = $this->StudentAdmission;
+                        $subject = $this->StudentTransferIn;
                         $eventKeys = explode(",", $workflowAction->event_key);
 
                         foreach ($eventKeys as $eventKey) {
@@ -467,7 +453,7 @@ die;    */
             $session->delete($this->registryAlias() . '.Data');
         } else {
             $this->log($entity->errors(), 'debug');
-            $url['action'] = 'BulkStudentAdmission';
+            $url['action'] = 'BulkStudentTransferIn';
             $url[0] = 'edit';
         }
         return $this->controller->redirect($url);
@@ -488,7 +474,7 @@ die;    */
                 $cancelUrl = [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
-                            'action' => 'BulkStudentAdmission',
+                            'action' => 'BulkStudentTransferIn',
                             'edit'
                         ];
                 $cancelButton['url'] = $cancelUrl;
@@ -527,6 +513,6 @@ die;    */
         $this->field('next_step', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('assignee_id', ['entity' => $entity]);
         $this->field('comment', ['type' => 'text']);
-        $this->field('bulk_student_admission', ['entity' => $entity]);
+        $this->field('bulk_student_transfer_in', ['entity' => $entity]);
     }
 }
