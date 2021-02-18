@@ -64,8 +64,8 @@ class POCOR5182 extends AbstractMigration
             ],
             [
                 'model' => 'Institution.Salaries',
-                'column_name' => 'amount',
-                'description' => 'addition',
+                'column_name' => 'amount_addition',
+                'description' => NULL,
                 'order' => 5,
                 'is_optional' => 1,
                 'foreign_key' => 0,
@@ -86,8 +86,8 @@ class POCOR5182 extends AbstractMigration
             ],
             [
                 'model' => 'Institution.Salaries',
-                'column_name' => 'amount',
-                'description' => 'deduction',
+                'column_name' => 'amount_deduction',
+                'description' => NULL,
                 'order' => 7,
                 'is_optional' => 1,
                 'foreign_key' => 0,
