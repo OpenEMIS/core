@@ -39,6 +39,7 @@ class ImportStaffSalariesTable extends AppTable
     {
         $events = parent::implementedEvents();
         $newEvent = [
+            //'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
             'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
@@ -130,14 +131,43 @@ class ImportStaffSalariesTable extends AppTable
     }
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
-    {
+    { 
         $staffData = TableRegistry::get('Security.Users');
         $data = $staffData->find()
-                ->where([$staffData->aliasField('openemis_no') => $originalRow[0]])->first();
-
-        $StaffId = $data->id;
-        $tempRow['staff_id'] = $StaffId;
+                ->where([$staffData->aliasField('openemis_no') => $originalRow[0]])->toArray();
         
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
+                $StaffId = $value->id;
+            }
+        }
+        $tempRow['staff_id'] = $StaffId; 
+        $grossSal = $tempRow['gross_salary'];
+        $addAmount = $tempRow['amount_addition'];
+        $deductAmount = $tempRow['amount_deduction'];
+        $StaffSalaries = TableRegistry::get('Institution.Salaries');
+        $id = $StaffSalaries->find()->last()->id;
+        $StaffSalaries = TableRegistry::get('Institution.Salaries');
+        $tempRow['net_salary'] =  $grossSal + $addAmount - $deductAmount;
+        if (!empty($addAmount)) {
+                $StaffSalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
+                $data = $StaffSalaryTransactions->newEntity();
+                $data->amount = $addAmount;
+                $data->salary_addition_type_id = $tempRow['salary_addition_type_id'];
+                $data->salary_deduction_type_id = 0;
+                $data->staff_salary_id = $id + 1; 
+                $StaffSalaryTransactions->save($data);
+        }
+        if (!empty($deductAmount)) {
+                $StaffSalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
+                $data = $StaffSalaryTransactions->newEntity();
+                $data->amount = $deductAmount;
+                $data->salary_addition_type_id = 0;
+                $data->salary_deduction_type_id = $tempRow['salary_deduction_type_id'];
+                $data->staff_salary_id = $id + 1; 
+                $StaffSalaryTransactions->save($data);
+        }
+
         return true;
     }
 }    
