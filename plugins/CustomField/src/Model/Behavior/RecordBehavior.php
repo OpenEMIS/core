@@ -779,7 +779,9 @@ class RecordBehavior extends Behavior
             $where =[];
             if ($entity->survey_form['custom_module_id'] == 1 && isset($model->request->query['tab_section'])){
                 $tabSection = $model->request->query['tab_section'];
-                $where[] = $query->newExpr('REPLACE(REPLACE(' . $this->CustomFormsFields->aliasField('section') . ', " ", "-" ), ".","") = "'.$tabSection.'"');
+                //POCOR-4850[START]
+                // $where[] = $query->newExpr('REPLACE(REPLACE(' . $this->CustomFormsFields->aliasField('section') . ', " ", "-" ), ".","") = "'.$tabSection.'"');
+                //POCOR-4850[END]
             }
             $customFields = $query
                 ->where([
