@@ -1,3 +1,22 @@
+### [3.62.0] - 2021-02-19
+- Implemented: Infrastructure module - Export feature
+- Implemented: Enhancement of the Core survey module: survey school coverage feature
+- Implemented: Staff Payslips feature
+- Implemented: Changes to student and staff health vaccination
+- Implemented: Import feature for importing the student marks on the assessments from Excel
+- Implemented: Allow user to view the reports in browser and add export / print the report
+- Implemented: Improvement of the Workbench functions
+- Implemented: Import Staff Salaries function
+- Bug Fixed: Institutions > Meals > Students: To add All Days page
+- Bug Fixed: Institutions > Students > Meal: Add permission to view and allow students to view their own student meal page
+- Bug Fixed: Reports > Workflows: Add Areas to filter institutions list
+- Bug Fixed: Institutions > Student > Academic > Programmes: End Date was not update when Academic Period End Date was changed
+- Bug Fixed: Daily recording of Meal distribution issue
+- Bug Fixed: Institutions > Attendance > Student: Student Transferred still appears in both Institutions if Transfer is in the middle of the week
+- Bug Fixed: Institutions > Staff > Career > Class: Staff is assigned as Secondary Teacher but did not appear in Class tab
+- Bug Fixed: Institutions > Survey > Forms: Forms with sections that have special characters is not working
+- Bug Fixed: Institutions > Staff > Salary: Data is not saved in staff_salary_transactions table
+
 ### [3.61.10] - 2021-02-09
 - Bug Fixed: Institutions > Attendance > Students: Student transferred to a new Institution and then transferred back to the old Institution has double record in Attendance page
 - Bug Fixed: Staff > Institution > Staff > Pending Transfer In > Approve: Encountered 404 error
