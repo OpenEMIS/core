@@ -61,6 +61,7 @@ class InstitutionReportCardsTable extends AppTable
                 'StaffQualificationDuties',
                 'StaffQualificationPositions',
                 'StaffQualificationStaffType',
+                'InstitutionCommittees',
             ]
         ]);
     }
@@ -104,6 +105,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationDuties'] = 'onExcelTemplateInitialiseStaffQualificationDuties';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationPositions'] = 'onExcelTemplateInitialiseStaffQualificationPositions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualificationStaffType'] = 'onExcelTemplateInitialiseStaffQualificationStaffType';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionCommittees'] = 'onExcelTemplateInitialiseInstitutionCommittees';
 		return $events;
     }
 
@@ -111,7 +113,7 @@ class InstitutionReportCardsTable extends AppTable
     {
         $InstitutionReportCards = TableRegistry::get('Institution.InstitutionReportCards');
         if (!$InstitutionReportCards->exists($params)) {
-            // insert student report card record if it does not exist
+            // insert institution report card record if it does not exist
             $params['status'] = $InstitutionReportCards::IN_PROGRESS;
             $params['started_on'] = date('Y-m-d H:i:s');
             $newEntity = $InstitutionReportCards->newEntity($params);
@@ -1515,6 +1517,21 @@ class InstitutionReportCardsTable extends AppTable
                 ];
 			}
             return $result;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseInstitutionCommittees(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionCommittees = TableRegistry::get('institution_committees');
+			$entity = $InstitutionCommittees
+				->find()
+				->where([$InstitutionCommittees->aliasField('academic_period_id') => $params['academic_period_id']])
+				->where([$InstitutionCommittees->aliasField('institution_id') => $params['institution_id']])
+				->hydrate(false)
+				->first()
+			;
+            return $entity;
         }
     }
 
