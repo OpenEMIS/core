@@ -74,6 +74,7 @@ class ProfilesTable extends ControllerActionTable
         $events['ControllerAction.Model.generate'] = 'generate';
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
+		$events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
         $events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
         $events['ControllerAction.Model.downloadPDF'] = 'downloadPDF';
         $events['ControllerAction.Model.publish'] = 'publish';
@@ -345,11 +346,20 @@ class ProfilesTable extends ControllerActionTable
 
                 // Download all button
                 if ($generatedCount > 0 || $publishedCount > 0) {
+                    $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
+                    $downloadButtonPdf['type'] = 'button';
+                    $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                    $downloadButtonPdf['attr'] = $toolbarAttr;
+                    $downloadButtonPdf['attr']['title'] = __('Download All PDF');
+                    $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
+                }
+
+                if ($generatedCount > 0 || $publishedCount > 0) {
                     $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
                     $downloadButton['type'] = 'button';
                     $downloadButton['label'] = '<i class="fa kd-download"></i>';
                     $downloadButton['attr'] = $toolbarAttr;
-                    $downloadButton['attr']['title'] = __('Download All');
+                    $downloadButton['attr']['title'] = __('Download All Excel');
                     $extra['toolbarButtons']['downloadAll'] = $downloadButton;
                 }
 
@@ -647,6 +657,60 @@ class ProfilesTable extends ControllerActionTable
 
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
+    }
+	
+	public function downloadAllPdf(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
+
+        // only download report cards with generated or published status
+        $statusArray = [self::GENERATED, self::PUBLISHED];
+
+        $files = $this->InstitutionReportCards->find()
+            ->contain(['ProfileTemplates'])
+            ->where([
+                $this->InstitutionReportCards->aliasField('report_card_id') => $params['report_card_id'],
+                $this->InstitutionReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
+                $this->InstitutionReportCards->aliasField('status IN ') => $statusArray,
+                $this->InstitutionReportCards->aliasField('file_name IS NOT NULL'),
+                $this->InstitutionReportCards->aliasField('file_content IS NOT NULL')
+            ])
+            ->toArray();
+            
+        if (!empty($files)) {
+            $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
+            $zipName = 'InstitutionReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $filepath = $path . $zipName;
+           
+            $zip = new ZipArchive;
+            $zip->open($filepath, ZipArchive::CREATE);
+            
+            foreach ($files as $file) {
+				$fileName = $file->file_name;
+				$fileNameData = explode(".",$fileName);
+				$fileName = $fileNameData[0].'.pdf';
+                
+				$zip->addFromString($fileName,  $this->getFile($file->file_content_pdf));
+             
+            }
+            $zip->close();
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/zip");
+            header("Content-Length: ".filesize($filepath));
+            header("Content-Disposition: attachment; filename=".$zipName);
+            readfile($filepath);
+
+            // delete file after download
+            unlink($filepath);
+        } else {
+            $event->stopPropagation();
+            $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
+            return $this->controller->redirect($this->url('index'));
+        }
     }
 
     public function downloadAll(Event $event, ArrayObject $extra)
