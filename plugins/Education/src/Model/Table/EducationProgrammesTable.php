@@ -140,7 +140,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     }
 
     public function onUpdateFieldEducationCycleId(Event $event, array $attr, $action, Request $request) {
-        list(,, $cycleOptions, $selectedCycle) = array_values($this->getSelectOptions());
+        list(,,,, $cycleOptions, $selectedCycle) = array_values($this->getSelectOptions());
         $attr['options'] = $cycleOptions;
         if ($action == 'add') {
             $attr['default'] = $selectedCycle;
@@ -193,16 +193,18 @@ class EducationProgrammesTable extends ControllerActionTable {
         
         //Return all required options and their key
         $levelOptions = $this->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod);
-        $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
 
+        $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+         
         $cycleOptions = $this->EducationCycles
                 ->find('list')
                 ->find('visible')
                 ->find('order')
                 ->where([$this->EducationCycles->aliasField('education_level_id') => $selectedLevel])
                 ->toArray();
+        
         $selectedCycle = !is_null($this->request->query('cycle')) ? $this->request->query('cycle') : key($cycleOptions);
-
+        
         return compact('academicPeriodOptions', 'selectedAcademicPeriod', 'levelOptions', 'selectedLevel', 'cycleOptions', 'selectedCycle');
     }
 
