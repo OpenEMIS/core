@@ -594,7 +594,7 @@ class NavigationComponent extends Component
                 'title' => 'Staff',
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.Staff', 'Institutions.StaffTransferIn', 'Institutions.StaffTransferOut', 'StaffHistories.index']
+                'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.ImportStaffSalaries', 'Institutions.Staff', 'Institutions.StaffTransferIn', 'Institutions.StaffTransferOut', 'StaffHistories.index']
             ],
 
             'Institution.Attendance' => [
@@ -660,7 +660,7 @@ class NavigationComponent extends Component
             'Institutions.Assessments.index' => [
                 'title' => 'Assessments',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive'],
+                'selected' => ['Institutions.Assessments', 'Institutions.Results', 'Institutions.AssessmentsArchive', 'Institutions.ImportAssessmentItemResults.add', 'Institutions.ImportAssessmentItemResults.results'],
                 'params' => ['plugin' => 'Institution'],
             ],
 
@@ -1079,7 +1079,14 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
                 'selected' => ['Students.StudentVisitRequests', 'Students.StudentVisits']
-            ]
+            ],
+            'Students.Meals' => [
+                'title' => 'Meals',
+                'parent' => 'Institutions.Students.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.Meals']
+            ],
+
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
@@ -1119,7 +1126,7 @@ class NavigationComponent extends Component
                 'title' => 'Finance',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.BankAccounts', 'Staff.Salaries', 'Staff.ImportSalaries']
+                'selected' => ['Staff.BankAccounts', 'Staff.Salaries', 'Staff.ImportSalaries', 'Staff.Payslips']
             ],
             'Institutions.StaffTrainingNeeds' => [
                 'title' => 'Training',
@@ -1259,7 +1266,7 @@ class NavigationComponent extends Component
                 'title' => 'Finance',
                 'parent' => 'Profiles.Staff',
                 'params' => ['plugin' => 'Profile', 'type' => 'staff'],
-                'selected' => ['Profiles.StaffBankAccounts', 'Profiles.StaffSalaries', 'Profiles.ImportSalaries']
+                'selected' => ['Profiles.StaffBankAccounts', 'Profiles.StaffSalaries', 'Profiles.ImportSalaries','Profiles.StaffPayslips']
             ],
             'Profiles.TrainingNeeds' => [
                 'title' => 'Training',
@@ -1382,7 +1389,7 @@ class NavigationComponent extends Component
                 'title' => 'Finance',
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory', 'type' => 'staff'],
-                'selected' => ['Directories.StaffBankAccounts', 'Directories.StaffSalaries', 'Directories.ImportSalaries']
+                'selected' => ['Directories.StaffBankAccounts', 'Directories.StaffSalaries', 'Directories.ImportSalaries','Directories.StaffPayslips']
             ],
             'Directories.TrainingNeeds' => [
                 'title' => 'Training',
@@ -1471,6 +1478,7 @@ class NavigationComponent extends Component
                 'title' => 'Institutions',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
+                'selected' => ['Reports.ViewReport']
             ],
             'Reports.Profiles' => [
                 'title' => 'Profiles',
