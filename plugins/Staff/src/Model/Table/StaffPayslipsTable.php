@@ -35,6 +35,10 @@ class StaffPayslipsTable extends ControllerActionTable
             $response["openemis_id"][] ="Field Can not be empty";
             $entity->errors($response);
                 return false;
+        }else if(!isset($entity->description)){
+            $response["description"][] ="Field Can not be empty";
+            $entity->errors($response);
+                return false;
         }else if(!isset($entity->file_name)){
             $response["file_name"][] ="Field Can not be empty";
             $entity->errors($response);
