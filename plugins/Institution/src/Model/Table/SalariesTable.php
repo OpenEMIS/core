@@ -1,5 +1,5 @@
 <?php
-namespace Staff\Model\Table;
+namespace Institution\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
@@ -17,9 +17,8 @@ class SalariesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->hasMany('SalaryAdditions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('SalaryDeductions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('SalaryTransactions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffSalaryTransactions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
+
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportSalaries']);
 
         $this->addBehavior('Excel', [
@@ -122,15 +121,16 @@ class SalariesTable extends ControllerActionTable
         $totalAddition = 0;
         $totalDeduction = 0;
 
-        $SalaryAdditions = TableRegistry::get('Staff.SalaryAdditions');
+        $SalaryAdditions = TableRegistry::get('Staff.StaffSalaryTransactions');
         $present = [];
         if ($entity->has('salary_additions')) {
             foreach ($entity->salary_additions as $key => $value) {
-                if ($value->has('amount')) {
+                if (!empty($value['amount'])) {
                     $totalAddition += $value->amount;
                 }
-                if ($value->has($SalaryAdditions->primaryKey())) {
-                    $present[] = $value->{$SalaryAdditions->primaryKey()};
+                //echo "<pre>";print_r($value->{$SalaryAdditions->primaryKey()});die("ddd");
+                if ($value['salary_addition_type_id']) {
+                    $present[] = $value['salary_addition_type_id'];
                 }
             }
         }
@@ -142,15 +142,15 @@ class SalariesTable extends ControllerActionTable
         }
         $SalaryAdditions->deleteAll($deleteOptions);
 
-        $SalaryDeductions = TableRegistry::get('Staff.SalaryDeductions');
+        $SalaryDeductions = TableRegistry::get('Staff.StaffSalaryTransactions');
         $present = [];
         if ($entity->has('salary_deductions')) {
             foreach ($entity->salary_deductions as $key => $value) {
-                if ($value->has('amount')) {
+                if (!empty($value['amount'])) {
                     $totalDeduction += $value->amount;
                 }
-                if ($value->has($SalaryDeductions->primaryKey())) {
-                    $present[] = $value->{$SalaryDeductions->primaryKey()};
+                if ($value['salary_deduction_type_id']) {
+                    $present[] = $value['salary_deduction_type_id'];
                 }
             }
         }
@@ -166,7 +166,32 @@ class SalariesTable extends ControllerActionTable
 
         $entity = $this->patchEntity($entity, $data);
     }
-
+    //POCOR-5915
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData) {
+        if (!empty($requestData['Salaries']['salary_additions'])) {
+            foreach ($requestData['Salaries']['salary_additions'] as $key => $value) {
+                $StaffSalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
+                $data = $StaffSalaryTransactions->newEntity();
+                $data->amount = $value['amount'];
+                $data->salary_addition_type_id = $value['salary_addition_type_id'];
+                $data->salary_deduction_type_id = 0;
+                $data->staff_salary_id = $entity->id; //$requestData['Salaries']['staff_id'];
+                $StaffSalaryTransactions->save($data);
+            }
+        }
+        if (!empty($requestData['Salaries']['salary_deductions'])) {
+            foreach ($requestData['Salaries']['salary_deductions'] as $key => $value) {
+                $StaffSalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
+                $data = $StaffSalaryTransactions->newEntity();
+                $data->amount = $value['amount'];
+                $data->salary_addition_type_id = 0;
+                $data->salary_deduction_type_id = $value['salary_deduction_type_id'];
+                $data->staff_salary_id = $entity->id; //$requestData['Salaries']['staff_id'];
+                $StaffSalaryTransactions->save($data);
+            }
+        }
+    }
+    //POCOR-5915
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         if (array_key_exists($this->alias(), $data)) {
@@ -197,44 +222,17 @@ class SalariesTable extends ControllerActionTable
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $paramsPass = $this->paramsDecode($this->ControllerAction->paramsPass()[1]);
-        $SalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
-        $findData = $SalaryTransactions->find()
-                    ->select([
-                      $SalaryTransactions->aliasField('salary_addition_type_id'),
-                      $SalaryTransactions->aliasField('salary_deduction_type_id')   
-                    ])
-                    ->where([$SalaryTransactions->aliasField('staff_salary_id') => $paramsPass['id']])->toArray();
-        
-        $addition  = $deduction = []; 
-        if (!empty($findData)) {
-            foreach ($findData as $key => $value) {
-               $addition[] = $value->salary_addition_type_id;
-               $deduction[] = $value->salary_deduction_type_id;        
-            }
-            if (!empty($addition[0]) && empty($deduction[1])) {
-                $query->contain([
-                            'SalaryAdditions'
-                ]);
-            } elseif (empty($addition[0]) && !empty($deduction[1])) {
-                $query->contain([
-                            'SalaryDeductions'
-                ]);
-            } else {
-                   $query->contain([
-                        'SalaryAdditions',
-                        'SalaryDeductions'
-                    ]);    
-            }
-        }
+        $query->contain([
+            'StaffSalaryTransactions'
+        ]);
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['additions']['visible'] = false;
+        $this->fields['gross_salary']['type'] = 'string';
         $this->fields['deductions']['visible'] = false;
 
-        $this->fields['gross_salary']['type'] = 'string';
         $this->fields['net_salary']['type'] = 'string';
 
         //$this->fields['gross_salary']['attr']['step'] = 0.00;
@@ -272,18 +270,18 @@ class SalariesTable extends ControllerActionTable
     {
         $data[$this->alias()]['salary_additions'][] = ['amount' => '0.00'];
         $options['associated'] = [
-            'SalaryAdditions' => ['validate' => false],
+            'StaffSalaryTransactions' => ['validate' => false],
             //'SalaryDeductions' => ['validate' => false]
         ];
-        //echo "<pre>";print_r( $options);die();
+        //echo "<pre>";print_r($options['associated']);die("1");
     }
 
     public function addEditOnDeductRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
+    {//die("22");
         $data[$this->alias()]['salary_deductions'][] = ['amount' => '0.00'];
         $options['associated'] = [
             //'SalaryAdditions' => ['validate' => false],
-            'SalaryDeductions' => ['validate' => false]
+            'StaffSalaryTransactions' => ['validate' => false]
         ];
     }
 

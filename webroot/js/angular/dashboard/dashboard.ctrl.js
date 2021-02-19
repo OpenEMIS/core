@@ -152,55 +152,21 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                     rowData: [],
                     headerHeight: 38,
                     rowHeight: 38,
+                    // minColWidth: 200,
                     enableColResize: true,
-                    enableSorting: false,
+                    enableSorting: true,
                     unSortIcon: true,
-                    enableFilter: false,
+                    enableFilter: true,
                     suppressMenuHide: true,
                     suppressMovableColumns: true,
-                    rowModelType: 'infinite',
-                    localeText: localeText,
-                    pagination: true,
-                    paginationPageSize: 10,
-                    maxBlocksInCache: 1,
-                    cacheBlockSize: 10,
-                    // Removed options - Issues in ag-Grid AG-828
-                    // suppressCellSelection: true,
-
-                    // Added options
                     suppressContextMenu: true,
                     stopEditingWhenGridLosesFocus: true,
                     ensureDomOrder: true,
-                    onGridSizeChanged: function(e) {
+                    suppressCellSelection: true,
+                    onGridSizeChanged: function() {
                         this.api.sizeColumnsToFit();
-                    }
-                };
-            }, function(error) {
-                vm.gridOptions[target] = {
-                    columnDefs: [],
-                    rowData: [],
-                    headerHeight: 38,
-                    rowHeight: 38,
-                    enableColResize: true,
-                    enableSorting: false,
-                    unSortIcon: true,
-                    enableFilter: false,
-                    suppressMenuHide: true,
-                    suppressMovableColumns: true,
-                    rowModelType: 'infinite',
-                    paginationPageSize: 10,
-                    maxBlocksInCache: 1,
-                    cacheBlockSize: 10,
-                    // Removed options - Issues in ag-Grid AG-828
-                    // suppressCellSelection: true,
-
-                    // Added options
-                    suppressContextMenu: true,
-                    stopEditingWhenGridLosesFocus: true,
-                    ensureDomOrder: true,
-                    onGridSizeChanged: function(e) {
-                        this.api.sizeColumnsToFit();
-                    }
+                    },
+                   
                 };
             });
     }
@@ -220,6 +186,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         textToTranslate.push(vm.workbenchTitle);
         DashboardSvc.translate(textToTranslate)
             .then(function(res) {
+                // console.log('res', res);
                 var maxCount = res.length - 1;
                 angular.forEach(res, function(value, key) {
                     if (key < maxCount) {
@@ -233,33 +200,56 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
             }, function(error) {
                 console.log(error);
             });
-
-        var limit = 10;
-        var dataSource = {
-            pageSize: limit,
-            getRows: function(params) {
-                var page = parseInt(params.startRow / limit) + 1;
-
-                UtilsSvc.isAppendSpinner(true, 'dashboard-workbench-table');
+            var limit = 0;
+            var page = 0;
+            var rows;
+            UtilsSvc.isAppendSpinner(true, 'dashboard-workbench-table');
                 DashboardSvc.getWorkbenchRowData(model, limit, page)
                     .then(function(response) {
+                        // console.log(response)
                         var lastRowIndex = response.data.total;
 
                         if (lastRowIndex > 0) {
-                            var rows = response.data.data;
-                            params.successCallback(rows, lastRowIndex);
-                        } else {
-                            params.failCallback();
-                        }
+                           rows = response.data.data;
+                             vm.gridOptions[vm.target].api.setRowData(rows)
+                            //  console.log('row end');
+                           
+                        } 
+                        
                     }, function(error) {
                         console.log(error);
                     })
                     .finally(function() {
                         UtilsSvc.isAppendSpinner(false, 'dashboard-workbench-table');
                     });
-            }
-        };
+                  
 
-        vm.gridOptions[vm.target].api.setDatasource(dataSource);
+        // var limit = 10;
+        // var dataSource = {
+        //     pageSize: limit,
+        //     getRows: function(params) {
+        //         var page = parseInt(params.startRow / limit) + 1;
+
+        //         UtilsSvc.isAppendSpinner(true, 'dashboard-workbench-table');
+        //         DashboardSvc.getWorkbenchRowData(model, limit, page)
+        //             .then(function(response) {
+        //                 var lastRowIndex = response.data.total;
+
+        //                 if (lastRowIndex > 0) {
+        //                     var rows = response.data.data;
+        //                     params.successCallback(rows, lastRowIndex);
+        //                 } else {
+        //                     params.failCallback();
+        //                 }
+        //             }, function(error) {
+        //                 console.log(error);
+        //             })
+        //             .finally(function() {
+        //                 UtilsSvc.isAppendSpinner(false, 'dashboard-workbench-table');
+        //             });
+        //     }
+        // };
+
+        // vm.gridOptions[vm.target].api.setRowData(dataSource);
     }
 }
