@@ -258,10 +258,10 @@ class DashboardController extends AppController
 
     private function triggerAutomatedStudentWithdrawalShell()
    {
-       $script = 'AutomatedStudentWithdrawalShell';
+       $script = 'AutomatedStudentWithdrawal';
        $consoleDir = ROOT . DS . 'bin' . DS;
-       $logs = ROOT . DS . 'logs' . DS . 'AutomatedStudentWithdrawalShell.log & echo $!';
-       $cmd = ROOT . DS . 'bin' . DS . 'cake AutomatedStudentWithdrawalShell';
+       $logs = ROOT . DS . 'logs' . DS . 'AutomatedStudentWithdrawal.log & echo $!';
+       $cmd = ROOT . DS . 'bin' . DS . 'cake AutomatedStudentWithdrawal';
        $nohup = 'nohup ' . $cmd . '> /dev/null 2>/dev/null &';
        exec($nohup);
        Log::write('debug', $nohup); 
