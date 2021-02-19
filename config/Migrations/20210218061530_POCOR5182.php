@@ -1,7 +1,7 @@
 <?php
 use Migrations\AbstractMigration;
 
-class POCOR5182 extends AbstractMigration
+class POCOR5895 extends AbstractMigration
 {
     /**
      * Change Method.
@@ -12,109 +12,76 @@ class POCOR5182 extends AbstractMigration
      */
     public function up()
     {
-        //backup
-        $this->execute('CREATE TABLE `z_5182_import_mapping` LIKE `import_mapping`');
-        $this->execute('INSERT INTO `z_5182_import_mapping` SELECT * FROM `import_mapping`');
 
-        //import_mapping
-        $data = [
-            [
-                'model' => 'Institution.Salaries',
-                'column_name' => 'staff_id',
-                'description' => 'OpenEMIS ID',
-                'order' => 1,
-                'is_optional' => 0,
-                'foreign_key' => 0, 
-                'lookup_plugin' => NULL,
-                'lookup_model' => NULL,
-                'lookup_column' => NULL
+        $this->execute('CREATE TABLE `zz_5895_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `zz_5895_security_functions` SELECT * FROM `security_functions`');
+
+        $this->execute('CREATE TABLE `z_5895_locale_contents` LIKE `locale_contents`');
+        $this->execute('INSERT INTO `z_5895_locale_contents` SELECT * FROM `locale_contents`');
+
+        // Create tables staff_payslips
+       
+        //$this->execute("CREATE TABLE `staff_payslips` ( `id` int(11) NOT NULL AUTO_INCREMENT, `name` varchar(250) NOT NULL,`description` text, `file_name` varchar(250) NOT NULL, `file_content` longblob NOT NULL,`staff_id` int(11) NOT NULL COMMENT 'links to security_users.id', `modified_user_id` int(11) DEFAULT NULL, `modified` datetime DEFAULT NULL, `created_user_id` int(11) NOT NULL, `created` datetime NOT NULL, PRIMARY KEY (`id`) )");
+
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 409');
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 410');
+
+         $data = [
+            [ 
+                'name' => 'Payslips', 
+                'controller' => 'Staff',
+                'module' => 'Institutions',
+                'category' => 'Staff - Finance',
+                'parent_id' => 3000,
+                '_view' => 'Payslips.index|Payslips.view',
+                '_edit' => 'Payslips.edit',
+                '_add' => 'Payslips.add',
+                '_delete' => 'Payslips.remove',
+                'order' => 410,
+                'created_user_id' => 1,
+                'created' =>date('Y-m-d H:i:s')
+                  
             ],
-            [
-                'model' => 'Institution.Salaries',
-                'column_name' => 'salary_date',
-                'description' => '( DD/MM/YYYY )',
-                'order' => 2,
-                'is_optional' => 0,
-                'foreign_key' => 0, 
-                'lookup_plugin' => NULL,
-                'lookup_model' => NULL,
-                'lookup_column' => NULL
-            ],
-            [
-                'model' => 'Institution.Salaries',
-                'column_name' => 'gross_salary',
-                'description' => NULL,
-                'order' => 3,
-                'is_optional' => 0,
-                'foreign_key' => 0,
-                'lookup_plugin' => NULL,
-                'lookup_model' => NULL,
-                'lookup_column' => NULL
-            ],
-            [
-                'model' => 'Institution.Salaries',
-                'column_name' => 'salary_addition_type_id',
-                'description' => NULL,
-                'order' => 4,
-                'is_optional' => 1,
-                'foreign_key' => 2,
-                'lookup_plugin' => 'Staff',
-                'lookup_model' => 'SalaryAdditionTypes',
-                'lookup_column' => 'id'
-            ],
-            [
-                'model' => 'Institution.Salaries',
-                'column_name' => 'amount_addition',
-                'description' => NULL,
-                'order' => 5,
-                'is_optional' => 1,
-                'foreign_key' => 0,
-                'lookup_plugin' => NULL,
-                'lookup_model' => NULL,
-                'lookup_column' => NULL
-            ],
-            [
-                'model' => 'Institution.Salaries',
-                'column_name' => 'salary_deduction_type_id',
-                'description' => NULL,
-                'order' => 6,
-                'is_optional' => 1,
-                'foreign_key' => 2,
-                'lookup_plugin' => 'Staff',
-                'lookup_model' => 'SalaryDeductionTypes',
-                'lookup_column' => 'id'
-            ],
-            [
-                'model' => 'Institution.Salaries',
-                'column_name' => 'amount_deduction',
-                'description' => NULL,
-                'order' => 7,
-                'is_optional' => 1,
-                'foreign_key' => 0,
-                'lookup_plugin' => NULL,
-                'lookup_model' => NULL,
-                'lookup_column' => NULL
-            ],
-            [
-                'model' => 'Institution.Salaries',
-                'column_name' => 'comment',
-                'description' => '(Optional)',
-                'order' => 8,
-                'is_optional' => 1,
-                'foreign_key' => 0,
-                'lookup_plugin' => NULL,
-                'lookup_model' => NULL,
-                'lookup_column' => NULL
+            [ 
+                'name' => 'Payslips', 
+                'controller' => 'Directories',
+                'module' => 'Directory',
+                'category' => 'Staff - Finance',
+                'parent_id' => 7000,
+                '_view' => 'StaffPayslips.index|StaffPayslips.view',
+                'order' => 411,
+                'created_user_id' => 1,
+                'created' =>date('Y-m-d H:i:s')
+                  
             ]
         ];
+        
+        $this->insert('security_functions', $data);
 
-        $this->insert('import_mapping', $data);
+        $data = [
+
+            [ 
+                'en' => 'Payslips', 
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+                  
+            ]
+        ];
+        
+        $this->insert('locale_contents', $data);
+
+
     }
 
-    //rollback
     public function down()
     {
-        $this->execute('DROP TABLE IF EXISTS `import_mapping`');
-        $this->execute('RENAME TABLE `z_5182_import_mapping` TO `import_mapping`');
+        // For tables
+        //$this->execute('DROP TABLE IF EXISTS `staff_payslips`');
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('RENAME TABLE `zz_5895_security_functions` TO `security_functions`');
+        
+        $this->execute('DROP TABLE IF EXISTS `locale_contents`');
+        $this->execute('RENAME TABLE `z_5895_locale_contents` TO `locale_contents`');
+        
     }
 }
