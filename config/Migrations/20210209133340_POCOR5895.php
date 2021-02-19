@@ -21,7 +21,7 @@ class POCOR5895 extends AbstractMigration
 
         // Create tables staff_payslips
        
-        $this->execute("CREATE TABLE `staff_payslips` ( `id` int(11) NOT NULL AUTO_INCREMENT, `name` varchar(250) NOT NULL,`description` text, `file_name` varchar(250) NOT NULL, `file_content` longblob NOT NULL,`staff_id` int(11) NOT NULL COMMENT 'links to security_users.id', `modified_user_id` int(11) DEFAULT NULL, `modified` datetime DEFAULT NULL, `created_user_id` int(11) NOT NULL, `created` datetime NOT NULL, PRIMARY KEY (`id`) )");
+        //$this->execute("CREATE TABLE `staff_payslips` ( `id` int(11) NOT NULL AUTO_INCREMENT, `name` varchar(250) NOT NULL,`description` text, `file_name` varchar(250) NOT NULL, `file_content` longblob NOT NULL,`staff_id` int(11) NOT NULL COMMENT 'links to security_users.id', `modified_user_id` int(11) DEFAULT NULL, `modified` datetime DEFAULT NULL, `created_user_id` int(11) NOT NULL, `created` datetime NOT NULL, PRIMARY KEY (`id`) )");
 
         $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 409');
         $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 410');
@@ -76,7 +76,7 @@ class POCOR5895 extends AbstractMigration
     public function down()
     {
         // For tables
-        $this->execute('DROP TABLE IF EXISTS `staff_payslips`');
+        //$this->execute('DROP TABLE IF EXISTS `staff_payslips`');
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
         $this->execute('RENAME TABLE `zz_5895_security_functions` TO `security_functions`');
         
