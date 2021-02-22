@@ -1,5 +1,5 @@
 <?php
-namespace Report\Model\Table;
+namespace ProfileTemplate\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
@@ -102,7 +102,7 @@ class ProfilesTable extends ControllerActionTable
             ];
 		
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['Reports', 'Profiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+            if ($this->AccessControl->check(['ProfileTemplate', 'Profiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
                 $buttons['download'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
@@ -118,7 +118,7 @@ class ProfilesTable extends ControllerActionTable
             }
 
             // Generate button, all statuses
-            if ($this->AccessControl->check(['Reports', 'Profiles', 'generate'])) {
+            if ($this->AccessControl->check(['ProfileTemplate', 'Profiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->ReportCards
@@ -154,7 +154,7 @@ class ProfilesTable extends ControllerActionTable
             }
 
             // Publish button, status must be generated
-            if ($this->AccessControl->check(['Reports', 'Profiles', 'publish']) && $entity->has('report_card_status') 
+            if ($this->AccessControl->check(['ProfileTemplate', 'Profiles', 'publish']) && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::GENERATED 
                          || $entity->report_card_status == '12' 
                        )
@@ -168,7 +168,7 @@ class ProfilesTable extends ControllerActionTable
             }
 
             // Unpublish button, status must be published
-            if ($this->AccessControl->check(['Reports', 'Profiles', 'unpublish']) 
+            if ($this->AccessControl->check(['ProfileTemplate', 'Profiles', 'unpublish']) 
                     && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::PUBLISHED 
                           || $entity->report_card_status == '16'
@@ -196,6 +196,30 @@ class ProfilesTable extends ControllerActionTable
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
+		$this->setupTabElements();
+    }
+	
+	private function setupTabElements() {
+		$options['type'] = 'StaffTemplates';
+		$tabElements = $this->getStaffTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Profiles');
+	}
+
+	public function getStaffTabElements($options = [])
+    {
+        $tabElements = [];
+        $tabUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
+        $templateUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
+        $tabElements = [
+            'Profiles' => ['text' => __('Profiles')],
+            'Templates' => ['text' => __('Templates')]
+        ];
+		
+        $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'InstitutionProfiles']);
+        $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Institutions']);
+
+		return $tabElements;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -507,7 +531,7 @@ class ProfilesTable extends ControllerActionTable
         if (!empty($reportCardId)) {
             $reportCardEntity = $this->ReportCards->find()->where(['id' => $reportCardId])->first();
             if (!empty($reportCardEntity)) {
-                $value = $reportCardEntity->code_name;
+                $value = $reportCardEntity->name;
             }
         }
         return $value;
