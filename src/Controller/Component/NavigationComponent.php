@@ -1717,6 +1717,11 @@ class NavigationComponent extends Component
                 'parent' => 'ProfileTemplates',
                 'selected' => ['ProfileTemplates.StaffProfiles', 'Staffs.view', 'Staffs.add', 'Staffs.edit', 'Staffs.delete']
             ],
+            'ProfileTemplates.Students' => [
+                'title' => 'Students',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['ProfileTemplates.StudentProfiles', 'Students.view', 'Students.add', 'Students.edit', 'Students.delete']
+            ],
 
             'Administration.Survey' => [
                 'title' => 'Survey',
