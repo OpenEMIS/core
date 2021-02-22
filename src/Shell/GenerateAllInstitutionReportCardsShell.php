@@ -46,6 +46,7 @@ class GenerateAllInstitutionReportCardsShell extends Shell
                 $this->InstitutionReportCardProcesses->updateAll(['status' => $this->InstitutionReportCardProcesses::RUNNING], [
                     'report_card_id' => $recordToProcess['report_card_id'],
                     'institution_id' => $recordToProcess['institution_id'],
+                    'academic_period_id' => $recordToProcess['academic_period_id'],
                 ]);
 
                 $excelParams = new ArrayObject([]);
