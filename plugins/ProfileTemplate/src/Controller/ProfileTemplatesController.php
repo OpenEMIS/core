@@ -16,7 +16,13 @@ class ProfileTemplatesController extends AppController
     }
 
     // CAv4
-    public function Templates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.ProfileTemplates']); }
+    public function Institutions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.ProfileTemplates']); }
+    
+	public function Staffs() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.StaffTemplates']); }
+	
+	public function InstitutionProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.Profiles']); }
+	
+	public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.StaffProfiles']); }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
