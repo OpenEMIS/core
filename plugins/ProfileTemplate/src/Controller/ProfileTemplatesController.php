@@ -20,9 +20,13 @@ class ProfileTemplatesController extends AppController
     
 	public function Staffs() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.StaffTemplates']); }
 	
+	public function Students() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.StudentTemplates']); }
+	
 	public function InstitutionProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.Profiles']); }
 	
 	public function StaffProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.StaffProfiles']); }
+	
+	public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.StudentProfiles']); }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
