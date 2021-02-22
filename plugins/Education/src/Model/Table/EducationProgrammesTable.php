@@ -140,7 +140,9 @@ class EducationProgrammesTable extends ControllerActionTable {
     }
 
     public function onUpdateFieldEducationCycleId(Event $event, array $attr, $action, Request $request) {
+        //POCOR-5908 starts
         list(,,,, $cycleOptions, $selectedCycle) = array_values($this->getSelectOptions());
+        //POCOR-5908 ends
         $attr['options'] = $cycleOptions;
         if ($action == 'add') {
             $attr['default'] = $selectedCycle;
