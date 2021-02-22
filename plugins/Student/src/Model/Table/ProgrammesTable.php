@@ -171,10 +171,10 @@ class ProgrammesTable extends ControllerActionTable
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'StudentTransition',
-				'edit',
+				'add',
 				$this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $entity->institution->id
-		];
+		];//echo "<pre>";print_r($url);die();
 		if ($this->AccessControl->check($url['permission']) && $studentStatusId == $statuses['CURRENT']) {
 			$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 		    $buttons['transition']['label'] = '<i class="kd-process"></i>' . __('Transition');

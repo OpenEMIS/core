@@ -9,11 +9,16 @@ use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
+use App\Model\Traits\MessagesTrait;
 
 use App\Model\Table\ControllerActionTable;
 
 class TransitionTable extends ControllerActionTable
 {
+
+    use MessagesTrait;
+
 	public function initialize(array $config)
 	{
 		$this->table('institution_students');
@@ -26,58 +31,140 @@ class TransitionTable extends ControllerActionTable
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 
+        $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->EducationProgrammes      = TableRegistry::get('Education.EducationProgrammes');
         $this->EducationGrades          = TableRegistry::get('Education.EducationGrades');
-
-		$this->toggle('remove', false);
-		$this->toggle('add', false);
-		$this->toggle('search', false);
-
-        $this->addBehavior('User.User');
 	}
 
-	private function setupTabElements()
-	{
-		$options['type'] = 'student';
-		$tabElements = $this->controller->getAcademicTabElements($options);
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
-	}
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        $validator
+            ->notEmpty('education_programme_id');
+
+        return $validator;
+    }
 
 	public function onGetEducationGradeId(Event $event, Entity $entity)
 	{
 		return $entity->education_grade->programme_grade_name;
 	}
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->fields['student_id']['visible'] = 'false';
+        $this->fields['start_year']['visible'] = 'false';
+        $this->fields['end_year']['visible'] = 'false';
+        $this->fields['photo_content']['visible'] = 'false';
+        $this->fields['openemis_no']['visible'] = 'false';
+        $this->fields['institution_id']['type'] = 'integer';
+        $this->fields['academic_period_id']['sort'] = ['field' => 'AcademicPeriods.name'];
+
+        $this->setFieldOrder([
+            'academic_period_id', 'institution_id', 'education_grade_id', 'start_date', 'end_date', 'student_status_id'
+        ]);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $session = $this->request->session();
+        if ($this->controller->name == 'Profiles') {
+            $sId = $session->read('Student.Students.id');
+            if (!empty($sId)) {
+                $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+            } else {
+                $studentId = $session->read('Auth.User.id');
+            }
+        } else {
+                $studentId = $session->read('Student.Students.id');
+        }
+        
+        // end POCOR-1893
+        $sortList = ['AcademicPeriods.name'];
+        
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        $query->where([$this->aliasField('student_id') => $studentId]);
+        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
+    }
+
+    private function setupTabElements()
+    {
+        $options['type'] = 'student';
+        $tabElements = $this->controller->getAcademicTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
+
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $this->setupTabElements();
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {   
+        $this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
+        $this->field('openemis_no',['before' => 'student_id']);
+        $this->field('student_status_id',['after' => 'student_id']);
+        $this->field('start_year', ['visible' => 'false']);
+        $this->field('end_year', ['visible' => 'false']);
+        $this->setupTabElements();
+        //POCOR-5671 
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default icon-big',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+ 
+        $extraButtons = [
+            'process' => [
+                'Institution' => ['Institution', 'Institutions'],
+                'action' => 'StudentTransition',
+                'icon' => '<i class="kd-process"></i>',
+                'title' => __('Transition')
+            ]
+        ];
+
+        foreach ($extraButtons as $key => $attr) {
+            if ($this->AccessControl->check($attr['permission'])) {
+                $button = [
+                    'type' => 'button',
+                    'attr' => $btnAttr,
+                    'url' => [0 => 'edit', $this->paramsEncode(['id' => $entity->id]),
+                'institution_id' => $entity->institution->id]
+                ];
+                $button['url']['action'] = $attr['action'];
+                $button['attr']['title'] = $attr['title'];
+                $button['label'] = $attr['icon'];
+
+                $extra['toolbarButtons'][$key] = $button;
+            }
+        }
+        //POCOR-5671
+    }
+
     public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
     {   
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
         $programmeOptions = $EducationProgrammes
-                ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-                ->find('availableProgrammes')
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                 ->toArray();
-        if ($action == 'add') {
-            $attr['type'] = 'select';
-            $attr['options'] = $programmeOptions;
-            $attr['onChangeReload'] = 'changeEducationProgrammeId';
-        } else if ($action == 'edit') {
+
+        if ($action == 'edit') {
             $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
-            $data = $EducationProgrammes->find()
-                    ->select([
-                        $EducationProgrammes->aliasField('id'),
-                        $EducationProgrammes->aliasField('code'),
-                        $EducationProgrammes->aliasField('name')
-                    ])
-                    ->where([$EducationProgrammes->aliasField('id') => $programmeId ])
-                    ->first();
-            
             $attr['type'] = 'select';
             $attr['options'] = $programmeOptions;
-            $attr['selected'] = $data->name;
-            $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
-            $attr['attr']['value']['selected'] = $EducationProgrammes->get($programmeId)->name;
+            $attr['default'] = $programmeId;
+            $attr['onChangeReload'] = 'changeEducationProgrammeId';
         }
-        //echo "<pre>";print_r($attr);die();
+        
         return $attr;
     }
 
@@ -95,13 +182,40 @@ class TransitionTable extends ControllerActionTable
         }
     }
 
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $selectedProgramme = $attr['entity']['education_grade']->education_programme_id;
+            $gradeOptions = [];
+
+        if (!is_null($selectedProgramme)) {
+                    $gradeOptions = $this->EducationGrades
+                        ->find('list')
+                        ->find('visible')
+                        ->contain(['EducationProgrammes'])
+                        ->where([$this->EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
+                        ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
+                        ->toArray();
+                }
+
+                $id = $attr['entity']->education_grade_id;
+                $gradeId = $this->EducationGrades->get($id);
+                $attr['type'] = 'select';
+                $attr['options'] = $gradeOptions;
+                $attr['default'] = $gradeId;
+                $attr['onChangeReload'] = 'changeEducationGrade';
+        }
+
+        return $attr;
+    }
+
     public function editBeforeQuery(Event $event, Query $query)
     {
         $query->contain(['Users', 'EducationGrades', 'AcademicPeriods', 'EducationGrades.EducationProgrammes']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
-    {//echo "<pre>";print_r($entity);die();
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
         $this->field('start_year', ['visible' => 'false']);
         $this->field('end_year', ['visible' => 'false']);
 
@@ -120,22 +234,178 @@ class TransitionTable extends ControllerActionTable
             ]);
             $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $entity->academic_period->name]]);
 
-            $this->field('education_programme_id', ['entity' => $entity]);
+            $this->field('education_programme_id', ['type' => 'select', 'entity' => $entity]);
 
-            $this->field('education_grade_id', ['type' => 'select', 'attr' => ['selected' => $entity->education_grade->programme_grade_name]]);
-            
-            $this->field('student_status_id', ['visible' => 'false', 'attr' => ['value' => $entity->student_status->name]]);
+            //$this->field('education_grade_id', ['type' => 'select', 'selected' => true, 'attr' => ['selected' => $entity->education_grade->programme_grade_name]]);
+            $this->field('education_grade_id', ['type' => 'select', 'entity' => $entity, 'empty' => true]);
+            $this->field('student_status_id', ['type' => 'hidden', 'attr' => ['value' => $entity->student_status->name]]);
+            $this->field('start_date');
+            $this->field('end_date');
+        }
 
-            $period = $entity->academic_period;
-            $dateOptions = [
-                'startDate' => $period->start_date->format('d-m-Y'),
-                'endDate' => $period->end_date->format('d-m-Y')
-            ];
+        // hide list button
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        
+        $extraButtons = [
+            'list' => [
+                'Institution' => ['Institutions', 'Institutions', 'StudentTransition'],
+                'action' => 'StudentTransition',
+                'icon' => '<i class="fa kd-lists"></i>',
+                'title' => __('List')
+            ]
+        ];
+        foreach ($extraButtons as $key => $attr) {
+            if ($this->AccessControl->check($attr['permission'])) {
+                $button = [
+                    'type' => 'hidden',
+                    'attr' => $btnAttr,
+                    'url' => [0 => 'index'] 
+                ];
+                $button['url']['action'] = $attr['action'];
+                $button['attr']['title'] = $attr['title'];
+                $button['label'] = $attr['icon'];
 
-            $this->fields['start_date']['date_options'] = $dateOptions;
-            $this->fields['end_date']['date_options'] = $dateOptions;
+                $extra['toolbarButtons'][$key] = $button;
+            }
+        }
+    }
 
-            $this->setupTabElements($entity);
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    {
+        if (!$entity->isNew()) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+
+            $AcademicPeriodsId = $requestData['Transition']['academic_period_id'];
+            $InstitutionId = $requestData['Transition']['institution_id'];
+            $EducationProgrammeId = $requestData['Transition']['education_programme_id'];
+            $EducationGradeId = $requestData['Transition']['education_grade_id'];
+            $StudentId = $requestData['Transition']['student_id'];
+            $startDate =  date("Y-m-d", strtotime($requestData['Transition']['start_date']));
+            $endDate = date("Y-m-d", strtotime($requestData['Transition']['end_date']));
+            //echo "<pre>";print_r($EducationGradeId);die("Shiva");
+            $previousYearId = $AcademicPeriod->find()->where(['id' => $AcademicPeriodsId-1])->first()->id;
+            //set student status "Transferred"                    
+            $transferStatus = $InstitutionStudents->find()
+                            ->select([
+                                $InstitutionStudents->aliasField('id'),
+                                $EducationGrades->aliasField('id'),
+                                $EducationProgrammes->aliasField('id'),
+                                $EducationProgrammes->aliasField('order')
+                            ])
+                            ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()], [
+                                $EducationGrades->aliasField('id = ') . $InstitutionStudents->aliasField('education_grade_id')
+                            ])
+                            ->leftJoin([$EducationProgrammes->alias() => $EducationProgrammes->table()], [
+                                $EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')
+                            ])
+                            ->where([
+                                $InstitutionStudents->aliasField('student_id') => $StudentId, 
+                                $InstitutionStudents->aliasField('academic_period_id') => $previousYearId, 
+                                $InstitutionStudents->aliasField('institution_id') => $InstitutionId
+                            ])
+                            ->first();
+            $currentOrder = $EducationProgrammes->find()->where([$EducationProgrammes->aliasField('id') => $EducationProgrammeId])->first()->order;
+            //Transferred
+            if(!empty($transferStatus)) {
+                $previousEducationGrades = $transferStatus['EducationGrades']['id'];
+                $previousEducationProgrammes = $transferStatus['EducationProgrammes']['id'];
+                $previousOrder = $transferStatus['EducationProgrammes']['order'];
+                if ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes == $EducationProgrammeId) {
+                        $query = $InstitutionStudents->query();
+                        $query->update()->set(['student_status_id' => 3, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                                ->where([
+                                    'institution_id' => $InstitutionId,
+                                    'student_id' => $StudentId,
+                                    'academic_period_id' => $previousYearId,
+                                    'id' => $transferStatus->id
+                                ])->execute();
+                } elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId) {
+                        $query = $InstitutionStudents->query();
+                        $query->update()->set(['student_status_id' => 3, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                            ->where([
+                                'institution_id' => $InstitutionId,
+                                'student_id' => $StudentId,
+                                'academic_period_id' => $previousYearId,
+                                'id' => $transferStatus->id
+                            ])->execute();
+                } elseif ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId) {
+                        $query = $InstitutionStudents->query();
+                        $query->update()->set(['student_status_id' => 3, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                            ->where([
+                                'institution_id' => $InstitutionId,
+                                'student_id' => $StudentId,
+                                'academic_period_id' => $previousYearId,
+                                'id' => $transferStatus->id
+                            ])->execute();
+                } 
+                //Repeated
+                elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes == $EducationProgrammeId && $previousOrder > $currentOrder) {
+                        $query = $InstitutionStudents->query();
+                        $query->update()->set(['student_status_id' => 8, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                            ->where([
+                                'institution_id' => $InstitutionId,
+                                'student_id' => $StudentId,
+                                'academic_period_id' => $previousYearId,
+                                'id' => $transferStatus->id
+                            ])->execute();
+                } elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder > $currentOrder) {
+                        $query = $InstitutionStudents->query();
+                        $query->update()->set(['student_status_id' => 8, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                            ->where([
+                                'institution_id' => $InstitutionId,
+                                'student_id' => $StudentId,
+                                'academic_period_id' => $previousYearId,
+                                'id' => $transferStatus->id
+                            ])->execute();
+                } elseif ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder > $currentOrder) {
+                        $query = $InstitutionStudents->query();
+                        $query->update()->set(['student_status_id' => 8, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                            ->where([
+                                'institution_id' => $InstitutionId,
+                                'student_id' => $StudentId,
+                                'academic_period_id' => $previousYearId,
+                                'id' => $transferStatus->id
+                            ])->execute();
+                } 
+                //Promoted
+                elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes == $EducationProgrammeId && $previousOrder < $currentOrder) {
+                        $query = $InstitutionStudents->query();
+                        $query->update()->set(['student_status_id' => 7, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                            ->where([
+                                'institution_id' => $InstitutionId,
+                                'student_id' => $StudentId,
+                                'academic_period_id' => $previousYearId,
+                                'id' => $transferStatus->id
+                            ])->execute();
+                } elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder < $currentOrder) {
+                        $query = $InstitutionStudents->query();
+                        $query->update()->set(['student_status_id' => 7, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                            ->where([
+                                'institution_id' => $InstitutionId,
+                                'student_id' => $StudentId,
+                                'academic_period_id' => $previousYearId,
+                                'id' => $transferStatus->id
+                            ])->execute();
+                } elseif ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder < $currentOrder) {
+                        $query = $InstitutionStudents->query();
+                        $query->update()->set(['student_status_id' => 7, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                            ->where([
+                                'institution_id' => $InstitutionId,
+                                'student_id' => $StudentId,
+                                'academic_period_id' => $previousYearId,
+                                'id' => $transferStatus->id
+                            ])->execute();
+                }
+            }
+            //echo "<pre>";print_r($this->validator);die();
         }
     }
 }
