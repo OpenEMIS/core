@@ -100,7 +100,7 @@ class ProgrammesTable extends ControllerActionTable
         //POCOR-5671 
         $statuses = $this->StudentStatuses->findCodeList();
 		$studentStatusId = $entity->student_status_id;
-		if (array_key_exists('edit', $buttons) && $studentStatusId == $statuses['CURRENT']) {
+		if ($studentStatusId == $statuses['CURRENT']) {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 
 	        $btnAttr = [
