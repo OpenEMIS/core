@@ -78,8 +78,8 @@ class StaffTemplatesTable extends ControllerActionTable
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'generate_start_date', false]
                 ]
-            ]);
-            //->allowEmpty('excel_template');
+            ])
+            ->allowEmpty('excel_template');
     }
 
     public function validationSubjects(Validator $validator) {
