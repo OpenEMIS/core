@@ -16,7 +16,6 @@ use App\Model\Table\ControllerActionTable;
 
 class TransitionTable extends ControllerActionTable
 {
-
     use MessagesTrait;
 
 	public function initialize(array $config)
@@ -46,9 +45,17 @@ class TransitionTable extends ControllerActionTable
         return $validator;
     }
 
-	
+    public function onGetEducationGradeId(Event $event, Entity $entity)
+    {
+        return $entity->education_grade->code_name;
+    }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function onGetEducationProgrammeId(Event $event, Entity $entity)
+    {
+        return $entity->education_grade->education_programme->cycle_programme_name;
+    }
+
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['student_id']['visible'] = 'false';
         $this->fields['start_year']['visible'] = 'false';
@@ -150,8 +157,29 @@ class TransitionTable extends ControllerActionTable
     public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
     {   
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+        $EducationCycles = TableRegistry::get('Education.EducationCycles');
+        $AcademicPeriods = $attr['entity']['academic_period']->id;
+        $getCycle = $EducationCycles ->find()
+                    ->select([$EducationCycles->aliasField('id')])
+                    ->leftJoin([$EducationLevels->alias() => $EducationLevels->table()], [
+                                $EducationLevels->aliasField('id = ') . $EducationCycles->aliasField('education_level_id')
+                    ])
+                    ->leftJoin([$EducationSystems->alias() => $EducationSystems->table()], [
+                                $EducationSystems->aliasField('id = ') . $EducationLevels->aliasField('education_system_id')
+                    ])
+                    ->where([$EducationSystems->aliasField('academic_period_id') => $AcademicPeriods]);
+        $cycleId = [];
+        if (!empty($getCycle)) {
+            foreach ($getCycle as $key => $value) {
+                $cycleId[] = $value->id;
+            }
+        }
         $programmeOptions = $EducationProgrammes
-                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                ->contain(['EducationCycles'])
+                //->where([$EducationProgrammes->aliasField('education_cycle_id IN') => $cycleId])
                 ->toArray();
 
         if ($action == 'edit') {
@@ -160,6 +188,7 @@ class TransitionTable extends ControllerActionTable
             $attr['options'] = $programmeOptions;
             $attr['default'] = $programmeId;
             $attr['onChangeReload'] = 'changeEducationProgrammeId';
+
         }
         
         return $attr;
@@ -180,9 +209,8 @@ class TransitionTable extends ControllerActionTable
     }
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
-    {//echo "<pre>";print_r();die();
+    {
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        // /$programmeId = $attr['entity']['education_grade']->education_programme_id;
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
         $selectedProgramme = $EducationProgrammes
                              ->find()
@@ -197,20 +225,17 @@ class TransitionTable extends ControllerActionTable
         } else {//die("else");
             $programmeId = $attr['entity']['education_grade']->education_programme_id;
             $gradeOptions = $EducationGrades
-                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
                         ->contain(['EducationProgrammes'])
                         ->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
                         ->toArray();
         }
-        
-
         if ($action == 'edit') {
             $gradeId = $this->EducationGrades->get($attr['entity']->education_grade_id);
             $attr['type'] = 'select';
             $attr['options'] = $gradeOptions;
             $attr['default'] = $gradeId;
             $attr['onChangeReload'] = 'changeEducationGradeId';
-            //echo "<pre>";print_r($attr);die();
         }
         
         return $attr;
@@ -254,11 +279,9 @@ class TransitionTable extends ControllerActionTable
                 'order' => 10,
                 'attr' => ['value' => $entity->user->name_with_id]
             ]);
+            //$this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
             $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $entity->academic_period->name]]);
-
             $this->field('education_programme_id', ['type' => 'select', 'entity' => $entity]);
-
-            //$this->field('education_grade_id', ['type' => 'select', 'selected' => true, 'attr' => ['selected' => $entity->education_grade->programme_grade_name]]);
             $this->field('education_grade_id', ['type' => 'select', 'entity' => $entity, 'empty' => true]);
             $this->field('student_status_id', ['type' => 'hidden', 'attr' => ['value' => $entity->student_status->name]]);
             $this->field('start_date');
@@ -342,7 +365,7 @@ class TransitionTable extends ControllerActionTable
                 $previousOrder = $transferStatus['EducationProgrammes']['order'];
                 if ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes == $EducationProgrammeId) {
                         $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 3, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                        $query->update()->set(['student_status_id' => 3])
                                 ->where([
                                     'institution_id' => $InstitutionId,
                                     'student_id' => $StudentId,
@@ -351,14 +374,14 @@ class TransitionTable extends ControllerActionTable
                                 ])->execute();
                 } elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId) {
                         $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 3, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                        $query->update()->set(['student_status_id' => 3])
                             ->where([
                                 'institution_id' => $InstitutionId,
                                 'student_id' => $StudentId,
                                 'academic_period_id' => $previousYearId,
                                 'id' => $transferStatus->id
                             ])->execute();
-                } elseif ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId) {
+                } /*elseif ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId) {
                         $query = $InstitutionStudents->query();
                         $query->update()->set(['student_status_id' => 3, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
                             ->where([
@@ -367,11 +390,11 @@ class TransitionTable extends ControllerActionTable
                                 'academic_period_id' => $previousYearId,
                                 'id' => $transferStatus->id
                             ])->execute();
-                } 
+                }*/ 
                 //Repeated
                 elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes == $EducationProgrammeId && $previousOrder > $currentOrder) {
                         $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 8, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                        $query->update()->set(['student_status_id' => 8])
                             ->where([
                                 'institution_id' => $InstitutionId,
                                 'student_id' => $StudentId,
@@ -380,7 +403,7 @@ class TransitionTable extends ControllerActionTable
                             ])->execute();
                 } elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder > $currentOrder) {
                         $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 8, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                        $query->update()->set(['student_status_id' => 8])
                             ->where([
                                 'institution_id' => $InstitutionId,
                                 'student_id' => $StudentId,
@@ -389,7 +412,7 @@ class TransitionTable extends ControllerActionTable
                             ])->execute();
                 } elseif ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder > $currentOrder) {
                         $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 8, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                        $query->update()->set(['student_status_id' => 8])
                             ->where([
                                 'institution_id' => $InstitutionId,
                                 'student_id' => $StudentId,
@@ -400,7 +423,7 @@ class TransitionTable extends ControllerActionTable
                 //Promoted
                 elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes == $EducationProgrammeId && $previousOrder < $currentOrder) {
                         $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 7, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                        $query->update()->set(['student_status_id' => 7])
                             ->where([
                                 'institution_id' => $InstitutionId,
                                 'student_id' => $StudentId,
@@ -409,7 +432,7 @@ class TransitionTable extends ControllerActionTable
                             ])->execute();
                 } elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder < $currentOrder) {
                         $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 7, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                        $query->update()->set(['student_status_id' => 7])
                             ->where([
                                 'institution_id' => $InstitutionId,
                                 'student_id' => $StudentId,
@@ -418,7 +441,7 @@ class TransitionTable extends ControllerActionTable
                             ])->execute();
                 } elseif ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder < $currentOrder) {
                         $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 7, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
+                        $query->update()->set(['student_status_id' => 7])
                             ->where([
                                 'institution_id' => $InstitutionId,
                                 'student_id' => $StudentId,
