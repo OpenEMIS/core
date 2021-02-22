@@ -32,9 +32,8 @@ class POCOR5920 extends AbstractMigration
             'comment' => '1 => New 2 => Running 3 => Completed -1 => Error'
         ])
 		->addColumn('institution_id', 'integer', [
-			'default' => null,
 			'limit' => 11,
-			'null' => true,
+			'null' => false,
 			'comment' => 'links to institutions.id'
 		])
 		->addColumn('academic_period_id', 'integer', [
