@@ -15,7 +15,7 @@ class EducationProgramme extends Entity
     	} else {
     		$table = TableRegistry::get('Education.EducationCycles');
     		$cycleId = $this->education_cycle_id;
-
+            //POCOR-5908 starts
             $checkCycleData =  $table->find()
                             ->where([$table->aliasField('id') => $cycleId])
                             ->first();
@@ -29,6 +29,7 @@ class EducationProgramme extends Entity
             }else{
                 $name = ' - ' . __($name);  
             }
+            //POCOR-5908 ends
         }
 
     	return $name;
