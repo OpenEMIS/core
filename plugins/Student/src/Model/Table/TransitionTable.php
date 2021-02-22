@@ -46,10 +46,7 @@ class TransitionTable extends ControllerActionTable
         return $validator;
     }
 
-	public function onGetEducationGradeId(Event $event, Entity $entity)
-	{
-		return $entity->education_grade->programme_grade_name;
-	}
+	
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -183,30 +180,55 @@ class TransitionTable extends ControllerActionTable
     }
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'edit') {
-            $selectedProgramme = $attr['entity']['education_grade']->education_programme_id;
-            $gradeOptions = [];
-
-        if (!is_null($selectedProgramme)) {
-                    $gradeOptions = $this->EducationGrades
-                        ->find('list')
-                        ->find('visible')
+    {//echo "<pre>";print_r();die();
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        // /$programmeId = $attr['entity']['education_grade']->education_programme_id;
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $selectedProgramme = $EducationProgrammes
+                             ->find()
+                             ->where([$EducationProgrammes->aliasField('id') => $programmeId])->first()->id;
+        if (!empty($request['data'])) {//die("if");
+            $programmeId = $request['data']['Transition']['education_programme_id'];
+            $gradeOptions = $EducationGrades
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                         ->contain(['EducationProgrammes'])
-                        ->where([$this->EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
-                        ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
+                        ->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
                         ->toArray();
-                }
-
-                $id = $attr['entity']->education_grade_id;
-                $gradeId = $this->EducationGrades->get($id);
-                $attr['type'] = 'select';
-                $attr['options'] = $gradeOptions;
-                $attr['default'] = $gradeId;
-                $attr['onChangeReload'] = 'changeEducationGrade';
+        } else {//die("else");
+            $programmeId = $attr['entity']['education_grade']->education_programme_id;
+            $gradeOptions = $EducationGrades
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                        ->contain(['EducationProgrammes'])
+                        ->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
+                        ->toArray();
         }
+        
 
+        if ($action == 'edit') {
+            $gradeId = $this->EducationGrades->get($attr['entity']->education_grade_id);
+            $attr['type'] = 'select';
+            $attr['options'] = $gradeOptions;
+            $attr['default'] = $gradeId;
+            $attr['onChangeReload'] = 'changeEducationGradeId';
+            //echo "<pre>";print_r($attr);die();
+        }
+        
         return $attr;
+    }
+
+    public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $request = $this->request;
+        unset($request->query['grade']);
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
+                    $selectedGrade = $request->data[$this->alias()]['education_grade_id'];
+                    $request->query['grade'] = $selectedGrade;
+                }
+            }
+        }
     }
 
     public function editBeforeQuery(Event $event, Query $query)
