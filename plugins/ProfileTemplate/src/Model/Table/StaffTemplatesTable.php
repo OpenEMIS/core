@@ -14,19 +14,18 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 
-class ProfileTemplatesTable extends ControllerActionTable
+class StaffTemplatesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    CONST ALL_SUBJECTS = 2;
-    CONST SELECT_SUBJECTS = 1;
-
     public function initialize(array $config)
     {
+		$this->table('staff_profile_templates');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        //$this->hasMany('InstitutionReportCards', ['className' => 'Institution.InstitutionReportCards', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+		$this->addBehavior('User.AdvancedNameSearch');
+		
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'excel_template_name',
             'content' => 'excel_template',
@@ -79,8 +78,8 @@ class ProfileTemplatesTable extends ControllerActionTable
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'generate_start_date', false]
                 ]
-            ])
-            ->allowEmpty('excel_template');
+            ]);
+            //->allowEmpty('excel_template');
     }
 
     public function validationSubjects(Validator $validator) {
@@ -95,7 +94,6 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->field('generate_start_date', ['type' => 'date']);
         $this->field('generate_end_date', ['type' => 'date']);
         $this->field('excel_template');
-		$this->setupTabElements();
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -103,7 +101,8 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['description']['visible'] = false;
         $this->setFieldOrder(['code', 'name', 'generate_start_date', 'generate_end_date', 'excel_template']);
-    }
+		$this->setupTabElements();
+	}
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -204,15 +203,6 @@ class ProfileTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        if (empty($entity->errors())) {
-            if ($entity->teacher_comments_required == self::ALL_SUBJECTS) {
-                $entity->teacher_comments_required = 1;
-            }
-        }
-    }
-
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
        
@@ -232,7 +222,7 @@ class ProfileTemplatesTable extends ControllerActionTable
 
     public function downloadTemplate()
     {
-        $filename = 'profile_template';
+        $filename = 'staff_profile_template';
         $fileType = 'xlsx';
         $filepath = WWW_ROOT . 'export' . DS . 'customexcel'. DS . 'default_templates'. DS . $filename . '.' . $fileType;
 
@@ -277,10 +267,10 @@ class ProfileTemplatesTable extends ControllerActionTable
             'Templates' => ['text' => __('Templates')]
         ];
 		
-        $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'InstitutionProfiles']);
-        $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Institutions']);
+        $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'StaffProfiles']);
+        $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Staffs']);
 
 		return $tabElements;
     }
-
+	
 }
