@@ -14,7 +14,6 @@ class InstitutionReportCardProcessesTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->belongsTo('ReportCards', ['className' => 'ReportCard.ReportCards']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('ProfileTemplates', ['className' => 'ProfileTemplate.ProfileTemplates', 'foreignKey' => 'report_card_id']);
     }
 }
