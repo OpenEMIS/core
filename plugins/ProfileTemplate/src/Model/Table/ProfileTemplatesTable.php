@@ -25,7 +25,6 @@ class ProfileTemplatesTable extends ControllerActionTable
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        //$this->hasMany('InstitutionReportCards', ['className' => 'Institution.InstitutionReportCards', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'excel_template_name',
