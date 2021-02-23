@@ -49,6 +49,21 @@ class POCOR5920 extends AbstractMigration
 		->addIndex('institution_id')
 		->addIndex('report_card_id')
         ->save();
+		
+		$this->execute("ALTER TABLE `institution_report_cards`
+                MODIFY `file_name` DEFAULT NULL");
+
+        $this->execute("ALTER TABLE `institution_report_cards`
+                MODIFY `file_content` DEFAULT NULL");
+
+        $this->execute("ALTER TABLE `institution_report_cards`
+                MODIFY `file_content_pdf` DEFAULT NULL");
+				
+        $this->execute("ALTER TABLE `institution_report_cards`
+                MODIFY `started_on` DEFAULT NULL");
+
+        $this->execute("ALTER TABLE `institution_report_cards`
+                MODIFY `completed_on` DEFAULT NULL");
     }
 
 }
