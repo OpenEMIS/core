@@ -18,11 +18,11 @@ class POCOR5192 extends AbstractMigration
 		
 		$this->insert('email_templates', [
                 'model_alias' => 'ReportCard.StaffReportCardEmail',
-				'model_reference' => '0',
+				'model_reference' => '1',
 				'subject' => 'Staff Report Card of ${staff.openemis_no} for ${academic_period.name}',
-				'message' => 'Dear ${student.first_name},
+				'message' => 'Dear ${staff.first_name},
 
-Attached is your student report card for ${academic_period.name}.
+Attached is your staff report card for ${academic_period.name}.
 
 Thank you.
 
