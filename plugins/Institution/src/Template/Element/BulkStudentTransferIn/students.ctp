@@ -12,6 +12,7 @@
 								<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
 							<?php } ?>
 							<th><?= __('Status') ?></th>
+							<th><?= __('Sending Institution') ?></th>
 							<th><?= __('Assignee') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Academic Period') ?></th>
@@ -48,6 +49,7 @@
 									</td>
 									<?php } ?>
 									<td><?= $obj->status->name ?></td>
+									<td><?= isset($obj->previous_institution->name) ? $obj->previous_institution->name : null ?></td>
 									<td><?= isset($obj->assignee->name) ? $obj->assignee->name : null ?></td>
 									<td><?= $obj->user->name_with_id ?></td>
 									<td><?= $obj->academic_period->name ?></td>
