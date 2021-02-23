@@ -14,7 +14,10 @@ class POCOR5192 extends AbstractMigration
     {
 		// Backup table
 		$this->execute('CREATE TABLE `zz_5192_security_functions` LIKE `security_functions`');
-		$this->execute('INSERT INTO `zz_5192_security_functions` SELECT * FROM `security_functions`');
+		$this->execute('INSERT INTO `zz_5192_security_functions` SELECT * FROM `security_functions`');		// Backup table
+		
+		$this->execute('CREATE TABLE `zz_5192_email_templates` LIKE `email_templates`');
+		$this->execute('INSERT INTO `zz_5192_email_templates` SELECT * FROM `email_templates`');
 		
 		$this->insert('email_templates', [
                 'model_alias' => 'ReportCard.StaffReportCardEmail',
@@ -307,6 +310,10 @@ Thank you.
 		// rollback of security_functions
 		$this->execute('DROP TABLE IF EXISTS `security_functions`');
 		$this->execute('RENAME TABLE `zz_5192_security_functions` TO `security_functions`');
+		
+		// rollback of email_templates
+		$this->execute('DROP TABLE IF EXISTS `email_templates`');
+		$this->execute('RENAME TABLE `zz_5192_email_templates` TO `email_templates`');
 		
         //rollback of staff_profile_templates,staff_report_card_processes,staff_report_cards
         $this->execute('DROP TABLE IF EXISTS `staff_profile_templates`');
