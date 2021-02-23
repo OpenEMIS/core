@@ -16,6 +16,7 @@ class AutomatedStudentWithdrawalShell extends Shell {
 	}
 
  	public function main() {
+ 		die('adsfads');
  		
 		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 		$daysAbsent= $ConfigItems->value("automated_student_days_absent");
@@ -27,7 +28,8 @@ class AutomatedStudentWithdrawalShell extends Shell {
 		$data = $InstitutionStudentAbsenceDays
 				->find('all')
 				->where([
-                        $this->InstitutionStudentAbsenceDays->aliasField('absent_days') => $daysAbsent
+                        $this->InstitutionStudentAbsenceDays->aliasField('absent_days') => $daysAbsent,
+                        $this->InstitutionStudentAbsenceDays->aliasField('absence_type_id') => 2
                     ])->all();
 		if (!$data->isEmpty()) {
 			$InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');

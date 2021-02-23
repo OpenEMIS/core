@@ -20,7 +20,7 @@ class DashboardController extends AppController
 
         $this->attachAngularModules();
         $this->triggerUnmarkedAttendanceShell();
-        $this->triggerAutomatedStudentWithdrawalShell();
+        //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
 		
     }
@@ -256,7 +256,7 @@ class DashboardController extends AppController
         return $data;
     }
 
-    private function triggerAutomatedStudentWithdrawalShell()
+   /* private function triggerAutomatedStudentWithdrawalShell()
    {
        $script = 'AutomatedStudentWithdrawal';
        $consoleDir = ROOT . DS . 'bin' . DS;
@@ -265,7 +265,7 @@ class DashboardController extends AppController
        $nohup = 'nohup ' . $cmd . '> /dev/null 2>/dev/null &';
        exec($nohup);
        Log::write('debug', $nohup); 
-   }
+   }*/
 
 //    private function triggerInstitutionClassSubjectsShell()
 //    {
