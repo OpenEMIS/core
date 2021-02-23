@@ -50,20 +50,15 @@ class POCOR5920 extends AbstractMigration
 		->addIndex('report_card_id')
         ->save();
 		
-		$this->execute("ALTER TABLE `institution_report_cards`
-                MODIFY `file_name` DEFAULT NULL");
+		$this->execute('ALTER TABLE `institution_report_cards` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL');
 
-        $this->execute("ALTER TABLE `institution_report_cards`
-                MODIFY `file_content` DEFAULT NULL");
+        $this->execute('ALTER TABLE `institution_report_cards` CHANGE `file_content` `file_content` LONGBLOB NULL DEFAULT NULL');
 
-        $this->execute("ALTER TABLE `institution_report_cards`
-                MODIFY `file_content_pdf` DEFAULT NULL");
+        $this->execute('ALTER TABLE `institution_report_cards` CHANGE `file_content_pdf` `file_content_pdf` LONGBLOB NULL DEFAULT NULL');
 				
-        $this->execute("ALTER TABLE `institution_report_cards`
-                MODIFY `started_on` DEFAULT NULL");
+        $this->execute('ALTER TABLE `institution_report_cards` CHANGE `started_on` `started_on` DATETIME NULL DEFAULT NULL');
 
-        $this->execute("ALTER TABLE `institution_report_cards`
-                MODIFY `completed_on` DEFAULT NULL");
+        $this->execute('ALTER TABLE `institution_report_cards` CHANGE `completed_on` `completed_on` DATETIME NULL DEFAULT NULL');
     }
 
 }
