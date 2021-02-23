@@ -15,7 +15,6 @@ use App\Model\Table\ControllerActionTable;
 
 class BulkStudentTransferInTable extends ControllerActionTable
 {
-   // private $_modelAlias = 'Institution.StudentTransferIn';
     private $_modelAlias = 'Institution.StudentTransferOut';
     private $_stepsOptions;
     private $_currentData;
@@ -27,7 +26,6 @@ class BulkStudentTransferInTable extends ControllerActionTable
 
         $this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
         $this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        /*$this->hasMany('StudentTransferIn', ['className' => 'Institution.StudentTransferIn', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);*/
         $this->hasMany('StudentTransferIn', ['className' => 'Institution.InstitutionStudentTransfers', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->toggle('index', false);
@@ -36,7 +34,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
         $this->toggle('remove', false);
         $this->toggle('search', false);
 
-        $this->_stepsOptions = $this
+        $steplists = $this
             ->find('list')
             ->contain([
                 'Workflows.WorkflowModels'
@@ -46,10 +44,14 @@ class BulkStudentTransferInTable extends ControllerActionTable
                 'WorkflowModels.model' => $this->_modelAlias
             ])
             ->toArray();
-        //remove open status because we are not getting start_date, end_date, institution class     
-        if (($key = array_search('Open', $this->_stepsOptions)) !== false) {
-            unset($this->_stepsOptions[$key]);
-        }
+        //remove open status because we are not getting start_date, end_date, institution class  
+        $option = array();
+        foreach ($steplists as $klist => $vlist) {
+            if($vlist == 'Pending Approval From Receiving Institution'){
+                $option[$klist] = $vlist;
+            }
+        } 
+        $this->_stepsOptions = $option;
     }
 
     public function validationDefault(Validator $validator)
@@ -97,7 +99,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
             'WorkflowActions.NextWorkflowSteps',
             'StudentTransferIn'=> function ($q) use ($superAdmin, $userId, $institutionId) {
                 $q->where(['StudentTransferIn.institution_id' => $institutionId])
-                    ->contain(['Users', 'Assignees', 'AcademicPeriods', 'EducationGrades', 'InstitutionClasses', 'Statuses']);
+                    ->contain(['Users', 'Assignees', 'AcademicPeriods', 'EducationGrades', 'InstitutionClasses', 'Statuses','PreviousInstitutions']);
                 if ($superAdmin) {
                     return $q;
                 } else {
@@ -154,8 +156,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
 
     public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
     {
-        /* gets all the workflow_steps in which the workflow model belongs to StudentAdmissionTable & returns a list of key-value pair for populating the dropdown. The dropdown contains statuses which have next step(action) */
-         switch ($this->action) {
+        switch ($this->action) {
             case 'edit':
                 $attr['type'] = 'select';
                 $attr['select'] = false;
@@ -419,6 +420,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
                         break;
                     }
                 }
+
                 $prevWorkflowStepName = $existingEntityToUpdate->status->name;
                 $existingEntityToUpdate->status_id = $data[$this->alias()]['next_step'];
                 $existingEntityToUpdate->assignee_id = $data[$this->alias()]['assignee_id'];
