@@ -361,6 +361,7 @@ class StudentAbsencesTable extends AppTable
                     ->select([
                         $StudentAttendanceTypes->aliasField('code'),
                         $StudentAttendanceMarkTypes->aliasField('id'),
+                        $StudentAttendanceMarkTypes->aliasField('attendance_per_day'),
                         $StudentAttendancePerDayPeriods->aliasField('name')
                     ])
                     ->innerJoin([$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()], [
@@ -383,7 +384,7 @@ class StudentAbsencesTable extends AppTable
         $array = [];
         if (!empty($record)) {
            foreach ($record as $key => $value) {
-               if ($value->StudentAttendanceTypes['code'] == 'DAY') {
+               if ($value->StudentAttendanceMarkTypes['attendance_per_day'] == 1) {
                    $array[] = isset($value->StudentAttendancePerDayPeriods['name']) ? $value->StudentAttendancePerDayPeriods['name'] : '';
                } 
                return implode(',', $array);
@@ -407,7 +408,8 @@ class StudentAbsencesTable extends AppTable
         $record = $this->find()
                     ->select([
                         $StudentAttendanceTypes->aliasField('code'),
-                        $StudentAttendanceMarkTypes->aliasField('id')
+                        $StudentAttendanceMarkTypes->aliasField('id'),
+                        $StudentAttendanceMarkTypes->aliasField('attendance_per_day'),
                     ])
                     ->innerJoin([$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()], [
                         $StudentMarkTypeStatusGrades->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
@@ -423,46 +425,26 @@ class StudentAbsencesTable extends AppTable
                     ])  
                     ->where([$this->aliasField('student_id') => $userId])
                     ->toArray();
-        /*$array = [];
-        if (!empty($record)) {
-            if ($record->StudentAttendanceTypes['code'] == 'SUBJECT') {
-                $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-                    $subjectDetails = $InstitutionSubjectStudents->find()
-                                        ->contain('InstitutionSubjects')
-                                        ->where([
-                                            $InstitutionSubjectStudents->aliasField('student_id') => $userId,
-                                            $InstitutionSubjectStudents->aliasField('academic_period_id') => $academicPeriodsId,
-                                        ])->toArray();
-                
-                    if (!empty($subjectDetails)) {
-                        foreach ($subjectDetails as $key => $value) {
-                                $array[] = $value->institution_subject->name;
+            $array = [];
+            if (!empty($record)) {
+               foreach ($record as $key => $value) {
+                   if ($value->StudentAttendanceMarkTypes['attendance_per_day'] == 0) {
+                      $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+                        $subjectDetails = $InstitutionSubjectStudents->find()
+                                            ->contain('InstitutionSubjects')
+                                            ->where([
+                                                $InstitutionSubjectStudents->aliasField('student_id') => $userId,
+                                                $InstitutionSubjectStudents->aliasField('academic_period_id') => $academicPeriodsId,
+                                            ])->toArray();
+                    
+                        if (!empty($subjectDetails)) {
+                            foreach ($subjectDetails as $key => $value) {
+                                    $array[] = $value->institution_subject->name;
                         }
-                }
+                   } 
+                   return implode(',', $array);
+               }
             }
-
-            return implode(',', $array);
-        }*/
-        $array = [];
-        if (!empty($record)) {
-           foreach ($record as $key => $value) {
-               if ($value->StudentAttendanceTypes['code'] == 'SUBJECT') {
-                  $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-                    $subjectDetails = $InstitutionSubjectStudents->find()
-                                        ->contain('InstitutionSubjects')
-                                        ->where([
-                                            $InstitutionSubjectStudents->aliasField('student_id') => $userId,
-                                            $InstitutionSubjectStudents->aliasField('academic_period_id') => $academicPeriodsId,
-                                        ])->toArray();
-                
-                    if (!empty($subjectDetails)) {
-                        foreach ($subjectDetails as $key => $value) {
-                                $array[] = $value->institution_subject->name;
-                    }
-               } 
-               return implode(',', $array);
-           }
-        }
         }
     }   
 }
