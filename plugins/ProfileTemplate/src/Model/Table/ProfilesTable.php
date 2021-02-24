@@ -102,7 +102,7 @@ class ProfilesTable extends ControllerActionTable
             ];
 		
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['ProfileTemplate', 'Profiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
                 $buttons['download'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
@@ -118,7 +118,7 @@ class ProfilesTable extends ControllerActionTable
             }
 
             // Generate button, all statuses
-            if ($this->AccessControl->check(['ProfileTemplate', 'Profiles', 'generate'])) {
+            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->ReportCards
@@ -154,7 +154,7 @@ class ProfilesTable extends ControllerActionTable
             }
 
             // Publish button, status must be generated
-            if ($this->AccessControl->check(['ProfileTemplate', 'Profiles', 'publish']) && $entity->has('report_card_status') 
+            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'publish']) && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::GENERATED 
                          || $entity->report_card_status == '12' 
                        )
@@ -168,7 +168,7 @@ class ProfilesTable extends ControllerActionTable
             }
 
             // Unpublish button, status must be published
-            if ($this->AccessControl->check(['ProfileTemplate', 'Profiles', 'unpublish']) 
+            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'unpublish']) 
                     && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::PUBLISHED 
                           || $entity->report_card_status == '16'
@@ -196,7 +196,6 @@ class ProfilesTable extends ControllerActionTable
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
-		$this->setupTabElements();
     }
 	
 	private function setupTabElements() {
@@ -244,6 +243,7 @@ class ProfilesTable extends ControllerActionTable
             ])
             ->hydrate(false)
             ->toArray();
+		$this->setupTabElements();	
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -314,12 +314,12 @@ class ProfilesTable extends ControllerActionTable
 		
         if (!is_null($reportCardId)) {
             $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
-
+			
             // only show toolbar buttons if request for report card and class is valid
             if ($existingReportCard) {
                 $generatedCount = 0;
                 $publishedCount = 0;
-
+				
                 // count statuses to determine which buttons are shown
                 foreach($data as $student) {
                     if ($student->has('report_card_status')) {
