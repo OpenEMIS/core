@@ -55,6 +55,7 @@ class StudentWithdrawalReportTable extends AppTable
         $institution_id = $requestData->institution_id;
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $StudentWithdrawReasons = TableRegistry::get('Student.StudentWithdrawReasons');
         $Users = TableRegistry::get('User.Users');
         $where = [];
         if ( $institution_id > 0) {
@@ -66,45 +67,77 @@ class StudentWithdrawalReportTable extends AppTable
         // die('asdfrahul');
 
         $query
-            ->select(['*'
-                // 'openemis_no' => 'Users.openemis_no',
-                // 'student_first_name' => 'Users.first_name',
+            ->select([
+                 'openemis_no' => 'Users.openemis_no',
+                 'student_first_name' => 'Users.first_name ',
                 // 'student_middle_name' => 'Users.middle_name',
                 // 'student_third_name' => 'Users.third_name',
                 // 'student_last_name' => 'Users.last_name',
-                // 'education_grade' => $EducationGrades->aliasField('name'),
+                 'education_grade' => $EducationGrades->aliasField('name'),
+                 'student_withdraw_reason' => $StudentWithdrawReasons->aliasField('name'),
+                 'comment',
             ])
-            // ->leftJoin(
-            //     [$Users->alias() => $Users->table()],
-            //         [
-            //             $Users->aliasField('id = ') . $this->aliasField('student_id')
-            //         ]
-            // ) 
-            // ->leftJoin(
-            //         [$EducationGrades->alias() => $EducationGrades->table()],
-            //         [
-            //             $EducationGrades->aliasField('id = ') . $InstitutionClassGrades->aliasField('education_grade_id')
-            //         ]
-            //     )
-            ->where([
-                //$this->aliasField('date >= ') => $startDate,
-               //// $this->aliasField('date <= ') => $endDate,
-                $where
-            ]);
+             ->leftJoin(
+                 [$Users->alias() => $Users->table()],
+                    [
+                         $Users->aliasField('id = ') . $this->aliasField('student_id')
+                     ]
+             ) 
+            ->leftJoin(
+                    [$EducationGrades->alias() => $EducationGrades->table()],
+                    [
+                        $EducationGrades->aliasField('id = ') . $this->aliasField('education_grade_id')
+                        // $EducationGrades->aliasField('id = ') . $InstitutionClassGrades->aliasField('education_grade_id')
+                    ]
+                )
+            ->leftJoin(
+                    [$StudentWithdrawReasons->alias() => $StudentWithdrawReasons->table()],
+                    [
+                        $StudentWithdrawReasons->aliasField('id = ') . $this->aliasField('student_withdraw_reason_id')
+                    ]
+                )
+            ->where([$where]);
             
         
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        // echo "<pre>"; print_r($fields); die();
+         // echo "<pre>"; print_r($fields); die();
        $newArray = [];
       
         $newArray[] = [
-            'key' => 'StudentWithdrawalReport.institution_id',
-            'field' => 'institution_id',
+            'key' => '',
+            'field' => 'openemis_no',
             'type' => 'string',
-            'label' => __('Institution')
+            'label' => __('Openemis No')
+        ];
+
+        $newArray[] = [
+            'key' => '',
+            'field' => 'student_first_name',
+            'type' => 'string',
+            'label' => __('Name')
+        ];
+
+        $newArray[] = [
+            'key' => '',
+            'field' => 'education_grade',
+            'type' => 'string',
+            'label' => __('Education Grade')
+        ];
+
+        $newArray[] = [
+            'key' => '',
+            'field' => 'student_withdraw_reason',
+            'type' => 'string',
+            'label' => __('Reason')
+        ];
+        $newArray[] = [
+            'key' => '',
+            'field' => 'comment',
+            'type' => 'string',
+            'label' => __('Comment')
         ];
         
         
