@@ -21,7 +21,7 @@ class StudentWithdrawalReportTable extends AppTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
    
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions',         'foreignKey' => 'institution_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
        
        $this->addBehavior('Excel', [
             'pages' => false,
@@ -40,10 +40,54 @@ class StudentWithdrawalReportTable extends AppTable
         $this->ControllerAction->field('format');
     }
 
+    public function onExcelGetInstitutionName(Event $event, Entity $entity)
+    {
+        $Institutions = TableRegistry::get('institutions');
+        
+        $where = [];
+        if ( $entity->institution_id > 0) {
+            $where = [$Institutions->aliasField('id = ') => $entity->institution_id];
+
+        } else {
+            $where = [];
+        }
+
+        $institutionName = $Institutions->find()->select(['name','code'])->where($where)>first();
+        return $institutionName->name;
+    }
+
+    public function onExcelGetInstitutionCode(Event $event, Entity $entity)
+    {
+        $Institutions = TableRegistry::get('institutions');
+        
+        $where = [];
+        if ( $entity->institution_id > 0) {
+            $where = [$Institutions->aliasField('id = ') => $entity->institution_id];
+
+        } else {
+            $where = [];
+        }
+
+        $institutionCode = $Institutions->find()->select(['name','code'])->where($where)->first();
+        return $institutionCode->code;
+    }
+
+
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions('Institutions');
         return $attr;
+    }
+
+    public function onExcelGetStudentName(Event $event, Entity $entity)
+    {
+        $studentName = [];
+        ($entity->student_first_name) ? $studentName[] = $entity->student_first_name : '';
+        ($entity->student_middle_name) ? $studentName[] = $entity->student_middle_name : '';
+        ($entity->student_third_name) ? $studentName[] = $entity->student_third_name : '';
+        ($entity->student_last_name) ? $studentName[] = $entity->student_last_name : '';
+
+        return implode(' ', $studentName);
     }
 
      public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -54,6 +98,7 @@ class StudentWithdrawalReportTable extends AppTable
         $academic_period_id = $requestData->academic_period_id;
         $institution_id = $requestData->institution_id;
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $Statuses = TableRegistry::get('Workflow.WorkflowSteps');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $StudentWithdrawReasons = TableRegistry::get('Student.StudentWithdrawReasons');
         $Users = TableRegistry::get('User.Users');
@@ -63,20 +108,25 @@ class StudentWithdrawalReportTable extends AppTable
         } else {
             $where = [];
         }
-        // echo "<pre>"; print_r($where);
-        // die('asdfrahul');
 
-        $query
+        if (!empty($academic_period_id)) {
+            $where[$this->aliasField('academic_period_id')] = $academic_period_id;
+        }
+
+        $query            
             ->select([
                  'openemis_no' => 'Users.openemis_no',
                  'student_first_name' => 'Users.first_name ',
-                // 'student_middle_name' => 'Users.middle_name',
-                // 'student_third_name' => 'Users.third_name',
-                // 'student_last_name' => 'Users.last_name',
+                 'student_middle_name' => 'Users.middle_name',
+                 'student_third_name' => 'Users.third_name',
+                 'student_last_name' => 'Users.last_name',
                  'education_grade' => $EducationGrades->aliasField('name'),
                  'student_withdraw_reason' => $StudentWithdrawReasons->aliasField('name'),
+                 'status' => $Statuses->aliasField('name'),
+                 'institution_id',
                  'comment',
             ])
+            
              ->leftJoin(
                  [$Users->alias() => $Users->table()],
                     [
@@ -87,13 +137,18 @@ class StudentWithdrawalReportTable extends AppTable
                     [$EducationGrades->alias() => $EducationGrades->table()],
                     [
                         $EducationGrades->aliasField('id = ') . $this->aliasField('education_grade_id')
-                        // $EducationGrades->aliasField('id = ') . $InstitutionClassGrades->aliasField('education_grade_id')
                     ]
                 )
             ->leftJoin(
                     [$StudentWithdrawReasons->alias() => $StudentWithdrawReasons->table()],
                     [
                         $StudentWithdrawReasons->aliasField('id = ') . $this->aliasField('student_withdraw_reason_id')
+                    ]
+                )
+            ->leftJoin(
+                    [$Statuses->alias() => $Statuses->table()],
+                    [
+                        $Statuses->aliasField('id = ') . $this->aliasField('status_id')
                     ]
                 )
             ->where([$where]);
@@ -103,9 +158,22 @@ class StudentWithdrawalReportTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-         // echo "<pre>"; print_r($fields); die();
        $newArray = [];
       
+        
+      $newArray[] = [
+            'key' => 'Institutions.institution_name',
+            'field' => 'institutionName',
+            'type' => 'string',
+            'label' => ''
+        ];
+        $newArray[] = [
+            'key' => 'Institutions.code',
+            'field' => 'institutionCode',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
+
         $newArray[] = [
             'key' => '',
             'field' => 'openemis_no',
@@ -114,10 +182,10 @@ class StudentWithdrawalReportTable extends AppTable
         ];
 
         $newArray[] = [
-            'key' => '',
-            'field' => 'student_first_name',
+            'key' => 'Users.student_name',
+            'field' => 'student_name',
             'type' => 'string',
-            'label' => __('Name')
+            'label' => __('Student')
         ];
 
         $newArray[] = [
@@ -125,6 +193,12 @@ class StudentWithdrawalReportTable extends AppTable
             'field' => 'education_grade',
             'type' => 'string',
             'label' => __('Education Grade')
+        ];
+         $newArray[] = [
+            'key' => '',
+            'field' => 'status',
+            'type' => 'string',
+            'label' => __('Student Status')
         ];
 
         $newArray[] = [
