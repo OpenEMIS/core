@@ -1889,6 +1889,21 @@ class WorkflowBehavior extends Behavior
                     }
                 }
             }
+
+            //POCOR-5677 starts
+            if ($entity->has('status_id') && $entity->status_id == 95) {
+                // update in institution_student_transfers table start and end date after change status open to pending approval
+                $AcademicPeriods = TableRegistry::get('academic_periods');
+                $AcademicData = $AcademicPeriods
+                            ->find()
+                            ->where([$AcademicPeriods->aliasField('id') => $entity->academic_period_id])
+                            ->first();
+
+                $entity->start_date = $AcademicData->start_year.'-01-01';
+                $entity->end_date = $AcademicData->start_year.'-12-31';
+                $model->save($entity);
+            }
+            //POCOR-5677 ends
         }
     }
 
