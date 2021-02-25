@@ -52,7 +52,7 @@ class ConfigItemsTable extends AppTable
         $this->ControllerAction->field('name', ['visible' => ['index'=>true]]);
         $this->ControllerAction->field('default_value', ['visible' => ['view'=>true]]);
         
-        if ($this->request->query['type'] == 8) {
+        if ($this->request->query['type'] == 9) {
           $this->ControllerAction->field('default_value', ['visible' => ['index'=>true]]);
         }
 
@@ -213,7 +213,7 @@ class ConfigItemsTable extends AppTable
 
                         $customOptions = new ArrayObject([]);
                         $this->dispatchEventToModels('Model.ConfigItems.populateOptions', [$customOptions], $this, $listeners);
-
+                        
                         if (!empty((array) $customOptions)) {
                             $attr['options'] = $customOptions;
                         } else {
@@ -289,6 +289,9 @@ class ConfigItemsTable extends AppTable
                     } else if ($entity->code == 'longitude_length') {
                         $attr['type'] = 'integer';
                         $attr['attr'] = ['min' => 1, 'max' => 7];
+                    }
+                    else if ($entity->code == 'date_time_format') {
+                        $attr['type'] = 'date';
                     }
                 }
             }
@@ -645,6 +648,18 @@ class ConfigItemsTable extends AppTable
         'bet' => [
             'rule'  => ['range', 1, 10],
             'message' => 'Numeric Value should be between 0 to 11',
+            'last' => true
+        ]
+    ];
+
+    private $validateAutomatedStudentDaysAbsent = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Numeric Value should be between 0 to 365',
+        ],
+        'bet' => [
+            'rule'  => ['range', 1, 365],
+            'message' => 'Numeric Value should be between 0 to 365',
             'last' => true
         ]
     ];
