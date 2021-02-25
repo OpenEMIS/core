@@ -8,6 +8,7 @@ use Cake\Network\Request;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -83,8 +84,27 @@ class ProgrammesTable extends ControllerActionTable
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
-
-        $query->where([$this->aliasField('student_id') => $studentId]);
+        $StudentTransferIn = TableRegistry::get('Institution.StudentTransferIn');
+        $Users = TableRegistry::get('User.Users');
+        $data = $StudentTransferIn->find()->where([$StudentTransferIn->aliasField('student_id') => $studentId]);
+        if (!empty($data)) {
+        	    $query
+        			->select([
+        				$StudentTransferIn->aliasField('start_date'),
+        			    $StudentTransferIn->aliasField('end_date'),
+        			    $this->Institutions->aliasField('code'),
+                        $this->Institutions->aliasField('name'),
+        			])
+        			->contain([$StudentTransferIn->Users->alias(), $StudentTransferIn->Institutions->alias()])
+        			->leftJoin([$StudentTransferIn->alias() => $StudentTransferIn->table()], [
+                        $StudentTransferIn->aliasField('student_id = ') . $this->aliasField('student_id')
+                    ])
+        			->where([$this->aliasField('student_id') => $studentId]);
+        } else {
+        	$query->where([$this->aliasField('student_id') => $studentId]);
+        }
+        //$query->where([$this->aliasField('student_id') => $studentId]);
+        //echo "<pre>";print_r($query);die();
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
