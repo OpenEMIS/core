@@ -1,4 +1,0 @@
-Exception: Shell class for "AutomatedStudentWithdrawalShell" could not be found. in [/var/www/html/pocor-openemis-core/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php, line 324]
-Warning Error: file_put_contents(/var/www/html/pocor-openemis-core/logs/cli-error.log): failed to open stream: Permission denied in [/var/www/html/pocor-openemis-core/vendor/cakephp/cakephp/src/Log/Engine/FileLog.php, line 133]
-
-PHP Warning:  file_put_contents(/var/www/html/pocor-openemis-core/logs/cli-error.log): failed to open stream: Permission denied in /var/www/html/pocor-openemis-core/vendor/cakephp/cakephp/src/Log/Engine/FileLog.php on line 133
