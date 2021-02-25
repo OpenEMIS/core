@@ -66,6 +66,7 @@ class ProgrammesTable extends ControllerActionTable
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
 		$session = $this->request->session();
+		$InstitutionId = $session->read('Institution.Institutions.id');
 		if ($this->controller->name == 'Profiles') {
 			$sId = $session->read('Student.Students.id');
 			if (!empty($sId)) {
@@ -89,22 +90,21 @@ class ProgrammesTable extends ControllerActionTable
         $data = $StudentTransferIn->find()->where([$StudentTransferIn->aliasField('student_id') => $studentId]);
         if (!empty($data)) {
         	    $query
-        			->select([
-        				$StudentTransferIn->aliasField('start_date'),
-        			    $StudentTransferIn->aliasField('end_date'),
-        			    $this->Institutions->aliasField('code'),
-                        $this->Institutions->aliasField('name'),
-        			])
-        			->contain([$StudentTransferIn->Users->alias(), $StudentTransferIn->Institutions->alias()])
-        			->leftJoin([$StudentTransferIn->alias() => $StudentTransferIn->table()], [
-                        $StudentTransferIn->aliasField('student_id = ') . $this->aliasField('student_id')
+        	    	->select([
+        	    		'Programmes__start_date' => $StudentTransferIn->aliasField('start_date'),
+        	    		'Programmes__end_date' => $StudentTransferIn->aliasField('end_date')
+        	    	])
+        			->innerJoin([$StudentTransferIn->alias() => $StudentTransferIn->table()], [
+                        $StudentTransferIn->aliasField('student_id = ') . $this->aliasField('student_id'),
+                        //$StudentTransferIn->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
                     ])
-        			->where([$this->aliasField('student_id') => $studentId]);
+        			->where([
+        				$this->aliasField('student_id') => $studentId,
+        				//$StudentTransferIn->aliasField('student_id') => $studentId, 
+        			]);
         } else {
         	$query->where([$this->aliasField('student_id') => $studentId]);
         }
-        //$query->where([$this->aliasField('student_id') => $studentId]);
-        //echo "<pre>";print_r($query);die();
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
