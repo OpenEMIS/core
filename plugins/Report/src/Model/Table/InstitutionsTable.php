@@ -584,6 +584,7 @@ class InstitutionsTable extends AppTable
                           'Report.InstitutionStudentsWithSpecialNeeds',
                           'Report.WashReports', 
                           'Report.InstitutionClasses',
+                          'Report.StudentWithdrawalReport',
                           'Report.InstitutionCommittees',
                           'Report.ClassAttendanceMarkedSummaryReport',  
                           'Report.Income',
@@ -836,6 +837,7 @@ class InstitutionsTable extends AppTable
                 'Report.Guardians',
                 'Report.InstitutionInfrastructures',
                 'Report.InstitutionClasses', 
+                'Report.StudentWithdrawalReport', 
                 'Report.SpecialNeedsFacilities', 
                 'Report.InstitutionCommittees',
                 'Report.SubjectsBookLists',
@@ -901,7 +903,7 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentWithdrawalReport','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else if (in_array($feature, ['Report.StudentAttendanceSummary'])) {//POCOR-5906 starts
                             $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;//POCOR-5906 ends
