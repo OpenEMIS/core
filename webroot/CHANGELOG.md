@@ -1,3 +1,16 @@
+### [3.62.1] - 2021-02-26
+- Implemented: Added extra columns for abscence reasons to Attendance Report
+- Implemented: Staff Profile feature
+- Implemented: Enhancement of Drop-Out and Withdraw function
+- Implemented: Enhancement of Student Transfer function
+- Bug Fixed: Reports > Profile: Upon clicking the generate button, Profiles were not being generated
+- Bug Fixed: Institutions > Academic > Classes > Add: Unable to select Homeroom Teacher is shift field has been selected
+- Bug Fixed: Institutions > Students > Import > Import Student Guardians: Add Guardian National ID column
+- Bug Fixed: Institutions > Attendance > Student: Multigrade Teacher unable to mark attendance
+- Bug Fixed: Institutions > General > Map: Latitude Length and Longitude Length is not reflecting the length that is configured in System Configurations
+- Bug Fixed: Institutions > Students > Bulk Promote: When selecting Promoted, the Next Grade field should not be mandatory
+- Bug Fixed: Administration > Education Structure > Programmes > Edit: Record disappeared after edit
+- Bug Fixed: Staff Payslips API: API Error
 ### [3.62.0] - 2021-02-19
 - Implemented: Infrastructure module - Export feature
 - Implemented: Enhancement of the Core survey module: survey school coverage feature

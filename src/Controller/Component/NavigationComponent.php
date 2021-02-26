@@ -586,7 +586,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Students.add', 'Institutions.Students.addExisting', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
                 'Institutions.StudentAdmission', 'Institutions.StudentTransferIn', 'Institutions.StudentTransferOut', 'Institutions.StudentWithdraw', 'Institutions.WithdrawRequests', 'Institutions.StudentUser.add',
-                'Institutions.ImportStudentAdmission', 'Institutions.Students','StudentHistories.index', 'Institutions.BulkStudentAdmission', 'Institutions.ImportStudentBodyMasses', 'Institutions.ImportStudentGuardians', 'Institutions.StudentStatusUpdates','Institutions.ImportStudentExtracurriculars'],
+                'Institutions.ImportStudentAdmission', 'Institutions.Students','StudentHistories.index', 'Institutions.BulkStudentAdmission', 'Institutions.ImportStudentBodyMasses', 'Institutions.ImportStudentGuardians', 'Institutions.StudentStatusUpdates','Institutions.ImportStudentExtracurriculars', 'Institutions.BulkStudentTransferIn'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -895,7 +895,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['InfrastructureUtilityTelephones.view', 'InfrastructureUtilityTelephones.add', 'InfrastructureUtilityTelephones.edit', 'InfrastructureUtilityTelephones.delete']
             ],
-
+			
             'InstitutionAssets.index' => [
                 'title' => 'Assets',
                 'parent' => 'Infrastructures',
@@ -1151,7 +1151,13 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
                 'selected' => ['Staff.SpecialNeedsReferrals', 'Staff.SpecialNeedsAssessments', 'Staff.SpecialNeedsServices', 'Staff.SpecialNeedsDevices', 'Staff.SpecialNeedsPlans']
-            ]
+            ],
+			'Staff.Profiles.index' => [
+				'title' => 'Profiles',
+				'parent' => 'Institutions.Staff.index',
+				'selected' => ['Staff.Profiles'],
+				'params' => ['plugin' => 'Staff']
+			],
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
@@ -1480,11 +1486,6 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Report'],
                 'selected' => ['Reports.ViewReport']
             ],
-            'Reports.Profiles' => [
-                'title' => 'Profiles',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Report'],
-            ],
             'Reports.Students' => [
                 'title' => 'Students',
                 'parent' => 'Reports',
@@ -1682,13 +1683,6 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Risk'],
                 'selected' => ['Risks.Risks']
             ],
-			'ProfileTemplates.Templates' => [
-				'title' => 'Profiles',
-				'parent' => 'SystemSetup',
-				'params' => ['plugin' => 'ProfileTemplate'],
-				'selected' => ['ProfileTemplates.Templates']
-			],
-
             'Security' => [
                 'title' => 'Security',
                 'parent' => 'Administration',
@@ -1714,6 +1708,22 @@ class NavigationComponent extends Component
                 'parent' => 'Security',
                 'params' => ['plugin' => 'Security'],
                 'selected' => ['Securities.Roles', 'Securities.Permissions']
+            ],
+			
+			'ProfileTemplates' => [
+                'title' => 'Profiles',
+                'parent' => 'Administration',
+                'link' => false
+            ],
+            'ProfileTemplates.Institutions' => [
+                'title' => 'Institutions',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['ProfileTemplates.InstitutionProfiles', 'ProfileTemplates.view', 'ProfileTemplates.add', 'ProfileTemplates.edit', 'ProfileTemplates.delete']
+            ],
+            'ProfileTemplates.Staff' => [
+                'title' => 'Staff',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['ProfileTemplates.StaffProfiles', 'Staff.view', 'Staff.add', 'Staff.edit', 'Staff.delete']
             ],
 
             'Administration.Survey' => [
