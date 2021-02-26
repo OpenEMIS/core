@@ -362,36 +362,33 @@ class StudentAbsencesTable extends AppTable
         $data = $this->find()
                 ->select([
                     $StudentAttendanceMarkTypes->aliasField('attendance_per_day'),
-                    $StudentAttendancePerDayPeriods->aliasField('name'),
-                    $StudentAttendanceTypes->aliasField('code'),
+                    $StudentAttendancePerDayPeriods->aliasField('name')
                 ])
-                ->leftJoin([$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()], [
+                ->innerJoin([$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()], [
                     $StudentMarkTypeStatusGrades->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
                 ])
-                ->leftJoin([$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()], [
+                ->innerJoin([$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()], [
                     $StudentMarkTypeStatuses->aliasField('id = ') . $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id')
                 ])
-                ->leftJoin([$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()], [
+                ->innerJoin([$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()], [
                     $StudentAttendanceMarkTypes->aliasField('id = ') . $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id')
                 ])
-                ->leftJoin([$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()], [
+                ->innerJoin([$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()], [
                     $StudentAttendanceTypes->aliasField('id = ') . $StudentAttendanceMarkTypes->aliasField('student_attendance_type_id')
                 ])
-                ->leftJoin([$StudentAttendancePerDayPeriods->alias() => $StudentAttendancePerDayPeriods->table()], [
+                ->innerJoin([$StudentAttendancePerDayPeriods->alias() => $StudentAttendancePerDayPeriods->table()], [
                         $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id = ') . $StudentAttendanceMarkTypes->aliasField('id')
                 ]) 
                 ->where([$this->aliasField('student_id') => $userId])
                 ->toArray();
-        
         $rows = []; 
         if (!empty($data)) {
            foreach ($data as $key => $value) {
-                if($value->StudentAttendanceTypes['code'] == 'DAY') {
+                if($value->StudentAttendanceMarkTypes['attendance_per_day'] == 1) {
                    $rows[] = $value->StudentAttendancePerDayPeriods['name'];
                 }
             }
         }
-        //echo "<pre>";print_r($rows);die("test");
         return implode(',', $rows);
     }
 
@@ -410,7 +407,6 @@ class StudentAbsencesTable extends AppTable
         $data = $this->find()
                 ->select([
                     $StudentAttendanceMarkTypes->aliasField('attendance_per_day'),
-                    $StudentAttendanceTypes->aliasField('code')
                 ])
                 ->innerJoin([$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()], [
                     $StudentMarkTypeStatusGrades->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
@@ -430,7 +426,7 @@ class StudentAbsencesTable extends AppTable
             $rows = []; 
             if (!empty($data)) {
                foreach ($data as $key => $value) {
-                   if($value->StudentAttendanceTypes['code'] == 'SUBJECT') {//die("1");
+                   if($value->StudentAttendanceMarkTypes['attendance_per_day'] == 0) {//die("1");
                        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
                         $subjectDetails = $InstitutionSubjectStudents->find()
                                             ->contain('InstitutionSubjects')
