@@ -1720,10 +1720,10 @@ class NavigationComponent extends Component
                 'parent' => 'ProfileTemplates',
                 'selected' => ['ProfileTemplates.InstitutionProfiles', 'ProfileTemplates.view', 'ProfileTemplates.add', 'ProfileTemplates.edit', 'ProfileTemplates.delete']
             ],
-            'ProfileTemplates.Staffs' => [
-                'title' => 'Staffs',
+            'ProfileTemplates.Staff' => [
+                'title' => 'Staff',
                 'parent' => 'ProfileTemplates',
-                'selected' => ['ProfileTemplates.StaffProfiles', 'Staffs.view', 'Staffs.add', 'Staffs.edit', 'Staffs.delete']
+                'selected' => ['ProfileTemplates.StaffProfiles', 'Staff.view', 'Staff.add', 'Staff.edit', 'Staff.delete']
             ],
 
             'Administration.Survey' => [

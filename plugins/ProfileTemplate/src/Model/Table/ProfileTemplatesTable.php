@@ -94,7 +94,6 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->field('generate_start_date', ['type' => 'date']);
         $this->field('generate_end_date', ['type' => 'date']);
         $this->field('excel_template');
-		$this->setupTabElements();
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -102,7 +101,8 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['description']['visible'] = false;
         $this->setFieldOrder(['code', 'name', 'generate_start_date', 'generate_end_date', 'excel_template']);
-    }
+		$this->setupTabElements();
+	}
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
