@@ -66,7 +66,6 @@ class ProgrammesTable extends ControllerActionTable
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
 		$session = $this->request->session();
-		$InstitutionId = $session->read('Institution.Institutions.id');
 		if ($this->controller->name == 'Profiles') {
 			$sId = $session->read('Student.Students.id');
 			if (!empty($sId)) {
@@ -85,26 +84,7 @@ class ProgrammesTable extends ControllerActionTable
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
-        $StudentTransferIn = TableRegistry::get('Institution.StudentTransferIn');
-        $Users = TableRegistry::get('User.Users');
-        $data = $StudentTransferIn->find()->where([$StudentTransferIn->aliasField('student_id') => $studentId]);
-        if (!empty($data)) {
-        	    $query
-        	    	->select([
-        	    		'Programmes__start_date' => $StudentTransferIn->aliasField('start_date'),
-        	    		'Programmes__end_date' => $StudentTransferIn->aliasField('end_date')
-        	    	])
-        			->innerJoin([$StudentTransferIn->alias() => $StudentTransferIn->table()], [
-                        $StudentTransferIn->aliasField('student_id = ') . $this->aliasField('student_id'),
-                        //$StudentTransferIn->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
-                    ])
-        			->where([
-        				$this->aliasField('student_id') => $studentId,
-        				//$StudentTransferIn->aliasField('student_id') => $studentId, 
-        			]);
-        } else {
-        	$query->where([$this->aliasField('student_id') => $studentId]);
-        }
+        $query->where([$this->aliasField('student_id') => $studentId]);
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
