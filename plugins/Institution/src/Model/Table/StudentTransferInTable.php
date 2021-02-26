@@ -257,6 +257,22 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         ]);
     }
 
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
+    {   
+        $studentId = $entity->student_id;
+        $institutionId = $entity->institution_id;
+        $academicPeriodId = $entity->academic_period_id;
+        $startDate = $entity->start_date;
+        $newDate = $startDate->format('Y-m-d');
+        $endDate = $entity->end_date;
+        $institutionStudents = TableRegistry::get('institution_students');
+        $query = $institutionStudents->query();
+        $query->update()
+                ->set(['start_date' => $newDate])
+                ->where(['institution_id' => $institutionId, 'student_id' => $studentId, 'academic_period_id' => $academicPeriodId])
+                ->execute();
+    }
+
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists('previous_academic_period_id') && $data->offsetExists('academic_period_id')) {
