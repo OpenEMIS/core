@@ -42,6 +42,7 @@ class StudentWithdrawalReportTable extends AppTable
 
     public function onExcelGetInstitutionName(Event $event, Entity $entity)
     {
+        die('rrr');
         $Institutions = TableRegistry::get('institutions');
         
         $where = [];
@@ -161,31 +162,32 @@ class StudentWithdrawalReportTable extends AppTable
        $newArray = [];
       
         
-      $newArray[] = [
-            'key' => 'Institutions.institution_name',
-            'field' => 'institutionName',
-            'type' => 'string',
-            'label' => ''
-        ];
-        $newArray[] = [
+       $newArray[] = [
             'key' => 'Institutions.code',
             'field' => 'institutionCode',
             'type' => 'string',
             'label' => __('Institution Code')
         ];
+          
+        $newArray[] = [
+            'key' => 'Institutions.institution_name',
+            'field' => 'institutionName',
+            'type' => 'string',
+            'label' => ''
+        ];       
 
         $newArray[] = [
             'key' => '',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => __('Openemis No')
+            'label' => __('Student OpenEMIS ID')
         ];
 
         $newArray[] = [
             'key' => 'Users.student_name',
             'field' => 'student_name',
             'type' => 'string',
-            'label' => __('Student')
+            'label' => __('Student Name')
         ];
 
         $newArray[] = [
