@@ -1615,6 +1615,141 @@ class Table implements RepositoryInterface, EventListenerInterface, EventDispatc
         return true;
     }
 
+    public function fileUpload(EntityInterface $entity, $options = [])
+    {
+        if ($options instanceof SaveOptionsBuilder) {
+            $options = $options->toArray();
+        }
+
+        $options = new ArrayObject($options + [
+            'atomic' => true,
+            'associated' => true,
+            'checkRules' => true,
+            'checkExisting' => true,
+            '_primary' => true
+        ]);
+
+        if ($entity->errors()) {
+            return false;
+        }
+
+        if ($entity->isNew() === false && !$entity->dirty()) {
+            return $entity;
+        }
+
+        $connection = $this->connection();
+        if ($options['atomic']) {
+            $success = $connection->transactional(function () use ($entity, $options) {
+                return $this->_processSaveFileUpload($entity, $options);
+            });
+            return $success;
+        } else {
+            $success = $this->_processSaveFileUpload($entity, $options);
+        }
+
+        if ($success) {
+            if (!$connection->inTransaction() &&
+                ($options['atomic'] || (!$options['atomic'] && $options['_primary']))
+            ) {
+                $this->dispatchEvent('Model.afterSaveCommit', compact('entity', 'options'));
+            }
+            if ($options['atomic'] || $options['_primary']) {
+                $entity->clean();
+                $entity->isNew(false);
+                $entity->source($this->registryAlias());
+            }
+        }
+
+        return $success;
+    }
+
+    protected function _processSaveFileUpload($entity, $options)
+    {
+        $primaryColumns = (array)$this->primaryKey();
+
+        if ($options['checkExisting'] && $primaryColumns && $entity->isNew() && $entity->has($primaryColumns)) {
+            $alias = $this->alias();
+            $conditions = [];
+            foreach ($entity->extract($primaryColumns) as $k => $v) {
+                $conditions["$alias.$k"] = $v;
+            }
+            $entity->isNew(!$this->exists($conditions));
+        }
+
+        $mode = $entity->isNew() ? RulesChecker::CREATE : RulesChecker::UPDATE;
+        if ($options['checkRules'] && !$this->checkRules($entity, $mode, $options)) {
+            return false;
+        }
+
+        $options['associated'] = $this->_associations->normalizeKeys($options['associated']);
+        $event = $this->dispatchEvent('Model.beforeSave', compact('entity', 'options'));
+
+        if ($event->isStopped()) {
+            return $event->result;
+        }
+
+        $saved = $this->_associations->saveParents(
+            $this,
+            $entity,
+            $options['associated'],
+            ['_primary' => false] + $options->getArrayCopy()
+        );
+
+        if (!$saved && $options['atomic']) {
+            return false;
+        }
+
+        $data = $entity->extract($this->schema()->columns(), true);
+        $isNew = $entity->isNew();
+        
+
+        if ($isNew) {
+            $success = $this->_insert($entity, $data);
+            return $success;
+        } else {
+            $success = $this->_update($entity, $data);
+        }
+
+        if ($success) {
+            $success = $this->_onSaveSuccessFileUpload($entity, $options);
+        }
+
+        if (!$success && $isNew) {
+            $entity->unsetProperty($this->primaryKey());
+            $entity->isNew(true);
+        }
+
+        return $success ? $entity : false;
+    }
+
+    protected function _onSaveSuccessFileUpload($entity, $options)
+    {
+        $success = $this->_associations->saveChildren(
+            $this,
+            $entity,
+            $options['associated'],
+            ['_primary' => false] + $options->getArrayCopy()
+        );
+
+        if (!$success && $options['atomic']) {
+            return false;
+        }
+
+        // $this->dispatchEvent('Model.afterSave', compact('entity', 'options'));
+
+        if ($options['atomic'] && !$this->connection()->inTransaction()) {
+            throw new RolledbackTransactionException(['table' => get_class($this)]);
+        }
+
+        if (!$options['atomic'] && !$options['_primary']) {
+            $entity->clean();
+            $entity->isNew(false);
+            $entity->source($this->registryAlias());
+        }
+
+        return true;
+    }
+
     /**
      * Auxiliary function to handle the insert of an entity's data in the table
      *
