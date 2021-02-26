@@ -3063,4 +3063,72 @@ class ValidationBehavior extends Behavior
         }
     }
     //POCOR-5917 ends
+	
+	public static function forLatitudeLength($field, array $globalData)
+    {   
+		if(!empty($field)){
+			$ConfigItems = TableRegistry::get('config_items');
+
+			$latitudeData = $ConfigItems->find()
+				->select([
+					$ConfigItems->aliasField('value'),
+					$ConfigItems->aliasField('default_value'),
+				   ])
+				   ->where([
+						$ConfigItems->aliasField('code') => 'latitude_length',
+					])
+				->first();
+				
+			$default_length = 0;
+			if (!empty($latitudeData->value)) {
+				$default_length = $latitudeData->value;
+			} else {
+				$default_length = $latitudeData->default_value;
+			}	
+			
+			$latitude = explode(".",$globalData['data']['latitude']);
+			$latitude_length = strlen($latitude[1]);
+			
+			if($latitude_length < $default_length) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+    }
+	
+	public static function forLongitudeLength($field, array $globalData)
+    {   
+		if(!empty($field)){
+			$ConfigItems = TableRegistry::get('config_items');
+
+			$longitudeData = $ConfigItems->find()
+				->select([
+					$ConfigItems->aliasField('value'),
+					$ConfigItems->aliasField('default_value'),
+				   ])
+				   ->where([
+						$ConfigItems->aliasField('code') => 'longitude_length',
+					])
+				->first();
+				
+			$longitude = explode(".",$globalData['data']['longitude']);
+			$longitude_length = strlen($longitude[1]);
+			
+			$default_length = 0;
+			if (!empty($longitudeData->value)) {
+				$default_length = $longitudeData->value;
+			} else {
+				$default_length = $longitudeData->default_value;
+			}
+			
+			if($longitude_length < $default_length) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+    }
 }

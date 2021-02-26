@@ -57,6 +57,20 @@ class InstitutionMapsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator = $this->LatLongValidation();
+
+        $validator
+            ->add('latitude', [
+                'ruleForLatitudeLength' => [
+                    'rule' => ['forLatitudeLength'],
+                    'message' => __('Latitude length is incomplete')
+                ]
+            ])
+			->add('longitude', [
+                'ruleForLongitudeLength' => [
+                    'rule' => ['forLongitudeLength'],
+                    'message' => __('Longitude length is incomplete')
+                ]
+            ]);
         return $validator;
     }
 
@@ -127,76 +141,6 @@ class InstitutionMapsTable extends ControllerActionTable
             }
         }
     }
-
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $extra) {
-		        
-		$ConfigItems = TableRegistry::get('config_items');
-
-		$latitudeData = $ConfigItems->find()
-            ->select([
-                $ConfigItems->aliasField('value'),
-                $ConfigItems->aliasField('default_value'),
-               ])
-			   ->where([
-					$ConfigItems->aliasField('code') => 'latitude_length',
-				])
-			->first();
-			
-		$longitudeData = $ConfigItems->find()
-            ->select([
-                $ConfigItems->aliasField('value'),
-                $ConfigItems->aliasField('default_value'),
-               ])
-			   ->where([
-					$ConfigItems->aliasField('code') => 'longitude_length',
-				])
-			->first();	
-		
-        if (!empty($entity->latitude)) {
-			$latitude = explode(".",$entity->latitude);
-			$latitude_length = strlen($latitude[1]);
-			
-			$default_length = 0;
-			if (!empty($latitudeData->value)) {
-				$default_length = $latitudeData->value;
-			} else {
-				$default_length = $latitudeData->default_value;
-			}
-			
-			if($latitude_length > $default_length) {
-				$latitude[1] = substr($latitude[1], 0, $default_length);
-			}
-			if($latitude_length < $default_length) {
-				$latitude[1] = $latitude[1].str_repeat('0', $default_length-$latitude_length);
-			}
-			
-			$latitude = implode(".",$latitude);
-			$entity->latitude = $latitude;
-        }  
-		
-        if (!empty($entity->longitude)) {
-			$longitude = explode(".",$entity->longitude);
-			$longitude_length = strlen($longitude[1]);
-			
-			$default_length = 0;
-			if (!empty($longitudeData->value)) {
-				$default_length = $longitudeData->value;
-			} else {
-				$default_length = $longitudeData->default_value;
-			}
-			
-			if($longitude_length > $default_length) {
-				$longitude[1] = substr($longitude[1], 0, $default_length);
-			}
-			if($longitude_length < $default_length) {
-				$longitude[1] = $longitude[1].str_repeat('0', $default_length-$longitude_length);
-			}
-			
-			$longitude = implode(".",$longitude);
-			$entity->longitude = $longitude;
-        }       
-
-    } 
 	
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
