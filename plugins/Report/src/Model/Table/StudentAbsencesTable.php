@@ -39,20 +39,18 @@ class StudentAbsencesTable extends AppTable
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    {//echo "<pre>";print_r($query);die();
+    {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institution_id = $requestData->institution_id;
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $Genders = TableRegistry::get('User.Genders');
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $Users = TableRegistry::get('User.Users');
         $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
         $Guardians = TableRegistry::get('Security.Users');
         $UserContacts = TableRegistry::get('UserContacts');
         $GuardianUser = TableRegistry::get('Security.Users');
-        $UserIdentities = TableRegistry::get('User.Identities');
         $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         if ( $institution_id > 0) {
@@ -88,8 +86,6 @@ class StudentAbsencesTable extends AppTable
                 'institution_class' => 'InstitutionClasses.name',
                 'education_grade' => $EducationGrades->aliasField('name'),
                 'gender' => $Genders->aliasField('name'),
-                'identity_type' => $IdentityTypes->aliasField('name'),
-                'identity_number' => $UserIdentities->aliasField('number'),
                 'address' => 'Users.address',
                 'academicPeriodId' => 'AcademicPeriods.id',
                 'guardian_name' => $GuardianUser->find()->func()->concat([
@@ -127,26 +123,6 @@ class StudentAbsencesTable extends AppTable
                         $Genders->aliasField('id = ') . $Users->aliasField('gender_id')
                     ]
                 )
-            ->leftJoin(
-                    [$UserIdentities->alias() => $UserIdentities->table()],
-                    [
-                        $UserIdentities->aliasField('security_user_id = ') . $Users->aliasField('id')
-                    ]
-                )
-            ->leftJoin(
-                    [$IdentityTypes->alias() => $IdentityTypes->table()],
-                    [
-                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
-                    ]
-                )
-            //pocor-5934
-            /*->leftJoin(
-                [$UserContacts->alias() => $UserContacts->table()],
-                    [
-                        $UserContacts->aliasField('security_user_id = ') . $Users->aliasField('id')
-                    ]
-            )*/
-            //pocor-5934
             ->leftJoin(
                 [$StudentGuardians->alias() => $StudentGuardians->table()],
                     [
@@ -204,21 +180,6 @@ class StudentAbsencesTable extends AppTable
             'type' => 'string',
             'label' => ''
         ];
-        //POCOR-5934
-        /*$newArray[] = [
-            'key' => 'Areas.code',
-            'field' => 'area_code',
-            'type' => 'string',
-            'label' => __('Area Education Code')
-        ];
-
-        $newArray[] = [
-            'key' => 'Areas.name',
-            'field' => 'area_name',
-            'type' => 'string',
-            'label' => __('Area Education')
-        ];*/
-        //POCOR-5934
         $newArray[] = [
             'key' => 'StudentAbsences.date',
             'field' => 'date',
@@ -262,13 +223,13 @@ class StudentAbsencesTable extends AppTable
             'label' => __('Gender'),
         ];
         $newArray[] = [
-            'key' => 'IdentityTypes.name',
+            'key' => 'identity_type',
             'field' => 'identity_type',
             'type' => 'string',
             'label' => __('Default Identity Type'),
         ];
         $newArray[] = [
-            'key' => 'Users.identity_number',
+            'key' => 'identity_number',
             'field' => 'identity_number',
             'type' => 'integer',
             'label' => __('Identity Number'),
@@ -344,92 +305,129 @@ class StudentAbsencesTable extends AppTable
         return implode(',', $contactArray);
     }
 
-    public function onExcelGetAttendancePerDay(Event $event, Entity $entity)
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
     {   
+        $openemisNo = $entity->openemis_no;
+        $Users = TableRegistry::get('User.Users');
+        $userId = $Users->find()->where([$Users->aliasField('openemis_no') => $openemisNo])->first()->id;
+        $UserIdentities = TableRegistry::get('User.Identities');
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $identities = $UserIdentities->find()
+                        ->select([$IdentityTypes->aliasField('name')])
+                        ->leftJoin([$IdentityTypes->alias() => $IdentityTypes->table()], [
+                            $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+                        ])
+                        ->where([
+                            $UserIdentities->aliasField('security_user_id') => $userId,
+                            $IdentityTypes->aliasField('default') => 1
+                        ])->first();
+        $identityTypeName = $identities['IdentityTypes']['name'];
+
+        return $identityTypeName;
+    }
+
+    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    {   
+        $openemisNo = $entity->openemis_no;
+        $Users = TableRegistry::get('User.Users');
+        $userId = $Users->find()->where([$Users->aliasField('openemis_no') => $openemisNo])->first()->id;
+        $UserIdentities = TableRegistry::get('User.Identities');
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $identitiesNo = $UserIdentities->find()
+                        ->leftJoin([$IdentityTypes->alias() => $IdentityTypes->table()], [
+                            $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+                        ])
+                        ->where([
+                            $UserIdentities->aliasField('security_user_id') => $userId,
+                            $IdentityTypes->aliasField('default') => 1
+                        ])->first();
+        
+        $identityTypeNumber = $identitiesNo['number'];
+        
+        return $identityTypeNumber;
+    }
+
+    public function onExcelGetAttendancePerDay(Event $event, Entity $entity)
+    { 
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
         $StudentMarkTypeStatuses = TableRegistry::get('Attendance.StudentMarkTypeStatuses');
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
-        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
-        $academicPeriodsId = $entity->academicPeriodId;
+        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods'); 
         $openemisNo = $entity->openemis_no;
         $Users = TableRegistry::get('User.Users');
         $userId = $Users->find()->where([$Users->aliasField('openemis_no') => $openemisNo])->first()->id;
-        
-        $record = $this->find()
-                    ->select([
-                        $StudentAttendanceTypes->aliasField('code'),
-                        $StudentAttendanceMarkTypes->aliasField('id'),
-                        $StudentAttendanceMarkTypes->aliasField('attendance_per_day'),
-                        $StudentAttendancePerDayPeriods->aliasField('name')
-                    ])
-                    ->innerJoin([$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()], [
-                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
-                    ])
-                    ->innerJoin([$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()], [
-                        $StudentMarkTypeStatuses->aliasField('id = ') . $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id')
-                    ])
-                    ->innerJoin([$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()], [
-                        $StudentAttendanceMarkTypes->aliasField('id = ') . $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id')
-                    ])
-                    ->innerJoin([$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()], [
-                        $StudentAttendanceTypes->aliasField('id = ') . $StudentAttendanceMarkTypes->aliasField('student_attendance_type_id')
-                    ])
-                    ->innerJoin([$StudentAttendancePerDayPeriods->alias() => $StudentAttendancePerDayPeriods->table()], [
+
+        $data = $this->find()
+                ->select([
+                    $StudentAttendanceMarkTypes->aliasField('attendance_per_day'),
+                    $StudentAttendancePerDayPeriods->aliasField('name')
+                ])
+                ->innerJoin([$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()], [
+                    $StudentMarkTypeStatusGrades->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
+                ])
+                ->innerJoin([$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()], [
+                    $StudentMarkTypeStatuses->aliasField('id = ') . $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id')
+                ])
+                ->innerJoin([$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()], [
+                    $StudentAttendanceMarkTypes->aliasField('id = ') . $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id')
+                ])
+                ->innerJoin([$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()], [
+                    $StudentAttendanceTypes->aliasField('id = ') . $StudentAttendanceMarkTypes->aliasField('student_attendance_type_id')
+                ])
+                ->innerJoin([$StudentAttendancePerDayPeriods->alias() => $StudentAttendancePerDayPeriods->table()], [
                         $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id = ') . $StudentAttendanceMarkTypes->aliasField('id')
-                    ])  
-                    ->where([$this->aliasField('student_id') => $userId])
-                    ->toArray();
-        $array = [];
-        if (!empty($record)) {
-           foreach ($record as $key => $value) {
-               if ($value->StudentAttendanceMarkTypes['attendance_per_day'] == 1) {
-                   $array[] = isset($value->StudentAttendancePerDayPeriods['name']) ? $value->StudentAttendancePerDayPeriods['name'] : '';
-               } 
-               return implode(',', $array);
-           }
+                ]) 
+                ->where([$this->aliasField('student_id') => $userId])
+                ->toArray();
+        $rows = []; 
+        if (!empty($data)) {
+           foreach ($data as $key => $value) {
+                if($value->StudentAttendanceMarkTypes['attendance_per_day'] == 1) {
+                   $rows[] = $value->StudentAttendancePerDayPeriods['name'];
+                }
+            }
         }
+        return implode(',', $rows);
     }
 
     public function onExcelGetSubjects(Event $event, Entity $entity)
-    {   
+    {
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
         $StudentMarkTypeStatuses = TableRegistry::get('Attendance.StudentMarkTypeStatuses');
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
-        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
-        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
-        $academicPeriodsId = $entity->academicPeriodId;
+        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes'); 
         $openemisNo = $entity->openemis_no;
+        $academicPeriodsId = $entity->academicPeriodId;
         $Users = TableRegistry::get('User.Users');
         $userId = $Users->find()->where([$Users->aliasField('openemis_no') => $openemisNo])->first()->id;
-        
-        $record = $this->find()
-                    ->select([
-                        $StudentAttendanceTypes->aliasField('code'),
-                        $StudentAttendanceMarkTypes->aliasField('id'),
-                        $StudentAttendanceMarkTypes->aliasField('attendance_per_day'),
-                    ])
-                    ->innerJoin([$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()], [
-                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
-                    ])
-                    ->innerJoin([$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()], [
-                        $StudentMarkTypeStatuses->aliasField('id = ') . $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id')
-                    ])
-                    ->innerJoin([$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()], [
-                        $StudentAttendanceMarkTypes->aliasField('id = ') . $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id')
-                    ])
-                    ->innerJoin([$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()], [
-                        $StudentAttendanceTypes->aliasField('id = ') . $StudentAttendanceMarkTypes->aliasField('student_attendance_type_id')
-                    ])  
-                    ->where([$this->aliasField('student_id') => $userId])
-                    ->toArray();
-            $array = [];
-            if (!empty($record)) {
-               foreach ($record as $key => $value) {
-                   if ($value->StudentAttendanceMarkTypes['attendance_per_day'] == 0) {
-                      $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+
+        $data = $this->find()
+                ->select([
+                    $StudentAttendanceMarkTypes->aliasField('attendance_per_day'),
+                ])
+                ->innerJoin([$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()], [
+                    $StudentMarkTypeStatusGrades->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id')
+                ])
+                ->innerJoin([$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()], [
+                    $StudentMarkTypeStatuses->aliasField('id = ') . $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id')
+                ])
+                ->innerJoin([$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()], [
+                    $StudentAttendanceMarkTypes->aliasField('id = ') . $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id')
+                ])
+                ->innerJoin([$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()], [
+                    $StudentAttendanceTypes->aliasField('id = ') . $StudentAttendanceMarkTypes->aliasField('student_attendance_type_id')
+                ])
+                ->where([$this->aliasField('student_id') => $userId])
+                ->toArray();
+            
+            $rows = []; 
+            if (!empty($data)) {
+               foreach ($data as $key => $value) {
+                   if($value->StudentAttendanceMarkTypes['attendance_per_day'] == 0) {//die("1");
+                       $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
                         $subjectDetails = $InstitutionSubjectStudents->find()
                                             ->contain('InstitutionSubjects')
                                             ->where([
@@ -439,12 +437,13 @@ class StudentAbsencesTable extends AppTable
                     
                         if (!empty($subjectDetails)) {
                             foreach ($subjectDetails as $key => $value) {
-                                    $array[] = $value->institution_subject->name;
-                        }
-                   } 
-                   return implode(',', $array);
-               }
+                                    $rows[] = $value->institution_subject->name;
+                            }
+                        } 
+                   }//die("else");
+                }
             }
-        }
+            
+            return implode(',', $rows);
     }   
 }
