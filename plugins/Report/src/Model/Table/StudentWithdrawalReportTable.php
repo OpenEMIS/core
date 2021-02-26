@@ -42,7 +42,6 @@ class StudentWithdrawalReportTable extends AppTable
 
     public function onExcelGetInstitutionName(Event $event, Entity $entity)
     {
-        die('rrr');
         $Institutions = TableRegistry::get('institutions');
         
         $where = [];
@@ -53,7 +52,7 @@ class StudentWithdrawalReportTable extends AppTable
             $where = [];
         }
 
-        $institutionName = $Institutions->find()->select(['name','code'])->where($where)>first();
+        $institutionName = $Institutions->find()->select(['name','code'])->where($where)->first();
         return $institutionName->name;
     }
 
@@ -170,10 +169,10 @@ class StudentWithdrawalReportTable extends AppTable
         ];
           
         $newArray[] = [
-            'key' => 'Institutions.institution_name',
+            'key' => 'Institutions.name',
             'field' => 'institutionName',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Institution Name')
         ];       
 
         $newArray[] = [
