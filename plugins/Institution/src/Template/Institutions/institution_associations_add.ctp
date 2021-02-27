@@ -33,11 +33,11 @@ $this->start('panelBody');
     </div>
     <div class="input string required">
         <label><?= __('Academic Period') ?></label>
-        <input ng-model="InstitutionClassStudentsController.academicPeriodName" type="text" disabled="disabled">
+        <input ng-model="" type="text">
     </div>
     <div class="input string required">
         <label><?= __('Name') ?></label>
-        <input ng-model="InstitutionClassStudentsController.className" type="string" ng-init="InstitutionClassStudentsController.className='';">
+        <input  type="string" ng-init="InstitutionClassStudentsController.className='';">
         <div ng-if="InstitutionClassStudentsController.postError.name" class="error-message">
             <p ng-repeat="error in InstitutionClassStudentsController.postError.name">{{ error }}</p>
         </div>
