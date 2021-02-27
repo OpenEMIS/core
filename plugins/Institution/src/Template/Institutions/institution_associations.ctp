@@ -1,6 +1,6 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/institutionassociations/institution.associations.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/institutionassociations/institution.associations.ctrl', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/institutionassociations/institutionadd.associations.svc', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/institutionassociations/institutionadd.associations.ctrl', ['block' => true]); ?>
 <?= $this->Html->css('ControllerAction.../plugins/chosen/css/chosen.min', ['block' => true]); ?>
 <?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min', ['block' => true]); ?>
 <?= $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', ['block' => true]); ?>
@@ -33,7 +33,14 @@ $this->start('panelBody');
     </div>
     <div class="input string required">
         <label><?= __('Academic Period') ?></label>
-        <input ng-model="InstitutionAssociationsController.academicPeriodName" type="text" disabled="disabled">
+        <div class="input-select-wrapper">
+         <select name="academic_period_id" id="academic-period-id"
+            ng-options="option.name for option in InstitutionAssociationsController.academicPeriodOptions.availableOptions track by option.id"
+            ng-model="InstitutionAssociationsController.academicPeriodOptions.selectedOption"
+            ng-change="InstitutionAssociationsController.onChangeAcademicPeriod()"
+            >
+        </select>
+        </div>
     </div>
     <div class="input string required">
         <label><?= __('Name') ?></label>
@@ -46,8 +53,8 @@ $this->start('panelBody');
         <label><?= __('Staff') ?></label>
         <select chosen
             data-placeholder="-- <?=__('Select Staff or Leave Blank') ?> --"
-            name="InstitutionClasses[secondary_staff_id]"
-            id="institutionclasses-secondary-staff-id"
+            name="InstitutionAssociations[security_user_id]"
+            id="institutionassociations-security-user-id"
             multiple="multiple"
             class="chosen-select"
             options="InstitutionAssociationsController.secondaryTeacherOptions"

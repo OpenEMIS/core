@@ -1224,19 +1224,54 @@ class InstitutionsController extends AppController
     // Assosiation feature 
     public function Associations($subaction = 'index', $associationId = null)
     {
-        if ($subaction == 'edit') {
+        if ($subaction == 'add') {
             $session = $this->request->session();
             $roles = [];
-            $associationId = $this->ControllerAction->paramsDecode($associationId);
             $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
             $viewUrl = $this->ControllerAction->url('view');
-            $viewUrl['action'] = 'Classes';
+            $viewUrl['action'] = 'Associations';
             $viewUrl[0] = 'view';
 
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'action' => 'Classes',
+                'action' => 'Associations',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+            ->getCurrent();
+            $academicPeriodOptions =TableRegistry::get('AcademicPeriod.AcademicPeriods')
+                ->getYearList();
+
+
+            $this->set('alertUrl', $alertUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('academicPeriodId', $academicPeriodId);
+            $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
+            $this->set('institutionId', $institutionId);
+            $this->render('institution_associations');
+        }else if ($subaction == 'edit') {
+            $session = $this->request->session();
+            $roles = [];
+            $associationId = $this->ControllerAction->paramsDecode($associationId);
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'Associations';
+            $viewUrl[0] = 'view';
+
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Associations',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
 
@@ -1523,6 +1558,14 @@ class InstitutionsController extends AppController
                             'kd-angular-multi-select',
                             'institution.associations.ctrl',
                             'institution.associations.svc'
+                        ]);
+                    }
+                    if ($this->request->param('pass')[0] == 'add') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'kd-angular-multi-select',
+                            'institutionadd.associations.ctrl',
+                            'institutionadd.associations.svc'
                         ]);
                     }
                 }

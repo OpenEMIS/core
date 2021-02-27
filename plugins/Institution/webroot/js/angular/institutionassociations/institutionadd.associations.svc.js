@@ -1,5 +1,5 @@
 angular
-    .module('institution.associations.svc', ['kd.data.svc'])
+    .module('institutionadd.associations.svc', ['kd.data.svc'])
     .service('InstitutionAssociationsSvc', InstitutionAssociationsSvc);
 
 InstitutionAssociationsSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc'];
@@ -13,6 +13,7 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
         getUnassignedStudent: getUnassignedStudent,
         translate: translate,
         getTeacherOptions: getTeacherOptions,
+        getStudentOptions: getStudentOptions,
         saveAssociation: saveAssociation,
         updateAssociation: updateAssociation,
         getConfigItemValue: getConfigItemValue,
@@ -22,6 +23,7 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
     var models = {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         InstitutionStaff: 'Institution.Staff',
+        InstitutionStudent: 'Institution.Student',
         AssociationStudent: 'Student.InstitutionAssociationStudent',
         InstitutionClasses: 'Institution.InstitutionClasses',
         InstitutionAssociations: 'Institution.InstitutionAssociations',
@@ -96,9 +98,37 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
             deferred.resolve(response.data.data);
         };
         return AssociationStudent.find('InstitutionStudentsNotInAssociation', {
-            academic_period_id: 29,
-            education_grade_id: 60,
+            academic_period_id: academicPeriodId,
+            education_grade_id: educationGradeId,
             institution_association_id: institutionAssociationId
+        }).ajax({
+            success: success,
+            defer: true
+        });
+    }
+
+    function getStudentOptions(institutionId, academicPeriodId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        // return InstitutionStudent.find('InstitutionStudentOption', {
+        //     institution_id: institutionId,
+        //     academic_period_id: academicPeriodId
+        // }).ajax({
+        //     success: success,
+        //     defer: true
+        // });
+        // return InstitutionStaff.find('byInstitution', {
+        //     institution_id: institutionId,
+        //     academic_period_id: academicPeriodId
+        // }).ajax({
+        //     success: success,
+        //     defer: true
+        // });
+
+        return AssociationStudent.find('institutionStudent', {
+            institution_id: institutionId,
+            academic_period_id: academicPeriodId
         }).ajax({
             success: success,
             defer: true
@@ -141,6 +171,7 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
 
     function saveAssociation(data) {
         InstitutionAssociations.reset();
+        console.log(data)
         return InstitutionAssociations.save(data);
     }
 
@@ -151,7 +182,6 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
 
     // for add page 
     function getAcademicPeriodOptions(institutionId) {
-        console.log("Institution ID " + institutionId);
         var success = function(response, deferred) {
             var periods = response.data.data;
             if (angular.isObject(periods) && periods.length > 0) {
@@ -160,7 +190,6 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
                 deferred.reject('There was an error when retrieving the academic periods');
             }
         };
-
         return AcademicPeriods
             .find('periodHasClass', {
                 institution_id: institutionId
