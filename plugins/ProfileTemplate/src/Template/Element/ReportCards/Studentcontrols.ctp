@@ -47,6 +47,19 @@
                         'data-named-group' => 'academic_period_id,student_profile_template_id'
                     ));
                 }
+				
+				if (!empty($classOptions)) {
+                    echo $this->Form->input('class_id', array(
+                        'type' => 'select',
+                        'class' => 'form-control',
+                        'label' => false,
+                        'options' => $classOptions,
+                        'default' => $selectedClass,
+                        'url' => $baseUrl,
+                        'data-named-key' => 'class_id',
+                        'data-named-group' => 'academic_period_id,student_profile_template_id,institution_id'
+                    ));
+                }
             ?>
         </div>
     </div>
