@@ -1088,13 +1088,20 @@ class HealthReportsTable extends AppTable
                 'type' => 'date',
                 'label' => __('Date')
             ];
-            
-            $extraFields[] = [
+            // POCOR-5890 starts
+            /*$extraFields[] = [
                 'key' => 'user_health_immunization_dosage',
                 'field' => 'user_health_immunization_dosage',
                 'type' => 'string',
                 'label' => __('Dosage')
-            ];
+            ];*/
+
+            $extraFields[] = [
+                'key' => 'user_health_immunization_type_name',
+                'field' => 'user_health_immunization_type_name',
+                'type' => 'string',
+                'label' => __('Vaccination Type')
+            ]; 
 
             $extraFields[] = [
                 'key' => 'user_health_immunization_comment',
@@ -1102,13 +1109,7 @@ class HealthReportsTable extends AppTable
                 'type' => 'string',
                 'label' => __('Comment')
             ];
-
-            $extraFields[] = [
-                'key' => 'user_health_immunization_type_name',
-                'field' => 'user_health_immunization_type_name',
-                'type' => 'string',
-                'label' => __('Health Immunization Type')
-            ]; 
+            // POCOR-5890 ends
         }elseif($healthReportType == 'Medications'){
             $extraFields[] = [
                 'key' => 'user_health_medication_name',

@@ -60,6 +60,7 @@ class InstitutionsController extends AppController
         'StaffTransferIn',
         'StaffTransferOut',
         'StaffDuties',
+        'StaffSalaries',
         // 'StaffPositionProfiles',
 
         // attendances
@@ -132,6 +133,9 @@ class InstitutionsController extends AppController
         'StudentOutcomes',
         'ImportOutcomeResults',
 
+        //assessment
+        'ImportAssessmentItemResults',
+
         // misc
         // 'IndividualPromotion',
         // 'CourseCatalogue',
@@ -153,6 +157,7 @@ class InstitutionsController extends AppController
         $this->ControllerAction->models = [
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
             'Staff'             => ['className' => 'Institution.Staff'],
+            'StaffSalaries'     => ['className' => 'Institution.StaffSalaries'],
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
 
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
@@ -175,6 +180,7 @@ class InstitutionsController extends AppController
             'ImportInstitutionSurveys'  => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
             'ImportStudentAdmission'    => ['className' => 'Institution.ImportStudentAdmission', 'actions' => ['add']],
             'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
+            'ImportStaffSalaries'       => ['className' => 'Institution.ImportStaffSalaries', 'actions' => ['add']],
             'ImportInstitutionTextbooks'=> ['className' => 'Institution.ImportInstitutionTextbooks', 'actions' => ['add']],
             'ImportOutcomeResults'      => ['className' => 'Institution.ImportOutcomeResults', 'actions' => ['add']],
             'ImportCompetencyResults'   => ['className' => 'Institution.ImportCompetencyResults', 'actions' => ['add']],
@@ -184,7 +190,8 @@ class InstitutionsController extends AppController
             'ImportStudentGuardians'   => ['className' => 'Institution.ImportStudentGuardians', 'actions' => ['add']],
             'ImportStudentExtracurriculars'   => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']],
             'StudentArchive'  => ['className' => 'Institution.StudentArchive', 'actions' => ['add']],
-            'AssessmentsArchive'  => ['className' => 'Institution.AssessmentsArchive', 'actions' => ['index']]
+            'AssessmentsArchive'  => ['className' => 'Institution.AssessmentsArchive', 'actions' => ['index']],
+            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -389,7 +396,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
     }
-
     public function AssessmentsArchive()
     {
         if (!empty($this->request->param('institutionId'))) {
@@ -482,6 +488,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferIn']);
     }
+    //POCOR-5677 start
+    public function BulkStudentTransferIn()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.BulkStudentTransferIn']);
+    }
+    //POCOR-5677 ends
     public function StudentTransferOut()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferOut']);
@@ -580,6 +592,13 @@ class InstitutionsController extends AppController
             'view'
         ];*/
     }
+
+    //POCOR-5182 added StaffSalaries
+    public function StaffSalaries()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffSalaries']);
+    }
+    //POCOR-5182 added StaffSalaries
 
     // AngularJS
     public function ScheduleTimetable($action = 'view')

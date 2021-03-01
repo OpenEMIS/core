@@ -14,15 +14,18 @@ class POCOR5192 extends AbstractMigration
     {
 		// Backup table
 		$this->execute('CREATE TABLE `zz_5192_security_functions` LIKE `security_functions`');
-		$this->execute('INSERT INTO `zz_5192_security_functions` SELECT * FROM `security_functions`');
+		$this->execute('INSERT INTO `zz_5192_security_functions` SELECT * FROM `security_functions`');		// Backup table
+		
+		$this->execute('CREATE TABLE `zz_5192_email_templates` LIKE `email_templates`');
+		$this->execute('INSERT INTO `zz_5192_email_templates` SELECT * FROM `email_templates`');
 		
 		$this->insert('email_templates', [
                 'model_alias' => 'ReportCard.StaffReportCardEmail',
-				'model_reference' => '0',
+				'model_reference' => '1',
 				'subject' => 'Staff Report Card of ${staff.openemis_no} for ${academic_period.name}',
-				'message' => 'Dear ${student.first_name},
+				'message' => 'Dear ${staff.first_name},
 
-Attached is your student report card for ${academic_period.name}.
+Attached is your staff report card for ${academic_period.name}.
 
 Thank you.
 
@@ -32,18 +35,20 @@ Thank you.
 				'created_user_id' => '1',
 				'created' => date('Y-m-d H:i:s')
             ]);	
-			
+		
+		$this->execute('ALTER TABLE `security_functions` CHANGE `_execute` `_execute` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL');
+		
 		$this->insert('security_functions', [
                 'name' => 'Institutions',
-				'controller' => 'ProfileTemplate',
+				'controller' => 'ProfileTemplates',
 				'module' => 'Administration',
 				'category' => 'Profiles',
 				'parent_id' => 5000,
-				'_view' => 'Profiles.index|Profiles.view',
-				'_edit' => 'Profiles.edit',
-				'_add' => 'Profiles.add',
-				'_delete' => 'Profiles.delete',
-				'_execute' => 'Profiles.generate|Profiles.downloadExcel|Profiles.publish|Profiles.unpublish|Profiles.email',
+				'_view' => 'Institutions.index|Institutions.view|InstitutionProfiles.view|InstitutionProfiles.index',
+				'_edit' => 'Institutions.edit',
+				'_add' => 'Institutions.add',
+				'_delete' => 'Institutions.remove',
+				'_execute' => 'InstitutionProfiles.generate|InstitutionProfiles.downloadExcel|InstitutionProfiles.publish|InstitutionProfiles.unpublish|InstitutionProfiles.email|InstitutionProfiles.downloadAll|InstitutionProfiles.generateAll|InstitutionProfiles.publishAll|InstitutionProfiles.unpublishAll',
 				'order' => 77,
 				'visible' => 1,
 				'created_user_id' => '1',
@@ -51,16 +56,16 @@ Thank you.
             ]);
 			
 		$this->insert('security_functions', [
-                'name' => 'Staffs',
-				'controller' => 'ProfileTemplate',
+                'name' => 'Staff',
+				'controller' => 'ProfileTemplates',
 				'module' => 'Administration',
 				'category' => 'Profiles',
 				'parent_id' => 5000,
-				'_view' => 'StaffProfiles.index|StaffProfiles.view',
-				'_edit' => 'StaffProfiles.edit',
-				'_add' => 'StaffProfiles.add',
-				'_delete' => 'StaffProfiles.delete',
-				'_execute' => 'StaffProfiles.generate|StaffProfiles.downloadExcel|StaffProfiles.publish|StaffProfiles.unpublish|StaffProfiles.email',
+				'_view' => 'Staff.index|Staff.view|StaffProfiles.view|StaffProfiles.view',
+				'_edit' => 'Staff.edit',
+				'_add' => 'Staff.add',
+				'_delete' => 'Staff.remove',
+				'_execute' => 'StaffProfiles.generate|StaffProfiles.downloadExcel|StaffProfiles.publish|StaffProfiles.unpublish|StaffProfiles.email|StaffProfiles.downloadAll|StaffProfiles.generateAll|StaffProfiles.publishAll|StaffProfiles.unpublishAll',
 				'order' => 78,
 				'visible' => 1,
 				'created_user_id' => '1',
@@ -308,9 +313,14 @@ Thank you.
 		$this->execute('DROP TABLE IF EXISTS `security_functions`');
 		$this->execute('RENAME TABLE `zz_5192_security_functions` TO `security_functions`');
 		
-        //rollback of staff_profile_templates,staff_report_card_processes,staff_report_cards
+		// rollback of email_templates
+		$this->execute('DROP TABLE IF EXISTS `email_templates`');
+		$this->execute('RENAME TABLE `zz_5192_email_templates` TO `email_templates`');
+		
+        //rollback of staff_profile_templates,staff_report_card_processes,staff_report_cards,staff_report_card_email_processes
         $this->execute('DROP TABLE IF EXISTS `staff_profile_templates`');
         $this->execute('DROP TABLE IF EXISTS `staff_report_card_processes`');
         $this->execute('DROP TABLE IF EXISTS `staff_report_cards`');
+        $this->execute('DROP TABLE IF EXISTS `staff_report_card_email_processes`');
     }
 }
