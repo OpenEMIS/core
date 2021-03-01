@@ -33,8 +33,8 @@ class InstitutionProgrammesTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
 	{
 		$query
-			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives','EducationGrades.EducationProgrammes.EducationCycles'])
-			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name','programmes' => 'EducationCycles.name']);
+			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives','EducationGrades.EducationProgrammes'])
+			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name','programmes' => 'EducationProgrammes.name']);
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -48,7 +48,7 @@ class InstitutionProgrammesTable extends AppTable  {
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
 		foreach ($cloneFields as $key => $value) {
-			$newFields[] = [
+			$newFields[0] = [
 					'key' => 'EducationProgrammes.name',
 					'field' => 'programmes',
 					'type' => 'string',
