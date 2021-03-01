@@ -316,6 +316,36 @@ class StudentProfilesTable extends ControllerActionTable
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 		$where[$this->aliasField('institution_id')] = $selectedInstitution;
         //End
+	
+		// Class filter
+		$Classes = $this->InstitutionClasses;
+        $classOptions = [];
+        $selectedClass = !is_null($this->request->query('class_id')) ? $this->request->query('class_id') : -1;
+
+        if ($selectedReportCard != -1) {
+            if (!empty($selectedClass)) {
+                $classOptions = $Classes->find('list')
+                    ->matching('ClassGrades')
+                    ->where([
+                        $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                        $Classes->aliasField('institution_id') => $selectedInstitution,
+                    ])
+                    ->order([$Classes->aliasField('name')])
+                    ->toArray();
+            } else {
+                // if selected report card is not valid, do not show any students
+                $selectedClass = -1;
+            }
+        }
+        
+        if(!empty($classOptions)){
+            $classOptions['all']   = "All Classes" ;
+        }
+        
+        $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
+        $this->controller->set(compact('classOptions', 'selectedClass'));
+        $where[$this->aliasField('institution_class_id')] = $selectedClass;
+        //End
 		
         $query
             ->select([
