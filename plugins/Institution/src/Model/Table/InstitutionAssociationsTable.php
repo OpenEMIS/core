@@ -79,7 +79,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
-        $this->field('code', ['visible' => false]);
+       // $this->field('code', ['visible' => false]);
         $this->field('created', ['visible' => false]);
         $this->field('total_male_students', ['visible' => ['index'=>true]]);
         $this->field('total_female_students', ['visible' => ['index'=>true]]);
