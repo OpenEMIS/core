@@ -32,9 +32,8 @@ class POCOR5920 extends AbstractMigration
             'comment' => '1 => New 2 => Running 3 => Completed -1 => Error'
         ])
 		->addColumn('institution_id', 'integer', [
-			'default' => null,
 			'limit' => 11,
-			'null' => true,
+			'null' => false,
 			'comment' => 'links to institutions.id'
 		])
 		->addColumn('academic_period_id', 'integer', [
@@ -50,6 +49,16 @@ class POCOR5920 extends AbstractMigration
 		->addIndex('institution_id')
 		->addIndex('report_card_id')
         ->save();
+		
+		$this->execute('ALTER TABLE `institution_report_cards` CHANGE `file_name` `file_name` VARCHAR(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL');
+
+        $this->execute('ALTER TABLE `institution_report_cards` CHANGE `file_content` `file_content` LONGBLOB NULL DEFAULT NULL');
+
+        $this->execute('ALTER TABLE `institution_report_cards` CHANGE `file_content_pdf` `file_content_pdf` LONGBLOB NULL DEFAULT NULL');
+				
+        $this->execute('ALTER TABLE `institution_report_cards` CHANGE `started_on` `started_on` DATETIME NULL DEFAULT NULL');
+
+        $this->execute('ALTER TABLE `institution_report_cards` CHANGE `completed_on` `completed_on` DATETIME NULL DEFAULT NULL');
     }
 
 }

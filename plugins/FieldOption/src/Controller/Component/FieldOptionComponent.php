@@ -147,7 +147,7 @@ class FieldOptionComponent extends Component
         'AllergyTypes' => ['className' => 'Health.AllergyTypes', 'parent' => 'Health'],
         'Conditions' => ['className' => 'Health.Conditions', 'parent' => 'Health'],
         'ConsultationTypes' => ['className' => 'Health.ConsultationTypes', 'parent' => 'Health'],
-        'ImmunizationTypes' => ['className' => 'Health.ImmunizationTypes', 'parent' => 'Health'],
+        'ImmunizationTypes' => ['title' => 'Vaccinations', 'className' => 'Health.ImmunizationTypes', 'parent' => 'Health'],
         'Relationships' => ['className' => 'Health.Relationships', 'parent' => 'Health'],
         'TestTypes' => ['className' => 'Health.TestTypes', 'parent' => 'Health'],
         'InsuranceProviders' => ['className' => 'Health.InsuranceProviders', 'parent' => 'Health'],

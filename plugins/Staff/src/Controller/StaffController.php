@@ -38,6 +38,7 @@ class StaffController extends AppController
         // finance
         'BankAccounts',
         'Salaries',
+        'Payslips',
 
         // training
         'StaffTrainings',
@@ -175,6 +176,10 @@ class StaffController extends AppController
     public function Salaries()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']);
+    }
+    public function Payslips()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Payslips']);
     }
     public function Behaviours()
     {
@@ -363,6 +368,11 @@ class StaffController extends AppController
             $primaryKey = $model->primaryKey();
 
             $alias = $model->alias;
+            //POCOR-5890 starts
+            if($alias == 'HealthImmunizations'){
+                $alias = __('Vaccinations');     
+            }
+            //POCOR-5890 ends
             $this->Navigation->addCrumb($model->getHeader($alias));
             $header = $header . ' - ' . $model->getHeader($alias);
 
@@ -522,14 +532,19 @@ class StaffController extends AppController
         $studentTabElements = [
             'BankAccounts' => ['text' => __('Bank Accounts')],
             'Salaries' => ['text' => __('Salaries')],
+            'Payslips' => ['text' => __('Payslips')],
         ];
+
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
         }
+
         return $this->TabPermission->checkTabPermission($tabElements);
+        // echo "<pre>";
+        // print_r($tabElements); die();
     }
 
     public function getTrainingTabElements($options = [])

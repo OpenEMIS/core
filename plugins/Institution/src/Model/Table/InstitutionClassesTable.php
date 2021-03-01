@@ -1861,6 +1861,7 @@ class InstitutionClassesTable extends ControllerActionTable
             $this->aliasField('academic_period_id') => $academicPeriodId,
             $institutionClassGrades->aliasField('institution_class_id') => $institutionClassId
         ])
+        ->group([$EducationGrades->aliasField('id')])
         ->order([$EducationGrades->aliasField('name')]);
         
         return $query;

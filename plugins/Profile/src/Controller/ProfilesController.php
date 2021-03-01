@@ -110,6 +110,7 @@ class ProfilesController extends AppController
     public function Attachments()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
     public function Courses()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
     public function StaffSalaries()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']); }
+    public function StaffPayslips()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Payslips']); }
     public function StaffBehaviours()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']); }
     public function StudentOutcomes()         { 
         $comment = $this->request->query['comment'];
@@ -336,6 +337,11 @@ class ProfilesController extends AppController
         $header = $session->read('Auth.User.name');
 
         $alias = $model->alias;
+        //POCOR-5890 starts
+        if($alias == 'HealthImmunizations'){
+           $alias = __('Vaccinations');     
+        }
+        //POCOR-5890 ends
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
         $action = $this->request->params['action'];
@@ -653,6 +659,7 @@ class ProfilesController extends AppController
         $staffTabElements = [
             'BankAccounts' => ['text' => __('Bank Accounts')],
             'Salaries' => ['text' => __('Salaries')],
+            'Payslips' => ['text' => __('Payslips')],
         ];
 
         $tabElements = array_merge($tabElements, $staffTabElements);
