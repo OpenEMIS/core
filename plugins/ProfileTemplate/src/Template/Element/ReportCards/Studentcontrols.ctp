@@ -48,15 +48,15 @@
                     ));
                 }
 				
-				if (!empty($classOptions)) {
-                    echo $this->Form->input('class_id', array(
+				if (!empty($educationGradeOptions)) {
+                    echo $this->Form->input('education_grade_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
-                        'options' => $classOptions,
-                        'default' => $selectedClass,
+                        'options' => $educationGradeOptions,
+                        'default' => $selectedGrade,
                         'url' => $baseUrl,
-                        'data-named-key' => 'class_id',
+                        'data-named-key' => 'education_grade_id',
                         'data-named-group' => 'academic_period_id,student_profile_template_id,institution_id'
                     ));
                 }
