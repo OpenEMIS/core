@@ -74,6 +74,8 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
             field: 'student_status_name'
         }
     ];
+    Controller.institutionId = 6;
+    Controller.academicPeriodId = 29;
     Controller.assignedStudents = {};
     Controller.unassignedStudents = {};
     Controller.mainTeacherOptions = [];
@@ -121,9 +123,9 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
                             education_grade_name: value.education_grade.name,
                             student_status_name: value.student_status.name,
                             gender_name: value.user.gender.name,
-                            student_id: value.student_id,
+                            security_user_id: value.security_user_id,
                             encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
-                                student_id: value.student_id,
+                                security_user_id: value.security_user_id,
                                 institution_association_id: value.institution_association_id,
                                 education_grade_id: value.education_grade_id,
                                 academic_period_id: value.academic_period_id,
@@ -137,7 +139,7 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
                     Controller.assignedStudents = assignedStudents;
 
                     var promises = [];
-                    promises[0] = InstitutionAssociationsSvc.getUnassignedStudent(Controller.classId);
+                    promises[0] = InstitutionAssociationsSvc.getUnassignedStudent(Controller.classId, Controller.institutionId, Controller.academicPeriodId);
                     promises[2] = InstitutionAssociationsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
                     promises[3] = InstitutionAssociationsSvc.getConfigItemValue('max_students_per_class');
                     return $q.all(promises);
@@ -153,9 +155,9 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
                             education_grade_name: value.education_grade_name,
                             student_status_name: value.student_status_name,
                             gender_name: value.gender_name,
-                            student_id: value.id,
+                            security_user_id: value.security_user_id,
                             encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
-                                student_id: value.id,
+                                security_user_id: value.security_user_id,
                                 institution_association_id: value.institution_association_id,
                                 education_grade_id: value.education_grade_id,
                                 academic_period_id: value.academic_period_id,
@@ -266,6 +268,7 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
     function postForm() {
         Controller.postError = [];
         var associationStudents = [];
+        console.log(Controller.gridOptionsBottom.rowData)
         angular.forEach(Controller.gridOptionsBottom.rowData, function(value, key) {
             this.push(value.encodedVar);
         }, associationStudents);

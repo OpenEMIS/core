@@ -8,7 +8,6 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
 
     var service = {
         init: init,
-        getClassDetails: getClassDetails,
         getAssociationDetails: getAssociationDetails,
         getUnassignedStudent: getUnassignedStudent,
         translate: translate,
@@ -52,32 +51,6 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
         });
     }
 
-    function getClassDetails(classId) {
-        var success = function(response, deferred) {
-            deferred.resolve(response.data.data);
-        };
-        return InstitutionClasses
-            .get(classId)
-            .find('classDetails')
-            .ajax({
-                success: success,
-                defer: true
-            });
-    }
-
-    function getClassDetailsBAK(classId) {
-        var success = function(response, deferred) {
-            deferred.resolve(response.data.data);
-        };
-        return InstitutionClasses
-            .get(classId)
-            .find('classDetails')
-            .ajax({
-                success: success,
-                defer: true
-            });
-    }
-
     function getAssociationDetails(associationId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
@@ -91,13 +64,13 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
             });
     }
 
-    function getUnassignedStudent(institutionAssociationId, academicPeriodId, educationGradeId) {
+    function getUnassignedStudent(institutionAssociationId, institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return AssociationStudent.find('InstitutionStudentsNotInAssociation', {
-            academic_period_id: 29,
-            education_grade_id: 60,
+        return Users.find('InstitutionStudentsNotInAssociation', {
+            academic_period_id: academicPeriodId,
+            institution_id: institutionId,
             institution_association_id: institutionAssociationId
         }).ajax({
             success: success,

@@ -50,7 +50,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         //$this->hasMany('AssociationStaff', ['className' => 'Institution.InstitutionAssociationStaff', 'saveStrategy' => 'replace', 'cascadeCallbacks' => true]);
         $this->addBehavior('AssociationExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'AssociationStudent' => ['add','view', 'edit'],
+            'AssociationStudent' => ['index','add','view', 'edit'],
         ]);
 
     }
@@ -502,7 +502,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
                         unset($newStudents[$classStudentEntity->security_user_id]);
                     }
                 }                                 
-                foreach ($newStudents as $key => $student) {
+                foreach ($newStudents as $key => $student) {     
                     $newClassStudentEntity = $this->AssociationStudent->newEntity($student);
                     $this->AssociationStudent->save($newClassStudentEntity);
                 }
@@ -560,6 +560,5 @@ class InstitutionAssociationsTable extends ControllerActionTable
                 return $arrResults;
             });
     }
-
-   
+  
 }

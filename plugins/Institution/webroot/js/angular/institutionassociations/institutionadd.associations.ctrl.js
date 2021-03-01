@@ -74,7 +74,8 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
             field: 'student_status_name'
         }
     ];
-    Controller.institutionId = null;
+    Controller.institutionId = 6;
+    Controller.academicPeriodId = 29;
     Controller.assignedStudents = {};
     Controller.unassignedStudents = {};
     Controller.mainTeacherOptions = [];
@@ -101,7 +102,7 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
         InstitutionAssociationsSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
         ///if (Controller.classId == '' && Controller.classId == undefined) {
-        InstitutionAssociationsSvc.getAcademicPeriodOptions(6)
+        InstitutionAssociationsSvc.getAcademicPeriodOptions(Controller.institutionId)
             .then(function(periods) {
                 console.log(periods);
                 // Acadmic Periods Option
@@ -143,8 +144,8 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
                 }, assignedStudents);
                 Controller.assignedStudents = assignedStudents;
                 var promises = [];
-                promises[0] = InstitutionAssociationsSvc.getTeacherOptions(6, 29);
-                promises[1] = InstitutionAssociationsSvc.getStudentOptions(6, 29);
+                promises[0] = InstitutionAssociationsSvc.getTeacherOptions(Controller.institutionId, Controller.academicPeriodId);
+                promises[1] = InstitutionAssociationsSvc.getUnassignedStudent(Controller.institutionId, Controller.academicPeriodId);
                 return $q.all(promises);
 
             }, function(error) {
@@ -279,8 +280,8 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
         postData.associationStudents = associationStudents;
         // postData.institution_id = postData.institution_id;
         // postData.academic_period_id = postData.academic_period_id;
-        postData.institution_id = 6;
-        postData.academic_period_id = 30;
+        postData.institution_id = Controller.institutionId;
+        postData.academic_period_id = Controller.academicPeriodId;
         postData.association_staff = [];
         angular.forEach(Controller.selectedSecondaryTeacher, function(value, key) {
 
