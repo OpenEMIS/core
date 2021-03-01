@@ -8,12 +8,10 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
 
     var service = {
         init: init,
-        getClassDetails: getClassDetails,
         getAssociationDetails: getAssociationDetails,
         getUnassignedStudent: getUnassignedStudent,
         translate: translate,
         getTeacherOptions: getTeacherOptions,
-        getStudentOptions: getStudentOptions,
         saveAssociation: saveAssociation,
         updateAssociation: updateAssociation,
         getConfigItemValue: getConfigItemValue,
@@ -25,7 +23,7 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
         InstitutionStaff: 'Institution.Staff',
         InstitutionStudent: 'Institution.Student',
         AssociationStudent: 'Student.InstitutionAssociationStudent',
-        InstitutionClasses: 'Institution.InstitutionClasses',
+        Student: 'Institution.StudentUser',
         InstitutionAssociations: 'Institution.InstitutionAssociations',
         InstitutionShifts: 'Institution.InstitutionShifts',
         Users: 'User.Users',
@@ -54,32 +52,6 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
         });
     }
 
-    function getClassDetails(classId) {
-        var success = function(response, deferred) {
-            deferred.resolve(response.data.data);
-        };
-        return InstitutionClasses
-            .get(classId)
-            .find('classDetails')
-            .ajax({
-                success: success,
-                defer: true
-            });
-    }
-
-    function getClassDetailsBAK(classId) {
-        var success = function(response, deferred) {
-            deferred.resolve(response.data.data);
-        };
-        return InstitutionClasses
-            .get(classId)
-            .find('classDetails')
-            .ajax({
-                success: success,
-                defer: true
-            });
-    }
-
     function getAssociationDetails(associationId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
@@ -93,40 +65,11 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
             });
     }
 
-    function getUnassignedStudent(institutionAssociationId, academicPeriodId, educationGradeId) {
+    function getUnassignedStudent(institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return AssociationStudent.find('InstitutionStudentsNotInAssociation', {
-            academic_period_id: academicPeriodId,
-            education_grade_id: educationGradeId,
-            institution_association_id: institutionAssociationId
-        }).ajax({
-            success: success,
-            defer: true
-        });
-    }
-
-    function getStudentOptions(institutionId, academicPeriodId) {
-        var success = function(response, deferred) {
-            deferred.resolve(response.data.data);
-        };
-        // return InstitutionStudent.find('InstitutionStudentOption', {
-        //     institution_id: institutionId,
-        //     academic_period_id: academicPeriodId
-        // }).ajax({
-        //     success: success,
-        //     defer: true
-        // });
-        // return InstitutionStaff.find('byInstitution', {
-        //     institution_id: institutionId,
-        //     academic_period_id: academicPeriodId
-        // }).ajax({
-        //     success: success,
-        //     defer: true
-        // });
-
-        return AssociationStudent.find('institutionStudent', {
+        return Users.find('InstitutionStudentsNotInAssociation', {
             institution_id: institutionId,
             academic_period_id: academicPeriodId
         }).ajax({
