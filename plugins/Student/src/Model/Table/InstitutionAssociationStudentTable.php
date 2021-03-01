@@ -17,14 +17,14 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        //$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id', 'joinType' => 'INNER']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionAssociations', ['className' => 'Institution.InstitutionAssociations', 'foreignKey' => 'institution_association_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->hasMany('InstitutionStudents', ['className' => 'Institution.Students']);
-        $this->belongsTo('Genders', ['className' => 'User.Genders']);
+        //$this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'AssociationStudent' => ['index','add','edit'],
         ]);
