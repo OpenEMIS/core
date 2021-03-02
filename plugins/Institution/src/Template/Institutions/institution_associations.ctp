@@ -80,7 +80,7 @@ $this->start('panelBody');
             <div class="button-label"></div>
             <button class="btn btn-default btn-save" type="button" ng-click="InstitutionAssociationsController.postForm();">
                 <i class="fa fa-check"></i> <?= __('Save') ?>
-                <input type="hidden"  ng-init="InstitutionAssociationsController.institutionId=<?= $institutionId; ?>; "/>
+                <input type="hidden"  ng-model="InstitutionAssociationsController.institutionId"  ng-init="InstitutionAssociationsController.institutionId=<?= $institutionId; ?>; "/>
             </button>
             <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
             <button id="reload" type="submit" name="submit" value="reload" class="hidden">reload</button>
