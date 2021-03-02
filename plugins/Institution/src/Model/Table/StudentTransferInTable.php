@@ -149,6 +149,21 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $toolbarButtonsArray['back']['url'][0] = 'index';
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End
+
+        // Start bulk Student Transfer In button POCOR-5677 start
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $url = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'BulkStudentTransferIn',
+            'edit'
+        ];
+        $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
+        $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
+        $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Student Transfer In');
+        $toolbarButtonsArray['bulkAdmission']['url'] = $url;
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        // End bulk Student Transfer In button POCOR-5677 end
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)

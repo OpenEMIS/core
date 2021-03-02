@@ -541,6 +541,12 @@ trait MessagesTrait
             'noStudentSelected' => 'There are no students selected',
             'savingError' => 'Some selected students record were not updated succesfully',
         ],
+        'BulkStudentTransferIn' => [
+            'success' => 'Bulk students transfer successful',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
+        ],
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
             'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
@@ -772,6 +778,25 @@ trait MessagesTrait
             'emailAll' => 'All Report Cards will be sent in the background',
             'emailInProgress' => 'There is already a email process sending in the background',
 			'date_closed' => 'Generate date for report card has been closed'
+        ],
+        'StaffProfiles' => [
+            'noProgrammes' => 'There is no programme set for this institution',
+            'noTemplate' => 'There is no template for this Staff Profile. Please contact the administrator for assistance.',
+            'noFilesToDownload' => 'There are no generated Staff Profiles to download',
+            'noFilesToPublish' => 'There are no generated Staff Profiles to publish',
+            'noFilesToUnpublish' => 'There are no published Staff Profiles to unpublish',
+            'inProgress' => 'There is already a process running for this Staff Profile',
+            'generate' => 'The Staff Profile will be generated in the background',
+            'generateAll' => 'All Staff Profile will be generated in the background',
+            'checkReportCardTemplatePeriod' => 'The Staff Profile period is not active. Please contact the System Administrator.',
+            'publish' => 'The Staff Profile has been successfully published',
+            'publishAll' => 'All generated Staff Profiles have been published successfully',
+            'unpublish' => 'The Staff Profile has been successfully unpublished',
+            'unpublishAll' => 'All published Staff Profiles have been unpublished successfully',
+            'email' => 'The Staff Profile will be sent in the background',
+            'emailAll' => 'All Staff Profiles will be sent in the background',
+            'emailInProgress' => 'There is already a email process sending in the background',
+			'date_closed' => 'Generate date for Staff Profile has been closed'
         ],
         'RecipientPaymentStructures' => [
             'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
