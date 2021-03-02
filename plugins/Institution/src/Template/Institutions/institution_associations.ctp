@@ -7,6 +7,8 @@
 <?php
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
+$session = $this->request->session();
+$institutionId = $session->read('Institution.Institutions.id');
 ?>
 <style type='text/css'>
     .ag-grid-duration {
@@ -78,6 +80,7 @@ $this->start('panelBody');
             <div class="button-label"></div>
             <button class="btn btn-default btn-save" type="button" ng-click="InstitutionAssociationsController.postForm();">
                 <i class="fa fa-check"></i> <?= __('Save') ?>
+                <input type="hidden"  ng-init="InstitutionAssociationsController.institutionId=<?= $institutionId; ?>; "/>
             </button>
             <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
             <button id="reload" type="submit" name="submit" value="reload" class="hidden">reload</button>
