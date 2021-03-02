@@ -471,7 +471,30 @@ class InstitutionAssociationsTable extends ControllerActionTable
                     $this->AssociationStudent->save($newClassStudentEntity);
                 }
             }
-        } else {
+        } else if (empty($entity->associationStudents)) {
+                $institutionAssociationId = $entity->id;
+                $existingStudents = $this->AssociationStudent
+                    ->find('all')
+                    ->select([
+                        'id', 'security_user_id', 'institution_association_id', 'education_grade_id', 'academic_period_id','student_status_id'
+                    ])
+                    ->matching('StudentStatuses', function ($q) {
+                        return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
+                    })
+                    ->where([
+                        $this->AssociationStudent->aliasField('institution_association_id') => $institutionAssociationId
+                    ])
+                    ->toArray();
+
+                foreach ($existingStudents as $key => $classStudentEntity) {
+                    if (!array_key_exists($classStudentEntity->security_user_id, $newStudents)) { // if current student does not exists in the new list of students
+                        $this->AssociationStudent->delete($classStudentEntity);
+                    } else { // if student exists, then remove from the array to get the new student records to be added
+                        unset($newStudents[$classStudentEntity->security_user_id]);
+                    }
+                }
+            }   
+        else {
              if ($entity->has('associationStudents') && !empty($entity->associationStudents)) {
                 $newStudents = [];
                 //decode string sent through form
