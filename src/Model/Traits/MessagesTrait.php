@@ -1321,8 +1321,7 @@ trait MessagesTrait
                 'start_date' => [
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
                     'ruleCompareDateReverse' => 'Start Date should not be earlier than Requested Date.',
-                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.',
-                    'dateAlreadyTaken' => 'Start Date already taken'
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
                 ],
                 'institution_id' => [
                     'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
