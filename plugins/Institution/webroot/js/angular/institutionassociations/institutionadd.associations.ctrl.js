@@ -354,13 +354,12 @@ function InstitutionAssociationsController(
             },
             associationStudents
         );
-        console.log(associationStudents);
         var postData = {};
         postData.name = Controller.associationName;
         postData.associationStudents = associationStudents;
         // postData.institution_id = postData.institution_id;
         // postData.academic_period_id = postData.academic_period_id;
-        postData.institution_id = postData.institutionId;
+        postData.institution_id = Controller.institutionId;
         postData.academic_period_id = (Controller.academicPeriodOptions.hasOwnProperty('selectedOption')) ? Controller.academicPeriodOptions.selectedOption.id : '';;
         postData.association_staff = [];
         angular.forEach(
