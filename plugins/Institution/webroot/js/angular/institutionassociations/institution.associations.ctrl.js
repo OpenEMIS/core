@@ -74,8 +74,8 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
             field: 'student_status_name'
         }
     ];
-    Controller.institutionId = 6;
-    Controller.academicPeriodId = 29;
+    Controller.institutionId = null;
+    Controller.academicPeriodId = null;
     Controller.assignedStudents = {};
     Controller.unassignedStudents = {};
     Controller.mainTeacherOptions = [];
@@ -139,7 +139,7 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
                     Controller.assignedStudents = assignedStudents;
 
                     var promises = [];
-                    promises[0] = InstitutionAssociationsSvc.getUnassignedStudent(Controller.classId, Controller.institutionId, Controller.academicPeriodId);
+                    promises[0] = InstitutionAssociationsSvc.getUnassignedStudent(Controller.classId, response.institution_id, response.academic_period_id);
                     promises[2] = InstitutionAssociationsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
                     promises[3] = InstitutionAssociationsSvc.getConfigItemValue('max_students_per_class');
                     return $q.all(promises);
