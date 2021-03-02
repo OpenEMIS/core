@@ -53,7 +53,7 @@ class StudentAbsencesTable extends AppTable
         return $entity->institution_id;
     }
 
-    public function onExcelGetAttendancePerDay(Event $event, Entity $entity)
+    /*public function onExcelGetAttendancePerDay(Event $event, Entity $entity)
     { 
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
@@ -259,5 +259,5 @@ class StudentAbsencesTable extends AppTable
         }
        
         return implode(',', $row);       
-    }   
+    }*/   
 }
