@@ -3119,7 +3119,6 @@ class ValidationBehavior extends Behavior
             }
         }
     }
-}
 
 	
 	public static function forLatitudeLength($field, array $globalData)
