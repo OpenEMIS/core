@@ -54,6 +54,9 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 ],
                 'ruleCheckProgrammeEndDateAgainstStudentStartDate' => [
                     'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date']
+                ],
+                'dateAlreadyTaken' => [
+                    'rule' => ['dateAlreadyTaken']
                 ]
             ])
             ->allowEmpty('institution_class_id')
@@ -262,6 +265,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $studentId = $entity->student_id;
         $institutionId = $entity->institution_id;
         $academicPeriodId = $entity->academic_period_id;
+        $gradeId = $entity->education_grade_id;
+        $classId = $entity->institution_class_id;
         $startDate = $entity->start_date;
         $newDate = $startDate->format('Y-m-d');
         $endDate = $entity->end_date;
