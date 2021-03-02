@@ -33,8 +33,8 @@ class InstitutionProgrammesTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
 	{
 		$query
-			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives'])
-			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name']);
+			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives','EducationGrades.EducationProgrammes'])
+			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name','programmes' => 'EducationProgrammes.name']);
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -44,11 +44,20 @@ class InstitutionProgrammesTable extends AppTable  {
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
 	{
+		// echo "<pre>"; print_r($fields); die();
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
 		foreach ($cloneFields as $key => $value) {
+			$newFields[0] = [
+					'key' => 'EducationProgrammes.name',
+					'field' => 'programmes',
+					'type' => 'string',
+					'label' => __('Programmes')
+				];
 			$newFields[] = $value;
 			if ($value['field'] == 'institution_id') {
+				
+
 				$newFields[] = [
 					'key' => 'Areas.code',
 					'field' => 'area_code',
