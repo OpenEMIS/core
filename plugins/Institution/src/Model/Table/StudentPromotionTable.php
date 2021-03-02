@@ -46,10 +46,11 @@ class StudentPromotionTable extends AppTable
             ->requirePresence('next_academic_period_id')
             ->requirePresence('grade_to_promote')
             ->requirePresence('class')
-            ->allowEmpty('education_grade_id', function ($context) {
+            ->allowEmpty('education_grade_id');
+            /*->allowEmpty('education_grade_id', function ($context) {
                 $studentStatusId = (!empty($context['data']['student_status_id']))? $context['data']['student_status_id']: '';
                 return ($studentStatusId != $this->statuses['PROMOTED']);
-            });
+            });*/
     }
 
     public function validationRemoveStudentPromotionValidation(Validator $validator)
@@ -892,6 +893,8 @@ class StudentPromotionTable extends AppTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
+        $this->validator()->remove('education_grade_id', 'required');
+
         $process = function ($model, $entity) use ($event, $data) {
             // Removal of some fields that are not in use in the table validation
             $errors = $entity->errors();
