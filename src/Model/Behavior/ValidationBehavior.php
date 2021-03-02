@@ -3062,7 +3062,63 @@ class ValidationBehavior extends Behavior
             return true;
         }
     }
-    //POCOR-5917 ends
+    //POCOR-5917 end
+
+    public static function dateAlreadyTaken($field, array $globalData)
+    {
+        $data = $globalData['data'];
+        $studentId = $data['student_id'];
+        $institutionId = $data['institution_id'];
+        $academicPeriodId = $data['academic_period_id'];
+        $gradeId = $data['education_grade_id'];
+        $classId = $data['institution_class_id'];
+        $startDate = $data['start_date'];
+        $endDate = $data['end_date'];
+        $institutionStudents = TableRegistry::get('institution_students');
+        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+        $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $check = $StudentAttendanceMarkedRecords->find()
+                    ->select([$StudentAttendanceMarkedRecords->aliasField('date')])
+                    ->where([
+                        $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
+                        $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
+                        $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $classId,
+                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $gradeId
+                    ])->first();    
+        if (!empty($check)) {
+            $markedDate = $check->date->format('Y-m-d');
+        }
+
+        $checkTwo = $InstitutionStudentAbsences->find()
+                    ->select([$InstitutionStudentAbsences->aliasField('date')])
+                    ->where([$InstitutionStudentAbsences->aliasField('student_id') => $studentId])
+                    ->first();
+        if (!empty($checkTwo)) {
+            $unmarkedDate = $checkTwo->date->format('Y-m-d');
+        }
+
+        if (!empty($check)) {
+            $query = $institutionStudents->query();
+            if (!empty($startDate)) {
+               if ($startDate > $markedDate) {
+                   return false;
+                } else {
+                    return true;
+                }
+            }
+        } 
+
+        if (!empty($checkTwo)) {
+            $query = $institutionStudents->query();
+            if (!empty($startDate)) {
+               if ($startDate > $unmarkedDate) {
+                   return false;
+                } else {
+                    return true;
+                }
+            }
+        }
+    }
 	
 	public static function forLatitudeLength($field, array $globalData)
     {   
