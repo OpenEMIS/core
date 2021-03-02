@@ -138,7 +138,7 @@ class StudentAbsencesExcelBehavior extends Behavior
 
         $generate($_settings);
 
-        $labelArray = array("openEMIS_ID","student","institution","code","date","attendance_per_day",/*"subjects",*/"absence_type","institution_class","education_grade","gender","default_identity_type","identity_number","address","contact", "parent_name");
+        $labelArray = array("openEMIS_ID","student","institution","code","date","attendance_per_day","subjects","absence_type","institution_class","education_grade","gender","default_identity_type","identity_number","address","contact", "parent_name");
 
         foreach($labelArray as $label) {
             $headerRow[] = $this->getFields($this->_table, $settings, $label);
@@ -177,7 +177,7 @@ class StudentAbsencesExcelBehavior extends Behavior
 
 
     private function getData($settings) {
-        $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        //$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institution_id = $requestData->institution_id;
@@ -197,11 +197,9 @@ class StudentAbsencesExcelBehavior extends Behavior
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
         $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
-        //$StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
-        //$academicPeriodsId = $entity->academicPeriodId;
+        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
         if ( $institution_id > 0) {
-            $where = [$StudentAbsences->aliasField('institution_id = ') => $institution_id];
+            $where = [$InstitutionStudentAbsenceDetails->aliasField('institution_id = ') => $institution_id];
         } else {
             $where = [];
         }
@@ -213,7 +211,7 @@ class StudentAbsencesExcelBehavior extends Behavior
             $endDate = $periodEntity->end_date->format('Y-m-d');
         }
 
-        $record = $StudentAbsences->find()
+        $record = $InstitutionStudentAbsenceDetails->find()
                 ->select([
                     'student_id' => 'Users.id',
                     'openemis_no' => 'Users.openemis_no',
@@ -226,16 +224,15 @@ class StudentAbsencesExcelBehavior extends Behavior
                     'institution_name' => 'Institutions.name',
                     'institution_code' => 'Institutions.code',
                     'absence_type' => 'AbsenceTypes.name',
-                    'date' => $StudentAbsences->aliasField('date'),
+                    'date' => $InstitutionStudentAbsenceDetails->aliasField('date'),
                     'institution_class_id' => 'InstitutionClasses.id',
                     'institution_class' => 'InstitutionClasses.name',
                     'education_grade_id' => $EducationGrades->aliasField('id'),
                     'education_grade' => $EducationGrades->aliasField('name'),
+                    'period' => $InstitutionStudentAbsenceDetails->aliasField('period'),
+                    'isSubject' => $InstitutionStudentAbsenceDetails->aliasField('subject_id'),
                     'gender' => $Genders->aliasField('name'),
                     'address' => 'Users.address',
-                    'period' => $StudentAttendancePerDayPeriods->aliasField('name'),
-                    'isPeriod' => $InstitutionStudentAbsenceDetails->aliasField('period'),
-                    'isSubject' => $InstitutionStudentAbsenceDetails->aliasField('subject_id'),
                     'academic_period_id' => 'AcademicPeriods.id',
                     'guardian_name' => $GuardianUser->find()->func()->concat([
                         'GuardianUser.first_name' => 'literal',
@@ -250,10 +247,10 @@ class StudentAbsencesExcelBehavior extends Behavior
                     'InstitutionClasses'
                 ])     
                 ->leftJoin([$Users->alias() => $Users->table()],[
-                        $Users->aliasField('id = ') . $StudentAbsences->aliasField('student_id')
+                        $Users->aliasField('id = ') . $InstitutionStudentAbsenceDetails->aliasField('student_id')
                 ])      
                 ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
-                        $InstitutionClassGrades->aliasField('institution_class_id = ') . $StudentAbsences->aliasField('institution_class_id')
+                        $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionStudentAbsenceDetails->aliasField('institution_class_id')
                 ])
                 ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()],[
                         $EducationGrades->aliasField('id = ') . $InstitutionClassGrades->aliasField('education_grade_id')
@@ -262,106 +259,62 @@ class StudentAbsencesExcelBehavior extends Behavior
                         $Genders->aliasField('id = ') . $Users->aliasField('gender_id')
                 ])
                 ->leftJoin([$StudentGuardians->alias() => $StudentGuardians->table()], [
-                        $StudentGuardians->aliasField('student_id = ') . $StudentAbsences->aliasField('student_id')
+                        $StudentGuardians->aliasField('student_id = ') . $InstitutionStudentAbsenceDetails->aliasField('student_id')
                 ])
                 ->leftJoin(['GuardianUser' => 'security_users'],[
                         'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
                 ])
                 ->leftJoin([$AcademicPeriods->alias() => $AcademicPeriods->table()], [
-                        $AcademicPeriods->aliasField('id = ') . $StudentAbsences->aliasField('academic_period_id')
-                ])
-                ->leftJoin([$InstitutionStudentAbsenceDetails->alias() => $InstitutionStudentAbsenceDetails->table()], [
-                        $InstitutionStudentAbsenceDetails->aliasField('student_id = ') . $StudentAbsences->aliasField('student_id')
-                ])
-                ->innerJoin([$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()], [
-                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id = ') . $InstitutionStudentAbsenceDetails->aliasField('education_grade_id')
-                ])
-                ->innerJoin([$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()], [
-                        $StudentMarkTypeStatuses->aliasField('id = ') . $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id')
-                ])
-                ->innerJoin([$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()], [
-                    $StudentAttendanceMarkTypes->aliasField('id = ') . $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id')
-                ])
-                ->innerJoin([$StudentAttendancePerDayPeriods->alias() => $StudentAttendancePerDayPeriods->table()], [
-                    $StudentAttendanceMarkTypes->aliasField('id = ') . $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id')
+                        $AcademicPeriods->aliasField('id = ') . $InstitutionStudentAbsenceDetails->aliasField('academic_period_id')
                 ])
                 ->where([
-                    $StudentAbsences->aliasField('date >= ') => $startDate,
-                    $StudentAbsences->aliasField('date <= ') => $endDate,
+                    $InstitutionStudentAbsenceDetails->aliasField('date >= ') => $startDate,
+                    $InstitutionStudentAbsenceDetails->aliasField('date <= ') => $endDate,
                     $where
                 ])
                 ->order([
-                    $StudentAbsences->aliasField('student_id'),
-                    $StudentAbsences->aliasField('institution_id'),
-                    $StudentAbsences->aliasField('date')
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                    $InstitutionStudentAbsenceDetails->aliasField('institution_id'),
+                    $InstitutionStudentAbsenceDetails->aliasField('date'),
                 ]);
-                //echo "<pre>";print_r($record);die();
-
             $result = [];
             if (!empty($record)) {
                 foreach ($record as $key => $value) {
-                    //echo "<pre>";print_r($value);die();
                     $stdId = $value->student_id;
                     $result[$key][] = $value->openemis_no;
                     $result[$key][] = $value->student_name;
                     $result[$key][] = $value->institution_name;
                     $result[$key][] = $value->institution_code;
                     $result[$key][] = date("d-m-Y", strtotime($value->date));
-                    
-                    if ($value->isPeriod !=0 && $value->isSubject == 0) {
-                        $result[$key][] = $value->period;
-                    } else {
+                    //attendance per day
+                    if ($value->period != 0 && $value->isSubject == 0 ) {
+                        $result[$key][] = 'Period' . ' ' . $value->period;
+                    }  else{
                         $result[$key][] = '';
                     }
-                    
-                    /*//subject
-                    $sub = [];
-                    if (!empty($userData)) {
-                        foreach ($userData as $k => $data) {
-                            if ($data->period != 0 && $data->subject_id != 0) {
-                                $gradeId = $data->education_grade_id;
-                                $date = $data->date->format('Y-m-d');
-                                $subjects = $StudentMarkTypeStatusGrades->find()
-                                        ->select([$InstitutionSubjects->aliasField('name')])
-                                        ->leftJoin([$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()], [
-                                                $StudentMarkTypeStatuses->aliasField('id = ') . $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id')
-                                        ])
-                                        ->leftJoin([$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()], [
-                                                $StudentAttendanceMarkTypes->aliasField('id = ') . $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id')
-                                        ])
-                                        ->leftJoin([$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()], [
-                                                $StudentAttendanceMarkTypes->aliasField('id = ') . $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id')
-                                        ])
-                                        ->leftJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
-                                            $InstitutionSubjectStudents->aliasField('education_grade_id = ') . $StudentMarkTypeStatusGrades->aliasField('education_grade_id')
-                                        ])
-                                        ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
-                                            $InstitutionSubjects->aliasField('id = ') . $InstitutionSubjectStudents->aliasField('institution_subject_id')
-                                        ])
-                                        ->group([$InstitutionSubjects->aliasField('name')])
-                                        ->where([
-                                            $InstitutionSubjectStudents->aliasField('student_id') => $stdId,
-                                            $StudentMarkTypeStatusGrades->aliasField('education_grade_id') => $gradeId,
-                                            $StudentMarkTypeStatuses->aliasField('date_enabled >= ') => $date,
-                                            $StudentMarkTypeStatuses->aliasField('date_disabled <= ') => $date
-                                        ])->toArray();
-                                //echo "<pre>";print_r($subjects);die();
-                                if (!empty($subjects)) {
-                                    foreach ($subjects as $vals) {
-                                        //echo "<pre>";print_r($vals);die();
-                                        $sub[] =  $vals['InstitutionSubjects']['name'];
-                                    }
-                                }
+                    //subject
+                    $arr = [];
+                    if ($value->isSubject != 0 && $value->period != 0 ) {
+                       $subject = $InstitutionSubjectStudents->find()
+                                ->select([$InstitutionSubjects->aliasField('name')])
+                                ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                                    $InstitutionSubjects->aliasField('id = ') . $InstitutionSubjectStudents->aliasField('institution_subject_id')
+                                ])
+                                ->group([$InstitutionSubjects->aliasField('name')])
+                                ->where([$InstitutionSubjectStudents->aliasField('student_id') => $stdId])
+                                ->toArray();
+
+                        if (!empty($subject)) {
+                            foreach ($subject as $sub) {
+                                $arr[] = $sub['InstitutionSubjects']['name'];
                             }
                         }
                     }
                     $subjectList = '';
-                    if (isset($sub)) {
-                        $subjectList  = implode(',', $sub);
-                    } else {
-                        $subjectList  = '';
-                    }
-                    $result[$key][] = $subjectList;*/
+                    if (isset($arr)) {
+                        $subjectList  = implode(',', $arr);
+                    } 
+                    $result[$key][] = $subjectList;
                     $result[$key][] = $value->absence_type;
                     $result[$key][] = $value->institution_class;
                     $result[$key][] = $value->education_grade;
