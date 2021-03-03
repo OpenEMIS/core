@@ -351,7 +351,11 @@ class ProfilesController extends AppController
                 $header = $header . ' - ' . $model->getHeader($alias);
             }
         } else {
-         $header = $header . ' - ' . $model->getHeader($alias);
+            if ($alias == 'StudentAssociations') {
+                $header = $header . ' - ' . 'Associations';
+            } else {
+                 $header = $header . ' - ' . $model->getHeader($alias);
+            }        
      }
        //POCOR-5675
      $this->set('contentHeader', $header);
