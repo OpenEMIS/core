@@ -209,7 +209,7 @@ class StudentAbsencesExcelBehavior extends Behavior
             $startDate = $periodEntity->start_date->format('Y-m-d');
             $endDate = $periodEntity->end_date->format('Y-m-d');
         }
-
+        
         $record = $InstitutionStudentAbsenceDetails->find()
                 ->select([
                     'student_id' => 'Users.id',
@@ -229,6 +229,7 @@ class StudentAbsencesExcelBehavior extends Behavior
                     'education_grade_id' => $EducationGrades->aliasField('id'),
                     'education_grade' => $EducationGrades->aliasField('name'),
                     'period' => $InstitutionStudentAbsenceDetails->aliasField('period'),
+                    'period_name' =>$StudentAttendancePerDayPeriods->aliasField('name'),
                     'isSubject' => $InstitutionStudentAbsenceDetails->aliasField('subject_id'),
                     'gender' => $Genders->aliasField('name'),
                     'address' => 'Users.address',
@@ -258,6 +259,14 @@ class StudentAbsencesExcelBehavior extends Behavior
                 ->leftJoin(['GuardianUser' => 'security_users'],[
                         'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
                 ])
+                ->leftJoin([$StudentAttendancePerDayPeriods->alias() => $StudentAttendancePerDayPeriods->table()], [
+                        $InstitutionStudentAbsenceDetails->aliasField('period = ') . $StudentAttendancePerDayPeriods->aliasField('period')
+                ])
+                ->group([
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                    $InstitutionStudentAbsenceDetails->aliasField('date'),
+                    $InstitutionStudentAbsenceDetails->aliasField('subject_id')
+                ])
                 ->where([
                     $InstitutionStudentAbsenceDetails->aliasField('date >= ') => $startDate,
                     $InstitutionStudentAbsenceDetails->aliasField('date <= ') => $endDate,
@@ -269,6 +278,7 @@ class StudentAbsencesExcelBehavior extends Behavior
                     $InstitutionStudentAbsenceDetails->aliasField('institution_id'),
                     $InstitutionStudentAbsenceDetails->aliasField('date'),
                 ]);
+
             $result = [];
             if (!empty($record)) {
                 foreach ($record as $key => $value) {
@@ -280,7 +290,7 @@ class StudentAbsencesExcelBehavior extends Behavior
                     $result[$key][] = date("d-m-Y", strtotime($value->date));
                     //attendance per day
                     if ($value->period != 0 && $value->isSubject == 0 ) {
-                        $result[$key][] = 'Period' . ' ' . $value->period;
+                        $result[$key][] = $value->period_name;
                     }  else{
                         $result[$key][] = '';
                     }
@@ -351,7 +361,6 @@ class StudentAbsencesExcelBehavior extends Behavior
                     $result[$key][] = $value->guardian_name;
                 }
             }
-            //echo "<pre>";print_r($result);die();
             return $result;
     }
 
