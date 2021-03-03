@@ -808,6 +808,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $ids = $this->ControllerAction->paramsDecode($modelId);
        
         $institutionServery = $this->get($ids['id']);
+
         //print_r($data);
         $SurveyFormQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
         $SurveyFormsQuestionDatas = $SurveyFormQuestions->find()
@@ -817,16 +818,16 @@ class InstitutionSurveysTable extends ControllerActionTable
                 )
                 ->where(['survey_form_id' => $institutionServery->survey_form_id, 'SurveyQuestions.is_mandatory' => self::IS_MANDATORY])
                 ->count();
-        
-        if($SurveyFormsQuestionDatas > 0){
+        //echo "<pre>";print_r($SurveyFormsQuestionDatas);die();
+        if($SurveyFormsQuestionDatas < 0 ){
           $errors = true; 
           $this->Alert->error('InstitutionSurveys.mandatoryFieldFill', ['reset'=>true]);
-        }
+        } 
         
         if ($errors) {
             $event->stopPropagation();
             $url = $this->url('view');
             return $this->controller->redirect($url);
-        }        
+        }      
     }
 }
