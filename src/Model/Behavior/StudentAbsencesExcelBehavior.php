@@ -265,7 +265,8 @@ class StudentAbsencesExcelBehavior extends Behavior
                 ->group([
                     $InstitutionStudentAbsenceDetails->aliasField('student_id'),
                     $InstitutionStudentAbsenceDetails->aliasField('date'),
-                    $InstitutionStudentAbsenceDetails->aliasField('subject_id')
+                    $InstitutionStudentAbsenceDetails->aliasField('subject_id'),
+                    $InstitutionStudentAbsenceDetails->aliasField('period')
                 ])
                 ->where([
                     $InstitutionStudentAbsenceDetails->aliasField('date >= ') => $startDate,
@@ -276,7 +277,7 @@ class StudentAbsencesExcelBehavior extends Behavior
                 ->order([
                     $InstitutionStudentAbsenceDetails->aliasField('student_id'),
                     $InstitutionStudentAbsenceDetails->aliasField('institution_id'),
-                    $InstitutionStudentAbsenceDetails->aliasField('date'),
+                    $InstitutionStudentAbsenceDetails->aliasField('date')
                 ]);
 
             $result = [];
