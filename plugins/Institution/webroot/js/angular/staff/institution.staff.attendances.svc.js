@@ -225,7 +225,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
     }
 
     function getAllDayColumnDefs(dayList) {
-        console.log(dayList);
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
@@ -303,7 +302,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
     }
 
     function getSingleDayTimeInTimeOutElement(params) {
-        console.log(params);
         var action = params.context.action;
         var academicPeriodId = params.context.period;
         var scope = params.context.scope;
@@ -375,7 +373,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     function getAllDayTimeInTimeOutElement(params) {
         console.log(params);
-        console.log('asdfasdfasd');
         var timeIn = params.time_in;
         console.log(timeIn);
         var timeOut = params.time_out;
