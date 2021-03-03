@@ -177,7 +177,6 @@ class StudentAbsencesExcelBehavior extends Behavior
 
 
     private function getData($settings) {
-        //$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institution_id = $requestData->institution_id;
@@ -241,20 +240,15 @@ class StudentAbsencesExcelBehavior extends Behavior
                     ])
                 ]) 
                 ->contain([
-                    'AbsenceTypes',               
-                    'Institutions.Areas.AreaLevels',
-                    'Institutions.AreaAdministratives',
-                    'InstitutionClasses'
+                    'AbsenceTypes',
+                    'Institutions',               
+                    'InstitutionClasses',
+                    'EducationGrades',
+                    'AcademicPeriods'
                 ])     
                 ->leftJoin([$Users->alias() => $Users->table()],[
                         $Users->aliasField('id = ') . $InstitutionStudentAbsenceDetails->aliasField('student_id')
                 ])      
-                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
-                        $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionStudentAbsenceDetails->aliasField('institution_class_id')
-                ])
-                ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()],[
-                        $EducationGrades->aliasField('id = ') . $InstitutionClassGrades->aliasField('education_grade_id')
-                ])
                 ->leftJoin([$Genders->alias() => $Genders->table()], [
                         $Genders->aliasField('id = ') . $Users->aliasField('gender_id')
                 ])
@@ -264,12 +258,10 @@ class StudentAbsencesExcelBehavior extends Behavior
                 ->leftJoin(['GuardianUser' => 'security_users'],[
                         'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
                 ])
-                ->leftJoin([$AcademicPeriods->alias() => $AcademicPeriods->table()], [
-                        $AcademicPeriods->aliasField('id = ') . $InstitutionStudentAbsenceDetails->aliasField('academic_period_id')
-                ])
                 ->where([
                     $InstitutionStudentAbsenceDetails->aliasField('date >= ') => $startDate,
                     $InstitutionStudentAbsenceDetails->aliasField('date <= ') => $endDate,
+                    $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $academicPeriodId,
                     $where
                 ])
                 ->order([
@@ -295,13 +287,16 @@ class StudentAbsencesExcelBehavior extends Behavior
                     //subject
                     $arr = [];
                     if ($value->isSubject != 0 && $value->period != 0 ) {
-                       $subject = $InstitutionSubjectStudents->find()
+                        $subId = $value->isSubject;
+                        $subject = $InstitutionSubjectStudents->find()
                                 ->select([$InstitutionSubjects->aliasField('name')])
                                 ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
                                     $InstitutionSubjects->aliasField('id = ') . $InstitutionSubjectStudents->aliasField('institution_subject_id')
                                 ])
-                                ->group([$InstitutionSubjects->aliasField('name')])
-                                ->where([$InstitutionSubjectStudents->aliasField('student_id') => $stdId])
+                                ->where([
+                                    $InstitutionSubjectStudents->aliasField('student_id') => $stdId,
+                                    $InstitutionSubjects->aliasField('id') => $subId
+                                ])
                                 ->toArray();
 
                         if (!empty($subject)) {
