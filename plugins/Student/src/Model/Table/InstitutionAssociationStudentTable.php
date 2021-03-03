@@ -34,11 +34,43 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
         $this->toggle('view', false);
         $this->toggle('remove', false);
     }
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		$session = $this->request->session();
+		if ($this->controller->name == 'Profiles') {
+			$sId = $session->read('Student.Students.id');
+			if (!empty($sId)) {
+				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+			} else {
+				$studentId = $session->read('Auth.User.id');
+			}
+		} else {
+				$studentId = $session->read('Student.Students.id');
+		}
+		
+		// end POCOR-1893
+		$sortList = ['AcademicPeriods.name'];
+		
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        $query->where([$this->aliasField('security_user_id') => $studentId]);
+        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
+	}
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['security_user_id']['visible'] = false;
         $this->setFieldOrder('academic_period_id','name','education_grade_id','student_status_id');    
     }
+
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $this->setupTabElements();
+    }
+
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
@@ -48,7 +80,6 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
-
     private function setupTabElements()
     {
         $options['type'] = 'student';
@@ -57,11 +88,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Associations');
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
-    {
-        $this->setupTabElements();
-    }
-
+    
     public function getMaleCountByAssociations($associationId)
     {
         $gender_id = 1; // male
