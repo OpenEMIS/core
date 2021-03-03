@@ -998,6 +998,7 @@ class StudentProfilesTable extends ControllerActionTable
         $institutionClassStudents = TableRegistry::get('institution_class_students');
         $where = [];
         $where[$institutionClassStudents->aliasField('education_grade_id')] = $educationGradeId;
+        $where[$institutionClassStudents->aliasField('academic_period_id')] = $academicPeriodId;
         if (!is_null($studentId)) {
             $where[$institutionClassStudents->aliasField('student_id')] = $studentId;
         }
@@ -1007,7 +1008,15 @@ class StudentProfilesTable extends ControllerActionTable
                 $institutionClassStudents->aliasField('institution_id'),
                 $institutionClassStudents->aliasField('education_grade_id'),
             ])
+			->group([
+                $institutionClassStudents->aliasField('student_id'),
+                $institutionClassStudents->aliasField('academic_period_id'),
+                $institutionClassStudents->aliasField('institution_id'),
+                $institutionClassStudents->aliasField('education_grade_id'),
+                $institutionClassStudents->aliasField('student_status_id')
+            ])
             ->where($where)
+            ->where([$institutionClassStudents->aliasField('student_status_id') => 1])
             ->toArray();
 
         foreach ($institutionStudents as $student) {
