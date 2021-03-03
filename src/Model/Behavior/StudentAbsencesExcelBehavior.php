@@ -262,11 +262,11 @@ class StudentAbsencesExcelBehavior extends Behavior
                 ->leftJoin([$StudentAttendancePerDayPeriods->alias() => $StudentAttendancePerDayPeriods->table()], [
                         $InstitutionStudentAbsenceDetails->aliasField('period = ') . $StudentAttendancePerDayPeriods->aliasField('period')
                 ])
-                ->group([
-                    $InstitutionStudentAbsenceDetails->aliasField('student_id'),
-                    $InstitutionStudentAbsenceDetails->aliasField('date'),
-                    $InstitutionStudentAbsenceDetails->aliasField('subject_id')
-                ])
+                //->group([
+                    //$InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                    //$InstitutionStudentAbsenceDetails->aliasField('date'),
+                    //$InstitutionStudentAbsenceDetails->aliasField('subject_id')
+                //])
                 ->where([
                     $InstitutionStudentAbsenceDetails->aliasField('date >= ') => $startDate,
                     $InstitutionStudentAbsenceDetails->aliasField('date <= ') => $endDate,
