@@ -222,7 +222,7 @@ class StudentTemplatesTable extends ControllerActionTable
 
     public function downloadTemplate()
     {
-        $filename = 'staff_profile_template';
+        $filename = 'student_profile_template';
         $fileType = 'xlsx';
         $filepath = WWW_ROOT . 'export' . DS . 'customexcel'. DS . 'default_templates'. DS . $filename . '.' . $fileType;
 
