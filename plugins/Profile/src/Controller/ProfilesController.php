@@ -103,9 +103,7 @@ class ProfilesController extends AppController
     public function TrainingNeeds()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
     public function StaffAppraisals()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
     public function StaffDuties()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Duties']); }
-    public function StaffAssociations()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.InstitutionAssociationStaff']);}
     public function StudentTextbooks()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
-    public function StudentAssociations()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);}
     public function ProfileGuardians()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Guardians']); }
     public function ProfileGuardianUser()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.GuardianUser']); }
     public function StudentReportCards()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']); }
@@ -553,8 +551,7 @@ class ProfilesController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')]
+            'Risks' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -607,7 +604,6 @@ class ProfilesController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
-            'Associations' => ['text' => __('Associations')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
