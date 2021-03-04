@@ -320,63 +320,6 @@ class UsersTable extends AppTable
             });
     }
 
-    public function findInstitutionStudentsNotInAssociation(Query $query, array $options)
-    {
-        $academicPeriodId = $options['academic_period_id'];
-        $institutionId = $options['institution_id'];
-        $associationId = ($options['institution_association_id'])?$options['institution_association_id'] : null;
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
-
-        return $query
-            ->innerJoinWith('InstitutionStudents')
-            ->innerJoinWith('InstitutionStudents.StudentStatuses')
-            ->innerJoinWith('InstitutionStudents.AcademicPeriods')
-            ->innerJoinWith('InstitutionStudents.EducationGrades')
-            ->innerJoinWith('Genders')
-            ->where([
-                'InstitutionStudents.institution_id' => $institutionId,
-                'InstitutionStudents.student_status_id' => $enrolledStatus,
-                'InstitutionStudents.academic_period_id' => $academicPeriodId,
-            ])
-            ->select([
-                'academic_period_id' => 'InstitutionStudents.academic_period_id',
-                'student_status_id' => 'InstitutionStudents.student_status_id',
-                'student_status_name' => 'StudentStatuses.name',
-                'gender_id' => 'Genders.id',
-                'gender_name' => 'Genders.name',
-                'education_grade_id' => 'InstitutionStudents.education_grade_id',
-                'education_grade_name' => 'EducationGrades.name',
-                $this->aliasField('id'),
-                $this->aliasField('openemis_no'),
-                $this->aliasField('first_name'),
-                $this->aliasField('middle_name'),
-                $this->aliasField('third_name'),
-                $this->aliasField('last_name'),
-                $this->aliasField('preferred_name')
-            ])
-            ->group([$this->aliasField('id')])
-            ->order([$this->aliasField('first_name', 'last_name')]) // POCOR-2547 sort list of staff and student by name
-            ->formatResults(function ($results) use ($institutionId) {
-                $arrReturn = [];
-                foreach ($results as $result) {
-                    $arrReturn[] = [
-                        'name' => $result->name,
-                        'openemis_no' => $result->openemis_no,
-                        'security_user_id' => $result->id,
-                        'education_grade_id' => $result->education_grade_id,
-                        'education_grade_name' => __($result->education_grade_name),
-                        'student_status_id' => $result->student_status_id,
-                        'student_status_name' => __($result->student_status_name),
-                        'academic_period_id' => $result->academic_period_id,
-                        'gender_id' => $result->gender_id,
-                        'gender_name' => __($result->gender_name),
-                        'institution_id' => $institutionId,
-                    ];
-                }
-                return $arrReturn;
-            });
-    }
-
     public function setTabElements()
     {
         if ($this->alias() != 'Users') {
