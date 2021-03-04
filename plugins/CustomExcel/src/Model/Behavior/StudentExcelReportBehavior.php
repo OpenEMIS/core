@@ -1350,11 +1350,11 @@ class StudentExcelReportBehavior extends Behavior
         $data = Hash::extract($extra['vars'], $attr['displayValue']);
         $imageContent = current($data);
         //for staff photo
-        if ($attr['displayValue'] == 'StaffUsers.photo_content' ) {
+        if ($attr['displayValue'] == 'StudentUsers.photo_content' ) {
             if (is_resource($imageContent)) {
                 $institutionId = Hash::extract($extra['vars'], 'Institutions.id');
                 $institutionId = current($institutionId);
-
+				
                 $mimeType = mime_content_type($imageContent);
                 $exp = explode('/', $mimeType);
                 $logoExt = end($exp);
@@ -1362,7 +1362,7 @@ class StudentExcelReportBehavior extends Behavior
                 $attr['mime_type'] = $mimeType;
 
                 $tempImagePath = TMP . "temp_logo_$institutionId.$logoExt";
-
+				
                 if (!file_exists($tempImagePath)) {
                     file_put_contents($tempImagePath, stream_get_contents($imageContent));
                     $extra['temp_logo'] = $tempImagePath;

@@ -29,6 +29,10 @@ class StudentReportCardsTable extends AppTable
             'variables' => [
                 'Profiles',
 				'Institutions',
+				'StudentUsers',
+				'StudentDemographics',
+				'StudentContacts',
+				'StudentNationalities',
             ]
         ]);
     }
@@ -41,6 +45,10 @@ class StudentReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseProfiles'] = 'onExcelTemplateInitialiseProfiles';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentUsers'] = 'onExcelTemplateInitialiseStudentUsers';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentDemographics'] = 'onExcelTemplateInitialiseStudentDemographics';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentContacts'] = 'onExcelTemplateInitialiseStudentContacts';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentNationalities'] = 'onExcelTemplateInitialiseStudentNationalities';
 		return $events;
     }
 
@@ -171,6 +179,135 @@ class StudentReportCardsTable extends AppTable
         if (array_key_exists('institution_id', $params)) {
             $Institutions = TableRegistry::get('Institution.Institutions');
             $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types']]);
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentUsers(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $Student = TableRegistry::get('Institution.InstitutionClassStudents');
+
+            $entity = $Student
+                ->find()
+                ->select([
+					'first_name' => 'Users.first_name',
+					'last_name' => 'Users.last_name',
+					'email' => 'Users.email',
+					'photo_content' => 'Users.photo_content',
+					'address' => 'Users.address',
+					'date_of_birth' => 'Users.date_of_birth',
+					'identity_number' => 'Users.identity_number',
+					'gender' => 'Genders.name',
+                ])
+                ->contain([
+                    'Users' => [
+                        'fields' => [
+                            'identity_number',
+                            'first_name',
+                            'last_name',
+                            'photo_content',
+                            'email',
+                            'address',
+                            'date_of_birth',
+                        ]
+                    ]
+                ])
+				->matching('Users.Genders')
+                ->where([
+                    $Student->aliasField('institution_id') => $params['institution_id'],
+                    $Student->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $Student->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $Student->aliasField('student_id') => $params['student_id'],
+                ])
+                ->first();
+				//echo '<pre>';print_r($entity);die;
+				$result = [];
+				$result = [
+					'name' => $entity->first_name.' '.$entity->last_name,
+					'identity_number' => $entity->identity_number,
+					'photo_content' => $entity->photo_content,
+					'email' => $entity->email,
+					'address' => $entity->address,
+					'date_of_birth' => $entity->date_of_birth,
+					'gender' => $entity->gender,
+				];
+            return $result;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentDemographics(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $Student = TableRegistry::get('Institution.InstitutionClassStudents');
+
+            $entity = $Student
+                ->find()
+                ->select([
+					'demographic_type_name' => 'DemographicTypes.name',
+                ])
+				->innerJoin(
+				['UserDemographics' => 'user_demographics'],
+				[
+					'UserDemographics.security_user_id ='. $Student->aliasField('student_id')
+				]
+				)
+				->leftJoin(
+				['DemographicTypes' => 'demographic_types'],
+				[
+					'DemographicTypes.id = UserDemographics.demographic_types_id'
+				]
+				)
+                ->where([
+                    $Student->aliasField('institution_id') => $params['institution_id'],
+                    $Student->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $Student->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $Student->aliasField('student_id') => $params['student_id'],
+                ])
+                ->first();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentContacts(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $UserContacts = TableRegistry::get('user_contacts');
+
+            $entity = $UserContacts
+                ->find()
+                ->select([
+					'contact' => $UserContacts->aliasField('value'),
+                ])
+                ->where([
+                    $UserContacts->aliasField('security_user_id') => $params['student_id'],
+                    $UserContacts->aliasField('preferred') => 1,
+                ])
+                ->first();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentNationalities(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $UserNationalities = TableRegistry::get('user_nationalities');
+
+            $entity = $UserNationalities
+                ->find()
+                ->select([
+					'name' => 'Nationalities.name',
+                ])
+				->innerJoin(
+				['Nationalities' => 'nationalities'],
+				[
+					'Nationalities.id ='. $UserNationalities->aliasField('nationality_id')
+				]
+				)
+                ->where([
+                    $UserNationalities->aliasField('security_user_id') => $params['student_id'],
+                ])
+                ->first();
             return $entity;
         }
     }
