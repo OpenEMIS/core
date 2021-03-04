@@ -1962,7 +1962,9 @@ class InstitutionsController extends AppController
 
         $data = array();
         $profileComplete = 0;
-        $totalProfileCount = 28;
+        // $totalProfileCount = 28;
+        // check in config item
+        
 /********************************************* */ 
         //Overview
         $institutions = TableRegistry::get('institutions');
@@ -1980,9 +1982,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[0]['complete'] = 'yes';
+            $data[0]['profileComplete'] = $profileComplete;
             $data[0]['modifiedDate'] = date("F j,Y",strtotime($institutionsData->modified));
 		} else {
             $data[0]['complete'] = 'no';
+            $data[0]['profileComplete'] = 0;
             $data[0]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2001,9 +2005,11 @@ class InstitutionsController extends AppController
 		if(!empty($calendarEventsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[1]['complete'] = 'yes';
+            $data[1]['profileComplete'] = $profileComplete;
             $data[1]['modifiedDate'] = date("F j,Y",strtotime($calendarEventsData->modified));
 		} else {
             $data[1]['complete'] = 'no';
+            $data[1]['profileComplete'] = 0;
             $data[1]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2023,9 +2029,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionContactPersonsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[2]['complete'] = 'yes';
+            $data[2]['profileComplete'] = $profileComplete;
             $data[2]['modifiedDate'] = date("F j,Y",strtotime($institutionContactPersonsData->modified));
 		} else {
             $data[2]['complete'] = 'no';
+            $data[2]['profileComplete'] = 0;
             $data[2]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2044,9 +2052,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionShiftsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[3]['complete'] = 'yes';
+            $data[3]['profileComplete'] = $profileComplete;
 		    $data[3]['modifiedDate'] = ($institutionShiftsData->modified)?date("F j,Y",strtotime($institutionShiftsData->modified)):date("F j,Y",strtotime($institutionShiftsData->created));
 		} else {
             $data[3]['complete'] = 'no';
+            $data[3]['profileComplete'] = 0;
             $data[3]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2066,9 +2076,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionProgrammesData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[4]['complete'] = 'yes';
+            $data[4]['profileComplete'] = $profileComplete;
 		    $data[4]['modifiedDate'] = ($institutionProgrammesData->modified)?date("F j,Y",strtotime($institutionProgrammesData->modified)):date("F j,Y",strtotime($institutionProgrammesData->created));
 		} else {
             $data[4]['complete'] = 'no';
+            $data[4]['profileComplete'] = 0;
             $data[4]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 		
@@ -2088,9 +2100,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionClassesData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[5]['complete'] = 'yes';
+            $data[5]['profileComplete'] = $profileComplete;
 		    $data[5]['modifiedDate'] = ($institutionClassesData->modified)?date("F j,Y",strtotime($institutionClassesData->modified)):date("F j,Y",strtotime($institutionClassesData->created));
 		} else {
             $data[5]['complete'] = 'no';
+            $data[5]['profileComplete'] = 0;
             $data[5]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2110,9 +2124,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionSubjectsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[6]['complete'] = 'yes';
+            $data[6]['profileComplete'] = $profileComplete;
 		    $data[6]['modifiedDate'] = ($institutionSubjectsData->modified)?date("F j,Y",strtotime($institutionSubjectsData->modified)):date("F j,Y",strtotime($institutionSubjectsData->created));
 		} else {
             $data[6]['complete'] = 'no';
+            $data[6]['profileComplete'] = 0;
             $data[6]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2132,9 +2148,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionTextbooksData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[7]['complete'] = 'yes';
+            $data[7]['profileComplete'] = $profileComplete;
 		    $data[7]['modifiedDate'] = ($institutionTextbooksData->modified)?date("F j,Y",strtotime($institutionTextbooksData->modified)):date("F j,Y",strtotime($institutionSubjectsData->created));
 		} else {
             $data[7]['complete'] = 'no';
+            $data[7]['profileComplete'] = 0;
             $data[7]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2154,9 +2172,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionStudentsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[8]['complete'] = 'yes';
+            $data[8]['profileComplete'] = $profileComplete;
 		    $data[8]['modifiedDate'] = ($institutionStudentsData->modified)?date("F j,Y",strtotime($institutionStudentsData->modified)):date("F j,Y",strtotime($institutionSubjectsData->created));
 		} else {
             $data[8]['complete'] = 'no';
+            $data[8]['profileComplete'] = 0;
             $data[8]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2176,9 +2196,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionStaffData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[9]['complete'] = 'yes';
+            $data[9]['profileComplete'] = $profileComplete;
 		    $data[9]['modifiedDate'] = ($institutionStaffData->modified)?date("F j,Y",strtotime($institutionStaffData->modified)):date("F j,Y",strtotime($institutionStaffData->created));
 		} else {
             $data[9]['complete'] = 'no';
+            $data[9]['profileComplete'] = 0;
             $data[9]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2198,9 +2220,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionAttendanceData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[10]['complete'] = 'yes';
+            $data[10]['profileComplete'] = $profileComplete;
 		    $data[10]['modifiedDate'] = ($institutionAttendanceData->modified)?date("F j,Y",strtotime($institutionAttendanceData->modified)):date("F j,Y",strtotime($institutionAttendanceData->created));
 		} else {
             $data[10]['complete'] = 'no';
+            $data[10]['profileComplete'] = 0;
             $data[10]['modifiedDate'] = 'Not updated';
         }
 
@@ -2221,9 +2245,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionBehaviourData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[11]['complete'] = 'yes';
+            $data[11]['profileComplete'] = $profileComplete;
 		    $data[11]['modifiedDate'] = ($institutionBehaviourData->modified)?date("F j,Y",strtotime($institutionBehaviourData->modified)):date("F j,Y",strtotime($institutionBehaviourData->created));;
 		} else {
             $data[11]['complete'] = 'no';
+            $data[11]['profileComplete'] = 0;
             $data[11]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2243,9 +2269,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionPositionsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[12]['complete'] = 'yes';
+            $data[12]['profileComplete'] = $profileComplete;
 		    $data[12]['modifiedDate'] = ($institutionPositionsData->modified)?date("F j,Y",strtotime($institutionPositionsData->modified)):date("F j,Y",strtotime($institutionPositionsData->created));
 		} else {
             $data[12]['complete'] = 'no';
+            $data[12]['profileComplete'] = 0;
             $data[12]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2265,9 +2293,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionBankAccountsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[13]['complete'] = 'yes';
+            $data[13]['profileComplete'] = $profileComplete;
 		    $data[13]['modifiedDate'] = ($institutionBankAccountsData->modified)?date("F j,Y",strtotime($institutionBankAccountsData->modified)):date("F j,Y",strtotime($institutionBankAccountsData->created));
 		} else {
             $data[13]['complete'] = 'no';
+            $data[13]['profileComplete'] = 0;
             $data[13]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2287,9 +2317,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionInstitutionFeesData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[14]['complete'] = 'yes';
+            $data[14]['profileComplete'] = $profileComplete;
 		    $data[14]['modifiedDate'] = ($institutionInstitutionFeesData->modified)?date("F j,Y",strtotime($institutionInstitutionFeesData->modified)):date("F j,Y",strtotime($institutionInstitutionFeesData->created));
 		} else {
             $data[14]['complete'] = 'no';
+            $data[14]['profileComplete'] = 0;
             $data[14]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2330,9 +2362,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionInfrastructuresOverviewData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[16]['complete'] = 'yes';
+            $data[16]['profileComplete'] = $profileComplete;
 		    $data[16]['modifiedDate'] = ($institutionInfrastructuresOverviewData->modified)?date("F j,Y",strtotime($institutionInfrastructuresOverviewData->modified)):date("F j,Y",strtotime($institutionInfrastructuresOverviewData->created));
 		} else {
             $data[16]['complete'] = 'no';
+            $data[16]['profileComplete'] = 0;
             $data[16]['modifiedDate'] = 'Not updated';
         }
  /********************************************* */ 
@@ -2352,9 +2386,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionInfrastructuresNeedsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[17]['complete'] = 'yes';
+            $data[17]['profileComplete'] = $profileComplete;
 		    $data[17]['modifiedDate'] = ($institutionInfrastructuresNeedsData->modified)?date("F j,Y",strtotime($institutionInfrastructuresNeedsData->modified)):date("F j,Y",strtotime($institutionInfrastructuresNeedsData->created));
 		} else {
             $data[17]['complete'] = 'no';
+            $data[17]['profileComplete'] = 0;
             $data[17]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2374,9 +2410,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionWashWaterData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[18]['complete'] = 'yes';
+            $data[18]['profileComplete'] = $profileComplete;
 		    $data[18]['modifiedDate'] = ($institutionWashWaterData->modified)?date("F j,Y",strtotime($institutionWashWaterData->modified)):date("F j,Y",strtotime($institutionWashWaterData->created));
 		} else {
             $data[18]['complete'] = 'no';
+            $data[18]['profileComplete'] = 0;
             $data[18]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2396,9 +2434,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionWashHygieneData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[19]['complete'] = 'yes';
+            $data[19]['profileComplete'] = $profileComplete;
 		    $data[19]['modifiedDate'] = ($institutionWashHygieneData->modified)?date("F j,Y",strtotime($institutionWashHygieneData->modified)):date("F j,Y",strtotime($institutionWashHygieneData->created));
 		} else {
             $data[19]['complete'] = 'no';
+            $data[19]['profileComplete'] = 0;
             $data[19]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2418,9 +2458,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionWashWasteData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[20]['complete'] = 'yes';
+            $data[20]['profileComplete'] = $profileComplete;
 		    $data[20]['modifiedDate'] = ($institutionWashWasteData->modified)?date("F j,Y",strtotime($institutionWashWasteData->modified)):date("F j,Y",strtotime($institutionWashWasteData->created));
 		} else {
             $data[20]['complete'] = 'no';
+            $data[20]['profileComplete'] = 0;
             $data[20]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2440,9 +2482,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionWashSewageData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[21]['complete'] = 'yes';
+            $data[21]['profileComplete'] = $profileComplete;
 		    $data[21]['modifiedDate'] = ($institutionWashSewageData->modified)?date("F j,Y",strtotime($institutionWashSewageData->modified)):date("F j,Y",strtotime($institutionWashSewageData->created));
 		} else {
             $data[21]['complete'] = 'no';
+            $data[21]['profileComplete'] = 0;
             $data[21]['modifiedDate'] = 'Not updated';
         }
 
@@ -2463,9 +2507,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionUtilitiesElectricityData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[22]['complete'] = 'yes';
+            $data[22]['profileComplete'] = $profileComplete;
 		    $data[22]['modifiedDate'] = ($institutionUtilitiesElectricityData->modified)?date("F j,Y",strtotime($institutionUtilitiesElectricityData->modified)):date("F j,Y",strtotime($institutionUtilitiesElectricityData->created));
 		} else {
             $data[22]['complete'] = 'no';
+            $data[22]['profileComplete'] = 0;
             $data[22]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2485,9 +2531,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionUtilitiesInternetData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[23]['complete'] = 'yes';
+            $data[23]['profileComplete'] = $profileComplete;
 		    $data[23]['modifiedDate'] = ($institutionUtilitiesInternetData->modified)?date("F j,Y",strtotime($institutionUtilitiesInternetData->modified)):date("F j,Y",strtotime($institutionUtilitiesInternetData->created));
 		} else {
             $data[23]['complete'] = 'no';
+            $data[23]['profileComplete'] = 0;
             $data[23]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2507,9 +2555,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionUtilitiesTelephoneData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[24]['complete'] = 'yes';
+            $data[24]['profileComplete'] = $profileComplete;
 		    $data[24]['modifiedDate'] = ($institutionUtilitiesTelephoneData->modified)?date("F j,Y",strtotime($institutionUtilitiesTelephoneData->modified)):date("F j,Y",strtotime($institutionUtilitiesTelephoneData->created));
 		} else {
             $data[24]['complete'] = 'no';
+            $data[24]['profileComplete'] = 0;
             $data[24]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2529,9 +2579,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionAssetsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[25]['complete'] = 'yes';
+            $data[25]['profileComplete'] = $profileComplete;
 		    $data[25]['modifiedDate'] = ($institutionAssetsData->modified)?date("F j,Y",strtotime($institutionAssetsData->modified)):date("F j,Y",strtotime($institutionAssetsData->created));
 		} else {
             $data[25]['complete'] = 'no';
+            $data[25]['profileComplete'] = 0;
             $data[25]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */   
@@ -2547,9 +2599,11 @@ class InstitutionsController extends AppController
 		if(!empty($institutionTransportData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[26]['complete'] = 'yes';
+            $data[26]['profileComplete'] = $profileComplete;
 		    $data[26]['modifiedDate'] = ($institutionTransportData->modified)?date("F j,Y",strtotime($institutionTransportData->modified)):date("F j,Y",strtotime($institutionTransportData->created));
 		} else {
             $data[26]['complete'] = 'no';
+            $data[26]['profileComplete'] = 0;
             $data[26]['modifiedDate'] = 'Not updated';
         }
 /********************************************* */ 
@@ -2569,17 +2623,56 @@ class InstitutionsController extends AppController
 		if(!empty($institutionCommitteesData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[27]['complete'] = 'yes';
+            $data[27]['profileComplete'] = $profileComplete;
 		    $data[27]['modifiedDate'] = ($institutionCommitteesData->modified)?date("F j,Y",strtotime($institutionCommitteesData->modified)):date("F j,Y",strtotime($institutionCommitteesData->created));
 		} else {
             $data[27]['complete'] = 'no';
+            $data[27]['profileComplete'] = 0;
             $data[27]['modifiedDate'] = 'Not updated';
         }
         // $percent = $profileComplete/$totalProfileCount * 100;
 		// $institutionPercentage = round($percent);
-        $profilePercentage = 100/$totalProfileCount * $profileComplete;
-		$profilePercentage = round($profilePercentage);
-		$data['percentage'] = $profilePercentage;
-        return $data;
+        // $profilePercentage = 100/$totalProfileCount * $profileComplete;
+		// $profilePercentage = round($profilePercentage);
+		//$data['percentage'] = $profilePercentage;
+
+        //Config validation
+        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $typeList = $ConfigItem
+            ->find('list', [
+                'keyField' => 'name',
+                'valueField' => 'name'
+            ])
+            ->order('type')
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'Institution Profile'])
+            ->toArray();
+          
+        $typeOptions = array_keys($typeList);
+        $totalProfileComplete = count($data);
+        $typeListDisable = $ConfigItem
+            ->find('list', [
+                'keyField' => 'name',
+                'valueField' => 'name'
+            ])
+            ->order('type')
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 0,$ConfigItem->aliasField('type') => 'Institution Profile'])
+            ->toArray();
+            if ($typeListDisable) {
+                $countList = count($typeListDisable);
+                $profileComplete = $profileComplete - $countList;
+            }
+ 
+        foreach($data as $key => $featureData) {
+            if (!in_array($featureData['feature'], $typeOptions)) {
+                unset($data[$key]);              
+                $totalProfileComplete = count($data);
+                }  
+        }
+       
+            $profilePercentage = 100/$totalProfileComplete * $profileComplete;
+            $profilePercentage = round($profilePercentage);
+            $data['percentage'] = $profilePercentage;
+            return $data;
     }
     public function getInstituteProfileCompletnessDataBAK ($institutionId) {
 
