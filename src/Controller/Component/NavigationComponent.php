@@ -560,12 +560,7 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Textbooks', 'Institutions.ImportInstitutionTextbooks'],
                 'params' => ['plugin' => 'Institution']
             ],
-            'Institutions.Associations' => [
-                'title' => 'Associations',
-                'parent' => 'Institution.Academic',
-                'selected' => ['Institutions.Associations'],
-                'params' => ['plugin' => 'Institution']
-            ],
+
             'Institution.Feeders' => [
                 'title' => 'Feeders',
                 'parent' => 'Institution.Academic',
@@ -1041,7 +1036,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
                 'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentRisks', 'Students.Outcomes', 'Institutions.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit',
-                'Students.Competencies','Institutions.Associations','Institutions.StudentAssociations']
+                'Students.Competencies']
             ],
             'Students.StudentScheduleTimetable' => [
                 'title' => 'Timetables',
@@ -1119,7 +1114,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave','Staff.Duties','Staff.Associations'],
+                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave','Staff.Duties'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',
@@ -1271,7 +1266,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Profiles.Staff',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffLeave', 'Profiles.HistoricalStaffLeave','Profiles.StaffAttendances','Profiles.StaffBehaviours', 'Profiles.StaffAppraisals','Profiles.StaffDuties','Profiles.StaffAssociations']
+                'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffLeave', 'Profiles.HistoricalStaffLeave','Profiles.StaffAttendances','Profiles.StaffBehaviours', 'Profiles.StaffAppraisals','Profiles.StaffDuties']
             ],
             'Profiles.StaffBankAccounts' => [
                 'title' => 'Finance',
@@ -1314,7 +1309,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Student',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours',
-                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes','Profiles.StudentRisks','Profiles.StudentAssociations']
+                'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes','Profiles.StudentRisks']
             ],
             'Profiles.StudentScheduleTimetable' => [
                 'title' => 'Timetables',
@@ -1394,7 +1389,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.HistoricalStaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffLeave', 'Directories.HistoricalStaffLeave', 'Directories.StaffAttendances', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals','Directories.StaffDuties','Directories.StaffAssociations']
+                'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.HistoricalStaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffLeave', 'Directories.HistoricalStaffLeave', 'Directories.StaffAttendances', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals','Directories.StaffDuties']
             ],
             'Directories.StaffBankAccounts' => [
                 'title' => 'Finance',
@@ -1434,7 +1429,7 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Student',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSubjects', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours',
-                'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentReportCards', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks', 'Directories.StudentOutcomes', 'Directories.StudentRisks','Directories.StudentAssociations']
+                'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentReportCards', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks', 'Directories.StudentOutcomes', 'Directories.StudentRisks']
             ],
             'Directories.StudentBankAccounts' => [
                 'title' => 'Finance',

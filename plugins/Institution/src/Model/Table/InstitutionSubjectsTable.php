@@ -1052,71 +1052,36 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $commonData = $data['InstitutionSubjects'];
         $error = false;
         $subjects = false;
-        //POCOR-5932 starts
-        $subjectOptions = $this->getSubjectOptions($extra['selectedClassId'],false, false);
-       
+        $subjectOptions = $this->getSubjectOptions($extra['selectedClassId']);
         /*$existedSubjects = $this->getExistedSubjects($extra['selectedClassId'], true);
         if (count($subjectOptions) == count($existedSubjects)) {
             $error = $this->aliasField('allSubjectsAlreadyAdded');
         } else*/
-        $Grade = $this->InstitutionClassGrades;
-        $gradeOptions = $Grade->find('list', [
-                            'keyField' => 'education_grade.id',
-                            'valueField' => 'education_grade.name'
-                        ])
-                        ->contain('EducationGrades')
-                        ->where([
-                            $Grade->aliasField('institution_class_id') => $extra['selectedClassId']
-                        ])->toArray();
         if (isset($data['MultiSubjects']) && count($data['MultiSubjects'])>0) {
-            $i=0;
             foreach ($data['MultiSubjects'] as $key => $row) {
-                
-                if (!empty($gradeOptions)) {
-                    
-                    foreach ($gradeOptions as $gradekey => $gradevalue) {
-                        
-                        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+                if (isset($row['education_subject_id']) && isset($row['subject_staff'])) {
+                    $subjectSelected = true;
+                    $subjects[$key] = [
+                        'key' => $key,
+                        'name' => $row['name'],
+                        'education_grade_id' => $row['education_grade_id'],
+                        'education_subject_id' => $row['education_subject_id'],
+                        'academic_period_id' => $commonData['academic_period_id'],
+                        'institution_id' => $commonData['institution_id'],
+                        'class_subjects' => [
+                            [
+                                'status' => 1,
+                                'institution_class_id' => $commonData['class_name']
+                            ]
+                        ]
+                    ];
+                    if ($row['subject_staff'][0]['staff_id']!=0) {
+                        $row['subject_staff'][0]['institution_id'] = $commonData['institution_id'];
 
-                        $eduGradesSubData = $EducationGradesSubjects
-                                ->find()
-                                ->contain(['EducationSubjects'])
-                                ->where([
-                                    'EducationGradesSubjects.education_grade_id' => $gradekey,
-                                    'EducationGradesSubjects.education_subject_id' => $row['education_subject_id'],
-                                ])->first(); 
-                         
-       
-                        if(!empty($eduGradesSubData)){
-
-                            if (isset($row['education_subject_id']) && isset($row['subject_staff'])) {
-                                $subjectSelected = true;
-                                $subjects[$i] = [
-                                    'key' => $i,
-                                    'name' => $row['name'],
-                                    'education_grade_id' => $eduGradesSubData->education_grade_id,
-                                    'education_subject_id' => $row['education_subject_id'],
-                                    'academic_period_id' => $commonData['academic_period_id'],
-                                    'institution_id' => $commonData['institution_id'],
-                                    'class_subjects' => [
-                                        [
-                                            'status' => 1,
-                                            'institution_class_id' => $commonData['class_name']
-                                        ]
-                                    ]
-                                ];
-                                if ($row['subject_staff'][0]['staff_id']!=0) {
-                                    $row['subject_staff'][0]['institution_id'] = $commonData['institution_id'];
-
-                                    $subjects[$i]['subject_staff'] = $row['subject_staff'];
-                                }
-                            }
-
-                            $i++;
-                        }
-                    } //foreach end
+                        $subjects[$key]['subject_staff'] = $row['subject_staff'];
+                    }
                 }
-            } //foreach end
+            }
 
             if (!$subjects) {
                 $error = $this->aliasField('noSubjectSelected');
@@ -1136,7 +1101,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             // $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInClass', 'debug');
             $error = $this->aliasField('noSubjectsInClass');
         }
-        //POCOR-5932 ends
+
         return [$error, $subjects, $data];
     }
 
@@ -1229,7 +1194,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
     }
 
-    public function getSubjectOptions($selectedClassId, $listOnly = false, $withgroup = true)
+    public function getSubjectOptions($selectedClassId, $listOnly = false)
     {
         $Grade = $this->InstitutionClassGrades;
         $gradeOptions = $Grade->find('list', [
@@ -1255,12 +1220,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     ->where([
                         'EducationGradesSubjects.education_grade_id IN ' => array_keys($gradeOptions),
                     ]);
-            $query->order('EducationSubjects.order');
-            //POCOR-5932 starts
-            if($withgroup){
-                $query->group('EducationSubjects.id');
-            }//POCOR-5932 ends
-            $subjects = $query->toArray();
+            $subjects = $query
+                    ->order('EducationSubjects.order')
+                    ->group('EducationSubjects.id')
+                    ->toArray();
             if ($listOnly) {
                 $subjectList = [];
                 foreach ($subjects as $key => $value) {
