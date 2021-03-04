@@ -1,3 +1,35 @@
+### [3.62.1] - 2021-02-26
+- Implemented: Added extra columns for abscence reasons to Attendance Report
+- Implemented: Staff Profile feature
+- Implemented: Enhancement of Drop-Out and Withdraw function
+- Implemented: Enhancement of Student Transfer function
+- Bug Fixed: Reports > Profile: Upon clicking the generate button, Profiles were not being generated
+- Bug Fixed: Institutions > Academic > Classes > Add: Unable to select Homeroom Teacher is shift field has been selected
+- Bug Fixed: Institutions > Students > Import > Import Student Guardians: Add Guardian National ID column
+- Bug Fixed: Institutions > Attendance > Student: Multigrade Teacher unable to mark attendance
+- Bug Fixed: Institutions > General > Map: Latitude Length and Longitude Length is not reflecting the length that is configured in System Configurations
+- Bug Fixed: Institutions > Students > Bulk Promote: When selecting Promoted, the Next Grade field should not be mandatory
+- Bug Fixed: Administration > Education Structure > Programmes > Edit: Record disappeared after edit
+- Bug Fixed: Staff Payslips API: API Error
+### [3.62.0] - 2021-02-19
+- Implemented: Infrastructure module - Export feature
+- Implemented: Enhancement of the Core survey module: survey school coverage feature
+- Implemented: Staff Payslips feature
+- Implemented: Changes to student and staff health vaccination
+- Implemented: Import feature for importing the student marks on the assessments from Excel
+- Implemented: Allow user to view the reports in browser and add export / print the report
+- Implemented: Improvement of the Workbench functions
+- Implemented: Import Staff Salaries function
+- Bug Fixed: Institutions > Meals > Students: To add All Days page
+- Bug Fixed: Institutions > Students > Meal: Add permission to view and allow students to view their own student meal page
+- Bug Fixed: Reports > Workflows: Add Areas to filter institutions list
+- Bug Fixed: Institutions > Student > Academic > Programmes: End Date was not update when Academic Period End Date was changed
+- Bug Fixed: Daily recording of Meal distribution issue
+- Bug Fixed: Institutions > Attendance > Student: Student Transferred still appears in both Institutions if Transfer is in the middle of the week
+- Bug Fixed: Institutions > Staff > Career > Class: Staff is assigned as Secondary Teacher but did not appear in Class tab
+- Bug Fixed: Institutions > Survey > Forms: Forms with sections that have special characters is not working
+- Bug Fixed: Institutions > Staff > Salary: Data is not saved in staff_salary_transactions table
+
 ### [3.61.10] - 2021-02-09
 - Bug Fixed: Institutions > Attendance > Students: Student transferred to a new Institution and then transferred back to the old Institution has double record in Attendance page
 - Bug Fixed: Staff > Institution > Staff > Pending Transfer In > Approve: Encountered 404 error

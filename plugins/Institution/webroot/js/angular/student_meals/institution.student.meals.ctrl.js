@@ -29,6 +29,10 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     vm.exportexcel = '';
     vm.excelExportAUrl = '';
 
+    vm.allMeals = '-';
+    vm.allFreeMealCount = '-';
+    vm.allPaidMealCount = '-';
+
     // Options
     vm.academicPeriodOptions = [];
     vm.selectedAcademicPeriod = '';
@@ -124,7 +128,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
        
         UtilsSvc.isAppendLoader(true);
         if (vm.institutionId != null) {
-            //debugger;
+            // debugger;
             InstitutionStudentMealsSvc.getTranslatedText()
 
             .then(function(isTranslated) {
@@ -245,7 +249,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         vm.dayListOptions = dayListOptions;
         console.log(vm.dayListOptions);
         var hasSelected = false;
-        vm.dayListOptions.splice(0, 1); // uncomment when All day needed in dropdown
+        // vm.dayListOptions.splice(0, 1); // uncomment when All day needed in dropdown
         if (dayListOptions.length > 0) {
             for (var i = 0; i < dayListOptions.length; ++i) {
                 if (angular.isDefined(dayListOptions[i]['selected']) && dayListOptions[i]['selected']) {
@@ -349,7 +353,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     function getRowHeight(params) {
         return params.data.rowHeight;
     }
-
+   
     
     vm.setGridData = function() {
         console.log(vm.classStudentList);
@@ -361,13 +365,17 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     }
 
     vm.setRowDatas = function(studentList) {
-        console.log(studentList);
-        studentList.forEach(function (dataItem, index) {
+        // console.log('studentList controller',studentList);
+      studentList.forEach(function (dataItem, index) {
+            if(dataItem.hasOwnProperty('institution_student_meal')){
             if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 1 || dataItem.institution_student_meal.meal_received_id == 2) {
                 dataItem.rowHeight = 60;
             } else {
                 dataItem.rowHeight = 120;
             }
+        } else{
+            dataItem.rowHeight = 80;
+        }
         });       
         vm.gridOptions.api.setRowData(studentList);
         
@@ -378,15 +386,17 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         if (vm.selectedDay != -1) {
             columnDefs = InstitutionStudentMealsSvc.getSingleDayColumnDefs(vm.selectedAttendancePeriod, vm.selectedSubject);
         } else {
+            
             columnDefs = InstitutionStudentMealsSvc.getAllDayColumnDefs(vm.dayListOptions, vm.attendancePeriodOptions);
         }
-
+       
         if (angular.isDefined(vm.gridOptions.api)) {
-            vm.gridOptions.api.setColumnDefs(columnDefs);
+           vm.gridOptions.api.setColumnDefs(columnDefs);
             vm.gridOptions.api.sizeColumnsToFit();
         } else {
-            vm.gridOptions.columnDefs = columnDefs;
+           vm.gridOptions.columnDefs = columnDefs;
         }
+        
     }
 
     // dashboard count
@@ -439,6 +449,9 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             var allPresentCount = '-';
             var allAbsenceCount = '-';
             var allLateCount = '-';
+            var allMeals = '-';
+            var allFreeMealCount = '-';
+            var allPaidMealCount = '-';
 
             if (vm.totalStudents > 0) {
                 allAttendances = 0;
@@ -446,28 +459,27 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 allAbsenceCount = 0;
                 allLateCount = 0;
 
+                allMeals = 0;
+                allFreeMealCount = 0;
+                allPaidMealCount = 0;
+
                 angular.forEach(vm.classStudentList, function(obj, studentKey) {
-                    if (angular.isDefined(obj.week_attendance) && Object.keys(obj.week_attendance).length > 0) {
-                        var weekAttendance = obj.week_attendance;
+                    if (angular.isDefined(obj.week_meals) && Object.keys(obj.week_meals).length > 0) {
+                        var weekAttendance = obj.week_meals;
                         angular.forEach(weekAttendance, function(day, dayKey) {
                             if (Object.keys(day).length > 0) {
                                 angular.forEach(day, function(period, periodKey) {
+                                    // console.log('period', period);
                                     switch(period) {
-                                        case attendanceType.NOTMARKED.code:
+                                      case mealType.Paid.code:
+                                           ++allPaidMealCount;
                                             break;
-                                        case attendanceType.PRESENT.code:
-                                            ++allAttendances;
-                                            ++allPresentCount;
+                                        case mealType.Free.code:
+                                            ++allFreeMealCount;
                                             break;
-                                        case attendanceType.LATE.code:
-                                            ++allAttendances;
-                                            ++allLateCount;
-                                            break;
-                                        case attendanceType.UNEXCUSED.code:
-                                        case attendanceType.EXCUSED.code:
-                                            ++allAttendances;
-                                            ++allAbsenceCount;
-                                            break;
+                                        
+                                        case mealType.None.code:
+                                           break;
                                     }
                                 });
                             }
@@ -476,10 +488,10 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 });
             }
 
-            vm.allAttendances = allAttendances;
-            vm.allPresentCount = allPresentCount;
-            vm.allAbsenceCount = allAbsenceCount;
-            vm.allLateCount = allLateCount;
+           vm.allMeals = allFreeMealCount + allPaidMealCount;
+           vm.allFreeMealCount = allFreeMealCount;
+           vm.allPaidMealCount = allPaidMealCount;
+           
         }
     }
 
@@ -584,7 +596,10 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         vm.selectedWeekEndDate = weekObj.end_day;
         vm.gridOptions.context.week = vm.selectedWeek;
         InstitutionStudentMealsSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId)
-       
+        .then(function(dayListOptions) {
+            vm.updateDayList(dayListOptions);
+            // return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay, vm.selectedEducationGrade);
+        }, vm.error)
         .then(function(isMarked) {
                 vm.updateIsMarked(isMarked);
                 //return InstitutionStudentMealsSvc.getClassStudent(vm.institutionId,vm.selectedClass,vm.selectedAcademicPeriod,vm.selectedDay,vm.selectedWeekStartDate,vm.selectedWeekEndDate,vm.selectedWeek,vm.subject_id);
@@ -605,8 +620,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     }
 
     vm.changeDay = function() {
-       
-        UtilsSvc.isAppendLoader(true);
+      UtilsSvc.isAppendLoader(true);
         var dayObj = vm.dayListOptions.find(obj => obj.date == vm.selectedDay);
         vm.schoolClosed = (angular.isDefined(dayObj.closed) && dayObj.closed) ? true : false;
         vm.gridOptions.context.schoolClosed = vm.schoolClosed;
@@ -634,8 +648,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             }, vm.error)
         .finally(function() {
             UtilsSvc.isAppendLoader(false);
-            vm.setGridData();
             vm.setColumnDef();
+            vm.setGridData();
         });
     }
 
@@ -686,6 +700,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     vm.onEditClick = function() {
         vm.action = 'edit';
         vm.gridOptions.context.mode = vm.action;
+        vm.gridOptions.context.mealPrograme=vm.selectedmealPrograme;
         vm.setColumnDef();
         AlertSvc.info($scope, 'Meal will be automatically saved.');
         InstitutionStudentMealsSvc.savePeriodMarked(vm.getPeriodMarkedParams(), $scope);

@@ -25,7 +25,6 @@ class ProfileTemplatesTable extends ControllerActionTable
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        //$this->hasMany('InstitutionReportCards', ['className' => 'Institution.InstitutionReportCards', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'excel_template_name',
@@ -102,7 +101,8 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['description']['visible'] = false;
         $this->setFieldOrder(['code', 'name', 'generate_start_date', 'generate_end_date', 'excel_template']);
-    }
+		$this->setupTabElements();
+	}
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -258,5 +258,28 @@ class ProfileTemplatesTable extends ControllerActionTable
         }        
 
     } 
+	
+	private function setupTabElements() {
+		$options['type'] = 'StaffTemplates';
+		$tabElements = $this->getStaffTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Templates');
+	}
+
+	public function getStaffTabElements($options = [])
+    {
+        $tabElements = [];
+        $tabUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
+        $templateUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
+        $tabElements = [
+            'Profiles' => ['text' => __('Profiles')],
+            'Templates' => ['text' => __('Templates')]
+        ];
+		
+        $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'InstitutionProfiles']);
+        $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Institutions']);
+
+		return $tabElements;
+    }
 
 }
