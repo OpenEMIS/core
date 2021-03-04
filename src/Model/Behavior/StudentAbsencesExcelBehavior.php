@@ -229,7 +229,6 @@ class StudentAbsencesExcelBehavior extends Behavior
                     'education_grade_id' => $EducationGrades->aliasField('id'),
                     'education_grade' => $EducationGrades->aliasField('name'),
                     'period' => $InstitutionStudentAbsenceDetails->aliasField('period'),
-                    'period_name' =>$StudentAttendancePerDayPeriods->aliasField('name'),
                     'isSubject' => $InstitutionStudentAbsenceDetails->aliasField('subject_id'),
                     'gender' => $Genders->aliasField('name'),
                     'address' => 'Users.address',
@@ -259,9 +258,6 @@ class StudentAbsencesExcelBehavior extends Behavior
                 ->leftJoin(['GuardianUser' => 'security_users'],[
                         'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
                 ])
-                ->leftJoin([$StudentAttendancePerDayPeriods->alias() => $StudentAttendancePerDayPeriods->table()], [
-                        $InstitutionStudentAbsenceDetails->aliasField('period = ') . $StudentAttendancePerDayPeriods->aliasField('period')
-                ])
                 ->group([
                     $InstitutionStudentAbsenceDetails->aliasField('student_id'),
                     $InstitutionStudentAbsenceDetails->aliasField('date'),
@@ -278,20 +274,45 @@ class StudentAbsencesExcelBehavior extends Behavior
                     $InstitutionStudentAbsenceDetails->aliasField('student_id'),
                     $InstitutionStudentAbsenceDetails->aliasField('institution_id'),
                     $InstitutionStudentAbsenceDetails->aliasField('date')
-                ]);
+                ])
+                ->toArray();
 
             $result = [];
             if (!empty($record)) {
                 foreach ($record as $key => $value) {
+                    $gradeId = $value->education_grade_id;
+                    $periodId = $value->period;
                     $stdId = $value->student_id;
+                    $yearId = $value->academic_period_id;
+                    $date = $value->date->format('Y-m-d');
+                    $periodData = $StudentAttendancePerDayPeriods->find()
+                                ->select(['period_name' => $StudentAttendancePerDayPeriods->aliasField('name')])
+                                ->innerJoin([$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()], [
+                                    $StudentAttendanceMarkTypes->aliasField('id = ') . $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id')
+                                ])
+                                ->innerJoin([$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()], [
+                                    $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $StudentAttendanceMarkTypes->aliasField('id')
+                                ])
+                                ->innerJoin([$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()], [
+                                    $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
+                                ])
+                                ->where([
+                                    $StudentMarkTypeStatusGrades->aliasField('education_grade_id') => $gradeId,
+                                    $StudentMarkTypeStatuses->aliasField('academic_period_id') => $yearId,
+                                    $StudentMarkTypeStatuses->aliasField('date_enabled <=') => $date,
+                                    $StudentMarkTypeStatuses->aliasField('date_disabled >=') => $date,
+                                    $StudentAttendancePerDayPeriods->aliasField('period') => $periodId
+
+                                ])->first();
                     $result[$key][] = $value->openemis_no;
                     $result[$key][] = $value->student_name;
                     $result[$key][] = $value->institution_name;
                     $result[$key][] = $value->institution_code;
                     $result[$key][] = date("d-m-Y", strtotime($value->date));
+                    
                     //attendance per day
                     if ($value->period != 0 && $value->isSubject == 0 ) {
-                        $result[$key][] = $value->period_name;
+                        $result[$key][] = $periodData->period_name;
                     }  else{
                         $result[$key][] = '';
                     }
