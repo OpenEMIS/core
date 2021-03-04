@@ -54,6 +54,7 @@ class InstitutionsController extends AppController
         'StaffAccount',
         'StaffLeave',
         'StaffAppraisals',
+        'Associations',
         'StaffTrainingNeeds',
         'StaffTrainingApplications',
         'StaffTrainingResults',
@@ -1760,7 +1761,8 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentRisks' => __('Risks')
+                'StudentRisks' => __('Risks'),
+                'StudentAssociations' => __('Associations')
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1791,6 +1793,7 @@ class InstitutionsController extends AppController
 
             $persona = false;
             $requestQuery = $this->request->query;
+           // echo '<pre>'; print_r($model->alias());die;
             if (isset($params['pass'][1])) {
                 if ($model->table() == 'security_users' && !$isDownload) {
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
@@ -1819,6 +1822,8 @@ class InstitutionsController extends AppController
             } elseif ($model->alias() == 'InstitutionStudentRisks') {
                 $header .= ' - '. __('Institution Student Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
+            }elseif ($model->alias() == 'InstitutionAssociationStudent') {
+                $header .= ' - '. __('Associations');
             } else {
                  $header .= ' - ' . $model->getHeader($alias);
             }
@@ -2951,6 +2956,7 @@ class InstitutionsController extends AppController
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             }
         }
+        //echo '<pre>';print_r($tabElements);die;
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
