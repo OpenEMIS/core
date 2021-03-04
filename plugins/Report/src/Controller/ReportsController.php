@@ -70,7 +70,6 @@ class ReportsController extends AppController
         } elseif ($module == 'Institutions') {
             $options = [
                 'Report.Institutions' => __('Institutions'),
-                'Report.InstitutionAssociations' => __('Associations'),
                 'Report.InstitutionPositions' => __('Positions'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
                 'Report.InstitutionClasses' => __('Classes'),

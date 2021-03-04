@@ -37,7 +37,6 @@ class ConfigItemsTable extends AppTable
             'OpenEMIS_Classroom' => ['index'],
             'Map' => ['index'],
             'ClassStudents' => ['index'],
-            'AssociationStudent' => ['index'],
             'SubjectStudents' => ['index']
         ]);
     }
