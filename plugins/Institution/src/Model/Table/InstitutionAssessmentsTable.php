@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
+use Cake\Validation\Validator;
 
 class InstitutionAssessmentsTable extends ControllerActionTable {
     public function initialize(array $config) {
@@ -28,6 +29,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             'pages' => ['index'],
             'orientation' => 'landscape'
         ]);
+
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportAssessmentItemResults']);
 
         $this->toggle('edit', false);
         $this->toggle('remove', false);

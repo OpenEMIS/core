@@ -64,7 +64,8 @@ class HealthBehavior extends Behavior
         if ($controller->AccessControl->check([$name, 'HealthImmunizations', 'index'])) {
             $tabElements['Immunizations'] = [
                 'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'HealthImmunizations'],
-                'text' => __('Immunizations')
+                //'text' => __('Immunizations')
+                'text' => __('Vaccinations')
             ];
         }
 

@@ -28,6 +28,7 @@ class ImportStaffTable extends AppTable
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'Staff']);
+        $this->addBehavior('Institution.ImportStaff');
 
         // register the target table once
         $this->Institutions = TableRegistry::get('Institution.Institutions');
