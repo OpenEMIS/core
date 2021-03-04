@@ -179,7 +179,7 @@ VALUES ('Associations', 'Students', 'Institutions', 'Academic', '8', 'Associatio
     public function down()
     {
         $this->execute('DROP TABLE institution_associations');
-        $this->execute('DROP TABLE institution_association_student');
+        $this->execute('DROP TABLE institution_association_students');
         $this->execute('DROP TABLE institution_association_staff');
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
         $this->execute('RENAME TABLE `zz_5189_security_functions` TO `security_functions`');
