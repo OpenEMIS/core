@@ -57,7 +57,7 @@ class POCOR5189 extends AbstractMigration
                 'null' => false
             ])
             ->addColumn('created', 'datetime', [
-                'default' => null,
+                'default' => CURRENT_TIMESTAMP,
                 'null' => false
             ])
             ->addIndex('academic_period_id')
@@ -95,7 +95,7 @@ class POCOR5189 extends AbstractMigration
                 'null' => false
             ])
             ->addColumn('created', 'datetime', [
-                'default' => null,
+                'default' => CURRENT_TIMESTAMP,
                 'null' => false
             ])
             ->addIndex('security_user_id')
@@ -142,7 +142,7 @@ class POCOR5189 extends AbstractMigration
                 'null' => false
             ])
             ->addColumn('created', 'datetime', [
-                'default' => null,
+                'default' => CURRENT_TIMESTAMP,
                 'null' => false
             ])
             ->addIndex('security_user_id')
