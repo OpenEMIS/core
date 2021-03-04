@@ -123,7 +123,7 @@ class DashboardController extends AppController
     public function getProfileCompletnessData ($userId) {
         $data = array();
         $profileComplete = 0;
-		$totalProfileComplete = 6;
+		//$totalProfileComplete = 6;
         $securityUsers = TableRegistry::get('security_users');
 		$securityUsersData = $securityUsers->find()		
 				->select([
@@ -140,9 +140,11 @@ class DashboardController extends AppController
 		if(!empty($securityUsersData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[0]['complete'] = 'yes';
+            $data[0]['profileComplete'] = $profileComplete;
 		    $data[0]['modifiedDate'] = ($securityUsersData->modified)?date("F j,Y",strtotime($securityUsersData->modified)):date("F j,Y",strtotime($securityUsersData->created));
 		} else {
             $data[0]['complete'] = 'no';
+            $data[0]['profileComplete'] = 0;
             $data[0]['modifiedDate'] = 'Not updated';
         }
 		
@@ -161,9 +163,11 @@ class DashboardController extends AppController
 		if(!empty($userDemographicsData)) {
 			$profileComplete = $profileComplete + 1;
             $data[1]['complete'] = 'yes';
+            $data[1]['profileComplete'] = $profileComplete;
 		    $data[1]['modifiedDate'] = ($userDemographicsData->modified)?date("F j,Y",strtotime($userDemographicsData->modified)):date("F j,Y",strtotime($userDemographicsData->created));
 		} else {
             $data[1]['complete'] = 'no';
+            $data[1]['profileComplete'] = 0;
             $data[1]['modifiedDate'] = 'Not updated';
         }
 		
@@ -182,9 +186,11 @@ class DashboardController extends AppController
 		if(!empty($userIdentitiesData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[2]['complete'] = 'yes';
+            $data[2]['profileComplete'] = $profileComplete;
 		    $data[2]['modifiedDate'] = ($userIdentitiesData->modified)?date("F j,Y",strtotime($userIdentitiesData->modified)):date("F j,Y",strtotime($userIdentitiesData->created));
 		} else {
             $data[2]['complete'] = 'no';
+            $data[2]['profileComplete'] = 0;
             $data[2]['modifiedDate'] = 'Not updated';
         }
 		
@@ -202,9 +208,11 @@ class DashboardController extends AppController
 		if(!empty($userNationalitiesData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[3]['complete'] = 'yes';
+            $data[3]['profileComplete'] = $profileComplete;
 		    $data[3]['modifiedDate'] = ($userNationalitiesData->modified)?date("F j,Y",strtotime($userNationalitiesData->modified)):date("F j,Y",strtotime($userNationalitiesData->created));
 		} else {
             $data[3]['complete'] = 'no';
+            $data[3]['profileComplete'] = 0;
             $data[3]['modifiedDate'] = 'Not updated';
         }
 		
@@ -223,9 +231,11 @@ class DashboardController extends AppController
 		if(!empty($userContactsData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[4]['complete'] = 'yes';
+            $data[4]['profileComplete'] = $profileComplete;
 		    $data[4]['modifiedDate'] = ($userContactsData->modified)?date("F j,Y",strtotime($userContactsData->modified)):date("F j,Y",strtotime($userContactsData->created));
 		} else {
             $data[4]['complete'] = 'no';
+            $data[4]['profileComplete'] = 0;
             $data[4]['modifiedDate'] = 'Not updated';
         }
 		
@@ -243,16 +253,54 @@ class DashboardController extends AppController
 		if(!empty($userLanguagesData)) {
 			$profileComplete = $profileComplete + 1;
 		    $data[5]['complete'] = 'yes';
+            $data[5]['profileComplete'] = $profileComplete;
 		    $data[5]['modifiedDate'] = ($userLanguagesData->modified)?date("F j,Y",strtotime($userLanguagesData->modified)):date("F j,Y",strtotime($userLanguagesData->created));
 		} else {
             $data[5]['complete'] = 'no';
+            $data[5]['profileComplete'] = 0;
             $data[5]['modifiedDate'] = 'Not updated';
         }
 	
 		
-		$profilePercentage = 100/$totalProfileComplete * $profileComplete;
-		$profilePercentage = round($profilePercentage);
-		$data['percentage'] = $profilePercentage;
+		// $profilePercentage = 100/$totalProfileComplete * $profileComplete;
+		// $profilePercentage = round($profilePercentage);
+		//$data['percentage'] = $profilePercentage;
+        // config 
+        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $typeList = $ConfigItem
+            ->find('list', [
+                'keyField' => 'name',
+                'valueField' => 'name'
+            ])
+            ->order('type')
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'User Profile'])
+            ->toArray();
+          
+        $typeOptions = array_keys($typeList);
+        $totalProfileComplete = count($data);
+         $typeListDisable = $ConfigItem
+            ->find('list', [
+                'keyField' => 'name',
+                'valueField' => 'name'
+            ])
+            ->order('type')
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 0,$ConfigItem->aliasField('type') => 'User Profile'])
+            ->toArray();
+            if ($typeListDisable) {
+                $countList = count($typeListDisable);
+                $profileComplete = $profileComplete - $countList;
+            }
+        foreach($data as $key => $featureData) {
+            if (!in_array($featureData['feature'], $typeOptions)) {
+                unset($data[$key]);              
+                //$data = array_values($data);
+                $totalProfileComplete = count($data);
+                }    
+        }
+            $profilePercentage = 100/$totalProfileComplete * $profileComplete;
+            $profilePercentage = round($profilePercentage);
+            $data['percentage'] = $profilePercentage;
+        // end config
         return $data;
     }
 
