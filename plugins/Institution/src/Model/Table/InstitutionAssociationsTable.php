@@ -117,6 +117,53 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     /******************************************************************************************************************
     **
+    ** delete action methods
+    **
+    ******************************************************************************************************************/
+
+    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        
+        if(!empty($this->controllerAction) && ($this->controllerAction == 'Associations')) {
+            // Delete Students related to associations 
+            $existingStudents = $this->AssociationStudent
+                ->find('all')
+                ->select([
+                    'id', 'security_user_id', 'institution_association_id', 'education_grade_id', 'academic_period_id','student_status_id'
+                ])
+                ->where([
+                    $this->AssociationStudent->aliasField('institution_association_id') => $entity->id
+                ])
+                ->toArray();
+            if ($existingStudents && !empty($existingStudents)) {
+                foreach ($existingStudents as $key => $StudentEntity) {    
+                     $this->AssociationStudent->delete($StudentEntity);
+                }
+                $countMale = $this->AssociationStudent->getMaleCountByAssociations($entity->id);
+                $countFemale = $this->AssociationStudent->getFemaleCountByAssociations($entity->id);
+                $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]); 
+            }
+
+            // Delete Staff related to associations 
+             $existingStaffs = $this->AssociationStaff
+                ->find('all')
+                ->select([
+                    'id', 'security_user_id', 'institution_association_id'
+                ])
+                ->where([
+                    $this->AssociationStaff->aliasField('institution_association_id') => $entity->id
+                ])
+                ->toArray();
+            if ($existingStaffs && !empty($existingStaffs)) {
+                foreach ($existingStaffs as $key => $StaffEntity) {    
+                     $this->AssociationStaff->delete($StaffEntity);
+                } 
+            }
+                
+        }
+    }
+    /******************************************************************************************************************
+    **
     ** index action methods
     **
     ******************************************************************************************************************/
