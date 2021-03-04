@@ -1563,7 +1563,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $programsubjects = 0;
                     $newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
                     foreach ($newSchoolSubjects as $subject) {     //POCOR 5001
-                        $institutionProgramGradeSubjects = 
+                        //POCOR-5932 starts
+                        /*$institutionProgramGradeSubjects = 
                             TableRegistry::get('InstitutionProgramGradeSubjects')
                             ->find('list')
                             ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $subject->education_grade_id,
@@ -1572,18 +1573,18 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                 ])
                             ->count(); 
                         
-                        if($institutionProgramGradeSubjects > 0){
+                        if($institutionProgramGradeSubjects > 0){*/
                             $programsubjects++;
                             $InstitutionSubjects->save($subject);
-                        }
+                        //}//POCOR-5932 ends
                     }
                     unset($subject);
-
-                    if ($programsubjects == 0) {
+                    //POCOR-5932 starts
+                    /*if ($programsubjects == 0) {
                         foreach ($newSchoolSubjects as $subject) {
                         $InstitutionSubjects->save($subject);
                         }
-                    }
+                    }*///POCOR-5932 ends
                 }
                 unset($newSchoolSubjects);
                 unset($InstitutionSubjects);
