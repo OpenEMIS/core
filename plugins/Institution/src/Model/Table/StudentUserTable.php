@@ -744,15 +744,14 @@ class StudentUserTable extends ControllerActionTable
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')]
+            'Risks' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         // Programme & Textbooks will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if ($key == 'Programmes' || $key == 'Textbooks' || $key == 'Associations') {
+            if ($key == 'Programmes' || $key == 'Textbooks') {
                 $type = (array_key_exists('type', $options))? $options['type']: null;
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
