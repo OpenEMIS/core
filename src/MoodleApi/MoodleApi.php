@@ -101,10 +101,11 @@ class MoodleApi
             if ($response->isOk()) {
                 $data = $response->json;
                 $data = $data["0"];
-
                 $moodleUser->linkMoodletoOpenEmis($data['id'], $data['username']);
+                //POCOR-5677 starts
+                //$moodleUser->linkMoodletoOpenEmis($data->id, $data->username);
+                //POCOR-5677 ends
             }
-
             return $response;
         } else {
             return null;

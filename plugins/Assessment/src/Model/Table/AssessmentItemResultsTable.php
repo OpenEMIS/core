@@ -3,6 +3,7 @@ namespace Assessment\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -13,6 +14,7 @@ use Cake\Core\Configure;
 
 class AssessmentItemResultsTable extends AppTable
 {
+    use OptionsTrait;
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -32,6 +34,7 @@ class AssessmentItemResultsTable extends AppTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
+        $this->addBehavior('Import.ImportLink');
     }
 
     public function validationDefault(Validator $validator)
@@ -217,35 +220,35 @@ class AssessmentItemResultsTable extends AppTable
     //     return $getValueIndex;
     // }
 
-    // public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
-    // {
-    //     $results = $this
-    //         ->find()
-    //         ->contain(['Assessments', 'EducationSubjects'])
-    //         ->where([
-    //             $this->aliasField('institution_id') => $institutionId,
-    //             $this->aliasField('student_id') => $studentId,
-    //             $this->aliasField('academic_period_id') => $academicPeriodId
-    //         ])
-    //         ->all();
+    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
+    {
+        $results = $this
+            ->find()
+            ->contain(['Assessments', 'EducationSubjects'])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->all();
 
-    //     $referenceDetails = [];
-    //     foreach ($results as $key => $obj) {
-    //         $assessmentName = $obj->assessment->name;
-    //         $educationSubjectName = $obj->education_subject->name;
-    //         $marks = !is_null($obj->marks) ? $obj->marks : 'null';
+        $referenceDetails = [];
+        foreach ($results as $key => $obj) {
+            $assessmentName = $obj->assessment->name;
+            $educationSubjectName = $obj->education_subject->name;
+            $marks = !is_null($obj->marks) ? $obj->marks : 'null';
 
-    //         $referenceDetails[$obj->assessment_id] = __($assessmentName) . ' - ' . __($educationSubjectName) . ' (' . $marks . ')';
-    //     }
+            $referenceDetails[$obj->assessment_id] = __($assessmentName) . ' - ' . __($educationSubjectName) . ' (' . $marks . ')';
+        }
 
-    //     // tooltip only receieved string to be display
-    //     $reference = '';
-    //     foreach ($referenceDetails as $key => $referenceDetailsObj) {
-    //         $reference = $reference . $referenceDetailsObj . '<br/>';
-    //     }
+        // tooltip only receieved string to be display
+        $reference = '';
+        foreach ($referenceDetails as $key => $referenceDetailsObj) {
+            $reference = $reference . $referenceDetailsObj . '<br/>';
+        }
 
-    //     return $reference;
-    // }
+        return $reference;
+    }
 
     private function getAssessmentGrading(Entity $entity)
     {
