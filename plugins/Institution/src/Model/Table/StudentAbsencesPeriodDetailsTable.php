@@ -26,6 +26,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes']);
         $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
         // $this->addBehavior('Institution.Calendar');
         $this->addBehavior('Restful.RestfulAccessControl', [
