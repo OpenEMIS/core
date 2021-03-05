@@ -57,10 +57,10 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         // $tabElements = $this->controller->getCareerTabElements($options);
         // $this->controller->set('tabElements', $tabElements);
         // $this->controller->set('selectedAction', 'Associations');
-        $this->setupTabElements();
+        $this->setupTabElements($extra);
     }
 
-    private function setupTabElements()
+    private function setupTabElements($extra)
     {
         $options['type'] = 'staff';
         $userId = $this->getUserId();
@@ -68,7 +68,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
             $options['user_id'] = $userId;
         }
         $tabElements = $this->controller->getCareerTabElements($options);
-        //echo '<pre>';print_r($tabElements);die;
+        //echo '<pre>';print_r($extra);die;
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'StaffAssociations');
     }
@@ -90,11 +90,13 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
 
     public function onGetTotalStudents(Event $event, Entity $entity)
     {
-        if (!isset($this->InstitutionAssociationStudent)) {
-            $this->InstitutionAssociationStudent = TableRegistry::get('Student.InstitutionAssociationStudent');
-        }
-        $count = $this->InstitutionAssociationStudent->getMaleCountByAssociations($entity->id) + $this->InstitutionAssociationStudent->getFemaleCountByAssociations($entity->id);
-        return $count.' ';
+
+        return $entity->total_male_students + $entity->total_female_students;
+        // if (!isset($this->InstitutionAssociationStudent)) {
+        //     $this->InstitutionAssociationStudent = TableRegistry::get('Student.InstitutionAssociationStudent');
+        // }
+        // $count = $this->InstitutionAssociationStudent->getMaleCountByAssociations($entity->id) + $this->InstitutionAssociationStudent->getFemaleCountByAssociations($entity->id);
+        // return $count.' ';
     }
 
 }
