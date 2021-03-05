@@ -346,7 +346,12 @@ class StudentMealsTable extends ControllerActionTable
             'table' => $this,
             'query' => $this
                 ->find()
-                ->select(['name' => 'Users.first_name',
+                ->select([//POCOR-5941 starts
+                    'name' => $this->find()->func()->concat([
+                        'Users.first_name' => 'literal',
+                        " ",
+                        'Users.last_name' => 'literal'
+                    ]),//POCOR-5941 ends
                     'openemis_no' => 'Users.openemis_no'
                 ]),
             'institutionId' => $institutionId,
@@ -358,8 +363,6 @@ class StudentMealsTable extends ControllerActionTable
             'dayId' => $dayId,
             'orientation' => 'landscape'
         ];
-        
-
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
