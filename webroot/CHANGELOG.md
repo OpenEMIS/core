@@ -1,3 +1,14 @@
+### [3.62.2] - 2021-03-05
+- Implemented: Generate Risks for all school at one time in Administration > System Setup > Risks
+- Bug Fixed: Profile > Student > Academic > Risk: 404 error upon viewing the Risk record
+- Bug Fixed: Institutions > Meals > Students > Export: Name column only has First Name of students
+- Bug Fixed: Institution > Attendance > Staff: When editing the Time in and Time Out, the up and down button for the minutes should be increased or decreased by 1 instead of 15
+- Bug Fixed: Reports > Institutions > Programmes: Missing Programmes column
+- Bug Fixed: Administration > System Setup > Localization > Translations: Added new data for Infrastructure Needs report
+- Bug Fixed: Reports > Institution > Student Absence report: Changes to the report
+- Bug Fixed: Profile > Student > Academic: Academic Page is missing
+- Bug Fixed: Institutions > Students > Academic > Programmes tab: Student's Start Date was edited after being Admitted to a new Institution but the new Start Date did not reflect in student's Academic page
+
 ### [3.62.1] - 2021-02-26
 - Implemented: Added extra columns for abscence reasons to Attendance Report
 - Implemented: Staff Profile feature
