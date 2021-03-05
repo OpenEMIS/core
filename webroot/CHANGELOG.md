@@ -22,6 +22,7 @@
 - Bug Fixed: Institutions > Students > Bulk Promote: When selecting Promoted, the Next Grade field should not be mandatory
 - Bug Fixed: Administration > Education Structure > Programmes > Edit: Record disappeared after edit
 - Bug Fixed: Staff Payslips API: API Error
+
 ### [3.62.0] - 2021-02-19
 - Implemented: Infrastructure module - Export feature
 - Implemented: Enhancement of the Core survey module: survey school coverage feature
