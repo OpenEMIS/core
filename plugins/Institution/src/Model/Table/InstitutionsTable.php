@@ -274,12 +274,12 @@ class InstitutionsTable extends ControllerActionTable
             'last' => true
         ])
 
-        ->add('area_id', 'ruleAuthorisedArea', [
-            'rule' => ['checkAuthorisedArea']
-        ])
-        ->add('area_id', 'ruleConfiguredArea', [
-            'rule' => ['checkConfiguredArea']
-        ])
+        // ->add('area_id', 'ruleAuthorisedArea', [
+        //     'rule' => ['checkAuthorisedArea']
+        // ])
+        // ->add('area_id', 'ruleConfiguredArea', [
+        //     'rule' => ['checkConfiguredArea']
+        // ])
         // ->allowEmpty('area_administrative_id')
         // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
         //     'rule' => ['checkConfiguredArea']
