@@ -280,10 +280,10 @@ class InstitutionsTable extends ControllerActionTable
         ->add('area_id', 'ruleConfiguredArea', [
             'rule' => ['checkConfiguredArea']
         ])
-        // ->allowEmpty('area_administrative_id')
-        // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
-        //     'rule' => ['checkConfiguredArea']
-        // ])
+        ->allowEmpty('area_administrative_id')
+        ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
+            'rule' => ['checkConfiguredArea']
+        ])
         ->add('institution_provider_id', 'ruleLinkedSector', [
             'rule' => 'checkLinkedSector',
             'provider' => 'table'
