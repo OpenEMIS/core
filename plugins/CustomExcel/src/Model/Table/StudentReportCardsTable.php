@@ -33,6 +33,9 @@ class StudentReportCardsTable extends AppTable
 				'StudentDemographics',
 				'StudentContacts',
 				'StudentNationalities',
+				'StudentAreas',
+				'StudentRisks',
+				'StudentClasses',
             ]
         ]);
     }
@@ -49,6 +52,9 @@ class StudentReportCardsTable extends AppTable
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentDemographics'] = 'onExcelTemplateInitialiseStudentDemographics';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentContacts'] = 'onExcelTemplateInitialiseStudentContacts';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentNationalities'] = 'onExcelTemplateInitialiseStudentNationalities';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentAreas'] = 'onExcelTemplateInitialiseStudentAreas';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentRisks'] = 'onExcelTemplateInitialiseStudentRisks';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentClasses'] = 'onExcelTemplateInitialiseStudentClasses';
 		return $events;
     }
 
@@ -221,7 +227,7 @@ class StudentReportCardsTable extends AppTable
                     $Student->aliasField('student_id') => $params['student_id'],
                 ])
                 ->first();
-				//echo '<pre>';print_r($entity);die;
+				
 				$result = [];
 				$result = [
 					'name' => $entity->first_name.' '.$entity->last_name,
@@ -308,6 +314,119 @@ class StudentReportCardsTable extends AppTable
                     $UserNationalities->aliasField('security_user_id') => $params['student_id'],
                 ])
                 ->first();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentAreas(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $SecurityUsers = TableRegistry::get('security_users');
+
+            $entity = $SecurityUsers
+                ->find()
+                ->select([
+					'area_administrative_name' => 'AreaAdministratives.name',
+					'area_administrative_level' => 'AreaAdministrativeLevels.name',
+                ])
+				->innerJoin(
+				['AreaAdministratives' => 'area_administratives'],
+				[
+					'AreaAdministratives.id ='. $SecurityUsers->aliasField('address_area_id')
+				]
+				)
+				->innerJoin(
+				['AreaAdministrativeLevels' => 'area_administrative_levels'],
+				[
+					'AreaAdministrativeLevels.id = AreaAdministratives.area_administrative_level_id'
+				]
+				)
+                ->where([
+                    $SecurityUsers->aliasField('id') => $params['student_id'],
+                ])
+                ->first();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentRisks(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $InstitutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks');
+            $StudentRisksCriterias = TableRegistry::get('Institution.StudentRisksCriterias');
+
+            $InstitutionStudentRiskData = $InstitutionStudentRisks
+                ->find()
+                ->select([
+					'id' => $InstitutionStudentRisks->aliasField('id'),
+					'total_risk' => $InstitutionStudentRisks->aliasField('total_risk')
+                ])
+                ->where([
+                    $InstitutionStudentRisks->aliasField('student_id') => $params['student_id'],
+                ])
+                ->toArray();
+				
+			foreach ($InstitutionStudentRiskData as $value) {
+				$studentRisksCriteriasResults = $StudentRisksCriterias->find()
+				->select([
+					'criteria' => 'RiskCriterias.criteria',
+                ])
+                ->contain(['RiskCriterias'])
+                ->where([
+                    $StudentRisksCriterias->aliasField('institution_student_risk_id') => $value->id,
+                    $StudentRisksCriterias->aliasField('value') . ' IS NOT NULL'
+                ])
+                ->toArray();
+				$criteriaArray = [];
+				$criteria = '';
+				foreach ($studentRisksCriteriasResults as $data) {
+					$criteriaArray[] = $data->criteria;
+				}
+				$criteria = implode(",",$criteriaArray);
+				$entity[] = [
+					'id' => $value->id,
+					'total_risk' => $value->total_risk,
+					'criteria' => $criteria,
+				];	
+            }	
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentClasses(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $StudentRisksCriterias = TableRegistry::get('Institution.StudentRisksCriterias');
+
+            $entity = $InstitutionClassStudents
+                ->find()
+                ->select([
+					'id' => $InstitutionClassStudents->aliasField('id'),
+					'name' => 'InstitutionClasses.name',
+					'education_grade' => 'EducationGrades.name',
+					'academic_period' => 'AcademicPeriods.name',
+					'start_date' => 'InstitutionStudents.start_date',
+					'end_date' => 'InstitutionStudents.end_date',
+					'status' => 'StudentStatuses.name',
+                ])
+				->contain(['InstitutionClasses', 'EducationGrades', 'AcademicPeriods', 'StudentStatuses'])
+                ->innerJoin(
+				['InstitutionStudents' => 'institution_students'],
+				[
+					'InstitutionStudents.student_id ='. $InstitutionClassStudents->aliasField('student_id'),
+					'InstitutionStudents.academic_period_id ='. $InstitutionClassStudents->aliasField('academic_period_id'),
+					'InstitutionStudents.education_grade_id ='. $InstitutionClassStudents->aliasField('education_grade_id')
+				]
+				)
+				->where([
+                    $InstitutionClassStudents->aliasField('student_id') => $params['student_id'],
+                    $InstitutionClassStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InstitutionClassStudents->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $InstitutionClassStudents->aliasField('institution_id') => $params['institution_id'],
+                ])
+                ->toArray();
+				
             return $entity;
         }
     }
