@@ -87,11 +87,11 @@ class InstitutionIncomesTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'income_source_id') {
-            return __('Source');
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         } else if ($field == 'income_type_id') {
             return  __('Type');
         } else if ($field == 'amount' && $this->action == 'index') {
-            return  __('Amount (PM)');
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
