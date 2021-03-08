@@ -71,10 +71,20 @@ class StaffClassesTable extends ControllerActionTable
                     ->where([$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId])->toArray();
         
         $classIds = [];
+        
         if (!empty($classData)) {
             foreach ($classData as $key => $value) {
                 $classIds[] = $value->institution_class_id;
             }
+        }
+        $where = [];
+        if (!empty($classIds)) {
+          $where = [
+                $InstitutionClassesSecondaryStaff->aliasField('institution_class_id IN') => $classIds,
+                $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId
+            ];
+        } else {
+            $where = [$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId];
         }
         // POCOR-5914
         $query->contain([
@@ -85,10 +95,7 @@ class StaffClassesTable extends ControllerActionTable
         ->leftJoin([$InstitutionClassesSecondaryStaff->alias() => $InstitutionClassesSecondaryStaff->table()], [
             $InstitutionClassesSecondaryStaff->aliasField('institution_class_id = ') . $this->aliasField('id')
         ])
-        ->orWhere([
-            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id IN') => $classIds,
-            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId
-        ]);
+        ->orWhere($where);
         // POCOR-5914
     }
 
