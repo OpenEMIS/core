@@ -266,6 +266,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 							$InstitutionStudents->aliasField('institution_id') => $result['institution_id'],
 							$InstitutionStudents->aliasField('academic_period_id') => $result['academic_period_id'],
 							$InstitutionStudents->aliasField('education_grade_id') => $result['education_grade_id'],
+                            $InstitutionStudents->aliasField('student_status_id') => $result['student_status_id'],
 						])
 						->first();	
                     $result['student_status_id'] = $StudentStatusesData->student_status_id;
