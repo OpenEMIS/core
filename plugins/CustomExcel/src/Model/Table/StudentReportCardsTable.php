@@ -40,6 +40,7 @@ class StudentReportCardsTable extends AppTable
 				'StudentExtracurriculars',
 				'StudentAwards',
 				'StudentBehaviours',
+				'StudentAbsences',
             ]
         ]);
     }
@@ -63,6 +64,7 @@ class StudentReportCardsTable extends AppTable
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentExtracurriculars'] = 'onExcelTemplateInitialiseStudentExtracurriculars';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentAwards'] = 'onExcelTemplateInitialiseStudentAwards';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentAbsences'] = 'onExcelTemplateInitialiseStudentAbsences';
 		return $events;
     }
 
@@ -532,6 +534,72 @@ class StudentReportCardsTable extends AppTable
                     $StudentBehaviours->aliasField('institution_id') => $params['institution_id'],
                 ])
                 ->toArray();
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentAbsences(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $InstitutionStudentAbsences = TableRegistry::get('institution_student_absences');
+			
+            $absencesData = $InstitutionStudentAbsences
+                ->find()
+				->select([
+					'id' => $InstitutionStudentAbsences->aliasField('id'),
+					'date' => $InstitutionStudentAbsences->aliasField('date'),
+					'month' => 'MONTH(date)',
+                ])
+				->where([
+                    $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
+                    $InstitutionStudentAbsences->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
+                ])
+				->where([
+                    $InstitutionStudentAbsences->aliasField('absence_type_id IN') => [1,2],
+                ])
+				->order('month')
+                ->toArray();
+				
+			$months = array(
+							1 => 'January',
+							2 => 'February',
+							3 => 'March',
+							4 => 'April',
+							5 => 'May',
+							6 => 'June',
+							7 => 'July',
+							8 => 'August',
+							9 => 'September',
+							10 => 'October',
+							11 => 'November',
+							12 => 'December'
+						);	
+						
+			foreach($absencesData as $data) {
+				foreach($months as $key => $val) {
+					if(!empty($months[$data->month])) { 
+						if($key == $data->month) {
+							$monthData[$val][] = $data->id;
+						} else {
+							$monthData[$val][] = '';
+						}
+					}
+				}
+			}	
+			foreach($monthData as $month => $absences) {
+				$number_of_days = [];	
+				foreach($absences as $absence) {
+					if(!empty($absence)) {
+						$number_of_days[] = $absence; 
+					}
+				}
+				$entity[] = [
+					'month' => $month,
+					'number_of_days' => count($number_of_days),
+				];
+			}			
             return $entity;
         }
     }
