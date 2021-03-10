@@ -279,6 +279,9 @@ class ProfilesController extends AppController
                 if ($action == 'StudentReportCards') {
                     $student_id = $sId['student_id'];
                 }
+                if ($action == 'StudentRisks') {
+                    $student_id = $loginUserId;
+                }
                 $entity = $this->Profiles->get($student_id);
                 $name = $entity->name;
             } else {
