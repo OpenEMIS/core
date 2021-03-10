@@ -96,6 +96,56 @@ class StaffLeaveTable extends AppTable {
             //POCOR-5762 starts
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
+                    $staff_custom_field_values = TableRegistry::get('staff_custom_field_values');
+                    $staff_custom_fields = TableRegistry::get('staff_custom_fields');
+                    $staffCustomFieldsData = $staff_custom_fields->find()
+                                                ->select([
+                                                    $staff_custom_fields->aliasfield('name'),
+                                                    $staff_custom_fields->aliasfield('field_type'),
+                                                    $staff_custom_field_values->aliasfield('text_value'),
+                                                    $staff_custom_field_values->aliasfield('number_value'),
+                                                    $staff_custom_field_values->aliasfield('decimal_value'),
+                                                    $staff_custom_field_values->aliasfield('textarea_value'),
+                                                    $staff_custom_field_values->aliasfield('date_value'),
+                                                    $staff_custom_field_values->aliasfield('time_value'),
+                                                    $staff_custom_field_values->aliasfield('staff_custom_field_id'),
+                                                    $staff_custom_field_values->aliasfield('staff_id')
+                                                ])
+                                                ->leftJoin(
+                                                    [$staff_custom_field_values->alias() => $staff_custom_field_values->table()],
+                                                    [
+                                                        $staff_custom_field_values->aliasField('staff_custom_field_id') . ' = '. $staff_custom_fields->aliasField('id')
+                                                    ]
+                                                )
+                                                ->where([$staff_custom_field_values->aliasField('staff_id') => $row['staff_id']])
+                                                ->first();
+                    $row['record_card'] = '';
+                    if(!empty($staffCustomFieldsData)){
+                        if($staffCustomFieldsData->name == 'record card'){
+                            if(!empty($staff_custom_field_values)){
+                                if($staffCustomFieldsData->field_type == 'TEXT' && !empty($staffCustomFieldsData->staff_custom_field_values['text_value'])){
+                                    $row['record_card'] = $staffCustomFieldsData->staff_custom_field_values['text_value'];
+                                }else if($staffCustomFieldsData->field_type == 'NUMBER' && !empty($staffCustomFieldsData->staff_custom_field_values['number_value'])){
+                                    $row['record_card'] = $staffCustomFieldsData->staff_custom_field_values['number_value'];
+                                }else if($staffCustomFieldsData->field_type == 'DECIMAL' && !empty($staffCustomFieldsData->staff_custom_field_values['decimal_value'])){
+                                    $row['record_card'] = $staffCustomFieldsData->staff_custom_field_values['decimal_value'];
+                                }else if($staffCustomFieldsData->field_type == 'TEXTAREA' && !empty($staffCustomFieldsData->staff_custom_field_values['textarea_value'])){
+                                    $row['record_card'] = $staffCustomFieldsData->staff_custom_field_values['textarea_value'];
+                                }else if($staffCustomFieldsData->field_type == 'DATE' && !empty($staffCustomFieldsData->staff_custom_field_values['date_value'])){
+                                    $row['record_card'] = $staffCustomFieldsData->staff_custom_field_values['date_value'];
+                                }else if($staffCustomFieldsData->field_type == 'TIME' && !empty($staffCustomFieldsData->staff_custom_field_values['time_value'])){
+                                    $row['record_card'] = $staffCustomFieldsData->staff_custom_field_values['time_value'];
+                                }else{
+                                    $row['record_card'] = '';
+                                }
+                            }
+                        }
+                    }  
+                    return $row;
+                });
+            });
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
                     $nationalities = TableRegistry::get('nationalities');
                     $identity_types = TableRegistry::get('identity_types');
                     $user_identities = TableRegistry::get('user_identities');
@@ -255,6 +305,13 @@ class StaffLeaveTable extends AppTable {
             'field' => 'identity_number',
             'type' => 'string',
             'label' => __('Identity Number')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'record_card',
+            'type' => 'string',
+            'label' => __('Record Card Number')
         ];
         /*$newFields[] = [
             'key' => 'AreaAdministratives.code',
