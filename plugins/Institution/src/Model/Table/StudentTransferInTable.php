@@ -54,6 +54,9 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 ],
                 'ruleCheckProgrammeEndDateAgainstStudentStartDate' => [
                     'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date']
+                ],
+                'dateAlreadyTaken' => [
+                    'rule' => ['dateAlreadyTaken']
                 ]
             ])
             ->allowEmpty('institution_class_id')
