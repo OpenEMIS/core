@@ -122,16 +122,22 @@ class StudentOutcomesTable extends ControllerActionTable
         // education subject filter
         $subjectOptions = [];
         if (!empty($selectedTemplate)){
-            $educationGradeId = $this->OutcomeTemplates->get(['id' => $selectedTemplate, 'academic_period_id' => $selectedAcademicPeriod])->education_grade_id;
-
-            $subjectOptions = $this->EducationSubjects
-                ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                ->matching('EducationGrades', function ($q) use ($educationGradeId) {
-                    return $q->where(['EducationGrades.id' => $educationGradeId]);
-                })
-                ->toArray();
-               
-                
+            $session = $this->request->session();
+            $studentId = $session->read('Student.Students.id');
+            $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $subjectOptions = $EducationSubjects
+                                ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                                ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                                   $InstitutionSubjects->aliasField('education_subject_id = ') . $EducationSubjects->aliasField('id')
+                                ])
+                                ->innerJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
+                                   $InstitutionSubjectStudents->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id')
+                                ])
+                                ->where([$InstitutionSubjectStudents->aliasField('student_id') => $studentId ])
+                                ->toArray(); 
+             
             $subjectOptions = ['0' => __('All Subjects')] + $subjectOptions;
         }
 
