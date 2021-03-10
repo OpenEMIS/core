@@ -113,7 +113,15 @@ class RisksTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
 
         $this->hasMany('RiskCriterias', ['className' => 'Risk.RiskCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionRisks', ['className' => 'Institution.InstitutionRisks', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStudentRisks', ['className' => 'Institution.InstitutionStudentRisks', 'dependent' => true, 'cascadeCallbacks' => true]);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.generate'] = 'generate';
+        return $events;
     }
 
     public function validationDefault(Validator $validator)
@@ -619,5 +627,121 @@ class RisksTable extends ControllerActionTable
         $shellCmd = $cmd . ' >> ' . $logs;
         $pid = exec($shellCmd);
         Log::write('debug', $shellCmd);
+    }
+
+    public function triggerUpdateRisksShell($shellName, $institutionId = 0, $userId = 0, $riskId = 0, $academicPeriodId = 0)
+    {
+        $args = '';
+        $args .= !is_null($institutionId) ? ' '.$institutionId : '';
+        $args .= !is_null($userId) ? ' '.$userId : '';
+        $args .= !is_null($riskId) ? ' '.$riskId : '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        $pid = exec($shellCmd);
+        Log::write('debug', $shellCmd);
+    }
+
+    public function generate(Event $event, ArrayObject $extra)
+    {
+        $Risks = TableRegistry::get('Risk.Risks');
+        $requestQuery = $this->request->query;
+        $params = $this->paramsDecode($requestQuery['queryString']);
+
+        $institutionId = $params['institution_id'];
+        $userId = $params['user_id'];
+        $riskId = $params['risk_id'];
+        $academicPeriodId = $params['academic_period_id'];
+
+        // update indexes pid and status
+        $pid = getmypid();
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionsData = $Institutions
+       									->find()
+		        					    ->toArray();
+        foreach($InstitutionsData AS $key => $Institutionsids){
+        $institutionId = $Institutionsids->id;
+        $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
+
+        // if processing id not null (process still running or process stuck)
+        if (!empty($record->pid)) {
+            exec("kill -9 " . $record->pid);
+        }
+
+        if (!empty($record)) {
+            // update the status to processing
+            $this->InstitutionRisks->updateAll([
+                'pid' => $pid,
+                'status' => 2 // processing
+            ],
+            ['id' => $record->id]);
+        } else {
+            $entity = $this->InstitutionRisks->newEntity([
+                'status' => 2, // processing
+                'pid' => $pid,
+                'generated_on' => NULL,
+                'generated_by' => NULL,
+                'risk_id' => $riskId,
+                'institution_id' => $institutionId,
+            ]);
+            $this->InstitutionRisks->save($entity);
+        }
+
+        // trigger shell
+        // trigger shell
+        $Risks->triggerUpdateRisksShell('UpdateRisks', $institutionId, $userId, $riskId, $academicPeriodId);
+        }
+
+        // redirect to index page
+        $url = [
+            'plugin' => 'Risk',
+            'controller' => 'Risks',
+            'action' => 'Risks',
+            'index',
+            'academic_period_id' => $params['academic_period_id']
+        ];
+
+        $event->stopPropagation();
+        return $this->controller->redirect($url);
+    }
+    public function getInstitutionIndexesRecords($riskId)
+    {
+        return $this->InstitutionRisks->find('Record', ['risk_id' => $riskId]);
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $userId = $session->read('Auth.User.id');
+        $riskId = $entity->id;
+
+        if (array_key_exists('view', $buttons)) {
+            // generate button
+            if ($this->AccessControl->check(['Institutions', 'Risks', 'generate'])) {
+                $url = [
+                    'plugin' => 'Risk',
+                    'controller' => 'Risks',
+                    'action' => 'Risks',
+                    'generate'
+                ];
+
+                $buttons['generate'] = $buttons['view'];
+                $buttons['generate']['label'] = '<i class="fa fa-refresh"></i>' . __('Generate');
+                $buttons['generate']['url'] = $this->setQueryString($url, [
+                    'institution_id' => $institutionId,
+                    'user_id' => $userId,
+                    'risk_id' => $riskId,
+                    'academic_period_id' => $entity->academic_period_id,
+                    'action' => 'index'
+                ]);
+            }
+            // end generate button
+        }
+
+        return $buttons;
     }
 }
