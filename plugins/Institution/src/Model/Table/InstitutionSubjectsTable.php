@@ -524,13 +524,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $query->contain([
             'Classes.ClassesSecondaryStaff',
             'Teachers',
             'Rooms',
             'SubjectStudents' => [
                 'Users.Genders',
-                'InstitutionStudents',
                 'InstitutionStudents.StudentStatuses',
                 'InstitutionClasses',
                 'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
