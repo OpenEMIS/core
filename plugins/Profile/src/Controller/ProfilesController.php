@@ -279,9 +279,6 @@ class ProfilesController extends AppController
                 if ($action == 'StudentReportCards') {
                     $student_id = $sId['student_id'];
                 }
-                if ($action == 'StudentRisks') {
-                    $student_id = $loginUserId;
-                }
                 $entity = $this->Profiles->get($student_id);
                 $name = $entity->name;
             } else {
@@ -310,7 +307,7 @@ class ProfilesController extends AppController
             }
 
             $alias = $model->alias();
-            $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards'];
+            $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards', 'Contacts'];
 
             if (!in_array($alias, $excludedModel)) {
                 $model->toggle('add', false);
