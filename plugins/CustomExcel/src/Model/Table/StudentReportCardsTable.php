@@ -41,6 +41,8 @@ class StudentReportCardsTable extends AppTable
 				'StudentAwards',
 				'StudentBehaviours',
 				'StudentAbsences',
+				'StudentTotalAbsences',
+				'StudentCounsellings',
             ]
         ]);
     }
@@ -65,6 +67,8 @@ class StudentReportCardsTable extends AppTable
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentAwards'] = 'onExcelTemplateInitialiseStudentAwards';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentAbsences'] = 'onExcelTemplateInitialiseStudentAbsences';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentTotalAbsences'] = 'onExcelTemplateInitialiseStudentTotalAbsences';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentCounsellings'] = 'onExcelTemplateInitialiseStudentCounsellings';
 		return $events;
     }
 
@@ -602,5 +606,84 @@ class StudentReportCardsTable extends AppTable
 			}			
             return $entity;
         }
+    }	
+	
+	public function onExcelTemplateInitialiseStudentTotalAbsences(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $InstitutionStudentAbsences = TableRegistry::get('institution_student_absences');
+			
+            $totalExcusedAbsences = $InstitutionStudentAbsences
+				->find()
+				->where([
+                    $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
+                    $InstitutionStudentAbsences->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
+                ])
+				->where([
+                    $InstitutionStudentAbsences->aliasField('absence_type_id') => 1,
+                ])
+				->count();
+				
+            $totalUnxcusedAbsences = $InstitutionStudentAbsences
+				->find()
+				->where([
+                    $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
+                    $InstitutionStudentAbsences->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
+                ])
+				->where([
+                    $InstitutionStudentAbsences->aliasField('absence_type_id') => 2,
+                ])
+				->count();
+				
+            $totalLate = $InstitutionStudentAbsences
+				->find()
+				->where([
+                    $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
+                    $InstitutionStudentAbsences->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
+                ])
+				->where([
+                    $InstitutionStudentAbsences->aliasField('absence_type_id') => 3,
+                ])
+				->count();
+				
+			$entity = [
+				'total_excused_absences' => $totalExcusedAbsences,
+				'total_unexcused_absences' => $totalUnxcusedAbsences,
+				'total_late' => $totalLate,
+				'total_number_of_absences' => ($totalExcusedAbsences +$totalUnxcusedAbsences),
+			];
+				
+            return $entity;
+        }
+    }
+	
+	public function onExcelTemplateInitialiseStudentCounsellings(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $Counsellings = TableRegistry::get('Institution.Counsellings');
+			
+            $entity = $Counsellings
+                ->find()
+                ->select([
+					'id' => $Counsellings->aliasField('id'),
+					'date' => $Counsellings->aliasField('date'),
+					'intervention' => $Counsellings->aliasField('intervention'),
+					'description' => $Counsellings->aliasField('description'),
+					'guidance_type' => 'GuidanceTypes.name',
+                ])
+				->contain(['GuidanceTypes'])
+				->where([
+                    $Counsellings->aliasField('student_id') => $params['student_id'],
+                ])
+                ->toArray();
+				
+            return $entity;
+		}
     }
 }
