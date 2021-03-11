@@ -556,9 +556,11 @@ public function editBeforeSave(Event $event, Entity $entity,
         }
     }
     $educationSubject = TableRegistry::get('Education.EducationSubjects');
-    $educationSubjectData = $educationSubject->find()->where([
-        'id IN' => $program_subject
-    ])->all();
+    if(!empty($program_subject)){
+        $educationSubjectData = $educationSubject->find()->where([
+            'id IN' => $program_subject
+        ])->all();
+    }
     
     $edu_subjects = [];
     if (!empty($educationSubjectData)) {
