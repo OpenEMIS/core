@@ -25,7 +25,7 @@ class POCOR5685a extends AbstractMigration
         values (uuid(), 'InstitutionClasses', 'capacity', 'Institution -> Academic -> Classes', 'Capacity', 1, 1, NOW())");
 
         $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created)
-        values (uuid(), 'InstitutionMealProgrammes', 'date_received', 'Institution -> meals -> Programme', 'Data Received', 1, 1, NOW())");
+        values (uuid(), 'InstitutionMealProgrammes', 'date_received', 'Institution -> meals -> Programme', 'Date Received', 1, 1, NOW())");
 
         $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created)
         values (uuid(), 'InstitutionMealProgrammes', 'quantity_received', 'Institution -> meals -> Programme', 'Quantity Received', 1, 1, NOW())");
@@ -35,13 +35,13 @@ class POCOR5685a extends AbstractMigration
 
 
         $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created)
-        values (uuid(), 'InstitutionPositions', 'current_staff', 'Institutions -> Positions', 'Current Staff', 1, 1, NOW())");
+        values (uuid(), 'InstitutionPositions', 'current_staff', 'Institution -> Appointment -> Positions', 'Current Staff', 1, 1, NOW())");
 
         $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created)
         values (uuid(), 'FeederOutgoingInstitutions', 'recipient_institution', 'Institution -> Academic -> Feeders -> outgoing', 'Recipient Institution', 1, 1, NOW())");
 
         $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created)
-        values (uuid(), 'FeederOutgoingInstitutions', 'area_education', 'Institution -> Academic -> Feeders -> outgoing', 'District Label', 1, 1, NOW())");
+        values (uuid(), 'FeederOutgoingInstitutions', 'area_education', 'Institution -> Academic -> Feeders -> outgoing', 'District', 1, 1, NOW())");
 
         $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created)
         values (uuid(), 'FeederIncomingInstitutions', 'feeder_institution_id', 'Institution -> Academic -> Feeders -> incoming', 'Feeder Institution', 1, 1, NOW())");
