@@ -667,7 +667,12 @@ class StudentOutcomesTable extends ControllerActionTable
         $session = $this->request->session();
         $AccessControl = $this->AccessControl;
 
-        $userId = $session->read('Auth.User.id');
+        //$userId = $session->read('Auth.User.id');
+        $session = $this->request->session();
+            $studentId = $session->read('Student.Students.id');
+            $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
         $gradeId = $this->gradeId;
         $academicPeriodId = $this->academicPeriodId;
         $institutionId = $this->institutionId;
@@ -675,30 +680,28 @@ class StudentOutcomesTable extends ControllerActionTable
 
         if (!is_null($gradeId)) {
             $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-            $subjectList = $InstitutionSubjects
-                ->find()
-                ->find('byAccess', [
-                    'userId' => $userId,
-                    'accessControl' => $AccessControl,
-                    'controller' => $this->controller
-                ])
-                ->contain(['EducationGrades', 'EducationSubjects'])
-                ->matching('ClassSubjects', function ($q) use ($classId) {
-                    return $q->where(['ClassSubjects.institution_class_id' => $classId]);
-                })
-                ->where([
-                    'EducationGrades.id' => $gradeId,
-                    'InstitutionSubjects.institution_id' => $institutionId,
-                    'InstitutionSubjects.academic_period_id' => $academicPeriodId,
-                ])
-                ->order('EducationSubjects.order')
-                ->toArray();
+            $subjectList = $EducationSubjects
+                                ->find()
+                                ->select([
+                                    $EducationSubjects->aliasField('id'),
+                                    $EducationSubjects->aliasField('code'),
+                                    $EducationSubjects->aliasField('name')
+                                ])
+                                ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                                   $InstitutionSubjects->aliasField('education_subject_id = ') . $EducationSubjects->aliasField('id')
+                                ])
+                                ->innerJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
+                                   $InstitutionSubjectStudents->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id')
+                                ])
+                                ->where([$InstitutionSubjectStudents->aliasField('student_id') => $studentId ])
+                                ->toArray(); 
 
             if (!empty($subjectList)) {
                 foreach ($subjectList as $subject) {
-                    $params['education_subject_id'] = $subject->education_subject->id;
-                    $subjectOptions[$subject->education_subject->id] = [
-                        'name' => $subject->education_subject->code_name,
+                    $params['education_subject_id'] = $subject->id;
+                    $code_name = $subject->code . ' - ' . $subject->name;
+                    $subjectOptions[$subject->id] = [
+                        'name' => $code_name,
                         'url' => $this->setQueryString($baseUrl, $params)
                     ];
                 }
@@ -718,7 +721,7 @@ class StudentOutcomesTable extends ControllerActionTable
                 $this->subjectId = key($subjectOptions);
             }
         }
-
+        //echo "<pre>";print_r($subjectOptions);die();
         return $subjectOptions;
     }
 
