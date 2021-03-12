@@ -800,7 +800,7 @@ class StudentProfilesTable extends ControllerActionTable
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
         $files = $this->InstitutionStudentsProfileTemplates->find()
-            ->contain(['StaffTemplates'])
+            ->contain(['StudentTemplates'])
             ->where([
                 $this->InstitutionStudentsProfileTemplates->aliasField('institution_id') => $params['institution_id'],
                 $this->InstitutionStudentsProfileTemplates->aliasField('academic_period_id') => $params['academic_period_id'],
@@ -813,7 +813,7 @@ class StudentProfilesTable extends ControllerActionTable
             
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
-            $zipName = 'StaffReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $zipName = 'StudentReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
            
             $zip = new ZipArchive;
@@ -855,7 +855,7 @@ class StudentProfilesTable extends ControllerActionTable
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
         $files = $this->InstitutionStudentsProfileTemplates->find()
-            ->contain(['StaffTemplates'])
+            ->contain(['StudentTemplates'])
             ->where([
                 $this->InstitutionStudentsProfileTemplates->aliasField('institution_id') => $params['institution_id'],
                 $this->InstitutionStudentsProfileTemplates->aliasField('academic_period_id') => $params['academic_period_id'],
@@ -867,7 +867,7 @@ class StudentProfilesTable extends ControllerActionTable
             ->toArray();
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
-            $zipName = 'StaffReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $zipName = 'StudentReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
            
             $zip = new ZipArchive;
