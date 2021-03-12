@@ -43,6 +43,8 @@ class StudentReportCardsTable extends AppTable
 				'StudentAbsences',
 				'StudentTotalAbsences',
 				'StudentCounsellings',
+				'StudentHealths',
+				'StudentHealthConsultations',
             ]
         ]);
     }
@@ -69,6 +71,8 @@ class StudentReportCardsTable extends AppTable
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentAbsences'] = 'onExcelTemplateInitialiseStudentAbsences';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentTotalAbsences'] = 'onExcelTemplateInitialiseStudentTotalAbsences';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentCounsellings'] = 'onExcelTemplateInitialiseStudentCounsellings';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentHealths'] = 'onExcelTemplateInitialiseStudentHealths';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentHealthConsultations'] = 'onExcelTemplateInitialiseStudentHealthConsultations';
 		return $events;
     }
 
@@ -680,6 +684,59 @@ class StudentReportCardsTable extends AppTable
 				->contain(['GuidanceTypes'])
 				->where([
                     $Counsellings->aliasField('student_id') => $params['student_id'],
+                ])
+                ->toArray();
+				
+            return $entity;
+		}
+    }	
+	
+	public function onExcelTemplateInitialiseStudentHealths(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $UserHealths = TableRegistry::get('user_healths');
+			
+            $entity = $UserHealths
+                ->find()
+                ->select([
+					'blood_type' => $UserHealths->aliasField('blood_type'),
+					'doctor_name' => $UserHealths->aliasField('doctor_name'),
+					'doctor_contact' => $UserHealths->aliasField('doctor_contact'),
+					'medical_facility' => $UserHealths->aliasField('medical_facility'),
+					'health_insurance' => $UserHealths->aliasField('health_insurance'),
+                ])
+				->where([
+                    $UserHealths->aliasField('security_user_id') => $params['student_id'],
+                ])
+                ->first();
+				
+				if($entity->health_insurance == 0) {
+					$entity['health_insurance'] = 'No';
+				}
+				if($entity->health_insurance == 1) {
+					$entity['health_insurance'] = 'Yes';
+				}
+            return $entity;
+		}
+    }	
+	
+	public function onExcelTemplateInitialiseStudentHealthConsultations(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $Consultations = TableRegistry::get('Health.Consultations');
+			
+            $entity = $Consultations
+                ->find()
+                ->select([
+					'id' => $Consultations->aliasField('id'),
+					'date' => $Consultations->aliasField('date'),
+					'description' => $Consultations->aliasField('description'),
+					'treatment' => $Consultations->aliasField('treatment'),
+					'consultation_type' => 'ConsultationTypes.name',
+                ])
+				->contain(['ConsultationTypes'])
+				->where([
+                    $Consultations->aliasField('security_user_id') => $params['student_id'],
                 ])
                 ->toArray();
 				
