@@ -86,9 +86,13 @@ class StaffClassesTable extends ControllerActionTable
             $InstitutionClassesSecondaryStaff->aliasField('institution_class_id = ') . $this->aliasField('id')
         ])
         ->orWhere([
-            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id IN') => $classIds,
-            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId
+           $InstitutionClassesSecondaryStaff->aliasField('institution_class_id IN') => $classIds,
+           $this->aliasField('staff_id') => $staffId
         ]);
+        // ->orWhere([
+        //     $InstitutionClassesSecondaryStaff->aliasField('institution_class_id IN') => $classIds,
+        //     $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId
+        // ]);
         // POCOR-5914
     }
 
