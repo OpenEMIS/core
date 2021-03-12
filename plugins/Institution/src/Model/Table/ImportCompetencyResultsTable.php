@@ -66,7 +66,7 @@ class ImportCompetencyResultsTable extends AppTable
     public function addAfterAction(Event $event, Entity $entity)
     {
         $this->dependency = [];
-        $this->dependency["academic_period"] = ["class"];
+        //$this->dependency["academic_period"] = ["class"];
         $this->dependency["class"] = ["competency_template"];
         $this->dependency["competency_template"] = ["competency_period"];
         $this->dependency["competency_period"] = ["competency_item"];
@@ -120,12 +120,23 @@ class ImportCompetencyResultsTable extends AppTable
         return $attr;
     }
 
+   public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $request = $this->request;
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('academic_period', $request->data[$this->alias()])) {
+                   $this->request->query['period'] = $request->data[$this->alias()]['academic_period'];
+                }
+            }
+        }
+    }
+
     public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
             $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
-
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
@@ -178,22 +189,36 @@ class ImportCompetencyResultsTable extends AppTable
                     }
                 }
             }
-
             $classOptions = $query
                 ->find('list')
                 ->where([
-                    $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
+                    $InstitutionClasses->aliasField('academic_period_id') =>$academicPeriodId,
                     $InstitutionClasses->aliasField('institution_id') => $institutionId])
                 ->group([
                     $InstitutionClasses->aliasField('id')
                 ])
                 ->toArray();
-
                 $attr['options'] = $classOptions;
                 // useing onChangeReload to do visible
                 $attr['onChangeReload'] = 'changeClass';
         }
         return $attr;
+    }
+
+    public function addEditOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $request = $this->request;
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('academic_period', $request->data[$this->alias()])) {
+                    $request->query['period'] = $request->data[$this->alias()]['academic_period'];
+                }
+                if (array_key_exists('class', $request->data[$this->alias()])) {
+                    $request->query['class'] = $request->data[$this->alias()]['class'];
+                }
+            }
+        }
     }
 
     public function onUpdateFieldCompetencyTemplate(Event $event, array $attr, $action, Request $request)
