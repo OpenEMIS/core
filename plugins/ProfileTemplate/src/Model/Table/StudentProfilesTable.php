@@ -956,8 +956,8 @@ class StudentProfilesTable extends ControllerActionTable
     public function email(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $this->addReportCardsToEmailProcesses($params['institution_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
-        $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
+        $this->addReportCardsToEmailProcesses($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
+        $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
         $this->Alert->warning('ReportCardStatuses.email');
 
         $event->stopPropagation();
@@ -972,14 +972,15 @@ class StudentProfilesTable extends ControllerActionTable
             ->where([
                 $this->StudentReportCardEmailProcesses->aliasField('student_profile_template_id') => $params['student_profile_template_id'],
                 $this->StudentReportCardEmailProcesses->aliasField('institution_id') => $params['institution_id'],
+                $this->StudentReportCardEmailProcesses->aliasField('education_grade_id') => $params['education_grade_id'],
                 $this->StudentReportCardEmailProcesses->aliasField('academic_period_id') => $params['academic_period_id'],
                 $this->StudentReportCardEmailProcesses->aliasField('status') => $this->StudentReportCardEmailProcesses::SENDING
             ])
             ->count();
 
         if (!$inProgress) {
-            $this->addReportCardsToEmailProcesses($params['institution_id'], $params['academic_period_id'], $params['student_profile_template_id']);
-            $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['academic_period_id'], $params['student_profile_template_id']);
+            $this->addReportCardsToEmailProcesses($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id']);
+            $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id']);
 
             $this->Alert->warning('ReportCardStatuses.emailAll');
         } else {
@@ -992,7 +993,7 @@ class StudentProfilesTable extends ControllerActionTable
 
     private function addReportCardsToProcesses($institutionId, $educationGradeId, $academicPeriodId, $reportCardId, $studentId = null)
     {
-        Log::write('debug', 'Initialize Add All Student Profile Report Cards '.$reportCardId.' for Grade '.$institutionGradeId.' to processes ('.Time::now().')');
+        Log::write('debug', 'Initialize Add All Student Profile Report Cards '.$reportCardId.' for Grade '.$educationGradeId.' to processes ('.Time::now().')');
 
         $StudentReportCardProcesses = TableRegistry::get('ReportCard.StudentReportCardProcesses');
         $institutionClassStudents = TableRegistry::get('institution_class_students');
@@ -1073,14 +1074,14 @@ class StudentProfilesTable extends ControllerActionTable
                 $newEntity = $this->InstitutionStudentsProfileTemplates->patchEntity($studentsReportCardEntity, $newData);
 
                 if (!$this->InstitutionStudentsProfileTemplates->save($newEntity)) {
-                    Log::write('debug', 'Error Add All student profile Report Cards '.$reportCardId.' for Grade '.$educationGradeId.' to processes ('.Time::now().')');
+                    Log::write('debug', 'Error Add All Student profile Report Cards '.$reportCardId.' for Grade '.$educationGradeId.' to processes ('.Time::now().')');
                     Log::write('debug', $newEntity->errors());
                 }
             }
             // end
         }
 
-        Log::write('debug', 'End Add All student profile Report Cards '.$reportCardId.' for Grade '.$institutionGradeId.' to processes ('.Time::now().')');
+        Log::write('debug', 'End Add All Student profile Report Cards '.$educationGradeId.' for Grade '.$institutionGradeId.' to processes ('.Time::now().')');
     }
 
     private function GenerateAllStudentReportCards($institutionId, $educationGradeId, $academicPeriodId, $reportCardId, $studentId = null)
@@ -1131,11 +1132,12 @@ class StudentProfilesTable extends ControllerActionTable
 
     private function addReportCardsToEmailProcesses($institutionId, $educationGradeId, $academicPeriodId, $reportCardId, $studentId = null)
     {
-        Log::write('debug', 'Initialize Add All Staff Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
+        Log::write('debug', 'Initialize Add All Student Profile Report Cards '.$reportCardId.' for Grade '.$educationGradeId.' to email processes ('.Time::now().')');
 		
 		$institutionClassStudents = TableRegistry::get('institution_class_students');
         $where = [];
         $where[$institutionClassStudents->aliasField('education_grade_id')] = $educationGradeId;
+        $where[$institutionClassStudents->aliasField('academic_period_id')] = $academicPeriodId;
         if (!is_null($studentId)) {
             $where[$institutionClassStudents->aliasField('student_id')] = $studentId;
         }
@@ -1150,11 +1152,20 @@ class StudentProfilesTable extends ControllerActionTable
                     $this->InstitutionStudentsProfileTemplates->aliasField('student_id = ') . $institutionClassStudents->aliasField('student_id'),
                     $this->InstitutionStudentsProfileTemplates->aliasField('institution_id = ') . $institutionClassStudents->aliasField('institution_id'),
                     $this->InstitutionStudentsProfileTemplates->aliasField('academic_period_id = ') . $academicPeriodId,
+                    $this->InstitutionStudentsProfileTemplates->aliasField('education_grade_id = ') . $educationGradeId,
                     $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id = ') . $reportCardId,
                     $this->InstitutionStudentsProfileTemplates->aliasField('status') => self::PUBLISHED
                 ]
             )
+			->group([
+                $institutionClassStudents->aliasField('student_id'),
+                $institutionClassStudents->aliasField('academic_period_id'),
+                $institutionClassStudents->aliasField('institution_id'),
+                $institutionClassStudents->aliasField('education_grade_id'),
+                $institutionClassStudents->aliasField('student_status_id')
+            ])
             ->where($where)
+            ->where([$institutionClassStudents->aliasField('student_status_id') => 1])
             ->toArray();
 
         foreach ($institutionStudents as $student) {
@@ -1162,8 +1173,8 @@ class StudentProfilesTable extends ControllerActionTable
             $idKeys = [
                 'student_profile_template_id' => $reportCardId,
                 'institution_id' => $student->institution_id,
-                'education_grade_id' => $student->education_grade_id,
-                'student_id' => $student->student_id
+                'student_id' => $student->student_id,
+                'education_grade_id' => $student->education_grade_id
             ];
 
             $data = [
@@ -1171,13 +1182,14 @@ class StudentProfilesTable extends ControllerActionTable
                 'academic_period_id' => $academicPeriodId,
                 'created' => date('Y-m-d H:i:s')
             ];
+			
             $obj = array_merge($idKeys, $data);
             $newEntity = $this->StudentReportCardEmailProcesses->newEntity($obj);
             $this->StudentReportCardEmailProcesses->save($newEntity);
             // end
         }
 
-        Log::write('debug', 'End Add All Report Cards '.$reportCardId.' for Institution '.$institutionId.' to email processes ('.Time::now().')');
+        Log::write('debug', 'End Add All Student Profile Report Cards '.$reportCardId.' for Grade '.$educationGradeId.' to email processes ('.Time::now().')');
     }
 
     private function triggerEmailAllReportCardsShell($institutionId, $educationGradeId, $institutionClassId, $reportCardId, $studentId = null)
