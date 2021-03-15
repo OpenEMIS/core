@@ -509,7 +509,10 @@ class DirectoriesController extends AppController
                 $this->Navigation->addCrumb($model->getHeader('Student'. $alias));
                 $header = $session->read('Student.Students.name');
                 $header = $header . ' - ' . $model->getHeader($alias);
-            } else {
+            }elseif ($alias == 'StudentAssociations') {
+                $header .= ' - '. __('Associations');
+            } 
+             else {
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = $header . ' - ' . $model->getHeader($alias);
             }
