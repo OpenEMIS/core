@@ -814,25 +814,6 @@ class NavigationComponent extends Component
                 'selected' => ['InfrastructureProjects.view', 'InfrastructureProjects.add', 'InfrastructureProjects.edit', 'InfrastructureProjects.delete']
             ],
 
-            'Meals' => [
-                'title' => 'Meals',
-                'parent' => 'Institutions.Institutions.index',
-                'link' => false
-            ],
-
-            'Institutions.MealProgramme' => [
-               'title' => 'Programme',
-                'parent' => 'Meals',
-                'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.MealProgramme']
-            ],
-
-            'Institutions.StudentMeals.index' => [
-                'title' => 'Students',
-                'parent' => 'Meals',
-                'selected' => ['Institutions.StudentMeals','Institutions.ImportStudentMeals'],
-                'params' => ['plugin' => 'Institution']
-            ],
 
             'Wash' => [
                 'title' => 'WASH',
@@ -906,6 +887,26 @@ class NavigationComponent extends Component
                 'parent' => 'Infrastructures',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['InstitutionAssets.view', 'InstitutionAssets.add', 'InstitutionAssets.edit', 'InstitutionAssets.delete'],
+            ],
+            
+            'Meals' => [
+                'title' => 'Meals',
+                'parent' => 'Institutions.Institutions.index',
+                'link' => false
+            ],
+
+            'Institutions.MealProgramme' => [
+               'title' => 'Programme',
+                'parent' => 'Meals',
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['Institutions.MealProgramme']
+            ],
+
+            'Institutions.StudentMeals.index' => [
+                'title' => 'Students',
+                'parent' => 'Meals',
+                'selected' => ['Institutions.StudentMeals','Institutions.ImportStudentMeals'],
+                'params' => ['plugin' => 'Institution']
             ],
 
             'Survey' => [
