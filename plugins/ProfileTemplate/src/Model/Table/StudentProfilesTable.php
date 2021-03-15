@@ -750,10 +750,10 @@ class StudentProfilesTable extends ControllerActionTable
         if ($hasTemplate) {
             $this->addReportCardsToProcesses($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
             $this->GenerateAllStudentReportCards($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
-            $this->Alert->warning('ReportCardStatuses.generate');
+            $this->Alert->warning('StudentProfiles.generate');
         } else {
             $url = $this->url('index');
-            $this->Alert->warning('ReportCardStatuses.noTemplate');
+            $this->Alert->warning('StudentProfiles.noTemplate');
         }
 
         $event->stopPropagation();
@@ -780,12 +780,12 @@ class StudentProfilesTable extends ControllerActionTable
             if (!$inProgress) {                   
                 $this->addReportCardsToProcesses($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
 				$this->GenerateAllStudentReportCards($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
-				$this->Alert->warning('ReportCardStatuses.generateAll');
+				$this->Alert->warning('StudentProfiles.generateAll');
             } else {
-                $this->Alert->warning('ReportCardStatuses.inProgress');
+                $this->Alert->warning('StudentProfiles.inProgress');
             }
         } else {
-            $this->Alert->warning('ReportCardStatuses.noTemplate');
+            $this->Alert->warning('StudentProfiles.noTemplate');
         }
 
         $event->stopPropagation();
@@ -842,7 +842,7 @@ class StudentProfilesTable extends ControllerActionTable
             unlink($filepath);
         } else {
             $event->stopPropagation();
-            $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
+            $this->Alert->warning('StudentProfiles.noFilesToDownload');
             return $this->controller->redirect($this->url('index'));
         }
     }
@@ -890,7 +890,7 @@ class StudentProfilesTable extends ControllerActionTable
             unlink($filepath);
         } else {
             $event->stopPropagation();
-            $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
+            $this->Alert->warning('StudentProfiles.noFilesToDownload');
             return $this->controller->redirect($this->url('index'));
         }
     }
@@ -899,7 +899,7 @@ class StudentProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $result = $this->InstitutionStudentsProfileTemplates->updateAll(['status' => self::PUBLISHED], $params);
-        $this->Alert->success('ReportCardStatuses.publish');
+        $this->Alert->success('StudentProfiles.publish');
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
@@ -915,9 +915,9 @@ class StudentProfilesTable extends ControllerActionTable
         ]);
 
         if ($result) {
-            $this->Alert->success('ReportCardStatuses.publishAll');
+            $this->Alert->success('StudentProfiles.publishAll');
         } else {
-            $this->Alert->warning('ReportCardStatuses.noFilesToPublish');
+            $this->Alert->warning('StudentProfiles.noFilesToPublish');
         }
 
         $event->stopPropagation();
@@ -928,7 +928,7 @@ class StudentProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $result = $this->InstitutionStudentsProfileTemplates->updateAll(['status' => self::NEW_REPORT], $params);
-        $this->Alert->success('ReportCardStatuses.unpublish');
+        $this->Alert->success('StudentProfiles.unpublish');
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
@@ -944,9 +944,9 @@ class StudentProfilesTable extends ControllerActionTable
         ]);
 
         if ($result) {
-            $this->Alert->success('ReportCardStatuses.unpublishAll');
+            $this->Alert->success('StudentProfiles.unpublishAll');
         } else {
-            $this->Alert->warning('ReportCardStatuses.noFilesToUnpublish');
+            $this->Alert->warning('StudentProfiles.noFilesToUnpublish');
         }
 
         $event->stopPropagation();
@@ -958,7 +958,7 @@ class StudentProfilesTable extends ControllerActionTable
         $params = $this->getQueryString();
         $this->addReportCardsToEmailProcesses($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
         $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
-        $this->Alert->warning('ReportCardStatuses.email');
+        $this->Alert->warning('StudentProfiles.email');
 
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
@@ -982,9 +982,9 @@ class StudentProfilesTable extends ControllerActionTable
             $this->addReportCardsToEmailProcesses($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id']);
             $this->triggerEmailAllReportCardsShell($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id']);
 
-            $this->Alert->warning('ReportCardStatuses.emailAll');
+            $this->Alert->warning('StudentProfiles.emailAll');
         } else {
-            $this->Alert->warning('ReportCardStatuses.emailInProgress');
+            $this->Alert->warning('StudentProfiles.emailInProgress');
         }
 
         $event->stopPropagation();
