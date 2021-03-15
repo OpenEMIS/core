@@ -1,3 +1,20 @@
+### [3.62.2] - 2021-03-15
+- Implemented: Feature for school activities/houses/clubs
+- Implemented: Enhancement of Translations
+- Implemented: Improvement of the school closing process changes
+- Bug Fixed: Institutions > Surveys > Forms : Unable to save even though mandatory fields are entered
+- Bug Fixed: Institutions > Academic > Programme > Add/Edit: Number of Subjects listed is not the same as number of Subjects configured in Education Structure
+- Bug Fixed: Institutions > Academic > Subject: Multigrade Class was created but only 1 Subject has Subject allocated for the Grades in the Multigrade
+- Bug Fixed: Institutions > Academic > Subjects > View: Student who was Withdrawn and Enrolled back in the same Institution is still having Withdrawn Status in Subjects page
+- Bug Fixed: Institutions > Add page : Unable to save due to unknown error
+- Bug Fixed: Institutions > Infrastructure > Overview: Unable to edit record
+- Bug Fixed: Institutions > Meals/ Institutions > Infrastructures : Menu for Infrastructure is hidden in Meals
+- Bug Fixed: Institutions > Survey: Data is missing upon saving Survey Form
+- Bug Fixed: Profile > Staff > Career > Classes tab: Encountered 404 error
+- Bug Fixed: Report > Institutions > Staff Leave Report: Changes to report
+- Bug Fixed: Report > Institutions > Staff Attendance Report: Changes to report
+- Bug Fixed: Administration > Security > Roles > System Roles: Re-order function is not working
+
 ### [3.62.2] - 2021-03-05
 - Implemented: Generate Risks for all school at one time in Administration > System Setup > Risks
 - Bug Fixed: Profile > Student > Academic > Risk: 404 error upon viewing the Risk record
