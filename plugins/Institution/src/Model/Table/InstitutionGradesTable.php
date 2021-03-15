@@ -807,7 +807,6 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
 
             if (!empty($educationGradeId)) {
 
-
                 $existingSubjectsInGrade = 
                 TableRegistry::get('Education.EducationGradesSubjects')
                 ->find('list', [
@@ -819,16 +818,16 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
 
                 $subjectQuery = TableRegistry::get('Education.EducationSubjects')
                 ->find()
-                ->find('visible')
+                //->find('visible') //POCOR-5931
                 ->find('order');
 
-                    // only show subjects that have been added in the grade
+                // only show subjects that have been added in the grade
                 if (!empty($existingSubjectsInGrade)) {
                     $subjectQuery->where([
-                        'EducationSubjects.id IN' => $existingSubjectsInGrade
+                        'EducationSubjects.id IN ' => $existingSubjectsInGrade
                     ]);
                 }
-
+                
                 $subjectOptions = $subjectQuery->toArray();
             }
 
@@ -860,7 +859,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
 
             $subjectQuery = TableRegistry::get('Education.EducationSubjects')
             ->find()
-            ->find('visible')
+            //->find('visible') //POCOR-5931
             ->find('order');
 
                     // only show subjects that have been added in the grade
@@ -918,13 +917,14 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
             if (!empty($existingSubjectsInGrade)) {
                 $subjectQuery = TableRegistry::get('Education.EducationSubjects')
                 ->find()
-                ->find('visible')
+                //->find('visible') //POCOR-5931
                 ->find('order');
                 $subjectQuery->where([
                     'EducationSubjects.id IN' => $existingSubjectsInGrade
                 ]);
                 $subjectOptions = $subjectQuery->toArray();
-            }                    
+            }   
+            
         }
 
         $attr['data'] = $subjectOptions;
