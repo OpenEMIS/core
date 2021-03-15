@@ -1,4 +1,4 @@
-### [3.62.2] - 2021-03-15
+### [3.62.3] - 2021-03-15
 - Implemented: Feature for school activities/houses/clubs
 - Implemented: Enhancement of Translations
 - Implemented: Improvement of the school closing process changes
