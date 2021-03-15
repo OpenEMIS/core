@@ -14,6 +14,7 @@ use Cake\Collection\Collection;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Log\Log;
+use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
@@ -386,7 +387,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function findSubjectDetails(Query $query, array $options)
     {
-
         // POCOR-2547 sort list of staff and student by name
         // move the contain from institution.subject.student.ctrl.js since its using finder method
         return $query
@@ -524,13 +524,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $query->contain([
             'Classes.ClassesSecondaryStaff',
             'Teachers',
             'Rooms',
             'SubjectStudents' => [
                 'Users.Genders',
-                'StudentStatuses',
+                'InstitutionStudents.StudentStatuses',
                 'InstitutionClasses',
                 'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
             ]
