@@ -202,7 +202,7 @@ class InstitutionsTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        $validator = $this->LatLongValidation();
+        // $validator = $this->LatLongValidation();
 
         $validator
         ->add('date_opened', [
@@ -274,16 +274,16 @@ class InstitutionsTable extends ControllerActionTable
             'last' => true
         ])
 
-        ->add('area_id', 'ruleAuthorisedArea', [
-            'rule' => ['checkAuthorisedArea']
-        ])
-        ->add('area_id', 'ruleConfiguredArea', [
-            'rule' => ['checkConfiguredArea']
-        ])
-        ->allowEmpty('area_administrative_id')
-        ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
-            'rule' => ['checkConfiguredArea']
-        ])
+        // ->add('area_id', 'ruleAuthorisedArea', [
+        //     'rule' => ['checkAuthorisedArea']
+        // ])
+        // ->add('area_id', 'ruleConfiguredArea', [
+        //     'rule' => ['checkConfiguredArea']
+        // ])
+        // ->allowEmpty('area_administrative_id')
+        // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
+        //     'rule' => ['checkConfiguredArea']
+        // ])
         ->add('institution_provider_id', 'ruleLinkedSector', [
             'rule' => 'checkLinkedSector',
             'provider' => 'table'
