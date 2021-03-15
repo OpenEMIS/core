@@ -661,18 +661,25 @@ class StudentOutcomesTable extends ControllerActionTable
 
     private function getSubjectOptions()
     {
+        $attr = $this->getStudentOptions();
+        $userId = array_keys($attr);
+        
         $subjectOptions = [];
         $baseUrl = $this->url($this->action, false);
+
         $params = $this->getQueryString();
         $session = $this->request->session();
         $AccessControl = $this->AccessControl;
-
-        //$userId = $session->read('Auth.User.id');
         $session = $this->request->session();
-            $studentId = $session->read('Student.Students.id');
-            $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+        if (!empty($params['student_id'])) {
+           $studentId = $params['student_id'];
+        } else {
+           $studentId = $userId[0];
+        }
+        
+        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
         $gradeId = $this->gradeId;
         $academicPeriodId = $this->academicPeriodId;
         $institutionId = $this->institutionId;
@@ -758,6 +765,7 @@ class StudentOutcomesTable extends ControllerActionTable
             if (!empty($results)) {
                 foreach ($results as $student) {
                     $params['student_id'] = $student->student_id;
+
                     $studentOptions[$student->student_id] = [
                         'name' => $student->_matchingData['Users']->name_with_id,
                         'status' => $student->_matchingData['StudentStatuses']->name,
