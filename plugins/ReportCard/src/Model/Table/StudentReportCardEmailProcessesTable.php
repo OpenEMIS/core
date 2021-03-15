@@ -14,10 +14,8 @@ class StudentReportCardEmailProcessesTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('StudentTemplates', ['className' => 'ProfileTemplate.StudentTemplates', 'foreignKey' => 'student_profile_template_id']);
-        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
     }
 
