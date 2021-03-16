@@ -142,7 +142,7 @@
 							?></td>
 						<td><?= __($obj->institution_class->name) ?></td>
 						<td><?= $obj->student_gender ?></td>
-						<td><?= __($obj->student_status->name) ?></td>
+						<td><?= __($obj->institution_student->student_status->name) ?></td>
 					</tr>
 
 				<?php endif;?>

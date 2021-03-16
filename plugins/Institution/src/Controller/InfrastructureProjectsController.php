@@ -7,6 +7,7 @@ use Cake\Routing\Router;
 
 use App\Controller\PageController;
 use Page\Model\Entity\PageElement;
+use Cake\ORM\TableRegistry;
 
 class InfrastructureProjectsController extends PageController
 {
@@ -62,7 +63,27 @@ class InfrastructureProjectsController extends PageController
             ->setOptions($this->projectStatusesOptions);
 
         // set field order
-        $page->move('infrastructure_project_funding_source_id')->after('description')->setLabel(__('Funding Source'));
+        $Users = TableRegistry::get('labels');
+        $result = $Users
+            ->find()
+            ->where(['module' => 'InfrastructureProjects', 'field_name' => 'Funding Source'])
+            ->toArray();
+        if(isset($result[0]['name'])){
+            $page->move('infrastructure_project_funding_source_id')->after('description')->setLabel($result[0]['name']);
+        }else{
+            $page->move('infrastructure_project_funding_source_id')->after('description')->setLabel(__('Funding Source'));
+        }
+
+        $Users = TableRegistry::get('labels');
+        $result = $Users
+            ->find()
+            ->where(['module' => 'InfrastructureProjects', 'field_name' => 'Contract Date'])
+            ->toArray();
+        if(isset($result[0]['name'])){
+            $page->get('contract_date')->setSortable(false)->setLabel($result[0]['name']);
+        }else{
+            $page->move('contract_date')->after('infrastructure_project_funding_source_id');
+        }
     }
 
     public function index()
@@ -76,6 +97,16 @@ class InfrastructureProjectsController extends PageController
         $page->exclude(['description', 'funding_source_description', 'contract_amount', 'date_started', 'date_completed', 'file_name', 'file_content', 'comment', 'institution_id']);
 
         $page->get('infrastructure_project_funding_source_id')->setSortable(false);
+        // $Users = TableRegistry::get('labels');
+        // $result = $Users
+        //     ->find()
+        //     ->where(['module' => 'InfrastructureProjects', 'field_name' => 'Contract Date'])
+        //     ->toArray();
+        // if(isset($result[0]['name'])){
+        //     $page->get('contract_date')->setSortable($result[0]['name']);
+        // }else{
+        //     $page->get('contract_date')->setSortable(false);
+        // }
         $page->get('contract_date')->setSortable(false);
         $page->get('status')->setSortable(false);
 

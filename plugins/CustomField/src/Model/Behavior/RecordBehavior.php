@@ -483,7 +483,7 @@ class RecordBehavior extends Behavior
                                     ])
                                     ->toArray();
                             }
-                            if (!empty($surveyIds)) {
+                            if (!empty($surveyIds) && array_key_exists('repeaterValues', $settings)) {
                                 // always deleted all existing answers before re-insert
                                 $RepeaterSurveyAnswers->deleteAll([
                                     $RepeaterSurveyAnswers->aliasField('institution_repeater_survey_id IN ') => $surveyIds

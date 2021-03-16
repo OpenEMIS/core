@@ -935,10 +935,10 @@ class InstitutionLandsTable extends ControllerActionTable
                     $this->aliasField('previous_institution_land_id') => $entity->id
                 ])
                 ->count();
-
-            if ($count > 0) {
+            //edit data   
+            /*if ($count > 0) {
                 $isEditable = false;
-            }
+            }*/
         } elseif ($entity->land_status_id == $endOfUsageId) {// If already end of usage, not allow to edit or delete
             $isEditable = false;
             $isDeletable = false;
