@@ -385,7 +385,8 @@ class StudentReportCardsTable extends AppTable
                     $InstitutionStudentRisks->aliasField('student_id') => $params['student_id'],
                 ])
                 ->toArray();
-				
+			
+			$entity = [];	
 			foreach ($InstitutionStudentRiskData as $value) {
 				$studentRisksCriteriasResults = $StudentRisksCriterias->find()
 				->select([
@@ -586,7 +587,9 @@ class StudentReportCardsTable extends AppTable
 							11 => 'November',
 							12 => 'December'
 						);	
-						
+			
+			$monthData = [];
+			$entity = [];	
 			foreach($absencesData as $data) {
 				foreach($months as $key => $val) {
 					if(!empty($months[$data->month])) { 
@@ -712,10 +715,10 @@ class StudentReportCardsTable extends AppTable
                 ])
                 ->first();
 				
-				if($entity->health_insurance == 0) {
+				if(!empty($entity->health_insurance) && ($entity->health_insurance == 0)) {
 					$entity['health_insurance'] = 'No';
 				}
-				if($entity->health_insurance == 1) {
+				if(!empty($entity->health_insurance) && ($entity->health_insurance == 1)) {
 					$entity['health_insurance'] = 'Yes';
 				}
             return $entity;
@@ -775,6 +778,7 @@ class StudentReportCardsTable extends AppTable
                 ->toArray();
 			
 			$i = 1;	
+			$entity = [];
 			foreach($guardianData as $value) {
 				$entity['relation'.$i] = $value->relation;
 				$entity['name'.$i] = $value->first_name. ' '. $value->last_name;

@@ -1092,6 +1092,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Student'],
                 'selected' => ['Students.Meals']
             ],
+            'Students.Profiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Institutions.Students.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.Profiles']
+            ],
 
         ];
         foreach ($navigation as &$n) {
