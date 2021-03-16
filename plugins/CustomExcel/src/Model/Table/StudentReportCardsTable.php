@@ -45,6 +45,7 @@ class StudentReportCardsTable extends AppTable
 				'StudentCounsellings',
 				'StudentHealths',
 				'StudentHealthConsultations',
+				'StudentGuardians',
             ]
         ]);
     }
@@ -73,6 +74,7 @@ class StudentReportCardsTable extends AppTable
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentCounsellings'] = 'onExcelTemplateInitialiseStudentCounsellings';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentHealths'] = 'onExcelTemplateInitialiseStudentHealths';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentHealthConsultations'] = 'onExcelTemplateInitialiseStudentHealthConsultations';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentGuardians'] = 'onExcelTemplateInitialiseStudentGuardians';
 		return $events;
     }
 
@@ -740,6 +742,45 @@ class StudentReportCardsTable extends AppTable
                 ])
                 ->toArray();
 				
+            return $entity;
+		}
+    }	
+	
+	public function onExcelTemplateInitialiseStudentGuardians(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $Guardians = TableRegistry::get('Guardian.Students');
+			
+            $guardianData = $Guardians
+                ->find()
+                ->select([
+					'id' => $Guardians->aliasField('id'),
+					'relation' => 'GuardianRelations.name',
+					'first_name' => 'StudentUser.first_name',
+					'last_name' => 'StudentUser.last_name',
+					'contact' => 'Contacts.value',
+                ])
+				->contain(['StudentUser', 'GuardianRelations'])
+				->leftJoin(
+				['Contacts' => 'user_contacts'],
+				[
+					'Contacts.security_user_id ='. $Guardians->aliasField('guardian_id'),
+				]
+				)
+				->where([
+                    $Guardians->aliasField('student_id') => $params['student_id'],
+                ])
+				->order($Guardians->aliasField('created'))
+				->limit(2)
+                ->toArray();
+			
+			$i = 1;	
+			foreach($guardianData as $value) {
+				$entity['relation'.$i] = $value->relation;
+				$entity['name'.$i] = $value->first_name. ' '. $value->last_name;
+				$entity['contact'.$i] = $value->contact;
+				$i++;
+			}	
             return $entity;
 		}
     }

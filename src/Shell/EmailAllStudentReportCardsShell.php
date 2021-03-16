@@ -11,6 +11,7 @@ use Cake\Console\Shell;
 
 class EmailAllStudentReportCardsShell extends Shell
 {
+	CONST EMAIL_TEMPLATE = 2;
     public function initialize()
     {
         parent::initialize();
@@ -195,7 +196,7 @@ class EmailAllStudentReportCardsShell extends Shell
 		$modelAlias = $StudentReportCardEmailTable->registryAlias();
         $availablePlaceholders = $StudentReportCardEmailTable->getPlaceholders();
         $reportCardId = $studentsReportCardEntity->student_profile_template_id;
-        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, 2);		
+        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, self::EMAIL_TEMPLATE);		
         $subject = $this->replacePlaceholders($emailTemplateEntity->subject, $availablePlaceholders, $studentsReportCardEntity);
         
 		if (!empty($subject)) {
@@ -211,7 +212,7 @@ class EmailAllStudentReportCardsShell extends Shell
         $modelAlias = $StudentReportCardEmailTable->registryAlias();
         $availablePlaceholders = $StudentReportCardEmailTable->getPlaceholders();
         $reportCardId = $studentsReportCardEntity->student_profile_template_id;
-        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, 2);
+        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, self::EMAIL_TEMPLATE);
         $message = $this->replacePlaceholders($emailTemplateEntity->message, $availablePlaceholders, $studentsReportCardEntity);
 
         if (!empty($message)) {
