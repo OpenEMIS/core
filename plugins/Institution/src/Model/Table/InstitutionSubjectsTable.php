@@ -14,6 +14,7 @@ use Cake\Collection\Collection;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Log\Log;
+use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
@@ -386,7 +387,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function findSubjectDetails(Query $query, array $options)
     {
-
         // POCOR-2547 sort list of staff and student by name
         // move the contain from institution.subject.student.ctrl.js since its using finder method
         return $query
@@ -524,13 +524,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $query->contain([
             'Classes.ClassesSecondaryStaff',
             'Teachers',
             'Rooms',
             'SubjectStudents' => [
                 'Users.Genders',
-                'StudentStatuses',
+                'InstitutionStudents.StudentStatuses',
                 'InstitutionClasses',
                 'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
             ]
@@ -1526,7 +1527,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $programsubjects = 0;
                     $newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
                     foreach ($newSchoolSubjects as $subject) {     //POCOR 5001
-                        $institutionProgramGradeSubjects = 
+                        //POCOR-5932 starts
+                        /*$institutionProgramGradeSubjects = 
                             TableRegistry::get('InstitutionProgramGradeSubjects')
                             ->find('list')
                             ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $subject->education_grade_id,
@@ -1535,18 +1537,18 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                 ])
                             ->count(); 
                         
-                        if($institutionProgramGradeSubjects > 0){
+                        if($institutionProgramGradeSubjects > 0){*/
                             $programsubjects++;
                             $InstitutionSubjects->save($subject);
-                        }
+                        //}//POCOR-5932 ends
                     }
                     unset($subject);
-
-                    if ($programsubjects == 0) {
+                    //POCOR-5932 starts
+                    /*if ($programsubjects == 0) {
                         foreach ($newSchoolSubjects as $subject) {
                         $InstitutionSubjects->save($subject);
                         }
-                    }
+                    }*///POCOR-5932 ends
                 }
                 unset($newSchoolSubjects);
                 unset($InstitutionSubjects);

@@ -75,6 +75,7 @@ class StaffController extends AppController
             'Nationalities'     => ['className' => 'User.Nationalities'],
             'Positions'             => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
             'Duties'                => ['className' => 'Staff.Duties', 'actions' => ['index', 'view']],
+            'StaffAssociations'                => ['className' => 'Staff.InstitutionAssociationStaff', 'actions' => ['index', 'view']],
             'Sections'          => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
             'Classes'           => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
             'Qualifications'    => ['className' => 'Staff.Qualifications'],
@@ -112,6 +113,10 @@ class StaffController extends AppController
     public function Duties()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Duties']);
+    }
+    public function StaffAssociations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.InstitutionAssociationStaff']);
     }
     public function Classes()
     {
@@ -508,7 +513,6 @@ class StaffController extends AppController
             $institutionId = $session->read('Institution.Institutions.id');
             $options['institution_id'] = $institutionId;
         }
-
         $tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
         return $this->TabPermission->checkTabPermission($tabElements);
     }
