@@ -35,12 +35,12 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
     const mealType = {
         'Paid': {
-            code: 'Paid',
+            code: 'Received',
             icon: 'fa fa-minus',
             color: '#999999'
         },
         'Free': {
-            code: 'Free',
+            code: 'Not Received',
             icon: 'fa fa-check',
             color: '#999999'
         },
@@ -489,18 +489,21 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     }
 
     function savePeriodMarked(params, scope) {
+        console.log('params',params);
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
             meal_programmes_id: params.meal_programmes_id,
             academic_period_id: params.academic_period_id,
             date: params.day,
+            meal_benefit_id:2, 
         };
 
         UtilsSvc.isAppendSpinner(true, 'institution-student-attendances-table');
         StudentMealMarkedRecords.save(extra)
         .then(
             function(response) {
+                console.log("response",response)
                 AlertSvc.info(scope, 'Meal will be automatically saved.');
             },
             function(error) {
@@ -659,9 +662,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                         var mealTypeObj = mealTypes.find(obj => obj.id == studentMealTypeId);
                         console.log("mealTypeObj1", mealTypeObj)
                         if (mode == 'view') {
-                            if(studentMealTypeId == 1 || studentMealTypeId == 2) {
+                            if(studentMealTypeId == 3 || studentMealTypeId == 2) {
                                 return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                            } else if(studentMealTypeId == 3) {
+                            } else if(studentMealTypeId == 1) {
                                 var html = '';
                                 html += getViewMealReasonElement(data, mealBenefitTypeOptions);
                                 html += getViewCommentsElement(data);
@@ -674,9 +677,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                                 switch (mealTypeObj.name) {
                                     case 'None':
                                         return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                                    case 'Free':
+                                    case 'Not Received':
                                         return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                                    case 'Paid':
+                                    case 'Received':
                                         var eCell = document.createElement('div');
                                         eCell.setAttribute("class", "reason-wrapper");
                                         var eSelect = getEditMealBenefiteElement(data, mealBenefitTypeOptions, context, api);
@@ -745,18 +748,21 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                 var oldParams = {
                     meal_received_id: oldValue
                 };
-                console.log("newValue",newValue)
+                console.log("newValue",newValue);
+                console.log("mealTypeObj.name", mealTypeObj.name);
+                
                 // reset not related data, store old params for reset purpose
                 switch (mealTypeObj.name) {
+                   
                     case 'None':
                         data.institution_student_meal.comment = null;
                         data.institution_student_meal.meal_received_id = 0;
                         break;
-                    case 'Free':
+                    case 'Not Received':
                         data.institution_student_meal.comment = null;
                         data.institution_student_meal.meal_received_id = 1;
                         break;
-                    case 'Paid':
+                    case 'Received':
                         data.institution_student_meal.meal_received_id = newValue;
                         oldParams.comment = data.institution_student_meal.comment;
                         break;
@@ -819,7 +825,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     function setRowDatas(context, data) {
         var studentList = context.scope.$ctrl.classStudentList;
         studentList.forEach(function (dataItem, index) {
-            if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 1 || dataItem.institution_student_meal.meal_received_id == 2) {
+            if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 2 || dataItem.institution_student_meal.meal_received_id == 3) {
                 dataItem.rowHeight = 60;
             } else {
                 dataItem.rowHeight = 120;
@@ -960,7 +966,8 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         }else if(data.institution_student_meal.meal_received_id == 2) {
             html = data.institution_student_meal.meal_received
         }else if(data.institution_student_meal.meal_received_id == 3) {
-            html = data.institution_student_meal.meal_received
+            // html = data.institution_student_meal.meal_received
+            html='<i style="color: #999999;" class="fa fa-minus"></i>'
         }
         
         return html;
@@ -1008,14 +1015,15 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     }
 
     function getViewAllDayAttendanceElement(code) {
+        console.log("code", code);
         var html = '';
         // console.log(mealType)
         switch (code) {
             case mealType.Paid.code:
-                html = '<i>Paid</i>';
+                html = '<i>Received</i>';
                 break;
             case mealType.Free.code:
-                html = '<i style="color: ' + mealType.Free.color + ';">Free</i>';
+                html = '<i style="color: ' + mealType.Free.color + ';">Not Received</i>';
                 break;
             case mealType.None.code:
                 html = '<i style="color: ' + mealType.None.color + ';" class="' + attendanceType.NOTMARKED.icon + '"></i>';
