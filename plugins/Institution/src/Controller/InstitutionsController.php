@@ -2644,7 +2644,7 @@ class InstitutionsController extends AppController
                 'valueField' => 'name'
             ])
             ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'Institution Profile'])
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'Institution Completeness'])
             ->toArray();
           
         $typeOptions = array_keys($typeList);
@@ -2655,7 +2655,7 @@ class InstitutionsController extends AppController
                 'valueField' => 'name'
             ])
             ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 0,$ConfigItem->aliasField('type') => 'Institution Profile'])
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 0,$ConfigItem->aliasField('type') => 'Institution Completeness'])
             ->toArray();
             if ($typeListDisable) {
                 $countList = count($typeListDisable);
