@@ -135,6 +135,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 return InstitutionStudentMealsSvc.mealBenefitOptions();
             }, vm.error)
             .then(function(mealBenefitTypeOptions) {
+                console.log('mealBenefitTypeOptions',mealBenefitTypeOptions);
                 vm.mealBenefitTypeOptions = mealBenefitTypeOptions;
                 vm.gridOptions.context.mealBenefitTypeOptions = vm.mealBenefitTypeOptions;
                 return InstitutionStudentMealsSvc.mealProgrameOptions();
@@ -412,11 +413,13 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                 var lateCount = 0;
 
                 if (vm.totalStudents > 0) {
+                    // alert();
                     angular.forEach(vm.classStudentList, function(obj, key) {
+                        console.log("obj",obj);
                         if (angular.isDefined(obj['institution_student_meal']) && angular.isDefined(obj['institution_student_meal']['meal_received'])) {
                             var code = obj['institution_student_meal']['meal_received'];
-                            // console.log(mealType)
-                            // console.log(code);
+                            console.log('mealType',mealType);
+                            console.log('code',code);
                             switch (code) {
                                 case null:
                                 case mealType.Free.code:
@@ -469,7 +472,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
                         angular.forEach(weekAttendance, function(day, dayKey) {
                             if (Object.keys(day).length > 0) {
                                 angular.forEach(day, function(period, periodKey) {
-                                    // console.log('period', period);
+                                    console.log('period', period);
                                     switch(period) {
                                       case mealType.Paid.code:
                                            ++allPaidMealCount;
@@ -617,6 +620,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             vm.setColumnDef();
             UtilsSvc.isAppendLoader(false);
         });
+       
     }
 
     vm.changeDay = function() {
@@ -698,15 +702,17 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
 
     // button events
     vm.onEditClick = function() {
+        // console.log('vm',vm.mealBenefitTypeOptions);
         vm.action = 'edit';
         vm.gridOptions.context.mode = vm.action;
         vm.gridOptions.context.mealPrograme=vm.selectedmealPrograme;
         vm.setColumnDef();
         AlertSvc.info($scope, 'Meal will be automatically saved.');
-        InstitutionStudentMealsSvc.savePeriodMarked(vm.getPeriodMarkedParams(), $scope);
+        InstitutionStudentMealsSvc.savePeriodMarked(vm.getPeriodMarkedParams(), $scope, vm.mealBenefitTypeOptions);
     };
 
     vm.onBackClick = function() {
+        // alert();
         vm.action = 'view';
         vm.gridOptions.context.mode = vm.action;
         UtilsSvc.isAppendLoader(true);
@@ -720,6 +726,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             UtilsSvc.isAppendLoader(false);
             vm.setGridData();
             vm.setColumnDef();
+            vm.countStudentData();
         }); 
     };
 
