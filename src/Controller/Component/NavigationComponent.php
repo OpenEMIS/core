@@ -815,11 +815,11 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.MealProgramme' => [
-               'title' => 'Programme',
+            'Institutions.Distribution' => [
+               'title' => 'Distribution',
                 'parent' => 'Meals',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.MealProgramme']
+                'selected' => ['Institutions.Distribution']
             ],
 
             'Institutions.StudentMeals.index' => [
