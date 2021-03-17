@@ -368,7 +368,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
         // console.log('studentList controller',studentList);
       studentList.forEach(function (dataItem, index) {
             if(dataItem.hasOwnProperty('institution_student_meal')){
-            if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 1 || dataItem.institution_student_meal.meal_received_id == 2) {
+            if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 2 || dataItem.institution_student_meal.meal_received_id == 3) {
                 dataItem.rowHeight = 60;
             } else {
                 dataItem.rowHeight = 120;
