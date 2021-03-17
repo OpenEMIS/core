@@ -46,6 +46,7 @@ class StudentReportCardsTable extends AppTable
 				'StudentHealths',
 				'StudentHealthConsultations',
 				'StudentGuardians',
+				'StudentHouses',
             ]
         ]);
     }
@@ -75,6 +76,7 @@ class StudentReportCardsTable extends AppTable
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentHealths'] = 'onExcelTemplateInitialiseStudentHealths';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentHealthConsultations'] = 'onExcelTemplateInitialiseStudentHealthConsultations';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentGuardians'] = 'onExcelTemplateInitialiseStudentGuardians';
+		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentHouses'] = 'onExcelTemplateInitialiseStudentHouses';
 		return $events;
     }
 
@@ -787,5 +789,32 @@ class StudentReportCardsTable extends AppTable
 			}	
             return $entity;
 		}
+    }
+	
+	public function onExcelTemplateInitialiseStudentHouses(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $institutionAssociationStudent = TableRegistry::get('institution_association_student');
+
+            $entity = $institutionAssociationStudent
+                ->find()
+                ->select([
+					'id' => $institutionAssociationStudent->aliasField('id'),
+					'name' => 'InstitutionAssociations.name',
+                ])
+				->innerJoin(
+				['InstitutionAssociations' => 'institution_associations'],
+				[
+					'InstitutionAssociations.id ='. $institutionAssociationStudent->aliasField('institution_association_id'),
+				]
+				)
+				->where([
+                    $institutionAssociationStudent->aliasField('security_user_id') => $params['student_id'],
+                    $institutionAssociationStudent->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $institutionAssociationStudent->aliasField('education_grade_id') => $params['education_grade_id'],
+                ])
+                ->first();
+            return $entity;
+        }
     }
 }
