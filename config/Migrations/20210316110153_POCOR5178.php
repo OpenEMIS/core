@@ -21,11 +21,11 @@ class POCOR5178 extends AbstractMigration
 		
 		$this->insert('email_templates', [
                 'model_alias' => 'ReportCard.StudentReportCardEmail',
-				'model_reference' => '1',
-				'subject' => 'Student Profile Report Card of ${student.openemis_no} for ${academic_period.name}',
+				'model_reference' => '2',
+				'subject' => 'Student Profile of ${student.openemis_no} for ${academic_period.name}',
 				'message' => 'Dear ${student.first_name},
 
-Attached is your student Profile report card for ${academic_period.name}.
+Attached is your student Profile for ${academic_period.name}.
 
 Thank you.
 
@@ -46,7 +46,7 @@ Thank you.
 				'_edit' => 'Students.edit',
 				'_add' => 'Students.add',
 				'_delete' => 'Students.remove',
-				'_execute' => 'StudentProfiles.generate|StudentProfiles.downloadExcel|StudentProfiles.publish|StudentProfiles.unpublish|StudentProfiles.email|StudentProfiles.downloadAll|StudentProfiles.downloadAllPdf|StudentProfiles.generateAll|StudentProfiles.publishAll|StudentProfiles.unpublishAll',
+				'_execute' => 'StudentProfiles.generate|StudentProfiles.downloadExcel|StudentProfiles.publish|StudentProfiles.unpublish|StudentProfiles.email|StudentProfiles.downloadAll|StudentProfiles.downloadAllPdf|StudentProfiles.generateAll|StudentProfiles.emailAll|StudentProfiles.publishAll|StudentProfiles.unpublishAll',
 				'order' => 79,
 				'visible' => 1,
 				'created_user_id' => '1',
