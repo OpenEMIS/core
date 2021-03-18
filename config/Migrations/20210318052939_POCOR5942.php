@@ -28,6 +28,7 @@ class POCOR5942 extends AbstractMigration
         $this->execute('ALTER TABLE `meal_implementers` ADD `default` INT(1) NULL DEFAULT 0 AFTER `visible`');
         $this->execute('ALTER TABLE `meal_benefits` ADD `default` INT(1) NULL DEFAULT 0 AFTER `visible`');
         $this->execute('ALTER TABLE `student_meal_marked_records` ADD `meal_benefit_id` INT(11) NULL DEFAULT NULL AFTER `date`');
+        $this->execute('ALTER TABLE `institution_meal_programmes` ADD `institution_id` INT(11) NULL DEFAULT NULL AFTER `meal_programmes_id`');
 
          $data = [
             [
