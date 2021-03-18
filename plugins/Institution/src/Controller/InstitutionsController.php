@@ -1958,7 +1958,7 @@ class InstitutionsController extends AppController
      * @return array
      */
 
-     public function getInstituteProfileCompletnessData ($institutionId) {
+     public function getInstituteProfileCompletnessDataBAK ($institutionId) {
 
         $data = array();
         $profileComplete = 0;
@@ -2674,99 +2674,6 @@ class InstitutionsController extends AppController
             $data['percentage'] = $profilePercentage;
             return $data;
     }
-    public function getInstituteProfileCompletnessDataBAK ($institutionId) {
-
-        $institutions = TableRegistry::get('institutions');
-		$institutionsData = $institutions->find()		
-				->select([
-					'created' => 'institutions.created',
-					'modified' => 'institutions.modified',
-				])
-				->where([$institutions->aliasField('id') => $institutionId])
-				->limit(1)
-				->first();
-				;
-		
-		$institutionGenralComplete = 0;
-		$totalGeneralComplete = 3;
-		
-		if(!empty($institutionsData)) {
-			$institutionGenralComplete = $institutionGenralComplete + 1;
-		}
-		
-		$calendarEvents = TableRegistry::get('calendar_events');
-		$calendarEventsData = $calendarEvents->find()		
-				->select([
-					'created' => 'calendar_events.created',
-					'modified' => 'calendar_events.modified',
-				])
-				->where([$calendarEvents->aliasField('institution_id') => $institutionId])
-				->limit(1)
-				->first();
-				;
-		if(!empty($calendarEventsData)) {
-			$institutionGenralComplete = $institutionGenralComplete + 1;
-		}
-		
-		$institutionContactPersons = TableRegistry::get('institution_contact_persons');
-		$institutionContactPersonsData = $institutionContactPersons->find()		
-				->select([
-					'created' => 'institution_contact_persons.created',
-					'modified' => 'institution_contact_persons.modified',
-				])
-				->where([$institutionContactPersons->aliasField('institution_id') => $institutionId])
-				->limit(1)
-				->first();
-				;
-		if(!empty($institutionContactPersonsData)) {
-			$institutionGenralComplete = $institutionGenralComplete + 1;
-		}
-		
-		$data = array();
-		$data[0]['feature'] = 'General';
-		if($institutionGenralComplete == $totalGeneralComplete) {
-			$data[0]['complete'] = 'yes';
-		} else {
-			$data[0]['complete'] = 'no';
-		}
-		
-		$institutionStudents = TableRegistry::get('institution_students');
-		$institutionStudentsData = $institutionStudents->find()		
-				->select([
-					'created' => 'institution_students.created',
-					'modified' => 'institution_students.modified',
-				])
-				->where([$institutionStudents->aliasField('institution_id') => $institutionId])
-				->limit(1)
-				->first();
-				;
-		
-		$totalStudentsComplete = 1;
-		$institutionStudentsComplete = 0;	
-		
-		if(!empty($institutionStudentsData)) {
-			$institutionStudentsComplete = $institutionStudentsComplete + 1;
-		}
-		
-		$data[1]['feature'] = 'Students';
-		if($institutionStudentsComplete == $totalStudentsComplete) {
-			$data[1]['complete'] = 'yes';
-		} else {
-			$data[1]['complete'] = 'no';
-		}
-		
-		$totalComplete = $totalGeneralComplete + $totalStudentsComplete;
-		$totalInstitutionComplete = $institutionStudentsComplete + $institutionGenralComplete;
-		
-		$institutionPercentage = 100/$totalComplete * $totalInstitutionComplete;
-		$institutionPercentage = round($institutionPercentage);
-		
-		$data['percentage'] = $institutionPercentage;
-
-        return $data;
-		//echo '<pre>';print_r($data);die;
-    }
-
     //autocomplete used for InstitutionSiteShift
     public function ajaxInstitutionAutocomplete()
     {
@@ -3240,6 +3147,613 @@ class InstitutionsController extends AppController
             echo "Meeting deleted successfully.";
             die;
         }
-    }   
+    } 
+    /**
+     * Get intitute profile completness data
+     * @return array
+     */
+     public function getInstituteProfileCompletnessData ($institutionId) {
+        $data = array();
+        $data['percentage'] = 0;
+        $profileComplete = 0;
+        //Overview
+        $institutions = TableRegistry::get('institutions');
+		$institutionsData = $institutions->find()		
+				->select([
+					'created' => 'institutions.created',
+					'modified' => 'institutions.modified',
+				])
+				->where([$institutions->aliasField('id') => $institutionId])
+                ->order(['institutions.modified'=>'desc'])
+				->limit(1)
+				->first();
+         //Events
+        $calendarEvents = TableRegistry::get('calendar_events');
+		$calendarEventsData = $calendarEvents->find()		
+				->select([
+					'created' => 'calendar_events.created',
+					'modified' => 'calendar_events.modified',
+				])
+				->where([$calendarEvents->aliasField('institution_id') => $institutionId])
+                ->order(['calendar_events.modified'=>'desc'])
+				->limit(1)
+				->first();
+        //Contacts
+        $institutionContactPersons = TableRegistry::get('institution_contact_persons');
+		$institutionContactPersonsData = $institutionContactPersons->find()		
+				->select([
+					'created' => 'institution_contact_persons.created',
+					'modified' => 'institution_contact_persons.modified',
+				])
+				->where([$institutionContactPersons->aliasField('institution_id') => $institutionId])
+                ->order(['institution_contact_persons.modified'=>'desc'])
+				->limit(1)
+				->first();
+        //Shifts
+        $institutionShifts = TableRegistry::get('institution_shifts');
+		$institutionShiftsData = $institutionShifts->find()		
+				->select([
+					'created' => 'institution_shifts.created',
+					'modified' => 'institution_shifts.modified',
+				])
+				->where([$institutionShifts->aliasField('institution_id') => $institutionId])
+				->order(['institution_shifts.modified'=>'desc'])
+                ->limit(1)
+				->first();
+        //Programmes
+        $institutionProgrammes = TableRegistry::get('institution_grades');
+		$institutionProgrammesData = $institutionProgrammes->find()		
+				->select([
+					'created' => 'institution_grades.created',
+					'modified' => 'institution_grades.modified',
+				])
+				->where([$institutionProgrammes->aliasField('institution_id') => $institutionId])
+                ->order(['institution_grades.modified'=>'desc'])
+				->limit(1)
+				->first();
+        //Classes
+        $institutionClasses = TableRegistry::get('institution_classes');
+		$institutionClassesData = $institutionClasses->find()		
+				->select([
+					'created' => 'institution_classes.created',
+					'modified' => 'institution_classes.modified',
+				])
+				->where([$institutionClasses->aliasField('institution_id') => $institutionId])
+                ->order(['institution_classes.modified'=>'desc'])
+				->limit(1)
+				->first();
+         //Subjects
+        $institutionSubjects = TableRegistry::get('institution_subjects');
+		$institutionSubjectsData = $institutionSubjects->find()		
+				->select([
+					'created' => 'institution_subjects.created',
+					'modified' => 'institution_subjects.modified',
+				])
+				->where([$institutionSubjects->aliasField('institution_id') => $institutionId])
+                ->order(['institution_subjects.modified'=>'desc'])
+				->limit(1)
+				->first();
+        //Textbooks
+        $institutionTextbooks = TableRegistry::get('institution_textbooks');
+		$institutionTextbooksData = $institutionTextbooks->find()		
+				->select([
+					'created' => 'institution_textbooks.created',
+					'modified' => 'institution_textbooks.modified',
+				])
+				->where([$institutionTextbooks->aliasField('institution_id') => $institutionId])
+                ->order(['institution_textbooks.modified'=>'desc'])
+				->limit(1)
+				->first();
+        //Students
+        $institutionStudents = TableRegistry::get('institution_students');
+		$institutionStudentsData = $institutionStudents->find()		
+				->select([
+					'created' => 'institution_students.created',
+					'modified' => 'institution_students.modified',
+				])
+				->where([$institutionStudents->aliasField('institution_id') => $institutionId])
+                ->order(['institution_students.modified'=>'desc'])
+				->limit(1)
+				->first();
+         //Staff
+        $institutionStaff = TableRegistry::get('institution_staff');
+		$institutionStaffData = $institutionStaff->find()		
+				->select([
+					'created' => 'institution_staff.created',
+					'modified' => 'institution_staff.modified',
+				])
+				->where([$institutionStaff->aliasField('institution_id') => $institutionId])
+                ->order(['institution_staff.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Attendance
+        $institutionAttendance = TableRegistry::get('institution_staff_attendances');
+		$institutionAttendanceData = $institutionAttendance->find()		
+				->select([
+					'created' => 'institution_staff_attendances.created',
+					'modified' => 'institution_staff_attendances.modified',
+				])
+				->where([$institutionAttendance->aliasField('institution_id') => $institutionId])
+                ->order(['institution_staff_attendances.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         //Behaviour
+        $institutionBehaviour = TableRegistry::get('staff_behaviours');
+		$institutionBehaviourData = $institutionBehaviour->find()		
+				->select([
+					'created' => 'staff_behaviours.created',
+					'modified' => 'staff_behaviours.modified',
+				])
+				->where([$institutionBehaviour->aliasField('institution_id') => $institutionId])
+                ->order(['staff_behaviours.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Positions
+        $institutionPositions = TableRegistry::get('institution_positions');
+		$institutionPositionsData = $institutionPositions->find()		
+				->select([
+					'created' => 'institution_positions.created',
+					'modified' => 'institution_positions.modified',
+				])
+				->where([$institutionPositions->aliasField('institution_id') => $institutionId])
+                ->order(['institution_positions.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Bank Accounts 
+        $institutionBankAccounts  = TableRegistry::get('institution_bank_accounts');
+		$institutionBankAccountsData = $institutionBankAccounts->find()		
+				->select([
+					'created' => 'institution_bank_accounts.created',
+					'modified' => 'institution_bank_accounts.modified',
+				])
+				->where([$institutionBankAccounts->aliasField('institution_id') => $institutionId])
+                ->order(['institution_bank_accounts.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Institution Fees
+        $institutionInstitutionFees = TableRegistry::get('institution_fees');
+		$institutionInstitutionFeesData = $institutionInstitutionFees->find()		
+				->select([
+					'created' => 'institution_fees.created',
+					'modified' => 'institution_fees.modified',
+				])
+				->where([$institutionInstitutionFees->aliasField('institution_id') => $institutionId])
+                ->order(['institution_fees.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         //Infrastructures Overview 
+        $institutionInfrastructuresOverview  = TableRegistry::get('institution_lands');
+		$institutionInfrastructuresOverviewData = $institutionInfrastructuresOverview->find()		
+				->select([
+					'created' => 'institution_lands.created',
+					'modified' => 'institution_lands.modified',
+				])
+				->where([$institutionInfrastructuresOverview->aliasField('institution_id') => $institutionId])
+                ->order(['institution_lands.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // Infrastructures Needs 
+        $institutionInfrastructuresNeeds  = TableRegistry::get('infrastructure_needs');
+		$institutionInfrastructuresNeedsData = $institutionInfrastructuresNeeds->find()		
+				->select([
+					'created' => 'infrastructure_needs.created',
+					'modified' => 'infrastructure_needs.modified',
+				])
+				->where([$institutionInfrastructuresNeeds->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_needs.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // Wash Water 
+        $institutionWashWater  = TableRegistry::get('infrastructure_wash_waters');
+		$institutionWashWaterData = $institutionWashWater->find()		
+				->select([
+					'created' => 'infrastructure_wash_waters.created',
+					'modified' => 'infrastructure_wash_waters.modified',
+				])
+				->where([$institutionWashWater->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_waters.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // Wash Hygiene  
+        $institutionWashHygiene  = TableRegistry::get('infrastructure_wash_hygienes');
+		$institutionWashHygieneData = $institutionWashHygiene->find()		
+				->select([
+					'created' => 'infrastructure_wash_hygienes.created',
+					'modified' => 'infrastructure_wash_hygienes.modified',
+				])
+				->where([$institutionWashHygiene->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_hygienes.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // Wash Waste  
+        $institutionWashWaste  = TableRegistry::get('infrastructure_wash_wastes');
+		$institutionWashWasteData = $institutionWashWaste->find()		
+				->select([
+					'created' => 'infrastructure_wash_wastes.created',
+					'modified' => 'infrastructure_wash_wastes.modified',
+				])
+				->where([$institutionWashWaste->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_wastes.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         // Wash Sewage  
+        $institutionWashSewage  = TableRegistry::get('infrastructure_wash_sewages');
+		$institutionWashSewageData = $institutionWashSewage->find()		
+				->select([
+					'created' => 'infrastructure_wash_sewages.created',
+					'modified' => 'infrastructure_wash_sewages.modified',
+				])
+				->where([$institutionWashSewage->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_sewages.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // Utilities Electricity  
+        $institutionUtilitiesElectricity  = TableRegistry::get('infrastructure_utility_electricities');
+		$institutionUtilitiesElectricityData = $institutionUtilitiesElectricity->find()		
+				->select([
+					'created' => 'infrastructure_utility_electricities.created',
+					'modified' => 'infrastructure_utility_electricities.modified',
+				])
+				->where([$institutionUtilitiesElectricity->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_electricities.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         // Utilities Internet  
+        $institutionUtilitiesInternet  = TableRegistry::get('infrastructure_utility_internets');
+		$institutionUtilitiesInternetData = $institutionUtilitiesInternet->find()		
+				->select([
+					'created' => 'infrastructure_utility_internets.created',
+					'modified' => 'infrastructure_utility_internets.modified',
+				])
+				->where([$institutionUtilitiesInternet->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_internets.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         //Utilities Telephone
+        $institutionUtilitiesTelephone  = TableRegistry::get('infrastructure_utility_telephones');
+		$institutionUtilitiesTelephoneData = $institutionUtilitiesTelephone->find()		
+				->select([
+					'created' => 'infrastructure_utility_telephones.created',
+					'modified' => 'infrastructure_utility_telephones.modified',
+				])
+				->where([$institutionUtilitiesTelephone->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_telephones.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         // Assets  
+        $institutionAssets  = TableRegistry::get('institution_assets');
+		$institutionAssetsData = $institutionAssets->find()		
+				->select([
+					'created' => 'institution_assets.created',
+					'modified' => 'institution_assets.modified',
+				])
+				->where([$institutionAssets->aliasField('institution_id') => $institutionId])
+                ->order(['institution_assets.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Transport 
+        $institutionTransport  = TableRegistry::get('institution_buses');
+		$institutionTransportData = $institutionTransport->find()		
+				->where([$institutionTransport->aliasField('institution_id') => $institutionId])
+                ->order(['institution_buses.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Committees 
+        $institutionCommittees  = TableRegistry::get('institution_committees');
+		$institutionCommitteesData = $institutionCommittees->find()		
+				->select([
+					'created' => 'institution_committees.created',
+					'modified' => 'institution_committees.modified',
+				])
+				->where([$institutionCommittees->aliasField('institution_id') => $institutionId])
+                ->order(['institution_committees.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // config 
+        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+		$enabledTypeList = $ConfigItem
+            ->find()
+            ->order('type')
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'Institution Completeness'])
+            ->toArray();
+
+        foreach($enabledTypeList as $key => $enabled) {
+                $data[$key]['feature'] = $enabled->name;
+                 if ($enabled->name == 'Overview') {
+                    if(!empty($institutionsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionsData->modified)?date("F j,Y",strtotime($institutionsData->modified)):date("F j,Y",strtotime($institutionsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Calendar') {
+                    if(!empty($calendarEventsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($calendarEventsData->modified)?date("F j,Y",strtotime($calendarEventsData->modified)):date("F j,Y",strtotime($calendarEventsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Contacts') {
+                    if(!empty($institutionContactPersonsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionContactPersonsData->modified)?date("F j,Y",strtotime($institutionContactPersonsData->modified)):date("F j,Y",strtotime($institutionContactPersonsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Shifts') {
+                    if(!empty($institutionShiftsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionShiftsData->modified)?date("F j,Y",strtotime($institutionShiftsData->modified)):date("F j,Y",strtotime($institutionShiftsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Programmes') {
+                    if(!empty($institutionProgrammesData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionProgrammesData->modified)?date("F j,Y",strtotime($institutionProgrammesData->modified)):date("F j,Y",strtotime($institutionProgrammesData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Classes') {
+                    if(!empty($institutionClassesData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionClassesData->modified)?date("F j,Y",strtotime($institutionClassesData->modified)):date("F j,Y",strtotime($institutionClassesData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Subjects') {
+                    if(!empty($institutionSubjectsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionSubjectsData->modified)?date("F j,Y",strtotime($institutionSubjectsData->modified)):date("F j,Y",strtotime($institutionSubjectsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Textbooks') {
+                    if(!empty($institutionTextbooksData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionTextbooksData->modified)?date("F j,Y",strtotime($institutionTextbooksData->modified)):date("F j,Y",strtotime($institutionTextbooksData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Students') {
+                    if(!empty($institutionStudentsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionStudentsData->modified)?date("F j,Y",strtotime($institutionStudentsData->modified)):date("F j,Y",strtotime($institutionStudentsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Staff') {
+                    if(!empty($institutionStaffData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionStaffData->modified)?date("F j,Y",strtotime($institutionStaffData->modified)):date("F j,Y",strtotime($institutionStaffData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Attendance') {
+                    if(!empty($institutionAttendanceData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionAttendanceData->modified)?date("F j,Y",strtotime($institutionAttendanceData->modified)):date("F j,Y",strtotime($institutionAttendanceData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Behaviour') {
+                    if(!empty($institutionBehaviourData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionBehaviourData->modified)?date("F j,Y",strtotime($institutionBehaviourData->modified)):date("F j,Y",strtotime($institutionBehaviourData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Positions') {
+                    if(!empty($institutionPositionsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionPositionsData->modified)?date("F j,Y",strtotime($institutionPositionsData->modified)):date("F j,Y",strtotime($institutionPositionsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Bank Accounts') {
+                    if(!empty($institutionBankAccountsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionBankAccountsData->modified)?date("F j,Y",strtotime($institutionBankAccountsData->modified)):date("F j,Y",strtotime($institutionBankAccountsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Institution Fees') {
+                    if(!empty($institutionInstitutionFeesData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionInstitutionFeesData->modified)?date("F j,Y",strtotime($institutionInstitutionFeesData->modified)):date("F j,Y",strtotime($institutionInstitutionFeesData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Infrastructures Overview') {
+                    if(!empty($institutionInfrastructuresOverviewData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionInfrastructuresOverviewData->modified)?date("F j,Y",strtotime($institutionInfrastructuresOverviewData->modified)):date("F j,Y",strtotime($institutionInfrastructuresOverviewData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Infrastructures Needs') {
+                    if(!empty($institutionInfrastructuresNeedsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionInfrastructuresNeedsData->modified)?date("F j,Y",strtotime($institutionInfrastructuresNeedsData->modified)):date("F j,Y",strtotime($institutionInfrastructuresNeedsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Wash Water') {
+                    if(!empty($institutionWashWaterData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionWashWaterData->modified)?date("F j,Y",strtotime($institutionWashWaterData->modified)):date("F j,Y",strtotime($institutionWashWaterData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Wash Hygiene') {
+                    if(!empty($institutionWashHygieneData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionWashHygieneData->modified)?date("F j,Y",strtotime($institutionWashHygieneData->modified)):date("F j,Y",strtotime($institutionWashHygieneData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Wash Waste') {
+                    if(!empty($institutionWashWasteData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionWashWasteData->modified)?date("F j,Y",strtotime($institutionWashWasteData->modified)):date("F j,Y",strtotime($institutionWashWasteData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Wash Sewage') {
+                    if(!empty($institutionWashSewageData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionWashSewageData->modified)?date("F j,Y",strtotime($institutionWashSewageData->modified)):date("F j,Y",strtotime($institutionWashSewageData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Utilities Electricity') {
+                    if(!empty($institutionUtilitiesElectricityData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionUtilitiesElectricityData->modified)?date("F j,Y",strtotime($institutionUtilitiesElectricityData->modified)):date("F j,Y",strtotime($institutionUtilitiesElectricityData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Utilities Internet') {
+                    if(!empty($institutionUtilitiesInternetData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionUtilitiesInternetData->modified)?date("F j,Y",strtotime($institutionUtilitiesInternetData->modified)):date("F j,Y",strtotime($institutionUtilitiesInternetData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Utilities Telephone') {
+                    if(!empty($institutionUtilitiesTelephoneData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionUtilitiesTelephoneData->modified)?date("F j,Y",strtotime($institutionUtilitiesTelephoneData->modified)):date("F j,Y",strtotime($institutionUtilitiesTelephoneData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Assets') {
+                    if(!empty($institutionAssetsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionAssetsData->modified)?date("F j,Y",strtotime($institutionAssetsData->modified)):date("F j,Y",strtotime($institutionAssetsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Transport') {
+                    if(!empty($institutionTransportData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionTransportData->modified)?date("F j,Y",strtotime($institutionTransportData->modified)):date("F j,Y",strtotime($institutionTransportData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Committees') {
+                    if(!empty($institutionCommitteesData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionCommitteesData->modified)?date("F j,Y",strtotime($institutionCommitteesData->modified)):date("F j,Y",strtotime($institutionCommitteesData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+
+        }
+        $totalProfileComplete = count($data);
+        $profilePercentage = 100/$totalProfileComplete * $profileComplete;
+        $profilePercentage = round($profilePercentage);
+        $data['percentage'] = $profilePercentage;
+        return $data;
+     }
 
 }
