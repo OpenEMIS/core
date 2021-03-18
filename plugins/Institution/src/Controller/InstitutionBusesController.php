@@ -3,6 +3,7 @@ namespace Institution\Controller;
 
 use Cake\Event\Event;
 use App\Controller\PageController;
+use Cake\ORM\TableRegistry;
 
 class InstitutionBusesController extends PageController
 {
@@ -89,7 +90,37 @@ class InstitutionBusesController extends PageController
         // end Transport Statuses
 
         // reorder fields
-        $page->move('capacity')->after('bus_type_id');
+        $Users = TableRegistry::get('labels');
+        $result = $Users
+        ->find()
+        ->where(['module' => 'InstitutionBuses', 'field_name' => 'Capacity'])
+        ->toArray();
+        if(isset($result[0]['name'])){
+            $page->get('capacity')->setSortable(false)->setLabel($result[0]['name']);
+            $page->move('capacity')->after('bus_type_id');
+        }else{
+            $page->move('capacity')->after('bus_type_id');
+        }
+        $result = $Users
+        ->find()
+        ->where(['module' => 'InstitutionBuses', 'field_name' => 'Plate Number'])
+        ->toArray();
+        if(isset($result[0]['name'])){
+            $page->get('plate_number')->setSortable(false)->setLabel($result[0]['name']);
+        }else{
+            $page->move('plate_number')->first();
+        }
+
+        $result = $Users
+        ->find()
+        ->where(['module' => 'InstitutionBuses', 'field_name' => 'Bus Type'])
+        ->toArray();
+        if(isset($result[0]['name'])){
+            $page->get('bus_type_id')->setSortable(false)->setLabel($result[0]['name']);
+        }else{
+            $page->move('bus_type_id')->after('institution_transport_provider_id');
+        }
+
         // end reorder fields
     }
 
