@@ -702,9 +702,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                                         var eCell = document.createElement('div');
                                         eCell.setAttribute("class", "reason-wrapper");
                                         var eSelect = getEditMealBenefiteElement(data, mealBenefitTypeOptions, context, api);
-                                        var eTextarea = getEditCommentElement(data, context, api);
+                                        // var eTextarea = getEditCommentElement(data, context, api);
                                         eCell.appendChild(eSelect);
-                                        eCell.appendChild(eTextarea);
+                                        // eCell.appendChild(eTextarea);
                                         return eCell;
                                     default:
                                         break;
@@ -848,7 +848,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             if(dataItem.institution_student_meal.meal_received_id == 2 || dataItem.institution_student_meal.meal_received_id == 3) {
                 dataItem.rowHeight = 60;
             } else {
-                dataItem.rowHeight = 120;
+                dataItem.rowHeight = 60;
             }
         });
         context.scope.$ctrl.gridOptions.api.setRowData(studentList);

@@ -374,7 +374,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
             if( dataItem.institution_student_meal.meal_received_id == 2 || dataItem.institution_student_meal.meal_received_id == 3) {
                 dataItem.rowHeight = 60;
             } else {
-                dataItem.rowHeight = 120;
+                dataItem.rowHeight = 60;
             }
         } else{
             dataItem.rowHeight = 80;
