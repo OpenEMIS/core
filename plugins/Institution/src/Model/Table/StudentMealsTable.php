@@ -160,6 +160,7 @@ class StudentMealsTable extends ControllerActionTable
                                         $StudentMealMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
                                         $StudentMealMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
                                         $StudentMealMarkedRecords->aliasField('meal_programmes_id = ') => $mealPogrammesId,
+                                        $StudentMealMarkedRecords->aliasField('institution_id = ') => $institutionId,
                                         $StudentMealMarkedRecords->aliasField('date = ') => $findDay,
                                     ])
                                     ->first();
@@ -214,6 +215,7 @@ class StudentMealsTable extends ControllerActionTable
                 if (!$studentListResult->isEmpty()) {
                     $studentList = $studentListResult->toArray();
                     $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
+                    $StudentMealMarkedRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
 
                     $result = $InstitutionMealStudents
                     ->find()
@@ -237,6 +239,28 @@ class StudentMealsTable extends ControllerActionTable
                         ]
                     ])
                     ->toArray();
+
+                    $isMarkedRecords = $StudentMealMarkedRecords
+                    ->find()
+                    ->contain(['MealBenefit'])
+                    ->select([
+                        $StudentMealMarkedRecords->aliasField('date'),
+                        $StudentMealMarkedRecords->aliasField('meal_benefit_id'),
+                        'MealBenefit.name'
+                    ])
+
+                    ->where([
+                        $StudentMealMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
+                        $StudentMealMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
+                        $StudentMealMarkedRecords->aliasField('meal_programmes_id = ') => $mealPogrammesId,
+                        $StudentMealMarkedRecords->aliasField('institution_id = ') => $institutionId,
+                        'AND' => [
+                            $StudentMealMarkedRecords->aliasField('date >= ') => $weekStartDay,
+                            $StudentMealMarkedRecords->aliasField('date <= ') => $weekEndDay,
+
+                        ]
+                    ])
+                    ->toArray();
                    
                     $studentMealsData = [];
                     foreach ($studentList as $value) {
@@ -254,6 +278,17 @@ class StudentMealsTable extends ControllerActionTable
                                 $studentMealsData[$studentId][$dayId] = [];
                             }
                             $studentMealsData[$studentId][$dayId][$keyId] = 'None';
+                                // echo "<pre>"; print_r($isMarkedRecords); die();
+                                foreach ($isMarkedRecords as $entity) {
+
+                                    $entityDate = $entity->date->format('Y-m-d');
+                                    $entityPeriod = $keyId;
+
+                                    if ($entityDate == $date && $entityPeriod == $keyId) {
+                                        $studentMealsData[$studentId][$dayId][$keyId] = 'Received';
+                                        break;
+                                    }
+                                }
                          
                                 foreach ($result as $key => $entity) {
                                     $entityDateFormat = $entity->date->format('Y-m-d');
