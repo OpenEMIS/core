@@ -27,7 +27,8 @@ class POCOR5942 extends AbstractMigration
         $this->execute('ALTER TABLE `meal_nutritions` ADD `default` INT(1) NULL DEFAULT 0 AFTER `visible`');
         $this->execute('ALTER TABLE `meal_implementers` ADD `default` INT(1) NULL DEFAULT 0 AFTER `visible`');
         $this->execute('ALTER TABLE `meal_benefits` ADD `default` INT(1) NULL DEFAULT 0 AFTER `visible`');
-        
+        $this->execute('ALTER TABLE `student_meal_marked_records` ADD `meal_benefit_id` INT(11) NULL DEFAULT NULL AFTER `date`');
+
          $data = [
             [
                 'name' => '100%',
@@ -44,6 +45,8 @@ class POCOR5942 extends AbstractMigration
         ];
 
         $this->insert('meal_benefits', $data);
+
+
     }
 
     // rollback
