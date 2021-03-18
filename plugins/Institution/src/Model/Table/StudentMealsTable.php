@@ -137,7 +137,7 @@ class StudentMealsTable extends ControllerActionTable
                      if (isset($areasData)) {
                          $data = [                    
                             'date' =>!empty($areasData->date) ? $areasData->date : $findDay,
-                            'paid' => $areasData->paid,                    
+                            // 'paid' => $areasData->paid,                    
                             'meal_benefit_id' => $areasData->meal_benefit_id,
                             'meal_benefit' => $areasData->meal_benefit->name,
                             'meal_received_id' => !empty($areasData->meal_received_id) ? $areasData->meal_received_id : "3",
@@ -167,7 +167,7 @@ class StudentMealsTable extends ControllerActionTable
 
                         $data = [                    
                             'date' =>!empty($isMarkedRecords->date) ? $isMarkedRecords->date : $findDay,
-                            'paid' => null,
+                            // 'paid' => null,
                             'meal_benefit_id' => $isMarkedRecords->meal_benefit_id,
                             'meal_benefit' => $isMarkedRecords->meal_benefit->name,
                             'meal_received_id' => !empty($isMarkedRecords) ?  "1"  : null,

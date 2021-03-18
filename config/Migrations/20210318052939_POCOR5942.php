@@ -12,6 +12,8 @@ class POCOR5942 extends AbstractMigration
      */
     public function up()
     {
+        
+
         $this->execute('CREATE TABLE `z_5942_meal_received` LIKE `meal_received`');
         $this->execute('INSERT INTO `z_5942_meal_received` SELECT * FROM `meal_received`');
 
@@ -25,6 +27,23 @@ class POCOR5942 extends AbstractMigration
         $this->execute('ALTER TABLE `meal_nutritions` ADD `default` INT(1) NULL DEFAULT 0 AFTER `visible`');
         $this->execute('ALTER TABLE `meal_implementers` ADD `default` INT(1) NULL DEFAULT 0 AFTER `visible`');
         $this->execute('ALTER TABLE `meal_benefits` ADD `default` INT(1) NULL DEFAULT 0 AFTER `visible`');
+        
+         $data = [
+            [
+                'name' => '100%',
+                'order' => '1',
+                'visible' => '1',
+                'default' => '1',
+                'international_code' => NULL,
+                'national_code' => NULL,
+                'modified_user_id' => NULL,
+                'modified' => NULL,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s'),
+            ],
+        ];
+
+        $this->insert('meal_benefits', $data);
     }
 
     // rollback
