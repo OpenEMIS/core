@@ -406,8 +406,8 @@ class InstitutionStatusTable extends ControllerActionTable
             'close' => [
                 'Institution' => ['Institutions', 'edit', $institutionId],
                 'action' => 'InstitutionStatus',
-                'icon' => '<i class="fa fa-times"></i>',
-                'title' => __('Update')
+                'icon' => '<i class="fa kd-key"></i>',
+                'title' => __('Status Update')
             ]
         ];
         foreach ($extraButtons as $key => $attr) {
@@ -585,6 +585,7 @@ class InstitutionStatusTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->Alert->info('general.status_update');
         $data = $this->find()->where(['id' => $entity->id])->first();
         if (!empty($data)) {
             $status = $data->institution_status_id;
