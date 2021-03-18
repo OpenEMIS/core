@@ -140,7 +140,7 @@ class StudentMealsTable extends ControllerActionTable
                             'paid' => $areasData->paid,                    
                             'meal_benefit_id' => $areasData->meal_benefit_id,
                             'meal_benefit' => $areasData->meal_benefit->name,
-                            'meal_received_id' => !empty($areasData->meal_received_id) ? $areasData->meal_received_id : "1",
+                            'meal_received_id' => !empty($areasData->meal_received_id) ? $areasData->meal_received_id : "3",
                             'meal_received' => !empty($areasData->meal_received->name) ? $areasData->meal_received->name : "None"
                         ];  
                      }
@@ -169,8 +169,8 @@ class StudentMealsTable extends ControllerActionTable
                             'paid' => null,
                             'meal_benefit_id' => $isMarkedRecords->meal_benefit_id,
                             'meal_benefit' => $isMarkedRecords->meal_benefit->name,
-                            'meal_received_id' => "1",
-                            'meal_received' => !empty($isMarkedRecords) ? "Recevied" : "None"
+                            'meal_received_id' => !empty($isMarkedRecords) ?  "1"  : null,
+                            'meal_received' => !empty($isMarkedRecords) ? "Received" : "None"
                         ];
                      }
                      
