@@ -3075,47 +3075,72 @@ class ValidationBehavior extends Behavior
         $startDate = $data['start_date'];
         $endDate = $data['end_date'];
         $institutionStudents = TableRegistry::get('institution_students');
+        $studentStatuses = TableRegistry::get('student_statuses');
         $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
         $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-        $check = $StudentAttendanceMarkedRecords->find()
+        $studentStatus = $institutionStudents->find()
+                        ->select([$studentStatuses->aliasField('code')])
+                        ->leftJoin([$studentStatuses->alias() => $studentStatuses->table()], [
+                            $studentStatuses->aliasField('id = ') . $institutionStudents->aliasField('student_status_id')
+                        ])
+                        ->where([
+                            $institutionStudents->aliasField('student_id') => $studentId, 
+                            $institutionStudents->aliasField('institution_id') => $institutionId
+                        ]) 
+                        ->first();
+        $code = $studentStatus['student_statuses']['code'];
+
+        if (!empty($code) && $code != 'CURRENT') {
+           $check = $StudentAttendanceMarkedRecords->find()
                     ->select([$StudentAttendanceMarkedRecords->aliasField('date')])
                     ->where([
                         $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
                         $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
                         $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $classId,
-                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $gradeId
-                    ])->first();    
-        if (!empty($check)) {
-            $markedDate = $check->date->format('Y-m-d');
-        }
+                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $gradeId,
+                        $StudentAttendanceMarkedRecords->aliasField('date') => $startDate
+                    ])->first(); 
 
-        $checkTwo = $InstitutionStudentAbsences->find()
-                    ->select([$InstitutionStudentAbsences->aliasField('date')])
-                    ->where([$InstitutionStudentAbsences->aliasField('student_id') => $studentId])
-                    ->first();
-        if (!empty($checkTwo)) {
-            $unmarkedDate = $checkTwo->date->format('Y-m-d');
-        }
-
-        if (!empty($check)) {
-            $query = $institutionStudents->query();
-            if (!empty($startDate)) {
-               if ($startDate > $markedDate) {
-                   return false;
-                } else {
-                    return true;
-                }
+            if (!empty($check)) {
+                $markedDate = $check->date->format('Y-m-d');
             }
-        } 
 
-        if (!empty($checkTwo)) {
-            $query = $institutionStudents->query();
-            if (!empty($startDate)) {
-               if ($startDate > $unmarkedDate) {
-                   return false;
-                } else {
-                    return true;
+            $checkTwo = $InstitutionStudentAbsences->find()
+                        ->select([$InstitutionStudentAbsences->aliasField('date')])
+                        ->where([
+                            $InstitutionStudentAbsences->aliasField('date') => $startDate,
+                            $InstitutionStudentAbsences->aliasField('institution_id') => $institutionId,
+                            $InstitutionStudentAbsences->aliasField('student_id') => $studentId
+                        ])
+                        ->first();
+            if (!empty($checkTwo)) {
+                $unmarkedDate = $checkTwo->date->format('Y-m-d');
+            }
+
+            if (!empty($check)) {
+                $query = $institutionStudents->query();
+                if (!empty($startDate)) {
+                   if ($startDate > $markedDate) {
+                       return false;
+                    } else {
+                        return true;
+                    }
                 }
+            } 
+
+            if (!empty($checkTwo)) {
+                $query = $institutionStudents->query();
+                if (!empty($startDate)) {
+                   if ($startDate > $unmarkedDate) {
+                       return false;
+                    } else {
+                        return true;
+                    }
+                }
+            } 
+
+            if (empty($checkTwo) && empty($check)) {
+                 return true;
             }
         }
     }
