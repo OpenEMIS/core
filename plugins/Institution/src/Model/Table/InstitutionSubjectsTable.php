@@ -524,40 +524,19 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $subId = $extra['indexButtons']['view']['url'][1];
-        $test = base64_decode($subId);
-        $variable = substr($test, 0, strpos($test, "}"));
-        $newVaridable = $variable . "}";
-        $data = json_decode($newVaridable);
-        $subjectId = $data->id;
-        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $studentIds = $SubjectStudents->find()
-                      ->select([
-                        $SubjectStudents->aliasField('student_id'),
-                        $SubjectStudents->aliasField('institution_class_id')
-                      ])
-                      ->where([$SubjectStudents->aliasField('institution_subject_id') => $subjectId])
-                      ->toArray();
-        if (!empty($studentIds)) {
-            foreach ($studentIds as $value) {
-                $stdId = $value->student_id;
-                $classId = $value->institution_class_id;
-                $query->contain([
-                    'Classes.ClassesSecondaryStaff',
-                    'Teachers',
-                    'Rooms',
-                    'SubjectStudents' => [
-                        'Users.Genders',
-                        'InstitutionClasses',
-                        'ClassStudents' => [
-                            'StudentStatuses'
-                        ],
-                        'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
-                    ]
-                ]);
-            }
-        }
+        $query->contain([
+                'Classes.ClassesSecondaryStaff',
+                'Teachers',
+                'Rooms',
+                'SubjectStudents' => [
+                    'Users.Genders',
+                    'InstitutionClasses',
+                    'ClassStudents' => [
+                        'StudentStatuses'
+                    ],
+                    'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
+                ]
+            ]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
