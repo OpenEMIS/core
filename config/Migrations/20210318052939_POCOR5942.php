@@ -52,7 +52,13 @@ class POCOR5942 extends AbstractMigration
     // rollback
     public function down()
     {
+        $this->execute('ALTER TABLE `meal_programme_types` DROP COLUMN `default`');
+        $this->execute('ALTER TABLE `meal_target_types` DROP COLUMN `default`');
+        $this->execute('ALTER TABLE `meal_nutritions` DROP COLUMN `default`');
+        $this->execute('ALTER TABLE `meal_implementers` DROP COLUMN `default`');
+        $this->execute('ALTER TABLE `meal_benefits` DROP COLUMN `default`');
         $this->execute('DROP TABLE IF EXISTS `meal_received`');
+
         $this->execute('RENAME TABLE `z_5942_meal_received` TO `meal_received`');  
     }
 }
