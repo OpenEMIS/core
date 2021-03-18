@@ -112,6 +112,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     { 
         $hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
+        $institutions = $this->request->session()->read('Institution.Institutions.id');
 
         $conditions = [];
 
@@ -120,6 +121,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
             if (array_key_exists('selectedPeriod', $extra)) {
                 if ($extra['selectedPeriod']) {
                     $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+                    $conditions[] = $this->aliasField('institution_id = ') . $institutions;
                 }
             }
 
@@ -138,6 +140,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
                     if (!empty($list)) {
                         $data = $list[$extra['selectedProgramme'] - 1];
 
+                        $conditions[] = $this->aliasField('institution_id = ') . $institutions;
                         $conditions[] = $this->aliasField('date_received >= ') . '"'. $data['start_day'] . '"';
                         $conditions[] = $this->aliasField('date_received <= ') . '"'. $data['end_day'] . '"';
                     }
@@ -276,6 +279,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
              $this->updateAll(['date_received' => NULL],['id' => $entity->id]);
                  return;
         }
+        $entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
         $entity->date_received = date("Y-m-d H:i:s");
     }
 
