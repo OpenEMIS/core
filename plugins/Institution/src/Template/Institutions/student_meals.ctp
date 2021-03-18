@@ -82,6 +82,7 @@ $panelHeader = $this->fetch('panelHeader');
         position: relative;
         width: 100%;
         display: inline-block;
+        margin-bottom: -13px;
     }
 
     #institution-student-attendances-table .ag-cell .reason-wrapper .input-select-wrapper {
@@ -239,13 +240,13 @@ $panelHeader = $this->fetch('panelHeader');
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Free Meals') ?></h4>
+                            <h4><?= __('No. of Students Not Received Meals') ?></h4>
                             <h1 class="data-header">{{$ctrl.allFreeMealCount}}</h1>
                         </div>
                     </div>
                     <div class="data-section" ng-show="$ctrl.selectedDay == -1">
                         <div class="data-field">
-                            <h4><?= __('No. of Paid Meals') ?></h4>
+                            <h4><?= __('No. of Students Received Meals') ?></h4>
                             <h1 class="data-header">{{$ctrl.allPaidMealCount}}</h1>
                         </div>
                     </div>
