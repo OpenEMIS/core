@@ -681,7 +681,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                         var mealTypeObj = mealTypes.find(obj => obj.id == studentMealTypeId);
                         console.log("mealTypeObj1", mealTypeObj)
                         if (mode == 'view') {
-                            if(studentMealTypeId == 3 || studentMealTypeId == 2) {
+                            if(studentMealTypeId == 3 || studentMealTypeId == 2 || studentMealTypeId == null) {
                                 return '<i style="color: #999999;" class="fa fa-minus"></i>';
                             } else if(studentMealTypeId == 1) {
                                 var html = '';
@@ -733,9 +733,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         var eCell = document.createElement('div');
         eCell.setAttribute("class", "oe-select-wrapper input-select-wrapper");
         eCell.setAttribute("id", dataKey);
-
+        console.log('onedit', data.institution_student_meal[dataKey]);
         if (data.institution_student_meal[dataKey] == null) {
-            data.institution_student_meal[dataKey] = 0;
+            data.institution_student_meal[dataKey] = 1;
         }
 
         var eSelect = document.createElement("select");
@@ -845,7 +845,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     function setRowDatas(context, data) {
         var studentList = context.scope.$ctrl.classStudentList;
         studentList.forEach(function (dataItem, index) {
-            if(dataItem.institution_student_meal.meal_received_id == null || dataItem.institution_student_meal.meal_received_id == 2 || dataItem.institution_student_meal.meal_received_id == 3) {
+            if(dataItem.institution_student_meal.meal_received_id == 2 || dataItem.institution_student_meal.meal_received_id == 3) {
                 dataItem.rowHeight = 60;
             } else {
                 dataItem.rowHeight = 120;
@@ -994,7 +994,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             html = data.institution_student_meal.meal_received
         }else if(data.institution_student_meal.meal_received_id == 2) {
             html = data.institution_student_meal.meal_received
-        }else if(data.institution_student_meal.meal_received_id == 3) {
+        }else if(data.institution_student_meal.meal_received_id == null || data.institution_student_meal.meal_received_id == 3) {
             // html = data.institution_student_meal.meal_received
             html='<i style="color: #999999;" class="fa fa-minus"></i>'
         }
@@ -1046,7 +1046,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
     function getViewAllDayAttendanceElement(code) {
         console.log("code", code);
         var html = '';
-        // console.log(mealType)
+        console.log(mealType)
         switch (code) {
             case mealType.Paid.code:
                 html = '<i>Received</i>';
