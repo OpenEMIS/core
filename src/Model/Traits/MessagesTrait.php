@@ -799,6 +799,25 @@ trait MessagesTrait
             'emailInProgress' => 'There is already a email process sending in the background',
 			'date_closed' => 'Generate date for Staff Profile has been closed'
         ],
+        'StudentProfiles' => [
+            'noProgrammes' => 'There is no programme set for this institution',
+            'noTemplate' => 'There is no template for this Student Profile. Please contact the administrator for assistance.',
+            'noFilesToDownload' => 'There are no generated Student Profiles to download',
+            'noFilesToPublish' => 'There are no generated Student Profiles to publish',
+            'noFilesToUnpublish' => 'There are no published Student Profiles to unpublish',
+            'inProgress' => 'There is already a process running for this Student Profile',
+            'generate' => 'The Student Profile will be generated in the background',
+            'generateAll' => 'All Student Profile will be generated in the background',
+            'checkReportCardTemplatePeriod' => 'The Student Profile period is not active. Please contact the System Administrator.',
+            'publish' => 'The Student Profile has been successfully published',
+            'publishAll' => 'All generated Student Profiles have been published successfully',
+            'unpublish' => 'The Student Profile has been successfully unpublished',
+            'unpublishAll' => 'All published Student Profiles have been unpublished successfully',
+            'email' => 'The Student Profile will be sent in the background',
+            'emailAll' => 'All Student Profiles will be sent in the background',
+            'emailInProgress' => 'There is already a email process sending in the background',
+			'date_closed' => 'Generate date for Student Profile has been closed'
+        ],
         'RecipientPaymentStructures' => [
             'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
         ],
@@ -2314,6 +2333,27 @@ trait MessagesTrait
         ],
         'ReportCard' => [
             'ReportCards' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+				'generate_start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'generate_end_date' => [
+                    'ruleCompareDateReverse' => 'Generate End Date should not be earlier than Generate Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ]
+            ],
+        ],
+        'ProfileTemplate' => [
+            'StudentTemplates' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period'
                 ],
