@@ -11,7 +11,7 @@ use Cake\Chronos\Date;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 
-class InstitutionMealProgrammesTable extends ControllerActionTable
+class InstitutionDistributionsTable extends ControllerActionTable
 {
 
     /**
@@ -22,6 +22,7 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
      */
     public function initialize(array $config)
     { 
+        $this->table('institution_meal_programmes');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('MealProgrammes', ['className' => 'Meal.MealProgrammes','foreignKey' => 'meal_programmes_id']);
@@ -111,6 +112,7 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     { 
         $hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
+        $institutions = $this->request->session()->read('Institution.Institutions.id');
 
         $conditions = [];
 
@@ -119,6 +121,7 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
             if (array_key_exists('selectedPeriod', $extra)) {
                 if ($extra['selectedPeriod']) {
                     $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+                    $conditions[] = $this->aliasField('institution_id = ') . $institutions;
                 }
             }
 
@@ -137,6 +140,7 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
                     if (!empty($list)) {
                         $data = $list[$extra['selectedProgramme'] - 1];
 
+                        $conditions[] = $this->aliasField('institution_id = ') . $institutions;
                         $conditions[] = $this->aliasField('date_received >= ') . '"'. $data['start_day'] . '"';
                         $conditions[] = $this->aliasField('date_received <= ') . '"'. $data['end_day'] . '"';
                     }
@@ -155,7 +159,7 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
         $this->field('delivery_status_id',['select' => false]);
         $this->field('date_received',['type' => 'date']);
 
-        $this->field('comment');
+        $this->field('comment',['type' => 'text']);
         $this->field('quantity_received');
          $this->setFieldOrder(['academic_period_id', 'meal_programmes_id','quantity_received','delivery_status_id','date_received', 'comment']);
     }
@@ -275,6 +279,7 @@ class InstitutionMealProgrammesTable extends ControllerActionTable
              $this->updateAll(['date_received' => NULL],['id' => $entity->id]);
                  return;
         }
+        $entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
         $entity->date_received = date("Y-m-d H:i:s");
     }
 
