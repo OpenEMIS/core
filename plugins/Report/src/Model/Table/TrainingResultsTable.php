@@ -50,7 +50,7 @@ class TrainingResultsTable extends AppTable
 
         $query
             ->select([
-                'workflow_step_name' => 'WorkflowSteps.name',
+                'workflow_step_name' => $WorkflowSteps->aliasField('name'),
                 'openemis_no' => 'Trainees.openemis_no',
                 'course_code' => 'Courses.code',
                 'course_name' => 'Courses.name',
@@ -232,8 +232,8 @@ class TrainingResultsTable extends AppTable
             $traineeId = $entity->trainee_id;
             $this->institutionDetails = $this->getInstitutionDetailByTraineeId($traineeId);
 
-            if (isset($this->institutionDetails) && array_key_exists('institution', $this->institutionDetails)) {
-                return $this->institutionDetails['institution']['code'];
+            if (isset($this->institutionDetails->institution->code) && !empty($this->institutionDetails->institution->code)) {
+                return $this->institutionDetails->institution->code;
             } else {
                 return ' ';
             }
@@ -244,8 +244,8 @@ class TrainingResultsTable extends AppTable
 
     public function onExcelRenderInstitutionName(Event $event, Entity $entity)
     {
-        if (isset($this->institutionDetails) && array_key_exists('institution', $this->institutionDetails)) {
-            return $this->institutionDetails['institution']['name'];
+        if (isset($this->institutionDetails->institution->name) && !empty($this->institutionDetails->institution->name)) {
+            return $this->institutionDetails->institution->name;
         } else {
             return ' ';
         }
@@ -267,7 +267,7 @@ class TrainingResultsTable extends AppTable
             ])
             ->first()
         ;
-
-        return $institutionDetails->toArray();
+		
+        return $institutionDetails;
     }
 }
