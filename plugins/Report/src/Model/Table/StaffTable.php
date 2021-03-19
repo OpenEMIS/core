@@ -117,10 +117,14 @@ class StaffTable extends AppTable  {
                     $attr['attr']['required'] = true;
                 }
         }
+<<<<<<< HEAD
+    }
+=======
               return $attr;
           }
         }
     
+>>>>>>> 3c9983a8ede9b0d956a7c372e090a0da6d39a00c
 
 
 
@@ -329,8 +333,8 @@ class StaffTable extends AppTable  {
 
                     $institutionList = $institutionQuery->toArray();
                     }
-                
 
+               
                 if (empty($institutionList)) {
                     $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
                     $attr['type'] = 'select';
@@ -356,7 +360,9 @@ class StaffTable extends AppTable  {
                     $attr['attr']['required'] = true;
                 }
             }
-        }
             return $attr;
         }
+		
+
+}
 }
