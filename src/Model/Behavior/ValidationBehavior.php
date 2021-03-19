@@ -3217,19 +3217,14 @@ class ValidationBehavior extends Behavior
     public function educationProgrammesCode($field, array $globalData) 
     {
         $data = $globalData['data'];
-        $code = $globalData['code'];
+        $code = $data['code'];
         $cycleId = $data['education_cycle_id'];
         $EducationCycles = TableRegistry::get('Education.EducationCycles');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
         $EducationLevels = TableRegistry::get('Education.EducationLevels');
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
-        
-        $checkCode = $EducationProgrammes
+        $checkCode = $EducationCycles
                                 ->find()
-                                ->leftJoin([$EducationCycles->alias() => $EducationCycles->table()], [
-                                        $EducationCycles->aliasField('id =') . $EducationProgrammes->aliasField('education_cycle_id'),
-                                        $EducationCycles->aliasField('visible') => 1
-                                ])
                                 ->leftJoin([$EducationLevels->alias() => $EducationLevels->table()], [
                                         $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
                                         $EducationLevels->aliasField('visible') => 1
@@ -3238,33 +3233,64 @@ class ValidationBehavior extends Behavior
                                         $EducationSystems->aliasField('id =') . $EducationLevels->aliasField('education_system_id'),
                                         $EducationSystems->aliasField('visible') => 1
                                 ])
-
                                 ->where([
-                                    $EducationProgrammes->aliasField('code') => $code,
-                                    $EducationProgrammes->aliasField('education_cycle_id') => $cycleId
+                                    $EducationCycles->aliasField('id') => $cycleId
                             ])->first();
         if (!empty($checkCode)) {
-            return true;
-        } else {
-            return false;
+            $existProgrammes = $EducationProgrammes->find()
+                            ->where([
+                                $EducationProgrammes->aliasField('code') => $code,
+                                $EducationProgrammes->aliasField('education_cycle_id') => $checkCode->id
+                            ])
+                            ->first();
         }
-        //echo "<pre>";print_r($checkCode);die();
-        /*$cycleData = $EducationCycles->find()
-                    ->select([$EducationCycles->aliasField('education_level_id')])
-                    ->where([$EducationCycles->aliasField('id') => $cycleId])
-                    ->toArray();*/
-        /*if (!empty($cycleData)) {
-            foreach ($cycleData as $value) {
-                $cycle = $value->education_level_id;
-                
+        if (!empty($existProgrammes)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
-                if (!empty($checkCode)) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        }*/
+
+    public function educationGradesCode($field, array $globalData) 
+    {
+        $data = $globalData['data'];
+        $code = $data['code'];
+        $programmeId = $data['education_programme_id'];
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationCycles = TableRegistry::get('Education.EducationCycles');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $checkCode = $EducationProgrammes->find()
+                        ->leftJoin([$EducationCycles->alias() => $EducationCycles->table()], [
+                                        $EducationCycles->aliasField('id =') . $EducationProgrammes->aliasField('education_cycle_id'),
+                                        $EducationCycles->aliasField('visible') => 1
+                        ])
+                        ->leftJoin([$EducationLevels->alias() => $EducationLevels->table()], [
+                                $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
+                                $EducationLevels->aliasField('visible') => 1
+                        ])
+                        ->leftJoin([$EducationSystems->alias() => $EducationSystems->table()], [
+                                $EducationSystems->aliasField('id =') . $EducationLevels->aliasField('education_system_id'),
+                                $EducationSystems->aliasField('visible') => 1
+                        ])
+                        ->where([
+                            $EducationProgrammes->aliasField('id') => $programmeId
+                    ])->first();
+        if (!empty($checkCode)) {
+            $existGrades = $EducationGrades->find()
+                            ->where([
+                                $EducationGrades->aliasField('code') => $code,
+                                $EducationGrades->aliasField('education_programme_id') => $checkCode->id
+                            ])
+                            ->first();
+        }
+        if (!empty($existGrades)) {
+            return false;
+        } else {
+            return true;
+        }
     }
     //POCOR-5975 ends
 }
