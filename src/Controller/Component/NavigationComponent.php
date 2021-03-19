@@ -814,7 +814,6 @@ class NavigationComponent extends Component
                 'selected' => ['InfrastructureProjects.view', 'InfrastructureProjects.add', 'InfrastructureProjects.edit', 'InfrastructureProjects.delete']
             ],
 
-
             'Wash' => [
                 'title' => 'WASH',
                 'parent' => 'Infrastructures',
@@ -888,18 +887,18 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['InstitutionAssets.view', 'InstitutionAssets.add', 'InstitutionAssets.edit', 'InstitutionAssets.delete'],
             ],
-            
+
             'Meals' => [
                 'title' => 'Meals',
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
 
-            'Institutions.MealProgramme' => [
-               'title' => 'Programme',
+            'Institutions.Distribution' => [
+               'title' => 'Distribution',
                 'parent' => 'Meals',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.MealProgramme']
+                'selected' => ['Institutions.Distribution']
             ],
 
             'Institutions.StudentMeals.index' => [
