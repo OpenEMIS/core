@@ -18,6 +18,7 @@ class StudentMealMarkedRecordsTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
+        $this->belongsTo('MealBenefit', ['className' => 'Meal.MealBenefits', 'foreignKey' =>'meal_benefit_id']);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentMeals' => ['index', 'add', 'edit']
