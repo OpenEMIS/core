@@ -3212,4 +3212,59 @@ class ValidationBehavior extends Behavior
 		}
 		
     }
+
+    //POCOR-5975 starts
+    public function educationProgrammesCode($field, array $globalData) 
+    {
+        $data = $globalData['data'];
+        $code = $globalData['code'];
+        $cycleId = $data['education_cycle_id'];
+        $EducationCycles = TableRegistry::get('Education.EducationCycles');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        
+        $checkCode = $EducationProgrammes
+                                ->find()
+                                ->leftJoin([$EducationCycles->alias() => $EducationCycles->table()], [
+                                        $EducationCycles->aliasField('id =') . $EducationProgrammes->aliasField('education_cycle_id'),
+                                        $EducationCycles->aliasField('visible') => 1
+                                ])
+                                ->leftJoin([$EducationLevels->alias() => $EducationLevels->table()], [
+                                        $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
+                                        $EducationLevels->aliasField('visible') => 1
+                                ])
+                                ->leftJoin([$EducationSystems->alias() => $EducationSystems->table()], [
+                                        $EducationSystems->aliasField('id =') . $EducationLevels->aliasField('education_system_id'),
+                                        $EducationSystems->aliasField('visible') => 1
+                                ])
+
+                                ->where([
+                                    $EducationProgrammes->aliasField('code') => $code,
+                                    $EducationProgrammes->aliasField('education_cycle_id') => $cycleId
+                            ])->first();
+        if (!empty($checkCode)) {
+            return true;
+        } else {
+            return false;
+        }
+        //echo "<pre>";print_r($checkCode);die();
+        /*$cycleData = $EducationCycles->find()
+                    ->select([$EducationCycles->aliasField('education_level_id')])
+                    ->where([$EducationCycles->aliasField('id') => $cycleId])
+                    ->toArray();*/
+        /*if (!empty($cycleData)) {
+            foreach ($cycleData as $value) {
+                $cycle = $value->education_level_id;
+                
+
+                if (!empty($checkCode)) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        }*/
+    }
+    //POCOR-5975 ends
 }
