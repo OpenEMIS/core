@@ -44,7 +44,13 @@ class FieldOptionComponent extends Component
         'StudentWithdrawReasons' => ['className' => 'Student.StudentWithdrawReasons', 'parent' => 'Student'],
         'GuidanceTypes' => ['className' => 'Student.GuidanceTypes', 'parent' => 'Student'],
         'VisitPurposeTypes' => ['className' => 'Student.StudentVisitPurposeTypes', 'parent' => 'Student'],
-        'MealBenefitTypes' => ['className' => 'Meal.MealBenefit', 'parent' => 'Student'],
+
+    // Meals    
+        'MealTypes' => ['className' => 'Meal.MealType', 'parent' => 'Meals'],
+        'MealTargets' => ['className' => 'Meal.MealTarget', 'parent' => 'Meals'],
+        'MealNutritions' => ['className' => 'Meal.MealNutritions', 'parent' => 'Meals'],
+        'MealImplementers' => ['className' => 'Meal.MealImplementer', 'parent' => 'Meals'],
+        'MealBenefitTypes' => ['className' => 'Meal.MealBenefit', 'parent' => 'Meals'],
 
     // Staff
         'StaffBehaviourCategories' => ['className' => 'Staff.StaffBehaviourCategories', 'parent' => 'Staff'],
