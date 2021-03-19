@@ -360,6 +360,18 @@ class ConfigItemsTable extends AppTable
             /**
              * options list is from ConfigItemOptions table
              */
+            }else if ($entity->type == 'Institution Completeness') {
+                if ($entity->{$valueField} == 0) {
+                 return __('Disabled');
+                } else {
+                 return __('Enabled');
+                }               
+            } else if ($entity->type == 'User Completeness') {
+                if ($entity->{$valueField} == 0) {
+                 return __('Disabled');
+                } else {
+                 return __('Enabled');
+                }               
             } else {
                 $optionsModel = TableRegistry::get('Configuration.ConfigItemOptions');
                 $value = $optionsModel->find()
