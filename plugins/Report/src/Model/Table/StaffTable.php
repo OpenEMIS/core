@@ -82,7 +82,7 @@ class StaffTable extends AppTable  {
 		return $attr;
 	}
 
-     public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
@@ -116,19 +116,12 @@ class StaffTable extends AppTable  {
                     $attr['options'] = $staffLeaveTypeOptions;
                     $attr['attr']['required'] = true;
                 }
+            }
         }
-<<<<<<< HEAD
+        
+        return $attr;
     }
-=======
-              return $attr;
-          }
-        }
     
->>>>>>> 3c9983a8ede9b0d956a7c372e090a0da6d39a00c
-
-
-
-
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
