@@ -1091,6 +1091,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Student'],
                 'selected' => ['Students.Meals']
             ],
+            'Students.Profiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Institutions.Students.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.Profiles']
+            ],
 
         ];
         foreach ($navigation as &$n) {
@@ -1729,6 +1735,11 @@ class NavigationComponent extends Component
                 'title' => 'Staff',
                 'parent' => 'ProfileTemplates',
                 'selected' => ['ProfileTemplates.StaffProfiles', 'Staff.view', 'Staff.add', 'Staff.edit', 'Staff.delete']
+            ],
+            'ProfileTemplates.Students' => [
+                'title' => 'Students',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['ProfileTemplates.StudentProfiles', 'Students.view', 'Students.add', 'Students.edit', 'Students.delete']
             ],
 
             'Administration.Survey' => [
