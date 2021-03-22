@@ -9,15 +9,15 @@ use Cake\I18n\Time;
 use Cake\Utility\Hash;
 use Cake\Console\Shell;
 
-class EmailAllStaffReportCardsShell extends Shell
+class EmailAllStudentReportCardsShell extends Shell
 {
-	CONST EMAIL_TEMPLATE = 1;
+	CONST EMAIL_TEMPLATE = 2;
     public function initialize()
     {
         parent::initialize();
         $this->loadModel('SystemProcesses');
-        $this->loadModel('ReportCard.StaffReportCardEmailProcesses');
-        $this->loadModel('Institution.StaffReportCards');
+        $this->loadModel('ReportCard.StudentReportCardEmailProcesses');
+        $this->loadModel('Institution.InstitutionStudentsProfileTemplates');
         $this->loadModel('Email.EmailProcesses');
         $this->loadModel('Email.EmailProcessAttachments');
         $this->loadModel('Email.EmailTemplates');
@@ -30,43 +30,45 @@ class EmailAllStaffReportCardsShell extends Shell
             $systemProcessId = !empty($this->args[0]) ? $this->args[0] : 0;
             $this->SystemProcesses->updatePid($systemProcessId, $pid);
 
-            $this->out('Initialize Email All Staff Report Cards ('.Time::now().')');
+            $this->out('Initialize Email All Student Report Cards ('.Time::now().')');
 
             $exit = false;
             while (!$exit) {
-                $recordToProcess = $this->StaffReportCardEmailProcesses->find()
+                $recordToProcess = $this->StudentReportCardEmailProcesses->find()
                     ->select([
-                        $this->StaffReportCardEmailProcesses->aliasField('staff_profile_template_id'),
-                        $this->StaffReportCardEmailProcesses->aliasField('staff_id'),
-                        $this->StaffReportCardEmailProcesses->aliasField('institution_id'),
-                        $this->StaffReportCardEmailProcesses->aliasField('academic_period_id')
+                        $this->StudentReportCardEmailProcesses->aliasField('student_profile_template_id'),
+                        $this->StudentReportCardEmailProcesses->aliasField('student_id'),
+                        $this->StudentReportCardEmailProcesses->aliasField('institution_id'),
+                        $this->StudentReportCardEmailProcesses->aliasField('education_grade_id'),
+                        $this->StudentReportCardEmailProcesses->aliasField('academic_period_id')
                     ])
                     ->where([
-                        $this->StaffReportCardEmailProcesses->aliasField('status') => $this->StaffReportCardEmailProcesses::SENDING
+                        $this->StudentReportCardEmailProcesses->aliasField('status') => $this->StudentReportCardEmailProcesses::SENDING
                     ])
                     ->order([
-                        $this->StaffReportCardEmailProcesses->aliasField('created'),
-                        $this->StaffReportCardEmailProcesses->aliasField('staff_id')
+                        $this->StudentReportCardEmailProcesses->aliasField('created'),
+                        $this->StudentReportCardEmailProcesses->aliasField('student_id')
                     ])
                     ->hydrate(false)
                     ->first();
 				
                 if (!empty($recordToProcess)) {
-                    $this->out('Sending report card for Staff '.$recordToProcess['staff_id'].' ('. Time::now() .')');
+                    $this->out('Sending report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
 
-                    $staffsReportCardEntity = $this->StaffReportCards
+                    $studentsReportCardEntity = $this->InstitutionStudentsProfileTemplates
                         ->find()
                         ->select([
-                            $this->StaffReportCards->aliasField('file_name'),
-                            $this->StaffReportCards->aliasField('file_content'),
-                            $this->StaffReportCards->aliasField('file_content_pdf'),
-                            $this->StaffReportCards->aliasField('staff_id'),
-                            $this->StaffReportCards->aliasField('institution_id'),
-                            $this->StaffReportCards->aliasField('staff_profile_template_id'),
-                            $this->StaffReportCards->aliasField('academic_period_id'),
+                            $this->InstitutionStudentsProfileTemplates->aliasField('file_name'),
+                            $this->InstitutionStudentsProfileTemplates->aliasField('file_content'),
+                            $this->InstitutionStudentsProfileTemplates->aliasField('file_content_pdf'),
+                            $this->InstitutionStudentsProfileTemplates->aliasField('student_id'),
+                            $this->InstitutionStudentsProfileTemplates->aliasField('institution_id'),
+                            $this->InstitutionStudentsProfileTemplates->aliasField('education_grade_id'),
+                            $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id'),
+                            $this->InstitutionStudentsProfileTemplates->aliasField('academic_period_id'),
                         ])
                         ->contain([
-                            'Staffs' => [
+                            'Students' => [
                                 'fields' => [
                                     'openemis_no',
                                     'first_name',
@@ -81,7 +83,7 @@ class EmailAllStaffReportCardsShell extends Shell
                                     'email'
                                 ]
                             ],
-                            'StaffTemplates' => [
+                            'StudentTemplates' => [
                                 'fields' => [
                                     'code',
                                     'name'
@@ -95,15 +97,16 @@ class EmailAllStaffReportCardsShell extends Shell
                             ]
                         ])
                         ->where([
-                            $this->StaffReportCards->aliasField('staff_profile_template_id') => $recordToProcess['staff_profile_template_id'],
-                            $this->StaffReportCards->aliasField('staff_id') => $recordToProcess['staff_id'],
-                            $this->StaffReportCards->aliasField('institution_id') => $recordToProcess['institution_id'],
-                            $this->StaffReportCards->aliasField('academic_period_id') => $recordToProcess['academic_period_id'],
-                            $this->StaffReportCards->aliasField('status') => $this->StaffReportCards::PUBLISHED
+                            $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id') => $recordToProcess['student_profile_template_id'],
+                            $this->InstitutionStudentsProfileTemplates->aliasField('student_id') => $recordToProcess['student_id'],
+                            $this->InstitutionStudentsProfileTemplates->aliasField('education_grade_id') => $recordToProcess['education_grade_id'],
+                            $this->InstitutionStudentsProfileTemplates->aliasField('institution_id') => $recordToProcess['institution_id'],
+                            $this->InstitutionStudentsProfileTemplates->aliasField('academic_period_id') => $recordToProcess['academic_period_id'],
+                            $this->InstitutionStudentsProfileTemplates->aliasField('status') => $this->InstitutionStudentsProfileTemplates::PUBLISHED
                         ])
                         ->first();
 					
-                    if (!empty($staffsReportCardEntity)) {
+                    if (!empty($studentsReportCardEntity)) {
                         $emailProcessesObj = new ArrayObject([
                             'recipients' => '',
                             'subject' => '',
@@ -111,14 +114,14 @@ class EmailAllStaffReportCardsShell extends Shell
                             'email_process_attachments' => []
                         ]);
 
-                        $this->setRecipients($staffsReportCardEntity, $emailProcessesObj);
-                        $this->setSubject($staffsReportCardEntity, $emailProcessesObj);
-                        $this->setMessage($staffsReportCardEntity, $emailProcessesObj);
-                        $this->setAttachments($staffsReportCardEntity, $emailProcessesObj);
+                        $this->setRecipients($studentsReportCardEntity, $emailProcessesObj);
+                        $this->setSubject($studentsReportCardEntity, $emailProcessesObj);
+                        $this->setMessage($studentsReportCardEntity, $emailProcessesObj);
+                        $this->setAttachments($studentsReportCardEntity, $emailProcessesObj);
 
                         $emailProcessesData = $emailProcessesObj->getArrayCopy();
 						// default email status is error
-                        $emailStatus = $this->StaffReportCardEmailProcesses::ERROR;
+                        $emailStatus = $this->StudentReportCardEmailProcesses::ERROR;
                         $errorMsg = NULL;
                         if (empty($emailProcessesData['recipients'])) {
                             $errorMsg = 'Email address is not configured';
@@ -134,36 +137,36 @@ class EmailAllStaffReportCardsShell extends Shell
                                     try {
                                         $result = $this->EmailProcesses->sendEmail($emailProcessesId);
                                         if ($result) {
-                                            $emailStatus = $this->StaffReportCardEmailProcesses::SENT;
+                                            $emailStatus = $this->StudentReportCardEmailProcesses::SENT;
                                         } else {
                                             $errorMsg = "Failed to sent email.";
                                         }
                                     } catch (\Exception $e) {
                                         $errorMsg = $e->getMessage();
 
-                                        $this->out('Error sending Report Card for Staff ' . $recordToProcess['staff_id']);
+                                        $this->out('Error sending Report Card for Student ' . $recordToProcess['student_id']);
                                         $this->out($errorMsg);
                                     }
                                 } else {
-                                    $this->out('Staff Report Cards email process is not saved');
+                                    $this->out('Student Report Cards email process is not saved');
                                     $this->out($emailProcessesEntity->errors());
                                 }
                             }
                         }
-                        $this->StaffReportCardEmailProcesses->updateAll([
+                        $this->StudentReportCardEmailProcesses->updateAll([
                             'status' => $emailStatus,
                             'error_message' => $errorMsg
                         ], [
-                            'staff_profile_template_id' => $recordToProcess['staff_profile_template_id'],
+                            'student_profile_template_id' => $recordToProcess['student_profile_template_id'],
                             'institution_id' => $recordToProcess['institution_id'],
                             'academic_period_id' => $recordToProcess['academic_period_id'],
-                            'staff_id' => $recordToProcess['staff_id']
+                            'student_id' => $recordToProcess['student_id']
                         ]);
                     } else {
-                        $this->out('Staff Report Cards not found');
+                        $this->out('Student Report Cards not found');
                     }
 
-                    $this->out('End sending report card for Staff '.$recordToProcess['staff_id'].' ('. Time::now() .')');
+                    $this->out('End sending report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
                 } else {
                     $exit = true;
                     $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
@@ -173,11 +176,11 @@ class EmailAllStaffReportCardsShell extends Shell
         }
     }
 
-    private function setRecipients(Entity $staffsReportCardEntity, ArrayObject $emailProcessesObj)
+    private function setRecipients(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
     {
         $recipientsArray = [];
-        if ($staffsReportCardEntity->has('staff') && $staffsReportCardEntity->staff->has('email')) {
-            $recipientsArray[] = $staffsReportCardEntity->staff->email;
+        if ($studentsReportCardEntity->has('student') && $studentsReportCardEntity->student->has('email')) {
+            $recipientsArray[] = $studentsReportCardEntity->student->email;
         }
 
         if (!empty($recipientsArray)) {
@@ -185,55 +188,55 @@ class EmailAllStaffReportCardsShell extends Shell
         }
     }
 
-    private function setSubject(Entity $staffsReportCardEntity, ArrayObject $emailProcessesObj)
+    private function setSubject(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
     {
         $subject = '';
 
-        $StaffReportCardEmailTable = TableRegistry::get('ReportCard.StaffReportCardEmail');
-		$modelAlias = $StaffReportCardEmailTable->registryAlias();
-        $availablePlaceholders = $StaffReportCardEmailTable->getPlaceholders();
-        $reportCardId = $staffsReportCardEntity->staff_profile_template_id;
+        $StudentReportCardEmailTable = TableRegistry::get('ReportCard.StudentReportCardEmail');
+		$modelAlias = $StudentReportCardEmailTable->registryAlias();
+        $availablePlaceholders = $StudentReportCardEmailTable->getPlaceholders();
+        $reportCardId = $studentsReportCardEntity->student_profile_template_id;
         $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, self::EMAIL_TEMPLATE);		
-        $subject = $this->replacePlaceholders($emailTemplateEntity->subject, $availablePlaceholders, $staffsReportCardEntity);
+        $subject = $this->replacePlaceholders($emailTemplateEntity->subject, $availablePlaceholders, $studentsReportCardEntity);
         
 		if (!empty($subject)) {
             $emailProcessesObj['subject'] = $subject;
         }
     }
 
-    private function setMessage(Entity $staffsReportCardEntity, ArrayObject $emailProcessesObj)
+    private function setMessage(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
     {
         $message = '';
 
-        $StaffReportCardEmailTable = TableRegistry::get('ReportCard.StaffReportCardEmail');
-        $modelAlias = $StaffReportCardEmailTable->registryAlias();
-        $availablePlaceholders = $StaffReportCardEmailTable->getPlaceholders();
-        $reportCardId = $staffsReportCardEntity->staff_profile_template_id;
-        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, self::EMAIL_TEMPLATE);		
-        $message = $this->replacePlaceholders($emailTemplateEntity->message, $availablePlaceholders, $staffsReportCardEntity);
+        $StudentReportCardEmailTable = TableRegistry::get('ReportCard.StudentReportCardEmail');
+        $modelAlias = $StudentReportCardEmailTable->registryAlias();
+        $availablePlaceholders = $StudentReportCardEmailTable->getPlaceholders();
+        $reportCardId = $studentsReportCardEntity->student_profile_template_id;
+        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, self::EMAIL_TEMPLATE);
+        $message = $this->replacePlaceholders($emailTemplateEntity->message, $availablePlaceholders, $studentsReportCardEntity);
 
         if (!empty($message)) {
             $emailProcessesObj['message'] = $message;
         }
     }
 
-    private function setAttachments(Entity $staffsReportCardEntity, ArrayObject $emailProcessesObj)
+    private function setAttachments(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
     {        
 		$attachments = [];
-        if ($staffsReportCardEntity->has('file_name') && !empty($staffsReportCardEntity->file_name) && $staffsReportCardEntity->has('file_content_pdf') && !empty($staffsReportCardEntity->file_content_pdf)) {
-			if(!empty($staffsReportCardEntity->staff_id)) {
-				$fileNameData = explode(".",$staffsReportCardEntity->file_name);
+        if ($studentsReportCardEntity->has('file_name') && !empty($studentsReportCardEntity->file_name) && $studentsReportCardEntity->has('file_content_pdf') && !empty($studentsReportCardEntity->file_content_pdf)) {
+			if(!empty($studentsReportCardEntity->student_id)) {
+				$fileNameData = explode(".",$studentsReportCardEntity->file_name);
 				$pdfFileName = $fileNameData[0].'.pdf';
 				$file_content = NULL;
-				$file_content = $staffsReportCardEntity->file_content_pdf;
+				$file_content = $studentsReportCardEntity->file_content_pdf;
 				$attachments[] = [
 					'file_name' => $pdfFileName,
 					'file_content' => $file_content
 				];
 			} else {
 				$attachments[] = [
-					'file_name' => $staffsReportCardEntity->file_name,
-					'file_content' => $staffsReportCardEntity->file_content
+					'file_name' => $studentsReportCardEntity->file_name,
+					'file_content' => $studentsReportCardEntity->file_content
 				];
 			}
         }

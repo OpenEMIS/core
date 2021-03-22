@@ -1,3 +1,13 @@
+### [3.63.0] - 2021-03-19
+- Implemented: Student Profile feature
+- Implemented: Changes to daily recording of Meal distribution to students
+- Bug Fixed: Administration > System Setup > Attendances > Attendances tab : The period_id shuffles across attendance periods when it is reordered. This can create data inconsistencies in report
+- Bug Fixed: Administration > System Setup > System Configuration > Coordinates: To allow decimal input
+- Bug Fixed: Administration > System Setup > System Configuration > Profile Completeness : Ability to configure features included in profile completeness
+- Bug Fixed: Institutions > Academic > Programmes > Edit: Upon editing page without checking any Subjects and saving record, 404 error encountered
+- Bug Fixed: Institutions > Academic > Subjects > View: Student is having both Withdrawn and Enrolled Status in Subjects page even though student is currently having Enrolled status
+- Bug Fixed: Institutions > Students > Individual student > Academic > Outcomes tab > Subjects dropdown showing unassigned subjects
+
 ### [3.62.3] - 2021-03-15
 - Implemented: Feature for school activities/houses/clubs
 - Implemented: Enhancement of Translations
