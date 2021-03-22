@@ -127,6 +127,10 @@ class HealthReportsTable extends AppTable
                     'student_name' => $query->func()->concat([
                         'Users.first_name' => 'literal',
                         " ",
+                        'Users.middle_name' => 'literal',
+                        " ",
+                        'Users.third_name' => 'literal',
+                        " ",
                         'Users.last_name' => 'literal'
                     ]),
                     // 'first_name' =>'Users.first_name',
@@ -204,15 +208,19 @@ class HealthReportsTable extends AppTable
                     'student_name' => $query->func()->concat([
                         'Users.first_name' => 'literal',
                         " ",
-                        'Users.last_name' => 'literal'
-                    ]),
-                    'name' => $query->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " ",
                         'Users.middle_name' => 'literal',
                         " ",
+                        'Users.third_name' => 'literal',
+                        " ",
                         'Users.last_name' => 'literal'
                     ]),
+                    // 'name' => $query->func()->concat([
+                    //     'Users.first_name' => 'literal',
+                    //     " ",
+                    //     'Users.middle_name' => 'literal',
+                    //     " ",
+                    //     'Users.last_name' => 'literal'
+                    // ]),
                     // 'first_name' =>'Users.first_name',
                     // 'middle_name' => 'Users.middle_name',
                     // 'last_name' => 'Users.last_name',
@@ -293,8 +301,12 @@ class HealthReportsTable extends AppTable
                     'student_name' => $query->func()->concat([
                         'Users.first_name' => 'literal',
                         " ",
+                        'Users.middle_name' => 'literal',
+                        " ",
+                        'Users.third_name' => 'literal',
+                        " ",
                         'Users.last_name' => 'literal'
-                    ]),
+                        ]),
                     // 'first_name' =>'Users.first_name',
                     // 'middle_name' => 'Users.middle_name',
                     // 'last_name' => 'Users.last_name',
@@ -375,8 +387,12 @@ class HealthReportsTable extends AppTable
                     'student_name' => $query->func()->concat([
                         'Users.first_name' => 'literal',
                         " ",
+                        'Users.middle_name' => 'literal',
+                        " ",
+                        'Users.third_name' => 'literal',
+                        " ",
                         'Users.last_name' => 'literal'
-                    ]),
+                        ]),
                     // 'first_name' =>'Users.first_name',
                     // 'middle_name' => 'Users.middle_name',
                     // 'last_name' => 'Users.last_name',
@@ -462,8 +478,12 @@ class HealthReportsTable extends AppTable
                     'student_name' => $query->func()->concat([
                         'Users.first_name' => 'literal',
                         " ",
+                        'Users.middle_name' => 'literal',
+                        " ",
+                        'Users.third_name' => 'literal',
+                        " ",
                         'Users.last_name' => 'literal'
-                    ]),
+                        ]),
                     // 'first_name' =>'Users.first_name',
                     // 'middle_name' => 'Users.middle_name',
                     // 'last_name' => 'Users.last_name',
@@ -542,8 +562,12 @@ class HealthReportsTable extends AppTable
                     'student_name' => $query->func()->concat([
                         'Users.first_name' => 'literal',
                         " ",
+                        'Users.middle_name' => 'literal',
+                        " ",
+                        'Users.third_name' => 'literal',
+                        " ",
                         'Users.last_name' => 'literal'
-                    ]),
+                        ]),
                     // 'first_name' =>'Users.first_name',
                     // 'middle_name' => 'Users.middle_name',
                     // 'last_name' => 'Users.last_name',
@@ -623,8 +647,12 @@ class HealthReportsTable extends AppTable
                     'student_name' => $query->func()->concat([
                         'Users.first_name' => 'literal',
                         " ",
+                        'Users.middle_name' => 'literal',
+                        " ",
+                        'Users.third_name' => 'literal',
+                        " ",
                         'Users.last_name' => 'literal'
-                    ]),
+                        ]),
                     // 'first_name' =>'Users.first_name',
                     // 'middle_name' => 'Users.middle_name',
                     // 'last_name' => 'Users.last_name',
@@ -698,8 +726,12 @@ class HealthReportsTable extends AppTable
                     'student_name' => $query->func()->concat([
                         'Users.first_name' => 'literal',
                         " ",
+                        'Users.middle_name' => 'literal',
+                        " ",
+                        'Users.third_name' => 'literal',
+                        " ",
                         'Users.last_name' => 'literal'
-                    ]),
+                        ]),
                     // 'first_name' =>'Users.first_name',
                     // 'middle_name' => 'Users.middle_name',
                     // 'last_name' => 'Users.last_name',
@@ -779,8 +811,12 @@ class HealthReportsTable extends AppTable
                     'student_name' => $query->func()->concat([
                         'Users.first_name' => 'literal',
                         " ",
+                        'Users.middle_name' => 'literal',
+                        " ",
+                        'Users.third_name' => 'literal',
+                        " ",
                         'Users.last_name' => 'literal'
-                    ]),
+                        ]),
                     // 'first_name' =>'Users.first_name',
                     // 'middle_name' => 'Users.middle_name',
                     // 'last_name' => 'Users.last_name',
