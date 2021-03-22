@@ -6,6 +6,7 @@ use Installer\Form\DatabaseConnectionForm;
 use PDOException;
 use Cake\Core\Configure;
 use Cake\Log\Log;
+require CONFIG . 'installer_mode_config.php';
 
 class InstallerController extends AppController
 {
@@ -22,19 +23,20 @@ class InstallerController extends AppController
             ]
         ]);
 
-        $theme = 'core';
-        if (Configure::read('installerSchool')) {
-            $theme = 'school';
-        }
+        $theme = APPLICATION_THEME;
+        // if (Configure::read('installerSchool')) {
+        //     $theme = 'school';
+        // }
 
         $this->loadComponent('RequestHandler');
         $this->loadComponent('OpenEmis.OpenEmis', [
-            'productName' => Configure::read('productName'),
-            'theme' => $theme
+            'productName' => APPLICATION_NAME,
+            'theme' => APPLICATION_THEME
         ]);
 
         $this->set('SystemVersion', '1.0.0');
-        $this->set('productName', Configure::read('productName'));
+        // $this->set('productName', Configure::read('productName'));
+        $this->set('productName', APPLICATION_NAME);
         $this->set('productLongName', Configure::read('productLongName'));
         $this->loadComponent('ControllerAction.Alert');
         $this->viewBuilder()->layout('Installer.default');
@@ -71,6 +73,15 @@ class InstallerController extends AppController
                 $this->set('_serialize', ['message', 'code']);
                 return null;
             }
+        }
+        if(DATABASE_DUMP_FILE == ''){
+            $this->Alert->error('Database not avaialble with this package.', ['type' => 'text']);
+            return null;
+        }
+        if (APPLICATION_MODE_COUNT > 1) {
+            $this->Alert->error('Please select only one mode at one time.', ['type' => 'text']);
+           $this->set('code', 422);
+         return null;
         }
         $action = '2';
         $this->set('action', $action);
