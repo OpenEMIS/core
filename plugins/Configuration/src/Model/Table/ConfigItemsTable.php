@@ -273,16 +273,12 @@ class ConfigItemsTable extends AppTable
                         $attr['type'] = 'integer';
                         $attr['attr'] = ['min' => 1, 'max' => 200];
                     } else if ($entity->code == 'latitude_minimum') {
-                        $attr['type'] = 'integer';
                         $attr['attr'] = ['min' => -90, 'max' => 0];
                     } else if ($entity->code == 'latitude_maximum') {
-                        $attr['type'] = 'integer';
                         $attr['attr'] = ['min' => 0, 'max' => 90];
                     } else if ($entity->code == 'longitude_minimum') {
-                        $attr['type'] = 'integer';
                         $attr['attr'] = ['min' => -180, 'max' => 0];
                     } else if ($entity->code == 'longitude_maximum') {
-                        $attr['type'] = 'integer';
                         $attr['attr'] = ['min' => 0, 'max' => 180];
                     } else if ($entity->code == 'latitude_length') {
                         $attr['type'] = 'integer';
@@ -364,6 +360,18 @@ class ConfigItemsTable extends AppTable
             /**
              * options list is from ConfigItemOptions table
              */
+            }else if ($entity->type == 'Institution Completeness') {
+                if ($entity->{$valueField} == 0) {
+                 return __('Disabled');
+                } else {
+                 return __('Enabled');
+                }               
+            } else if ($entity->type == 'User Completeness') {
+                if ($entity->{$valueField} == 0) {
+                 return __('Disabled');
+                } else {
+                 return __('Enabled');
+                }               
             } else {
                 $optionsModel = TableRegistry::get('Configuration.ConfigItemOptions');
                 $value = $optionsModel->find()
@@ -743,6 +751,57 @@ class ConfigItemsTable extends AppTable
         'checkMaxStudentsPerSubject' => [
             'rule'  => ['checkMaxStudentsPerSubject'],
             'provider' => 'table'
+        ]
+    ];
+
+     private $validateLatitudeMinimum = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Must Be Numeric Value',
+            'last' => true
+        ],
+        'bet' => [
+            'rule'  => ['range', -99, 0],
+            'message' => 'Numeric Value should be between -99 to 0',
+            'last' => true
+        ]
+    ];
+
+    private $validateLatitudeMaximum = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Must Be Numeric Value',
+            'last' => true
+        ],
+        'bet' => [
+            'rule'  => ['range', 0, 90],
+            'message' => 'Numeric Value should be between 0 to 90',
+            'last' => true
+        ]
+    ];
+
+    private $validateLongitudeMinimum = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Must Be Numeric Value',
+            'last' => true
+        ],
+        'bet' => [
+            'rule'  => ['range',-180, 0],
+            'message' => 'Numeric Value should be between -180 to 0',
+            'last' => true
+        ]
+    ];
+    private $validateLongitudeMaximum = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Must Be Numeric Value',
+            'last' => true
+        ],
+        'bet' => [
+            'rule'  => ['range', 0, 180],
+            'message' => 'Numeric Value should be between 0 to 180',
+            'last' => true
         ]
     ];
 
