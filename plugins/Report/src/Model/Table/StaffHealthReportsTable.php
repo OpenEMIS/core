@@ -184,9 +184,7 @@ class StaffHealthReportsTable extends AppTable
                 ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                   // $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
-                    //$ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
+                    $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,                  
                 ])
                 ->leftJoin([$Class->alias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
@@ -202,14 +200,21 @@ class StaffHealthReportsTable extends AppTable
                    // $this->aliasField('academic_period_id'),                
                     'class_name' => 'InstitutionClasses.name',
                     'code_name' => 'Institutions.code',
-                    'student_name' => $query->func()->concat([
+                    // 'student_name' => $query->func()->concat([
+                    //     'Users.first_name' => 'literal',
+                    //     " ",
+                    //     'Users.last_name' => 'literal'
+                    // ]),
+                    'staff_name' => $query->func()->concat([
                         'Users.first_name' => 'literal',
+                        " ",
+                        'Users.middle_name' => 'literal',
                         " ",
                         'Users.last_name' => 'literal'
                     ]),
-                    'first_name' =>'Users.first_name',
-                    'middle_name' => 'Users.middle_name',
-                    'last_name' => 'Users.last_name',
+                    // 'first_name' =>'Users.first_name',
+                    // 'middle_name' => 'Users.middle_name',
+                    // 'last_name' => 'Users.last_name',
                     'description' => 'UserHealthAllergies.description',
                     'severe' => 'UserHealthAllergies.severe',
                     'comment' => 'UserHealthAllergies.comment',
@@ -267,9 +272,7 @@ class StaffHealthReportsTable extends AppTable
                 ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    //$ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
-                    //$ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
                 ])
                 ->leftJoin([$Class->alias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
@@ -349,9 +352,7 @@ class StaffHealthReportsTable extends AppTable
                 ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    //$ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
-                    //$ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
                 ])
                 ->leftJoin([$Class->alias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
@@ -436,9 +437,7 @@ class StaffHealthReportsTable extends AppTable
                 ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    //$ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
-                    //$ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
                 ])
                 ->leftJoin([$Class->alias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
@@ -516,9 +515,7 @@ class StaffHealthReportsTable extends AppTable
                 ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    //$ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
-                    //$ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
                 ])
                 ->leftJoin([$Class->alias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
@@ -597,9 +594,7 @@ class StaffHealthReportsTable extends AppTable
                 ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    //$ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
-                    //$ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
                 ])
                 ->leftJoin([$Class->alias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
@@ -672,9 +667,7 @@ class StaffHealthReportsTable extends AppTable
                 ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    //$ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
-                    //$ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
                 ])
                 ->leftJoin([$Class->alias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
@@ -753,9 +746,7 @@ class StaffHealthReportsTable extends AppTable
                 ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    //$ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
-                    //$ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
                 ])
                 ->leftJoin([$Class->alias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
@@ -765,9 +756,7 @@ class StaffHealthReportsTable extends AppTable
             $query
                 ->select([
                     $this->aliasField('staff_id'),
-                    //$this->aliasField('education_grade_id'),
-                    $this->aliasField('institution_id'),
-                    //$this->aliasField('academic_period_id'),                
+                    $this->aliasField('institution_id'),               
                     'class_name' => 'InstitutionClasses.name',
                     'code_name' => 'Institutions.code',
                     'student_name' => $query->func()->concat([
@@ -841,9 +830,8 @@ class StaffHealthReportsTable extends AppTable
                 ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    //$ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
-                    //$ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
                 ])
                 ->leftJoin([$Class->alias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
@@ -858,34 +846,20 @@ class StaffHealthReportsTable extends AppTable
         $healthReportType = $requestData->health_report_type;
         
         $extraFields = [];
-        // $extraFields[] = [
-        //     'key' => 'HealthReports.code_name',
-        //     'field' => 'code_name',
-        //     'type' => 'string',
-        //     'label' => __('Code')
-        // ];
+        $extraFields[] = [
+            'key' => 'HealthReports.code_name',
+            'field' => 'code_name',
+            'type' => 'string',
+            'label' => __('Code')
+        ];
 
 
-        // $extraFields[] = [
-        //     'key' => 'HealthReports.institution_id',
-        //     'field' => 'institution_id',
-        //     'type' => 'string',
-        //     'label' => __('Name')
-        // ];
-        
-        // $extraFields[] = [
-        //     'key' => 'HealthReports.education_grade_id',
-        //     'field' => 'education_grade_id',
-        //     'type' => 'string',
-        //     'label' => __('Education Grade')
-        // ];
-        
-        // $extraFields[] = [
-        //     'key' => 'InstitutionClasses.name',
-        //     'field' => 'class_name',
-        //     'type' => 'string',
-        //     'label' => ''
-        // ];
+        $extraFields[] = [
+            'key' => 'HealthReports.institution_id',
+            'field' => 'institution_id',
+            'type' => 'string',
+            'label' => __('Name')
+        ];
         
         $extraFields[] = [
             'key' => 'openemis_no',
@@ -901,26 +875,26 @@ class StaffHealthReportsTable extends AppTable
         //     'label' => __('Student Name')
         // ];
 
-        // $extraFields[] = [
-        //     'key' => 'first_name',
-        //     'field' => 'first_name',
-        //     'type' => 'string',
-        //     'label' => __('First Name')
-        // ];
+        $extraFields[] = [
+            'key' => 'first_name',
+            'field' => 'first_name',
+            'type' => 'string',
+            'label' => __('First Name')
+        ];
 
-        // $extraFields[] = [
-        //     'key' => 'middle_name',
-        //     'field' => 'middle_name',
-        //     'type' => 'string',
-        //     'label' => __('Middle Name')
-        // ];
+        $extraFields[] = [
+            'key' => 'middle_name',
+            'field' => 'middle_name',
+            'type' => 'string',
+            'label' => __('Middle Name')
+        ];
 
-        // $extraFields[] = [
-        //     'key' => 'last_name',
-        //     'field' => 'last_name',
-        //     'type' => 'string',
-        //     'label' => __('Last Name')
-        // ];
+        $extraFields[] = [
+            'key' => 'last_name',
+            'field' => 'last_name',
+            'type' => 'string',
+            'label' => __('Last Name')
+        ];
         
         $extraFields[] = [
             'key' => 'Users.date_of_birth',
