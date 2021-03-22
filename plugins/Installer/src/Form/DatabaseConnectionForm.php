@@ -2,6 +2,7 @@
 namespace Installer\Form;
 
 require CONFIG . 'snapshot_config.php';
+require CONFIG . 'installer_mode_config.php';
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Datasource\ConnectionManager;
@@ -105,7 +106,9 @@ return [
     ]
 ";
 
-    private $app_extra_school_mode = ",'schoolMode' => true";
+    private $app_extra_school_mode = ",'schoolMode' => false";
+    private $app_extra_cencus_mode = ",'cencusMode' => false";
+    private $app_extra_vaccinations_mode = ",'vaccinationsMode' => true";
 
     private $app_extra_template_end = "];";
 
@@ -165,8 +168,14 @@ return [
         $root = $data['database_admin_user'];
         $rootPass = $data['database_admin_password'];
 
-        $default_db_name = Configure::read('installerSchool') ? 'oe_school' : 'oe_core';
-        $default_db_user = Configure::read('installerSchool') ? 'oe_school_user' : 'oe_core_user';
+        // $default_db_name = Configure::read('installerCencus') ? 'oe_cencus' : APPLICATION_DB_NAME;
+        // $default_db_user = Configure::read('installerCencus') ? 'oe_cencus_user' : APPLICATION_DB_NAME;
+
+        // $default_db_name = Configure::read('installerSchool') ? 'oe_school' : APPLICATION_DB_NAME;
+        // $default_db_user = Configure::read('installerSchool') ? 'oe_school_user' : APPLICATION_DB_NAME;
+
+        $default_db_name = Configure::read('installerVaccinations') ? 'oe_vaccinations' : APPLICATION_DB_NAME;
+        $default_db_user = Configure::read('installerVaccinations') ? 'oe_vaccinations_user' : APPLICATION_DB_NAME;
 
         $db = isset($data['datasource_db']) ? $data['datasource_db'] : $default_db_name;
         $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : $default_db_user;
@@ -194,6 +203,12 @@ return [
             if (Configure::read('installerSchool')) {
                 $app_extra_text .= $this->app_extra_school_mode;
             }
+            else if (Configure::read('installerCencus')) {
+                $app_extra_text .= $this->app_extra_cencus_mode;
+            }
+            else if (Configure::read('installerVaccinations')) {
+                $app_extra_text .= $this->app_extra_vaccinations_mode;
+            }
             $app_extra_text .= $this->app_extra_template_end;
             fwrite($appExtraHandle, $app_extra_text);
             $this->createDb($pdo, $db);
@@ -206,25 +221,38 @@ return [
             Configure::load('datasource', 'default');
             Configure::load('app_extra', 'default');
             ConnectionManager::config(Configure::consume('Datasources'));
-            $migrations = new Migrations();
-            $source = 'Snapshot' . DS . VERSION;
-            $status = $migrations->status(['source' => $source]);
-            $executed = false;
-            if ($status[0]['status'] == 'down') {
-                $migrate = $migrations->migrate(['source' => $source]);
-                if ($migrate) {
-                    $seedSource = 'Snapshot' . DS . VERSION . DS . 'Seeds';
-                    $seedStatus = $migrations->seed(['source' => $seedSource]);
-                    if ($seedStatus) {
-                        // Applying missed out migrations
-                        $executed = $migrations->migrate();
-                        Cache::clear(false, '_cake_model_');
-                        if ($executed) {
-                            return $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
-                        }
-                    }
-                }
-            }
+            $connection = ConnectionManager::get('default');
+
+            $dbConfig = $connection->config();
+            $username = $dbConfig['username']; 
+            $host = $dbConfig['host']; 
+            $dbname = $dbConfig['database']; 
+            $password = $dbConfig['password']; 
+            $fileName = DATABASE_DUMP_FILE;
+
+            //echo 'mysqldump --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' > '.WWW_ROOT.'export/backup' . DS .$fileName.'.sql'; die;
+            exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+
+            // $migrations = new Migrations();
+            // $source = 'Snapshot' . DS . VERSION;
+            // $status = $migrations->status(['source' => $source]);
+            // $executed = false;
+            // if ($status[0]['status'] == 'down') {
+            //     $migrate = $migrations->migrate(['source' => $source]);
+            //     if ($migrate) {
+            //         $seedSource = 'Snapshot' . DS . VERSION . DS . 'Seeds';
+            //         $seedStatus = $migrations->seed(['source' => $seedSource]);
+            //         if ($seedStatus) {
+            //             // Applying missed out migrations
+            //             $executed = $migrations->migrate();
+            //             Cache::clear(false, '_cake_model_');
+            //             if ($executed) {
+            //                 return $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
+            //             }
+            //         }
+            //     }
+            // }
+            Cache::clear(false, 'themes');
             return false;
         } else {
             return false;
