@@ -107,7 +107,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                    
                    $StudentAttendancePerDayPeriods->updateAll(
                         ['name' => $requestData['period'][$i],
-                         'student_attendance_mark_type_id' => $student_attendance_mark_type_id, 'period' => $i,'order' =>$key],
+                         'student_attendance_mark_type_id' => $student_attendance_mark_type_id,'order' =>$key+1],
                     [
                         'id' => $id
                     ]
