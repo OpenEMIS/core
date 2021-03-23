@@ -106,12 +106,13 @@ return [
     ]
 ";
 
-    private $app_extra_school_mode = ",'schoolMode' => false";
-    private $app_extra_cencus_mode = ",'cencusMode' => false";
-    private $app_extra_vaccinations_mode = ",'vaccinationsMode' => true";
+    private $app_extra_core_mode = ",'coreMode' => false";    
+    private $app_extra_school_mode = ",'schoolMode' => true";
+    private $app_extra_census_mode = ",'censusMode' => false";
+    private $app_extra_vaccinations_mode = ",'vaccinationsMode' => false";
 
     private $app_extra_template_end = "];";
-
+    
     /**
      * Builds the schema for the modelless form
      *
@@ -167,16 +168,19 @@ return [
         $port = $data['database_server_port'];
         $root = $data['database_admin_user'];
         $rootPass = $data['database_admin_password'];
-
-        // $default_db_name = Configure::read('installerCencus') ? 'oe_cencus' : APPLICATION_DB_NAME;
-        // $default_db_user = Configure::read('installerCencus') ? 'oe_cencus_user' : APPLICATION_DB_NAME;
-
-        // $default_db_name = Configure::read('installerSchool') ? 'oe_school' : APPLICATION_DB_NAME;
-        // $default_db_user = Configure::read('installerSchool') ? 'oe_school_user' : APPLICATION_DB_NAME;
-
-        $default_db_name = Configure::read('installerVaccinations') ? 'oe_vaccinations' : APPLICATION_DB_NAME;
-        $default_db_user = Configure::read('installerVaccinations') ? 'oe_vaccinations_user' : APPLICATION_DB_NAME;
-
+        if (APPLICATION_MODE == 'census') {
+            $default_db_name = Configure::read('installerCensus') ? 'prd_cen_dmo' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerCensus') ? 'prd_cen_user' : APPLICATION_DB_NAME;
+        }else if(APPLICATION_MODE == 'school'){
+            $default_db_name = Configure::read('installerSchool') ? 'prd_sch_dmo' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerSchool') ? 'prd_sch_user' : APPLICATION_DB_NAME;
+        }else if(APPLICATION_MODE == 'vaccinations'){
+            $default_db_name = Configure::read('installerVaccinations') ? 'prd_vac_dmo' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerVaccinations') ? 'prd_vac_user' : APPLICATION_DB_NAME;
+        }else{
+            $default_db_name = Configure::read('installerCore') ? 'prd_cor_dmo' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerCore') ? 'prd_cor_user' : APPLICATION_DB_NAME;
+        }
         $db = isset($data['datasource_db']) ? $data['datasource_db'] : $default_db_name;
         $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : $default_db_user;
         $dbPassword = isset($data['datasource_password']) ? $data['datasource_password'] : bin2hex(random_bytes(4));
@@ -203,11 +207,13 @@ return [
             if (Configure::read('installerSchool')) {
                 $app_extra_text .= $this->app_extra_school_mode;
             }
-            else if (Configure::read('installerCencus')) {
-                $app_extra_text .= $this->app_extra_cencus_mode;
+            else if (Configure::read('installerCensus')) {
+                $app_extra_text .= $this->app_extra_census_mode;
             }
             else if (Configure::read('installerVaccinations')) {
                 $app_extra_text .= $this->app_extra_vaccinations_mode;
+            }else{
+                $app_extra_text .= $this->app_extra_core_mode;
             }
             $app_extra_text .= $this->app_extra_template_end;
             fwrite($appExtraHandle, $app_extra_text);
