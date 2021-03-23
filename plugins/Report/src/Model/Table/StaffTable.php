@@ -248,50 +248,50 @@ class StaffTable extends AppTable  {
                                     'Report.StaffLeaveReport','Report.StaffDuties','Report.PositionSummary'])) { 
                 $area_id = $this->request->data[$this->alias()]['area_id'];
                 $area_ids = [];
-				
-				if(!empty($area_id)) {
-					$AreaTable = TableRegistry::get('Area.Areas');
-					$areaData = [];
-					$areaData = $AreaTable
-						->find()
-						->select([
-							$AreaTable->aliasField('id'),
-						])
-						->where([
-							$AreaTable->aliasField('parent_id') => $area_id,
-						])
-						->hydrate(false)
-						->toArray();
-					
-					if(!empty($areaData)) {
-						foreach($areaData as $data) {
-							$area_ids[] = $data['id'];
-						}
-						
-						$areaIds = [];
-						if(!empty($area_ids)) {
-							$areaIds = $AreaTable
-								->find()
-								->select([
-									$AreaTable->aliasField('id'),
-								])
-								->where([
-									$AreaTable->aliasField('parent_id').' IN'  => $area_ids,
-								])
-								->hydrate(false)
-								->toArray();
-						}
-						if(!empty($areaIds)) {
-							foreach($areaIds as $area) {
-								$area_ids[] = $area['id'];
-							}
-						}
-					} else {
-						$area_ids[] = $area_id;
-					}
-				}
-				
-				$institutionList = [];
+                
+                if(!empty($area_id)) {
+                    $AreaTable = TableRegistry::get('Area.Areas');
+                    $areaData = [];
+                    $areaData = $AreaTable
+                        ->find()
+                        ->select([
+                            $AreaTable->aliasField('id'),
+                        ])
+                        ->where([
+                            $AreaTable->aliasField('parent_id') => $area_id,
+                        ])
+                        ->hydrate(false)
+                        ->toArray();
+                    
+                    if(!empty($areaData)) {
+                        foreach($areaData as $data) {
+                            $area_ids[] = $data['id'];
+                        }
+                        
+                        $areaIds = [];
+                        if(!empty($area_ids)) {
+                            $areaIds = $AreaTable
+                                ->find()
+                                ->select([
+                                    $AreaTable->aliasField('id'),
+                                ])
+                                ->where([
+                                    $AreaTable->aliasField('parent_id').' IN'  => $area_ids,
+                                ])
+                                ->hydrate(false)
+                                ->toArray();
+                        }
+                        if(!empty($areaIds)) {
+                            foreach($areaIds as $area) {
+                                $area_ids[] = $area['id'];
+                            }
+                        }
+                    } else {
+                        $area_ids[] = $area_id;
+                    }
+                }
+                
+                $institutionList = [];
 
                 if ($area_id == 0) {
                     $InstitutionsTable = TableRegistry::get('Institution.Institutions');
@@ -321,7 +321,7 @@ class StaffTable extends AppTable  {
                             'valueField' => 'code_name'
                         ])
                         ->where([
-                             $InstitutionsTable->aliasField('area_id').' IN' => $area_ids
+                                $InstitutionsTable->aliasField('area_id').' IN' => $area_ids
                         ])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
@@ -337,7 +337,7 @@ class StaffTable extends AppTable  {
                     $institutionList = $institutionQuery->toArray();
                     }
 
-               
+                
                 if (empty($institutionList)) {
                     $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
                     $attr['type'] = 'select';
@@ -367,8 +367,8 @@ class StaffTable extends AppTable  {
                 }
             }
             return $attr;
+        }
     }
-
     public function onUpdateFieldHealthReportType(Event $event, array $attr, $action, Request $request){
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
