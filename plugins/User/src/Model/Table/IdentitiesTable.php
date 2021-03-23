@@ -131,7 +131,6 @@ class IdentitiesTable extends ControllerActionTable
 			    ]
 		    ])
 		    ->notEmpty('nationality_id');
-		;
 	}
 
 	public function validationAddByAssociation(Validator $validator)
