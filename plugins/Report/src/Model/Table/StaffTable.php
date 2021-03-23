@@ -41,9 +41,21 @@ class StaffTable extends AppTable  {
             ->notEmpty('institution_id');
         return $validator;
     }
+	
+	public function validationStaffDuties(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('institution_id');
+        return $validator;
+    }
 
      public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+		if ($data[$this->alias()]['feature'] == 'Report.StaffDuties') {
+            $options['validate'] = 'StaffDuties';
+        } 
         if ($data[$this->alias()]['feature'] == 'Report.StaffLeaveReport') {
             $options['validate'] = 'StaffLeaveReport';
         }
@@ -70,7 +82,7 @@ class StaffTable extends AppTable  {
 		return $attr;
 	}
 
-     public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
@@ -104,21 +116,18 @@ class StaffTable extends AppTable  {
                     $attr['options'] = $staffLeaveTypeOptions;
                     $attr['attr']['required'] = true;
                 }
+            }
         }
-              return $attr;
-          }
-        }
+        
+        return $attr;
+    }
     
-
-
-
-
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.StaffSalaries',
-                                    'Report.StaffLeaveReport'])) {
+                                    'Report.StaffLeaveReport','Report.StaffDuties'])) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
 
@@ -197,7 +206,7 @@ class StaffTable extends AppTable  {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 
-            if (in_array($feature, ['Report.StaffPositions',
+            if (in_array($feature, ['Report.StaffPositions', 'Report.PositionSummary',
                   ])) { 
                     $Areas = TableRegistry::get('Area.Areas');
                     $entity = $attr['entity'];
@@ -226,9 +235,53 @@ class StaffTable extends AppTable  {
             $feature = $this->request->data[$this->alias()]['feature'];
 
             if (in_array($feature, ['Report.StaffPositions',
-                                    'Report.StaffLeaveReport'])) { 
+                                    'Report.StaffLeaveReport','Report.StaffDuties','Report.PositionSummary'])) { 
                 $area_id = $this->request->data[$this->alias()]['area_id'];
-                $institutionList = [];
+                $area_ids = [];
+				
+				if(!empty($area_id)) {
+					$AreaTable = TableRegistry::get('Area.Areas');
+					$areaData = [];
+					$areaData = $AreaTable
+						->find()
+						->select([
+							$AreaTable->aliasField('id'),
+						])
+						->where([
+							$AreaTable->aliasField('parent_id') => $area_id,
+						])
+						->hydrate(false)
+						->toArray();
+					
+					if(!empty($areaData)) {
+						foreach($areaData as $data) {
+							$area_ids[] = $data['id'];
+						}
+						
+						$areaIds = [];
+						if(!empty($area_ids)) {
+							$areaIds = $AreaTable
+								->find()
+								->select([
+									$AreaTable->aliasField('id'),
+								])
+								->where([
+									$AreaTable->aliasField('parent_id').' IN'  => $area_ids,
+								])
+								->hydrate(false)
+								->toArray();
+						}
+						if(!empty($areaIds)) {
+							foreach($areaIds as $area) {
+								$area_ids[] = $area['id'];
+							}
+						}
+					} else {
+						$area_ids[] = $area_id;
+					}
+				}
+				
+				$institutionList = [];
 
                 if ($area_id == 0) {
                     $InstitutionsTable = TableRegistry::get('Institution.Institutions');
@@ -258,7 +311,7 @@ class StaffTable extends AppTable  {
                             'valueField' => 'code_name'
                         ])
                         ->where([
-                             $InstitutionsTable->aliasField('area_id') => $area_id
+                             $InstitutionsTable->aliasField('area_id').' IN' => $area_ids
                         ])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
@@ -273,8 +326,8 @@ class StaffTable extends AppTable  {
 
                     $institutionList = $institutionQuery->toArray();
                     }
-                
 
+               
                 if (empty($institutionList)) {
                     $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
                     $attr['type'] = 'select';
@@ -284,7 +337,9 @@ class StaffTable extends AppTable  {
                     
                     if (in_array($feature, [
                         'Report.StaffPositions',
-                        'Report.StaffLeaveReport'
+                        'Report.StaffLeaveReport',
+                        'Report.StaffDuties',
+                        'Report.PositionSummary'
                     ])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     }else {
@@ -298,7 +353,9 @@ class StaffTable extends AppTable  {
                     $attr['attr']['required'] = true;
                 }
             }
-        }
             return $attr;
         }
+		
+
+}
 }

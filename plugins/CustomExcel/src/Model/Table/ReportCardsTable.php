@@ -12,7 +12,7 @@ use App\Model\Table\AppTable;
 class ReportCardsTable extends AppTable
 {
     private $fileType = 'xlsx';
-    // private $fileType = 'pdf';
+    //private $fileType = 'pdf';
 
     public function initialize(array $config)
     {
@@ -1021,13 +1021,21 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('assessment_id', $extra) && array_key_exists('institution_class_id', $params)) {
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-
+            $StudentSubjects = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $entity = $AssessmentItems
                 ->find('assessmentItemsInClass', [
                     'assessment_id' => $extra['assessment_id'],
                     'class_id' => $params['institution_class_id']
                 ])
+                //POCOR-5056 starts
+                ->innerJoin([$StudentSubjects->alias() => $StudentSubjects->table()], [
+                    $StudentSubjects->aliasField('education_subject_id = ') . $AssessmentItems->aliasField('education_subject_id')
+                ])
+                ->where([$StudentSubjects->aliasField('student_id') => $params['student_id']])
+                //POCOR-5056 end
+
                 ->toArray();
+            
             return $entity;
         }
     }
@@ -1050,7 +1058,7 @@ class ReportCardsTable extends AppTable
                         END
                     )',
             ];
-
+           
             $subjectList = $AssessmentItems
                 ->find('list', [
                     'keyField' => 'education_subject_id',
@@ -1061,7 +1069,7 @@ class ReportCardsTable extends AppTable
                     'class_id' => $params['institution_class_id']
                 ])
                 ->toArray();
-
+            
             // to only process the query if the class has subjects
             $conditions = [];
             if (!empty($subjectList)) {
@@ -1121,7 +1129,7 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
 
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-
+            
             $entity = $AssessmentItems->find()
                 ->find('assessmentItemsInClass', [
                     'assessment_id' => $extra['assessment_id'],
@@ -1277,6 +1285,7 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('institution_class_id', $params) &&array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids'])) {
 
             $classId = $params['institution_class_id'];
+            $studentId  = $params['student_id'];
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
             $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
             $mergeEntity = [];
@@ -1292,6 +1301,11 @@ class ReportCardsTable extends AppTable
                 ->innerJoinWith('InstitutionSubjects.ClassSubjects', function ($q) use ($classId) {
                     return $q->where(['ClassSubjects.institution_class_id' => $classId]);
                 })
+                //POCOR-5056 starts
+                ->innerJoinWith('InstitutionSubjects.SubjectStudents', function ($q) use ($studentId) {
+                    return $q->where(['SubjectStudents.student_id' => $studentId]);
+                })
+                //POCOR-5056 ends
                 ->leftJoin([$OutcomePeriods->alias() => $OutcomePeriods->table()], [
                     $OutcomePeriods->aliasField('id IN ') => $extra['outcome_periods_ids']
                 ])
@@ -1311,7 +1325,7 @@ class ReportCardsTable extends AppTable
                     });
                 })
                 ->autoFields(true);
-
+            
             return $entity->toArray();
         }
     }

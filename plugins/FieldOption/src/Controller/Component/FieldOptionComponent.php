@@ -27,6 +27,7 @@ class FieldOptionComponent extends Component
     private $fieldOptions = [
     // Institution
         'Localities' => ['className' => 'Institution.Localities', 'parent' => 'Institution'],
+        'Duties' => ['className' => 'Institution.StaffDuties', 'parent' => 'Institution'],
         'Ownerships' => ['className' => 'Institution.Ownerships', 'parent' => 'Institution'],
         'Sectors' => ['className' => 'Institution.Sectors', 'parent' => 'Institution'],
         'Providers' => ['className' => 'Institution.Providers', 'parent' => 'Institution'],
@@ -43,6 +44,13 @@ class FieldOptionComponent extends Component
         'StudentWithdrawReasons' => ['className' => 'Student.StudentWithdrawReasons', 'parent' => 'Student'],
         'GuidanceTypes' => ['className' => 'Student.GuidanceTypes', 'parent' => 'Student'],
         'VisitPurposeTypes' => ['className' => 'Student.StudentVisitPurposeTypes', 'parent' => 'Student'],
+
+    // Meals    
+        'MealTypes' => ['className' => 'Meal.MealType', 'parent' => 'Meals'],
+        'MealTargets' => ['className' => 'Meal.MealTarget', 'parent' => 'Meals'],
+        'MealNutritions' => ['className' => 'Meal.MealNutritions', 'parent' => 'Meals'],
+        'MealImplementers' => ['className' => 'Meal.MealImplementer', 'parent' => 'Meals'],
+        'MealBenefitTypes' => ['className' => 'Meal.MealBenefit', 'parent' => 'Meals'],
 
     // Staff
         'StaffBehaviourCategories' => ['className' => 'Staff.StaffBehaviourCategories', 'parent' => 'Staff'],
@@ -145,7 +153,7 @@ class FieldOptionComponent extends Component
         'AllergyTypes' => ['className' => 'Health.AllergyTypes', 'parent' => 'Health'],
         'Conditions' => ['className' => 'Health.Conditions', 'parent' => 'Health'],
         'ConsultationTypes' => ['className' => 'Health.ConsultationTypes', 'parent' => 'Health'],
-        'ImmunizationTypes' => ['className' => 'Health.ImmunizationTypes', 'parent' => 'Health'],
+        'ImmunizationTypes' => ['title' => 'Vaccinations', 'className' => 'Health.ImmunizationTypes', 'parent' => 'Health'],
         'Relationships' => ['className' => 'Health.Relationships', 'parent' => 'Health'],
         'TestTypes' => ['className' => 'Health.TestTypes', 'parent' => 'Health'],
         'InsuranceProviders' => ['className' => 'Health.InsuranceProviders', 'parent' => 'Health'],

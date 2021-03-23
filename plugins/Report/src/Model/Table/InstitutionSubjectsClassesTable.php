@@ -47,12 +47,11 @@ class InstitutionSubjectsClassesTable extends AppTable  {
         if (!empty($institutionId)) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
-
-        if (!empty($education_grade_id)) {
+        //POCOR-5852 starts
+        if ($education_grade_id > 0) {
             $conditions[$this->aliasField('education_grade_id')] = $education_grade_id;
         }
-        
-
+        //POCOR-5852 ends
          $query
             ->select([
                 'institution_code' => 'Institutions.code',

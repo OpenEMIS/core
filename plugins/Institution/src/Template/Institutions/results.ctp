@@ -31,7 +31,11 @@ $this->start('toolbar');
     ?>
     <?php if ($_edit) : ?>
         <!-- Show buttons when action is view: -->
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && editPermissionForSelectedSubject" ng-click="onEditClick()">
+        <!-- <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && editPermissionForSelectedSubject" ng-click="onEditClick()">
+            <i class="fa kd-edit"></i>
+        </button> -->
+
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="onEditClick()">
             <i class="fa kd-edit"></i>
         </button>
         <!-- End -->
@@ -82,7 +86,7 @@ $roles = '[' . implode(",", $_roles) . ']';
             </div>
         </div>
     </div>
-
+    
     <div ng-init="class_id=<?= $classId; ?>;assessment_id=<?= $assessmentId; ?>;institution_id=<?= $institutionId; ?>;roles=<?=$roles; ?>">
         <div class="scrolltabs sticky-content">
             <scrollable-tabset show-tooltips="false" show-drop-down="false">

@@ -1,3 +1,298 @@
+### [3.63.0] - 2021-03-19
+- Implemented: Student Profile feature
+- Implemented: Changes to daily recording of Meal distribution to students
+- Bug Fixed: Administration > System Setup > Attendances > Attendances tab : The period_id shuffles across attendance periods when it is reordered. This can create data inconsistencies in report
+- Bug Fixed: Administration > System Setup > System Configuration > Coordinates: To allow decimal input
+- Bug Fixed: Administration > System Setup > System Configuration > Profile Completeness : Ability to configure features included in profile completeness
+- Bug Fixed: Institutions > Academic > Programmes > Edit: Upon editing page without checking any Subjects and saving record, 404 error encountered
+- Bug Fixed: Institutions > Academic > Subjects > View: Student is having both Withdrawn and Enrolled Status in Subjects page even though student is currently having Enrolled status
+- Bug Fixed: Institutions > Students > Individual student > Academic > Outcomes tab > Subjects dropdown showing unassigned subjects
+
+### [3.62.3] - 2021-03-15
+- Implemented: Feature for school activities/houses/clubs
+- Implemented: Enhancement of Translations
+- Implemented: Improvement of the school closing process changes
+- Bug Fixed: Institutions > Surveys > Forms : Unable to save even though mandatory fields are entered
+- Bug Fixed: Institutions > Academic > Programme > Add/Edit: Number of Subjects listed is not the same as number of Subjects configured in Education Structure
+- Bug Fixed: Institutions > Academic > Subject: Multigrade Class was created but only 1 Subject has Subject allocated for the Grades in the Multigrade
+- Bug Fixed: Institutions > Academic > Subjects > View: Student who was Withdrawn and Enrolled back in the same Institution is still having Withdrawn Status in Subjects page
+- Bug Fixed: Institutions > Add page : Unable to save due to unknown error
+- Bug Fixed: Institutions > Infrastructure > Overview: Unable to edit record
+- Bug Fixed: Institutions > Meals/ Institutions > Infrastructures : Menu for Infrastructure is hidden in Meals
+- Bug Fixed: Institutions > Survey: Data is missing upon saving Survey Form
+- Bug Fixed: Profile > Staff > Career > Classes tab: Encountered 404 error
+- Bug Fixed: Report > Institutions > Staff Leave Report: Changes to report
+- Bug Fixed: Report > Institutions > Staff Attendance Report: Changes to report
+- Bug Fixed: Administration > Security > Roles > System Roles: Re-order function is not working
+
+### [3.62.2] - 2021-03-05
+- Implemented: Generate Risks for all school at one time in Administration > System Setup > Risks
+- Bug Fixed: Profile > Student > Academic > Risk: 404 error upon viewing the Risk record
+- Bug Fixed: Institutions > Meals > Students > Export: Name column only has First Name of students
+- Bug Fixed: Institution > Attendance > Staff: When editing the Time in and Time Out, the up and down button for the minutes should be increased or decreased by 1 instead of 15
+- Bug Fixed: Reports > Institutions > Programmes: Missing Programmes column
+- Bug Fixed: Administration > System Setup > Localization > Translations: Added new data for Infrastructure Needs report
+- Bug Fixed: Reports > Institution > Student Absence report: Changes to the report
+- Bug Fixed: Profile > Student > Academic: Academic Page is missing
+- Bug Fixed: Institutions > Students > Academic > Programmes tab: Student's Start Date was edited after being Admitted to a new Institution but the new Start Date did not reflect in student's Academic page
+
+### [3.62.1] - 2021-02-26
+- Implemented: Added extra columns for abscence reasons to Attendance Report
+- Implemented: Staff Profile feature
+- Implemented: Enhancement of Drop-Out and Withdraw function
+- Implemented: Enhancement of Student Transfer function
+- Bug Fixed: Reports > Profile: Upon clicking the generate button, Profiles were not being generated
+- Bug Fixed: Institutions > Academic > Classes > Add: Unable to select Homeroom Teacher is shift field has been selected
+- Bug Fixed: Institutions > Students > Import > Import Student Guardians: Add Guardian National ID column
+- Bug Fixed: Institutions > Attendance > Student: Multigrade Teacher unable to mark attendance
+- Bug Fixed: Institutions > General > Map: Latitude Length and Longitude Length is not reflecting the length that is configured in System Configurations
+- Bug Fixed: Institutions > Students > Bulk Promote: When selecting Promoted, the Next Grade field should not be mandatory
+- Bug Fixed: Administration > Education Structure > Programmes > Edit: Record disappeared after edit
+- Bug Fixed: Staff Payslips API: API Error
+
+### [3.62.0] - 2021-02-19
+- Implemented: Infrastructure module - Export feature
+- Implemented: Enhancement of the Core survey module: survey school coverage feature
+- Implemented: Staff Payslips feature
+- Implemented: Changes to student and staff health vaccination
+- Implemented: Import feature for importing the student marks on the assessments from Excel
+- Implemented: Allow user to view the reports in browser and add export / print the report
+- Implemented: Improvement of the Workbench functions
+- Implemented: Import Staff Salaries function
+- Bug Fixed: Institutions > Meals > Students: To add All Days page
+- Bug Fixed: Institutions > Students > Meal: Add permission to view and allow students to view their own student meal page
+- Bug Fixed: Reports > Workflows: Add Areas to filter institutions list
+- Bug Fixed: Institutions > Student > Academic > Programmes: End Date was not update when Academic Period End Date was changed
+- Bug Fixed: Daily recording of Meal distribution issue
+- Bug Fixed: Institutions > Attendance > Student: Student Transferred still appears in both Institutions if Transfer is in the middle of the week
+- Bug Fixed: Institutions > Staff > Career > Class: Staff is assigned as Secondary Teacher but did not appear in Class tab
+- Bug Fixed: Institutions > Survey > Forms: Forms with sections that have special characters is not working
+- Bug Fixed: Institutions > Staff > Salary: Data is not saved in staff_salary_transactions table
+
+### [3.61.10] - 2021-02-09
+- Bug Fixed: Institutions > Attendance > Students: Student transferred to a new Institution and then transferred back to the old Institution has double record in Attendance page
+- Bug Fixed: Staff > Institution > Staff > Pending Transfer In > Approve: Encountered 404 error
+- Bug Fixed: Reports > Workflows: Workflow Records - Institutions > Student Transfer > Receiving - Done report does not generate.
+- Bug Fixed: Reports > Institution > Committees Report (PTA and School Board): No data generated and changes to Columns and Filter
+
+### [3.61.9] - 2021-02-05
+- Bug Fixed: Reports > Institutions > Committees: Not generating
+- Bug Fixed: Reports > Institutions > Class Attendance Marked Summary: the selectable date range is incorrect
+- Bug Fixed: Reports > Institutions > Student Absence report: Changes to optimise generation
+- Bug Fixed: Reports > Institutions > Students > Import Extracurricular: Remove OpenEMIS ID in reference tab
+- Bug Fixed: Reports > Institutions > Student Absence report: changes
+- Bug Fixed: Reports > Institutions > Student Attendance Summary: Not generating
+- Bug Fixed: Reports > Institutions > Income and Expenditure report: To add From Date and To Date on the report generation page
+- Bug Fixed: Reports > Institutions > Infrastructure > Room: Progress bar moves but does not complete
+- Bug Fixed: Profile > Student > Academic > Report card and Risks tab : System should not show record for all students
+- Bug Fixed: Profile > Student > Academic > Risk tab: 404 error
+
+### [3.61.8] - 2021-02-04
+- Bug Fixed: Profile > Student > Academic > Subjects, Absence, Outcomes, Competencies tab : System should not show record for ALL students
+
+### [3.61.7] - 2021-02-02
+- Bug Fixed: Institution > Attendance > Students: Unable to view attendance and Secondary Teacher should be able to view and mark attendance
+
+### [3.61.6] - 2021-01-30
+- Implemented: Export Institutions > Visits
+- Bug Fixed: Institution > Staff > Professional > Qualifications/License tab > Add: 404 error
+- Bug Fixed: Profile and Directory pages: Encountered 404 error
+- Bug Fixed: Administration > Training > Courses > Add: 404 error
+- Bug Fixed: Reports > Institutions > Student Attendance Summary: Excel tab do not tally with the data on the Excel sheet
+- Bug Fixed: Institution > Students > Pending Transfer In/Out: Student awaiting for transfer with Open status not appearing in Pending Transfer In/Out
+- Bug Fixed: Institutions > Performance > Assessments : Students that are transferred out of school and get transferred back into same school status is not showing enrolled
+- Bug Fixed: Institutions > Attendance > Students > Export: Export file is not reflecting data correctly
+- Bug Fixed: Profiles > Students > Academic > Classes tab : System should not show record for ALL students
+- Bug Fixed: Administration > Academic Periods : Setting academic period to current should copy data from previous years
+- Bug Fixed: Institutions > Attendance > Students: Transferred student appeared in the Attendance list even before her Start Date
+- Bug Fixed: Workbench> Survey: Survey does not appear in workbench until user access institutions survey manually
+- Bug Fixed: Institution > Assessments : Missing marks for a specific class/subject
+- Bug Fixed: Institutions > Classes > Add : List of Homeroom/Secondary teacher is not populated
+- Bug Fixed: Institution > Attendance > Staff > Edit: Time in reverted to default time which is 7am after editing the Time In and Time Out
+
+### [3.61.5] - 2021-01-21
+- Implemented: Improve readability of the student status in the current year
+- Implemented: Improvement of the school closing process
+- Implemented: Export staff extracurricular activities
+- Implemented: Reports > School Profile Report
+- Bug Fixed: Institutions > Students > Nationalities tab > Add/Edit: Validate button is not validating Identity Number correctly
+- Bug Fixed: Reports > Student > Subject and Book List: Issues
+- Bug Fixed: Institutions > Students > General > Identities tab: Issue Date and Expiry Date to remove default date
+- Bug Fixed: Institutions > Performance > Report Cards: No Download PDF for bulk download
+- Bug Fixed: Reports > Staff > Position Summary Report : Changes
+- Bug Fixed: Reports > Students > BMI Status Report : Issues
+- Bug Fixed: Reports > Students > Risk Assessment Report : Changes
+- Bug Fixed: Institutions > Committees Add/Edit page
+- Bug Fixed: Add User from External Source: OpenEMIS ID should be the same as from OpenEMIS Identity for the same user
+- Bug Fixed: Reports > Institution > Guardians Report: Changes
+- Bug Fixed: Reports > Institutions > Staff Attendance/Staff Leave: Include columns
+- Bug Fixed: Reports > Students > Students with Special Needs: Changes
+- Bug Fixed: Reports > Students > Not Assigned to a Class: Changes
+- Bug Fixed: Reports > Students > Enrolment Summary: Changes
+- Bug Fixed: Institutions > Finances > Budget/Income/Expenditure : Budget appears across all Schools and user unable to view attachments
+- Bug Fixed: Institutions > Staff > Salaries : Remove additions, deductions column from staff_salaries table
+- Bug Fixed: Profiles > Students > Guardian : Slow query when accessing this page
+- Bug Fixed: Institutions > Students > Import: To allow other users besides System Administrator to Import Extracurricular
+
+### [3.61.4] - 2021-01-08
+- Bug Fixed: Reports > Institutions > Body Masses : Remove Type filter from report generation to enable user to generate report for all schools
+- Bug Fixed: Reports > Institution > Infrastructure Report
+- Bug Fixed: Institution > Appointment > Duties: 404 error
+- Bug Fixed: Security > Roles > Permissions : Allow users to enabled/disable View for Assessment/Attendance Archive buttons
+- Bug Fixed: Reports > Students > Student Health Reports : Changes in report
+- Bug Fixed: Reports > Institution > Staff Leave: To add Custom Fields on the report
+- Bug Fixed: Institution > Academic > Classes: Unable to View/Edit record
+
+### [3.61.3] - 2021-01-06
+- Bug Fixed: Profile > Student > Academic > Behaviour tab: Student is able to see all Behaviour records in the system even though the records do not belong to the student
+- Bug Fixed: Directory > Add: Encountered 404 error
+- Bug Fixed: Institution > Students > Nationalities: Identity is not read-through even though the identity has been linked to the Nationality selected
+- Bug Fixed: Reports > Institution > WASH Report
+- Bug Fixed: Reports > Institutions > Classes/Subjects Report is not generating report
+- Bug Fixed: Report > Institution > Classes
+- Bug Fixed: 1.04 Reports > Institution > Subject Report
+
+### [3.61.2] - 2020-12-30
+- Bug Fixed: Student Profiles > Report Cards feature
+- Bug Fixed: Institutions > Students > Undo feature
+- Implemented: Improve management of student nationalities
+
+### [3.61.1] - 2020-12-24
+- Implemented: Enable Changes in the Education Structure across school years
+- Bug Fixed: Institution > Performance > Assessment: Only show assigned subjects
+- Bug Fixed: Issues with Archive feature
+
+### [3.61.0] - 2020-12-22
+- Implemented: Education System setup
+- Bug Fixed: Webhook Institution Create/Update: To include institution_area_education_id and institution_area_administrative_id
+- Bug Fixed: Webhook Subject create/update: To include institution_classes_name,institution_classes_id,education_grades_id,education_subjects_id
+- Bug Fixed: Webhook Class Create/Update: To include education_grade_id
+- Bug Fixed: Webhook Security User delete
+- Bug Fixed: Webhook Student/Staff Delete: To include institution_id
+- Bug Fixed: API endpoints to return JSON response and not redirects to the sign-in page
+- Bug Fixed: Institution > Report Cards > Comments: Total Mark for Assessment is not reflecting even though Total Mark is filled up in Assessment page
+
+### [3.60.0] - 2020-12-11
+- Implemented: Devlop a function to show percentage of user profile data completion
+- Implemented: Develop Data Archiving feature
+- Implemented: Enhancement of the OpenEMIS mapping features
+- Bug Fixed: Reports > Institution > Add > WASH Report : Changes in WASH report page
+- Bug Fixed: Administrations > System Setup > APIs : Unable to change User Authentication API security permission
+
+### [3.59.1] - 2020-12-05
+- Implemented: Quick Search and Advanced Search option for Institution > Students List > Withdrawn
+- Implemented: Enable Guardians to access their pupil's records
+- Bug Fixed: Institution > Performance > Assessments > Edit: Marks are not displaying for Assessments with more than one Assessment Period
+- Bug Fixed: Reports > Survey: Data reflected incorrectly upon generating and downloading the report
+- Bug Fixed: Institutions > Performance > Assessment: Edit Permission do not work for Homeroom Teacher role
+- Bug Fixed: Remove the InsitutionClassSubjects shell script as it keeps running in the background
+- Bug Fixed: Validate Report Cards / Outcome / Competency Comments - Comments cannot start with special characters
+
+### [3.59.0] - 2020-12-02
+- Implemented: Enhancement of the Core survey report module
+- Implemneted: Reports for the Infrastructure module
+- Implemented: Automation of a revised WebGIS input file and API for user authentification
+- Bug Fixed: Student Attendance POST API
+
+### [3.58.3] - 2020-11-27
+- Implemented: Add Results and Comments tabs under Institution > Student > Academic Outcomes
+- Implemented: Add a chart for student/staff attendance to institution dashboard
+- Implemented: Reports > Institution > Finance (Income and Expenditure) Report
+- Bug Fixed: Import Extracurriculars: Changes to the Import Template
+- Bug Fixed: Institutions > Students > Academic > Competencies tab: Competencies filter list down all Competencies even though student is not taking all
+- Bug Fixed: Institutions > Attendance > Students: Add an Education Grade field
+- Bug Fixed: Institutions > Attendance > Students: Disable edit for future date attendances
+- Bug Fixed: Reports > Institutions > Special Needs Facilities: Changes to the report and filters
+- Bug Fixed: Reports > Students > Guardians: Add an Institution filter option and an Institution column in Guardians report
+- Bug Fixed: Institution > Academic > Schedules: Schedules not found even though user has been given the Permission rights
+
+### [3.58.2] - 2020-11-19
+- Data Archiving feature in OpenEMIS Core
+- Develop Reports > Directoty > User List
+- Develop API Feature student assessment (write)
+- Develop API Feature student assessment (read)
+- Develop Staff Duties feature
+- Develop Export Subject List in Institutions > Subjects Page
+- Develop Export Class List Institutions > Class Page
+- Develop Reports > Staff > Duties Report
+- Develop Reports > Institution > Summary Report
+- Bug Fix in Institution > Finance > Expenditure > Add page
+- Bug Fix in Institution > Finance > Income > Add page
+- Bug Fix in Institutions > Performance > Assessments page
+- Bug Fix in Institution > Attendance > Students page
+- Bug Fix in Institutions > Students > Academic > Extracurricular page
+- Bug Fix in Institution > Students > Import > Import Extracurricular feature
+- Bug Fix in student overview page
+
+### [3.58.1] - 2020-11-03
+- Implemented: Webhook Feature class (delete)
+- Implemented: Webhook Feature staff (delete)
+- Implemented: Webhook Feature student (delete)
+- Implemented: Webhook Feature subject (delete)
+- Implemented: Develop a function to view students report cards online
+- Bug Fixed: Institutions > Forms > Survey : System does not save mandatory dropdown fields when user clicks on save
+- Bug Fixed: Administration > Survey > Forms: Survey created with "Open" status is still resulting in Institutions having "Not Completed" status in the Survey report
+- Bug Fixed: Institution > Attendance > Staff/Student : Replace BEMIS ID with OpenEMIS ID
+- Bug Fixed: Administration > Survey > Forms > Forms tab: To allow Repeater questions in Surveys
+- Bug Fixed: Institutions > Attendance : Set default height for table row
+- Bug Fixed: Institutions > Attendance : Set default height for table row
+
+### [3.58.0] - 2020-10-27
+- Implemented: Allow students from different class to be combined into the same subjects / Allow students from same class to split across multiple subjects
+- Implemented: Administration > System Setup > Attendance - Student Mark Types: reorder function
+- Implemented: Webhook Feature staff (update)	
+- Implemented: Webhook Feature programme (delete)
+- Implemented: Webhook Feature programme (update)
+- Implemented: Webhook Feature programme (create)
+- Implemented: Webhook Feature institution (delete)
+- Implemented: Webhook Feature institution (update)
+- Implemented: Allow user to set dates to Administrations > Attendance configurations
+- Implemented: Add Subject filter to Class Attendance Marked Report 
+- Implemented: Add a case workflow for unmarked attendance
+- Bug Fixed: Webhooks: Missing field output after Update Programme has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Create Programme has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Update Staff has been triggered in Core
+- Bug Fixed: Webhooks: Missing field output after Create Staff has been triggered in Core
+- Bug Fixed: Webhooks Institution Delete: To remove some Webhooks field output
+- Bug Fixed: Webhooks Programme Delete: To remove some Webhooks field output
+- Bug Fixed: Webhooks Update Programme: Updated Webhooks fields
+- Bug Fixed: Webhooks Create Programme: Updated Webhooks fields
+- Bug Fixed: Webhooks: When Class is created in Core and Subjects are automatically created, Create Subject was not triggered in Webhooks
+- Bug Fixed: Webhooks: Missing field output after Create Staff has been triggered in Core
+- Bug Fixed: Login: 404 Error Message encountered upon successful login
+- Bug Fixed: Institution > Attendance > Students: When changing Class dropdown, the page loads and it keeps loading
+
+### [3.57.10] - 2020-10-02
+- Implemented: Webhook Feature student (update)
+- Implemented: Webhook Feature student (create)
+- Implemented: Webhook Feature subject (update)
+- Implemented: Webhook Feature subject (create)
+- Implemented: Webhook Feature staff (create)
+- Bug Fixed: Institution > Academic > Schedules > Timetable > Timetable tab: Rooms field has no option
+- Bug Fixed: Administration > System Configuration > Webhooks : Add id to Class Create output
+- Bug Fixed: Webhooks Output for Create Class: Missing fields in Webhooks Output
+- Bug Fixed: Administration > System Configuration > Webhooks : Add institution id to Institutions Create output
+- Bug Fixed: Administration > System Configuration > Webhooks : Add id to Class Update output
+- Bug Fixed: Institutions > Attendance > Students: View and Edit permissions
+- Bug Fixed: Institutions > Students/Staff > Add : Unable to create users as OpenEMIS ID is showing 1 or 2 digits.
+- Bug Fixed: Institutions > Academic > Subjects : Subject list should follow Institution > Programme subject list
+
+### [3.57.9] - 2020-09-25
+- Bug Fixed: Webhooks Output for Update Class: Missing fields in Webhooks Output
+- Bug Fixed: Administration > Security > Groups : 404 error when creating group that is linked to an institution
+
+### [3.57.8] - 2020-09-22
+- Bug Fixed: Institutions > Academic > Subjects: Subjects are not automatically created
+- Bug Fixed: System Configurations > Authentication > Other Identity Providers > SAML: Increase the input length of the below fields from 50 to 100
+- Bug Fixed: Reports > Institution > Student Attendance Summary Report: Report generated is inaccurate
+- Implemented: Webhook Feature institution (create)
+- Implemented: Webhook Feature class (update)
+- Implemented: Webhook Feature class (create)
+
+### [3.57.7] - 2020-09-17
+- Bug Fixed: System Configurations > Authentication > Other Identity Providers > SAML: Increase the input length of the fields from 50 to 100
+- Bug Fixed: Reports > Institution > Student Attendance Summary Report: Report generated is inaccurate
+
 ### [3.57.6] - 2020-09-10
 - Bug Fixed: Institution > Attendance > Students : Access for Secondary Teacher/ Subject Teacher
 - Bug Fixed: Institutions > Academic > Subjects: System does not create subjects based on configuration in National Level

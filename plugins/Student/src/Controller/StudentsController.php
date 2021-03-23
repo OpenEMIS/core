@@ -65,7 +65,7 @@ class StudentsController extends AppController
             'Nationalities'     => ['className' => 'User.Nationalities'],
             'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
             'Behaviours'        => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-            'Extracurriculars'  => ['className' => 'Student.Extracurriculars',  'actions' => ['index', 'view']],
+            'Extracurriculars'  => ['className' => 'Student.Extracurriculars',  'actions' => ['index', 'add', 'edit', 'remove','view']],
             'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
             'ImportStudents'    => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
         ];
@@ -144,7 +144,23 @@ class StudentsController extends AppController
     }
     public function Outcomes()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
+        $comment = $this->request->query['comment'];
+        if(!empty($comment) && $comment == 1){ 
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
+        
+        }else{
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
+        }        
+    }
+
+    public function Meals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionMealStudents']);
+    }
+	
+	public function Profiles()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Profiles']);
     }
 
     // health
@@ -382,7 +398,11 @@ class StudentsController extends AppController
             $idKey = $this->ControllerAction->getPrimaryKey($model);
             $primaryKey = $model->primaryKey();
 
-            $alias = $model->alias;
+            //POCOR-5890 starts
+            if($model->getHeader($alias) == 'Immunizations'){
+                $alias = __('Vaccinations');     
+            }
+            //POCOR-5890 ends
             $this->Navigation->addCrumb($model->getHeader($alias));
             $header = $header . ' - ' . $model->getHeader($alias);
 

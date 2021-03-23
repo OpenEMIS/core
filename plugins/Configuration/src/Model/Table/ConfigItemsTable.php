@@ -37,6 +37,7 @@ class ConfigItemsTable extends AppTable
             'OpenEMIS_Classroom' => ['index'],
             'Map' => ['index'],
             'ClassStudents' => ['index'],
+            'AssociationStudent' => ['index'],
             'SubjectStudents' => ['index']
         ]);
     }
@@ -51,6 +52,10 @@ class ConfigItemsTable extends AppTable
 
         $this->ControllerAction->field('name', ['visible' => ['index'=>true]]);
         $this->ControllerAction->field('default_value', ['visible' => ['view'=>true]]);
+        
+        if ($this->request->query['type'] == 9) {
+          $this->ControllerAction->field('default_value', ['visible' => ['index'=>true]]);
+        }
 
         $this->ControllerAction->field('type', ['visible' => ['view'=>true, 'edit'=>true]]);
         $this->ControllerAction->field('label', ['visible' => ['view'=>true, 'edit'=>true]]);
@@ -209,7 +214,7 @@ class ConfigItemsTable extends AppTable
 
                         $customOptions = new ArrayObject([]);
                         $this->dispatchEventToModels('Model.ConfigItems.populateOptions', [$customOptions], $this, $listeners);
-
+                        
                         if (!empty((array) $customOptions)) {
                             $attr['options'] = $customOptions;
                         } else {
@@ -267,6 +272,23 @@ class ConfigItemsTable extends AppTable
                     } else if ($entity->type == 'Student Settings') {
                         $attr['type'] = 'integer';
                         $attr['attr'] = ['min' => 1, 'max' => 200];
+                    } else if ($entity->code == 'latitude_minimum') {
+                        $attr['attr'] = ['min' => -90, 'max' => 0];
+                    } else if ($entity->code == 'latitude_maximum') {
+                        $attr['attr'] = ['min' => 0, 'max' => 90];
+                    } else if ($entity->code == 'longitude_minimum') {
+                        $attr['attr'] = ['min' => -180, 'max' => 0];
+                    } else if ($entity->code == 'longitude_maximum') {
+                        $attr['attr'] = ['min' => 0, 'max' => 180];
+                    } else if ($entity->code == 'latitude_length') {
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 1, 'max' => 7];
+                    } else if ($entity->code == 'longitude_length') {
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 1, 'max' => 7];
+                    }
+                    else if ($entity->code == 'date_time_format') {
+                        $attr['type'] = 'date';
                     }
                 }
             }
@@ -338,6 +360,18 @@ class ConfigItemsTable extends AppTable
             /**
              * options list is from ConfigItemOptions table
              */
+            }else if ($entity->type == 'Institution Completeness') {
+                if ($entity->{$valueField} == 0) {
+                 return __('Disabled');
+                } else {
+                 return __('Enabled');
+                }               
+            } else if ($entity->type == 'User Completeness') {
+                if ($entity->{$valueField} == 0) {
+                 return __('Disabled');
+                } else {
+                 return __('Enabled');
+                }               
             } else {
                 $optionsModel = TableRegistry::get('Configuration.ConfigItemOptions');
                 $value = $optionsModel->find()
@@ -627,6 +661,18 @@ class ConfigItemsTable extends AppTable
         ]
     ];
 
+    private $validateAutomatedStudentDaysAbsent = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Numeric Value should be between 0 to 365',
+        ],
+        'bet' => [
+            'rule'  => ['range', 1, 365],
+            'message' => 'Numeric Value should be between 0 to 365',
+            'last' => true
+        ]
+    ];
+
     private $validateTrainingCreditHour = [
         'num' => [
             'rule'  => 'numeric',
@@ -705,6 +751,57 @@ class ConfigItemsTable extends AppTable
         'checkMaxStudentsPerSubject' => [
             'rule'  => ['checkMaxStudentsPerSubject'],
             'provider' => 'table'
+        ]
+    ];
+
+     private $validateLatitudeMinimum = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Must Be Numeric Value',
+            'last' => true
+        ],
+        'bet' => [
+            'rule'  => ['range', -99, 0],
+            'message' => 'Numeric Value should be between -99 to 0',
+            'last' => true
+        ]
+    ];
+
+    private $validateLatitudeMaximum = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Must Be Numeric Value',
+            'last' => true
+        ],
+        'bet' => [
+            'rule'  => ['range', 0, 90],
+            'message' => 'Numeric Value should be between 0 to 90',
+            'last' => true
+        ]
+    ];
+
+    private $validateLongitudeMinimum = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Must Be Numeric Value',
+            'last' => true
+        ],
+        'bet' => [
+            'rule'  => ['range',-180, 0],
+            'message' => 'Numeric Value should be between -180 to 0',
+            'last' => true
+        ]
+    ];
+    private $validateLongitudeMaximum = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Must Be Numeric Value',
+            'last' => true
+        ],
+        'bet' => [
+            'rule'  => ['range', 0, 180],
+            'message' => 'Numeric Value should be between 0 to 180',
+            'last' => true
         ]
     ];
 

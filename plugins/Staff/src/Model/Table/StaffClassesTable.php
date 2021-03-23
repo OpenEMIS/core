@@ -58,10 +58,45 @@ class StaffClassesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // POCOR-5914
+        $staffId = $this->Session->read('Staff.Staff.id');
+        if (!empty($staffId)) {
+            $staffId = $this->Session->read('Staff.Staff.id');
+        } else {
+            $staffId =$this->Session->read('Auth.User.id');
+        }
+        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+        $classData = $InstitutionClassesSecondaryStaff->find()
+                    ->select([$InstitutionClassesSecondaryStaff->aliasField('institution_class_id')])
+                    ->where([$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId])->toArray();
+        
+        $classIds = [];
+        
+        if (!empty($classData)) {
+            foreach ($classData as $key => $value) {
+                $classIds[] = $value->institution_class_id;
+            }
+        }
+        $where = [];
+        if (!empty($classIds)) {
+          $where = [
+                $InstitutionClassesSecondaryStaff->aliasField('institution_class_id IN') => $classIds,
+                $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId
+            ];
+        } else {
+            $where = [$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId];
+        }
+        // POCOR-5914
         $query->contain([
             'AcademicPeriods',
-            'Institutions',
-        ]);
+            'Institutions'
+        ])
+        // POCOR-5914
+        ->leftJoin([$InstitutionClassesSecondaryStaff->alias() => $InstitutionClassesSecondaryStaff->table()], [
+            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id = ') . $this->aliasField('id')
+        ])
+        ->orWhere($where);
+        // POCOR-5914
     }
 
    
