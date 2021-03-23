@@ -28,6 +28,7 @@ class InstitutionsController extends AppController
     private $features = [
         // general
         'InstitutionAttachments',
+        'InstitutionMaps',
 
         // academic
         'InstitutionShifts',
@@ -53,17 +54,26 @@ class InstitutionsController extends AppController
         'StaffAccount',
         'StaffLeave',
         'StaffAppraisals',
+        'Associations',
         'StaffTrainingNeeds',
         'StaffTrainingApplications',
         'StaffTrainingResults',
         'StaffTransferIn',
         'StaffTransferOut',
+        'StaffDuties',
+        'StaffSalaries',
         // 'StaffPositionProfiles',
 
         // attendances
         'InstitutionStaffAttendances',
         'InstitutionStudentAbsences',
         'StudentAttendances',
+
+        'StudentArchive',
+        'AssessmentsArchive',
+
+        'StudentMeals',
+
 
         // behaviours
         'StaffBehaviours',
@@ -124,6 +134,9 @@ class InstitutionsController extends AppController
         'StudentOutcomes',
         'ImportOutcomeResults',
 
+        //assessment
+        'ImportAssessmentItemResults',
+
         // misc
         // 'IndividualPromotion',
         // 'CourseCatalogue',
@@ -145,6 +158,7 @@ class InstitutionsController extends AppController
         $this->ControllerAction->models = [
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
             'Staff'             => ['className' => 'Institution.Staff'],
+            'StaffSalaries'     => ['className' => 'Institution.StaffSalaries'],
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
 
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
@@ -163,9 +177,11 @@ class InstitutionsController extends AppController
             'ImportInstitutions'        => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
             'ImportStaffAttendances'    => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
             'ImportStudentAttendances'  => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
+            'ImportStudentMeals'  => ['className' => 'Institution.ImportStudentMeals', 'actions' => ['add']],
             'ImportInstitutionSurveys'  => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
             'ImportStudentAdmission'    => ['className' => 'Institution.ImportStudentAdmission', 'actions' => ['add']],
             'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
+            'ImportStaffSalaries'       => ['className' => 'Institution.ImportStaffSalaries', 'actions' => ['add']],
             'ImportInstitutionTextbooks'=> ['className' => 'Institution.ImportInstitutionTextbooks', 'actions' => ['add']],
             'ImportOutcomeResults'      => ['className' => 'Institution.ImportOutcomeResults', 'actions' => ['add']],
             'ImportCompetencyResults'   => ['className' => 'Institution.ImportCompetencyResults', 'actions' => ['add']],
@@ -173,7 +189,10 @@ class InstitutionsController extends AppController
             'ImportInstitutionPositions'=> ['className' => 'Institution.ImportInstitutionPositions', 'actions' => ['add']],
             'ImportStudentBodyMasses'   => ['className' => 'Institution.ImportStudentBodyMasses', 'actions' => ['add']],
             'ImportStudentGuardians'   => ['className' => 'Institution.ImportStudentGuardians', 'actions' => ['add']],
-            'ImportStudentExtracurriculars'   => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']]
+            'ImportStudentExtracurriculars'   => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']],
+            'StudentArchive'  => ['className' => 'Institution.StudentArchive', 'actions' => ['add']],
+            'AssessmentsArchive'  => ['className' => 'Institution.AssessmentsArchive', 'actions' => ['index']],
+            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -187,6 +206,11 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAttachments']);
     }
+	
+	public function Profiles()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Profiles']);
+    }
 
     public function StaffAppraisals()
     {
@@ -199,7 +223,7 @@ class InstitutionsController extends AppController
     }
 
     public function Institutions()
-    {
+    { 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Institutions']);
     }
 
@@ -207,6 +231,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']);
     }
+
+    public function StaffDuties()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffDuties']);
+    }
+
     public function Shifts()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']);
@@ -367,6 +397,35 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
     }
+    public function AssessmentsArchive()
+    {
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $backUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Assessments',
+            'institutionId' => $institutionId,
+            'index',
+            $this->ControllerAction->paramsEncode(['id' => $timetableId])
+        ];
+        $this->set('backUrl', Router::url($backUrl));
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $this->Navigation->addCrumb($crumbTitle);
+        $this->set('institution_id', $institutionId);
+        $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
+    }
+
+    public function Distribution()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDistributions']);
+    }
     public function ReportCardStatuses()
     {
         $classId = $this->request->query['class_id'];
@@ -406,6 +465,10 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
     }
+	public function InstitutionReportCards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionReportCards']);
+    }
     public function StaffTransferIn()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferIn']);
@@ -426,6 +489,12 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferIn']);
     }
+    //POCOR-5677 start
+    public function BulkStudentTransferIn()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.BulkStudentTransferIn']);
+    }
+    //POCOR-5677 ends
     public function StudentTransferOut()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferOut']);
@@ -490,7 +559,47 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Schedule.ScheduleTerms']);
     }
+
+    public function Committees()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTestCommittees']);
+    }
+
+    public function CommitteeAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.CommitteeAttachments']);
+    }
     // Timetable - END
+
+    //POCOR-5669 added InstitutionMaps
+    public function InstitutionMaps()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionMaps']);
+    }
+    //POCOR-5669 added InstitutionMaps
+    
+    //POCOR-5683 added InstitutionStatusUpdate
+    public function InstitutionStatus()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStatus']);
+
+        /*$institutionId = $this->request->pass[1];
+       
+        $backUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institution',
+            'action' => 'view',
+            'institutionId' => $institutionId,
+            'view'
+        ];*/
+    }
+
+    //POCOR-5182 added StaffSalaries
+    public function StaffSalaries()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffSalaries']);
+    }
+    //POCOR-5182 added StaffSalaries
 
     // AngularJS
     public function ScheduleTimetable($action = 'view')
@@ -527,10 +636,10 @@ class InstitutionsController extends AppController
     {
         if($pass=='excel'){
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
-        }else{
-
+        }else{       
 
         $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
+        
         $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
         $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
 
@@ -541,6 +650,37 @@ class InstitutionsController extends AppController
         } else {
             $session = $this->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $securityFunctions = TableRegistry::get('SecurityFunctions');
+        $securityFunctionsData = $securityFunctions
+        ->find()
+        ->select([
+            'SecurityFunctions.id'
+        ])
+        ->where([
+            'SecurityFunctions.name' => 'Student Attendance Archive'
+        ])
+        ->first();
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+
+        $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+        $securityRoleFunctionsData = $securityRoleFunctions
+        ->find()
+        ->select([
+            'SecurityRoleFunctions._view'
+        ])
+        ->where([
+            'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+            'SecurityRoleFunctions.security_role_id' => $permission_id,
+        ])
+        ->first();
+        $is_button_accesible = 0;
+        if( (!empty($securityRoleFunctionsData) && $securityRoleFunctionsData->_view == 1) ){
+            $is_button_accesible = 1;
+        }
+        if($this->Auth->user('super_admin') == 1){
+            $is_button_accesible = 1;
         }
 
         // issue
@@ -560,17 +700,112 @@ class InstitutionsController extends AppController
             'add'
         ];
 
-            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-            $this->Navigation->addCrumb($crumbTitle);
+        $archiveUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StudentArchive',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+            'add'
+        ];
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
 
         $this->set('_edit', $_edit);
         $this->set('_excel', $_excel);
         $this->set('_import', $_import);
+        $this->set('_archive', $_archive);
         $this->set('excelUrl', Router::url($excelUrl));
         $this->set('importUrl', Router::url($importUrl));
+        $this->set('archiveUrl', Router::url($archiveUrl));
+        $this->set('is_button_accesible', $is_button_accesible);
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
+        }
     }
+
+    public function StudentMeals($pass='')
+    {
+        if($pass=='excel'){
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentMeals']);
+        }
+        else{
+            $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
+            $_excel = $this->AccessControl->check(['Institutions', 'StudentMeals', 'excel']);
+            $_import = $this->AccessControl->check(['Institutions', 'ImportStudentMeals', 'add']);
+
+            $_excel = true;
+
+            if (!empty($this->request->param('institutionId'))) {
+                $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            } else {
+                $session = $this->request->session();
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+
+            $excelUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentMeals',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+                'excel'
+            ];
+
+            $importUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'ImportStudentMeals',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+            'add'
+        ];
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+                $this->Navigation->addCrumb($crumbTitle);
+
+            $this->set('_edit', $_edit);
+            $this->set('_excel', $_excel);
+            $this->set('_import', $_import);
+            $this->set('excelUrl', Router::url($excelUrl));
+            $this->set('importUrl', Router::url($importUrl));
+            $this->set('institution_id', $institutionId);
+            $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
+        }
+        
+    }
+
+    public function StudentArchive(){
+            if (!empty($this->request->param('institutionId'))) {
+                $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            } else {
+                $session = $this->request->session();
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+
+            $archiveUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentArchive',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+                'add'
+            ];
+
+            $backUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentAttendances',
+                'institutionId' => $institutionId,
+                'index',
+                $this->ControllerAction->paramsEncode(['id' => $timetableId])
+            ];
+            $this->set('backUrl', Router::url($backUrl));
+
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+                $this->Navigation->addCrumb($crumbTitle);
+
+            $this->set('archiveUrl', Router::url($archiveUrl));
+            $this->set('institution_id', $institutionId);
+            $this->set('ngController', 'InstitutionStudentArchiveCtrl as $ctrl');
+                
     }
 
     public function Results()
@@ -1006,6 +1241,83 @@ class InstitutionsController extends AppController
         }
     }
 
+    // Assosiation feature 
+    public function Associations($subaction = 'index', $associationId = null)
+    {
+        if ($subaction == 'add') {
+            $session = $this->request->session();
+            $roles = [];
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'Associations';
+            $viewUrl[0] = 'view';
+
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Associations',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+            ->getCurrent();
+            $academicPeriodOptions =TableRegistry::get('AcademicPeriod.AcademicPeriods')
+                ->getYearList();
+
+
+            $this->set('alertUrl', $alertUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('academicPeriodId', $academicPeriodId);
+            $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
+            $this->set('institutionId', $institutionId);
+            $this->render('institution_associations');
+        }else if ($subaction == 'edit') {
+            $session = $this->request->session();
+            $roles = [];
+            $associationId = $this->ControllerAction->paramsDecode($associationId);
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'Associations';
+            $viewUrl[0] = 'view';
+
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Associations',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $this->set('alertUrl', $alertUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('classId', $associationId['id']);
+            $this->set('institutionId', $institutionId);
+            $this->render('institution_associations_edit');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssociations']);
+        }
+    }
+
+    public function StudentAssociations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);
+    }
+
     public function InstitutionStaffAttendances($pass = 'index')
     {
         if ($pass == 'excel') {
@@ -1112,7 +1424,7 @@ class InstitutionsController extends AppController
     }
 
     public function beforeFilter(Event $event)
-    {
+    { 
         parent::beforeFilter($event);
         $session = $this->request->session();
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -1166,6 +1478,7 @@ class InstitutionsController extends AppController
             || $action == 'dashboard'
             || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
             $id = 0;
+           
             if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {
                 $id = $this->request->pass[0];
                 $id = $this->ControllerAction->paramsDecode($id)['id'];
@@ -1185,7 +1498,7 @@ class InstitutionsController extends AppController
             } elseif ($this->request->param('institutionId')) {
                 $id = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
 
-                // Remove writing to session once model has been converted to institution plugin
+               // Remove writing to session once model has been converted to institution plugin
                 $session->write('Institution.Institutions.id', $id);
             } elseif ($session->check('Institution.Institutions.id')) {
                 $id = $session->read('Institution.Institutions.id');
@@ -1228,6 +1541,16 @@ class InstitutionsController extends AppController
                 return $this->redirect($indexPage);
             }
         }
+        if($action == 'dashboard') {
+            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $id);
+            $havePermission = $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles);
+            if($havePermission) {
+                 $header = $name .' - '.__('Institution Completeness');
+            } else {
+                 $header = $name .' - '.__('Dashboard');
+            }
+           
+        }
         $this->set('contentHeader', $header);
     }
 
@@ -1247,10 +1570,36 @@ class InstitutionsController extends AppController
     {
         $action = $this->request->action;
         switch ($action) {
+            case 'Associations':
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'kd-angular-multi-select',
+                            'institution.associations.ctrl',
+                            'institution.associations.svc'
+                        ]);
+                    }
+                    if ($this->request->param('pass')[0] == 'add') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'kd-angular-multi-select',
+                            'institutionadd.associations.ctrl',
+                            'institutionadd.associations.svc'
+                        ]);
+                    }
+                }
+                break;
             case 'StudentAttendances':
                 $this->Angular->addModules([
                     'institution.student.attendances.ctrl',
                     'institution.student.attendances.svc'
+                ]);
+                break;
+            case 'StudentMeals':
+                $this->Angular->addModules([
+                    'institution.student.meals.ctrl',
+                    'institution.student.meals.svc'
                 ]);
                 break;
             case 'Results':
@@ -1366,6 +1715,19 @@ class InstitutionsController extends AppController
                     'timetable.svc'
                 ]);
                 break;
+
+            case 'StudentArchive':
+                $this->Angular->addModules([
+                    'institution.student.archive.ctrl',
+                    'institution.student.archive.svc'
+                ]);
+                break;
+            case 'AssessmentsArchive':
+                $this->Angular->addModules([
+                    'institution.assessments.archive.ctrl',
+                    'institution.assessments.archive.svc'
+                ]);
+                break;
         }
     }
 
@@ -1399,7 +1761,8 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentRisks' => __('Risks')
+                'StudentRisks' => __('Risks'),
+                'StudentAssociations' => __('Associations')
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1415,13 +1778,22 @@ class InstitutionsController extends AppController
                     // header name
                     $header = $studentName;
                 }
-            } else {
+            } elseif ($model->alias() == 'CommitteeAttachments') {
+                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+                $institutionName = $session->read('Institution.Institutions.name');
+                $this->Navigation->addCrumb('Committees', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Committees']);
+                $this->Navigation->addCrumb('Attachments');
+                $header = __($institutionName) ;
+                $this->set('contentHeader', $header);
+            } 
+            else {
                 $this->Navigation->addCrumb($crumbTitle, $crumbOptions);
                 $header = $this->activeObj->name;
             }
 
             $persona = false;
             $requestQuery = $this->request->query;
+           // echo '<pre>'; print_r($model->alias());die;
             if (isset($params['pass'][1])) {
                 if ($model->table() == 'security_users' && !$isDownload) {
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
@@ -1450,8 +1822,10 @@ class InstitutionsController extends AppController
             } elseif ($model->alias() == 'InstitutionStudentRisks') {
                 $header .= ' - '. __('Institution Student Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
+            }elseif ($model->alias() == 'InstitutionAssociationStudent') {
+                $header .= ' - '. __('Associations');
             } else {
-                $header .= ' - ' . $model->getHeader($alias);
+                 $header .= ' - ' . $model->getHeader($alias);
             }
 
             $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
@@ -1568,7 +1942,6 @@ class InstitutionsController extends AppController
     {
         $id = $this->ControllerAction->paramsDecode($id)['id'];
         // $this->ControllerAction->model->action = $this->request->action;
-
         $Institutions = TableRegistry::get('Institution.Institutions');
         $classification = $Institutions->get($id)->classification;
 
@@ -1590,13 +1963,24 @@ class InstitutionsController extends AppController
             $InstitutionStudents = TableRegistry::get('Institution.Students');
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
-
+			
+			$params = [
+                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
+                    $statuses['PROMOTED'], $statuses['REPEATED']]]
+            ];
+            $highChartDatas[] = $InstitutionStudents->getHighChart('student_attendance', $params);
+            
+            $params = [
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
+            ];
+            $highChartDatas[] = $InstitutionStaff->getHighChart('staff_attendance', $params);
+            
             //Students By Grade for current year, excludes transferred ,withdrawn, promoted, repeated students
             $params = [
                 'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
                     $statuses['PROMOTED'], $statuses['REPEATED']]]
             ];
-
+	
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_stage', $params);
 
             //Students By Year, excludes transferred withdrawn,promoted,repeated students
@@ -1632,9 +2016,766 @@ class InstitutionsController extends AppController
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_year', $params);
         }
 
+         if (!$this->AccessControl->isAdmin()) {
+            $userId = $this->Auth->user('id');
+            $institutionId = $id;
+            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+            $isActive = $Institutions->isActive($institutionId);
+                if ($isActive) {
+                    $this->set('haveProfilePermission',$this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles));
+                } else {
+                    $this->set('haveProfilePermission',false);
+                }         
+        } else {
+            $this->set('haveProfilePermission',true);
+        }
+        $profileData = $this->getInstituteProfileCompletnessData($id);
+        $this->set('instituteprofileCompletness',$profileData);
+        $this->set('instituteName', $this->activeObj->name);
         $this->set('highChartDatas', $highChartDatas);
+        $indexDashboard = 'dashboard';
+        $this->set('mini_dashboard', [
+                'name' => $indexDashboard,
+                'data' => [
+                    'model' => 'staff',
+                    'modelCount' => 25,
+                    'modelArray' => []]
+                ]);
+        
+            // $this->controller->viewVars['indexElements']['mini_dashboard'] = [
+            //     'name' => $indexDashboard,
+            //     'data' => [
+            //         'model' => 'staff',
+            //         'modelCount' => 25,
+            //         'modelArray' => [],
+            //     ],
+            //     'options' => [],
+            //     'order' => 1
+            // ];
+
     }
 
+    /**
+     * Get intitute profile completness data
+     * @return array
+     */
+
+     public function getInstituteProfileCompletnessDataBAK ($institutionId) {
+
+        $data = array();
+        $profileComplete = 0;
+        // $totalProfileCount = 28;
+        // check in config item
+        
+/********************************************* */ 
+        //Overview
+        $institutions = TableRegistry::get('institutions');
+		$institutionsData = $institutions->find()		
+				->select([
+					'created' => 'institutions.created',
+					'modified' => 'institutions.modified',
+				])
+				->where([$institutions->aliasField('id') => $institutionId])
+                ->order(['institutions.modified'=>'desc'])
+				->limit(1)
+				->first();
+				;
+        $data[0]['feature'] = 'Overview';
+		if(!empty($institutionsData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[0]['complete'] = 'yes';
+            $data[0]['profileComplete'] = $profileComplete;
+            $data[0]['modifiedDate'] = date("F j,Y",strtotime($institutionsData->modified));
+		} else {
+            $data[0]['complete'] = 'no';
+            $data[0]['profileComplete'] = 0;
+            $data[0]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        //Events
+        $calendarEvents = TableRegistry::get('calendar_events');
+		$calendarEventsData = $calendarEvents->find()		
+				->select([
+					'created' => 'calendar_events.created',
+					'modified' => 'calendar_events.modified',
+				])
+				->where([$calendarEvents->aliasField('institution_id') => $institutionId])
+                ->order(['calendar_events.modified'=>'desc'])
+				->limit(1)
+				->first();
+		$data[1]['feature'] = 'Calendar';		;
+		if(!empty($calendarEventsData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[1]['complete'] = 'yes';
+            $data[1]['profileComplete'] = $profileComplete;
+            $data[1]['modifiedDate'] = date("F j,Y",strtotime($calendarEventsData->modified));
+		} else {
+            $data[1]['complete'] = 'no';
+            $data[1]['profileComplete'] = 0;
+            $data[1]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        //Contacts
+        $institutionContactPersons = TableRegistry::get('institution_contact_persons');
+		$institutionContactPersonsData = $institutionContactPersons->find()		
+				->select([
+					'created' => 'institution_contact_persons.created',
+					'modified' => 'institution_contact_persons.modified',
+				])
+				->where([$institutionContactPersons->aliasField('institution_id') => $institutionId])
+                ->order(['institution_contact_persons.modified'=>'desc'])
+				->limit(1)
+				->first();
+                
+		$data[2]['feature'] = 'Contacts';
+		if(!empty($institutionContactPersonsData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[2]['complete'] = 'yes';
+            $data[2]['profileComplete'] = $profileComplete;
+            $data[2]['modifiedDate'] = date("F j,Y",strtotime($institutionContactPersonsData->modified));
+		} else {
+            $data[2]['complete'] = 'no';
+            $data[2]['profileComplete'] = 0;
+            $data[2]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        //Shifts
+        $institutionShifts = TableRegistry::get('institution_shifts');
+		$institutionShiftsData = $institutionShifts->find()		
+				->select([
+					'created' => 'institution_shifts.created',
+					'modified' => 'institution_shifts.modified',
+				])
+				->where([$institutionShifts->aliasField('institution_id') => $institutionId])
+				->order(['institution_shifts.modified'=>'desc'])
+                ->limit(1)
+				->first();
+		$data[3]['feature'] = 'Shifts';
+		if(!empty($institutionShiftsData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[3]['complete'] = 'yes';
+            $data[3]['profileComplete'] = $profileComplete;
+		    $data[3]['modifiedDate'] = ($institutionShiftsData->modified)?date("F j,Y",strtotime($institutionShiftsData->modified)):date("F j,Y",strtotime($institutionShiftsData->created));
+		} else {
+            $data[3]['complete'] = 'no';
+            $data[3]['profileComplete'] = 0;
+            $data[3]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        //Programmes
+        $institutionProgrammes = TableRegistry::get('institution_grades');
+		$institutionProgrammesData = $institutionProgrammes->find()		
+				->select([
+					'created' => 'institution_grades.created',
+					'modified' => 'institution_grades.modified',
+				])
+				->where([$institutionProgrammes->aliasField('institution_id') => $institutionId])
+                ->order(['institution_grades.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[4]['feature'] = 'Programmes';
+		if(!empty($institutionProgrammesData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[4]['complete'] = 'yes';
+            $data[4]['profileComplete'] = $profileComplete;
+		    $data[4]['modifiedDate'] = ($institutionProgrammesData->modified)?date("F j,Y",strtotime($institutionProgrammesData->modified)):date("F j,Y",strtotime($institutionProgrammesData->created));
+		} else {
+            $data[4]['complete'] = 'no';
+            $data[4]['profileComplete'] = 0;
+            $data[4]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 		
+         //Classes
+        $institutionClasses = TableRegistry::get('institution_classes');
+		$institutionClassesData = $institutionClasses->find()		
+				->select([
+					'created' => 'institution_classes.created',
+					'modified' => 'institution_classes.modified',
+				])
+				->where([$institutionClasses->aliasField('institution_id') => $institutionId])
+                ->order(['institution_classes.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[5]['feature'] = 'Classes';
+		if(!empty($institutionClassesData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[5]['complete'] = 'yes';
+            $data[5]['profileComplete'] = $profileComplete;
+		    $data[5]['modifiedDate'] = ($institutionClassesData->modified)?date("F j,Y",strtotime($institutionClassesData->modified)):date("F j,Y",strtotime($institutionClassesData->created));
+		} else {
+            $data[5]['complete'] = 'no';
+            $data[5]['profileComplete'] = 0;
+            $data[5]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+         //Subjects
+        $institutionSubjects = TableRegistry::get('institution_subjects');
+		$institutionSubjectsData = $institutionSubjects->find()		
+				->select([
+					'created' => 'institution_subjects.created',
+					'modified' => 'institution_subjects.modified',
+				])
+				->where([$institutionSubjects->aliasField('institution_id') => $institutionId])
+                ->order(['institution_subjects.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[6]['feature'] = 'Subjects';
+		if(!empty($institutionSubjectsData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[6]['complete'] = 'yes';
+            $data[6]['profileComplete'] = $profileComplete;
+		    $data[6]['modifiedDate'] = ($institutionSubjectsData->modified)?date("F j,Y",strtotime($institutionSubjectsData->modified)):date("F j,Y",strtotime($institutionSubjectsData->created));
+		} else {
+            $data[6]['complete'] = 'no';
+            $data[6]['profileComplete'] = 0;
+            $data[6]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+         //Textbooks
+        $institutionTextbooks = TableRegistry::get('institution_textbooks');
+		$institutionTextbooksData = $institutionTextbooks->find()		
+				->select([
+					'created' => 'institution_textbooks.created',
+					'modified' => 'institution_textbooks.modified',
+				])
+				->where([$institutionTextbooks->aliasField('institution_id') => $institutionId])
+                ->order(['institution_textbooks.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[7]['feature'] = 'Textbooks';
+		if(!empty($institutionTextbooksData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[7]['complete'] = 'yes';
+            $data[7]['profileComplete'] = $profileComplete;
+		    $data[7]['modifiedDate'] = ($institutionTextbooksData->modified)?date("F j,Y",strtotime($institutionTextbooksData->modified)):date("F j,Y",strtotime($institutionSubjectsData->created));
+		} else {
+            $data[7]['complete'] = 'no';
+            $data[7]['profileComplete'] = 0;
+            $data[7]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+         //Students
+        $institutionStudents = TableRegistry::get('institution_students');
+		$institutionStudentsData = $institutionStudents->find()		
+				->select([
+					'created' => 'institution_students.created',
+					'modified' => 'institution_students.modified',
+				])
+				->where([$institutionStudents->aliasField('institution_id') => $institutionId])
+                ->order(['institution_students.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[8]['feature'] = 'Students';
+		if(!empty($institutionStudentsData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[8]['complete'] = 'yes';
+            $data[8]['profileComplete'] = $profileComplete;
+		    $data[8]['modifiedDate'] = ($institutionStudentsData->modified)?date("F j,Y",strtotime($institutionStudentsData->modified)):date("F j,Y",strtotime($institutionSubjectsData->created));
+		} else {
+            $data[8]['complete'] = 'no';
+            $data[8]['profileComplete'] = 0;
+            $data[8]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        //Staff
+        $institutionStaff = TableRegistry::get('institution_staff');
+		$institutionStaffData = $institutionStaff->find()		
+				->select([
+					'created' => 'institution_staff.created',
+					'modified' => 'institution_staff.modified',
+				])
+				->where([$institutionStaff->aliasField('institution_id') => $institutionId])
+                ->order(['institution_staff.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[9]['feature'] = 'Staff';
+		if(!empty($institutionStaffData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[9]['complete'] = 'yes';
+            $data[9]['profileComplete'] = $profileComplete;
+		    $data[9]['modifiedDate'] = ($institutionStaffData->modified)?date("F j,Y",strtotime($institutionStaffData->modified)):date("F j,Y",strtotime($institutionStaffData->created));
+		} else {
+            $data[9]['complete'] = 'no';
+            $data[9]['profileComplete'] = 0;
+            $data[9]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        //Attendance
+        $institutionAttendance = TableRegistry::get('institution_staff_attendances');
+		$institutionAttendanceData = $institutionAttendance->find()		
+				->select([
+					'created' => 'institution_staff_attendances.created',
+					'modified' => 'institution_staff_attendances.modified',
+				])
+				->where([$institutionAttendance->aliasField('institution_id') => $institutionId])
+                ->order(['institution_staff_attendances.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[10]['feature'] = 'Attendance';
+		if(!empty($institutionAttendanceData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[10]['complete'] = 'yes';
+            $data[10]['profileComplete'] = $profileComplete;
+		    $data[10]['modifiedDate'] = ($institutionAttendanceData->modified)?date("F j,Y",strtotime($institutionAttendanceData->modified)):date("F j,Y",strtotime($institutionAttendanceData->created));
+		} else {
+            $data[10]['complete'] = 'no';
+            $data[10]['profileComplete'] = 0;
+            $data[10]['modifiedDate'] = 'Not updated';
+        }
+
+/********************************************* */ 
+        //Behaviour
+        $institutionBehaviour = TableRegistry::get('staff_behaviours');
+		$institutionBehaviourData = $institutionBehaviour->find()		
+				->select([
+					'created' => 'staff_behaviours.created',
+					'modified' => 'staff_behaviours.modified',
+				])
+				->where([$institutionBehaviour->aliasField('institution_id') => $institutionId])
+                ->order(['staff_behaviours.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[11]['feature'] = 'Behaviour';
+		if(!empty($institutionBehaviourData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[11]['complete'] = 'yes';
+            $data[11]['profileComplete'] = $profileComplete;
+		    $data[11]['modifiedDate'] = ($institutionBehaviourData->modified)?date("F j,Y",strtotime($institutionBehaviourData->modified)):date("F j,Y",strtotime($institutionBehaviourData->created));;
+		} else {
+            $data[11]['complete'] = 'no';
+            $data[11]['profileComplete'] = 0;
+            $data[11]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        //Positions
+        $institutionPositions = TableRegistry::get('institution_positions');
+		$institutionPositionsData = $institutionPositions->find()		
+				->select([
+					'created' => 'institution_positions.created',
+					'modified' => 'institution_positions.modified',
+				])
+				->where([$institutionPositions->aliasField('institution_id') => $institutionId])
+                ->order(['institution_positions.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[12]['feature'] = 'Positions';
+		if(!empty($institutionPositionsData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[12]['complete'] = 'yes';
+            $data[12]['profileComplete'] = $profileComplete;
+		    $data[12]['modifiedDate'] = ($institutionPositionsData->modified)?date("F j,Y",strtotime($institutionPositionsData->modified)):date("F j,Y",strtotime($institutionPositionsData->created));
+		} else {
+            $data[12]['complete'] = 'no';
+            $data[12]['profileComplete'] = 0;
+            $data[12]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        //Bank Accounts 
+        $institutionBankAccounts  = TableRegistry::get('institution_bank_accounts');
+		$institutionBankAccountsData = $institutionBankAccounts->find()		
+				->select([
+					'created' => 'institution_bank_accounts.created',
+					'modified' => 'institution_bank_accounts.modified',
+				])
+				->where([$institutionBankAccounts->aliasField('institution_id') => $institutionId])
+                ->order(['institution_bank_accounts.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[13]['feature'] = 'Bank Accounts';
+		if(!empty($institutionBankAccountsData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[13]['complete'] = 'yes';
+            $data[13]['profileComplete'] = $profileComplete;
+		    $data[13]['modifiedDate'] = ($institutionBankAccountsData->modified)?date("F j,Y",strtotime($institutionBankAccountsData->modified)):date("F j,Y",strtotime($institutionBankAccountsData->created));
+		} else {
+            $data[13]['complete'] = 'no';
+            $data[13]['profileComplete'] = 0;
+            $data[13]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        //Institution Fees
+        $institutionInstitutionFees = TableRegistry::get('institution_fees');
+		$institutionInstitutionFeesData = $institutionInstitutionFees->find()		
+				->select([
+					'created' => 'institution_fees.created',
+					'modified' => 'institution_fees.modified',
+				])
+				->where([$institutionInstitutionFees->aliasField('institution_id') => $institutionId])
+                ->order(['institution_fees.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[14]['feature'] = 'Institution Fees';
+		if(!empty($institutionInstitutionFeesData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[14]['complete'] = 'yes';
+            $data[14]['profileComplete'] = $profileComplete;
+		    $data[14]['modifiedDate'] = ($institutionInstitutionFeesData->modified)?date("F j,Y",strtotime($institutionInstitutionFeesData->modified)):date("F j,Y",strtotime($institutionInstitutionFeesData->created));
+		} else {
+            $data[14]['complete'] = 'no';
+            $data[14]['profileComplete'] = 0;
+            $data[14]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        // Student Fees 
+        // $institutionStudentFees  = TableRegistry::get('student_fees');
+		// $institutionStudentFeesData = $institutionStudentFees->find()		
+		// 		->select([
+		// 			'created' => 'student_fees.created',
+		// 			'modified' => 'student_fees.modified',
+		// 		])
+		// 		->where([$institutionStudentFees->aliasField('institution_id') => $institutionId])
+		// 		->limit(1)
+		// 		->first();
+
+		// $data[15]['feature'] = 'Student Fees';
+		// if(!empty($institutionStudentFeesData)) {
+		// 	$profileComplete = $profileComplete + 1;
+		//     $data[15]['complete'] = 'yes';
+		//     $data[15]['modifiedDate'] = date("F j,Y",strtotime($institutionStudentFeesData->modified));
+		// } else {
+        //     $data[15]['complete'] = 'no';
+        //     $data[15]['modifiedDate'] = 'Not updated';
+        // }
+/********************************************* */ 
+        //Infrastructures Overview 
+        $institutionInfrastructuresOverview  = TableRegistry::get('institution_lands');
+		$institutionInfrastructuresOverviewData = $institutionInfrastructuresOverview->find()		
+				->select([
+					'created' => 'institution_lands.created',
+					'modified' => 'institution_lands.modified',
+				])
+				->where([$institutionInfrastructuresOverview->aliasField('institution_id') => $institutionId])
+                ->order(['institution_lands.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[16]['feature'] = 'Infrastructures Overview';
+		if(!empty($institutionInfrastructuresOverviewData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[16]['complete'] = 'yes';
+            $data[16]['profileComplete'] = $profileComplete;
+		    $data[16]['modifiedDate'] = ($institutionInfrastructuresOverviewData->modified)?date("F j,Y",strtotime($institutionInfrastructuresOverviewData->modified)):date("F j,Y",strtotime($institutionInfrastructuresOverviewData->created));
+		} else {
+            $data[16]['complete'] = 'no';
+            $data[16]['profileComplete'] = 0;
+            $data[16]['modifiedDate'] = 'Not updated';
+        }
+ /********************************************* */ 
+        // Infrastructures Needs 
+        $institutionInfrastructuresNeeds  = TableRegistry::get('infrastructure_needs');
+		$institutionInfrastructuresNeedsData = $institutionInfrastructuresNeeds->find()		
+				->select([
+					'created' => 'infrastructure_needs.created',
+					'modified' => 'infrastructure_needs.modified',
+				])
+				->where([$institutionInfrastructuresNeeds->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_needs.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[17]['feature'] = 'Infrastructures Needs';
+		if(!empty($institutionInfrastructuresNeedsData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[17]['complete'] = 'yes';
+            $data[17]['profileComplete'] = $profileComplete;
+		    $data[17]['modifiedDate'] = ($institutionInfrastructuresNeedsData->modified)?date("F j,Y",strtotime($institutionInfrastructuresNeedsData->modified)):date("F j,Y",strtotime($institutionInfrastructuresNeedsData->created));
+		} else {
+            $data[17]['complete'] = 'no';
+            $data[17]['profileComplete'] = 0;
+            $data[17]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        // Wash Water 
+        $institutionWashWater  = TableRegistry::get('infrastructure_wash_waters');
+		$institutionWashWaterData = $institutionWashWater->find()		
+				->select([
+					'created' => 'infrastructure_wash_waters.created',
+					'modified' => 'infrastructure_wash_waters.modified',
+				])
+				->where([$institutionWashWater->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_waters.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[18]['feature'] = 'Wash Water';
+		if(!empty($institutionWashWaterData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[18]['complete'] = 'yes';
+            $data[18]['profileComplete'] = $profileComplete;
+		    $data[18]['modifiedDate'] = ($institutionWashWaterData->modified)?date("F j,Y",strtotime($institutionWashWaterData->modified)):date("F j,Y",strtotime($institutionWashWaterData->created));
+		} else {
+            $data[18]['complete'] = 'no';
+            $data[18]['profileComplete'] = 0;
+            $data[18]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        // Wash Hygiene  
+        $institutionWashHygiene  = TableRegistry::get('infrastructure_wash_hygienes');
+		$institutionWashHygieneData = $institutionWashHygiene->find()		
+				->select([
+					'created' => 'infrastructure_wash_hygienes.created',
+					'modified' => 'infrastructure_wash_hygienes.modified',
+				])
+				->where([$institutionWashHygiene->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_hygienes.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[19]['feature'] = 'Wash Hygiene';
+		if(!empty($institutionWashHygieneData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[19]['complete'] = 'yes';
+            $data[19]['profileComplete'] = $profileComplete;
+		    $data[19]['modifiedDate'] = ($institutionWashHygieneData->modified)?date("F j,Y",strtotime($institutionWashHygieneData->modified)):date("F j,Y",strtotime($institutionWashHygieneData->created));
+		} else {
+            $data[19]['complete'] = 'no';
+            $data[19]['profileComplete'] = 0;
+            $data[19]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        // Wash Waste  
+        $institutionWashWaste  = TableRegistry::get('infrastructure_wash_wastes');
+		$institutionWashWasteData = $institutionWashWaste->find()		
+				->select([
+					'created' => 'infrastructure_wash_wastes.created',
+					'modified' => 'infrastructure_wash_wastes.modified',
+				])
+				->where([$institutionWashWaste->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_wastes.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[20]['feature'] = 'Wash Waste';
+		if(!empty($institutionWashWasteData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[20]['complete'] = 'yes';
+            $data[20]['profileComplete'] = $profileComplete;
+		    $data[20]['modifiedDate'] = ($institutionWashWasteData->modified)?date("F j,Y",strtotime($institutionWashWasteData->modified)):date("F j,Y",strtotime($institutionWashWasteData->created));
+		} else {
+            $data[20]['complete'] = 'no';
+            $data[20]['profileComplete'] = 0;
+            $data[20]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        // Wash Sewage  
+        $institutionWashSewage  = TableRegistry::get('infrastructure_wash_sewages');
+		$institutionWashSewageData = $institutionWashSewage->find()		
+				->select([
+					'created' => 'infrastructure_wash_sewages.created',
+					'modified' => 'infrastructure_wash_sewages.modified',
+				])
+				->where([$institutionWashSewage->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_sewages.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[21]['feature'] = 'Wash Sewage';
+		if(!empty($institutionWashSewageData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[21]['complete'] = 'yes';
+            $data[21]['profileComplete'] = $profileComplete;
+		    $data[21]['modifiedDate'] = ($institutionWashSewageData->modified)?date("F j,Y",strtotime($institutionWashSewageData->modified)):date("F j,Y",strtotime($institutionWashSewageData->created));
+		} else {
+            $data[21]['complete'] = 'no';
+            $data[21]['profileComplete'] = 0;
+            $data[21]['modifiedDate'] = 'Not updated';
+        }
+
+/********************************************* */ 
+        // Utilities Electricity  
+        $institutionUtilitiesElectricity  = TableRegistry::get('infrastructure_utility_electricities');
+		$institutionUtilitiesElectricityData = $institutionUtilitiesElectricity->find()		
+				->select([
+					'created' => 'infrastructure_utility_electricities.created',
+					'modified' => 'infrastructure_utility_electricities.modified',
+				])
+				->where([$institutionUtilitiesElectricity->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_electricities.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[22]['feature'] = 'Utilities Electricity';
+		if(!empty($institutionUtilitiesElectricityData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[22]['complete'] = 'yes';
+            $data[22]['profileComplete'] = $profileComplete;
+		    $data[22]['modifiedDate'] = ($institutionUtilitiesElectricityData->modified)?date("F j,Y",strtotime($institutionUtilitiesElectricityData->modified)):date("F j,Y",strtotime($institutionUtilitiesElectricityData->created));
+		} else {
+            $data[22]['complete'] = 'no';
+            $data[22]['profileComplete'] = 0;
+            $data[22]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        // Utilities Internet  
+        $institutionUtilitiesInternet  = TableRegistry::get('infrastructure_utility_internets');
+		$institutionUtilitiesInternetData = $institutionUtilitiesInternet->find()		
+				->select([
+					'created' => 'infrastructure_utility_internets.created',
+					'modified' => 'infrastructure_utility_internets.modified',
+				])
+				->where([$institutionUtilitiesInternet->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_internets.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[23]['feature'] = 'Utilities Internet';
+		if(!empty($institutionUtilitiesInternetData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[23]['complete'] = 'yes';
+            $data[23]['profileComplete'] = $profileComplete;
+		    $data[23]['modifiedDate'] = ($institutionUtilitiesInternetData->modified)?date("F j,Y",strtotime($institutionUtilitiesInternetData->modified)):date("F j,Y",strtotime($institutionUtilitiesInternetData->created));
+		} else {
+            $data[23]['complete'] = 'no';
+            $data[23]['profileComplete'] = 0;
+            $data[23]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        //Utilities Telephone
+        $institutionUtilitiesTelephone  = TableRegistry::get('infrastructure_utility_telephones');
+		$institutionUtilitiesTelephoneData = $institutionUtilitiesTelephone->find()		
+				->select([
+					'created' => 'infrastructure_utility_telephones.created',
+					'modified' => 'infrastructure_utility_telephones.modified',
+				])
+				->where([$institutionUtilitiesTelephone->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_telephones.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[24]['feature'] = 'Utilities Telephone';
+		if(!empty($institutionUtilitiesTelephoneData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[24]['complete'] = 'yes';
+            $data[24]['profileComplete'] = $profileComplete;
+		    $data[24]['modifiedDate'] = ($institutionUtilitiesTelephoneData->modified)?date("F j,Y",strtotime($institutionUtilitiesTelephoneData->modified)):date("F j,Y",strtotime($institutionUtilitiesTelephoneData->created));
+		} else {
+            $data[24]['complete'] = 'no';
+            $data[24]['profileComplete'] = 0;
+            $data[24]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        // Assets  
+        $institutionAssets  = TableRegistry::get('institution_assets');
+		$institutionAssetsData = $institutionAssets->find()		
+				->select([
+					'created' => 'institution_assets.created',
+					'modified' => 'institution_assets.modified',
+				])
+				->where([$institutionAssets->aliasField('institution_id') => $institutionId])
+                ->order(['institution_assets.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[25]['feature'] = 'Assets';
+		if(!empty($institutionAssetsData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[25]['complete'] = 'yes';
+            $data[25]['profileComplete'] = $profileComplete;
+		    $data[25]['modifiedDate'] = ($institutionAssetsData->modified)?date("F j,Y",strtotime($institutionAssetsData->modified)):date("F j,Y",strtotime($institutionAssetsData->created));
+		} else {
+            $data[25]['complete'] = 'no';
+            $data[25]['profileComplete'] = 0;
+            $data[25]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */   
+        //Transport 
+        $institutionTransport  = TableRegistry::get('institution_buses');
+		$institutionTransportData = $institutionTransport->find()		
+				->where([$institutionTransport->aliasField('institution_id') => $institutionId])
+                ->order(['institution_buses.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[26]['feature'] = 'Transport';
+		if(!empty($institutionTransportData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[26]['complete'] = 'yes';
+            $data[26]['profileComplete'] = $profileComplete;
+		    $data[26]['modifiedDate'] = ($institutionTransportData->modified)?date("F j,Y",strtotime($institutionTransportData->modified)):date("F j,Y",strtotime($institutionTransportData->created));
+		} else {
+            $data[26]['complete'] = 'no';
+            $data[26]['profileComplete'] = 0;
+            $data[26]['modifiedDate'] = 'Not updated';
+        }
+/********************************************* */ 
+        //Committees 
+        $institutionCommittees  = TableRegistry::get('institution_committees');
+		$institutionCommitteesData = $institutionCommittees->find()		
+				->select([
+					'created' => 'institution_committees.created',
+					'modified' => 'institution_committees.modified',
+				])
+				->where([$institutionCommittees->aliasField('institution_id') => $institutionId])
+                ->order(['institution_committees.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+		$data[27]['feature'] = 'Committees';
+		if(!empty($institutionCommitteesData)) {
+			$profileComplete = $profileComplete + 1;
+		    $data[27]['complete'] = 'yes';
+            $data[27]['profileComplete'] = $profileComplete;
+		    $data[27]['modifiedDate'] = ($institutionCommitteesData->modified)?date("F j,Y",strtotime($institutionCommitteesData->modified)):date("F j,Y",strtotime($institutionCommitteesData->created));
+		} else {
+            $data[27]['complete'] = 'no';
+            $data[27]['profileComplete'] = 0;
+            $data[27]['modifiedDate'] = 'Not updated';
+        }
+        // $percent = $profileComplete/$totalProfileCount * 100;
+		// $institutionPercentage = round($percent);
+        // $profilePercentage = 100/$totalProfileCount * $profileComplete;
+		// $profilePercentage = round($profilePercentage);
+		//$data['percentage'] = $profilePercentage;
+
+        //Config validation
+        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $typeList = $ConfigItem
+            ->find('list', [
+                'keyField' => 'name',
+                'valueField' => 'name'
+            ])
+            ->order('type')
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'Institution Completeness'])
+            ->toArray();
+          
+        $typeOptions = array_keys($typeList);
+        $totalProfileComplete = count($data);
+        $typeListDisable = $ConfigItem
+            ->find('list', [
+                'keyField' => 'name',
+                'valueField' => 'name'
+            ])
+            ->order('type')
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 0,$ConfigItem->aliasField('type') => 'Institution Completeness'])
+            ->toArray();
+            if ($typeListDisable) {
+                $countList = count($typeListDisable);
+                $profileComplete = $profileComplete - $countList;
+            }
+ 
+        foreach($data as $key => $featureData) {
+            if (!in_array($featureData['feature'], $typeOptions)) {
+                unset($data[$key]);              
+                $totalProfileComplete = count($data);
+                }  
+        }
+       
+            $profilePercentage = 100/$totalProfileComplete * $profileComplete;
+            $profilePercentage = round($profilePercentage);
+            $data['percentage'] = $profilePercentage;
+            return $data;
+    }
     //autocomplete used for InstitutionSiteShift
     public function ajaxInstitutionAutocomplete()
     {
@@ -1799,14 +2940,15 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'Risks' => ['text' => __('Risks')]
+            'Risks' => ['text' => __('Risks')],
+            'Associations' => ['text' => __('Associations')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, ['Programmes', 'Textbooks', 'Risks'])) {
+            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations'])) {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             } else {
@@ -1814,6 +2956,7 @@ class InstitutionsController extends AppController
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             }
         }
+        //echo '<pre>';print_r($tabElements);die;
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
@@ -2097,4 +3240,624 @@ class InstitutionsController extends AppController
         echo json_encode($dataSet);
         die;
     }
+    // Delete commitee meeting
+    public function deleteCommiteeMeetingById() {
+        if (isset($this->request->query['meetingId'])) {
+            $meetingId = $this->request->query['meetingId'];
+
+            $users_table = TableRegistry::get('institution_committee_meeting');
+            $users = $users_table->get($meetingId);
+            $users_table->delete($users);
+            echo "Meeting deleted successfully.";
+            die;
+        }
+    } 
+    /**
+     * Get intitute profile completness data
+     * @return array
+     */
+     public function getInstituteProfileCompletnessData ($institutionId) {
+        $data = array();
+        $data['percentage'] = 0;
+        $profileComplete = 0;
+        //Overview
+        $institutions = TableRegistry::get('institutions');
+		$institutionsData = $institutions->find()		
+				->select([
+					'created' => 'institutions.created',
+					'modified' => 'institutions.modified',
+				])
+				->where([$institutions->aliasField('id') => $institutionId])
+                ->order(['institutions.modified'=>'desc'])
+				->limit(1)
+				->first();
+         //Events
+        $calendarEvents = TableRegistry::get('calendar_events');
+		$calendarEventsData = $calendarEvents->find()		
+				->select([
+					'created' => 'calendar_events.created',
+					'modified' => 'calendar_events.modified',
+				])
+				->where([$calendarEvents->aliasField('institution_id') => $institutionId])
+                ->order(['calendar_events.modified'=>'desc'])
+				->limit(1)
+				->first();
+        //Contacts
+        $institutionContactPersons = TableRegistry::get('institution_contact_persons');
+		$institutionContactPersonsData = $institutionContactPersons->find()		
+				->select([
+					'created' => 'institution_contact_persons.created',
+					'modified' => 'institution_contact_persons.modified',
+				])
+				->where([$institutionContactPersons->aliasField('institution_id') => $institutionId])
+                ->order(['institution_contact_persons.modified'=>'desc'])
+				->limit(1)
+				->first();
+        //Shifts
+        $institutionShifts = TableRegistry::get('institution_shifts');
+		$institutionShiftsData = $institutionShifts->find()		
+				->select([
+					'created' => 'institution_shifts.created',
+					'modified' => 'institution_shifts.modified',
+				])
+				->where([$institutionShifts->aliasField('institution_id') => $institutionId])
+				->order(['institution_shifts.modified'=>'desc'])
+                ->limit(1)
+				->first();
+        //Programmes
+        $institutionProgrammes = TableRegistry::get('institution_grades');
+		$institutionProgrammesData = $institutionProgrammes->find()		
+				->select([
+					'created' => 'institution_grades.created',
+					'modified' => 'institution_grades.modified',
+				])
+				->where([$institutionProgrammes->aliasField('institution_id') => $institutionId])
+                ->order(['institution_grades.modified'=>'desc'])
+				->limit(1)
+				->first();
+        //Classes
+        $institutionClasses = TableRegistry::get('institution_classes');
+		$institutionClassesData = $institutionClasses->find()		
+				->select([
+					'created' => 'institution_classes.created',
+					'modified' => 'institution_classes.modified',
+				])
+				->where([$institutionClasses->aliasField('institution_id') => $institutionId])
+                ->order(['institution_classes.modified'=>'desc'])
+				->limit(1)
+				->first();
+         //Subjects
+        $institutionSubjects = TableRegistry::get('institution_subjects');
+		$institutionSubjectsData = $institutionSubjects->find()		
+				->select([
+					'created' => 'institution_subjects.created',
+					'modified' => 'institution_subjects.modified',
+				])
+				->where([$institutionSubjects->aliasField('institution_id') => $institutionId])
+                ->order(['institution_subjects.modified'=>'desc'])
+				->limit(1)
+				->first();
+        //Textbooks
+        $institutionTextbooks = TableRegistry::get('institution_textbooks');
+		$institutionTextbooksData = $institutionTextbooks->find()		
+				->select([
+					'created' => 'institution_textbooks.created',
+					'modified' => 'institution_textbooks.modified',
+				])
+				->where([$institutionTextbooks->aliasField('institution_id') => $institutionId])
+                ->order(['institution_textbooks.modified'=>'desc'])
+				->limit(1)
+				->first();
+        //Students
+        $institutionStudents = TableRegistry::get('institution_students');
+		$institutionStudentsData = $institutionStudents->find()		
+				->select([
+					'created' => 'institution_students.created',
+					'modified' => 'institution_students.modified',
+				])
+				->where([$institutionStudents->aliasField('institution_id') => $institutionId])
+                ->order(['institution_students.modified'=>'desc'])
+				->limit(1)
+				->first();
+         //Staff
+        $institutionStaff = TableRegistry::get('institution_staff');
+		$institutionStaffData = $institutionStaff->find()		
+				->select([
+					'created' => 'institution_staff.created',
+					'modified' => 'institution_staff.modified',
+				])
+				->where([$institutionStaff->aliasField('institution_id') => $institutionId])
+                ->order(['institution_staff.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Attendance
+        $institutionAttendance = TableRegistry::get('institution_staff_attendances');
+		$institutionAttendanceData = $institutionAttendance->find()		
+				->select([
+					'created' => 'institution_staff_attendances.created',
+					'modified' => 'institution_staff_attendances.modified',
+				])
+				->where([$institutionAttendance->aliasField('institution_id') => $institutionId])
+                ->order(['institution_staff_attendances.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         //Behaviour
+        $institutionBehaviour = TableRegistry::get('staff_behaviours');
+		$institutionBehaviourData = $institutionBehaviour->find()		
+				->select([
+					'created' => 'staff_behaviours.created',
+					'modified' => 'staff_behaviours.modified',
+				])
+				->where([$institutionBehaviour->aliasField('institution_id') => $institutionId])
+                ->order(['staff_behaviours.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Positions
+        $institutionPositions = TableRegistry::get('institution_positions');
+		$institutionPositionsData = $institutionPositions->find()		
+				->select([
+					'created' => 'institution_positions.created',
+					'modified' => 'institution_positions.modified',
+				])
+				->where([$institutionPositions->aliasField('institution_id') => $institutionId])
+                ->order(['institution_positions.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Bank Accounts 
+        $institutionBankAccounts  = TableRegistry::get('institution_bank_accounts');
+		$institutionBankAccountsData = $institutionBankAccounts->find()		
+				->select([
+					'created' => 'institution_bank_accounts.created',
+					'modified' => 'institution_bank_accounts.modified',
+				])
+				->where([$institutionBankAccounts->aliasField('institution_id') => $institutionId])
+                ->order(['institution_bank_accounts.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Institution Fees
+        $institutionInstitutionFees = TableRegistry::get('institution_fees');
+		$institutionInstitutionFeesData = $institutionInstitutionFees->find()		
+				->select([
+					'created' => 'institution_fees.created',
+					'modified' => 'institution_fees.modified',
+				])
+				->where([$institutionInstitutionFees->aliasField('institution_id') => $institutionId])
+                ->order(['institution_fees.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         //Infrastructures Overview 
+        $institutionInfrastructuresOverview  = TableRegistry::get('institution_lands');
+		$institutionInfrastructuresOverviewData = $institutionInfrastructuresOverview->find()		
+				->select([
+					'created' => 'institution_lands.created',
+					'modified' => 'institution_lands.modified',
+				])
+				->where([$institutionInfrastructuresOverview->aliasField('institution_id') => $institutionId])
+                ->order(['institution_lands.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // Infrastructures Needs 
+        $institutionInfrastructuresNeeds  = TableRegistry::get('infrastructure_needs');
+		$institutionInfrastructuresNeedsData = $institutionInfrastructuresNeeds->find()		
+				->select([
+					'created' => 'infrastructure_needs.created',
+					'modified' => 'infrastructure_needs.modified',
+				])
+				->where([$institutionInfrastructuresNeeds->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_needs.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // Wash Water 
+        $institutionWashWater  = TableRegistry::get('infrastructure_wash_waters');
+		$institutionWashWaterData = $institutionWashWater->find()		
+				->select([
+					'created' => 'infrastructure_wash_waters.created',
+					'modified' => 'infrastructure_wash_waters.modified',
+				])
+				->where([$institutionWashWater->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_waters.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // Wash Hygiene  
+        $institutionWashHygiene  = TableRegistry::get('infrastructure_wash_hygienes');
+		$institutionWashHygieneData = $institutionWashHygiene->find()		
+				->select([
+					'created' => 'infrastructure_wash_hygienes.created',
+					'modified' => 'infrastructure_wash_hygienes.modified',
+				])
+				->where([$institutionWashHygiene->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_hygienes.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // Wash Waste  
+        $institutionWashWaste  = TableRegistry::get('infrastructure_wash_wastes');
+		$institutionWashWasteData = $institutionWashWaste->find()		
+				->select([
+					'created' => 'infrastructure_wash_wastes.created',
+					'modified' => 'infrastructure_wash_wastes.modified',
+				])
+				->where([$institutionWashWaste->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_wastes.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         // Wash Sewage  
+        $institutionWashSewage  = TableRegistry::get('infrastructure_wash_sewages');
+		$institutionWashSewageData = $institutionWashSewage->find()		
+				->select([
+					'created' => 'infrastructure_wash_sewages.created',
+					'modified' => 'infrastructure_wash_sewages.modified',
+				])
+				->where([$institutionWashSewage->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_wash_sewages.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // Utilities Electricity  
+        $institutionUtilitiesElectricity  = TableRegistry::get('infrastructure_utility_electricities');
+		$institutionUtilitiesElectricityData = $institutionUtilitiesElectricity->find()		
+				->select([
+					'created' => 'infrastructure_utility_electricities.created',
+					'modified' => 'infrastructure_utility_electricities.modified',
+				])
+				->where([$institutionUtilitiesElectricity->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_electricities.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         // Utilities Internet  
+        $institutionUtilitiesInternet  = TableRegistry::get('infrastructure_utility_internets');
+		$institutionUtilitiesInternetData = $institutionUtilitiesInternet->find()		
+				->select([
+					'created' => 'infrastructure_utility_internets.created',
+					'modified' => 'infrastructure_utility_internets.modified',
+				])
+				->where([$institutionUtilitiesInternet->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_internets.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         //Utilities Telephone
+        $institutionUtilitiesTelephone  = TableRegistry::get('infrastructure_utility_telephones');
+		$institutionUtilitiesTelephoneData = $institutionUtilitiesTelephone->find()		
+				->select([
+					'created' => 'infrastructure_utility_telephones.created',
+					'modified' => 'infrastructure_utility_telephones.modified',
+				])
+				->where([$institutionUtilitiesTelephone->aliasField('institution_id') => $institutionId])
+                ->order(['infrastructure_utility_telephones.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+         // Assets  
+        $institutionAssets  = TableRegistry::get('institution_assets');
+		$institutionAssetsData = $institutionAssets->find()		
+				->select([
+					'created' => 'institution_assets.created',
+					'modified' => 'institution_assets.modified',
+				])
+				->where([$institutionAssets->aliasField('institution_id') => $institutionId])
+                ->order(['institution_assets.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Transport 
+        $institutionTransport  = TableRegistry::get('institution_buses');
+		$institutionTransportData = $institutionTransport->find()		
+				->where([$institutionTransport->aliasField('institution_id') => $institutionId])
+                ->order(['institution_buses.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        //Committees 
+        $institutionCommittees  = TableRegistry::get('institution_committees');
+		$institutionCommitteesData = $institutionCommittees->find()		
+				->select([
+					'created' => 'institution_committees.created',
+					'modified' => 'institution_committees.modified',
+				])
+				->where([$institutionCommittees->aliasField('institution_id') => $institutionId])
+                ->order(['institution_committees.modified'=>'desc'])
+				->limit(1)
+				->first();
+
+        // config 
+        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+		$enabledTypeList = $ConfigItem
+            ->find()
+            ->order('type')
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'Institution Completeness'])
+            ->toArray();
+
+        foreach($enabledTypeList as $key => $enabled) {
+                $data[$key]['feature'] = $enabled->name;
+                 if ($enabled->name == 'Overview') {
+                    if(!empty($institutionsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionsData->modified)?date("F j,Y",strtotime($institutionsData->modified)):date("F j,Y",strtotime($institutionsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Calendar') {
+                    if(!empty($calendarEventsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($calendarEventsData->modified)?date("F j,Y",strtotime($calendarEventsData->modified)):date("F j,Y",strtotime($calendarEventsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Contacts') {
+                    if(!empty($institutionContactPersonsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionContactPersonsData->modified)?date("F j,Y",strtotime($institutionContactPersonsData->modified)):date("F j,Y",strtotime($institutionContactPersonsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Shifts') {
+                    if(!empty($institutionShiftsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionShiftsData->modified)?date("F j,Y",strtotime($institutionShiftsData->modified)):date("F j,Y",strtotime($institutionShiftsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Programmes') {
+                    if(!empty($institutionProgrammesData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionProgrammesData->modified)?date("F j,Y",strtotime($institutionProgrammesData->modified)):date("F j,Y",strtotime($institutionProgrammesData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Classes') {
+                    if(!empty($institutionClassesData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionClassesData->modified)?date("F j,Y",strtotime($institutionClassesData->modified)):date("F j,Y",strtotime($institutionClassesData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Subjects') {
+                    if(!empty($institutionSubjectsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionSubjectsData->modified)?date("F j,Y",strtotime($institutionSubjectsData->modified)):date("F j,Y",strtotime($institutionSubjectsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Textbooks') {
+                    if(!empty($institutionTextbooksData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionTextbooksData->modified)?date("F j,Y",strtotime($institutionTextbooksData->modified)):date("F j,Y",strtotime($institutionTextbooksData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Students') {
+                    if(!empty($institutionStudentsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionStudentsData->modified)?date("F j,Y",strtotime($institutionStudentsData->modified)):date("F j,Y",strtotime($institutionStudentsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Staff') {
+                    if(!empty($institutionStaffData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionStaffData->modified)?date("F j,Y",strtotime($institutionStaffData->modified)):date("F j,Y",strtotime($institutionStaffData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Attendance') {
+                    if(!empty($institutionAttendanceData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionAttendanceData->modified)?date("F j,Y",strtotime($institutionAttendanceData->modified)):date("F j,Y",strtotime($institutionAttendanceData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Behaviour') {
+                    if(!empty($institutionBehaviourData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionBehaviourData->modified)?date("F j,Y",strtotime($institutionBehaviourData->modified)):date("F j,Y",strtotime($institutionBehaviourData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Positions') {
+                    if(!empty($institutionPositionsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionPositionsData->modified)?date("F j,Y",strtotime($institutionPositionsData->modified)):date("F j,Y",strtotime($institutionPositionsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Bank Accounts') {
+                    if(!empty($institutionBankAccountsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionBankAccountsData->modified)?date("F j,Y",strtotime($institutionBankAccountsData->modified)):date("F j,Y",strtotime($institutionBankAccountsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Institution Fees') {
+                    if(!empty($institutionInstitutionFeesData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionInstitutionFeesData->modified)?date("F j,Y",strtotime($institutionInstitutionFeesData->modified)):date("F j,Y",strtotime($institutionInstitutionFeesData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Infrastructures Overview') {
+                    if(!empty($institutionInfrastructuresOverviewData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionInfrastructuresOverviewData->modified)?date("F j,Y",strtotime($institutionInfrastructuresOverviewData->modified)):date("F j,Y",strtotime($institutionInfrastructuresOverviewData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Infrastructures Needs') {
+                    if(!empty($institutionInfrastructuresNeedsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionInfrastructuresNeedsData->modified)?date("F j,Y",strtotime($institutionInfrastructuresNeedsData->modified)):date("F j,Y",strtotime($institutionInfrastructuresNeedsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Wash Water') {
+                    if(!empty($institutionWashWaterData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionWashWaterData->modified)?date("F j,Y",strtotime($institutionWashWaterData->modified)):date("F j,Y",strtotime($institutionWashWaterData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Wash Hygiene') {
+                    if(!empty($institutionWashHygieneData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionWashHygieneData->modified)?date("F j,Y",strtotime($institutionWashHygieneData->modified)):date("F j,Y",strtotime($institutionWashHygieneData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Wash Waste') {
+                    if(!empty($institutionWashWasteData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionWashWasteData->modified)?date("F j,Y",strtotime($institutionWashWasteData->modified)):date("F j,Y",strtotime($institutionWashWasteData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Wash Sewage') {
+                    if(!empty($institutionWashSewageData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionWashSewageData->modified)?date("F j,Y",strtotime($institutionWashSewageData->modified)):date("F j,Y",strtotime($institutionWashSewageData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Utilities Electricity') {
+                    if(!empty($institutionUtilitiesElectricityData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionUtilitiesElectricityData->modified)?date("F j,Y",strtotime($institutionUtilitiesElectricityData->modified)):date("F j,Y",strtotime($institutionUtilitiesElectricityData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Utilities Internet') {
+                    if(!empty($institutionUtilitiesInternetData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionUtilitiesInternetData->modified)?date("F j,Y",strtotime($institutionUtilitiesInternetData->modified)):date("F j,Y",strtotime($institutionUtilitiesInternetData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Utilities Telephone') {
+                    if(!empty($institutionUtilitiesTelephoneData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionUtilitiesTelephoneData->modified)?date("F j,Y",strtotime($institutionUtilitiesTelephoneData->modified)):date("F j,Y",strtotime($institutionUtilitiesTelephoneData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Assets') {
+                    if(!empty($institutionAssetsData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionAssetsData->modified)?date("F j,Y",strtotime($institutionAssetsData->modified)):date("F j,Y",strtotime($institutionAssetsData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Transport') {
+                    if(!empty($institutionTransportData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionTransportData->modified)?date("F j,Y",strtotime($institutionTransportData->modified)):date("F j,Y",strtotime($institutionTransportData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+                if ($enabled->name == 'Committees') {
+                    if(!empty($institutionCommitteesData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        $data[$key]['modifiedDate'] = ($institutionCommitteesData->modified)?date("F j,Y",strtotime($institutionCommitteesData->modified)):date("F j,Y",strtotime($institutionCommitteesData->created));
+                    } else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
+                }
+
+        }
+        $totalProfileComplete = count($data);
+        $profilePercentage = 100/$totalProfileComplete * $profileComplete;
+        $profilePercentage = round($profilePercentage);
+        $data['percentage'] = $profilePercentage;
+        return $data;
+     }
+
 }

@@ -579,6 +579,7 @@ class ImportBehavior extends Behavior
     {
         $session = $this->_table->Session;
         if ($session->check($this->sessionKey)) {
+            
             $completedData = $session->read($this->sessionKey);
             $this->_table->ControllerAction->field('select_file', ['visible' => false]);
             $this->_table->ControllerAction->field('results', [
@@ -998,7 +999,13 @@ class ImportBehavior extends Behavior
                 // end POCOR-3916
 
                 if (!empty($value->description)) {
-                    $label .= ' ' . __($value->description);
+                    //POCOR-5913 starts 
+                    if($value->model == 'Student.StudentGuardians') {
+                        $label =  __($value->description);   
+                    }else{
+                        $label .= ' ' . __($value->description);     
+                    }
+                    //POCOR-5913 ends 
                 }
             }
 
@@ -1079,6 +1086,7 @@ class ImportBehavior extends Behavior
             $lookupPlugin = $row->lookup_plugin;
             $lookupModel = $row->lookup_model;
             $lookupColumn = $row->lookup_column;
+            $mappingModel = $row->model;
 
             $translatedCol = $this->getExcelLabel($model, $lookupColumn);
 
@@ -1091,18 +1099,35 @@ class ImportBehavior extends Behavior
             if ($foreignKey == self::FIELD_OPTION) {
                 if (TableRegistry::exists($lookupModel)) {
                     $relatedModel = TableRegistry::get($lookupModel);
-                } else {
+                } elseif($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
+                    $institutionId = 0;
+                    $session = $this->_table->Session;
+                    if ($session->check('Institution.Institutions.id')) {
+                        $institutionId = $session->read('Institution.Institutions.id');
+                    }
+                    
+                    $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table'])->findStudents($institutionId);
+                }else{
                     $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table']);
                 }
-                $modelData = $relatedModel->getList($relatedModel->find());
-                $emptyCodeRecords = $modelData;
-                $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $key) {
-                    return !empty($record->national_code);
-                })->toArray();
-
+                
+                if($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
+                    
+                    $emptyCodeRecords = $relatedModel;
+                    $modelData = $relatedModel;
+                }else{
+                    $modelData = $relatedModel->getList($relatedModel->find());
+                    $emptyCodeRecords = $modelData;
+                    $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $key) {
+                        return !empty($record->national_code);
+                    })->toArray();
+                    
+                    $modelData = $modelData->toArray();
+                }
+                
                 $data[$row->order]['lookupColumn'] = 2;
                 $data[$row->order]['data'][] = [__('Name'), $translatedCol];
-                $modelData = $modelData->toArray();
+                
                 if (!empty($modelData)) {
                     foreach ($modelData as $record) {
                         if (count($emptyCodeRecords)<1) {
@@ -1145,7 +1170,6 @@ class ImportBehavior extends Behavior
                 }
             }
         }
-
         return $folder;
     }
 
@@ -1208,6 +1232,7 @@ class ImportBehavior extends Behavior
      */
     protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols, ArrayObject $extra)
     {
+        
         // $references = [$sheet, $mapping, $columns, $lookup, $totalColumns, $row, $activeModel, $systemDateFormat];
         $sheet = $references['sheet'];
         $mapping = $references['mapping'];
@@ -1234,8 +1259,8 @@ class ImportBehavior extends Behavior
             } else {
                 $originalValue = $cell->getValue();
             }
-
-             $cellValue = $originalValue;
+            
+            $cellValue = $originalValue;
             // need to understand this check
             // @hanafi - this might be for type casting a double or boolean value to a string to avoid data loss when assigning
             // them to $val. Example: the value of latitude, "1.05647" might become "1" if not casted as a string type.
@@ -1249,8 +1274,139 @@ class ImportBehavior extends Behavior
             $lookupPlugin = $excelMappingObj->lookup_plugin;
             $lookupModel = $excelMappingObj->lookup_model;
             $lookupColumn = $excelMappingObj->lookup_column;
-            $columnName = $columns[$col];
-            $originalRow[$col] = $originalValue;
+            $lookupColumnName = $excelMappingObj->column_name;
+            $mappingModel = $excelMappingObj->model;
+
+            if($mappingModel == 'Student.Extracurriculars'  && $lookupColumnName == 'openemis_no'){
+                $columnName = 'security_user_id';
+                $securityUser = TableRegistry::get('User.Users')->find()->where(['openemis_no' => $originalValue])->first();
+                if(!$securityUser) {
+                    $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
+                    $rowPass = false;
+                    $extra['entityValidate'] = false;
+                }
+                $originalRow[$col] = $securityUser->id;
+                $cellValue = $securityUser->id;
+            }else if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'openemis_no' && !empty($originalValue)){ //POCOR-5913 starts
+                $i=1;
+                $columnName = 'guardian_id';
+                $userIdentities = TableRegistry::get('user_identities');
+                $identityTypes = TableRegistry::get('identity_types');
+                $User = TableRegistry::get('security_users');
+                $securityUser = $User
+                                    ->find()
+                                    ->select([
+                                        'id' => $User->aliasField('id'), 
+                                        'openemis_id' => $User->aliasField('openemis_no'),
+                                        'user_identities_id' => $userIdentities->aliasField('id'),
+                                        'identity_type_id' => $userIdentities->aliasField('identity_type_id'),
+                                        'number' => $userIdentities->aliasField('number'),
+                                        'security_user_id' => $userIdentities->aliasField('security_user_id'),
+                                        'identityTypes_id' => $identityTypes->aliasField('id'),
+                                        'default' => $identityTypes->aliasField('default')
+                                    ])
+                                    ->leftJoin(
+                                        [$userIdentities->alias() => $userIdentities->table()],
+                                        [$userIdentities->aliasField('security_user_id = ') .$User->aliasField('id')]
+                                    )
+                                    ->leftJoin(
+                                        [$identityTypes->alias() => $identityTypes->table()],
+                                        [$identityTypes->aliasField('id =') .$userIdentities->aliasField('identity_type_id')]
+                                    )
+                                    ->where([
+                                        'OR'=>[
+                                            $User->aliasField('openemis_no') => $originalValue,
+                                            'AND'=>[
+                                                $userIdentities->aliasField('number') => $originalValue,
+                                                $identityTypes->aliasField('default') => 1
+                                            ]
+                                        ]
+
+                                    ])
+                                    ->first();
+                if(!$securityUser) {
+                    $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
+                    $rowPass = false;
+                    $extra['entityValidate'] = false;
+
+                    $originalRow[$col] = $originalValue;
+                    $cellValue = $originalValue;
+                }else{
+                    $originalRow[$col] = $securityUser->id;
+                    $cellValue = $securityUser->id;
+                }
+            }else if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number' && !empty($originalValue)){ 
+                if($i == 1){
+                    break;
+                }
+                $k = 1;
+                $columnName = 'guardian_id';
+                $userIdentities = TableRegistry::get('user_identities');
+                $identityTypes = TableRegistry::get('identity_types');
+                $User = TableRegistry::get('security_users');
+                $securityUser = $User
+                                    ->find()
+                                    ->select([
+                                        'id' => $User->aliasField('id'), 
+                                        'openemis_id' => $User->aliasField('openemis_no'),
+                                        'user_identities_id' => $userIdentities->aliasField('id'),
+                                        'identity_type_id' => $userIdentities->aliasField('identity_type_id'),
+                                        'number' => $userIdentities->aliasField('number'),
+                                        'security_user_id' => $userIdentities->aliasField('security_user_id'),
+                                        'identityTypes_id' => $identityTypes->aliasField('id'),
+                                        'default' => $identityTypes->aliasField('default')
+                                    ])
+                                    ->leftJoin(
+                                        [$userIdentities->alias() => $userIdentities->table()],
+                                        [$userIdentities->aliasField('security_user_id = ') .$User->aliasField('id')]
+                                    )
+                                    ->leftJoin(
+                                        [$identityTypes->alias() => $identityTypes->table()],
+                                        [$identityTypes->aliasField('id =') .$userIdentities->aliasField('identity_type_id')]
+                                    )
+                                    ->where([
+                                        'OR'=>[
+                                            $User->aliasField('openemis_no') => $originalValue,
+                                            'AND'=>[
+                                                $userIdentities->aliasField('number') => $originalValue,
+                                                $identityTypes->aliasField('default') => 1
+                                            ]
+                                        ]
+
+                                    ])
+                                    ->first();
+                if(!$securityUser) {
+                    $rowInvalidCodeCols[$columnName] = __('Identity number is not valid');
+                    $rowPass = false;
+                    $extra['entityValidate'] = false;
+
+                    $originalRow[$col] = $originalValue;
+                    $cellValue = $originalValue;
+                }else{
+                    $originalRow[$col] = $securityUser->id;
+                    $cellValue = $securityUser->id;
+                }
+                //POCOR-5913 ends
+            }else{
+                $columnName = $columns[$col];
+                $originalRow[$col] = $originalValue;
+            }
+
+            //POCOR-5913 starts
+            if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'openemis_no' && empty($originalValue)){
+                $i=0;
+                continue;
+            }else if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number' && empty($originalValue)){
+                if($i==0){
+                    /*$columnName = 'guardian_id';
+                    $rowInvalidCodeCols[$columnName] = __('Please enter either OpenEMIS ID or Identity number for guardian');
+                    $rowPass = false;
+                    $extra['entityValidate'] = false;*/
+                }else{
+                    continue;
+                }
+            }
+            //POCOR-5913 ends
             $val = $cellValue;
 
             $datePattern = "/(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/[0-9]{4}/"; // dd/mm/yyyy
@@ -1295,6 +1451,8 @@ class ImportBehavior extends Behavior
             if (!$isOptional) {
                 $isOptional = substr_count($columnDescription, 'not required');
             }
+
+
             if ($foreignKey == self::FIELD_OPTION) {
                 if (!empty($cellValue)) {
                     if (array_key_exists($cellValue, $lookup[$col])) {
@@ -1322,9 +1480,21 @@ class ImportBehavior extends Behavior
                     if (isset($extra['lookup'][$excelLookupModel->alias()][$cellValue])) {
                         $record = $extra['lookup'][$excelLookupModel->alias()][$cellValue];
                     } else {
+                        //POCOR-5913 starts
+                        if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id'){
+                            if($securityUser){
+                                $cellValue = $securityUser->openemis_id;
+                            }else{
+                                $cellValue = $originalValue;
+                            }
+
+                            if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number'){
+                                $lookupColumn = 'openemis_no';
+                            }
+                        }//POCOR-5913 ends
+
                         $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
                         $record = $lookupQuery->first();
-
                         $extra['lookup'][$excelLookupModel->alias()][$cellValue] = $record;
                     }
                 } else {
@@ -1353,8 +1523,19 @@ class ImportBehavior extends Behavior
                                 $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
                             }
                         } else {
-                            $rowPass = false;
-                            $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
+                            //POCOR-5913 starts
+                            if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number' && empty($originalValue)){
+                                if($i==0){
+                                    $columnName = 'guardian_id';
+                                    $rowInvalidCodeCols[$columnName] = __('Please enter either OpenEMIS ID or Identity number for guardian');
+                                    $rowPass = false;
+                                    $extra['entityValidate'] = false;
+                                }
+                            //POCOR-5913 ends
+                            }else{
+                                $rowPass = false;
+                                $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
+                            }
                         }
                     }
                 } else {
@@ -1395,7 +1576,7 @@ class ImportBehavior extends Behavior
                 $tempRow[$columnName] = $val;
             }
         }
-
+        
         // add condition to check if its importing institutions
         $plugin = $this->config('plugin');
         $model = $this->config('model');
@@ -1409,12 +1590,11 @@ class ImportBehavior extends Behavior
             $tempRow['userId'] = $userId;
             $tempRow['superAdmin'] = $superAdmin;
         }
-
+       
         if ($rowPass) {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
             $rowPass = $rowPassEvent->result;
         }
-
 
         return $rowPass;
     }

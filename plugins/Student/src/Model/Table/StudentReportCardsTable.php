@@ -37,6 +37,7 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->fields['started_on']['visible'] = false;
         $this->fields['completed_on']['visible'] = false;
         $this->fields['status']['visible'] = false;
+        $this->fields['file_content_pdf']['visible'] = false;
         $this->fields['report_card_id']['type'] = 'integer';
         $this->fields['education_grade_id']['type'] = 'integer';
         $this->fields['institution_id']['type'] = 'integer';
@@ -49,12 +50,25 @@ class StudentReportCardsTable extends ControllerActionTable
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
+    {   
+        $user = $this->Auth->user();
+       
         $InstitutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $query
-            ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')
+        
+        if ($user['is_student'] == 1) {
+            $query
+            ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
+            ->where([$this->aliasField('student_id') => $user['id']])   //  POCOR-5910
+            //->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
+            ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
+        }
+        else{
+            $query
+            ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
             ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
             ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
+        }
+
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -65,14 +79,17 @@ class StudentReportCardsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
+   
         $downloadAccess = false;
         if ($this->controller->name == 'Students') {
             $downloadAccess = $this->AccessControl->check(['Students', 'ReportCards', 'download']);
         } else if ($this->controller->name == 'Directories') {
             $downloadAccess = $this->AccessControl->check(['Directories', 'StudentReportCards', 'download']);
+        } else if ($this->controller->name == 'Profiles') {
+            $downloadAccess = $this->AccessControl->check(['Profiles', 'StudentReportCards', 'download']);
+            unset($buttons['view']);
         }
-
+    
         if ($downloadAccess) {
             $params = [
                 'report_card_id' => $entity->report_card_id,
@@ -82,15 +99,14 @@ class StudentReportCardsTable extends ControllerActionTable
                 'education_grade_id' => $entity->education_grade_id
             ];
 
-            $url = $this->url('download');
+            $url = $this->url('downloadPdf');
             $url[1] = $this->paramsEncode($params);
-            $buttons['download'] = [
+            $buttons['downloadPdf'] = [
                 'label' => '<i class="fa kd-download"></i>'.__('Download'),
                 'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false],
                 'url' => $url
             ];
         }
-
         return $buttons;
     }
 

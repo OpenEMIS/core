@@ -327,10 +327,15 @@ class RestfulV2Component extends Component implements RestfulInterface
         $options = ['extra' => $extra];
 
         $entity = $table->newEntity($requestData, $options);
-
-        // blob data type will be sent using based64 format
-        $entity = $this->convertBase64ToBinary($entity);
-        $table->save($entity, $options);
+        if($table->table() == 'staff_payslips'){
+            // blob data type will be sent using based64 format without stream get content
+            $entity = $this->convertBase64ToBinaryWithoutStreamGetContent($entity);
+            $table->fileUpload($entity, $options);
+        }else{
+            // blob data type will be sent using based64 format
+            $entity = $this->convertBase64ToBinary($entity);
+            $table->save($entity, $options);
+        }
         $errors = $entity->errors();
         $this->translateArray($errors);
 
@@ -973,6 +978,21 @@ class RestfulV2Component extends Component implements RestfulInterface
                     $value = urldecode($entity->$column);
                     $entity->$column = base64_decode($value);
                 }
+            }
+        }
+        return $entity;
+    }
+
+    private function convertBase64ToBinaryWithoutStreamGetContent(Entity $entity)
+    {
+        $table = $this->model;
+        $schema = $table->schema();
+        $columns = $schema->columns();
+
+        foreach ($columns as $column) {
+            $attr = $schema->column($column);
+            if ($attr['type'] == 'binary' && $entity->has($column)) {
+                $entity->$column = base64_decode($entity->$column);
             }
         }
         return $entity;

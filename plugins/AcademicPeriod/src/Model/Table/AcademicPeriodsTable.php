@@ -95,13 +95,18 @@ class AcademicPeriodsTable extends AppTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-
         $additionalParameters = ['editable = 1 AND visible > 0'];
-
+        //POCOR-5917 starts
         return $validator
-            ->add('end_date', 'ruleCompareDateReverse', [
+            ->add('end_date', [
+                'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', false]
-                ])
+                ],
+                'ruleCompareEndDate' => [
+                    'rule' => ['compareEndDate', 'start_date', false],
+                    'message' => __('End date should not be less than current date')
+                ]
+            ])//POCOR-5917 ends
             ->add('current', 'ruleValidateNeeded', [
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
             ])
@@ -112,6 +117,13 @@ class AcademicPeriodsTable extends AppTable
     {
         $entity->start_year = date("Y", strtotime($entity->start_date));
         $entity->end_year = date("Y", strtotime($entity->end_date));
+        //POCOR-5917 starts
+        if (!$entity->isNew()) { //when edit academic period
+            $acedmicPeriodData = $this->find()->where([$this->aliasField('id') => $entity->id])->first();
+            $entity->old_end_date = (new Date($acedmicPeriodData->end_date))->format('Y-m-d');
+            $entity->old_end_year = $acedmicPeriodData->end_year;
+        }
+        //POCOR-5917 ends
         if ($entity->current == 1) {
             $entity->editable = 1;
             $entity->visible = 1;
@@ -156,6 +168,29 @@ class AcademicPeriodsTable extends AppTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
+        //POCOR-5917 starts
+        if(isset($entity->old_end_date) && !empty($entity->old_end_date) && isset($entity->old_end_year) && !empty($entity->old_end_year)){ //when edit academic period
+            $academic_end_date = (new Date($entity->old_end_date))->format('Y-m-d'); 
+            $academic_end_year = $entity->old_end_year; 
+            $institutionStudents = TableRegistry::get('institution_students');
+            $institutionStudentsData = $institutionStudents
+                                            ->find()
+                                            ->where([
+                                                $institutionStudents->aliasField('end_date') => $academic_end_date,
+                                                $institutionStudents->aliasField('end_year') => $academic_end_year,
+                                                $institutionStudents->aliasField('student_status_id') => 1
+                                            ])->toArray();
+            if(!empty($institutionStudentsData)){
+                foreach ($institutionStudentsData as $key => $val) {
+                    $institution_students_end_date = (new Date($entity->end_date))->format('Y-m-d');
+                    $institution_students_end_year = $entity->end_year;
+                    $institutionStudentsEntity = $this->patchEntity($val, ['end_date' => $institution_students_end_date, 'end_year' =>$institution_students_end_year], ['validate' =>false]);
+
+                    $institutionStudents->save($institutionStudentsEntity);  
+                }
+            }                                
+        }
+        //POCOR-5917 ends
         $canCopy = $this->checkIfCanCopy($entity);
 
         $shells = ['Infrastructure', 'Shift'];
@@ -398,7 +433,7 @@ class AcademicPeriodsTable extends AppTable
                         ->first();
                     $current = $request->query('current');
 
-                    if ($academicPeriodLevelId == $level->id && !is_null($current) && $current == 1) {
+                    if (!is_null($current) && $current == 1) {
                         $where = [$this->aliasField('academic_period_level_id') => $level->id];
                         if (array_key_exists('id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['id'])) {
                             $currentAcademicPeriodId = $request->data[$this->alias()]['id'];
@@ -932,6 +967,55 @@ class AcademicPeriodsTable extends AppTable
 
         return $academicPeriodId;
     }
+
+    public function getMealWeeksForPeriod($academicPeriodId){
+        $model = $this;
+        $query = $this->AcademicPeriods->find()
+                ->where([$this->aliasField('id') => $academicPeriodId])
+                 ->all();
+     
+
+
+         $todayDate = date("Y-m-d");
+                    $weekOptions = [];
+                    $selectedIndex = 0;
+
+                    $weeks = $model->getAttendanceWeeks($academicPeriodId);
+
+                    $weekStr = __('Week') . ' %d (%s - %s)';
+                    $currentWeek = null;
+
+                    foreach ($weeks as $index => $dates) {
+                        $startDay = $dates[0]->format('Y-m-d');
+                        $endDay = $dates[1]->format('Y-m-d');
+                        $weekAttr = [];
+                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                            $weekStr = __('Current Week') . ' %d (%s - %s)';
+                            // $weekAttr['selected'] = true;
+                            $currentWeek = $index;
+                        } else {
+                            $weekStr = __('Week') . ' %d (%s - %s)';
+                        }
+
+                        $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+                        $weekAttr['start_day'] = $startDay;
+                        $weekAttr['end_day'] = $endDay;
+                        $weekAttr['id'] = $index;
+                        $weekOptions[] = $weekAttr;
+
+                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                            end($weekOptions);
+                            $selectedIndex = key($weekOptions);
+                        }
+                    }
+
+                    $weekOptions[$selectedIndex]['selected'] = true;
+                   
+                    
+            return $weekOptions;
+       
+    }
+
     
     public function findWeeksForPeriod(Query $query, array $options)
     {

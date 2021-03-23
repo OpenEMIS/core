@@ -17,6 +17,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $this->table('institution_outcome_results');
 
         parent::initialize($config);
+       
         $this->belongsTo('OutcomeGradingOptions', ['className' => 'Outcome.OutcomeGradingOptions']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('OutcomeTemplates', [
@@ -121,14 +122,22 @@ class StudentOutcomesTable extends ControllerActionTable
         // education subject filter
         $subjectOptions = [];
         if (!empty($selectedTemplate)){
-            $educationGradeId = $this->OutcomeTemplates->get(['id' => $selectedTemplate, 'academic_period_id' => $selectedAcademicPeriod])->education_grade_id;
-
-            $subjectOptions = $this->EducationSubjects
-                ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                ->matching('EducationGrades', function ($q) use ($educationGradeId) {
-                    return $q->where(['EducationGrades.id' => $educationGradeId]);
-                })
-                ->toArray();
+            $session = $this->request->session();
+            $studentId = $session->read('Student.Students.id');
+            $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $subjectOptions = $EducationSubjects
+                                ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                                ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                                   $InstitutionSubjects->aliasField('education_subject_id = ') . $EducationSubjects->aliasField('id')
+                                ])
+                                ->innerJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
+                                   $InstitutionSubjectStudents->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id')
+                                ])
+                                ->where([$InstitutionSubjectStudents->aliasField('student_id') => $studentId ])
+                                ->toArray(); 
+             
             $subjectOptions = ['0' => __('All Subjects')] + $subjectOptions;
         }
 
@@ -146,6 +155,17 @@ class StudentOutcomesTable extends ControllerActionTable
             'OutcomeCriterias' => ['code'],
             'OutcomeGradingOptions' => ['code']
         ];
+
+		$userData = $this->Session->read();
+		$studentId = $userData['Auth']['User']['id'];
+		
+		if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
+
+		} else {
+			if (!empty($studentId)) {
+				$conditions[$this->aliasField('student_id')] = $studentId;
+			}
+		}
 
         $query->where($conditions);
     }

@@ -119,6 +119,7 @@ trait MessagesTrait
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
             'custom_validation_pattern' => 'Please enter a valid format',
             'inactive_message' => 'This institution is inactive, all data entry operation are disabled.',
+            'status_update' => 'By Saving this Page, the institution status will be updated.',
             'contactInstitution' => [
                     'telephone' => 'Telephone cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'fax' => 'Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
@@ -541,6 +542,12 @@ trait MessagesTrait
             'noStudentSelected' => 'There are no students selected',
             'savingError' => 'Some selected students record were not updated succesfully',
         ],
+        'BulkStudentTransferIn' => [
+            'success' => 'Bulk students transfer successful',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
+        ],
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
             'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
@@ -773,6 +780,44 @@ trait MessagesTrait
             'emailInProgress' => 'There is already a email process sending in the background',
 			'date_closed' => 'Generate date for report card has been closed'
         ],
+        'StaffProfiles' => [
+            'noProgrammes' => 'There is no programme set for this institution',
+            'noTemplate' => 'There is no template for this Staff Profile. Please contact the administrator for assistance.',
+            'noFilesToDownload' => 'There are no generated Staff Profiles to download',
+            'noFilesToPublish' => 'There are no generated Staff Profiles to publish',
+            'noFilesToUnpublish' => 'There are no published Staff Profiles to unpublish',
+            'inProgress' => 'There is already a process running for this Staff Profile',
+            'generate' => 'The Staff Profile will be generated in the background',
+            'generateAll' => 'All Staff Profile will be generated in the background',
+            'checkReportCardTemplatePeriod' => 'The Staff Profile period is not active. Please contact the System Administrator.',
+            'publish' => 'The Staff Profile has been successfully published',
+            'publishAll' => 'All generated Staff Profiles have been published successfully',
+            'unpublish' => 'The Staff Profile has been successfully unpublished',
+            'unpublishAll' => 'All published Staff Profiles have been unpublished successfully',
+            'email' => 'The Staff Profile will be sent in the background',
+            'emailAll' => 'All Staff Profiles will be sent in the background',
+            'emailInProgress' => 'There is already a email process sending in the background',
+			'date_closed' => 'Generate date for Staff Profile has been closed'
+        ],
+        'StudentProfiles' => [
+            'noProgrammes' => 'There is no programme set for this institution',
+            'noTemplate' => 'There is no template for this Student Profile. Please contact the administrator for assistance.',
+            'noFilesToDownload' => 'There are no generated Student Profiles to download',
+            'noFilesToPublish' => 'There are no generated Student Profiles to publish',
+            'noFilesToUnpublish' => 'There are no published Student Profiles to unpublish',
+            'inProgress' => 'There is already a process running for this Student Profile',
+            'generate' => 'The Student Profile will be generated in the background',
+            'generateAll' => 'All Student Profile will be generated in the background',
+            'checkReportCardTemplatePeriod' => 'The Student Profile period is not active. Please contact the System Administrator.',
+            'publish' => 'The Student Profile has been successfully published',
+            'publishAll' => 'All generated Student Profiles have been published successfully',
+            'unpublish' => 'The Student Profile has been successfully unpublished',
+            'unpublishAll' => 'All published Student Profiles have been unpublished successfully',
+            'email' => 'The Student Profile will be sent in the background',
+            'emailAll' => 'All Student Profiles will be sent in the background',
+            'emailInProgress' => 'There is already a email process sending in the background',
+			'date_closed' => 'Generate date for Student Profile has been closed'
+        ],
         'RecipientPaymentStructures' => [
             'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
         ],
@@ -876,6 +921,14 @@ trait MessagesTrait
                 'classification' => [
                     'validClassification' => 'Please enter a valid Classification',
                 ],
+            ],
+            'InstitutionMaps' => [
+                'longitude' => [
+                    'ruleLongitude' => 'Please enter a valid Longitude'
+                ],
+                'latitude' => [
+                    'ruleLatitude' => 'Please enter a valid Latitude'
+                ]
             ],
             'InstitutionContacts' => [
                 'email' => [
@@ -1288,7 +1341,8 @@ trait MessagesTrait
                 'start_date' => [
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
                     'ruleCompareDateReverse' => 'Start Date should not be earlier than Requested Date.',
-                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.',
+                    'dateAlreadyTaken' => 'Start Date already taken'
                 ],
                 'institution_id' => [
                     'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
@@ -2298,6 +2352,27 @@ trait MessagesTrait
                 ]
             ],
         ],
+        'ProfileTemplate' => [
+            'StudentTemplates' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+				'generate_start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'generate_end_date' => [
+                    'ruleCompareDateReverse' => 'Generate End Date should not be earlier than Generate Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ]
+            ],
+        ],
         'Area' => [
             'Areas' => [
                 'code' => [
@@ -2365,7 +2440,24 @@ trait MessagesTrait
                     'ruleUniqueCode' => 'Code must be unique'
                 ]
             ]
+        ],
+        'Archive' => [
+            'lessSpace' => 'Please make sure there is enough space for backup.',
+            'backupReminder' => 'Please remember to backup first before you proceed to transfer this data. Transfer is not possible for the current Academic Period. After the transfer is completed, the Academic Period will be updated to non-editable and non-visible.',
+            'currentAcademic' => 'Please do not transfer data of current Academic Period.'
+        ],
+        'Connection' => [
+            'testConnectionSuccess' => 'Connection has been established successfully.',
+            'testConnectionFail' => 'Please configure correct Connection to Archive Database.',
+            'transferConnectionFail' => 'Please configure connection to Archive Database.',
+            'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.'
+        ],
+        'UserNationalities' => [
+            'ValidateNumberSuccess' => 'Identity number validate successfully.',
+            'ValidateNumberFail' => 'Please enter correct identity number.',
+            'IdentityNumberNotExist' => 'Identity number should not be blank.',
         ]
+
     ];
 
 

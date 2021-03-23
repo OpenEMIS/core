@@ -320,6 +320,63 @@ class UsersTable extends AppTable
             });
     }
 
+    public function findInstitutionStudentsNotInAssociation(Query $query, array $options)
+    {
+        $academicPeriodId = $options['academic_period_id'];
+        $institutionId = $options['institution_id'];
+        $associationId = ($options['institution_association_id'])?$options['institution_association_id'] : null;
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
+
+        return $query
+            ->innerJoinWith('InstitutionStudents')
+            ->innerJoinWith('InstitutionStudents.StudentStatuses')
+            ->innerJoinWith('InstitutionStudents.AcademicPeriods')
+            ->innerJoinWith('InstitutionStudents.EducationGrades')
+            ->innerJoinWith('Genders')
+            ->where([
+                'InstitutionStudents.institution_id' => $institutionId,
+                'InstitutionStudents.student_status_id' => $enrolledStatus,
+                'InstitutionStudents.academic_period_id' => $academicPeriodId,
+            ])
+            ->select([
+                'academic_period_id' => 'InstitutionStudents.academic_period_id',
+                'student_status_id' => 'InstitutionStudents.student_status_id',
+                'student_status_name' => 'StudentStatuses.name',
+                'gender_id' => 'Genders.id',
+                'gender_name' => 'Genders.name',
+                'education_grade_id' => 'InstitutionStudents.education_grade_id',
+                'education_grade_name' => 'EducationGrades.name',
+                $this->aliasField('id'),
+                $this->aliasField('openemis_no'),
+                $this->aliasField('first_name'),
+                $this->aliasField('middle_name'),
+                $this->aliasField('third_name'),
+                $this->aliasField('last_name'),
+                $this->aliasField('preferred_name')
+            ])
+            ->group([$this->aliasField('id')])
+            ->order([$this->aliasField('first_name', 'last_name')]) // POCOR-2547 sort list of staff and student by name
+            ->formatResults(function ($results) use ($institutionId) {
+                $arrReturn = [];
+                foreach ($results as $result) {
+                    $arrReturn[] = [
+                        'name' => $result->name,
+                        'openemis_no' => $result->openemis_no,
+                        'security_user_id' => $result->id,
+                        'education_grade_id' => $result->education_grade_id,
+                        'education_grade_name' => __($result->education_grade_name),
+                        'student_status_id' => $result->student_status_id,
+                        'student_status_name' => __($result->student_status_name),
+                        'academic_period_id' => $result->academic_period_id,
+                        'gender_id' => $result->gender_id,
+                        'gender_name' => __($result->gender_name),
+                        'institution_id' => $institutionId,
+                    ];
+                }
+                return $arrReturn;
+            });
+    }
+
     public function setTabElements()
     {
         if ($this->alias() != 'Users') {
@@ -534,7 +591,7 @@ class UsersTable extends AppTable
         $latest = $this->find()
             ->order($this->aliasField('id').' DESC')
             ->first();
-
+        
         if (is_array($latest)) {
             $latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
         } else {
@@ -545,9 +602,11 @@ class UsersTable extends AppTable
         } else {
             $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
         }
-
+        
+        $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
+        
         $currentStamp = time();
-        if ($latestDbStamp <= $currentStamp) {
+        if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
             $newStamp = $latestDbStamp + 1;
         } else {
             $newStamp = $currentStamp;
@@ -564,8 +623,8 @@ class UsersTable extends AppTable
            $resultOpenemisTemp = $openemisTemps->find('all')                
                 ->order(['id' => 'DESC'])
                 ->first();
-           
-           $newOpenemisNo = $resultOpenemisTemp->openemis_no + 1;
+           $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
+           $newOpenemisNo = $resultOpenemisNoTemp + 1;
         }       
         
         $openemisTemp = $openemisTemps->newEntity();
@@ -1269,5 +1328,31 @@ class UsersTable extends AppTable
 		}
         
         die;
+    }
+    
+    public function findStudents($institutionId = 0){
+       
+        $query = TableRegistry::get('Institution.Students');
+        $studentQuery = $query->find()
+                ->contain(['Users'])                
+                ->where(['institution_id' => $institutionId])
+                ;
+        
+        
+        $student = $studentQuery->select(['id' =>'Users.openemis_no','openemis_no' =>'Users.openemis_no', 
+                    'first_name' =>"Users.first_name",
+                    'middle_name' =>"Users.middle_name",
+                    'third_name' =>"Users.third_name",
+                    'last_name' => "Users.last_name"
+                ]);
+        
+        $students = $student->formatResults(function($results) {
+                return $results->map(function($row) { 
+                    $row->name = preg_replace('/\s+/', ' ',$row->first_name.' '.$row->middle_name.' '.$row->third_name.' '.$row->last_name);
+                    return $row;
+                });
+            })->toArray();
+            
+        return $students;
     }
 }
