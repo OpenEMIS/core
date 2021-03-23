@@ -75,7 +75,7 @@ class InstallerController extends AppController
             }
         }
         if(DATABASE_DUMP_FILE == ''){
-            $this->Alert->error('Database not avaialble with this package.', ['type' => 'text']);
+            $this->Alert->error('Database not configured properly.', ['type' => 'text']);
             return null;
         }
         if (APPLICATION_MODE_COUNT > 1) {
@@ -106,7 +106,7 @@ class InstallerController extends AppController
             } catch (Exception $e) {
                 if (file_exists(CONFIG . 'datasource.php')) {
                     if ($this->request->param('_ext') != 'json') {
-                        return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+                        $this->redirect(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'step3']);
                     } else {
                         $this->set('code', 422);
                         $this->set('message', 'Datasource has already been created');
