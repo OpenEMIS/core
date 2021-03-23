@@ -435,6 +435,11 @@ class InstitutionSurveysTable extends ControllerActionTable
                         'name'
                     ]
                 ],
+                'Institutions' => [
+                    'fields' => [
+                        'institution_status_id'
+                    ]
+                ],
                 'SurveyForms' => [
                     'fields' => [
                         'name', 'description'
@@ -447,7 +452,11 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ]
             ])
             ->where([
-            $this->aliasField('status_id <> ') => self::EXPIRED
+            $this->aliasField('status_id <> ') => self::EXPIRED,
+            //POCOR-5666 Condition[START]
+            //Survey should only show for the active institution
+            $this->aliasField('Institutions.institution_status_id = ') => 1
+            //POCOR-5666 Condition[END]
         ]);
 
         // POCOR-4027 fixed search function (search assignee and survey form)
@@ -721,6 +730,12 @@ class InstitutionSurveysTable extends ControllerActionTable
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
         $doneStatus = WorkflowSteps::DONE;
+        $roles = TableRegistry::get('Security.SecurityGroupUsers');
+        $userRole = $roles->find()
+                    ->select([$roles->aliasField('security_role_id')])
+                    ->where([ $roles->aliasField('security_user_id')  => $userId ])->first();
+        $roleId = $userRole['security_role_id'];
+        $workflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
 
         $query
             ->select([
@@ -745,7 +760,16 @@ class InstitutionSurveysTable extends ControllerActionTable
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
-            ->where([$this->aliasField('assignee_id') => $userId])
+            ->innerJoin(
+                [$workflowStepsRoles->alias() => $workflowStepsRoles->table()],
+                [
+                    $workflowStepsRoles->aliasField('workflow_step_id = ') . $this->aliasField('status_id')
+                ]
+            )
+            ->where([
+                $this->aliasField('assignee_id') => $userId,
+                $workflowStepsRoles->aliasField('security_role_id') => $roleId
+            ])
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
@@ -774,7 +798,6 @@ class InstitutionSurveysTable extends ControllerActionTable
                     return $row;
                 });
             });
-
         return $query;
     }
     
@@ -785,6 +808,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $ids = $this->ControllerAction->paramsDecode($modelId);
        
         $institutionServery = $this->get($ids['id']);
+
         //print_r($data);
         $SurveyFormQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
         $SurveyFormsQuestionDatas = $SurveyFormQuestions->find()
@@ -794,16 +818,16 @@ class InstitutionSurveysTable extends ControllerActionTable
                 )
                 ->where(['survey_form_id' => $institutionServery->survey_form_id, 'SurveyQuestions.is_mandatory' => self::IS_MANDATORY])
                 ->count();
-        
-        if($SurveyFormsQuestionDatas > 0){
+        //echo "<pre>";print_r($SurveyFormsQuestionDatas);die();
+        if($SurveyFormsQuestionDatas < 0 ){
           $errors = true; 
           $this->Alert->error('InstitutionSurveys.mandatoryFieldFill', ['reset'=>true]);
-        }
+        } 
         
         if ($errors) {
             $event->stopPropagation();
             $url = $this->url('view');
             return $this->controller->redirect($url);
-        }        
+        }      
     }
 }

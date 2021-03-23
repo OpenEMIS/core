@@ -54,6 +54,9 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 ],
                 'ruleCheckProgrammeEndDateAgainstStudentStartDate' => [
                     'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date']
+                ],
+                'dateAlreadyTaken' => [
+                    'rule' => ['dateAlreadyTaken']
                 ]
             ])
             ->allowEmpty('institution_class_id')
@@ -146,6 +149,21 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $toolbarButtonsArray['back']['url'][0] = 'index';
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End
+
+        // Start bulk Student Transfer In button POCOR-5677 start
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $url = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'BulkStudentTransferIn',
+            'edit'
+        ];
+        $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
+        $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
+        $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Student Transfer In');
+        $toolbarButtonsArray['bulkAdmission']['url'] = $url;
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        // End bulk Student Transfer In button POCOR-5677 end
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -240,6 +258,22 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
             'new_information_header', 'academic_period_id', 'education_grade_id', 'institution_id',  'institution_class_id', 'start_date', 'end_date',
             'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
         ]);
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
+    {   
+        $studentId = $entity->student_id;
+        $institutionId = $entity->institution_id;
+        $academicPeriodId = $entity->academic_period_id;
+        $startDate = $entity->start_date;
+        $newDate = $startDate->format('Y-m-d');
+        $endDate = $entity->end_date;
+        $institutionStudents = TableRegistry::get('institution_students');
+        $query = $institutionStudents->query();
+        $query->update()
+                ->set(['start_date' => $newDate])
+                ->where(['institution_id' => $institutionId, 'student_id' => $studentId, 'academic_period_id' => $academicPeriodId])
+                ->execute();
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)

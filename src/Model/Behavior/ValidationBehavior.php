@@ -95,10 +95,14 @@ class ValidationBehavior extends Behavior
 
     public static function checkLongitude($check)
     {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $LongitudeMinimum = $ConfigItems->value("longitude_minimum");
+        $LongitudeMaximum = $ConfigItems->value("longitude_maximum");
+        
         $isValid = false;
         $longitude = trim($check);
 
-        if (is_numeric($longitude) && floatval($longitude) >= -180.00 && floatval($longitude <= 180.00)) {
+        if (is_numeric($longitude) && floatval($longitude) >= $LongitudeMinimum && floatval($longitude <= $LongitudeMaximum)) {
             $isValid = true;
         }
         return $isValid;
@@ -261,11 +265,14 @@ class ValidationBehavior extends Behavior
 
     public static function checkLatitude($check)
     {
-
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $LatitudeMinimum = $ConfigItems->value("latitude_minimum");
+        $LatitudeMaximum = $ConfigItems->value("latitude_maximum");
+        
         $isValid = false;
         $latitude = trim($check);
 
-        if (is_numeric($latitude) && floatval($latitude) >= -90.00 && floatval($latitude <= 90.00)) {
+        if (is_numeric($latitude) && floatval($latitude) >= $LatitudeMinimum && floatval($latitude <= $LatitudeMaximum)) {
             $isValid = true;
         }
         return $isValid;
@@ -559,7 +566,7 @@ class ValidationBehavior extends Behavior
         $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
         $contactOptionOther = $ContactOptionsTable->getIdByCode('OTHER');
 
-    	$flag = false;
+        $flag = false;
         $contactOption = $globalData['data']['contact_option_id'];
         $userId = $globalData['data']['security_user_id'];
         $currentField = $globalData['field'];
@@ -581,7 +588,7 @@ class ValidationBehavior extends Behavior
         if ($currentField == 'preferred') {
             $preferred = $field;
 
-        	if ($preferred == "0" && $contactOption != $contactOptionOther) { //during not preferred set ot contact type is 'others'
+            if ($preferred == "0" && $contactOption != $contactOptionOther) { //during not preferred set ot contact type is 'others'
                 $query->where([$Contacts->aliasField('preferred') => 1]);
                 $count = $query->count();
 
@@ -2941,4 +2948,268 @@ class ValidationBehavior extends Behavior
         }
     }
 
+    //POCOR-5668 validation for external validation in fieldOption edit Nationalities
+    public static function check_external_validation($field)
+    {   
+        //$field is for external variable
+        if($field == 1){
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $external_data = $ConfigItems->findByCode('external_data_source_type')->first();
+            $type = $external_data->value;
+            if($type == 'None' || $type == ''){
+                return false;
+            }
+        }
+        return true;
+    }  
+
+    public static function check_validate_number($field, array $globalData)
+    {   
+        //$field is for external variable
+        $nationalityTable = TableRegistry::get('Nationalities')
+                            ->find()
+                            ->where([
+                                'Nationalities.id' => $globalData['data']['nationality_id']
+                            ])
+                            ->first();
+        if($nationalityTable->external_validation == 1){
+            if($globalData['data']['id'] != '' && $globalData['data']['identity_type_id'] != '' && $globalData['data']['number'] != ''){
+                //edit nationality case
+                $IdentityTypes = TableRegistry::get('identity_types');
+                $UserIdentities = TableRegistry::get('UserIdentities');
+                $identityTypeData = $UserIdentities
+                                        ->find()
+                                        ->select([
+                                            $UserIdentities->aliasField('id'),
+                                            $UserIdentities->aliasField('identity_type_id'),
+                                            $IdentityTypes->aliasField('name'),
+                                            $UserIdentities->aliasField('number'),
+                                            $UserIdentities->aliasField('nationality_id'),
+                                        ])
+                                        ->leftJoin(
+                                            [$IdentityTypes->alias() => $IdentityTypes->table()], [
+                                                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+                                            ]
+                                        )
+                                        ->where([
+                                            'UserIdentities.identity_type_id' => $globalData['data']['identity_type_id'],
+                                            'UserIdentities.nationality_id' => $globalData['data']['nationality_id'],
+                                            'UserIdentities.security_user_id' => $globalData['data']['security_user_id']
+                                        ])
+                                        ->first();
+                if(!empty($identityTypeData)){
+                    if($identityTypeData->number == $globalData['data']['number']){
+                        return true;
+                    }else if($identityTypeData->number != $globalData['data']['number'] && $globalData['data']['validate_number'] == 1){
+                        return true;
+                    }
+                }
+                return false;
+            }else{
+                //add nationality                          
+                if($globalData['data']['validate_number'] == 0){
+                    return false;
+                }
+            }
+        }                    
+        return true;
+    }
+
+
+    public static function check_identity_type_id_validation($field)
+    {   
+        //$field is for external variable
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $arr = array('StudentIdentities', 'StaffIdentities','GuardianIdentities','OtherIdentities');
+        $conditions = [
+            'code IN ' => $arr,
+            'value' => 1,
+        ];
+        $count = $ConfigItems->find()
+            ->where($conditions)
+            ->count();
+        if($count > 0){
+            return true;
+        }
+        return false;
+    }
+    //POCOR-5668 ends
+
+    public static function forOneMonthDate($field, array $globalData)
+    {   
+        //$field is start date for student attandance summary report
+        if(!empty($field)){
+            $report_start_date =  strtotime($globalData['data']['report_start_date']);
+            $report_end_date =  strtotime($globalData['data']['report_end_date']);
+            $datediff = $report_end_date - $report_start_date;
+            $days = round($datediff / (60 * 60 * 24));  
+            if($days <= 31){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //POCOR-5917 starts
+    public static function compareEndDate($field)
+    {   
+        $label = Inflector::humanize($field);
+        $enteredDate = new Date($field);
+        $today = new Date('now');
+        if (strtotime($today) > strtotime($enteredDate)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    //POCOR-5917 end
+
+    public static function dateAlreadyTaken($field, array $globalData)
+    {
+        $data = $globalData['data'];
+        $studentId = $data['student_id'];
+        $institutionId = $data['institution_id'];
+        $academicPeriodId = $data['academic_period_id'];
+        $gradeId = $data['education_grade_id'];
+        $classId = $data['institution_class_id'];
+        $startDate = $data['start_date'];
+        $endDate = $data['end_date'];
+        $institutionStudents = TableRegistry::get('institution_students');
+        $studentStatuses = TableRegistry::get('student_statuses');
+        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+        $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $studentStatus = $institutionStudents->find()
+                        ->select([$studentStatuses->aliasField('code')])
+                        ->leftJoin([$studentStatuses->alias() => $studentStatuses->table()], [
+                            $studentStatuses->aliasField('id = ') . $institutionStudents->aliasField('student_status_id')
+                        ])
+                        ->where([
+                            $institutionStudents->aliasField('student_id') => $studentId, 
+                            $institutionStudents->aliasField('institution_id') => $institutionId
+                        ]) 
+                        ->first();
+        $code = $studentStatus['student_statuses']['code'];
+
+        if (!empty($code) && $code != 'CURRENT') {
+           $check = $StudentAttendanceMarkedRecords->find()
+                    ->select([$StudentAttendanceMarkedRecords->aliasField('date')])
+                    ->where([
+                        $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
+                        $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
+                        $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $classId,
+                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $gradeId,
+                        $StudentAttendanceMarkedRecords->aliasField('date') => $startDate
+                    ])->first(); 
+
+            if (!empty($check)) {
+                $markedDate = $check->date->format('Y-m-d');
+            }
+
+            $checkTwo = $InstitutionStudentAbsences->find()
+                        ->select([$InstitutionStudentAbsences->aliasField('date')])
+                        ->where([
+                            $InstitutionStudentAbsences->aliasField('date') => $startDate,
+                            $InstitutionStudentAbsences->aliasField('institution_id') => $institutionId,
+                            $InstitutionStudentAbsences->aliasField('student_id') => $studentId
+                        ])
+                        ->first();
+            if (!empty($checkTwo)) {
+                $unmarkedDate = $checkTwo->date->format('Y-m-d');
+            }
+
+            if (!empty($check)) {
+                $query = $institutionStudents->query();
+                if (!empty($startDate)) {
+                   if ($startDate > $markedDate) {
+                       return false;
+                    } else {
+                        return true;
+                    }
+                }
+            } 
+
+            if (!empty($checkTwo)) {
+                $query = $institutionStudents->query();
+                if (!empty($startDate)) {
+                   if ($startDate > $unmarkedDate) {
+                       return false;
+                    } else {
+                        return true;
+                    }
+                }
+            } 
+
+            if (empty($checkTwo) && empty($check)) {
+                 return true;
+            }
+        }
+    }
+	
+	public static function forLatitudeLength($field, array $globalData)
+    {   
+		if(!empty($field)){
+			$ConfigItems = TableRegistry::get('config_items');
+
+			$latitudeData = $ConfigItems->find()
+				->select([
+					$ConfigItems->aliasField('value'),
+					$ConfigItems->aliasField('default_value'),
+				   ])
+				   ->where([
+						$ConfigItems->aliasField('code') => 'latitude_length',
+					])
+				->first();
+				
+			$default_length = 0;
+			if (!empty($latitudeData->value)) {
+				$default_length = $latitudeData->value;
+			} else {
+				$default_length = $latitudeData->default_value;
+			}	
+			
+			$latitude = explode(".",$globalData['data']['latitude']);
+			$latitude_length = strlen($latitude[1]);
+			
+			if($latitude_length < $default_length) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+    }
+	
+	public static function forLongitudeLength($field, array $globalData)
+    {   
+		if(!empty($field)){
+			$ConfigItems = TableRegistry::get('config_items');
+
+			$longitudeData = $ConfigItems->find()
+				->select([
+					$ConfigItems->aliasField('value'),
+					$ConfigItems->aliasField('default_value'),
+				   ])
+				   ->where([
+						$ConfigItems->aliasField('code') => 'longitude_length',
+					])
+				->first();
+				
+			$longitude = explode(".",$globalData['data']['longitude']);
+			$longitude_length = strlen($longitude[1]);
+			
+			$default_length = 0;
+			if (!empty($longitudeData->value)) {
+				$default_length = $longitudeData->value;
+			} else {
+				$default_length = $longitudeData->default_value;
+			}
+			
+			if($longitude_length < $default_length) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+    }
 }

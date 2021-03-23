@@ -13,7 +13,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Institution\Model\Table\ClassAttendanceRecordsTable as RecordMarkedType;
-
 use Cake\Log\Log;
 
 class StudentAttendanceSummaryTable extends AppTable
@@ -73,9 +72,10 @@ class StudentAttendanceSummaryTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        
         $requestData = json_decode($settings['process']['params']);
-        $sheetData = $settings['sheet']['sheetData'];
-        $gradeId = $sheetData['education_grade_id'];
+        //$sheetData = $settings['sheet']['sheetData'];
+        //$gradeId = $sheetData['education_grade_id'];
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
         $institutionId = $requestData->institution_id;
@@ -84,10 +84,16 @@ class StudentAttendanceSummaryTable extends AppTable
 
         $reportStartDate = new DateTime($requestData->report_start_date);
         $reportEndDate = new DateTime($requestData->report_end_date);
+        
+        $startDate = $reportStartDate->format('Y-m-d');
+        $endDate = $reportEndDate->format('Y-m-d');
 
         $conditions = [];
 
         $institutions = TableRegistry::get('Institution.Institutions');
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $institutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $studentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',
                                                     'valueField' => 'id'
@@ -102,8 +108,9 @@ class StudentAttendanceSummaryTable extends AppTable
         if (!empty($academicPeriodId)) {
             $conditions['StudentAttendanceSummary.academic_period_id'] = $academicPeriodId;
         }
-
+        
         $query
+
             ->contain([
                 'Institutions' => [
                     'fields' => [
@@ -127,20 +134,38 @@ class StudentAttendanceSummaryTable extends AppTable
                             'institution_id',
                             'student_status_id'
                         ])
+                        
                         ->where(['InstitutionClassStudents.student_status_id' => $enrolledStatus]);
                 }
             ])
-        
+
+            ->leftJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
+                        'InstitutionClassGrades.institution_class_id = '. $this->aliasField('id'),
+                    ])
+            ->leftJoin(['StudentAttendanceMarkedRecords' => 'institution_student_absence_details'], [
+                        'StudentAttendanceMarkedRecords.institution_class_id = '. $this->aliasField('id'),
+                        'StudentAttendanceMarkedRecords.academic_period_id = '.$this->aliasField('academic_period_id'),
+                        'StudentAttendanceMarkedRecords.institution_id = '.$this->aliasField('institution_id'),
+                        'StudentAttendanceMarkedRecords.date >= "'.$startDate.'"',
+                        'StudentAttendanceMarkedRecords.date <= "'.$endDate.'"'
+                    ])
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('name'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('academic_period_id')
+                $this->aliasField('academic_period_id'),
+                'InstitutionClassGrades.education_grade_id',
+                'StudentAttendanceMarkedRecords.period',
+                'StudentAttendanceMarkedRecords.subject_id' 
             ])
+            ->group([$this->aliasField('id'), 
+                'StudentAttendanceMarkedRecords.period', 
+                'StudentAttendanceMarkedRecords.subject_id'
+                ])
             ->where([$conditions]);
-            //echo '<pre>'; print_r($query); die;
-            $results = $query->toArray(); 
-           // echo '<pre>'; print_r($results); die;
+            
+            $results = $query->toArray();
+                                    
             // To get a list of dates based on user's input start and end dates
             $begin = $reportStartDate;
             $end = $reportEndDate;
@@ -334,10 +359,12 @@ class StudentAttendanceSummaryTable extends AppTable
             ->formatResults(function (ResultSetInterface $results) use ($rowResults) {
                  return $rowResults;
             });
+        
     }
 
     public function onExcelRenderTotalStudents(Event $event, Entity $entity, $attr)
     {
+       
         $totalStudents = 0;
         if ($entity->has('institution_class_students')) {
             $totalStudents = count($entity->institution_class_students);
@@ -357,7 +384,7 @@ class StudentAttendanceSummaryTable extends AppTable
                             ->where(['id' => $entity->id])
                             ->first();
       
-        ;if ($entity->has('id')) {
+        if ($entity->has('id')) {
             $totalFemaleStudents = $InstitutionClasses->total_female_students;
         }
 
@@ -388,161 +415,606 @@ class StudentAttendanceSummaryTable extends AppTable
     
     public function onExcelRenderTotalStudentsAbsent(Event $event, Entity $entity, $attr)
     {   
+       
         $totalStudentsAbsent = 0;
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
 
-        if ($entity->has('absence_count')) {
-            $totalStudentsAbsent = $entity->absence_count;
+        $dateFormatted = $entity->date->format('Y-m-d');
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        
+        if ($entity->class_attendance_records == RecordMarkedType::MARKED) {
+            
+        if(!empty($subjectId)){
+        $markConditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+            'absence_type_id IN (1,2)',
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
+            ];
+        }else{
+            $markConditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+            'absence_type_id IN (1,2)',
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
+            ];
         }
         
-        if ($totalStudentsAbsent == 0) {
+        $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()            
+            ->where($markConditions)
+            ->count() ;
+        } 
+    
+        if ($entity->class_attendance_records == RecordMarkedType::PARTIAL_MARKED) {
+            if(!empty($subjectId)){
+        $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+            'absence_type_id!=3',
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
+            ];
+        }else{
+            $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+            'absence_type_id!=3',
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
+            ];
+        }
+            $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()            
+            ->where($conditions)
+            ->count();
+
+        }
+        if ($totalStudentsAbsent <= 0) {     
             $totalStudentsAbsent = '-';
         }
+
         return $totalStudentsAbsent;
     }
     
     public function onExcelRenderTotalFemaleStudentsAbsent(Event $event, Entity $entity, $attr)
     {   
-     
         $totalFemaleStudentsAbsent = 0;
-
-        if ($entity->has('female_absence_count')) {
-            $totalFemaleStudentsAbsent = $entity->female_absence_count;
-        }
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        $dateFormatted = $entity->date->format('Y-m-d');
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails'); 
         
-        if ($totalFemaleStudentsAbsent == 0) {
-            $totalFemaleStudentsAbsent = '-';
+        if ($entity->class_attendance_records == RecordMarkedType::PARTIAL_MARKED) {
+            if(!empty($subjectId)){
+        $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+            'absence_type_id!=3',
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
+            ];
+        }else{
+            $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+            'absence_type_id!=3',
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
+            ];
         }
-        return $totalFemaleStudentsAbsent;
-    }
+            $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find() 
+                ->leftJoin(['SecurityUsers' => 'security_users'], [
+                        'SecurityUsers.id = '. $StudentAbsencesPeriodDetails->aliasField('student_id')
+                    ])
+                ->where($conditions)
+                ->count();
+
+                $totalFemaleStudent = $entity->female_absence_count;
+                $totalFemaleStudentsAbsents = $totalStudentsAbsent-$totalFemaleStudent;
+         }
+
+           if ($entity->class_attendance_records == RecordMarkedType::MARKED){
+
+                if ($entity->has('female_absence_count')) {
+                    $totalFemaleStudentsAbsent = $entity->female_absence_count;
+                }
+              
+            }  
+              
+            if ($totalFemaleStudentsAbsent <= 0) {
+                $totalFemaleStudentsAbsent = '-';
+            }
+            return $totalFemaleStudentsAbsent;
+         }
+
+   
 
     public function onExcelRenderTotalMaleStudentsAbsent(Event $event, Entity $entity, $attr)
     {   
-     
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        
         $totalMaleStudentsAbsent = 0;
-
-        if ($entity->has('male_absence_count')) {
-            $totalMaleStudentsAbsent = $entity->male_absence_count;
+        $dateFormatted = $entity->date->format('Y-m-d');
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails'); 
+        
+        if(!empty($subjectId)){
+        $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+            'absence_type_id!=3',
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
+            ];
+        }else{
+            $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+            'absence_type_id!=3',
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
+            ];
         }
         
-        if ($totalMaleStudentsAbsent == 0) {
+        if ($entity->class_attendance_records == RecordMarkedType::PARTIAL_MARKED) {
+            $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find() 
+                ->leftJoin(['SecurityUsers' => 'security_users'], [
+                        'SecurityUsers.id = '. $StudentAbsencesPeriodDetails->aliasField('student_id')
+                    ])
+                ->where($conditions)
+                ->count() ;
+
+                $totalMaleStudent = $entity->male_absence_count;
+                $totalMaleStudentsAbsent = $totalStudentsAbsent-$totalMaleStudent; 
+         }
+        
+        if ($entity->class_attendance_records == RecordMarkedType::MARKED) {
+            if ($entity->has('male_absence_count')) {
+                $totalMaleStudentsAbsent = $entity->male_absence_count;
+            }
+        }
+
+        if ($totalMaleStudentsAbsent <= 0) {
             $totalMaleStudentsAbsent = '-';
         }
+
         return $totalMaleStudentsAbsent;
-    }
+        }
     
-    public function onExcelRenderTotalFemaleStudentsPresent(Event $event, Entity $entity, $attr)
-    {
-        
-        $totalFemaleStudentsPresent = 0;
-        $totalFemaleStudentsAbsent = 0;
-        $totalFemaleStudents = 0;
-
-        $institutionClasses = $this->find('all')
-                            ->where(['id' => $entity->id])
-                            ->first();
-
-        if ($entity->has('female_absence_count')) {
-            $totalFemaleStudentsAbsent = $entity->female_absence_count;
-        }
-        if ($entity->has('id')) {
-            $totalFemaleStudents = $institutionClasses->total_female_students;
-        }
-
-        $totalFemaleStudentsPresent = $totalFemaleStudents - $totalFemaleStudentsAbsent;
-
-        if ($totalFemaleStudentsPresent == 0) {
-            $totalFemaleStudentsPresent = '-';
-        }
-        return $totalFemaleStudentsPresent;
-    }
-
-     
-    public function onExcelRenderTotalMaleStudentsPresent(Event $event, Entity $entity, $attr)
-    {
-        $totalMaleStudentsPresent = 0;
-        $totalMaleStudentsAbsent = 0;
-        $totalMaleStudents = 0;
-
-        $institutionClasses = $this->find('all')
-                            ->where(['id' => $entity->id])
-                            ->first();
-        
-        if ($entity->has('male_absence_count')) {
-            $totalMaleStudentsAbsent = $entity->male_absence_count;
-        }
-
-        if ($entity->has('id')) {
-            $totalMaleStudents = $institutionClasses->total_male_students;
-            $totalMaleStudentsPresent = $totalMaleStudents - $totalMaleStudentsAbsent;
-        }
-       
-        if ($totalMaleStudentsPresent == 0) {
-            $totalMaleStudentsPresent = '-';
-        }
-        
-        return $totalMaleStudentsPresent;
-    }
-
     public function onExcelRenderTotalStudentsPresent(Event $event, Entity $entity, $attr)
     {
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        $dateFormatted = $entity->date->format('Y-m-d');
         $totalStudentsPresent = 0;
         $totalStudentsAbsent = 0;
         $totalStudents = 0;
 
-        if ($entity->has('absence_count')) {
-            $totalStudentsAbsent = $entity->absence_count;
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        
+        if(!empty($subjectId)){
+        $markConditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+            'absence_type_id IN (1,2)',
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
+            ];
+        }else{
+            $markConditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+            'absence_type_id IN (1,2)', 
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
+            ];
         }
-        if ($entity->has('institution_class_students')) {
-            $totalStudents = count($entity->institution_class_students);
-        }
+        
+        $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()
+                
+            ->where($markConditions)
+            ->count() ;
 
-        $totalStudentsPresent = $totalStudents - $totalStudentsAbsent;
+            if ($entity->class_attendance_records == RecordMarkedType::MARKED) {
 
-        if ($totalStudentsPresent == 0) {
+                if ($entity->has('institution_class_students')) {
+                     $totalStudents = count($entity->institution_class_students);
+
+                 }
+                 $totalStudentsPresent = $totalStudents - $totalStudentsAbsent;
+
+             } 
+
+             if ($entity->class_attendance_records == RecordMarkedType::PARTIAL_MARKED)
+             {
+                if(!empty($subjectId)){
+                $conditions = [
+                    $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+                    $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+                    $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+                    $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+                    $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+                    'absence_type_id!=3',
+                    $StudentAbsencesPeriodDetails->aliasField('period') => 1
+                    ];
+                }else{
+                    $conditions = [
+                    $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+                    $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+                    $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+                    $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+                    $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+                    'absence_type_id!=3',
+                    $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
+                    ];
+                }
+
+                $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()
+                ->where($conditions)
+                ->count();
+
+                if ($entity->has('institution_class_students')) {
+                    $totalStudents = count($entity->institution_class_students);
+
+                }
+                $totalStudentsPresent = $totalStudents - $totalStudentsAbsent;
+             }
+                      
+       
+       if ($totalStudentsPresent <= 0) {
             $totalStudentsPresent = '-';
         }
+       
         return $totalStudentsPresent;
+    }   
+
+    public function onExcelRenderTotalFemaleStudentsPresent(Event $event, Entity $entity, $attr)
+    {
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        $totalFemaleStudentsPresent = 0;
+        $totalFemaleStudentsAbsent = 0;
+        $totalFemaleStudents = 0;
+        $dateFormatted = $entity->date->format('Y-m-d');
+        $institutionClasses = $this->find('all')
+                            ->where(['id' => $entity->id])
+                            ->first();
+        
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');                    
+        
+        if(!empty($subjectId)){
+        $markConditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+            'absence_type_id IN (1,2)',
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
+            ];
+        }else{
+            $markConditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+            'absence_type_id IN (1,2)',
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
+            ];
+        }
+        
+        $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()
+                    ->leftJoin(['SecurityUsers' => 'security_users'], [
+                        'SecurityUsers.id = '. $StudentAbsencesPeriodDetails->aliasField('student_id')
+                    ])
+                    ->where($markConditions)
+                    ->count()
+                    ;
+                          
+        if ($entity->class_attendance_records == RecordMarkedType::MARKED) {
+            $totalFemaleStudentsAbsent = $entity->female_absence_count;
+           
+            $totalFemaleStudents = $institutionClasses->total_female_students;
+            $totalFemaleStudentsPresent = $totalFemaleStudents - $totalFemaleStudentsAbsent;
+          
+        } 
+
+        else if ($entity->class_attendance_records == RecordMarkedType::PARTIAL_MARKED) {
+            
+        if(!empty($subjectId)){
+        $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+            'absence_type_id!=3',
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1,
+            'SecurityUsers.gender_id' => 2
+            ];
+        }else{
+            $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+            'absence_type_id!=3',
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0,
+            'SecurityUsers.gender_id' => 2
+            ];
+        }
+            $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()
+                    ->leftJoin(['SecurityUsers' => 'security_users'], [
+                        'SecurityUsers.id = '. $StudentAbsencesPeriodDetails->aliasField('student_id')
+                    ])
+                    ->where($conditions)
+                    ->count()
+                    ;
+            $totalFemaleStudentsAbsent =  $totalStudentsAbsent;
+          
+            $totalFemaleStudents = $institutionClasses->total_female_students;
+            $totalFemaleStudentsPresent = $totalFemaleStudents - $totalFemaleStudentsAbsent;
+          
+        } else {
+            $totalFemaleStudentsPresent = '-';
+        }
+
+        return $totalFemaleStudentsPresent;
     }
+        
+    public function onExcelRenderTotalMaleStudentsPresent(Event $event, Entity $entity, $attr)
+    {
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        $totalMaleStudentsPresent = 0;
+        $totalMaleStudentsAbsent = 0;
+        $totalMaleStudents = 0;
+        $dateFormatted = $entity->date->format('Y-m-d');
+        $institutionClasses = $this->find('all')
+                            ->where(['id' => $entity->id])
+                            ->first();
+
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');                    
+                
+        if(!empty($subjectId)){
+        $markConditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+            'absence_type_id IN (1,2)',
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
+            ];
+        }else{
+            $markConditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+            'absence_type_id IN (1,2)',
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
+            ];
+        }
+        
+        $totalStudentsAbsent = $StudentAbsencesPeriodDetails->find()    
+            ->leftJoin(['SecurityUsers' => 'security_users'], [
+                        'SecurityUsers.id = '. $StudentAbsencesPeriodDetails->aliasField('student_id')
+                    ])
+            ->where($markConditions)
+            ->count()
+            ;
+        
+        if ($entity->class_attendance_records == RecordMarkedType::MARKED) {
+           
+            $totalMaleStudentsAbsent = $entity->male_absence_count;
+            $totalMaleStudents = $institutionClasses->total_male_students;
+            $totalMaleStudentsPresent = $totalMaleStudents - $totalMaleStudentsAbsent;
+           
+        }
+        
+        else if ($entity->class_attendance_records == RecordMarkedType::PARTIAL_MARKED) {
+           
+           
+            $totalMaleStudentsAbsent = $totalStudentsAbsent;
+            $totalMaleStudents = $institutionClasses->total_male_students;
+            $totalMaleStudentsPresent = $totalMaleStudents - $totalMaleStudentsAbsent;
+        
+        }
+        else{
+            $totalMaleStudentsPresent = '-';
+        }
+      
+        return $totalMaleStudentsPresent;
+    }
+
+   
     public function onExcelRenderTotalFemaleStudentsLate(Event $event, Entity $entity, $attr)
     {
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
         $totalFemaleStudentsLate = 0;
-
+        $dateFormatted = $entity->date->format('Y-m-d');
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');   
+                
+        if(!empty($subjectId)){
+        $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+            'absence_type_id'=>3,
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
+            ];
+        }else{
+            $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+            'absence_type_id'=>3,
+            'SecurityUsers.gender_id' => 2,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
+            ];
+        }
+        
+        $totalStudentsLate = $StudentAbsencesPeriodDetails->find()
+            ->leftJoin(['SecurityUsers' => 'security_users'], [
+                        'SecurityUsers.id = '. $StudentAbsencesPeriodDetails->aliasField('student_id')
+                    ])
+            ->where($conditions)
+            ->count()
+            ;
+     if ($entity->class_attendance_records == RecordMarkedType::MARKED) {
         if ($entity->has('female_late_count')) {
             $totalFemaleStudentsLate = $entity->female_late_count;
         }
 
-        if ($totalFemaleStudentsLate == 0) {
+        if ($totalFemaleStudentsLate <= 0) {
             $totalFemaleStudentsLate = '-';
         }
 
-        return $totalFemaleStudentsLate;
+        if ($entity->class_attendance_records == RecordMarkedType::PARTIAL_MARKED) {
+           
+            $totalFemaleStudent = $entity->female_late_count;
+            $totalFemaleStudentsLate = $totalStudentsLate-$totalFemaleStudent;
+          
+        }
     }
-
+        return $totalFemaleStudentsLate;
+    
+    }
     public function onExcelRenderTotalMaleStudentsLate(Event $event, Entity $entity, $attr)
     {
         $totalMaleStudentsLate = 0;
-
-        if ($entity->has('male_late_count')) {
-            $totalMaleStudentsLate = $entity->male_late_count;
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        $dateFormatted = $entity->date->format('Y-m-d');
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');   
+               
+        if(!empty($subjectId)){
+        $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+            'absence_type_id'=>3,
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
+            ];
+        }else{
+            $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+            'absence_type_id'=>3,
+            'SecurityUsers.gender_id' => 1,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
+            ];
         }
+        $totalStudentsLate = $StudentAbsencesPeriodDetails->find()
+            ->leftJoin(['SecurityUsers' => 'security_users'], [
+                        'SecurityUsers.id = '. $StudentAbsencesPeriodDetails->aliasField('student_id')
+                    ])
+            ->where($conditions)
+            ->count()
+            ;
 
-        if ($totalMaleStudentsLate == 0) {
-            $totalMaleStudentsLate = '-';
+        if ($entity->class_attendance_records == RecordMarkedType::MARKED) {
+            if ($entity->has('male_late_count')) {
+                $totalMaleStudentsLate = $entity->male_late_count;
+            }
+
+            if ($totalMaleStudentsLate == 0) {
+                $totalMaleStudentsLate = '-';
+            }
         }
-
+        if ($entity->class_attendance_records == RecordMarkedType::PARTIAL_MARKED) {
+            $totalMaleStudent = $entity->male_late_count;
+            $totalMaleStudentsLate = $totalStudentsLate;
+          
+        }
+        
         return $totalMaleStudentsLate;
     }
 
 
     public function onExcelRenderTotalStudentsLate(Event $event, Entity $entity, $attr)
     {
+      
         $totalStudentsLate = 0;
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        $dateFormatted = $entity->date->format('Y-m-d');
 
-        if ($entity->has('late_count')) {
-            $totalStudentsLate = $entity->late_count;
+        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+                
+        if(!empty($subjectId)){
+        $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') =>  $subjectId,
+            'absence_type_id' => 3,
+            $StudentAbsencesPeriodDetails->aliasField('period') => 1
+            ];
+        }else{
+            $conditions = [
+            $StudentAbsencesPeriodDetails->aliasField('academic_period_id') => $entity->academic_period_id, 
+            $StudentAbsencesPeriodDetails->aliasField('institution_id') => $entity->institution_id,
+            $StudentAbsencesPeriodDetails->aliasField('institution_class_id') => $entity->id, 
+            $StudentAbsencesPeriodDetails->aliasField('date') =>  $dateFormatted,
+            $StudentAbsencesPeriodDetails->aliasField('period') =>  $periodId,
+            'absence_type_id' => 3,
+            $StudentAbsencesPeriodDetails->aliasField('subject_id') => 0
+            ];
         }
-
-        if ($totalStudentsLate == 0) {
+        
+        $totalStudentsLate = $StudentAbsencesPeriodDetails->find()
+            ->where($conditions)
+            ->count();
+        
+        if ($totalStudentsLate <= 0) {
             $totalStudentsLate = '-';
         }
 
@@ -581,9 +1053,69 @@ class StudentAttendanceSummaryTable extends AppTable
         }
         return $date;
     }
+public function onExcelRenderSubject(Event $event, Entity $entity, $attr)
+    {
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectName = '';
+        
+        if(!empty($subjectId)){
+            $institutionSubject = TableRegistry::get('Institution.InstitutionSubjects');             
+            $periodDetails = $institutionSubject->find('all')
+            ->select(['name'])
+            ->where(['id' => $subjectId])
+            ->first();
+            $subjectName = $periodDetails->name;
+        }
+        
+        return $subjectName;
+    }
+    
+    public function onExcelRenderPeriod(Event $event, Entity $entity, $attr)
+    {
+        $periodId = $entity->StudentAttendanceMarkedRecords['period'];
+        $subjectId = $entity->StudentAttendanceMarkedRecords['subject_id'];
+        $educationGradeId = $entity->InstitutionClassGrades['education_grade_id'];
+        
+        $periodName = '';
+        
+        if(!empty($periodId)){
+            $institionClassId = $entity->id;
+            $academicPeriodId = $entity->academic_period_id;
+            $dayId = date('Y-m-d');
+            $studentAttendanceMarkTypeTmpArr = [];
 
+            $studentAttendanceMarkTypesTable = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+            $studentAttendanceMarkTypes = $studentAttendanceMarkTypesTable->getAttendancePerDayOptionsByClass(
+                    $institionClassId, $academicPeriodId, $dayId , $educationGradeId
+                    );
+
+            foreach ($studentAttendanceMarkTypes as $studentAttendanceMarkTypes){
+                $studentAttendanceMarkTypeTmpArr[$studentAttendanceMarkTypes['id']] = $studentAttendanceMarkTypes['name'];
+            }
+        
+            $periodName = $studentAttendanceMarkTypeTmpArr[$periodId];
+        }
+        
+        return (empty($subjectId))?$periodName:'';
+    }
+    
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        $extraField[] = [
+            'key' => 'Subject',
+            'field' => 'Subject',
+            'type' => 'Subject',
+            'label' => 'Subject',
+        ];
+
+        $extraField[] = [
+            'key' => 'Period',
+            'field' => 'Period',
+            'type' => 'Period',
+            'label' => 'Period',
+        ];
+
         $extraField[] = [
             'key' => 'Date',
             'field' => 'Date',
@@ -686,6 +1218,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
+        $institutionTypeId = $requestData->institution_type_id;
 
         $ids ='';
         $institutions = TableRegistry::get('Institution.Institutions');
@@ -701,7 +1234,29 @@ class StudentAttendanceSummaryTable extends AppTable
 
         $gradeOptions = [];
         if ($educationGradeId != -1) {
-            $gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
+            if(in_array($educationGradeId, $institutionGradeResults)){
+                $gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
+            }else{
+                $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                $educationGradesOptions = $EducationGrades
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'name'
+                    ])
+                    ->select([
+                        'id' => $EducationGrades->aliasField('id'),
+                        'name' => $EducationGrades->aliasField('name'),
+                        'education_programme_name' => 'EducationProgrammes.name'
+                    ])
+                    ->contain(['EducationProgrammes'])
+                    ->order([
+                        'EducationProgrammes.order' => 'ASC',
+                        $EducationGrades->aliasField('name') => 'ASC'
+                    ])
+                    ->toArray();
+
+                $gradeOptions[$educationGradeId] = $educationGradesOptions[$educationGradeId];
+            }
         } else {
             $gradeOptions = $institutionGradeResults;
         }
@@ -724,12 +1279,13 @@ class StudentAttendanceSummaryTable extends AppTable
                 'sheetData' => [
                     'education_grade_id' => $gradeId
                 ],
-                'name' => $gradeName,
+                'name' => preg_replace("/\([^)]+\)/","",$gradeName),
                 'table' => $this,
                 'query' => $query,
                 'orientation' => 'landscape'
             ];
         }
+        
         return $sheets;
     }
 }

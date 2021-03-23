@@ -26,6 +26,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes']);
         $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
         // $this->addBehavior('Institution.Calendar');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -63,6 +64,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 'institution_id' => $entity->institution_id,
                 'academic_period_id' => $entity->academic_period_id,
                 'institution_class_id' => $entity->institution_class_id,
+                'education_grade_id' => $entity->education_grade_id,
                 'date' => $date,
                 'period' => $entity->period
             ];
@@ -89,18 +91,20 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $classId = $entity->institution_class_id;
         $academicPeriodId = $entity->academic_period_id;
+        $educationGradeId = $entity->education_grade_id;
         $date = $entity->date;
         $institutionId = $entity->institution_id;
         $studentId = $entity->student_id;
         $absenceTypeId = $entity->absence_type_id;
 
-        $optionList = $StudentAttendanceMarkTypes->getAttendancePerDayOptionsByClass($classId, $academicPeriodId);
+        $optionList = $StudentAttendanceMarkTypes->getAttendancePerDayOptionsByClass($classId, $academicPeriodId, $date, $educationGradeId);
         if (!is_null($optionList)) {
             $periodCount = count($optionList);
             $totalRecordCount = $this
                 ->find()
                 ->where([
                     $this->aliasField('institution_class_id') => $classId,
+                    $this->aliasField('education_grade_id') => $educationGradeId,
                     $this->aliasField('academic_period_id') => $academicPeriodId,
                     $this->aliasField('date') => $date,
                     $this->aliasField('institution_id') => $institutionId,
@@ -114,6 +118,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 $fullDayRecordResult = $InstitutionStudentAbsences
                     ->find()
                     ->where([
+                        $InstitutionStudentAbsences->aliasField('education_grade_id') => $educationGradeId,
                         $InstitutionStudentAbsences->aliasField('institution_class_id') => $classId,
                         $InstitutionStudentAbsences->aliasField('academic_period_id') => $academicPeriodId,
                         $InstitutionStudentAbsences->aliasField('date') => $date,
@@ -130,6 +135,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
                 $data = [
                     'institution_class_id' => $classId,
+                    'education_grade_id' => $educationGradeId,
                     'academic_period_id' => $academicPeriodId,
                     'date' => $date,
                     'institution_id' => $institutionId,
@@ -150,6 +156,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         $institutionId = $entity->institution_id;
         $studentId = $entity->student_id;
         $absenceTypeId = $entity->absence_type_id;
+        $educationGradeId = $entity->education_grade_id;
         
         $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
         
@@ -157,6 +164,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 ->find()
                 ->where([
                     $this->aliasField('institution_class_id') => $classId,
+                    $this->aliasField('education_grade_id') => $educationGradeId,
                     $this->aliasField('academic_period_id') => $academicPeriodId,
                     $this->aliasField('date') => $date,
                     $this->aliasField('institution_id') => $institutionId,
@@ -168,6 +176,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
            
             $data = [
                         'institution_class_id' => $classId,
+                        'education_grade_id' => $educationGradeId,
                         'academic_period_id' => $academicPeriodId,
                         'date' => $date->format('Y-m-d'),
                         'institution_id' => $institutionId,

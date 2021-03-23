@@ -316,11 +316,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var time = '';
         var historyUrl = data.historyUrl;
         var successInstitutionShifts = function(response, deferred) {
-           
-           if(response.data.data.length > 0){
+          //POCOR-5885  Edit: Time in reverted to default time 
+        //    if(response.data.data.length > 0){
               
-              params.value.time_in = response.data.data[0].startTime; 
-           }
+        //       params.value.time_in = response.data.data[0].startTime; 
+        //    }
             
             deferred.resolve(response.data.data);
         };
@@ -515,7 +515,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             timeInputElement.setAttribute("class", "form-control form-error");
         }
         setTimeout(function(event) {
-            var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time, showInputs: true});
+            var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time, showInputs: true,minuteStep:1});
             $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
                 if (params.value[timeKey] == null) {
