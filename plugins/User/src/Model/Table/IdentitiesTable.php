@@ -65,14 +65,24 @@ class IdentitiesTable extends ControllerActionTable
         if (isset($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         }
-        $NationalityOptions = $UserNationalityTable
+        if ($this->action == 'add') {
+        	$NationalityOptions = $UserNationalityTable
             ->find('list',
                 ['keyField' => '_matchingData.NationalitiesLookUp.id',
                 'valueField' => '_matchingData.NationalitiesLookUp.name'
             ])
             ->matching('NationalitiesLookUp')
-            ->where([$UserNationalityTable->aliasField('security_user_id') => $userId])
             ->toArray();
+        } else {
+        	$NationalityOptions = $this
+            ->find('list',
+                ['keyField' => '_matchingData.Nationalities.id',
+                'valueField' => '_matchingData.Nationalities.name'
+            ])
+            ->matching('Nationalities')
+            ->where([$this->aliasField('security_user_id') => $userId])
+            ->toArray();
+        }
 		$this->fields['identity_type_id']['type'] = 'select';
 		$this->fields['nationality_id']['type'] = 'select';
         $this->fields['nationality_id']['options'] = $NationalityOptions;
@@ -119,7 +129,8 @@ class IdentitiesTable extends ControllerActionTable
 			        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
 			        'provider' => 'table'
 			    ]
-		    ]);
+		    ])
+		    ->notEmpty('nationality_id');
 		;
 	}
 
@@ -136,7 +147,7 @@ class IdentitiesTable extends ControllerActionTable
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
-	{ 
+	{
             if(!empty($entity->nationality_id)){
                 $nationalitiesLookUp = TableRegistry::get('Nationalities')->get($entity->nationality_id);
                 if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
