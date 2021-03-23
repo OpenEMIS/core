@@ -352,7 +352,8 @@ return [
     ],
     'productName' => "OpenEMIS",
     'productLongName' => "Open Education Management Information System",
-    'installerSchool' => false,
-    'installerCencus' => false,
-    'installerVaccinations' => true
+    'installerCore' => false,
+    'installerSchool' => true,
+    'installerCensus' => false,
+    'installerVaccinations' => false
 ];

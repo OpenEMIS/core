@@ -106,7 +106,7 @@ class InstallerController extends AppController
             } catch (Exception $e) {
                 if (file_exists(CONFIG . 'datasource.php')) {
                     if ($this->request->param('_ext') != 'json') {
-                        $this->redirect(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'step3']);
+                        return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                     } else {
                         $this->set('code', 422);
                         $this->set('message', 'Datasource has already been created');
