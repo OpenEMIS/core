@@ -143,7 +143,7 @@ return [
             ->requirePresence('database_server_host')
             ->requirePresence('database_server_port')
             ->requirePresence('database_admin_user')
-            ->requirePresence('database_admin_password')
+            //->requirePresence('database_admin_password')
             ->requirePresence('account_password')
             ->requirePresence('retype_password')
             ->add('account_password', [
@@ -187,9 +187,11 @@ return [
 
         $connectionString = sprintf('mysql:host=%s;port=%d', $host, $port);
         $pdo = new PDO($connectionString, $root, $rootPass);
+
         $template = str_replace('{host}', "'$host'", self::CONFIG_TEMPLATE);
         $template = str_replace('{port}', "'$port'", $template);
         $template = str_replace('{pass}', "'$dbPassword'", $template);
+
         $dbFileHandle = fopen(CONFIG . 'datasource.php', 'w');
         $privateKeyHandle = fopen(CONFIG . 'private.key', 'w');
         $publicKeyHandle = fopen(CONFIG . 'public.key', 'w');
@@ -228,7 +230,7 @@ return [
             Configure::load('app_extra', 'default');
             ConnectionManager::config(Configure::consume('Datasources'));
             $connection = ConnectionManager::get('default');
-
+       
             $dbConfig = $connection->config();
             $username = $dbConfig['username']; 
             $host = $dbConfig['host']; 
@@ -236,9 +238,23 @@ return [
             $password = $dbConfig['password']; 
             $fileName = DATABASE_DUMP_FILE;
 
+            //echo 'mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql'; die;
             //echo 'mysqldump --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' > '.WWW_ROOT.'export/backup' . DS .$fileName.'.sql'; die;
-            exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-
+            //exec('mysql -u prd_sch_user prd_sch_dmo < C:\xampp\htdocs\pocor-openemis-core\webroot\sql_dump\prd_sch_dmo_2021-03-19.sql');
+            //exec('mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            /*echo 'mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql'; die;*/
+            //exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            //echo "111"; die;
+            $sql = mysqli_connect($host, $username, $password, $dbname);
+            $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            mysqli_multi_query($sql,$sqlSource);
+            Cache::clear(false, '_cake_model_');
+            Cache::clear(false, 'themes');
+            $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
+            return false;
+            //return $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
+            //exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            //exec('mysql -u root prd_sch_dmo < C:\xampp7.1\htdocs\pocor-openemis-core\webroot\sql_dump\prd_sch_dmo_2021-03-19.sql');
             // $migrations = new Migrations();
             // $source = 'Snapshot' . DS . VERSION;
             // $status = $migrations->status(['source' => $source]);
@@ -258,8 +274,8 @@ return [
             //         }
             //     }
             // }
-            Cache::clear(false, 'themes');
-            return false;
+            
+            //return false;
         } else {
             return false;
         }
@@ -363,7 +379,8 @@ return [
             $result = $userExists->rowCount();
         } while ($result);
         $user = $newUser;
-        $createUserSQL = sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", $user, $host, $password);
+        //$createUserSQL = sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", $user, $host, $password);
+        $createUserSQL = sprintf("CREATE USER '%s'@'%s'", $user, $host);
         $flushPriviledges = "FLUSH PRIVILEGES";
         $grantSQL = sprintf("GRANT ALL ON %s.* TO '%s'@'%s'", $db, $user, $host);
         $pdo->exec($createUserSQL);
