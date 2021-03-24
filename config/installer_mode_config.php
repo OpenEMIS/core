@@ -8,7 +8,7 @@
 	);
 
 	$count_mode_value = array_sum($mode);
-	$database_dump_file = 'prd_sch_dmo_2021-03-19';
+	$database_dump_file = 'prd_sch_dmo';
 	$application_name = $application_colour = $application_login_image = $application_sql_name = $application_db_user_name = $application_mode = $application_theme = $application_favicon = '';
 	
 	if($mode['core'] == true){
@@ -50,14 +50,25 @@
 	}
 
 
-	define('APPLICATION_MODE', $application_mode);
-	define('APPLICATION_NAME', $application_name);
-	define('APPLICATION_COLOUR', $application_colour);
-	define('APPLICATION_LOGIN_IMAGE', $application_login_image);
-	define('APPLICATION_DB_NAME', $application_sql_name);
-	define('APPLICATION_DB_USER_NAME', $application_db_user_name);
-	define('APPLICATION_THEME', $application_theme);
-	define('APPLICATION_FAVICON', $application_favicon);
-	define('DATABASE_DUMP_FILE', $database_dump_file);
-	define('APPLICATION_MODE_COUNT', $count_mode_value);
+	if (!defined('APPLICATION_NAME')) define('APPLICATION_NAME', $application_name);
+	if (!defined('APPLICATION_MODE')) define('APPLICATION_MODE', $application_mode);
+	if (!defined('APPLICATION_COLOUR')) define('APPLICATION_COLOUR', $application_colour);
+	if (!defined('APPLICATION_LOGIN_IMAGE')) define('APPLICATION_LOGIN_IMAGE', $application_login_image);
+	if (!defined('APPLICATION_DB_NAME')) define('APPLICATION_DB_NAME', $application_sql_name);
+	if (!defined('APPLICATION_DB_USER_NAME')) define('APPLICATION_DB_USER_NAME', $application_db_user_name);
+	if (!defined('APPLICATION_THEME')) define('APPLICATION_THEME', $application_theme);
+	if (!defined('APPLICATION_FAVICON')) define('APPLICATION_FAVICON', $application_favicon);
+	if (!defined('DATABASE_DUMP_FILE')) define('DATABASE_DUMP_FILE', $database_dump_file);
+	if (!defined('APPLICATION_MODE_COUNT')) define('APPLICATION_MODE_COUNT', $count_mode_value);
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
     
