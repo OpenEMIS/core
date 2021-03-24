@@ -205,16 +205,9 @@ class StaffHealthReportsTable extends AppTable
                     //     " ",
                     //     'Users.last_name' => 'literal'
                     // ]),
-                    'staff_name' => $query->func()->concat([
-                        'Users.first_name' => 'literal',
-                        " ",
-                        'Users.middle_name' => 'literal',
-                        " ",
-                        'Users.last_name' => 'literal'
-                    ]),
-                    // 'first_name' =>'Users.first_name',
-                    // 'middle_name' => 'Users.middle_name',
-                    // 'last_name' => 'Users.last_name',
+                    'first_name' =>'Users.first_name',
+                    'middle_name' => 'Users.middle_name',
+                    'last_name' => 'Users.last_name',
                     'description' => 'UserHealthAllergies.description',
                     'severe' => 'UserHealthAllergies.severe',
                     'comment' => 'UserHealthAllergies.comment',
