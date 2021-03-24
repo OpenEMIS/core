@@ -243,11 +243,11 @@ return [
             //exec('mysql -u prd_sch_user prd_sch_dmo < C:\xampp\htdocs\pocor-openemis-core\webroot\sql_dump\prd_sch_dmo_2021-03-19.sql');
             //exec('mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
             /*echo 'mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql'; die;*/
-            //exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
             //echo "111"; die;
-            $sql = mysqli_connect($host, $username, $password, $dbname);
-            $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            mysqli_multi_query($sql,$sqlSource);
+            // $sql = mysqli_connect($host, $username, $password, $dbname);
+            // $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            // mysqli_multi_query($sql,$sqlSource);
             Cache::clear(false, '_cake_model_');
             Cache::clear(false, 'themes');
             $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
