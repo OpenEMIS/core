@@ -379,8 +379,7 @@ return [
             $result = $userExists->rowCount();
         } while ($result);
         $user = $newUser;
-        //$createUserSQL = sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", $user, $host, $password);
-        $createUserSQL = sprintf("CREATE USER '%s'@'%s'", $user, $host);
+        $createUserSQL = sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", $user, $host, $password);
         $flushPriviledges = "FLUSH PRIVILEGES";
         $grantSQL = sprintf("GRANT ALL ON %s.* TO '%s'@'%s'", $db, $user, $host);
         $pdo->exec($createUserSQL);
