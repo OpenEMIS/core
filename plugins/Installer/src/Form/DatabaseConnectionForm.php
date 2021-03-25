@@ -2,7 +2,6 @@
 namespace Installer\Form;
 
 require CONFIG . 'snapshot_config.php';
-require CONFIG . 'installer_mode_config.php';
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Datasource\ConnectionManager;
@@ -106,13 +105,10 @@ return [
     ]
 ";
 
-    private $app_extra_core_mode = ",'coreMode' => false";    
     private $app_extra_school_mode = ",'schoolMode' => true";
-    private $app_extra_census_mode = ",'censusMode' => false";
-    private $app_extra_vaccinations_mode = ",'vaccinationsMode' => false";
 
     private $app_extra_template_end = "];";
-    
+
     /**
      * Builds the schema for the modelless form
      *
@@ -143,7 +139,7 @@ return [
             ->requirePresence('database_server_host')
             ->requirePresence('database_server_port')
             ->requirePresence('database_admin_user')
-            //->requirePresence('database_admin_password')
+            ->requirePresence('database_admin_password')
             ->requirePresence('account_password')
             ->requirePresence('retype_password')
             ->add('account_password', [
@@ -168,30 +164,19 @@ return [
         $port = $data['database_server_port'];
         $root = $data['database_admin_user'];
         $rootPass = $data['database_admin_password'];
-        if (APPLICATION_MODE == 'census') {
-            $default_db_name = Configure::read('installerCensus') ? 'prd_cen_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerCensus') ? 'prd_cen_user' : APPLICATION_DB_NAME;
-        }else if(APPLICATION_MODE == 'school'){
-            $default_db_name = Configure::read('installerSchool') ? 'prd_sch_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerSchool') ? 'prd_sch_user' : APPLICATION_DB_NAME;
-        }else if(APPLICATION_MODE == 'vaccinations'){
-            $default_db_name = Configure::read('installerVaccinations') ? 'prd_vac_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerVaccinations') ? 'prd_vac_user' : APPLICATION_DB_NAME;
-        }else{
-            $default_db_name = Configure::read('installerCore') ? 'prd_cor_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerCore') ? 'prd_cor_user' : APPLICATION_DB_NAME;
-        }
+
+        $default_db_name = Configure::read('installerSchool') ? 'oe_school' : 'oe_core';
+        $default_db_user = Configure::read('installerSchool') ? 'oe_school_user' : 'oe_core_user';
+
         $db = isset($data['datasource_db']) ? $data['datasource_db'] : $default_db_name;
         $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : $default_db_user;
         $dbPassword = isset($data['datasource_password']) ? $data['datasource_password'] : bin2hex(random_bytes(4));
 
         $connectionString = sprintf('mysql:host=%s;port=%d', $host, $port);
         $pdo = new PDO($connectionString, $root, $rootPass);
-
         $template = str_replace('{host}', "'$host'", self::CONFIG_TEMPLATE);
         $template = str_replace('{port}', "'$port'", $template);
         $template = str_replace('{pass}', "'$dbPassword'", $template);
-
         $dbFileHandle = fopen(CONFIG . 'datasource.php', 'w');
         $privateKeyHandle = fopen(CONFIG . 'private.key', 'w');
         $publicKeyHandle = fopen(CONFIG . 'public.key', 'w');
@@ -209,14 +194,6 @@ return [
             if (Configure::read('installerSchool')) {
                 $app_extra_text .= $this->app_extra_school_mode;
             }
-            else if (Configure::read('installerCensus')) {
-                $app_extra_text .= $this->app_extra_census_mode;
-            }
-            else if (Configure::read('installerVaccinations')) {
-                $app_extra_text .= $this->app_extra_vaccinations_mode;
-            }else{
-                $app_extra_text .= $this->app_extra_core_mode;
-            }
             $app_extra_text .= $this->app_extra_template_end;
             fwrite($appExtraHandle, $app_extra_text);
             $this->createDb($pdo, $db);
@@ -229,53 +206,26 @@ return [
             Configure::load('datasource', 'default');
             Configure::load('app_extra', 'default');
             ConnectionManager::config(Configure::consume('Datasources'));
-            $connection = ConnectionManager::get('default');
-       
-            $dbConfig = $connection->config();
-            $username = $dbConfig['username']; 
-            $host = $dbConfig['host']; 
-            $dbname = $dbConfig['database']; 
-            $password = $dbConfig['password']; 
-            $fileName = DATABASE_DUMP_FILE;
-
-            //echo 'mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql'; die;
-            //echo 'mysqldump --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' > '.WWW_ROOT.'export/backup' . DS .$fileName.'.sql'; die;
-            //exec('mysql -u prd_sch_user prd_sch_dmo < C:\xampp\htdocs\pocor-openemis-core\webroot\sql_dump\prd_sch_dmo_2021-03-19.sql');
-            //exec('mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            /*echo 'mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql'; die;*/
-            exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            //echo "111"; die;
-            // $sql = mysqli_connect($host, $username, $password, $dbname);
-            // $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            // mysqli_multi_query($sql,$sqlSource);
-            Cache::clear(false, '_cake_model_');
-            Cache::clear(false, 'themes');
-            $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
+            $migrations = new Migrations();
+            $source = 'Snapshot' . DS . VERSION;
+            $status = $migrations->status(['source' => $source]);
+            $executed = false;
+            if ($status[0]['status'] == 'down') {
+                $migrate = $migrations->migrate(['source' => $source]);
+                if ($migrate) {
+                    $seedSource = 'Snapshot' . DS . VERSION . DS . 'Seeds';
+                    $seedStatus = $migrations->seed(['source' => $seedSource]);
+                    if ($seedStatus) {
+                        // Applying missed out migrations
+                        $executed = $migrations->migrate();
+                        Cache::clear(false, '_cake_model_');
+                        if ($executed) {
+                            return $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
+                        }
+                    }
+                }
+            }
             return false;
-            //return $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
-            //exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            //exec('mysql -u root prd_sch_dmo < C:\xampp7.1\htdocs\pocor-openemis-core\webroot\sql_dump\prd_sch_dmo_2021-03-19.sql');
-            // $migrations = new Migrations();
-            // $source = 'Snapshot' . DS . VERSION;
-            // $status = $migrations->status(['source' => $source]);
-            // $executed = false;
-            // if ($status[0]['status'] == 'down') {
-            //     $migrate = $migrations->migrate(['source' => $source]);
-            //     if ($migrate) {
-            //         $seedSource = 'Snapshot' . DS . VERSION . DS . 'Seeds';
-            //         $seedStatus = $migrations->seed(['source' => $seedSource]);
-            //         if ($seedStatus) {
-            //             // Applying missed out migrations
-            //             $executed = $migrations->migrate();
-            //             Cache::clear(false, '_cake_model_');
-            //             if ($executed) {
-            //                 return $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
-            //             }
-            //         }
-            //     }
-            // }
-            
-            //return false;
         } else {
             return false;
         }

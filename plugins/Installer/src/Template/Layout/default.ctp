@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<?php require CONFIG . 'installer_mode_config.php'; ?>
 <html lang="en" dir="ltr" class="ltr">
 <head>
     <?= $this->Html->charset(); ?>
     <title><?= $_productName ?></title>
 
     <?php
-    $icon = strpos($_productName, ucfirst(APPLICATION_FAVICON)) != -1 ? APPLICATION_FAVICON : '';
+    $icon = strpos($_productName, 'School') !== false ? '_school' : '';
     echo $this->Html->meta('icon', 'favicon'.$icon.'.ico');
     echo $this->fetch('meta');
 
