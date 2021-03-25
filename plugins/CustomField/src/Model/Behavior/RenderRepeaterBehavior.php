@@ -126,7 +126,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                         }
                     }
                 }
-
+                
                 if (!empty($repeaters)) {
                     $fieldTypes = $CustomFieldTypes
                         ->find('list', ['keyField' => 'code', 'valueField' => 'value'])
@@ -196,7 +196,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                             if (isset($entity->institution_repeater_surveys[$fieldId][$repeaterId][$questionId])) {
                                 $answerObj = $entity->institution_repeater_surveys[$fieldId][$repeaterId][$questionId];
                             }
-
+                        $questionType = 'CHECKBOX';
                             switch ($questionType) {
                                 case 'TEXT':
                                     $answerValue = !is_null($answerObj['text_value']) ? $answerObj['text_value'] : null;
@@ -224,6 +224,33 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
 
                                     $cellValue = !is_null($answerValue) ? $answerValue : '';
+                                    break;
+                                case 'CHECKBOX':   
+                                    $answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null; 
+                                    $checkboxOptions = [];
+                                    foreach ($question->custom_field->custom_field_options as $key => $obj) {
+                                     $checkboxOptions[$obj->id] = $obj->name;
+                                    }
+                                    foreach ($checkboxOptions as $key => $value) {
+                                        if (!empty($checkedValues)) {
+                                            if (in_array($key, $checkedValues)) {
+                                                $option['checked'] = true;
+                                            }
+                                        }
+                                        $option['value'] = $key;
+                                        $option['id'] =$attr['model'] . '_' . $attr['field'];
+                                        $attr['fieldName'] = $cellPrefix.".".$fieldTypes[$questionType].".".$key;
+                                        if (array_key_exists('fieldName', $attr)) {
+                                            $option['id'] = $this->_domId($attr['fieldName']);
+                                         }
+                                        //$cellInput .= $form->hidden($cellPrefix.".".$fieldTypes[$questionType], ['value' => $key]);
+                                        $cellInput .= $form->checkbox($cellPrefix.".".$fieldTypes[$questionType], $option);
+                                        $cellInput .= '<label>'. $value .'</label>';   
+                                                                             
+                                    }
+                                    $cellValue = !is_null($answerValue) ? $checkboxOptions[$answerValue] : $checkboxOptions[$checkedValues];
+                                    // unset($option['value']);
+                                  //echo '<pre>';print_r($question);die;
                                     break;
                                 case 'DECIMAL':
                                     $answerValue = !is_null($answerObj['decimal_value']) ? $answerObj['decimal_value'] : null;
@@ -260,7 +287,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $cellOptions['default'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                     $cellOptions['value'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                     $cellOptions['options'] = $dropdownOptions;
-
                                     $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : $dropdownOptions[$dropdownDefault];
                                     break;
                                 case 'TEXTAREA':
@@ -377,7 +403,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                 default:
                                     break;
                             }
-                            if (in_array($questionType, ['TEXT', 'NUMBER', 'DECIMAL', 'DROPDOWN', 'TEXTAREA'])) {
+                            if (in_array($questionType, ['TEXT', 'NUMBER', 'DECIMAL','DROPDOWN', 'TEXTAREA'])) {
                                 $cellInput .= $form->input($cellPrefix.".".$fieldTypes[$questionType], $cellOptions);
                                 if($errorInput){
                                     $cellInput .= $errorInput;
@@ -506,7 +532,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
             $institutionId = $entity->institution_id;
             $periodId = $entity->academic_period_id;
             $parentFormId = $entity->{$formKey};
-
+            echo '<pre>';print_r($entity);die;
             foreach ($entity->institution_repeater_surveys as $fieldId => $fieldObj) {
                 $formId = $fieldObj[$formKey];
                 unset($fieldObj[$formKey]);
