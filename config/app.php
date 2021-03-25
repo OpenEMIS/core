@@ -117,16 +117,6 @@ return [
             'duration' => '+2 minutes',
             'url' => env('CACHE_CAKEMODEL_URL', null),
         ],
-
-        // Application specific labels cache
-        'labels' => [
-            'className' => 'File',
-            'path' => CACHE,
-            'probability' => 0,
-            'duration' => '+1 month',
-            'groups' => ['labels'],
-            'url' => env('CACHE_DEFAULT_URL', null)
-        ]
     ],
 
     /**
@@ -352,8 +342,5 @@ return [
     ],
     'productName' => "OpenEMIS",
     'productLongName' => "Open Education Management Information System",
-    'installerCore' => false,
-    'installerSchool' => true,
-    'installerCensus' => false,
-    'installerVaccinations' => false
+    'installerSchool' => false
 ];
