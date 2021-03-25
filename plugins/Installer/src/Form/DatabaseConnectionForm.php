@@ -238,14 +238,12 @@ return [
             $password = $dbConfig['password']; 
             $fileName = DATABASE_DUMP_FILE;
 
-            //exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            $sql = mysqli_connect($host, $username, $password, $dbname);
+            exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            /*$sql = mysqli_connect($host, $username, $password, $dbname);
             $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            mysqli_multi_query($sql,$sqlSource);
+            mysqli_multi_query($sql,$sqlSource);*/
             Cache::clear(false, '_cake_model_');
             Cache::clear(false, 'themes');
-            return false;
-            
             // $migrations = new Migrations();
             // $source = 'Snapshot' . DS . VERSION;
             // $status = $migrations->status(['source' => $source]);
@@ -265,8 +263,7 @@ return [
             //         }
             //     }
             // }
-            
-            //return false;
+            return false;
         } else {
             return false;
         }
@@ -354,6 +351,7 @@ return [
 
     private function createDbUser($pdo, $host, &$user, $password, $db)
     {
+        $host = '%';
         $userSql = "SELECT 1 FROM mysql.user WHERE User = ? AND Host = ?";
         $result = true;
         $counter = 0;
