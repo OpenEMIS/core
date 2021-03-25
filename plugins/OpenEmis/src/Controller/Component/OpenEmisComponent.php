@@ -81,9 +81,9 @@ class OpenEmisComponent extends Component
             $controller->set('SystemLayout_leftPanel', 'width: 10%');
             $controller->set('SystemLayout_rightPanel', 'width: 90%');
         }
-        // $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        // $footer = $ConfigItems->value('footer');
-        // $controller->set('footerText', $footer);
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $footer = $ConfigItems->value('footer');
+        $controller->set('footerText', $footer);
     }
 
     private function getTheme()

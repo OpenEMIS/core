@@ -1786,37 +1786,37 @@ class POCOR3674 extends AbstractMigration
         // end locales
 
         // locale_contents
-        // $table = $this->table('locale_contents', [
-        //         'collation' => 'utf8mb4_unicode_ci',
-        //         'comment' => 'This table contains the words in english'
-        //     ]);
-        // $table
-        //     ->addColumn('en', 'text', [
-        //         'default' => null,
-        //         'null' => false
-        //     ])
-        //     ->addColumn('modified_user_id', 'integer', [
-        //         'default' => null,
-        //         'limit' => 11,
-        //         'null' => true
-        //     ])
-        //     ->addColumn('modified', 'datetime', [
-        //         'default' => null,
-        //         'null' => true
-        //     ])
-        //     ->addColumn('created_user_id', 'integer', [
-        //         'default' => null,
-        //         'limit' => 11,
-        //         'null' => false
-        //     ])
-        //     ->addColumn('created', 'datetime', [
-        //         'default' => null,
-        //         'null' => false
-        //     ])
-        //     ->addIndex('modified_user_id')
-        //     ->addIndex('created_user_id')
-        //     ->save()
-        // ;
+        $table = $this->table('locale_contents', [
+                'collation' => 'utf8mb4_unicode_ci',
+                'comment' => 'This table contains the words in english'
+            ]);
+        $table
+            ->addColumn('en', 'text', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save()
+        ;
         // insert data to locale_contents
         $this->execute('
             INSERT INTO `locale_contents` (`id`, `en`, `modified_user_id`, `modified`, `created_user_id`, `created`)
