@@ -1,6 +1,7 @@
 ### [3.63.1] - 2021-03-25
 - Implemented: Reports > Staff > Staff Health report
 - Bug Fixed: Reports > Students > Student Health report: Changes to report
+- Bug Fixed: Institutions > Student > Pending Transfer In > Pending Approval from Receiving Institution: Error
 
 ### [3.63.0] - 2021-03-19
 - Implemented: Student Profile feature
