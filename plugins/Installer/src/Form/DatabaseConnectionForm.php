@@ -143,7 +143,7 @@ return [
             ->requirePresence('database_server_host')
             ->requirePresence('database_server_port')
             ->requirePresence('database_admin_user')
-            //->requirePresence('database_admin_password')
+            ->requirePresence('database_admin_password')
             ->requirePresence('account_password')
             ->requirePresence('retype_password')
             ->add('account_password', [
@@ -184,7 +184,7 @@ return [
         $db = isset($data['datasource_db']) ? $data['datasource_db'] : $default_db_name;
         $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : $default_db_user;
         $dbPassword = isset($data['datasource_password']) ? $data['datasource_password'] : bin2hex(random_bytes(4));
-
+       
         $connectionString = sprintf('mysql:host=%s;port=%d', $host, $port);
         $pdo = new PDO($connectionString, $root, $rootPass);
 
@@ -238,23 +238,14 @@ return [
             $password = $dbConfig['password']; 
             $fileName = DATABASE_DUMP_FILE;
 
-            //echo 'mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql'; die;
-            //echo 'mysqldump --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' > '.WWW_ROOT.'export/backup' . DS .$fileName.'.sql'; die;
-            //exec('mysql -u prd_sch_user prd_sch_dmo < C:\xampp\htdocs\pocor-openemis-core\webroot\sql_dump\prd_sch_dmo_2021-03-19.sql');
-            //exec('mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            /*echo 'mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql'; die;*/
-            exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            //echo "111"; die;
-            // $sql = mysqli_connect($host, $username, $password, $dbname);
-            // $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            // mysqli_multi_query($sql,$sqlSource);
+            //exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            $sql = mysqli_connect($host, $username, $password, $dbname);
+            $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            mysqli_multi_query($sql,$sqlSource);
             Cache::clear(false, '_cake_model_');
             Cache::clear(false, 'themes');
-            $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
             return false;
-            //return $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
-            //exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            //exec('mysql -u root prd_sch_dmo < C:\xampp7.1\htdocs\pocor-openemis-core\webroot\sql_dump\prd_sch_dmo_2021-03-19.sql');
+            
             // $migrations = new Migrations();
             // $source = 'Snapshot' . DS . VERSION;
             // $status = $migrations->status(['source' => $source]);
