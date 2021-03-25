@@ -1,3 +1,7 @@
+### [3.63.1] - 2021-03-25
+- Implemented: Reports > Staff > Staff Health report
+- Bug Fixed: Reports > Students > Student Health report: Changes to report
+
 ### [3.63.0] - 2021-03-19
 - Implemented: Student Profile feature
 - Implemented: Changes to daily recording of Meal distribution to students
