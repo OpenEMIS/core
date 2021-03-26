@@ -353,7 +353,7 @@ class ProfilesController extends AppController
         $id = $session->read('Student.Students.id');
         if (!empty($id)) {
             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards') {
-                $studentId = $this->ControllerAction->paramsDecode($id)['id'];
+				$studentId = $this->ControllerAction->paramsDecode($this->request->params['pass'][1])['id'];
                 $entity = $this->Profiles->get($studentId);
                 $name = $entity->name;
                 $header = $name;
