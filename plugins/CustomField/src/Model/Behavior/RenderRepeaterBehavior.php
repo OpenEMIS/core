@@ -196,7 +196,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                             if (isset($entity->institution_repeater_surveys[$fieldId][$repeaterId][$questionId])) {
                                 $answerObj = $entity->institution_repeater_surveys[$fieldId][$repeaterId][$questionId];
                             }
-                        $questionType = 'CHECKBOX';
+                        //$questionType = 'CHECKBOX';
                             switch ($questionType) {
                                 case 'TEXT':
                                     $answerValue = !is_null($answerObj['text_value']) ? $answerObj['text_value'] : null;
@@ -243,14 +243,11 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                         if (array_key_exists('fieldName', $attr)) {
                                             $option['id'] = $this->_domId($attr['fieldName']);
                                          }
-                                        //$cellInput .= $form->hidden($cellPrefix.".".$fieldTypes[$questionType], ['value' => $key]);
                                         $cellInput .= $form->checkbox($cellPrefix.".".$fieldTypes[$questionType], $option);
                                         $cellInput .= '<label>'. $value .'</label>';   
                                                                              
                                     }
                                     $cellValue = !is_null($answerValue) ? $checkboxOptions[$answerValue] : $checkboxOptions[$checkedValues];
-                                    // unset($option['value']);
-                                  //echo '<pre>';print_r($question);die;
                                     break;
                                 case 'DECIMAL':
                                     $answerValue = !is_null($answerObj['decimal_value']) ? $answerObj['decimal_value'] : null;
@@ -532,7 +529,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
             $institutionId = $entity->institution_id;
             $periodId = $entity->academic_period_id;
             $parentFormId = $entity->{$formKey};
-            echo '<pre>';print_r($entity);die;
             foreach ($entity->institution_repeater_surveys as $fieldId => $fieldObj) {
                 $formId = $fieldObj[$formKey];
                 unset($fieldObj[$formKey]);
