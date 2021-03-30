@@ -218,7 +218,8 @@ class InstitutionSubjectStudentsTable extends AppTable
                     $ItemResults->aliasField('assessment_id') => $assessmentId,
                     $ItemResults->aliasField('academic_period_id') => $periodId,
                     $ItemResults->aliasField('education_subject_id') => $subjectId,
-                    $ItemResults->aliasField('education_grade_id') => $gradeId
+                    $ItemResults->aliasField('education_grade_id') => $gradeId,
+                    $ItemResults->aliasField('institution_classes_id') => $classId
                 ]
             )
             ->leftJoin(

@@ -1288,6 +1288,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             var academicPeriodId = params.context.academic_period_id;
             var classId = params.context.class_id;
             var studentId = params.data.student_id;
+            var studentStatusId = params.data.student_status_id;
             var field = params.colDef.field;
             var result = params.data[field];
             var assessmentPeriodId = field.replace('period_', '');
@@ -1328,6 +1329,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 "education_grade_id" : educationGradeId,
                 "institution_id" : institutionId,
                 "academic_period_id" : academicPeriodId,
+                "institution_classes_id" : classId,
+                "student_status_id" : studentStatusId,
                 "student_id" : parseInt(studentId),
                 "assessment_period_id" : parseInt(assessmentPeriodId)
             };
