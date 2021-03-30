@@ -273,42 +273,55 @@ return [
     private function createUser($password)
     {
         $UserTable = TableRegistry::get('User.Users');
-        $data = [
-            'id' => 1,
-            'username' => 'admin',
-            'password' => $password,
-            'openemis_no' => 'sysadmin',
-            'first_name' => 'System',
-            'middle_name' => null,
-            'third_name' => null,
-            'last_name' => 'Administrator',
-            'preferred_name' => null,
-            'email' => null,
-            'address' => null,
-            'postal_code' => null,
-            'address_area_id' => null,
-            'birthplace_area_id' => null,
-            'gender_id' => 1,
-            'date_of_birth' => new Date(),
-            'date_of_death' => null,
-            'nationality_id' => null,
-            'identity_type_id' => null,
-            'identity_number' => null,
-            'external_reference' => null,
-            'super_admin' => 1,
-            'status' => 1,
-            'last_login' => new Date(),
-            'photo_name' => null,
-            'photo_content' => null,
-            'preferred_language' => 'en',
-            'is_student' => 0,
-            'is_staff' => 0,
-            'is_guardian' => 0
-        ];
-
-        $entity = $UserTable->newEntity($data, ['validate' => false]);
-        return $UserTable->save($entity);
+        $userData = $UserTable
+            ->find()
+            ->where([$UserTable->aliasField('username') => 'admin'])
+            ->first();
+        if(!empty($userData)){
+            return $userData->updateAll(
+                ['password' => $password],
+                ['id' => $userData->id]
+            );
+        }
+        else{
+            $data = [
+                'id' => 1,
+                'username' => 'admin',
+                'password' => $password,
+                'openemis_no' => 'sysadmin',
+                'first_name' => 'System',
+                'middle_name' => null,
+                'third_name' => null,
+                'last_name' => 'Administrator',
+                'preferred_name' => null,
+                'email' => null,
+                'address' => null,
+                'postal_code' => null,
+                'address_area_id' => null,
+                'birthplace_area_id' => null,
+                'gender_id' => 1,
+                'date_of_birth' => new Date(),
+                'date_of_death' => null,
+                'nationality_id' => null,
+                'identity_type_id' => null,
+                'identity_number' => null,
+                'external_reference' => null,
+                'super_admin' => 1,
+                'status' => 1,
+                'last_login' => new Date(),
+                'photo_name' => null,
+                'photo_content' => null,
+                'preferred_language' => 'en',
+                'is_student' => 0,
+                'is_staff' => 0,
+                'is_guardian' => 0
+            ];
+            
+            $entity = $UserTable->newEntity($data, ['validate' => false]);
+            return $UserTable->save($entity);
+        }
     }
+
 
     private function createArea($name, $code)
     {
