@@ -319,7 +319,7 @@ class UsersExcelBehavior extends Behavior
                                $result[$key][] = $value->email;
                                $result[$key][] = $value->postal_code;
                                $result[$key][] = $userType;
-                               $result[$key][] = $username->name;
+                               $result[$key][] = $username->username;
 
                                    if ($userType == 'Staff') {
                                         $result[$key][] = $value->staff_association;
