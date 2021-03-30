@@ -238,7 +238,8 @@ return [
             $password = $dbConfig['password']; 
             $fileName = DATABASE_DUMP_FILE;
 
-            exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            $result = exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
             /*$sql = mysqli_connect($host, $username, $password, $dbname);
             $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
             mysqli_multi_query($sql,$sqlSource);*/
