@@ -266,7 +266,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $institutionId = $entity->institution_id;
         $academicPeriodId = $entity->academic_period_id;
         $startDate = $entity->start_date;
-        $newDate = $startDate->format('Y-m-d');
+        $newDate = date("Y-m-d", strtotime($startDate));
         $endDate = $entity->end_date;
         $institutionStudents = TableRegistry::get('institution_students');
         $query = $institutionStudents->query();

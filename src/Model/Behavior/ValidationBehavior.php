@@ -3142,7 +3142,9 @@ class ValidationBehavior extends Behavior
             if (empty($checkTwo) && empty($check)) {
                  return true;
             }
-        }
+        } else {
+			return true;
+		}
     }
 	
 	public static function forLatitudeLength($field, array $globalData)
