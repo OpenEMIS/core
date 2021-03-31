@@ -13,6 +13,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Migrations\Migrations;
 use PDO;
+use Cake\Auth\DefaultPasswordHasher;
 
 /**
  * DatabaseInstaller Form.
@@ -279,7 +280,7 @@ return [
             ->first();
         if(!empty($userData)){
             return $UserTable->updateAll(
-                ['password' => $password],
+                ['password' => (new DefaultPasswordHasher)->hash($password)],
                 ['id' => $userData->id]
             );
         }
