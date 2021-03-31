@@ -196,7 +196,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
                             if (isset($entity->institution_repeater_surveys[$fieldId][$repeaterId][$questionId])) {
                                 $answerObj = $entity->institution_repeater_surveys[$fieldId][$repeaterId][$questionId];
                             }
-                        //$questionType = 'CHECKBOX';
                             switch ($questionType) {
                                 case 'TEXT':
                                     $answerValue = !is_null($answerObj['text_value']) ? $answerObj['text_value'] : null;
@@ -238,6 +237,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                             }
                                         }
                                         $option['value'] = $key;
+                                        $option['hiddenField'] = false;
                                         $option['id'] =$attr['model'] . '_' . $attr['field'];
                                         $attr['fieldName'] = $cellPrefix.".".$fieldTypes[$questionType].".".$key;
                                         if (array_key_exists('fieldName', $attr)) {
