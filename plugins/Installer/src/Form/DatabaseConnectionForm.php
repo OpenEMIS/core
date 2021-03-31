@@ -278,7 +278,7 @@ return [
             ->where([$UserTable->aliasField('username') => 'admin'])
             ->first();
         if(!empty($userData)){
-            return $userData->updateAll(
+            return $UserTable->updateAll(
                 ['password' => $password],
                 ['id' => $userData->id]
             );
@@ -326,19 +326,30 @@ return [
     private function createArea($name, $code)
     {
         $AreasTable = TableRegistry::get('Area.Areas');
-        $data = [
-            'id' => 1,
-            'code' => $code,
-            'name' => $name,
-            'parent_id' => null,
-            'lft' => 1,
-            'rght' => 2,
-            'area_level_id' => 1,
-            'order' => 1,
-            'visible' => 1
-        ];
-        $entity = $AreasTable->newEntity($data);
-        return $AreasTable->save($entity);
+        $areaData = $AreasTable
+            ->find()
+            ->where([$AreasTable->aliasField('code') => $code, $AreasTable->aliasField('name') => $name])
+            ->first();
+        if(!empty($areaData)){
+            return $AreasTable->updateAll(
+                ['code' => $code, 'name' => $name],
+                ['id' => $areaData->id]
+            );
+        }else{
+            $data = [
+                'id' => 1,
+                'code' => $code,
+                'name' => $name,
+                'parent_id' => null,
+                'lft' => 1,
+                'rght' => 2,
+                'area_level_id' => 1,
+                'order' => 1,
+                'visible' => 1
+            ];
+            $entity = $AreasTable->newEntity($data);
+            return $AreasTable->save($entity);
+        }
     }
 
     private function createDb($pdo, &$db)
