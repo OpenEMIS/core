@@ -224,6 +224,7 @@ class StudentsTable extends ControllerActionTable
                 'Users.MainNationalities'
             ])
             ->select([
+                'student_id' => 'Users.id',
                 'openemis_no' => 'Users.openemis_no',
                 'identity_number' => 'Users.identity_number',
                 'gender_name' => 'Genders.name',
@@ -263,6 +264,37 @@ class StudentsTable extends ControllerActionTable
         if ($periodId > 0) {
             $query->where([$this->aliasField('academic_period_id') => $periodId]);
         }
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+
+                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+
+                $InstitutionStudentsCurrentData = $InstitutionStudents
+                ->find()
+                ->select([
+                    'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
+                ])
+                ->where([
+                    $InstitutionStudents->aliasField('student_id') => $row->student_id
+                ])
+                ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
+                ->autoFields(true)
+                ->first();
+                if($row->student_status == "Enrolled"){
+                    if(($InstitutionStudentsCurrentData->student_status_id == 8)){
+                        $student_status = "Enrolled (Repeater)";
+                    }else{
+                        $student_status = $row->student_status;
+                    }
+                }else{
+                        $student_status = $row->student_status;
+                }
+                          
+                $row['student_status'] = $student_status;
+                return $row;
+            });
+        });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -320,7 +352,7 @@ class StudentsTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key' => 'StudentStatuses.name',
+            'key' => '',
             'field' => 'student_status',
             'type' => 'string',
             'label' => __('Student Status')
