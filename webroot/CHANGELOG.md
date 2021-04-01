@@ -1,3 +1,7 @@
+### [3.63.2] - 2021-04-01
+- Bug Fixed: Number appearing when editing Institutions > Survey > Forms page
+- Bug Fixed: Issues when viewing Students data in Guardian Login > Profiles > Students page
+
 ### [3.63.1] - 2021-03-25
 - Implemented: Reports > Staff > Staff Health report
 - Bug Fixed: Reports > Students > Student Health report: Changes to report
