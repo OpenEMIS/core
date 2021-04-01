@@ -1895,11 +1895,11 @@ class StaffTable extends ControllerActionTable
             ])
             ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
                 $SecurityGroupUsers->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
-                $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                //$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
                 $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
             ])
             ->where([
-                $InstitutionClasses->aliasField('id') => $classId,
+                //$InstitutionClasses->aliasField('id') => $classId,
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('staff_id') => $staffId
             ])
