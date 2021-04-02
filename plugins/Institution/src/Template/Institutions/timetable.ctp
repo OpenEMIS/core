@@ -15,7 +15,7 @@ $this->start('toolbar');
         </a>
     <?php endif; ?>
 
-    <a ng-show="$ctrl.action == 'edit'" ng-click="$ctrl.onInfoClicked()">
+    <a ng-show="$ctrl.action == 'edit' || $ctrl.action == 'view'" ng-click="$ctrl.onInfoClicked()">
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Overview') ?>" >
             <i class="fa fa-info"></i>
         </button>
