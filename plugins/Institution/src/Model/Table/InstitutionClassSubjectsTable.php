@@ -58,12 +58,14 @@ class InstitutionClassSubjectsTable extends AppTable
         $institutionClassId = $options['institution_class_id'];
         $academicPeriodId = $options['academic_period_id'];
         $day_id = (new Time($options['day_id']))->format('w');
+        $educationGradeId = $options['education_grade_id'];
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables');
         $ScheduleCurriculumLessons = TableRegistry::get('Schedule.ScheduleCurriculumLessons');
         $ScheduleNonCurriculumLessons = TableRegistry::get('Schedule.ScheduleNonCurriculumLessons');
         $ScheduleLessonDetails = TableRegistry::get('Schedule.ScheduleLessonDetails');
         $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
 
         $scheduleTimetablesData = $ScheduleTimetables->find()
                                     ->where([
@@ -127,7 +129,9 @@ class InstitutionClassSubjectsTable extends AppTable
                             ]
                         )
                         ->where([
-                            $this->aliasField('institution_class_id') => $institutionClassId
+                            $this->aliasField('institution_class_id') => $institutionClassId,
+                            $InstitutionSubjects->aliasField('education_grade_id') => $educationGradeId
+
                         ])
                         ->order([
                             $InstitutionSubjects->aliasField('name')=>'DESC'
