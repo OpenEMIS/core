@@ -224,12 +224,6 @@ class InstitutionSubjectStudentsTable extends AppTable
                     //$ItemResults->aliasField('institution_classes_id') => $classId
                 ]
             )
-            // ->leftJoin(
-            //     [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
-            //     [
-            //         $ItemResults->aliasField('institution_classes_id = ') . $InstitutionClassStudents->aliasField('institution_class_id')
-            //     ]
-            // )
             ->leftJoin(
                 [$StudentStatuses->alias() => $StudentStatuses->table()],
                 [
@@ -252,15 +246,40 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $this->aliasField('student_id')
             ])
             ->formatResults(function ($results) use ($classId) {
-                echo "<pre>"; print_r($results); die();
                 $arrResults = is_array($results) ? $results : $results->toArray();
                 foreach ($arrResults as &$result) {
 					
 					$InstitutionStudents = TableRegistry::get('institution_students');
                     $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 					$StudentStatuses = TableRegistry::get('student_statuses');
+
+                    $studentClassStatus = $InstitutionClassStudents->find()
+                        ->select([
+                            $InstitutionClassStudents->aliasField('student_status_id'),
+                            $StudentStatuses->aliasField('code'),
+                            $StudentStatuses->aliasField('name')
+                        ])
+                        ->innerJoin(
+                            [$StudentStatuses->alias() => $StudentStatuses->table()],
+                            [
+                               $InstitutionClassStudents->aliasField('student_status_id = ') . $StudentStatuses->aliasField('id')
+                            ]
+                        )
+                        ->order([
+                            $InstitutionClassStudents->aliasField('created') => 'DESC'
+                        ])
+
+                        ->where([
+                            $InstitutionClassStudents->aliasField('student_id') => $result['student_id'],
+                            $InstitutionClassStudents->aliasField('institution_id') => $result['institution_id'],
+                            $InstitutionClassStudents->aliasField('academic_period_id') => $result['academic_period_id'],
+                            $InstitutionClassStudents->aliasField('education_grade_id') => $result['education_grade_id'],
+                            $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
+                        ])
+                        ->first();
+                        
 					
-					$StudentStatusesData = $InstitutionStudents->find()
+					   $StudentStatusesData = $InstitutionStudents->find()
 						->select([
 							$InstitutionStudents->aliasField('student_status_id'),
 							$StudentStatuses->aliasField('code'),
@@ -286,11 +305,12 @@ class InstitutionSubjectStudentsTable extends AppTable
 							$InstitutionStudents->aliasField('institution_id') => $result['institution_id'],
 							$InstitutionStudents->aliasField('academic_period_id') => $result['academic_period_id'],
 							$InstitutionStudents->aliasField('education_grade_id') => $result['education_grade_id'],
-       //                      $InstitutionStudents->aliasField('student_status_id') => $result['student_status_id'],
+                            $InstitutionStudents->aliasField('student_status_id') => $studentClassStatus['student_status_id'],
                             $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
 						])
 						->first();	
                     $result['student_status_id'] = $StudentStatusesData->student_status_id;
+                    $result['student_status']['code'] = $StudentStatusesData->student_statuses['code'];
                     $result['student_status']['name'] = $StudentStatusesData->student_statuses['name'];
                 }
                 return $arrResults;
