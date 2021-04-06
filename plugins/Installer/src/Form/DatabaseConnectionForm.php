@@ -13,6 +13,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Migrations\Migrations;
 use PDO;
+use Cake\Auth\DefaultPasswordHasher;
 
 /**
  * DatabaseInstaller Form.
@@ -143,7 +144,7 @@ return [
             ->requirePresence('database_server_host')
             ->requirePresence('database_server_port')
             ->requirePresence('database_admin_user')
-            //->requirePresence('database_admin_password')
+            ->requirePresence('database_admin_password')
             ->requirePresence('account_password')
             ->requirePresence('retype_password')
             ->add('account_password', [
@@ -184,7 +185,7 @@ return [
         $db = isset($data['datasource_db']) ? $data['datasource_db'] : $default_db_name;
         $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : $default_db_user;
         $dbPassword = isset($data['datasource_password']) ? $data['datasource_password'] : bin2hex(random_bytes(4));
-
+       
         $connectionString = sprintf('mysql:host=%s;port=%d', $host, $port);
         $pdo = new PDO($connectionString, $root, $rootPass);
 
@@ -238,23 +239,13 @@ return [
             $password = $dbConfig['password']; 
             $fileName = DATABASE_DUMP_FILE;
 
-            //echo 'mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql'; die;
-            //echo 'mysqldump --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' > '.WWW_ROOT.'export/backup' . DS .$fileName.'.sql'; die;
-            //exec('mysql -u prd_sch_user prd_sch_dmo < C:\xampp\htdocs\pocor-openemis-core\webroot\sql_dump\prd_sch_dmo_2021-03-19.sql');
-            //exec('mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            /*echo 'mysql -u '.$username.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql'; die;*/
-            exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            //echo "111"; die;
-            // $sql = mysqli_connect($host, $username, $password, $dbname);
-            // $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            // mysqli_multi_query($sql,$sqlSource);
+            $result = exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
+            /*$sql = mysqli_connect($host, $username, $password, $dbname);
+            $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            mysqli_multi_query($sql,$sqlSource);*/
             Cache::clear(false, '_cake_model_');
             Cache::clear(false, 'themes');
-            $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
-            return false;
-            //return $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
-            //exec('mysql --user='.$username.' --password='.$password.' --host='.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
-            //exec('mysql -u root prd_sch_dmo < C:\xampp7.1\htdocs\pocor-openemis-core\webroot\sql_dump\prd_sch_dmo_2021-03-19.sql');
             // $migrations = new Migrations();
             // $source = 'Snapshot' . DS . VERSION;
             // $status = $migrations->status(['source' => $source]);
@@ -274,8 +265,7 @@ return [
             //         }
             //     }
             // }
-            
-            //return false;
+            return false;
         } else {
             return false;
         }
@@ -284,59 +274,83 @@ return [
     private function createUser($password)
     {
         $UserTable = TableRegistry::get('User.Users');
-        $data = [
-            'id' => 1,
-            'username' => 'admin',
-            'password' => $password,
-            'openemis_no' => 'sysadmin',
-            'first_name' => 'System',
-            'middle_name' => null,
-            'third_name' => null,
-            'last_name' => 'Administrator',
-            'preferred_name' => null,
-            'email' => null,
-            'address' => null,
-            'postal_code' => null,
-            'address_area_id' => null,
-            'birthplace_area_id' => null,
-            'gender_id' => 1,
-            'date_of_birth' => new Date(),
-            'date_of_death' => null,
-            'nationality_id' => null,
-            'identity_type_id' => null,
-            'identity_number' => null,
-            'external_reference' => null,
-            'super_admin' => 1,
-            'status' => 1,
-            'last_login' => new Date(),
-            'photo_name' => null,
-            'photo_content' => null,
-            'preferred_language' => 'en',
-            'is_student' => 0,
-            'is_staff' => 0,
-            'is_guardian' => 0
-        ];
-
-        $entity = $UserTable->newEntity($data, ['validate' => false]);
-        return $UserTable->save($entity);
+        $userData = $UserTable
+            ->find()
+            ->where([$UserTable->aliasField('username') => 'admin'])
+            ->first();
+        if(!empty($userData)){
+            return $UserTable->updateAll(
+                ['password' => (new DefaultPasswordHasher)->hash($password)],
+                ['id' => $userData->id]
+            );
+        }
+        else{
+            $data = [
+                'id' => 1,
+                'username' => 'admin',
+                'password' => $password,
+                'openemis_no' => 'sysadmin',
+                'first_name' => 'System',
+                'middle_name' => null,
+                'third_name' => null,
+                'last_name' => 'Administrator',
+                'preferred_name' => null,
+                'email' => null,
+                'address' => null,
+                'postal_code' => null,
+                'address_area_id' => null,
+                'birthplace_area_id' => null,
+                'gender_id' => 1,
+                'date_of_birth' => new Date(),
+                'date_of_death' => null,
+                'nationality_id' => null,
+                'identity_type_id' => null,
+                'identity_number' => null,
+                'external_reference' => null,
+                'super_admin' => 1,
+                'status' => 1,
+                'last_login' => new Date(),
+                'photo_name' => null,
+                'photo_content' => null,
+                'preferred_language' => 'en',
+                'is_student' => 0,
+                'is_staff' => 0,
+                'is_guardian' => 0
+            ];
+            
+            $entity = $UserTable->newEntity($data, ['validate' => false]);
+            return $UserTable->save($entity);
+        }
     }
+
 
     private function createArea($name, $code)
     {
         $AreasTable = TableRegistry::get('Area.Areas');
-        $data = [
-            'id' => 1,
-            'code' => $code,
-            'name' => $name,
-            'parent_id' => null,
-            'lft' => 1,
-            'rght' => 2,
-            'area_level_id' => 1,
-            'order' => 1,
-            'visible' => 1
-        ];
-        $entity = $AreasTable->newEntity($data);
-        return $AreasTable->save($entity);
+        $areaData = $AreasTable
+            ->find()
+            ->where([$AreasTable->aliasField('code') => $code, $AreasTable->aliasField('name') => $name])
+            ->first();
+        if(!empty($areaData)){
+            return $AreasTable->updateAll(
+                ['code' => $code, 'name' => $name],
+                ['id' => $areaData->id]
+            );
+        }else{
+            $data = [
+                'id' => 1,
+                'code' => $code,
+                'name' => $name,
+                'parent_id' => null,
+                'lft' => 1,
+                'rght' => 2,
+                'area_level_id' => 1,
+                'order' => 1,
+                'visible' => 1
+            ];
+            $entity = $AreasTable->newEntity($data);
+            return $AreasTable->save($entity);
+        }
     }
 
     private function createDb($pdo, &$db)
@@ -363,6 +377,7 @@ return [
 
     private function createDbUser($pdo, $host, &$user, $password, $db)
     {
+        $host = '%';
         $userSql = "SELECT 1 FROM mysql.user WHERE User = ? AND Host = ?";
         $result = true;
         $counter = 0;
