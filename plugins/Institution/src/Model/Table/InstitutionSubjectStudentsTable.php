@@ -26,7 +26,8 @@ class InstitutionSubjectStudentsTable extends AppTable
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
-
+        $this->belongsTo('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
+        
         $this->belongsTo('ClassStudents', [
             'className' => 'Institution.InstitutionClassStudents',
             'foreignKey' => [
@@ -178,6 +179,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         $InstitutionSubjects = $this->InstitutionSubjects;
         $StudentStatuses = $this->StudentStatuses;
         $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         
         return $query
             ->select([
@@ -219,9 +221,15 @@ class InstitutionSubjectStudentsTable extends AppTable
                     $ItemResults->aliasField('academic_period_id') => $periodId,
                     $ItemResults->aliasField('education_subject_id') => $subjectId,
                     $ItemResults->aliasField('education_grade_id') => $gradeId,
-                    $ItemResults->aliasField('institution_classes_id') => $classId
+                    //$ItemResults->aliasField('institution_classes_id') => $classId
                 ]
             )
+            // ->leftJoin(
+            //     [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
+            //     [
+            //         $ItemResults->aliasField('institution_classes_id = ') . $InstitutionClassStudents->aliasField('institution_class_id')
+            //     ]
+            // )
             ->leftJoin(
                 [$StudentStatuses->alias() => $StudentStatuses->table()],
                 [
@@ -233,6 +241,9 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $this->aliasField('institution_class_id') => $classId,
                 //$StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']
             ])
+            ->orWhere([
+                $ItemResults->aliasField('institution_classes_id') => $classId,
+            ])
             ->group([
                 $this->aliasField('student_id'),
                 $ItemResults->aliasField('assessment_period_id')
@@ -240,11 +251,13 @@ class InstitutionSubjectStudentsTable extends AppTable
             ->order([
                 $this->aliasField('student_id')
             ])
-            ->formatResults(function ($results) {
+            ->formatResults(function ($results) use ($classId) {
+                echo "<pre>"; print_r($results); die();
                 $arrResults = is_array($results) ? $results : $results->toArray();
                 foreach ($arrResults as &$result) {
 					
 					$InstitutionStudents = TableRegistry::get('institution_students');
+                    $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 					$StudentStatuses = TableRegistry::get('student_statuses');
 					
 					$StudentStatusesData = $InstitutionStudents->find()
@@ -259,6 +272,12 @@ class InstitutionSubjectStudentsTable extends AppTable
 							   $InstitutionStudents->aliasField('student_status_id = ') . $StudentStatuses->aliasField('id')
 							]
 						)
+                        ->leftJoin(
+                            [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
+                            [
+                                $InstitutionClassStudents->aliasField('student_id = ') . $InstitutionStudents->aliasField('student_id')
+                            ]
+                        )
 						->order([
 							$InstitutionStudents->aliasField('created') => 'DESC'
 						])
@@ -267,7 +286,8 @@ class InstitutionSubjectStudentsTable extends AppTable
 							$InstitutionStudents->aliasField('institution_id') => $result['institution_id'],
 							$InstitutionStudents->aliasField('academic_period_id') => $result['academic_period_id'],
 							$InstitutionStudents->aliasField('education_grade_id') => $result['education_grade_id'],
-                            $InstitutionStudents->aliasField('student_status_id') => $result['student_status_id'],
+       //                      $InstitutionStudents->aliasField('student_status_id') => $result['student_status_id'],
+                            $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
 						])
 						->first();	
                     $result['student_status_id'] = $StudentStatusesData->student_status_id;
