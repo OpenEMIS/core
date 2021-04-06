@@ -3,12 +3,12 @@
 	$mode = array(
 			'core' => false,
 			'census' => false,
-			'school' => true,
-			'vaccinations' => false
+			'school' => false,
+			'vaccinations' => true
 	);
 
 	$count_mode_value = array_sum($mode);
-	$database_dump_file = 'prd_sch_dmo_2021-03-19';
+	$database_dump_file = 'prd_vac_dmo_2021-03-19';
 	$application_name = $application_colour = $application_login_image = $application_sql_name = $application_db_user_name = $application_mode = $application_theme = $application_favicon = '';
 	
 	if($mode['core'] == true){
