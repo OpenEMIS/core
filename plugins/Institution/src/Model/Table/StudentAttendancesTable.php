@@ -536,7 +536,21 @@ class StudentAttendancesTable extends ControllerActionTable
                     });
             }
         }
-
+        $studentId = [];
+        $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+		$studentWithdraw = $studentWithdraw->find('all')		
+				->select([
+					'student_id' => 'institution_student_withdraw.student_id',
+				])
+				->where([$studentWithdraw->aliasField('institution_id') => $institutionId]);
+         $studentWithdraw->toArray();
+          if (!empty($studentWithdraw)) {
+              foreach($studentWithdraw as $studenetVal){
+                   $studentId[] = $studenetVal['student_id'];
+              }  
+            $query->where([$this->aliasField('student_id NOT IN') => $studentId]);             
+          }
+        
         return $query;
     }
 
