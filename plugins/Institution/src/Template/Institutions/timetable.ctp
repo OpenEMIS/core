@@ -171,6 +171,24 @@ $panelHeader = $this->fetch('panelHeader');
 	.input-selection-inline:hover .fa-trash{
 		display:block;
 	}
+    .add-button{
+    display: flex;
+    justify-content:center;
+    align-items:center;
+    margin-bottom: 8px;
+    }
+    .add-button button{
+    display: flex;
+    justify-content:center;
+    align-items:center;
+    }
+    .add-button button i {
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    margin-right: 7px !important;
+    } 
 </style>
  
 <div class="panel">
@@ -272,13 +290,18 @@ $panelHeader = $this->fetch('panelHeader');
                                         <h6><?= __('Room') ?> </h6>
                                         <div class="input text required select" >
                                             <div class="input-select-wrapper">
-                                            <select ng-model="lesson.schedule_non_curriculum_lesson_room.institution_room_id" ng-change="$ctrl.onUpdateLessonData(key, $ctrl.NON_CURRICULUM_LESSON)">
+                                            <select ng-model="lesson.schedule_non_curriculum_lesson_room.institution_room_id">
                                                 <option value="">Select Room</option>
                                                 <option ng-repeat="(key, room) in $ctrl.institutionRooms" value="{{room.id}}">{{room.name}}</option>
                                                
                                             </select>
                                             </div>
                                         </div>
+                                    </div>
+                                     <div class="lesson-wrapper non-curriculum add-button" >
+                                        <button class="btn btn-default btn-save" name="submit" ng-click= "$ctrl.onUpdateLessonData(key, $ctrl.NON_CURRICULUM_LESSON)" value="save" type="submit">
+                                               <i class="fa fa-plus"></i> <span>Add</span>
+                                        </button>
                                     </div>
                                 </div>
                                 <!-- Curriculum Lessons -->
@@ -307,13 +330,18 @@ $panelHeader = $this->fetch('panelHeader');
                                         <h6><?= __('Room') ?> </h6>
                                         <div class="input text required select">
                                             <div class="input-select-wrapper">
-                                            <select ng-model="lesson.schedule_curriculum_lesson_room.institution_room_id"  ng-change="$ctrl.onUpdateLessonData(key, $ctrl.CURRICULUM_LESSON)">
+                                            <select ng-model="lesson.schedule_curriculum_lesson_room.institution_room_id">
                                                 <option value="">Select Room</option>
                                                 <option ng-repeat="(key, room) in $ctrl.institutionRooms" value="{{room.id}}">{{room.name}}</option>
                                                
                                             </select>
                                             </div>
                                         </div>
+                                    </div>
+                                    <div class="lesson-wrapper curriculum add-button" >
+                                        <button class="btn btn-default btn-save" name="submit" ng-click= "$ctrl.onUpdateLessonData(key, $ctrl.CURRICULUM_LESSON)" value="save" type="submit">
+                                            <i class="fa fa-plus"></i> <span>Add</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
