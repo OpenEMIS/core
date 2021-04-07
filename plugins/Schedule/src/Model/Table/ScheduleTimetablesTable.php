@@ -126,7 +126,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
             case 'institution_class_id':
                 return __('Class');
             case 'institution_schedule_interval_id':
-                return __('Interval');
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
