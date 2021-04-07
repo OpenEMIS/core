@@ -7,6 +7,7 @@ use Cake\Routing\Router;
 
 use App\Controller\PageController;
 use Page\Model\Entity\PageElement;
+use Cake\ORM\TableRegistry;
 
 class InfrastructureNeedsController extends PageController
 {
@@ -73,9 +74,27 @@ class InfrastructureNeedsController extends PageController
 
         // set field
         $page->exclude(['description', 'date_determined', 'date_started', 'date_completed', 'file_name', 'file_content', 'comment', 'institution_id']);
+        $Users = TableRegistry::get('labels');
+        $result = $Users
+            ->find()
+            ->where(['module' => 'InfrastructureNeeds', 'field_name' => 'Need Type'])
+            ->toArray();
+        if(isset($result[0]['name'])){
+            $page->get('infrastructure_need_type_id')->setSortable(false)->setLabel($result[0]['name']);
+        }else{
+            $page->get('infrastructure_need_type_id')->setSortable(false)->setLabel('Need Type');
+        }
 
-        $page->get('infrastructure_need_type_id')->setSortable(false)->setLabel('Need Type');
-        $page->get('priority')->setSortable(false);
+        $Users = TableRegistry::get('labels');
+        $result = $Users
+            ->find()
+            ->where(['module' => 'InfrastructureNeeds', 'field_name' => 'Priority'])
+            ->toArray();
+        if(isset($result[0]['name'])){
+            $page->get('priority')->setSortable(false)->setLabel($result[0]['name']);
+        }else{
+            $page->get('priority')->setSortable(false);
+        }
 
         // set need type filter
         $needTypeOptions = [null => __('All Need Types')] + $this->needTypeOptions;

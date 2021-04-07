@@ -87,11 +87,11 @@ class InstitutionExpendituresTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'budget_type_id') {
-            return __('Budget');
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         } else if ($field == 'expenditure_type_id') {
             return  __('Type');
         } else if ($field == 'amount' && $this->action == 'index') {
-            return  __('Amount (PM)');
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

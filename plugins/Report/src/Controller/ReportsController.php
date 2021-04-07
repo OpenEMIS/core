@@ -70,6 +70,7 @@ class ReportsController extends AppController
         } elseif ($module == 'Institutions') {
             $options = [
                 'Report.Institutions' => __('Institutions'),
+                'Report.InstitutionAssociations' => __('Associations'),
                 'Report.InstitutionPositions' => __('Positions'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
                 'Report.InstitutionClasses' => __('Classes'),
@@ -127,6 +128,7 @@ class ReportsController extends AppController
                 'Report.StaffQualifications' => __('Qualifications'),
                 'Report.StaffLicenses' => __('Licenses'),
                 'Report.StaffEmploymentStatuses' => __('Employment Statuses'),
+                'Report.StaffHealthReports' => __('Staff Health Report'),
                 'Report.StaffSalaries' => __('Salaries'),
                 'Report.StaffSystemUsage' => __('System Usage'),
                 'Report.StaffTrainingReports' => __('Training Courses Report'),
@@ -134,7 +136,7 @@ class ReportsController extends AppController
                 'Report.StaffPositions' => __('Staff Positions Report'),
                 'Report.PositionSummary' => __('Position Summary Report'),
                 'Report.StaffDuties' => __('Duties Report'),
-                'Report.StaffExtracurriculars' => __('Staff Extracurricular')
+                'Report.StaffExtracurriculars' => __('Staff Extracurricular'),
 				
             ];
         } elseif ($module == 'Textbooks') {
