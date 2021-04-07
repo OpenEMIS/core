@@ -85,7 +85,7 @@ class InstitutionBudgetsTable extends ControllerActionTable
         if ($field == 'budget_type_id') {
             return __('Type');
         } else if ($field == 'amount' && $this->action == 'index') {
-            return  __('Amount (PM)');
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Datasource\ResultSetInterface;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
+use Cake\ORM\TableRegistry;
 
 class InstitutionTripsController extends PageController
 {
@@ -109,8 +110,36 @@ class InstitutionTripsController extends PageController
 
         // reorder fields
         $page->move('academic_period_id')->first();
+        $Users = TableRegistry::get('labels');
+        $result = $Users
+            ->find()
+            ->where(['module' => 'InstitutionTrips', 'field_name' => 'Repeat'])
+            ->toArray();
+        if(isset($result[0]['name'])){
+            $page->get('repeat')->setSortable(false)->setLabel($result[0]['name']);
+        }else{
+            $page->move('repeat')->after('institution_bus_id');
+        }
         $page->move('repeat')->after('institution_bus_id');
         $page->move('days')->after('repeat');
+        $result = $Users
+            ->find()
+            ->where(['module' => 'InstitutionTrips', 'field_name' => 'Trip Type'])
+            ->toArray();
+        if(isset($result[0]['name'])){
+            $page->get('trip_type_id')->setSortable(false)->setLabel($result[0]['name']);
+        }else{
+            $page->move('trip_type_id')->after('name');
+        }
+        $result = $Users
+            ->find()
+            ->where(['module' => 'InstitutionTrips', 'field_name' => 'Bus'])
+            ->toArray();
+        if(isset($result[0]['name'])){
+            $page->get('institution_bus_id')->setSortable(false)->setLabel($result[0]['name']);
+        }else{
+            $page->move('repeat')->after('institution_bus_id');
+        }
         // end reorder fields
     }
 
