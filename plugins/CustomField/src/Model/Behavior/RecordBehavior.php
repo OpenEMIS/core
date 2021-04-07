@@ -483,7 +483,7 @@ class RecordBehavior extends Behavior
                                     ])
                                     ->toArray();
                             }
-                            if (!empty($surveyIds)) {
+                            if (!empty($surveyIds) && array_key_exists('repeaterValues', $settings)) {
                                 // always deleted all existing answers before re-insert
                                 $RepeaterSurveyAnswers->deleteAll([
                                     $RepeaterSurveyAnswers->aliasField('institution_repeater_survey_id IN ') => $surveyIds
@@ -792,29 +792,32 @@ class RecordBehavior extends Behavior
             foreach ($customFields as $key => $obj) {
                 $customField = $obj->custom_field;
                 $fieldTypeCode = $customField->field_type;
-
+				$section = Inflector::slug($obj->section);
+				
                 // only apply for field type store in custom_field_values
                 if (in_array($fieldTypeCode, $this->fieldValueArray)) {
-                    $fieldId = $customField->id;
+					if($section == $tabSection) {
+						$fieldId = $customField->id;
 
-                    if (array_key_exists($fieldId, $values)) {
-                        $fieldValues[] = $values[$fieldId];
-                    } else {
-                        $valueData = [
-                            'text_value' => null,
-                            'number_value' => null,
-                            'decimal_value' => null,
-                            'textarea_value' => null,
-                            'date_value' => null,
-                            'time_value' => null,
-                            $this->config('fieldKey') => $fieldId,
-                            $this->config('recordKey') => $entity->id,
-                            'custom_field' => null // set after data is patched else will lost
-                        ];
-                        $valueEntity = $this->CustomFieldValues->newEntity($valueData, ['validate' => false]);
-                        $valueEntity->custom_field = $customField;
-                        $fieldValues[] = $valueEntity;
-                    }
+						if (array_key_exists($fieldId, $values)) {
+							$fieldValues[] = $values[$fieldId];
+						} else {
+							$valueData = [
+								'text_value' => null,
+								'number_value' => null,
+								'decimal_value' => null,
+								'textarea_value' => null,
+								'date_value' => null,
+								'time_value' => null,
+								$this->config('fieldKey') => $fieldId,
+								$this->config('recordKey') => $entity->id,
+								'custom_field' => null // set after data is patched else will lost
+							];
+							$valueEntity = $this->CustomFieldValues->newEntity($valueData, ['validate' => false]);
+							$valueEntity->custom_field = $customField;
+							$fieldValues[] = $valueEntity;
+						}
+					}
                 } else {
                     $fieldType = Inflector::camelize(strtolower($fieldTypeCode));
                     $settings = new ArrayObject([
