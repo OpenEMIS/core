@@ -1373,7 +1373,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Profile','controller' => 'Profiles', 'action' => 'ProfileStudentUser', 0 => 'view', $studentId],
                 'selected' => ['Profiles.ProfileStudentUser']
             ],
-            'Profiles.ProfileStudents.index' => [
+            'Profiles.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Profiles.ProfileStudents.index',
                 'params' =>  ['plugin' => 'Profile', 'controller' => 'Profiles', $studentId],
