@@ -66,7 +66,8 @@ class EducationGradesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator
             ->add('code', 'ruleUnique', [
-                'rule' => 'validateUnique',
+                //'rule' => 'validateUnique',
+                'rule' => 'educationGradesCode',
                 'provider' => 'table'
             ]);
         return $validator;
@@ -560,3 +561,4 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 }
+                                                                                                                                  
