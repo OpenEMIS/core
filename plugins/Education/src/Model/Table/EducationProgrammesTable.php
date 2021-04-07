@@ -48,10 +48,10 @@ class EducationProgrammesTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
         return $validator
                         ->add('code', 'ruleUnique', [
-                            'rule' => 'validateUnique',
+                            //'rule' => 'validateUnique',
+                            'rule' => 'educationProgrammesCode',
                             'provider' => 'table'
-                        ])
-        ;
+                        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
@@ -194,8 +194,9 @@ class EducationProgrammesTable extends ControllerActionTable {
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         
         //Return all required options and their key
-        $levelOptions = $this->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod);
-
+        //$levelOptions = $this->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod); //POCOR-5975 starts
+        $levelOptions = $this->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
+        //POCOR-5975 ends
         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
          
         $cycleOptions = $this->EducationCycles
