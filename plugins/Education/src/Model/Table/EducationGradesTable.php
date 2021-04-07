@@ -64,13 +64,17 @@ class EducationGradesTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        $validator
-            ->add('code', 'ruleUnique', [
-                //'rule' => 'validateUnique',
-                'rule' => 'educationGradesCode',
-                'provider' => 'table'
-            ]);
-        return $validator;
+        if ($this->action == 'add') {
+            $validator
+                    ->add('code', 'ruleUnique', [
+                        //'rule' => 'validateUnique',
+                        'rule' => 'educationGradesCode',
+                        'provider' => 'table'
+                    ]);
+            return $validator;
+        } else {
+            return $validator;
+        }
     }
 
     public function implementedEvents()
