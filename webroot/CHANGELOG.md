@@ -1,3 +1,39 @@
+### [3.63.2] - 2021-04-01
+- Bug Fixed: Number appearing when editing Institutions > Survey > Forms page
+- Bug Fixed: Issues when viewing Students data in Guardian Login > Profiles > Students page
+
+### [3.63.1] - 2021-03-25
+- Implemented: Reports > Staff > Staff Health report
+- Bug Fixed: Reports > Students > Student Health report: Changes to report
+- Bug Fixed: Institutions > Student > Pending Transfer In > Pending Approval from Receiving Institution: Error
+
+### [3.63.0] - 2021-03-19
+- Implemented: Student Profile feature
+- Implemented: Changes to daily recording of Meal distribution to students
+- Bug Fixed: Administration > System Setup > Attendances > Attendances tab : The period_id shuffles across attendance periods when it is reordered. This can create data inconsistencies in report
+- Bug Fixed: Administration > System Setup > System Configuration > Coordinates: To allow decimal input
+- Bug Fixed: Administration > System Setup > System Configuration > Profile Completeness : Ability to configure features included in profile completeness
+- Bug Fixed: Institutions > Academic > Programmes > Edit: Upon editing page without checking any Subjects and saving record, 404 error encountered
+- Bug Fixed: Institutions > Academic > Subjects > View: Student is having both Withdrawn and Enrolled Status in Subjects page even though student is currently having Enrolled status
+- Bug Fixed: Institutions > Students > Individual student > Academic > Outcomes tab > Subjects dropdown showing unassigned subjects
+
+### [3.62.3] - 2021-03-15
+- Implemented: Feature for school activities/houses/clubs
+- Implemented: Enhancement of Translations
+- Implemented: Improvement of the school closing process changes
+- Bug Fixed: Institutions > Surveys > Forms : Unable to save even though mandatory fields are entered
+- Bug Fixed: Institutions > Academic > Programme > Add/Edit: Number of Subjects listed is not the same as number of Subjects configured in Education Structure
+- Bug Fixed: Institutions > Academic > Subject: Multigrade Class was created but only 1 Subject has Subject allocated for the Grades in the Multigrade
+- Bug Fixed: Institutions > Academic > Subjects > View: Student who was Withdrawn and Enrolled back in the same Institution is still having Withdrawn Status in Subjects page
+- Bug Fixed: Institutions > Add page : Unable to save due to unknown error
+- Bug Fixed: Institutions > Infrastructure > Overview: Unable to edit record
+- Bug Fixed: Institutions > Meals/ Institutions > Infrastructures : Menu for Infrastructure is hidden in Meals
+- Bug Fixed: Institutions > Survey: Data is missing upon saving Survey Form
+- Bug Fixed: Profile > Staff > Career > Classes tab: Encountered 404 error
+- Bug Fixed: Report > Institutions > Staff Leave Report: Changes to report
+- Bug Fixed: Report > Institutions > Staff Attendance Report: Changes to report
+- Bug Fixed: Administration > Security > Roles > System Roles: Re-order function is not working
+
 ### [3.62.2] - 2021-03-05
 - Implemented: Generate Risks for all school at one time in Administration > System Setup > Risks
 - Bug Fixed: Profile > Student > Academic > Risk: 404 error upon viewing the Risk record
