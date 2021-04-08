@@ -195,16 +195,15 @@ class EducationProgrammesTable extends ControllerActionTable {
         
         //Return all required options and their key
         $levelOptions = $this->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod);
-
-        $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
-         
+        //POCOR-5973 starts
+        $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : implode(',',array_keys($levelOptions));
         $cycleOptions = $this->EducationCycles
                 ->find('list')
                 ->find('visible')
                 ->find('order')
-                ->where([$this->EducationCycles->aliasField('education_level_id') => $selectedLevel])
+                ->where([$this->EducationCycles->aliasField('education_level_id') . ' IN (' .  $selectedLevel . ')'])
                 ->toArray();
-        
+        //POCOR-5973 ends
         $selectedCycle = !is_null($this->request->query('cycle')) ? $this->request->query('cycle') : key($cycleOptions);
         
         return compact('academicPeriodOptions', 'selectedAcademicPeriod', 'levelOptions', 'selectedLevel', 'cycleOptions', 'selectedCycle');

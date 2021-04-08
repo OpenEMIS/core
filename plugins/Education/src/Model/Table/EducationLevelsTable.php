@@ -51,13 +51,14 @@ class EducationLevelsTable extends ControllerActionTable
 
         // Education System filter
         $systemOptions = $this->EducationSystems->getSystemOptions($selectedAcademicPeriod);
+
         if (!empty($systemOptions )) {
         	$selectedSystem = !empty($this->request->query('system')) ? $this->request->query('system') : key($systemOptions);
         } else {
         	$systemOptions = ['0' => '-- '.__('No Education System').' --'] + $systemOptions;
         	$selectedSystem = !empty($this->request->query('system')) ? $this->request->query('system') : 0;
         }
-        
+
         $this->controller->set(compact('systemOptions', 'selectedSystem'));
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $query->where([$this->aliasField('education_system_id') => $selectedSystem])
@@ -126,18 +127,32 @@ class EducationLevelsTable extends ControllerActionTable
 		return $list;
 	}
 
-	public function getLevelOptions()
+	public function getLevelOptions($selectedAcademicPeriod = null)
 	{
-		$list = $this
-			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
-			->find('visible')
-			->contain(['EducationSystems'])
-			->order([
-				$this->EducationSystems->aliasField('order'),
-				$this->aliasField('order')
-			])
-			->toArray();
-
+		//POCOR-5973 starts
+		$systemOptions = $this->EducationSystems->getSystemOptions($selectedAcademicPeriod);
+		if(!empty($systemOptions)){
+			$list = $this
+					->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
+					->find('visible')
+					->contain(['EducationSystems'])
+					->where([$this->aliasField('education_system_id') . ' IN (' .  implode(',',array_keys($systemOptions)) . ')'])
+					->order([
+						$this->EducationSystems->aliasField('order'),
+						$this->aliasField('order')
+					])
+					->toArray();
+		}else{
+			$list = $this
+					->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
+					->find('visible')
+					->contain(['EducationSystems'])
+					->order([
+						$this->EducationSystems->aliasField('order'),
+						$this->aliasField('order')
+					])
+					->toArray();
+		}//POCOR-5973 ends
 		return $list;
 	}
 
