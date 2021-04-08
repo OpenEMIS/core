@@ -814,7 +814,6 @@ class NavigationComponent extends Component
                 'selected' => ['InfrastructureProjects.view', 'InfrastructureProjects.add', 'InfrastructureProjects.edit', 'InfrastructureProjects.delete']
             ],
 
-
             'Wash' => [
                 'title' => 'WASH',
                 'parent' => 'Infrastructures',
@@ -888,18 +887,18 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['InstitutionAssets.view', 'InstitutionAssets.add', 'InstitutionAssets.edit', 'InstitutionAssets.delete'],
             ],
-            
+
             'Meals' => [
                 'title' => 'Meals',
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
 
-            'Institutions.MealProgramme' => [
-               'title' => 'Programme',
+            'Institutions.Distribution' => [
+               'title' => 'Distribution',
                 'parent' => 'Meals',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.MealProgramme']
+                'selected' => ['Institutions.Distribution']
             ],
 
             'Institutions.StudentMeals.index' => [
@@ -1091,6 +1090,12 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
                 'selected' => ['Students.Meals']
+            ],
+            'Students.Profiles' => [
+                'title' => 'Profiles',
+                'parent' => 'Institutions.Students.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.Profiles']
             ],
 
         ];
@@ -1355,12 +1360,8 @@ class NavigationComponent extends Component
     public function getProfileGuardianStudentNavigation()
     {   
         $session = $this->request->session();
-        $sId = $this->request->pass[1];
-        $studentId = $session->read('Student.Students.id');        
+        $studentId = $this->request->pass[1];        
     
-        if ($this->action == "ProfileStudentUser" && empty($studentId)) {
-            $session->write('Student.Students.id', $sId);
-        }
         $navigation = [
             'Profiles.ProfileStudentUser' => [
                 'title' => 'Overview',
@@ -1730,6 +1731,11 @@ class NavigationComponent extends Component
                 'title' => 'Staff',
                 'parent' => 'ProfileTemplates',
                 'selected' => ['ProfileTemplates.StaffProfiles', 'Staff.view', 'Staff.add', 'Staff.edit', 'Staff.delete']
+            ],
+            'ProfileTemplates.Students' => [
+                'title' => 'Students',
+                'parent' => 'ProfileTemplates',
+                'selected' => ['ProfileTemplates.StudentProfiles', 'Students.view', 'Students.add', 'Students.edit', 'Students.delete']
             ],
 
             'Administration.Survey' => [
