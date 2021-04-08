@@ -280,7 +280,7 @@ class ProfilesController extends AppController
                 $student_id = $sId['id'];
                 
                 if ($action == 'StudentReportCards') {
-                    //$student_id = $sId['student_id'];
+                    //$student_id = $sId['student_id']; //POCOR-5979
                     $student_id = $sId['id'];
                 }
                 if ($action == 'StudentRisks') {
@@ -354,7 +354,16 @@ class ProfilesController extends AppController
         $action = $this->request->params['action'];
         $id = $session->read('Student.Students.id');
         if (!empty($id)) {
-            if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards') {
+            //POCOR-5979 starts
+            if ($action == 'StudentCompetencies' || $action == 'StudentAwards' || $action == 'ComponentAction') {
+                $studentId = $this->ControllerAction->paramsDecode($id);
+                $entity = $this->Profiles->get($studentId['id']);
+                $name = $entity->name;
+                $header = $name;
+                $header = $header . ' - ' . $model->getHeader($alias);
+            }
+            //POCOR-5979 ends 
+            if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'StudentOutcomes'|| $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks') {
                 $studentId = $this->ControllerAction->paramsDecode($id)['id'];
                 $entity = $this->Profiles->get($studentId);
                 $name = $entity->name;
