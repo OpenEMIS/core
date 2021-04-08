@@ -1,6 +1,7 @@
 <?php
 use Migrations\AbstractMigration;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 
 class POCOR5987 extends AbstractMigration
 {
@@ -14,10 +15,11 @@ class POCOR5987 extends AbstractMigration
     public function up()
     {
 
-        // Backup table
-        $this->execute('CREATE TABLE `zz_5987_user_identities` LIKE `user_identities`');
-        $this->execute('INSERT INTO `zz_5987_user_identities` SELECT * FROM `user_identities`');
 
+        // Backup table
+        //$this->execute('CREATE TABLE `zz_5987_user_identities` LIKE `user_identities`');
+        //$this->execute('INSERT INTO `zz_5987_user_identities` SELECT * FROM `user_identities`');
+        echo "<pre>";print_r($request);die();
         $UserNationalities = TableRegistry::get('User.UserNationalities');
         $Identities = TableRegistry::get('User.Identities');
         $getData = $UserNationalities
@@ -26,6 +28,7 @@ class POCOR5987 extends AbstractMigration
         if (!empty($getData)) {
             foreach ($getData as $value) {
                 $userId = $value->security_user_id;
+
                 $nationalityId = $value->nationality_id;
                 $countData = $this->fetchAll('SELECT count(*) AS `COUNT` from `user_nationalities` where `security_user_id` = '.$userId.' ');
                 if (!empty($countData) && $countData[0]['COUNT'] == 1) {
@@ -35,6 +38,7 @@ class POCOR5987 extends AbstractMigration
                         $national = $getUserIdentity->nationality_id;
                         if (is_null($national)) {
                             $query = $Identities->query();
+                            print_r($nationalityId);die();
                             $result = $query->update()
                                         ->set(['nationality_id' => $nationalityId])
                                         ->where(['security_user_id' => $userId])
