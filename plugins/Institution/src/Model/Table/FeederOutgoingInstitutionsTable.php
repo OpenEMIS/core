@@ -273,9 +273,11 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
                         'keyField' => 'education_grade_id',
                         'valueField' => 'education_grade.programme_grade_name'
                     ])
-                    ->contain(['EducationGrades'])
+                    //->contain(['EducationGrades'])
+					->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
                     ->where([
-                        $InstitutionGradesTable->aliasField('institution_id') => $institutionId
+                        $InstitutionGradesTable->aliasField('institution_id') => $institutionId,
+						'EducationSystems.academic_period_id' => $academicPeriodId,
                     ])
                     ->find('academicPeriod', ['academic_period_id' => $academicPeriodId])
                     ->toArray();
