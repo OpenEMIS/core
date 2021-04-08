@@ -99,5 +99,74 @@ class WorkflowReportBehavior extends Behavior
                     ->where(['Statuses.category' => $category]);
             }
         }
+
+        if($requestData->model == 'Report.WorkflowStudentTransferOut'){
+            $category = $requestData->category;
+            $institution_id = $requestData->institution_id;
+
+            if ($category != -1) {
+                $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category, 'WorkflowStudentTransferOut.institution_id'=>$institution_id])
+                    ->toArray();
+                if(!empty($query)){
+                    $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category, 'WorkflowStudentTransferOut.institution_id'=>$institution_id]);
+                }
+                else{
+                    return true;
+                }
+            }else if($category == -1){
+                $query
+                    ->contain('Statuses')
+                    ->where(['WorkflowStudentTransferOut.institution_id'=>$institution_id]);
+            }
+            else{
+                return true;
+            }
+        }else{
+            $category = $requestData->category;
+            if ($category != -1) {
+                $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category]);
+            }
+        }
+
+        if($requestData->model == 'Report.WorkflowInstitutionCase'){
+            $category = $requestData->category;
+            $institution_id = $requestData->institution_id;
+
+            if ($category != -1) {
+                $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category, 'WorkflowInstitutionCase.institution_id'=>$institution_id])
+                    ->toArray();
+                if(!empty($query)){
+                    $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category, 'WorkflowInstitutionCase.institution_id'=>$institution_id]);
+                }
+                else{
+                    return true;
+                }
+            }else if($category == -1){
+                $query
+                    ->contain('Statuses')
+                    ->where(['WorkflowInstitutionCase.institution_id'=>$institution_id]);
+            }
+            else{
+                return true;
+            }
+        }else{
+            $category = $requestData->category;
+            if ($category != -1) {
+                $query
+                    ->contain('Statuses')
+                    ->where(['Statuses.category' => $category]);
+            }
+        }
+
     }
 }
