@@ -352,19 +352,10 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
         $action = $this->request->params['action'];
-        $id = $session->read('Student.Students.id');
-        if (!empty($id)) {
-            //POCOR-5979 starts
-            if ($action == 'StudentCompetencies' || $action == 'StudentAwards' || $action == 'ComponentAction') {
-                $studentId = $this->ControllerAction->paramsDecode($id);
-                $entity = $this->Profiles->get($studentId['id']);
-                $name = $entity->name;
-                $header = $name;
-                $header = $header . ' - ' . $model->getHeader($alias);
-            }
-            //POCOR-5979 ends 
-            if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'StudentOutcomes'|| $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks') {
-                $studentId = $this->ControllerAction->paramsDecode($id)['id'];
+        $studentId = $this->request->params['pass'][1];
+        if (!empty($studentId)) {
+             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards') {
+				$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
                 $entity = $this->Profiles->get($studentId);
                 $name = $entity->name;
                 $header = $name;
@@ -548,7 +539,7 @@ class ProfilesController extends AppController
     public function getAcademicTabElements($options = [])
     {  
         $session = $this->request->session();
-        $studentId = $session->read('Student.Students.id');
+        $studentId = $this->request->pass[1];        
         $id = (array_key_exists('id', $options))? $options['id'] : 0;
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];
