@@ -612,18 +612,7 @@ class InstitutionsTable extends AppTable
                 $attr['options'] = $academicPeriodOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                if (in_array($feature, 
-                            [
-                                'Report.ClassAttendanceNotMarkedRecords', 
-                                'Report.InstitutionCases', 
-                                'Report.StudentAttendanceSummary', 
-                                'Report.StaffAttendances',
-                                'Report.ClassAttendanceMarkedSummaryReport'
-                            ])
-                    ) {
-                    $attr['onChangeReload'] = true;
-                }
-
+				$attr['onChangeReload'] = true;
                 if (empty($request->data[$this->alias()]['academic_period_id'])) {
                     $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
                 }
@@ -643,12 +632,16 @@ class InstitutionsTable extends AppTable
                         ])
                 ) {
                 
+				$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
                 $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                     ->find('visible')
-                    ->contain(['EducationCycles'])
-                    ->order([
+                    ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                    ->where([
+						'EducationSystems.academic_period_id' => $academicPeriodId,
+					])
+					->order([
                         'EducationCycles.order' => 'ASC',
                         $EducationProgrammes->aliasField('order') => 'ASC'
                     ])
@@ -690,7 +683,11 @@ class InstitutionsTable extends AppTable
                         'name' => $EducationGrades->aliasField('name'),
                         'education_programme_name' => 'EducationProgrammes.name'
                     ])
-                    ->contain(['EducationProgrammes'])
+                    //->contain(['EducationProgrammes'])
+					->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+					->where([
+						'EducationSystems.academic_period_id' => $academicPeriodId,
+					])
                     ->order([
                         'EducationProgrammes.order' => 'ASC',
                         $EducationGrades->aliasField('name') => 'ASC'
