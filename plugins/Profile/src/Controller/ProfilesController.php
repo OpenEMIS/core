@@ -272,6 +272,7 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
         
         $header = '';
+
         if ($this->Profiles->exists([$this->Profiles->primaryKey() => $loginUserId])) {
             $studentId = $this->request->pass[1];
             if (!empty($studentId)) {
@@ -279,7 +280,8 @@ class ProfilesController extends AppController
                 $student_id = $sId['id'];
                 
                 if ($action == 'StudentReportCards') {
-                    $student_id = $sId['student_id'];
+                    //$student_id = $sId['student_id'];
+                    $student_id = $sId['id'];
                 }
                 if ($action == 'StudentRisks') {
                     $student_id = $loginUserId;
