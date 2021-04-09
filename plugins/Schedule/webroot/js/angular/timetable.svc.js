@@ -19,7 +19,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         InstitutionClassGradesTable: 'Institution.InstitutionClassGrades',
         InstitutionRoomsTable: 'Institution.InstitutionRooms',
         InstitutionClassSubjectsTable: 'Institution.InstitutionClassSubjects',
-        ScheduleTimetableCustomizesTable:'Schedule.ScheduleTimetableCustomizes'
+        ScheduleTimetableCustomizesTable: 'Schedule.ScheduleTimetableCustomizes'
     };
 
     var service = {
@@ -38,11 +38,11 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         saveLessonDetailCurriculumData: saveLessonDetailCurriculumData,
         checkCurriculumSubjectExistSameTimeslot: checkCurriculumSubjectExistSameTimeslot,
         saveLessonDetailNonCurriculumData: saveLessonDetailNonCurriculumData,
-        getInstitutionRooms:getInstitutionRooms,
-        getInstitutionClassSubjects:getInstitutionClassSubjects,
-        getScheduleTimetableCustomizesTable:getScheduleTimetableCustomizesTable,
-        saveTimetableCustomizeData:saveTimetableCustomizeData,
-        deleteTimeTableCellData:deleteTimeTableCellData,
+        getInstitutionRooms: getInstitutionRooms,
+        getInstitutionClassSubjects: getInstitutionClassSubjects,
+        getScheduleTimetableCustomizesTable: getScheduleTimetableCustomizesTable,
+        saveTimetableCustomizeData: saveTimetableCustomizeData,
+        deleteTimeTableCellData: deleteTimeTableCellData,
     };
 
     return service;
@@ -53,58 +53,67 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         KdDataSvc.controllerAction('ScheduleTimetable');
         KdDataSvc.init(models);
     }
-    
-    function getScheduleTimetableCustomizesTable(timetableId){
+
+    function getScheduleTimetableCustomizesTable(timetableId) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
                 deferred.reject('There was an error when retrieving the data');
             }
-        }; 
-        
+        };
+
         return ScheduleTimetableCustomizesTable
             .where({
                 institution_schedule_timetable_id: timetableId
             })
-            .ajax({success: success, defer: true});          
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
-    
-    function getInstitutionRooms(institutionId, academicPeriodId){
+
+    function getInstitutionRooms(institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
                 deferred.reject('There was an error when retrieving the data');
             }
-        }; 
-        
+        };
+
         return InstitutionRoomsTable
             .where({
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
-                //accessibility: 1,
-                //end_year:new Date().getFullYear()
+                    //accessibility: 1,
+                    //end_year:new Date().getFullYear()
             })
-            .ajax({success: success, defer: true});          
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
-    
-    function getInstitutionClassSubjects(institutionId, institutionClassId , academicPeriodId){
+
+    function getInstitutionClassSubjects(institutionId, institutionClassId, academicPeriodId) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
                 deferred.reject('There was an error when retrieving the data');
             }
-        }; 
-        
+        };
+
         return InstitutionClassSubjectsTable
             .find('AllSubjects', {
-                institution_class_id:institutionClassId,
-            })            
-            .ajax({success: success, defer: true});          
+                institution_class_id: institutionClassId,
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
-    
+
     function getTimetable(timetableId) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.data)) {
@@ -117,7 +126,10 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         return ScheduleTimetableTable
             .get(timetableId)
             .contain(['AcademicPeriods', 'ScheduleIntervals', 'ScheduleTerms', 'InstitutionClasses'])
-            .ajax({success: success, defer: true});
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
 
     function getTimeslots(scheduleIntervalId) {
@@ -132,9 +144,14 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         };
 
         return ScheduleTimeslotsTable
-            .where({institution_schedule_interval_id: scheduleIntervalId})
+            .where({
+                institution_schedule_interval_id: scheduleIntervalId
+            })
             .order(['order'])
-            .ajax({success: success, defer: true});
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
 
     function getTimetableLessons(timetableId) {
@@ -151,7 +168,10 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             .find('allLessons', {
                 institution_schedule_timetable_id: timetableId
             })
-            .ajax({success: success, defer: true});
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
 
     function getWorkingDayOfWeek() {
@@ -165,7 +185,10 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
 
         return AcademicPeriodTable
             .find('workingDayOfWeek')
-            .ajax({success: success, defer: true});
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
 
     function getLessonType() {
@@ -179,7 +202,10 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
 
         return ScheduleLessonsTable
             .find('lessonType')
-            .ajax({success: success, defer: true});
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
 
     function getTimetableStatus() {
@@ -193,7 +219,10 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
 
         return ScheduleTimetableTable
             .find('timetableStatus')
-            .ajax({success: success, defer: true});
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
 
     function getEducationGrade(institutionClassId) {
@@ -206,8 +235,13 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         };
 
         return InstitutionClassGradesTable
-            .where({institution_class_id: institutionClassId})
-            .ajax({success: success, defer: true});
+            .where({
+                institution_class_id: institutionClassId
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
 
     // save events
@@ -237,16 +271,16 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
 
         return ScheduleLessonsTable.save(saveData);
     }
-    
-    function checkCurriculumSubjectExistSameTimeslot(lessonDetailData){
-        
+
+    function checkCurriculumSubjectExistSameTimeslot(lessonDetailData) {
+
         var searchData = {
             day_of_week: lessonDetailData.day_of_week,
             institution_schedule_timeslot_id: lessonDetailData.institution_schedule_timeslot_id,
             institution_schedule_timetable_id: lessonDetailData.institution_schedule_timetable_id,
             lesson_type: lessonDetailData.lesson_type,
-            institution_room_id:lessonDetailData.schedule_curriculum_lesson_room.institution_room_id,
-            institution_subject_id: lessonDetailData.schedule_curriculum_lesson.institution_subject_id            
+            institution_room_id: lessonDetailData.schedule_curriculum_lesson_room.institution_room_id,
+            institution_subject_id: lessonDetailData.schedule_curriculum_lesson.institution_subject_id
         };
 
         var success = function(response, deferred) {
@@ -257,19 +291,27 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
                 deferred.reject('There was an error when retrieving the data');
             }
         };
-       
+
         return ScheduleLessonDetailsTable
             .find('checkSubjectExistSameTimeslot', searchData)
-            .ajax({success: success, defer: true}); 
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
-    
-    
+
+
     function saveLessonDetailCurriculumData(lessonDetailData) {
-       
+
         var codeOnly = 0;
         //console.log('schedule_curriculum_lesson_details:',lessonDetailData.schedule_curriculum_lesson);
-        if(lessonDetailData.schedule_curriculum_lesson.code_only !=0){
+        if (lessonDetailData.schedule_curriculum_lesson.code_only != 0) {
             codeOnly = 1;
+        }
+        if (lessonDetailData.schedule_curriculum_lesson_room.institution_room_id) {
+            room_id = lessonDetailData.schedule_curriculum_lesson_room.institution_room_id;
+        } else {
+            room_id = 0;
         }
         var saveData = {
             day_of_week: lessonDetailData.day_of_week,
@@ -277,33 +319,38 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             institution_schedule_timetable_id: lessonDetailData.institution_schedule_timetable_id,
             lesson_type: lessonDetailData.lesson_type,
             schedule_lesson_room: {
-                institution_schedule_lesson_detail_id:'1',
-                institution_room_id:lessonDetailData.schedule_curriculum_lesson_room.institution_room_id,
+                institution_schedule_lesson_detail_id: '1',
+                institution_room_id: room_id,
             },
             schedule_curriculum_lesson: {
                 institution_subject_id: lessonDetailData.schedule_curriculum_lesson.institution_subject_id,
-                code_only:codeOnly,
+                code_only: codeOnly,
             }
         };
-        
-        
+
+
         if (angular.isDefined(lessonDetailData.id)) {
             saveData.id = lessonDetailData.id;
         }
-        
+
         return ScheduleLessonDetailsTable.save(saveData);
     }
 
     function saveLessonDetailNonCurriculumData(lessonDetailData) {
-        
+
+        if (lessonDetailData.schedule_non_curriculum_lesson_room.institution_room_id) {
+            room_id = lessonDetailData.schedule_non_curriculum_lesson_room.institution_room_id;
+        } else {
+            room_id = 0;
+        }
         var saveData = {
             day_of_week: lessonDetailData.day_of_week,
             institution_schedule_timeslot_id: lessonDetailData.institution_schedule_timeslot_id,
             institution_schedule_timetable_id: lessonDetailData.institution_schedule_timetable_id,
             lesson_type: lessonDetailData.lesson_type,
             schedule_lesson_room: {
-                institution_schedule_lesson_detail_id:'1',
-                institution_room_id:lessonDetailData.schedule_non_curriculum_lesson_room.institution_room_id,
+                institution_schedule_lesson_detail_id: '1',
+                institution_room_id: room_id,
             },
             schedule_non_curriculum_lesson: {
                 name: lessonDetailData.schedule_non_curriculum_lesson.name
@@ -313,10 +360,10 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         if (angular.isDefined(lessonDetailData.id)) {
             saveData.id = lessonDetailData.id;
         }
-       
+
         return ScheduleLessonDetailsTable.save(saveData);
     }
-    
+
     function saveTimetableCustomizeData(timetableId, institutionId, academicPeriodId, customizeData) {
         var success = function(response, deferred) {
             console.log('Checkresponse', response);
@@ -327,10 +374,15 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             }
         };
         ScheduleTimetableCustomizesTable
-            .find('deleteTimetableCustomizeData',{institution_schedule_timetable_id:timetableId})
-            .ajax({success: success, defer: true});
-        
-        angular.forEach(customizeData, function(value, key){
+            .find('deleteTimetableCustomizeData', {
+                institution_schedule_timetable_id: timetableId
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
+
+        angular.forEach(customizeData, function(value, key) {
             var saveData = {
                 institution_schedule_timetable_id: timetableId,
                 institution_id: institutionId,
@@ -343,10 +395,10 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         });
         return true;
     }
-    
-    function deleteTimeTableCellData(lessionId){
+
+    function deleteTimeTableCellData(lessionId) {
         var searchData = {
-            lession_id: lessionId            
+            lession_id: lessionId
         };
 
         var success = function(response, deferred) {
@@ -357,10 +409,13 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
                 deferred.reject('There was an error when retrieving the data');
             }
         };
-       
+
         return ScheduleLessonDetailsTable
             .find('deleteTimetableLessionDetailsData', searchData)
-            .ajax({success: success, defer: true});
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
-    
+
 };

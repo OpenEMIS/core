@@ -161,7 +161,6 @@ class WorkflowsTable extends AppTable
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
         $Areaid = $request['data']['Workflows']['area'];
-        //for POCOR-5992
         if($Areaid != ''){
             $InstitutionsTable = TableRegistry::get('Institution.Institutions');
             $institutionQuery = $InstitutionsTable
