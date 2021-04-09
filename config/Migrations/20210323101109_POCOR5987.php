@@ -15,7 +15,6 @@ class POCOR5987 extends AbstractMigration
     {
 
         // Backup table
-        $this->execute('DROP TABLE IF EXISTS `zz_5987_user_identities`');
         $this->execute('CREATE TABLE `zz_5987_user_identities` LIKE `user_identities`');
         $this->execute('INSERT INTO `zz_5987_user_identities` SELECT * FROM `user_identities`');
 
@@ -34,7 +33,7 @@ class POCOR5987 extends AbstractMigration
                                 ->where([$Identities->aliasField('security_user_id') => $userId])->first();
                     if (!empty($getUserIdentity)) {
                         $national = $getUserIdentity->nationality_id;
-                        if ($national  != $nationalityId || is_null($national)) {
+                        if (is_null($national)) {
                             $query = $Identities->query();
                             $result = $query->update()
                                         ->set(['nationality_id' => $nationalityId])
