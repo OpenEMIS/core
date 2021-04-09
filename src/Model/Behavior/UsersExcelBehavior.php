@@ -153,7 +153,7 @@ class UsersExcelBehavior extends Behavior
             $labelArray3[] = $value->student_custom;
         }
         
-        $labelArray = array("openEMIS_ID","first_name","middle_name","third_name","last_name","preferred_name","gender","date_of_birth","address","address_area","birth_area","nationality_name","identity_type","identity_number","email","postal_Code","user_type");
+        $labelArray = array("openEMIS_ID","first_name","middle_name","third_name","last_name","preferred_name","gender","date_of_birth","address","address_area","birth_area","nationality_name","identity_type","identity_number","email","postal_Code","user_type","username");
 
         $labelArray2 = array("staff_association_ID");
 
@@ -210,6 +210,7 @@ class UsersExcelBehavior extends Behavior
 
     private function getData($settings) {
         $requestData = json_decode($settings['process']['params']);
+        $userId = $requestData->user_id;
         $userType = $requestData->user_type;
         $Users = TableRegistry::get('Security.Users');
         $userList = $Users
@@ -293,6 +294,11 @@ class UsersExcelBehavior extends Behavior
                         $userList
                             ->where([$Users->aliasField('is_student') => 1]);
                         }
+
+                        /*$username = $Users
+                        ->find()
+                        ->where([$Users->aliasField('id') => $userId])->first();*/
+
                         $result = [];
                         if (!empty($userList)) {
                             foreach ($userList as $key => $value) {
@@ -313,6 +319,8 @@ class UsersExcelBehavior extends Behavior
                                $result[$key][] = $value->email;
                                $result[$key][] = $value->postal_code;
                                $result[$key][] = $userType;
+                               $result[$key][] = $value->username; //POCOR-5855
+
                                    if ($userType == 'Staff') {
                                         $result[$key][] = $value->staff_association;
                                    }
@@ -338,7 +346,6 @@ class UsersExcelBehavior extends Behavior
                                 }
                             }
                         }
-                       //echo '<pre>';print_r($result);die('aaaa');
                     return $result;
             }
 
