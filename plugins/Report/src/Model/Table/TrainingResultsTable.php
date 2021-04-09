@@ -46,21 +46,31 @@ class TrainingResultsTable extends AppTable
 
         $requestData = json_decode($settings['process']['params']);
         $selectedStatus = $requestData->status;
-        $selectedCourse = $requestData->training_course_id;
+		$selectedCourse = $requestData->training_course_id;
+		$conditions = [];
+        if ($selectedCourse != '-1') {
+            $conditions['Courses.id'] = $selectedCourse;
+        }
 
         $query
             ->select([
-                'workflow_step_name' => 'WorkflowSteps.name',
+                'result' => $this->aliasField('result'),
+                'workflow_step_name' => $WorkflowSteps->aliasField('name'),
                 'openemis_no' => 'Trainees.openemis_no',
                 'course_code' => 'Courses.code',
                 'course_name' => 'Courses.name',
                 'credit_hours' => 'Courses.credit_hours',
                 'session_code' => 'Sessions.code',
                 'identity_type_name' => 'IdentityTypes.name',
-                'identity_number' => 'Trainees.identity_number'
+                'identity_number' => 'Trainees.identity_number',
+                'result_type' => 'ResultTypes.name'
             ])
             ->contain(['Sessions.Courses'])
             ->innerJoin(
+                ['ResultTypes' => 'training_result_types'],
+                ['ResultTypes.id = ' . $this->aliasField('training_result_type_id')]
+            )
+			->innerJoin(
                 [$TrainingSessionResults->alias() => $TrainingSessionResults->table()],
                 [$TrainingSessionResults->aliasField('training_session_id = ') . $this->aliasField('training_session_id')]
             )
@@ -84,7 +94,7 @@ class TrainingResultsTable extends AppTable
                     ]
                 ],
             ])
-            ->where(['Courses.id' => $selectedCourse])
+            ->where([$conditions])
             ->group([
                 $this->aliasField('training_session_id'),
                 $this->aliasField('trainee_id')
@@ -188,42 +198,22 @@ class TrainingResultsTable extends AppTable
             'type' => 'integer',
             'label' => '',
         ];
-
-        $requestData = json_decode($settings['process']['params']);
-        $selectedCourse = $requestData->training_course_id;
-
-        $TrainingCourses = TableRegistry::get('Training.TrainingCourses');
-        $course = $TrainingCourses->get($selectedCourse, ['contain' => ['ResultTypes']]);
-        $resultTypes = $course->result_types;
-
-        foreach ($resultTypes as $type) {
-            $newFields[] = [
-                'key' => 'result',
-                'field' => 'result',
-                'type' => 'result',
-                'label' => __($type->name),
-                'resultTypeId' => $type->id
-            ];
-        }
+		
+        $newFields[] = [
+            'key' => 'result_type',
+            'field' => 'result_type',
+            'type' => 'string',
+            'label' => __('Result Type'),
+        ];
+		
+        $newFields[] = [
+            'key' => 'result',
+            'field' => 'result',
+            'type' => 'string',
+            'label' => __('Result'),
+        ];
 
         $fields->exchangeArray($newFields);
-    }
-
-    public function onExcelRenderResult(Event $event, Entity $entity, array $attr)
-    {
-        $sessionId = $entity->training_session_id;
-        $traineeId = $entity->trainee_id;
-        $resultTypeId = $attr['resultTypeId'];
-
-        $trainingSessionResults = $this->trainingSessionResults;
-        if (!isset($trainingSessionResults[$sessionId][$traineeId][$resultTypeId])) {
-            $TrainingResultsTable = TableRegistry::get('Training.TrainingSessionTraineeResults');
-            $this->trainingSessionResults = $TrainingResultsTable->getTrainingSessionResults($sessionId);
-            $trainingSessionResults = $this->trainingSessionResults;
-        }
-
-        $result = $trainingSessionResults[$sessionId][$traineeId][$resultTypeId];
-        return $result;
     }
 
     public function onExcelRenderInstitutionCode(Event $event, Entity $entity, array $attr)
@@ -232,8 +222,8 @@ class TrainingResultsTable extends AppTable
             $traineeId = $entity->trainee_id;
             $this->institutionDetails = $this->getInstitutionDetailByTraineeId($traineeId);
 
-            if (isset($this->institutionDetails) && array_key_exists('institution', $this->institutionDetails)) {
-                return $this->institutionDetails['institution']['code'];
+            if (isset($this->institutionDetails->institution->code) && !empty($this->institutionDetails->institution->code)) {
+                return $this->institutionDetails->institution->code;
             } else {
                 return ' ';
             }
@@ -244,8 +234,8 @@ class TrainingResultsTable extends AppTable
 
     public function onExcelRenderInstitutionName(Event $event, Entity $entity)
     {
-        if (isset($this->institutionDetails) && array_key_exists('institution', $this->institutionDetails)) {
-            return $this->institutionDetails['institution']['name'];
+        if (isset($this->institutionDetails->institution->name) && !empty($this->institutionDetails->institution->name)) {
+            return $this->institutionDetails->institution->name;
         } else {
             return ' ';
         }
@@ -267,7 +257,7 @@ class TrainingResultsTable extends AppTable
             ])
             ->first()
         ;
-
-        return $institutionDetails->toArray();
+		
+        return $institutionDetails;
     }
 }
