@@ -1204,8 +1204,8 @@ class ReportCardStatusesTable extends ControllerActionTable
             $entityAssessmentPeriods = $AssessmentPeriods->find()
                 ->where([
                     $AssessmentPeriods->aliasField('assessment_id') => $condition['assessment_id'],
-                    $AssessmentPeriods->aliasField('end_date >= ') => $condition['report_card_end_date'],
-                    $AssessmentPeriods->aliasField('start_date <= ') => $condition['report_card_start_date']
+                    $AssessmentPeriods->aliasField('start_date >= ') => $condition['report_card_start_date'],
+                    $AssessmentPeriods->aliasField('end_date <= ') => $condition['report_card_end_date']
                 ])
                 ->order([$AssessmentPeriods->aliasField('start_date')]);
 
