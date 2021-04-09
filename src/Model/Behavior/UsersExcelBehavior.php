@@ -295,9 +295,9 @@ class UsersExcelBehavior extends Behavior
                             ->where([$Users->aliasField('is_student') => 1]);
                         }
 
-                        $username = $Users
+                        /*$username = $Users
                         ->find()
-                        ->where([$Users->aliasField('id') => $userId])->first();
+                        ->where([$Users->aliasField('id') => $userId])->first();*/
 
                         $result = [];
                         if (!empty($userList)) {
@@ -319,7 +319,7 @@ class UsersExcelBehavior extends Behavior
                                $result[$key][] = $value->email;
                                $result[$key][] = $value->postal_code;
                                $result[$key][] = $userType;
-                               $result[$key][] = $username->username;
+                               $result[$key][] = $value->username; //POCOR-5855
 
                                    if ($userType == 'Staff') {
                                         $result[$key][] = $value->staff_association;
@@ -346,7 +346,6 @@ class UsersExcelBehavior extends Behavior
                                 }
                             }
                         }
-                       //echo '<pre>';print_r($result);die('aaaa');
                     return $result;
             }
 
