@@ -132,7 +132,7 @@ class ImportCompetencyResultsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
+   public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
@@ -150,9 +150,9 @@ class ImportCompetencyResultsTable extends AppTable
                     if (!$classPermission && !$subjectPermission) {
                         $query->where(['1 = 0'], [], true);
                     } else {
-                        $query->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                            'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
-                        ]);
+                        // $query->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                        //     'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
+                        // ]);
                         // If only class permission is available but no subject permission available
                         if ($classPermission && !$subjectPermission) {
                             $query->where([
@@ -176,8 +176,8 @@ class ImportCompetencyResultsTable extends AppTable
                                 $query->where([
                                     'OR' => [
                                         ['InstitutionClasses.staff_id' => $userId],
-                                        ['ClassesSecondaryStaff.secondary_staff_id' => $userId],
-                                        ['InstitutionSubjectStaff.staff_id' => $userId]
+                                        //['ClassesSecondaryStaff.secondary_staff_id' => $userId],
+                                        //['InstitutionSubjectStaff.staff_id' => $userId]
                                     ]
                                 ]);
                             }
