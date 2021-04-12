@@ -191,6 +191,8 @@ class InstitutionInfrastructuresTable extends AppTable
         $institutionId = $requestData->institution_id;
         $infrastructureLevel = $requestData->infrastructure_level;
         $infrastructureType = $requestData->infrastructure_type;
+        $institutionTypeId = $requestData->institution_type_id;
+        
         
         $institutionLands = TableRegistry::get('Institution.InstitutionLands');
         $institutionFloors = TableRegistry::get('Institution.InstitutionFloors');
@@ -217,6 +219,19 @@ class InstitutionInfrastructuresTable extends AppTable
         }
         if (!empty($institutionId)) {
             $conditions[$this->aliasField('id')] = $institutionId;
+        }
+
+        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutionIds = $institutions->find('list', [
+                                                    'keyField' => 'id',
+                                                    'valueField' => 'id'
+                                             ])
+                            ->where(['institution_type_id' => $institutionTypeId])
+                            ->toArray();
+
+        if (!empty($institutionTypeId)) {
+             $conditions['Institution'.$level.'.'.'institution_id IN'] = $institutionIds;
+         
         }
        
         $query
