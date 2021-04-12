@@ -774,7 +774,6 @@ class InstitutionsTable extends AppTable
                 $attr['onChangeReload'] = true;
                 
                 if($feature == 'Report.StaffAttendances' || 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.InstitutionSubjects' || $feature == 'Report.Guardians' || $feature == 'Report.BodyMasses' || $feature == 'Report.InstitutionInfrastructures') {
-
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
@@ -800,7 +799,7 @@ class InstitutionsTable extends AppTable
                 $typeOptions = $TypesTable
                     ->find('list')
                     ->toArray();
-               
+				
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
                 $attr['options'] = $typeOptions;
@@ -917,7 +916,7 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentWithdrawalReport','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentWithdrawalReport','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports','Report.InstitutionInfrastructures'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else if (in_array($feature, ['Report.StudentAttendanceSummary'])) {//POCOR-5906 starts
                             $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;//POCOR-5906 ends
