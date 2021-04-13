@@ -46,7 +46,7 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
-        if ($this->action == 'add') {
+        if (isset($this->action) && $this->action == 'add') {
             return $validator
                         ->add('code', 'ruleUnique', [
                             //'rule' => 'validateUnique',
