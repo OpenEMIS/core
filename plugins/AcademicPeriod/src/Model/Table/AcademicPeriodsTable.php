@@ -101,11 +101,11 @@ class AcademicPeriodsTable extends AppTable
             ->add('end_date', [
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', false]
-                ],
-                'ruleCompareEndDate' => [
+                ]//POCOR-5964 starts
+                /*,'ruleCompareEndDate' => [
                     'rule' => ['compareEndDate', 'start_date', false],
                     'message' => __('End date should not be less than current date')
-                ]
+                ]*///POCOR-5964 ends
             ])//POCOR-5917 ends
             ->add('current', 'ruleValidateNeeded', [
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
