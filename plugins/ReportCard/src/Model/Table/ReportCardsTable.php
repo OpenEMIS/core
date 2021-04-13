@@ -249,6 +249,7 @@ class ReportCardsTable extends ControllerActionTable
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $attr['type'] = 'select';
+			$attr['onChangeReload'] = true;
             $attr['options'] = $periodOptions;
 
         } else if ($action == 'edit') {
@@ -264,12 +265,17 @@ class ReportCardsTable extends ControllerActionTable
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
         if ($action == 'add') {
+			
+			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
+				
             $programmeOptions = $EducationProgrammes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                 ->find('visible')
-                ->contain(['EducationCycles'])
+				->contain(['EducationCycles.EducationLevels.EducationSystems'])
                 ->order(['EducationCycles.order', $EducationProgrammes->aliasField('order')])
-                ->toArray();
+                ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+				->toArray();
             $attr['type'] = 'select';
             $attr['options'] = $programmeOptions;
             $attr['onChangeReload'] = 'changeEducationProgrammeId';
