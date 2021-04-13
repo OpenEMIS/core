@@ -38,6 +38,22 @@ class WorkflowReportBehavior extends Behavior
 
         $localFields = (array) $fields;
 
+        $openEmis_field = array(
+
+            '0' => array(
+                'key' => '',
+                'field' => 'openemis_no',
+                'type' => 'integer',
+                'label' => 'OpenEMIS ID',
+                'style' => Array
+                    (
+                    ),
+
+                'formatting' => 'GENERAL'
+            )
+        );
+        array_splice( $localFields, 3, 0, $openEmis_field );
+
         foreach ($localFields as $currentIndex => $value) {
             if($value['field'] == 'status_id') {
                 $statusTempArr = $value;
@@ -79,6 +95,14 @@ class WorkflowReportBehavior extends Behavior
                     $query
                     ->contain('Statuses')
                     ->where(['Statuses.category' => $category, 'WorkflowStudentTransferIn.institution_id'=>$institution_id]);
+
+                    $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                        return $results->map(function ($row) {
+                                      
+                            $row['openemis_no'] = $row->user->openemis_no;
+                            return $row;
+                        });
+                    });
                 }
                 else{
                     return true;
@@ -87,6 +111,14 @@ class WorkflowReportBehavior extends Behavior
                 $query
                     ->contain('Statuses')
                     ->where(['WorkflowStudentTransferIn.institution_id'=>$institution_id]);
+
+                    $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                        return $results->map(function ($row) {
+                                      
+                            $row['openemis_no'] = $row->user->openemis_no;
+                            return $row;
+                        });
+                    });
             }
             else{
                 return true;
