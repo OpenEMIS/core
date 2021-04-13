@@ -119,7 +119,10 @@ class IdentitiesTable extends ControllerActionTable
 			        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
 			        'provider' => 'table'
 			    ]
-		    ]);
+		    ])
+		    //POCOR-5987 starts
+		    ->notEmpty('nationality_id');
+		    //POCOR-5987 ends
 		;
 	}
 
