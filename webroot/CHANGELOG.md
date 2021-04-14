@@ -1,3 +1,14 @@
+### [3.64.2] - 2021-04-14
+- Implemented: Improvement to the school closing process
+- Implemented: Improvement to the student overview page
+- Implemented: Changes to reports for the Infrastructure module
+- Implemented: Improvement of readability of the student status in the current year
+- Bug Fixed: Reports > Institution > Students: Withdrawn: Data not reflected on the View page after report has been generated
+- Bug Fixed: Reports > Workflow report: Report is remain in In-Progress status
+- Bug Fixed: Reports > Institution > Infrastructure report: Add 'All' option for some of the fields
+- Bug Fixed: Users > Identities tab > Edit Page : Make Nationality mandatory
+- Bug Fixed: Institution > Attendance > Students: If a Multigrade Class period is configured as Subjects, the list of Subjects listed are Subjects from All Education Grade that are assigned to the Multi Grade class
+
 ### [3.64.1] - 2021-04-09
 - Bug Fixed: Administration > System Setup > Education Structure > Programme: When selecting a past Academic Period filter and then selecting Levels filter, the Academic Period filter reverted to current Academic Period
 - Bug Fixed: Administration > System Setup > Academic Period > Edit: An error encountered when editing End Date for a non-current Academic Period
