@@ -1,5 +1,7 @@
 <?php
+
 use Migrations\AbstractMigration;
+use Cake\ORM\TableRegistry;
 
 class POCOR5987 extends AbstractMigration
 {
