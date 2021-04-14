@@ -87,7 +87,9 @@ class WorkflowsTable extends AppTable
         }
         if (in_array($selectedFeature, 
         [
-            'Report.WorkflowStudentTransferIn'
+            'Report.WorkflowStudentTransferIn',
+            'Report.WorkflowStudentTransferOut',
+            'Report.WorkflowInstitutionCase'
         ])
         ) {
         $this->ControllerAction->field('institution_id', [

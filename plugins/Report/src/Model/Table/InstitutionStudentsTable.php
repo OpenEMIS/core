@@ -278,6 +278,36 @@ class InstitutionStudentsTable extends AppTable  {
 
                     return $row;
                 });
+            })
+            ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+
+                    $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+
+                    $InstitutionStudentsCurrentData = $InstitutionStudents
+                    ->find()
+                    ->select([
+                        'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
+                    ])
+                    ->where([
+                        $InstitutionStudents->aliasField('student_id') => $row->student_id
+                    ])
+                    ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
+                    ->autoFields(true)
+                    ->first();
+                    if($row->student_status->name == "Enrolled"){
+                        if(($InstitutionStudentsCurrentData->student_status_id == 8)){
+                            $student_status = "Enrolled (Repeater)";
+                        }else{
+                            $student_status = $row->student_status->name;
+                        }
+                    }else{
+                            $student_status = $row->student_status->name;
+                    }
+                              
+                    $row['student_status'] = $student_status;
+                    return $row;
+                });
             });
     }
 
@@ -605,8 +635,10 @@ class InstitutionStudentsTable extends AppTable  {
         ];
 
         $extraField[] = [
-            'key' => 'InstitutionStudents.student_status_id',
-            'field' => 'student_status_id',
+            // 'key' => 'InstitutionStudents.student_status_id',
+            // 'field' => 'student_status_id',
+            'key' => '',
+            'field' => 'student_status',
             'type' => 'integer',
             'label' => __('Student Status'),
             'formatting' => 'string'
