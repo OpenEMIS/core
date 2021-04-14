@@ -13,7 +13,7 @@ class POCOR5987 extends AbstractMigration
     public function up()
     {
         // Backup table
-        $this->execute('DROP TABLE IF EXISTS `zz_5987_user_identities`')
+        $this->execute('DROP TABLE IF EXISTS `zz_5987_user_identities`');
         $this->execute('CREATE TABLE `zz_5987_user_identities` LIKE `user_identities`');
         $this->execute('INSERT INTO `zz_5987_user_identities` SELECT * FROM `user_identities`');
 
