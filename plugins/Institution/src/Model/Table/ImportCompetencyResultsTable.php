@@ -132,7 +132,7 @@ class ImportCompetencyResultsTable extends AppTable
         }
     }
 
-   public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
