@@ -675,7 +675,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $startDate = $startDateClone->modify('+1 day');
                     $attr['date_options']['startDate'] = $startDate->format('d-m-Y');
                 }
-               // $attr['value'] = (new Date(null));
+              
             } else {
                 $attr['type'] = 'hidden';
             }
@@ -698,7 +698,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $staffChangeTypes = $this->staffChangeTypesList;
         if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
             $attr['type'] = 'date';
-          $attr['value'] = new Date(null);
+            $attr['value'] = new Date(null);
         } else {
             $attr['value'] = $startDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($startDate);
@@ -712,7 +712,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
             if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['END_OF_ASSIGNMENT']) {
-            //echo "<br>";print_r($attr);die;
+           
                 $attr['type'] = 'date';
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
