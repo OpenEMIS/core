@@ -1,5 +1,7 @@
 <?php
+
 use Migrations\AbstractMigration;
+use Cake\ORM\TableRegistry;
 
 class POCOR5987 extends AbstractMigration
 {
@@ -20,13 +22,14 @@ class POCOR5987 extends AbstractMigration
         $UserNationalities = TableRegistry::get('User.UserNationalities');
         $Identities = TableRegistry::get('User.Identities');
         $getData = $UserNationalities
+                    ->find()
+                    ->toArray();
         if (!empty($getData)) {
            foreach ($getData as $value) {
                $userId = $value->security_user_id;
-
                $nationalityId = $value->nationality_id;
                $countData = $this->fetchAll('SELECT count(*) AS `COUNT` from `user_nationalities` where `security_user_id` = '.$userId.' ');
-               if (!empty($countData) && $countData[0]['COUNT'] == 1 && ) {
+               if (!empty($countData) && $countData[0]['COUNT'] == 1) {
                    $getUserIdentity = $Identities->find()
                                 ->where([$Identities->aliasField('security_user_id') => $userId])->first();
                     if (!empty($getUserIdentity)) {
@@ -42,11 +45,9 @@ class POCOR5987 extends AbstractMigration
                         }
                     }
                }
-           } else {
-                     //do nothing
-           }
+           } 
         }
-   }
+    }
 
     //rollback
    public function down()
