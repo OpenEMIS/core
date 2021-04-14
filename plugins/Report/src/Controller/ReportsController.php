@@ -271,28 +271,25 @@ class ReportsController extends AppController
     public function ViewReport()
     {
         ini_set('memory_limit', '-1');
-        $data = $_GET;
-        $explode_data = explode("/", $data['file_path']);
+        PHP_OS == "WINNT" ? define("SEPARATOR", "\\") : define("SEPARATOR", "/");
+        $file_name = explode(SEPARATOR, $this->request->query['file_path']);
         if (!empty($this->request->param('institutionId'))) {
             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
         } else {
             $session = $this->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
         }
-
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-        $this->Navigation->addCrumb($data['module']);
-        $header = __('Reports') . ' - ' .$data['module'];
+        $this->Navigation->addCrumb($this->request->query['module']);
+        $header = __('Reports') . ' - ' .$this->request->query['module'];
 
-        $inputFileName = WWW_ROOT. 'export/'.end($explode_data);
-
+        $inputFileName = WWW_ROOT. 'export/'.end($file_name);
         $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
         $objReader = PHPExcel_IOFactory::createReader($inputFileType);
         $objPHPExcel = $objReader->load($inputFileName);
-
         $sheet = $objPHPExcel->getSheet(0); 
-        $highestRow = $sheet->getHighestRow(); 
-        $highestColumn = $sheet->getHighestColumn();
+        $highestRow = $sheet->getHighestDataRow(); 
+        $highestColumn = $sheet->getHighestDataColumn();
 
         for ($row = 1; $row <= 1; $row++){
             $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
@@ -301,14 +298,12 @@ class ReportsController extends AppController
                                             FALSE);
         }
         $rowHeaderNew = $this->array_flatten($rowHeader);
-        for ($row = 2; $row <= $highestRow -1; $row++){ 
-            //  Read a row of data into an array
+        for ($row = 2; $row <= $highestRow -1; $row++){
             $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
                                             NULL,
                                             TRUE,
                                             FALSE);
             if($this->isEmptyRow(reset($rowData))) { continue; }
-            //  Insert row data array into your database of choice here
         }
         foreach($rowData as $newKey => $newDataVal){
         	foreach($newDataVal as $kay2 => $new_data_arr){
@@ -316,6 +311,11 @@ class ReportsController extends AppController
         			$newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
         		}
         	}
+        }
+        foreach($newArr2 as $newKey => $newValue){
+            foreach($newValue as $newKey1 => $newValue1){
+                $newArr3[$newKey1][] = $newValue1;
+            }
         }
         $this->set('rowHeader', $rowHeader);
         $this->set('newArr2', $newArr2);
