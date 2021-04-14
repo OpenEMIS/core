@@ -42,11 +42,11 @@ class POCOR5987 extends AbstractMigration
                         }
                     }
                }
-           } else {
-                     //do nothing
-           }
-        }
-   }
+           } 
+        } else {
+            //do nothing
+        } 
+    }
 
     //rollback
    public function down()
