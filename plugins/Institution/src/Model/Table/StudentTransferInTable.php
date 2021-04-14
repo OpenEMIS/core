@@ -189,13 +189,6 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    //POCOR-5944 starts
-    /*public function viewBeforeAction(Event $event, ArrayObject $extra)
-    {
-        //echo "<pre>";print_r($extra);die();
-    }*/
-    //POCOR-5944 ends
-
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->addSections();
