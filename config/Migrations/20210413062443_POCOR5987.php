@@ -45,9 +45,7 @@ class POCOR5987 extends AbstractMigration
                     }
                }
            } 
-        } else {
-            //do nothing
-        } 
+        }
     }
 
     //rollback
