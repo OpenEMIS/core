@@ -1,6 +1,8 @@
 <?php
 $session = $this->request->session();
 $firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : 'System';
+$middleName = $session->check('Auth.User.middle_name') ? $session->read('Auth.User.middle_name') : '';
+$thirdName = $session->check('Auth.User.third_name') ? $session->read('Auth.User.third_name') : '';
 $lastName = $session->check('Auth.User.last_name') ? $session->read('Auth.User.last_name') : 'Administrator';
 
 if (!isset($headerMenu)) {
@@ -14,7 +16,7 @@ if ($session->check('System.User.roles')) {
 ?>
 <div class="header-navigation">
 	<div class="username">
-		<span><?= sprintf('%s %s', $firstName, $lastName) ?></span>
+		<span><?= sprintf('%s %s %s %s', $firstName, $middleName,$thirdName,$lastName) ?></span>
 		<a class="btn" data-toggle="tooltip" data-placement="bottom" data-html="true" title="<?= $roles ?>"><i class="kd-role"></i></a>
 	</div>
 
