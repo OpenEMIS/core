@@ -16,10 +16,10 @@ $this->start('toolbar');
 	}
 $this->end();
 $this->start('panelBody');
-foreach ($rowHeader as $key => $value) {
-	foreach($value AS $kay1 => $val){
-		if(isset($val)){
-			$newArr[] = $val;
+foreach ($rowHeader as $key => $val) {
+	foreach($val AS $kay1 => $val1){
+		if(isset($val1)){
+			$rowHeaderData[] = $val1;
 		}
 	}
 }
@@ -43,12 +43,16 @@ $(document).ready( function () {
 <div class="table-wrapper">
 	<div class="table-responsive">
 		<table class="table table-curved" id="myTable">
-			<thead><?= $this->Html->tableHeaders($newArr) ?></thead>
+		<thead>
+			<?php foreach ($rowHeaderData as $newArrdata) : ?>
+				<th><?= $newArrdata ?> </th>
+			<?php endforeach; ?>
+			</thead>
 			<tbody>
-				<?php foreach ($newArr2 as $key => $obj) :?>
+				<?php foreach ($finalRowData as $key => $val) :?>
 				<tr>
-					<?php foreach ($obj as $key1 => $value) :?>
-					<td><?=$value ?></td>
+					<?php foreach ($val as $key1 => $val1) :?>
+					<td><?=$val1 ?></td>
 					<?php endforeach; ?>
 				</tr>
 				<?php endforeach; ?>
