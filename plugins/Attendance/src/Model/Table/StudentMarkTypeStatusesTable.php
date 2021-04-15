@@ -86,12 +86,13 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         $query->contain($this->_contain);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function onUpdateFieldEducationGrades(Event $event, array $attr, $action, Request $request)
     {
-        list($educationGradeOptions) = array_values($this->getSelectOptions());
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+        list($educationGradeOptions) = array_values($this->getSelectOptions($academicPeriodId));
         $this->fields['education_grades']['options'] = $educationGradeOptions;
     }
-
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
@@ -102,6 +103,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
 
         $attr['placeholder'] = __('Select Academic Periods');
         $attr['attr']['options'] = $periodOptions;
+		$attr['onChangeReload'] = true;
         
         return $attr;
     }
@@ -123,7 +125,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function getSelectOptions()
+    public function getSelectOptions($academicPeriodId)
     {
         //Return all required options and their key      
 
@@ -132,9 +134,10 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->find('visible')
             ->find('order')
-            ->toArray();
+			->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+            ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+			->toArray();
         $selectedEducationGrade = key($educationGradeOptions);
-
         return compact('educationGradeOptions', 'selectedEducationGrade');
     }
 }
