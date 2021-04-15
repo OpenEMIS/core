@@ -538,23 +538,25 @@ class StudentAttendancesTable extends ControllerActionTable
         }
         $studentId = [];
         $studentWithdraw = TableRegistry::get('institution_student_withdraw');
-		$studentWithdrawData = $studentWithdraw->find('list')		
-				->select([
+		$studentWithdrawData = $studentWithdraw->find()
+            ->select([
 					'student_id' => 'institution_student_withdraw.student_id',
 				])
 				->where([
                     $studentWithdraw->aliasField('institution_id') => $institutionId,
+                    $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
+                    $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
                    // $studentWithdraw->aliasField('effective_date >= ') => $day,
                     $studentWithdraw->aliasField('effective_date <= ') => $day
                     ])
                 ->toArray();
+               
           if ($studentWithdrawData) {
               foreach($studentWithdrawData as $studenetVal){
                    $studentId[] = $studenetVal['student_id'];
               }  
-            $query->where([$this->aliasField('student_id NOT IN') => $studentId]);             
+                $query->where([$this->aliasField('student_id NOT IN') => $studentId]);             
           }
-       
         return $query;
     }
 
