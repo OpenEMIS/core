@@ -5,7 +5,11 @@ angular
 InstitutionsCommentsSvc.$inject = ['$filter', '$q', 'KdDataSvc', 'KdSessionSvc'];
 
 function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
-    const roles = {PRINCIPAL: 'PRINCIPAL', HOMEROOM_TEACHER: 'HOMEROOM_TEACHER', TEACHER: 'TEACHER'};
+    const roles = {
+        PRINCIPAL: 'PRINCIPAL',
+        HOMEROOM_TEACHER: 'HOMEROOM_TEACHER',
+        TEACHER: 'TEACHER'
+    };
 
     var models = {
         ReportCardTable: 'ReportCard.ReportCards',
@@ -48,18 +52,33 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     function getReportCard(reportCardId) {
         return ReportCardTable
             .get(reportCardId)
-            .ajax({defer: true});
+            .ajax({
+                defer: true
+            });
     };
 
     function getEditPermissions(reportCardId, institutionId, classId, currentUserId) {
         var promises = [];
 
+        var nonTeacherPermission = StaffTable
+            .select()
+            .find('nonTeacherEditPermissions', {
+                institution_id: institutionId,
+                staff_id: currentUserId
+            });
         var principalPermission = StaffTable
             .select()
             .find('principalEditPermissions', {
                 institution_id: institutionId,
                 staff_id: currentUserId
             });
+
+        // var principalPermission = StaffTable
+        //     .select()
+        //     .find('nonTeacherEditPermissions', {
+        //         institution_id: institutionId,
+        //         staff_id: currentUserId
+        //     });
 
         var homeroomTeacherPermission = HomeroomStaffTable
             .select()
@@ -79,9 +98,18 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             });
 
         promises.push(KdSessionSvc.read('Auth.User.super_admin'));
-        promises.push(principalPermission.ajax({defer: true}));
-        promises.push(homeroomTeacherPermission.ajax({defer: true}));
-        promises.push(teacherPermission.ajax({defer: true}));
+        promises.push(principalPermission.ajax({
+            defer: true
+        }));
+        promises.push(homeroomTeacherPermission.ajax({
+            defer: true
+        }));
+        promises.push(teacherPermission.ajax({
+            defer: true
+        }));
+        promises.push(nonTeacherPermission.ajax({
+            defer: true
+        }));
 
         return $q.all(promises);
     };
@@ -94,116 +122,121 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         var principalPermission = {};
         var homeroomTeacherPermission = {};
         var teacherPermission = {};
+        var nonTeacherPermission = {};
 
         this.getEditPermissions(reportCardId, institutionId, classId, currentUserId)
-        .then(function(response)
-        {
-            isSuperAdmin = response[0];
-            principalPermission = response[1].data;
-            homeroomTeacherPermission = response[2].data;
-            teacherPermission = response[3].data;
+            .then(function(response) {
+                isSuperAdmin = response[0];
+                principalPermission = response[1].data;
+                homeroomTeacherPermission = response[2].data;
+                teacherPermission = response[3].data;
+                nonTeacherPermission = response[1].data;
 
-            if (principalCommentsRequired) {
-                editable = (angular.isObject(principalPermission) && principalPermission.length > 0) || isSuperAdmin;
-                tabs.push({
-                    tabName: "Principal",
-                    type: roles.PRINCIPAL,
-                    education_subject_id: 0,
-                    editable: editable
-                });
-            }
-
-            if (homeroomTeacherCommentsRequired) {
-                editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0) || isSuperAdmin;
-                tabs.push({
-                    tabName: "Homeroom Teacher",
-                    type: roles.HOMEROOM_TEACHER,
-                    education_subject_id: 0,
-                    editable: editable
-                });
-            }
-
-            return getSubjects(reportCardId, classId,principalPermission);
-        }, function(error)
-        {
-            console.log(error);
-        })
-        .then(function(response)
-        {
-            if (teacherCommentsRequired) {
-                subjects = response.data;
-                if (angular.isObject(subjects) && subjects.length > 0) {
-                    angular.forEach(subjects, function(subject, key)
-                    {
-                        editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin;
-                        this.push({
-                            tabName: subject.name + " Teacher",
-                            type: roles.TEACHER,
-                            id: subject.id,
-                            education_subject_id: subject.education_subject_id,
-                            editable: editable
-                        });
-                    }, tabs);
+                if (principalCommentsRequired) {
+                    editable = (angular.isObject(principalPermission) && principalPermission.length > 0) || isSuperAdmin;
+                    tabs.push({
+                        tabName: "Principal",
+                        type: roles.PRINCIPAL,
+                        education_subject_id: 0,
+                        editable: editable
+                    });
                 }
-            }
-        }, function(error)
-        {
-            console.log(error);
-        })
-        .finally(function()
-        {
-            if (tabs.length > 0) {
-                deferred.resolve(tabs);
-            } else {
-                deferred.reject('You have to configure the comments required first');
-            }
-        });
+
+                if (homeroomTeacherCommentsRequired) {
+                    editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0) || isSuperAdmin;
+                    tabs.push({
+                        tabName: "Homeroom Teacher",
+                        type: roles.HOMEROOM_TEACHER,
+                        education_subject_id: 0,
+                        editable: editable
+                    });
+                }
+
+                return getSubjects(reportCardId, classId, principalPermission, nonTeacherPermission);
+            }, function(error) {
+                console.log(error);
+            })
+            .then(function(response) {
+                if (teacherCommentsRequired) {
+                    subjects = response.data;
+                    if (angular.isObject(subjects) && subjects.length > 0) {
+                        angular.forEach(subjects, function(subject, key) {
+                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin;
+                            this.push({
+                                tabName: subject.name + " Teacher",
+                                type: roles.TEACHER,
+                                id: subject.id,
+                                education_subject_id: subject.education_subject_id,
+                                editable: editable
+                            });
+                        }, tabs);
+                    }
+                }
+            }, function(error) {
+                console.log(error);
+            })
+            .finally(function() {
+                if (tabs.length > 0) {
+                    deferred.resolve(tabs);
+                } else {
+                    deferred.reject('You have to configure the comments required first');
+                }
+            });
 
         return deferred.promise;
     };
 
-    function getSubjects(reportCardId, classId,principalPermission) {
+    function getSubjects(reportCardId, classId, principalPermission, nonTeacherPermission) {
         return ReportCardSubjectsTable
             .select()
             .find('matchingClassSubjects', {
                 report_card_id: reportCardId,
                 institution_class_id: classId,
-                type:principalPermission.length
+                type: principalPermission.length,
+                staffType: nonTeacherPermission.length
             })
-            .ajax({defer: true});
+            .ajax({
+                defer: true
+            });
     };
 
     function getCommentCodeOptions() {
         return ReportCardCommentCodesTable
             .select(['id', 'name'])
-            .where({visible: 1})
+            .where({
+                visible: 1
+            })
             .order(['order'])
-            .ajax({defer: true});
+            .ajax({
+                defer: true
+            });
     };
 
     function getCurrentUser() {
         var deferred = $q.defer();
 
         KdSessionSvc.read('Auth.User.id')
-        .then(function(response) {
-            var staffId = response;
-            return StaffUserTable
-                .get(staffId)
-                .ajax({defer: true});
+            .then(function(response) {
+                var staffId = response;
+                return StaffUserTable
+                    .get(staffId)
+                    .ajax({
+                        defer: true
+                    });
 
-        }, function(error) {
-            console.log(error);
-            deferred.reject(error);
-        })
-        // get staff data
-        .then(function(response) {
-            staffData = response.data;
-            deferred.resolve(staffData);
+            }, function(error) {
+                console.log(error);
+                deferred.reject(error);
+            })
+            // get staff data
+            .then(function(response) {
+                staffData = response.data;
+                deferred.resolve(staffData);
 
-        }, function(error) {
-            console.log(error);
-            deferred.reject(error);
-        });
+            }, function(error) {
+                console.log(error);
+                deferred.reject(error);
+            });
 
         return deferred.promise;
     };
@@ -211,7 +244,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     function getColumnDefs(action, tab, currentUserName, _comments, commentCodeOptions, _commentTextEditor) {
         var deferred = $q.defer();
 
-        var menuTabs = [ "filterMenuTab" ];
+        var menuTabs = ["filterMenuTab"];
         var filterParams = {
             cellHeight: 30
         };
@@ -283,9 +316,9 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     if (angular.isDefined(params.data) && angular.isDefined(params.data[params.colDef.field])) {
                         var value = params.data[params.colDef.field];
                         if (!isNaN(parseFloat(value))) {
-                            marks =  $filter('number')(params.data[params.colDef.field], 2);
+                            marks = $filter('number')(params.data[params.colDef.field], 2);
                         }
-                    } 
+                    }
                     return marks;
                 },
                 cellStyle: {
@@ -299,13 +332,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         // comment code column
         if (isSubjectTab) {
             var selectOptions = {
-                0 : {
+                0: {
                     id: 0,
                     name: '-- Select --'
                 }
             };
             for (var i = 0; i < commentCodeOptions.length; i++) {
-                selectOptions[i+1] = commentCodeOptions[i];
+                selectOptions[i + 1] = commentCodeOptions[i];
             }
 
             extra = {
@@ -343,9 +376,9 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     if (angular.isDefined(params.data) && angular.isDefined(params.data[params.colDef.field])) {
                         var value = params.data[params.colDef.field];
                         if (!isNaN(parseFloat(value))) {
-                            marks =  $filter('number')(params.data[params.colDef.field], 2);
-                        } 
-                    } 
+                            marks = $filter('number')(params.data[params.colDef.field], 2);
+                        }
+                    }
                     return marks;
                 },
                 cellStyle: {
@@ -357,7 +390,9 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         }
 
         // comment column
-        extra = {editPermission: tab.editable};
+        extra = {
+            editPermission: tab.editable
+        };
         var columnDef = {
             headerName: "Comments" + headerIcons,
             field: "comments",
@@ -458,7 +493,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                             eSelect.value = params.value;
                         }
 
-                        eSelect.addEventListener('change', function () {
+                        eSelect.addEventListener('change', function() {
                             var newValue = eSelect.value;
                             params.data[params.colDef.field] = newValue;
 
@@ -476,10 +511,9 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                             _comments[params.data.student_id][params.colDef.field] = newValue;
 
                             saveSingleRecordData(params, extra.tab)
-                            .then(function(response) {
-                            }, function(error) {
-                                console.log(error);
-                            });
+                                .then(function(response) {}, function(error) {
+                                    console.log(error);
+                                });
 
                             // Important: to refresh the grid after data is modified
                             params.api.refreshView();
@@ -607,7 +641,10 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             })
             .limit(limit)
             .page(page)
-            .ajax({success: success, defer: true});
+            .ajax({
+                success: success,
+                defer: true
+            });
     };
 
     function checkStudentReportCardExists(data) {
@@ -615,13 +652,15 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             .select()
             .where({
                 report_card_id: data.report_card_id,
-                student_id : data.student_id,
-                institution_id : data.institution_id,
-                academic_period_id : data.academic_period_id,
-                education_grade_id : data.education_grade_id,
+                student_id: data.student_id,
+                institution_id: data.institution_id,
+                academic_period_id: data.academic_period_id,
+                education_grade_id: data.education_grade_id,
                 institution_class_id: data.institution_class_id
             })
-            .ajax({defer: true});
+            .ajax({
+                defer: true
+            });
     };
 
     function saveSingleRecordData(params, tab) {
@@ -657,22 +696,22 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
             // check if main student report card record exists
             checkStudentReportCardExists(studentReportCardData)
-            .then(function(response) {
-                var studentReportcard = response.data;
+                .then(function(response) {
+                    var studentReportcard = response.data;
 
-                if (studentReportcard.length == 0) {
-                    // save to both tables
-                    promises.push(InstitutionStudentsReportCardsTable.save(studentReportCardData));
-                    promises.push(InstitutionStudentsReportCardsCommentsTable.save(subjectCommentsData));
+                    if (studentReportcard.length == 0) {
+                        // save to both tables
+                        promises.push(InstitutionStudentsReportCardsTable.save(studentReportCardData));
+                        promises.push(InstitutionStudentsReportCardsCommentsTable.save(subjectCommentsData));
 
-                } else {
-                    // save only to comments table
-                    promises.push(InstitutionStudentsReportCardsCommentsTable.save(subjectCommentsData));
-                }
+                    } else {
+                        // save only to comments table
+                        promises.push(InstitutionStudentsReportCardsCommentsTable.save(subjectCommentsData));
+                    }
 
-            }, function(error) {
-                console.log(error);
-            });
+                }, function(error) {
+                    console.log(error);
+                });
 
         } else {
             if (tab.type == roles.PRINCIPAL) {
