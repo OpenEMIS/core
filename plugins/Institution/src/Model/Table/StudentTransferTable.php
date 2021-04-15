@@ -575,7 +575,7 @@ class StudentTransferTable extends ControllerActionTable
 			$studentQuery = $this
 				->find('byNoExistingTransferRequest')
 				->find('byNoEnrolledRecord')
-				->find('byNotCompletedGrade', ['gradeId' => $nextEducationGradeId])
+				//->find('byNotCompletedGrade', ['gradeId' => $nextEducationGradeId])
 				->find('byStatus', ['statuses' => [$statuses['PROMOTED'], $statuses['GRADUATED']]])
                 ->find('studentClasses', ['institution_class_id' => $selectedClass])
                 ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
