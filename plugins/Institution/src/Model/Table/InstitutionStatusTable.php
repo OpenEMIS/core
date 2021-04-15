@@ -585,7 +585,7 @@ class InstitutionStatusTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->Alert->info('general.status_update');
+        $this->Alert->info(__('general.status_update'));
         $data = $this->find()->where(['id' => $entity->id])->first();
         if (!empty($data)) {
             $status = $data->institution_status_id;
