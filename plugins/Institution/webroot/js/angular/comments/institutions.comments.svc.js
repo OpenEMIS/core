@@ -21,6 +21,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         InstitutionClassStudentsTable: 'Institution.InstitutionClassStudents',
         StaffUserTable: 'Institution.StaffUser',
         StaffTable: 'Institution.Staff',
+        NonTeacherStaffTable: 'Institution.Staff',
         HomeroomStaffTable: 'Institution.Staff',
     };
 
@@ -60,7 +61,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     function getEditPermissions(reportCardId, institutionId, classId, currentUserId) {
         var promises = [];
 
-        var nonTeacherPermission = StaffTable
+        var nonTeacherPermission = NonTeacherStaffTable
             .select()
             .find('nonTeacherEditPermissions', {
                 institution_id: institutionId,
@@ -72,14 +73,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 institution_id: institutionId,
                 staff_id: currentUserId
             });
-
-        // var principalPermission = StaffTable
-        //     .select()
-        //     .find('nonTeacherEditPermissions', {
-        //         institution_id: institutionId,
-        //         staff_id: currentUserId
-        //     });
-
         var homeroomTeacherPermission = HomeroomStaffTable
             .select()
             .find('homeroomEditPermissions', {
@@ -130,10 +123,10 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 principalPermission = response[1].data;
                 homeroomTeacherPermission = response[2].data;
                 teacherPermission = response[3].data;
-                nonTeacherPermission = response[1].data;
+                nonTeacherPermission = response[4].data;
 
                 if (principalCommentsRequired) {
-                    editable = (angular.isObject(principalPermission) && principalPermission.length > 0) || isSuperAdmin;
+                    editable = (angular.isObject(principalPermission) && principalPermission.length > 0) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0);
                     tabs.push({
                         tabName: "Principal",
                         type: roles.PRINCIPAL,
@@ -143,7 +136,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 }
 
                 if (homeroomTeacherCommentsRequired) {
-                    editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0) || isSuperAdmin;
+                    editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0);
                     tabs.push({
                         tabName: "Homeroom Teacher",
                         type: roles.HOMEROOM_TEACHER,
@@ -161,7 +154,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     subjects = response.data;
                     if (angular.isObject(subjects) && subjects.length > 0) {
                         angular.forEach(subjects, function(subject, key) {
-                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin;
+                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0);
                             this.push({
                                 tabName: subject.name + " Teacher",
                                 type: roles.TEACHER,
