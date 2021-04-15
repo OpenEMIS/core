@@ -169,7 +169,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         return StudentAbsenceReasons
             .select(['id', 'name'])
-            .order(['order'])
+            //.order(['order']) //POCOR-5815
             .ajax({success: success, defer: true});
     }
 
