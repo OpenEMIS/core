@@ -297,7 +297,7 @@ class ReportsController extends AppController
                                             TRUE,
                                             FALSE);
         }
-        $rowHeaderNew = $this->array_flatten($rowHeader);
+        $rowHeaderData = $this->array_flatten($rowHeader);
         for ($row = 2; $row <= $highestRow -1; $row++){
             $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
                                             NULL,
@@ -305,20 +305,15 @@ class ReportsController extends AppController
                                             FALSE);
             if($this->isEmptyRow(reset($rowData))) { continue; }
         }
-        foreach($rowData as $newKey => $newDataVal){
-        	foreach($newDataVal as $kay2 => $new_data_arr){
-        		if(isset($new_data_arr)){
-        			$newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+        foreach($rowData as $key => $value){
+        	foreach($value as $kay1 => $value1){
+        		if(isset($value1)){
+        			$finalRowData[] = array_combine($rowHeaderData, $value1);
         		}
         	}
         }
-        foreach($newArr2 as $newKey => $newValue){
-            foreach($newValue as $newKey1 => $newValue1){
-                $newArr3[$newKey1][] = $newValue1;
-            }
-        }
         $this->set('rowHeader', $rowHeader);
-        $this->set('newArr2', $newArr2);
+        $this->set('finalRowData', $finalRowData);
 
         $this->set('contentHeader', $header);
     }
