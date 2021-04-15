@@ -175,8 +175,21 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                     $grade['education_grade_id'] = $data['grades']['education_grade_id'];
                             // need to set programme value since it was marked as required in validationDefault()
                     $grade['programme'] = $entity->programme;
-					if ($entity->has('start_date')) {
-                        $grade['start_date'] = $entity->start_date;
+					
+					$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+					
+					if ($entity->has('academic_period_id')) {
+						$AcademicPeriodData = $AcademicPeriod->find()
+								->select([
+									'start_date' => $AcademicPeriod->aliasField('start_date'),
+								])
+								->where([
+									$AcademicPeriod->aliasField('id') => $entity->academic_period_id
+								])
+								->first();
+					}
+					if (!empty($AcademicPeriodData->start_date)) {
+                        $grade['start_date'] = $AcademicPeriodData->start_date;
                     }
                     $grade['institution_id'] = $entity->institution_id;
                     if ($entity->has('end_date')) {
