@@ -284,38 +284,44 @@ class ReportsController extends AppController
         $header = __('Reports') . ' - ' .$this->request->query['module'];
 
         $inputFileName = WWW_ROOT. 'export/'.end($file_name);
-        $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
-        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
-        $objPHPExcel = $objReader->load($inputFileName);
-        $sheet = $objPHPExcel->getSheet(0); 
-        $highestRow = $sheet->getHighestDataRow(); 
-        $highestColumn = $sheet->getHighestDataColumn();
+        if(file_exists($inputFileName)){
+            $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
+            $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+            $objPHPExcel = $objReader->load($inputFileName);
+            $sheet = $objPHPExcel->getSheet(0); 
+            $highestRow = $sheet->getHighestDataRow(); 
+            $highestColumn = $sheet->getHighestDataColumn();
 
-        for ($row = 1; $row <= 1; $row++){
-            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
-                                            NULL,
-                                            TRUE,
-                                            FALSE);
-        }
-        $rowHeaderData = $this->array_flatten($rowHeader);
-        for ($row = 2; $row <= $highestRow -1; $row++){
-            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
-                                            NULL,
-                                            TRUE,
-                                            FALSE);
-            if($this->isEmptyRow(reset($rowData))) { continue; }
-        }
-        foreach($rowData as $key => $value){
-        	foreach($value as $kay1 => $value1){
-        		if(isset($value1)){
-        			$finalRowData[] = array_combine($rowHeaderData, $value1);
-        		}
-        	}
-        }
-        $this->set('rowHeader', $rowHeader);
-        $this->set('finalRowData', $finalRowData);
+            for ($row = 1; $row <= 1; $row++){
+                $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
+                                                NULL,
+                                                TRUE,
+                                                FALSE);
+            }
+            $rowHeaderData = $this->array_flatten($rowHeader);
+            for ($row = 2; $row <= $highestRow -1; $row++){
+                $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
+                                                NULL,
+                                                TRUE,
+                                                FALSE);
+                if($this->isEmptyRow(reset($rowData))) { continue; }
+            }
+            foreach($rowData as $key => $value){
+                foreach($value as $kay1 => $value1){
+                    if(isset($value1)){
+                        $finalRowData[] = array_combine($rowHeaderData, $value1);
+                    }
+                }
+            }
+            $this->set('rowHeader', $rowHeader);
+            $this->set('finalRowData', $finalRowData);
 
-        $this->set('contentHeader', $header);
+            $this->set('contentHeader', $header);
+        }else{
+            $this->Alert->error('general.noFile', ['reset'=>true]);
+            $this->redirect(array('controller'=>'Reports', 'action' => $this->request->query['module']));
+        }
+        
     }
 
     function array_flatten($array) { 
