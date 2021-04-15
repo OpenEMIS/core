@@ -71,7 +71,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             .then(function(scheduleIntervalData) {
                 //console.log('scheduleIntervalData', scheduleIntervalData);
                 vm.scheduleIntervalData = scheduleIntervalData;   
-                if(vm.scheduleIntervalDefaultId != null){
+                if(vm.scheduleIntervalDefaultId != ''){
                     return TimetableSvc.getTimeslots(vm.scheduleIntervalDefaultId);
                 }else{
                     return TimetableSvc.getTimeslots(vm.scheduleIntervalData[0].id);
@@ -95,7 +95,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                 });
                 //console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
                 //console.log('scheduleIntervalDefaultId: ', vm.scheduleIntervalDefaultId);
-                if(vm.scheduleIntervalDefaultId != null){
+                if(vm.scheduleIntervalDefaultId != ''){
                     return TimetableSvc.getTimetableLessons(vm.scheduleIntervalDefaultId, vm.staffId);
                 }else{
                     return TimetableSvc.getTimetableLessons(vm.scheduleIntervalData[0].id, vm.staffId);
