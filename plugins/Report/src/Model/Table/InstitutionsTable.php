@@ -305,6 +305,14 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'periods';
                     $fieldsOrder[] = 'subjects';
                     $fieldsOrder[] = 'format';
+                    break; 
+
+                case 'Report.InstitutionInfrastructures':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'institution_type_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'infrastructure_level';
+                    $fieldsOrder[] = 'format';
                     break;                
                 
                 default:
@@ -601,7 +609,8 @@ class InstitutionsTable extends AppTable
                           'Report.InstitutionCommittees',
                           'Report.ClassAttendanceMarkedSummaryReport',  
                           'Report.Income',
-                          'Report.Expenditure'
+                          'Report.Expenditure',
+                          'Report.InstitutionInfrastructures'
                          ]
                     )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
@@ -815,7 +824,7 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, 
                         [
-                            'Report.InstitutionInfrastructures'
+                            //'Report.InstitutionInfrastructures'
                         ])
                 ) {
 
