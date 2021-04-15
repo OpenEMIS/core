@@ -86,25 +86,24 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         $query->contain($this->_contain);
     }
 
-    public function onUpdateFieldEducationGrades(Event $event, array $attr, $action, Request $request)
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+		$academicPeriodId = !is_null($entity->academic_period_id) ? $entity->academic_period_id : $AcademicPeriod->getCurrent();	
         list($educationGradeOptions) = array_values($this->getSelectOptions($academicPeriodId));
         $this->fields['education_grades']['options'] = $educationGradeOptions;
     }
-
+	
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodOptions = $AcademicPeriods->getYearList();
-            
+				
         $attr['type'] = 'select';
 
         $attr['placeholder'] = __('Select Academic Periods');
         $attr['attr']['options'] = $periodOptions;
 		$attr['onChangeReload'] = true;
-        
         return $attr;
     }
 
