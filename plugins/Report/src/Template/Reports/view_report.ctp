@@ -522,6 +522,45 @@ function getValueData($obj, $newArr){
 		$extraValue .= "<td>".$obj[$newArr[28]]."</td>";
 		$extraValue .= "<td>".$obj[$newArr[29]]."</td>";
 	}
+	if($headerCount > 36 && $headerCount <=37){
+		$extraValue .= "<td>".$obj[$newArr[1]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[2]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[3]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[4]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[5]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[6]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[7]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[8]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[9]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[10]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[11]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[12]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[13]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[14]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[15]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[16]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[17]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[18]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[19]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[20]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[21]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[22]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[23]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[24]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[25]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[26]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[27]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[28]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[29]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[30]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[31]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[32]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[33]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[34]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[35]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[36]]."</td>";
+		$extraValue .= "<td>".$obj[$newArr[37]]."</td>";
+	}
 	return $extraValue;
 }
 $params = $this->request->params;

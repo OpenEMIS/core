@@ -105,11 +105,7 @@ class TrainingsTable extends AppTable
                 $feature = $this->request->data[$this->alias()]['feature'];
                 if (in_array($feature, ['Report.TrainingResults', 'Report.TrainingSessionParticipants', 'Report.TrainingTrainers'])) {
                     $options = $this->Training->getCourseList();
-
-                    if (empty($this->request->data[$this->alias()]['training_course_id'])) {
-                        reset($options);
-                        $this->request->data[$this->alias()]['training_course_id'] = key($options);
-                    }
+					$options = ['-1' => __('All Training Courses')] + $options;
 
                     $attr['type'] = 'select';
                     $attr['select'] = false;
