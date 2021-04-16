@@ -911,13 +911,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         AlertSvc.reset($scope);
 
         if (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
-            // StaffController.startDate = InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date);
+            StaffController.startDate = InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date);
         }
 
         var startDatePicker = angular.element(document.getElementById('Staff_start_date'));
         startDatePicker.datepicker("setStartDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
         startDatePicker.datepicker("setEndDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.end_date));
-        // startDatePicker.datepicker("setDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
+        startDatePicker.datepicker("setDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
         var endDatePicker = angular.element(document.getElementById('Staff_end_date'));
         endDatePicker.datepicker("setStartDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
         StaffController.onChangeFTE();
