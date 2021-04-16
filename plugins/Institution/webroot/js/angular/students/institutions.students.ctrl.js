@@ -103,6 +103,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.postResponse;
 
     angular.element(document).ready(function() {
+        // console.log("log",startDate)
         InstitutionsStudentsSvc.init(angular.baseUrl);
         InstitutionsStudentsSvc.setInstitutionId(StudentController.institutionId);
         UtilsSvc.isAppendLoader(true);
@@ -848,7 +849,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var studentStartDate = new Date(studentData['institution_students'][0]['start_date']);
         studentStartDate.setDate(studentStartDate.getDate() + 1);
         var studentStartDateFormatted = $filter('date')(studentStartDate, 'dd-MM-yyyy');
-
+        console.log("studentStartDateFormatted", studentStartDateFormatted);
         StudentController.startDate = studentStartDateFormatted;
         $scope.endDate = periodEndDate;
 
@@ -956,13 +957,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         if (StudentController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
             $scope.endDate = InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.end_date);
-            StudentController.startDate = InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.start_date);
+            // StudentController.startDate = InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.start_date);
         }
-
+        console.log('start date', StudentController.academicPeriodOptions.selectedOption.start_date, StudentController.academicPeriodOptions.selectedOption.end_date)
         var startDatePicker = angular.element(document.getElementById('Students_start_date'));
         startDatePicker.datepicker("setStartDate", InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.start_date));
         startDatePicker.datepicker("setEndDate", InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.end_date));
-        startDatePicker.datepicker("setDate", InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.start_date));
+        // startDatePicker.datepicker("setDate", InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.start_date));
 
         StudentController.educationGradeOptions = null;
         InstitutionsStudentsSvc.getEducationGrades({
