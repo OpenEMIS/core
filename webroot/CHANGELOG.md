@@ -1,3 +1,18 @@
+### [3.64.3] - 2021-04-16
+- Bug Fixed: Institutions > Report Cards > Comments: Student transferred to another school, but report card record is still available in the previous school
+- Bug Fixed: Institutions > Academic > Classes: When a Student gets transferred back into the same school in the same year, student is not showing in the list of Unassigned students
+- Bug Fixed: Institutions > Attendance > Student: Withdrawn student still appear on Attendance page
+- Bug Fixed: Institutions > Staff > Finance > Payslip > Add: Unable to add record
+- Bug Fixed: Institutions > Report Cards > Comment: Homeroom Teacher unable to input/edit comment
+- Bug Fixed: Institutions > Students > Health > Vaccinations > Delete: Delete Prompt header is reflecting Immunizations
+- Bug Fixed: Institutions > Performance > Competencies > Import: There is no Option to select Class
+- Bug Fixed: Reports > Institution > Infrastructure: Changes to reports field
+- Bug Fixed: Reports > Institutions > Institutions > View: View format is incorrect
+- Bug Fixed: Administration > Workflow: Editable and Deletable check/uncheck function is not working
+- Bug Fixed: API: The list of Absence -Excused Reasons are not listed in the same order as in Student Attendance page
+- Bug Fixed: Directory > Search user: When selecting User Type as Students, the selection listed belongs to Staff
+- Bug Fixed: Profile: User Account is only showing First and Last Name
+
 ### [3.64.2] - 2021-04-14
 - Implemented: Improvement to the school closing process
 - Implemented: Improvement to the student overview page
