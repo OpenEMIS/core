@@ -552,7 +552,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->field('institution_staff_id', ['visible' => true, 'type' => 'hidden', 'value' => $entity->institution_staff_id]);
         $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->name]]);
         $this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->staff_id)->name_with_id]]);
-        $this->field('start_date', ['type' => 'readonly']);
+        $this->field('start_date', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('staff_change_type_id');
         $this->field('staff_type_id', ['type' => 'select']);
         $this->field('current_staff_type', ['before' => 'staff_type_id']);
@@ -675,7 +675,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $startDate = $startDateClone->modify('+1 day');
                     $attr['date_options']['startDate'] = $startDate->format('d-m-Y');
                 }
-              
+                $attr['value'] = (new Date())->modify('+1 day');
             } else {
                 $attr['type'] = 'hidden';
             }
@@ -685,7 +685,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
     {
-        $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
+        $entity = $attr['entity'];
 
         // start_date
         if (!$entity->has('start_date')) {
@@ -698,7 +698,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $staffChangeTypes = $this->staffChangeTypesList;
         if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
             $attr['type'] = 'date';
-            $attr['value'] = new Date(null);
+            $attr['value'] = $startDate->format('Y-m-d');
         } else {
             $attr['value'] = $startDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($startDate);
@@ -712,7 +712,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
             if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['END_OF_ASSIGNMENT']) {
-           
                 $attr['type'] = 'date';
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
