@@ -407,7 +407,7 @@ class StudentTransferTable extends ControllerActionTable
 				->where([$Grades->aliasField('institution_id') => $institutionId])
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 				->toArray();
-
+			
 			$selectedGrade = $this->request->query('education_grade_id');
             $pendingTransferStatuses = $this->StudentTransfers->getStudentTransferWorkflowStatuses('PENDING');
 
@@ -442,6 +442,13 @@ class StudentTransferTable extends ControllerActionTable
 						->count();
 				}
 			]);
+			if ($gradeOptions) {
+				foreach ($gradeOptions as $key => $gradeVal) {
+					if (($keyVal = array_search($gradeVal[0], $gradeVal)) == 'disabled') {
+						unset($gradeOptions[$key]);
+					}	
+				}
+			}
 		return $gradeOptions;
 	}
 
@@ -568,7 +575,7 @@ class StudentTransferTable extends ControllerActionTable
 			$studentQuery = $this
 				->find('byNoExistingTransferRequest')
 				->find('byNoEnrolledRecord')
-				->find('byNotCompletedGrade', ['gradeId' => $nextEducationGradeId])
+				//->find('byNotCompletedGrade', ['gradeId' => $nextEducationGradeId])
 				->find('byStatus', ['statuses' => [$statuses['PROMOTED'], $statuses['GRADUATED']]])
                 ->find('studentClasses', ['institution_class_id' => $selectedClass])
                 ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
