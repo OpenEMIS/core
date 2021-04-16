@@ -1870,6 +1870,42 @@ class StaffTable extends ControllerActionTable
             ]);
     }
 
+    public function findNonTeacherEditPermissions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $staffId = $options['staff_id'];
+        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+        $InstitutionPosition = TableRegistry::get('Institution.InstitutionPositions');
+        return $query
+                ->select([$this->aliasField('staff_id')])
+                ->leftJoin(
+                    [$InstitutionPosition->alias() => $InstitutionPosition->table()],
+                    [
+                        $InstitutionPosition->aliasField('id = ') . $this->aliasField('institution_position_id'),
+                        $InstitutionPosition->aliasField('institution_id = ') . $this->aliasField('institution_id')
+                    ]
+                )
+                ->leftJoin(
+                    [$StaffPositionTitles->alias() => $StaffPositionTitles->table()],
+                    [
+                        $InstitutionPosition->aliasField('staff_position_title_id = ') . $StaffPositionTitles->aliasField('id'),
+                    ]
+                )
+            ->where([$StaffPositionTitles->aliasField('type') => 0,
+                    $this->aliasField('staff_id') => $staffId            
+            ]);
+    //     $staffList = $query->toArray();   
+    //     $nonTeacherIds = [];
+    //     if(!empty($staffList)){
+    //         foreach($staffList as $staffVal) {
+    //             $nonTeacherIds[] = $staffVal->staff_id;
+    //         }
+	// 	}
+    //    if (in_array($staffId,$nonTeacherIds)) {
+    //        $isNonTeacher = true;
+    //    }       
+    }
+    
     // used for student report cards
     public function findHomeroomEditPermissions(Query $query, array $options)
     {
