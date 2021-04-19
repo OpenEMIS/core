@@ -43,7 +43,6 @@ class ImportStudentMealsTable extends AppTable {
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
-            'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
             'Model.import.onImportPopulateMealReceivedData' => 'onImportPopulateMealReceivedData',
             'Model.import.onImportPopulateMealBenefitData' => 'onImportPopulateMealBenefitData',
             'Model.import.onImportPopulateMealProgrammeData' => 'onImportPopulateMealProgrammeData',
@@ -115,76 +114,7 @@ class ImportStudentMealsTable extends AppTable {
     /**
      * Currently only populates students based on current academic period
      */
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $currentPeriodId = $this->AcademicPeriods->getCurrent();
-       
-        if (!$currentPeriodId) {
-            $array = $this->AcademicPeriods->getAvailableAcademicPeriods();
-            reset($array);
-            $currentPeriodId = key($array);
-        }
 
-        $classId = (!empty($this->request->query('class'))) ? $this->request->query('class') : '';
-
-
-        if (!empty($classId)) {
-            //Query to find all students from the selected classes in the institutions and academic period for absentee
-            $currentPeriod = $this->AcademicPeriods->get($currentPeriodId);
-            $allStudents = $this->Students
-                                ->find('all')
-                                ->select([
-                                    'student_id',
-                                    'EducationGrades.name','EducationGrades.order',
-                                    'Users.first_name', 'Users.middle_name', 'Users.third_name', 'Users.last_name', 'Users.'.$lookupColumn
-                                ])
-                                ->where([
-                                    $this->Students->aliasField('academic_period_id') => $currentPeriodId,
-                                    $this->Students->aliasField('institution_id') => $this->institutionId,
-                                    'InstitutionClassStudents.institution_class_id' => $classId,
-                                    'Users.id IS NOT NULL',
-                                ])
-                                ->contain([
-                                    'EducationGrades',
-                                    'Users'
-                                ])
-                                ->join([
-                                 'InstitutionClasseStudents' => [
-                                     'table' => 'institution_class_students',
-                                     'alias' => 'InstitutionClassStudents',
-                                     'conditions' => 'InstitutionClassStudents.student_id = '.$this->Students->aliasField('student_id'),
-                                 ],
-                                ])
-                                ->order(['EducationGrades.order']);
-        }
-
-        $institution = $this->Institutions->get($this->institutionId);
-        $institutionHeader = $this->getExcelLabel('Imports', 'institution_id') . ": " . $institution->name;
-        $periodHeader = $this->getExcelLabel($lookedUpTable, 'academic_period_id') . ": " . $currentPeriod->name;
-        $gradeHeader = $this->getExcelLabel($lookedUpTable, 'education_grade_id');
-        $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
-        $columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
-        $data[$columnOrder]['lookupColumn'] = 5;
-        $data[$columnOrder]['data'][] = [
-            $institutionHeader,
-            $periodHeader,
-            $gradeHeader,
-            $nameHeader,
-            $columnHeader
-        ];
-     
-        if (!empty($allStudents)) {
-            foreach($allStudents->toArray() as $row) {
-                $data[$columnOrder]['data'][] = [
-                    $institution->name,
-                    $currentPeriod->name,
-                    $row->education_grade->name,
-                    $row->user->name,
-                    $row->user->{$lookupColumn}
-                ];
-            }
-        }
-    }  
 
     public function onImportPopulateMealProgrammesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 
@@ -259,7 +189,19 @@ class ImportStudentMealsTable extends AppTable {
 
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-       
+  
+        $userId =  $this->Users
+                   ->find('all')
+                   ->select('id')
+                   ->where([
+                            $this->Users->aliasField('openemis_no') => $tempRow['OpenEMIS_ID'],
+                            ])
+                   ->first();
+                  
+
+
+       $tempRow['student_id'] = $userId->id;
+
         if (empty($tempRow['student_id'])) {
             $rowInvalidCodeCols['student_id'] = __('OpenEMIS ID was not defined');
             return false;
@@ -320,9 +262,7 @@ class ImportStudentMealsTable extends AppTable {
             $tempRow['student_id'] = false;
             return false;
         }
-       // echo "<pre>";
-        //print_r($tempRow); die();
-     
+           
         if($tempRow['meal_received_id'] !=  1 && empty($tempRow['meal_received_id'])) {
             $tempRow['meal_received_id'] = NULL;
         }
@@ -330,9 +270,6 @@ class ImportStudentMealsTable extends AppTable {
         if($tempRow['meal_benefit_id'] !=  1 && empty($tempRow['meal_benefit_id'])) {
             $tempRow['meal_benefit_id'] = NULL;
         }
-
-        //add identifier that later will be used on StudentAbsencesPeriodDetails
-        // $tempRow['record_source'] = 'import_student_meal';
 
         return true;
     }

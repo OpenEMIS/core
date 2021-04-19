@@ -46,12 +46,16 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
-        return $validator
+        if (isset($this->action) && $this->action == 'add') {
+            return $validator
                         ->add('code', 'ruleUnique', [
-                            'rule' => 'validateUnique',
+                            //'rule' => 'validateUnique',
+                            'rule' => 'educationProgrammesCode',
                             'provider' => 'table'
-                        ])
-        ;
+            ]);
+        } else {
+            return $validator;
+        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
@@ -140,7 +144,9 @@ class EducationProgrammesTable extends ControllerActionTable {
     }
 
     public function onUpdateFieldEducationCycleId(Event $event, array $attr, $action, Request $request) {
-        list(,, $cycleOptions, $selectedCycle) = array_values($this->getSelectOptions());
+        //POCOR-5908 starts
+        list(,,,, $cycleOptions, $selectedCycle) = array_values($this->getSelectOptions());
+        //POCOR-5908 ends
         $attr['options'] = $cycleOptions;
         if ($action == 'add') {
             $attr['default'] = $selectedCycle;
@@ -192,17 +198,20 @@ class EducationProgrammesTable extends ControllerActionTable {
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         
         //Return all required options and their key
-        $levelOptions = $this->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod);
+        //$levelOptions = $this->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod); //POCOR-5975 starts
+        $levelOptions = $this->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
+        //POCOR-5975 ends
         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
-
+         
         $cycleOptions = $this->EducationCycles
                 ->find('list')
                 ->find('visible')
                 ->find('order')
                 ->where([$this->EducationCycles->aliasField('education_level_id') => $selectedLevel])
                 ->toArray();
+        
         $selectedCycle = !is_null($this->request->query('cycle')) ? $this->request->query('cycle') : key($cycleOptions);
-
+        
         return compact('academicPeriodOptions', 'selectedAcademicPeriod', 'levelOptions', 'selectedLevel', 'cycleOptions', 'selectedCycle');
     }
 

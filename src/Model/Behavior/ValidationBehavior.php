@@ -3049,4 +3049,250 @@ class ValidationBehavior extends Behavior
         }
         return false;
     }
+
+    //POCOR-5917 starts
+    public static function compareEndDate($field)
+    {   
+        $label = Inflector::humanize($field);
+        $enteredDate = new Date($field);
+        $today = new Date('now');
+        if (strtotime($today) > strtotime($enteredDate)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    //POCOR-5917 end
+
+    public static function dateAlreadyTaken($field, array $globalData)
+    {
+        $data = $globalData['data'];
+        $studentId = $data['student_id'];
+        $institutionId = $data['institution_id'];
+        $academicPeriodId = $data['academic_period_id'];
+        $gradeId = $data['education_grade_id'];
+        $classId = $data['institution_class_id'];
+        $startDate = $data['start_date'];
+        $endDate = $data['end_date'];
+        $institutionStudents = TableRegistry::get('institution_students');
+        $studentStatuses = TableRegistry::get('student_statuses');
+        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+        $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $studentStatus = $institutionStudents->find()
+                        ->select([$studentStatuses->aliasField('code')])
+                        ->leftJoin([$studentStatuses->alias() => $studentStatuses->table()], [
+                            $studentStatuses->aliasField('id = ') . $institutionStudents->aliasField('student_status_id')
+                        ])
+                        ->where([
+                            $institutionStudents->aliasField('student_id') => $studentId, 
+                            $institutionStudents->aliasField('institution_id') => $institutionId
+                        ]) 
+                        ->first();
+        $code = $studentStatus['student_statuses']['code'];
+
+        if (!empty($code) && $code != 'CURRENT') {
+           $check = $StudentAttendanceMarkedRecords->find()
+                    ->select([$StudentAttendanceMarkedRecords->aliasField('date')])
+                    ->where([
+                        $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
+                        $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
+                        $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $classId,
+                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $gradeId,
+                        $StudentAttendanceMarkedRecords->aliasField('date') => $startDate
+                    ])->first(); 
+
+            if (!empty($check)) {
+                $markedDate = $check->date->format('Y-m-d');
+            }
+
+            $checkTwo = $InstitutionStudentAbsences->find()
+                        ->select([$InstitutionStudentAbsences->aliasField('date')])
+                        ->where([
+                            $InstitutionStudentAbsences->aliasField('date') => $startDate,
+                            $InstitutionStudentAbsences->aliasField('institution_id') => $institutionId,
+                            $InstitutionStudentAbsences->aliasField('student_id') => $studentId
+                        ])
+                        ->first();
+            if (!empty($checkTwo)) {
+                $unmarkedDate = $checkTwo->date->format('Y-m-d');
+            }
+
+            if (!empty($check)) {
+                $query = $institutionStudents->query();
+                if (!empty($startDate)) {
+                   if ($startDate > $markedDate) {
+                       return false;
+                    } else {
+                        return true;
+                    }
+                }
+            } 
+
+            if (!empty($checkTwo)) {
+                $query = $institutionStudents->query();
+                if (!empty($startDate)) {
+                   if ($startDate > $unmarkedDate) {
+                       return false;
+                    } else {
+                        return true;
+                    }
+                }
+            } 
+
+            if (empty($checkTwo) && empty($check)) {
+                 return true;
+            }
+        } else {
+			return true;
+		}
+    }
+	
+	public static function forLatitudeLength($field, array $globalData)
+    {   
+		if(!empty($field)){
+			$ConfigItems = TableRegistry::get('config_items');
+
+			$latitudeData = $ConfigItems->find()
+				->select([
+					$ConfigItems->aliasField('value'),
+					$ConfigItems->aliasField('default_value'),
+				   ])
+				   ->where([
+						$ConfigItems->aliasField('code') => 'latitude_length',
+					])
+				->first();
+				
+			$default_length = 0;
+			if (!empty($latitudeData->value)) {
+				$default_length = $latitudeData->value;
+			} else {
+				$default_length = $latitudeData->default_value;
+			}	
+			
+			$latitude = explode(".",$globalData['data']['latitude']);
+			$latitude_length = strlen($latitude[1]);
+			
+			if($latitude_length < $default_length) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+    }
+	
+	public static function forLongitudeLength($field, array $globalData)
+    {   
+		if(!empty($field)){
+			$ConfigItems = TableRegistry::get('config_items');
+
+			$longitudeData = $ConfigItems->find()
+				->select([
+					$ConfigItems->aliasField('value'),
+					$ConfigItems->aliasField('default_value'),
+				   ])
+				   ->where([
+						$ConfigItems->aliasField('code') => 'longitude_length',
+					])
+				->first();
+				
+			$longitude = explode(".",$globalData['data']['longitude']);
+			$longitude_length = strlen($longitude[1]);
+			
+			$default_length = 0;
+			if (!empty($longitudeData->value)) {
+				$default_length = $longitudeData->value;
+			} else {
+				$default_length = $longitudeData->default_value;
+			}
+			
+			if($longitude_length < $default_length) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+    }
+
+    //POCOR-5975 starts
+    public function educationProgrammesCode($field, array $globalData) 
+    {
+        $data = $globalData['data'];
+        $code = $data['code'];
+        $cycleId = $data['education_cycle_id'];
+        $EducationCycles = TableRegistry::get('Education.EducationCycles');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $checkCode = $EducationCycles
+                                ->find()
+                                ->leftJoin([$EducationLevels->alias() => $EducationLevels->table()], [
+                                        $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
+                                        $EducationLevels->aliasField('visible') => 1
+                                ])
+                                ->leftJoin([$EducationSystems->alias() => $EducationSystems->table()], [
+                                        $EducationSystems->aliasField('id =') . $EducationLevels->aliasField('education_system_id'),
+                                        $EducationSystems->aliasField('visible') => 1
+                                ])
+                                ->where([
+                                    $EducationCycles->aliasField('id') => $cycleId
+                            ])->first();
+        if (!empty($checkCode)) {
+            $existProgrammes = $EducationProgrammes->find()
+                            ->where([
+                                $EducationProgrammes->aliasField('code') => $code,
+                                $EducationProgrammes->aliasField('education_cycle_id') => $checkCode->id
+                            ])
+                            ->first();
+        }
+        if (!empty($existProgrammes)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+
+    public function educationGradesCode($field, array $globalData) 
+    {
+        $data = $globalData['data'];
+        $code = $data['code'];
+        $programmeId = $data['education_programme_id'];
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationCycles = TableRegistry::get('Education.EducationCycles');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $checkCode = $EducationProgrammes->find()
+                        ->leftJoin([$EducationCycles->alias() => $EducationCycles->table()], [
+                                        $EducationCycles->aliasField('id =') . $EducationProgrammes->aliasField('education_cycle_id'),
+                                        $EducationCycles->aliasField('visible') => 1
+                        ])
+                        ->leftJoin([$EducationLevels->alias() => $EducationLevels->table()], [
+                                $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
+                                $EducationLevels->aliasField('visible') => 1
+                        ])
+                        ->leftJoin([$EducationSystems->alias() => $EducationSystems->table()], [
+                                $EducationSystems->aliasField('id =') . $EducationLevels->aliasField('education_system_id'),
+                                $EducationSystems->aliasField('visible') => 1
+                        ])
+                        ->where([
+                            $EducationProgrammes->aliasField('id') => $programmeId
+                    ])->first();
+        if (!empty($checkCode)) {
+            $existGrades = $EducationGrades->find()
+                            ->where([
+                                $EducationGrades->aliasField('code') => $code,
+                                $EducationGrades->aliasField('education_programme_id') => $checkCode->id
+                            ])
+                            ->first();
+        }
+        if (!empty($existGrades)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    //POCOR-5975 ends
 }

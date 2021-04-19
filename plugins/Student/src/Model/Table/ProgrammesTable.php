@@ -8,6 +8,7 @@ use Cake\Network\Request;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -84,7 +85,6 @@ class ProgrammesTable extends ControllerActionTable
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
-
         $query->where([$this->aliasField('student_id') => $studentId]);
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
