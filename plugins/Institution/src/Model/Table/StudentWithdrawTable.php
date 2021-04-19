@@ -54,6 +54,16 @@ class StudentWithdrawTable extends ControllerActionTable
         ]);
 
         $this->toggle('add', false);
+
+        //POCOR-5986
+        $this->addBehavior('User.User');
+        $this->addBehavior('User.AdvancedNameSearch');
+         $advancedSearchFieldOrder = [
+            'first_name', 'middle_name', 'third_name', 'last_name',
+            'openemis_no'
+        ];
+        $this->addBehavior('ControllerAction.Image');
+        //POCOR-5986
     }
 
     public function implementedEvents()
@@ -63,11 +73,18 @@ class StudentWithdrawTable extends ControllerActionTable
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
         $events['Shell.StudentWithdraw.updateStudentStatusId'] = 'updateStudentStatusId';
+        $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
 
         foreach ($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
         }
         return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'student_id';
+        $searchableFields[] = 'openemis_no';
     }
 
     public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
@@ -394,5 +411,20 @@ class StudentWithdrawTable extends ControllerActionTable
             });
 
         return $query;
+    }
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    { 
+         $this->field('openemis_no', ['visible' => false]);
+         $this->field('photo_content', ['visible' => false]);
+    }  
+
+     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+        } 
+
     }
 }

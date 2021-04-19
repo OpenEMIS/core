@@ -57,6 +57,20 @@ class InstitutionMapsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator = $this->LatLongValidation();
+
+        $validator
+            ->add('latitude', [
+                'ruleForLatitudeLength' => [
+                    'rule' => ['forLatitudeLength'],
+                    'message' => __('Latitude length is incomplete')
+                ]
+            ])
+			->add('longitude', [
+                'ruleForLongitudeLength' => [
+                    'rule' => ['forLongitudeLength'],
+                    'message' => __('Longitude length is incomplete')
+                ]
+            ]);
         return $validator;
     }
 
@@ -127,7 +141,7 @@ class InstitutionMapsTable extends ControllerActionTable
             }
         }
     }
-
+	
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder([

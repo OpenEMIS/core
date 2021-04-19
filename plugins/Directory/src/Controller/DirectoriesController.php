@@ -151,6 +151,10 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Duties']);
     }
+    public function StaffAssociations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.InstitutionAssociationStaff']);
+    }
     public function StudentTextbooks()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']);
@@ -187,6 +191,10 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']);
     }
+    public function StaffPayslips()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Payslips']);
+    }
     public function StaffBehaviours()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']);
@@ -205,6 +213,11 @@ class DirectoriesController extends AppController
     public function StudentRisks()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentRisks']);
+    }
+
+     public function StudentAssociations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);
     }
     // health
     public function Healths()
@@ -476,6 +489,11 @@ class DirectoriesController extends AppController
             }
 
             $alias = $model->alias;
+            //POCOR-5890 starts
+            if($alias == 'HealthImmunizations'){
+                $alias = __('Vaccinations');     
+            }
+            //POCOR-5890 ends
             $guardianId = $session->read('Guardian.Guardians.id');
             $studentId = $session->read('Student.Students.id');
             $isStudent = $session->read('Directory.Directories.is_student');
@@ -491,7 +509,10 @@ class DirectoriesController extends AppController
                 $this->Navigation->addCrumb($model->getHeader('Student'. $alias));
                 $header = $session->read('Student.Students.name');
                 $header = $header . ' - ' . $model->getHeader($alias);
-            } else {
+            }elseif ($alias == 'StudentAssociations') {
+                $header .= ' - '. __('Associations');
+            } 
+             else {
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = $header . ' - ' . $model->getHeader($alias);
             }
@@ -807,7 +828,8 @@ class DirectoriesController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'Risks' => ['text' => __('Risks')]
+            'Risks' => ['text' => __('Risks')],
+            'Associations' => ['text' => __('Associations')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -859,6 +881,7 @@ class DirectoriesController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
+            'Associations' => ['text' => __('Associations')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -912,6 +935,7 @@ class DirectoriesController extends AppController
         $staffTabElements = [
             'BankAccounts' => ['text' => __('Bank Accounts')],
             'Salaries' => ['text' => __('Salaries')],
+            'Payslips' => ['text' => __('Payslips')],
         ];
 
         $tabElements = array_merge($tabElements, $staffTabElements);
@@ -919,6 +943,7 @@ class DirectoriesController extends AppController
         foreach ($staffTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'type' => $type]);
         }
+       
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
