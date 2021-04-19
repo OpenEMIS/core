@@ -127,6 +127,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
             $attr['select'] = false;
             $attr['options'] = $periodOptions;
             $attr['default'] = $selectedPeriod;
+			$attr['onChangeReload'] = true;
         } else if ($action == 'edit') {
             $academicPeriodId = $attr['entity']->academic_period_id;
             $attr['type'] = 'readonly';
@@ -139,12 +140,16 @@ class OutcomeTemplatesTable extends ControllerActionTable
     public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
     {
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
         if ($action == 'add') {
             $programmeOptions = $EducationProgrammes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                 ->find('availableProgrammes')
-                ->toArray();
+				->contain(['EducationCycles.EducationLevels.EducationSystems'])
+				->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+				->toArray();
 
             $attr['type'] = 'select';
             $attr['options'] = $programmeOptions;
