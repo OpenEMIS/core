@@ -269,7 +269,14 @@ class CustomReportsTable extends AppTable
     {
         $params = $settings['requestQuery'];
         $customReportData = $this->get($params['feature']);
-
+		
+		if(!empty($params['start_date'])) {
+			$params['start_date'] = date("Y-m-d", strtotime($params['start_date']));	
+		}
+		if(!empty($params['end_date'])) {
+			$params['end_date'] = date("Y-m-d", strtotime($params['end_date']));	
+		}
+		
         if (array_key_exists('requestQuery', $settings)) {
             $jsonQuery = json_decode($customReportData->query, true);
 

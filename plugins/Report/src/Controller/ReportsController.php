@@ -6,6 +6,9 @@ use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
+use Cake\ORM\ResultSet;
+use PHPExcel_IOFactory;
 
 class ReportsController extends AppController
 {
@@ -29,6 +32,7 @@ class ReportsController extends AppController
             'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
         ];
+        $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
     }
 
@@ -66,6 +70,7 @@ class ReportsController extends AppController
         } elseif ($module == 'Institutions') {
             $options = [
                 'Report.Institutions' => __('Institutions'),
+                'Report.InstitutionAssociations' => __('Associations'),
                 'Report.InstitutionPositions' => __('Positions'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
                 'Report.InstitutionClasses' => __('Classes'),
@@ -75,6 +80,7 @@ class ReportsController extends AppController
                 'Report.InstitutionStaff' => __('Staff'),
                 'Report.StudentAbsences' => __('Student Absence'),
                 'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
+                'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
                 'Report.InstitutionSummaryReport' => __('Institution Summary Report'),
                 'Report.BodyMasses' => __('Student Body Masses'),
                 // 'Report.StaffAbsences' => __('Staff Absence'),
@@ -122,6 +128,7 @@ class ReportsController extends AppController
                 'Report.StaffQualifications' => __('Qualifications'),
                 'Report.StaffLicenses' => __('Licenses'),
                 'Report.StaffEmploymentStatuses' => __('Employment Statuses'),
+                'Report.StaffHealthReports' => __('Staff Health Report'),
                 'Report.StaffSalaries' => __('Salaries'),
                 'Report.StaffSystemUsage' => __('System Usage'),
                 'Report.StaffTrainingReports' => __('Training Courses Report'),
@@ -129,7 +136,7 @@ class ReportsController extends AppController
                 'Report.StaffPositions' => __('Staff Positions Report'),
                 'Report.PositionSummary' => __('Position Summary Report'),
                 'Report.StaffDuties' => __('Duties Report'),
-                'Report.StaffExtracurriculars' => __('Staff Extracurricular')
+                'Report.StaffExtracurriculars' => __('Staff Extracurricular'),
 				
             ];
         } elseif ($module == 'Textbooks') {
@@ -259,6 +266,83 @@ class ReportsController extends AppController
 	public function Profiles()
     { 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
+    }
+
+    public function ViewReport()
+    {
+        ini_set('memory_limit', '-1');
+        $data = $_GET;
+        $explode_data = explode("/", $data['file_path']);
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($data['module']);
+        $header = __('Reports') . ' - ' .$data['module'];
+
+        $inputFileName = WWW_ROOT. 'export/'.end($explode_data);
+
+        $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
+        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+        $objPHPExcel = $objReader->load($inputFileName);
+
+        $sheet = $objPHPExcel->getSheet(0); 
+        $highestRow = $sheet->getHighestRow(); 
+        $highestColumn = $sheet->getHighestColumn();
+
+        for ($row = 1; $row <= 1; $row++){
+            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
+                                            NULL,
+                                            TRUE,
+                                            FALSE);
+        }
+        $rowHeaderNew = $this->array_flatten($rowHeader);
+        for ($row = 2; $row <= $highestRow -1; $row++){ 
+            //  Read a row of data into an array
+            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
+                                            NULL,
+                                            TRUE,
+                                            FALSE);
+            if($this->isEmptyRow(reset($rowData))) { continue; }
+            //  Insert row data array into your database of choice here
+        }
+        foreach($rowData as $newKey => $newDataVal){
+        	foreach($newDataVal as $kay2 => $new_data_arr){
+        		if(isset($new_data_arr)){
+        			$newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+        		}
+        	}
+        }
+        $this->set('rowHeader', $rowHeader);
+        $this->set('newArr2', $newArr2);
+
+        $this->set('contentHeader', $header);
+    }
+
+    function array_flatten($array) { 
+        if (!is_array($array)) { 
+          return false; 
+        } 
+        $result = array(); 
+        foreach ($array as $key => $value) { 
+          if (is_array($value)) { 
+            $result = array_merge($result, $this->array_flatten($value)); 
+          } else { 
+            $result = array_merge($result, array($key => $value));
+          } 
+        } 
+        return $result; 
+      }
+
+    function isEmptyRow($row) {
+        foreach($row as $cell){
+            if (null !== $cell) return false;
+        }
+        return true;
     }
 	
 }
