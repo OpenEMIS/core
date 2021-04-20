@@ -118,6 +118,7 @@ trait MessagesTrait
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
             'custom_validation_pattern' => 'Please enter a valid format',
+            'bulk_student_transfer_in' => 'Bulk Student Transfer In updated. Pending Student Transfer from Sending Institution.',
             'inactive_message' => 'This institution is inactive, all data entry operation are disabled.',
             'status_update' => 'You are about to update the status of the Institution. This action will affect the availability of the Institution in the system.',
             'contactInstitution' => [
