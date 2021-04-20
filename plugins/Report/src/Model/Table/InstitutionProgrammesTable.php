@@ -33,8 +33,8 @@ class InstitutionProgrammesTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
 	{
 		$query
-			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives','EducationGrades.EducationProgrammes'])
-			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name','programmes' => 'EducationProgrammes.name']);
+			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives','EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems.AcademicPeriods'])
+			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name','programmes' => 'EducationProgrammes.name','academic_period' => 'AcademicPeriods.name']);
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -57,6 +57,12 @@ class InstitutionProgrammesTable extends AppTable  {
 			$newFields[] = $value;
 			if ($value['field'] == 'institution_id') {
 				
+				$newFields[] = [
+					'key' => 'AcademicPeriods.name',
+					'field' => 'academic_period',
+					'type' => 'string',
+					'label' => __('Academic Period')
+				];
 
 				$newFields[] = [
 					'key' => 'Areas.code',
