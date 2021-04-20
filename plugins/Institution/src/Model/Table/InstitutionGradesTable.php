@@ -176,6 +176,15 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                             // need to set programme value since it was marked as required in validationDefault()
                     $grade['programme'] = $entity->programme;
 					
+					$Institutions = TableRegistry::get('Institution.Institutions');
+					$InstitutionData = $Institutions->find()
+								->select([
+									'date_opened' => $Institutions->aliasField('date_opened'),
+								])
+								->where([
+									$Institutions->aliasField('id') => $entity->institution_id
+								])
+								->first();
 					$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 					
 					if ($entity->has('academic_period_id')) {
@@ -189,14 +198,20 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
 								->first();
 					}
 					if (!empty($AcademicPeriodData->start_date)) {
-                        $grade['start_date'] = $AcademicPeriodData->start_date;
+                        $start_date = $AcademicPeriodData->start_date;
+						if($start_date < $InstitutionData->date_opened) {
+							$start_date = $InstitutionData->date_opened;
+						}
+                        $grade['start_date'] = $start_date;
                     }
+					
                     $grade['institution_id'] = $entity->institution_id;
                     if ($entity->has('end_date')) {
                         $grade['end_date'] = $entity->end_date;
                     }
 
                     $gradeEntities[] = $this->newEntity($grade);
+					
                     if ($gradeEntities[0]->errors()) {
                         $error = true;
                     }
@@ -281,7 +296,7 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                                 $education_programme_code = $value->education_programme->code;
                                 $education_programme_name = $value->education_programme->name;
                                 $education_programme_name = $value->education_programme->name;
-                                $start_date = $entity->start_date;
+                                $start_date = $start_date;
                             }
                         }
 
@@ -699,7 +714,7 @@ public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
         $Institution->save($institution);
         $dateOpened = $institution->date_opened;
     }
-
+	
     $this->fields['start_date']['value'] = isset($entity->start_date) ? $entity->start_date : $dateOpened;
     $this->fields['start_date']['date_options']['startDate'] = $dateOpened->format('d-m-Y');
     $this->fields['end_date']['date_options']['startDate'] = $dateOpened->format('d-m-Y');

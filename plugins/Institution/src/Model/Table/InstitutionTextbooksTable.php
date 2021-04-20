@@ -597,9 +597,32 @@ class InstitutionTextbooksTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
+				$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+				$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
-                $educationLevelOptions = $this->EducationLevels->getLevelOptionsByInstitution($this->institutionId);
+				$InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+				$EducationGrades = TableRegistry::get('Education.EducationGrades');
+				$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
+				$list = $InstitutionGrades
+					->find()
+					->select(['level_id' => 'EducationLevels.id', 'level_name' => 'EducationLevels.name', 'system_name' => 'EducationSystems.name'])
+					->matching('EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems')
+					->where([
+						'EducationSystems.academic_period_id' => $academicPeriodId,
+						$InstitutionGrades->aliasField('institution_id') => $this->institutionId
+					])
+					->order(['EducationSystems.order', 'EducationLevels.order'])
+					->group(['level_id'])
+					->toArray();
+
+				$returnList = [];
+				foreach ($list as $key => $value) {
+					$returnList[$value->level_id] = $value->system_name . " - " . $value->level_name;
+				}
+				
+				$educationLevelOptions = $returnList;
+		
                 $attr['options'] = $educationLevelOptions;
                 $attr['onChangeReload'] = 'changeEducationLevel';
 
