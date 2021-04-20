@@ -951,7 +951,7 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 
                                     'Report.InstitutionCases',
-                                    'Report.StudentAttendanceSummary',
+                                    //'Report.StudentAttendanceSummary',
                                     'Report.ClassAttendanceMarkedSummaryReport',
                 ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
                 ) {
@@ -959,11 +959,25 @@ class InstitutionsTable extends AppTable
                 $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
-
                 $attr['type'] = 'date';
                 $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
                 $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
                 $attr['value'] = $selectedPeriod->start_date;
+            } elseif (in_array($feature, [
+                                    'Report.StudentAttendanceSummary'
+                ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
+                ) {
+
+                $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+                $attr['type'] = 'date';
+                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                $attr['value'] = $selectedPeriod->start_date;
+                $attr['onChangeReload'] = true;
+                $attr['value'] = $this->request->data[$this->alias()]['report_start_date'];
+                //echo "<pre>";print_r($attr);die();
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -977,7 +991,7 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 
                                     'Report.InstitutionCases',
-                                    'Report.StudentAttendanceSummary',
+                                    //'Report.StudentAttendanceSummary',
                                     'Report.ClassAttendanceMarkedSummaryReport'
                                     ])
                 ) {
@@ -997,6 +1011,33 @@ class InstitutionsTable extends AppTable
                 }
                 //POCOR-5907[START]
                 $attr['value'] = $selectedPeriod->end_date;
+                //POCOR-5907[END]
+            } elseif (in_array($feature, [
+                                    'Report.StudentAttendanceSummary'
+                                    ])
+                ) {
+                    
+                $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+
+
+                $attr['type'] = 'date';
+                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                //$attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                $dateString = $selectedPeriod->start_date;
+                $endDate = date('d-m-Y',strtotime('+30 days',strtotime($dateString)));
+                //echo date('m/d/Y',strtotime('+30 days',strtotime($dateString)));die();
+                //echo "<pre>";print_r($lastDateOfMonth);die();
+                $attr['date_options']['endDate'] = $endDate;
+                if ($academicPeriodId != $AcademicPeriods->getCurrent()) {
+                    $attr['value'] = $endDate;
+                } 
+                else {
+                    $attr['value'] = Time::now();
+                }
+                //POCOR-5907[START]
+                $attr['value'] = $endDate;
                 //POCOR-5907[END]
             } else {
                 $attr['value'] = self::NO_FILTER;
