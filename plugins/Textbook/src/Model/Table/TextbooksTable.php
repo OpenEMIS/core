@@ -74,9 +74,8 @@ class TextbooksTable extends ControllerActionTable {
         $data['selectedPeriod'] = $selectedPeriod;
 
         //education level filter
-        $levelOptions = $this->EducationLevels->getLevelOptions();
-
-
+        $levelOptions = $this->EducationLevels->getEducationLevelOptions($selectedPeriod);
+					
         if ($levelOptions) {
             $levelOptions = array(-1 => __('-- Select Education Level --')) + $levelOptions;
         }
@@ -265,7 +264,8 @@ class TextbooksTable extends ControllerActionTable {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
             $attr['options'] = $periodOptions;
-            $attr['default'] = $selectedPeriod;
+			$attr['onChangeReload'] = true;
+			$attr['default'] = $selectedPeriod;
         } else if ($action == 'edit') {
             $entity = $attr['entity'];
 
@@ -281,9 +281,14 @@ class TextbooksTable extends ControllerActionTable {
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
-
-                $educationLevelOptions = $this->EducationLevels->getLevelOptions();
-
+				$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+				if(!empty($this->request->query('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
+					$academicPeriodId = $this->request->query('period');
+				} else {
+					$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
+				}
+                $educationLevelOptions = $this->EducationLevels->getEducationLevelOptions($academicPeriodId);
+					
                 $attr['options'] = $educationLevelOptions;
                 $attr['onChangeReload'] = 'changeEducationLevel';
 
