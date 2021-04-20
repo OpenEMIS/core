@@ -541,8 +541,8 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ->first();
           
             if (!empty($firstInstitutionClassIdResult)) {
-                $requestQuery['institution_class_id'] = $firstInstitutionClassIdResult->id;
-                // $requestQuery['institution_class_id'] = 'all';
+                // $requestQuery['institution_class_id'] = $firstInstitutionClassIdResult->id;
+                $requestQuery['institution_class_id'] = 'all';
             } else {
                 $requestQuery['institution_class_id'] = -1;
             }
@@ -573,7 +573,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 $classList = $result->toArray();
 
                 $allClassList = ["0" => 'All'];
-                $institutionClassOptions = $classList;
+                $institutionClassOptions = $allClassList + $classList;
             } else {
                 $institutionClassOptions = ['-1' => __('No Classes')];
             }
