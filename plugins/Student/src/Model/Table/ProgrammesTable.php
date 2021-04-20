@@ -171,21 +171,20 @@ class ProgrammesTable extends ControllerActionTable
 			}
 		}
 		//POCOR-5671
-		$url = [
+		if (isset($buttons['view']) && $this->AccessControl->check(['Institutions', 'StudentTransition'])) {
+            $icon = '<i class="kd-process"></i>';
+            $url = [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'StudentTransition',
-				'add',
+				'edit',
 				$this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $entity->institution->id
-		];
-		if ($this->AccessControl->check($url['permission']) && $studentStatusId == $statuses['CURRENT']) {
-			$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
-		    $buttons['transition']['label'] = '<i class="kd-process"></i>' . __('Transition');
-            $buttons['transition']['attr'] = $indexAttr;
+			];
+            $buttons['transition'] = $buttons['view'];
+            $buttons['transition']['label'] = $icon . __('Transition');
             $buttons['transition']['url'] = $url;
-            $buttons['transition']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
-		}
+        }
 		//POCOR-5671
 		
 		return parent::onUpdateActionButtons($event, $entity, $buttons);
