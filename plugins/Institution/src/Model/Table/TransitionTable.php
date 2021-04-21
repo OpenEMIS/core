@@ -1,5 +1,5 @@
 <?php
-namespace Student\Model\Table;
+namespace Institution\Model\Table;
 
 use ArrayObject;
 
@@ -151,38 +151,6 @@ class TransitionTable extends ControllerActionTable
                 $extra['toolbarButtons'][$key] = $button;
             }
         }
-
-        // overwrite back button
-        $btnAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        
-        $extraButtons = [
-            'back' => [
-                'Institution' => ['Institutions', 'Institutions', 'index'],
-                'action' => 'StudentProgrammes',
-                'icon' => '<i class="fa kd-back"></i>',
-                'title' => __('Back')
-            ]
-        ];
-        foreach ($extraButtons as $key => $attr) {
-            if ($this->AccessControl->check($attr['permission'])) {
-                $button = [
-                    'type' => 'button',
-                    'attr' => $btnAttr,
-                    'url' => [0 => 'index'] 
-                ];
-                $button['url']['action'] = $attr['action'];
-                $button['attr']['title'] = $attr['title'];
-                $button['label'] = $attr['icon'];
-
-                $extra['toolbarButtons'][$key] = $button;
-            }
-        }
-        // back button
         //POCOR-5671
     }
 
@@ -350,38 +318,6 @@ class TransitionTable extends ControllerActionTable
                 $extra['toolbarButtons'][$key] = $button;
             }
         }
-
-        // overwrite back button
-        $btnAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        
-        $extraButtons = [
-            'back' => [
-                'Institution' => ['Institutions', 'Institutions', 'index'],
-                'action' => 'StudentProgrammes',
-                'icon' => '<i class="fa kd-back"></i>',
-                'title' => __('Back')
-            ]
-        ];
-        foreach ($extraButtons as $key => $attr) {
-            if ($this->AccessControl->check($attr['permission'])) {
-                $button = [
-                    'type' => 'button',
-                    'attr' => $btnAttr,
-                    'url' => [0 => 'index'] 
-                ];
-                $button['url']['action'] = $attr['action'];
-                $button['attr']['title'] = $attr['title'];
-                $button['label'] = $attr['icon'];
-
-                $extra['toolbarButtons'][$key] = $button;
-            }
-        }
-        // back button
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
