@@ -24,6 +24,10 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
         {
             'key': 'Administration',
             'name': 'Administration'
+        },
+        {
+            'key': 'Profiles',
+            'name': 'Profiles'
         }
     ];
     Controller.selectedModule = 'Institutions';
