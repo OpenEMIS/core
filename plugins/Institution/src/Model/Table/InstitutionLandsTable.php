@@ -46,19 +46,19 @@ class InstitutionLandsTable extends ControllerActionTable
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-        // $this->addBehavior('CustomField.Record', [
-        //     'fieldKey' => 'infrastructure_custom_field_id',
-        //     'tableColumnKey' => null,
-        //     'tableRowKey' => null,
-        //     'fieldClass' => ['className' => 'Infrastructure.LandCustomFields'],
-        //     'formKey' => 'infrastructure_custom_form_id',
-        //     'filterKey' => 'infrastructure_custom_filter_id',
-        //     'formFieldClass' => ['className' => 'Infrastructure.LandCustomFormsFields'],
-        //     'formFilterClass' => ['className' => 'Infrastructure.LandCustomFormsFilters'],
-        //     'recordKey' => 'institution_land_id',
-        //     'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true],
-        //     'tableCellClass' => null
-        // ]);
+        $this->addBehavior('CustomField.Record', [
+            'fieldKey' => 'infrastructure_custom_field_id',
+            'tableColumnKey' => null,
+            'tableRowKey' => null,
+            'fieldClass' => ['className' => 'Infrastructure.LandCustomFields'],
+            'formKey' => 'infrastructure_custom_form_id',
+            'filterKey' => 'infrastructure_custom_filter_id',
+            'formFieldClass' => ['className' => 'Infrastructure.LandCustomFormsFields'],
+            'formFilterClass' => ['className' => 'Infrastructure.LandCustomFormsFilters'],
+            'recordKey' => 'institution_land_id',
+            'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true],
+            'tableCellClass' => null
+        ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
@@ -935,10 +935,10 @@ class InstitutionLandsTable extends ControllerActionTable
                     $this->aliasField('previous_institution_land_id') => $entity->id
                 ])
                 ->count();
-
-            if ($count > 0) {
+            //edit data   
+            /*if ($count > 0) {
                 $isEditable = false;
-            }
+            }*/
         } elseif ($entity->land_status_id == $endOfUsageId) {// If already end of usage, not allow to edit or delete
             $isEditable = false;
             $isDeletable = false;

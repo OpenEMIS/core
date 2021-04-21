@@ -685,7 +685,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $requestData['address'] = $institutionRecord->address;
                         $requestData['postal_code'] = $institutionRecord->postal_code;
                         $requestData['contact_person'] = $institutionRecord->contact_person;
-                        $requestData['telephone'] = $institutionRecord->telephone;
+                        $requestData['telephone'] = isset($institutionRecord->telephone) ? $institutionRecord->telephone : '';
                         $requestData['fax'] = $institutionRecord->fax;
                         $requestData['email'] = $institutionRecord->email;
                         $requestData['website'] = $institutionRecord->website;

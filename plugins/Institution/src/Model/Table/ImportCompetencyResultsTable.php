@@ -66,7 +66,7 @@ class ImportCompetencyResultsTable extends AppTable
     public function addAfterAction(Event $event, Entity $entity)
     {
         $this->dependency = [];
-        $this->dependency["academic_period"] = ["class"];
+        //$this->dependency["academic_period"] = ["class"];
         $this->dependency["class"] = ["competency_template"];
         $this->dependency["competency_template"] = ["competency_period"];
         $this->dependency["competency_period"] = ["competency_item"];
@@ -120,12 +120,23 @@ class ImportCompetencyResultsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
+   public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $request = $this->request;
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('academic_period', $request->data[$this->alias()])) {
+                   $this->request->query['period'] = $request->data[$this->alias()]['academic_period'];
+                }
+            }
+        }
+    }
+
+   public function onUpdateFieldClassBAK(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
             $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
-
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
@@ -139,9 +150,9 @@ class ImportCompetencyResultsTable extends AppTable
                     if (!$classPermission && !$subjectPermission) {
                         $query->where(['1 = 0'], [], true);
                     } else {
-                        $query->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                            'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
-                        ]);
+                        // $query->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
+                        //     'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
+                        // ]);
                         // If only class permission is available but no subject permission available
                         if ($classPermission && !$subjectPermission) {
                             $query->where([
@@ -165,8 +176,8 @@ class ImportCompetencyResultsTable extends AppTable
                                 $query->where([
                                     'OR' => [
                                         ['InstitutionClasses.staff_id' => $userId],
-                                        ['ClassesSecondaryStaff.secondary_staff_id' => $userId],
-                                        ['InstitutionSubjectStaff.staff_id' => $userId]
+                                        //['ClassesSecondaryStaff.secondary_staff_id' => $userId],
+                                        //['InstitutionSubjectStaff.staff_id' => $userId]
                                     ]
                                 ]);
                             }
@@ -178,22 +189,104 @@ class ImportCompetencyResultsTable extends AppTable
                     }
                 }
             }
-
+            //echo '<pre>';print_r($query->toArray());die;
             $classOptions = $query
                 ->find('list')
                 ->where([
-                    $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
+                    $InstitutionClasses->aliasField('academic_period_id') =>$academicPeriodId,
                     $InstitutionClasses->aliasField('institution_id') => $institutionId])
                 ->group([
                     $InstitutionClasses->aliasField('id')
                 ])
                 ->toArray();
-
                 $attr['options'] = $classOptions;
                 // useing onChangeReload to do visible
                 $attr['onChangeReload'] = 'changeClass';
         }
         return $attr;
+    }
+
+    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+            $userId = $this->Auth->user('id');
+            $AccessControl = $this->AccessControl;
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $roles = $Institutions->getInstitutionRoles($userId, $institutionId);
+            $query = $InstitutionClasses->find();
+            if (!$AccessControl->isAdmin()) {
+                //if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
+                    $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+                    $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
+                    if (!$classPermission && !$subjectPermission) {
+                        $query->where(['1 = 0'], [], true);
+                    } else {
+                        
+                        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+                        $classData = $InstitutionClassesSecondaryStaff->find()
+                        ->select([$InstitutionClassesSecondaryStaff->aliasField('institution_class_id')])
+                        ->where([$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $userId])->toArray();
+            
+                        $classIds = [];
+                        
+                        if (!empty($classData)) {
+                            foreach ($classData as $key => $value) {
+                                $classIds[] = $value->institution_class_id;
+                            }
+                        }
+                        
+                        if (!empty($classIds)) {
+                            $query->where([
+                                    'OR' => [
+                                        ['InstitutionClasses.id IN' => $classIds],
+                                        ['InstitutionClasses.staff_id' => $userId],
+                                    ]
+                                ]);
+                        } else {
+                           $query->where([
+                                    'OR' => [
+                                        ['InstitutionClasses.staff_id' => $userId],
+                                    ]
+                                ]);
+                        }
+                    }
+                //}
+            }
+
+            //echo '<pre>';print_r($query->toArray());die;
+            $classOptions = $query
+                ->find('list')
+                ->where([
+                    $InstitutionClasses->aliasField('academic_period_id') =>$academicPeriodId,
+                    $InstitutionClasses->aliasField('institution_id') => $institutionId])
+                ->group([
+                    $InstitutionClasses->aliasField('id')
+                ])
+                ->toArray();
+                $attr['options'] = $classOptions;
+                // useing onChangeReload to do visible
+                $attr['onChangeReload'] = 'changeClass';
+        }
+        return $attr;
+    }
+
+    public function addEditOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $request = $this->request;
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('academic_period', $request->data[$this->alias()])) {
+                    $request->query['period'] = $request->data[$this->alias()]['academic_period'];
+                }
+                if (array_key_exists('class', $request->data[$this->alias()])) {
+                    $request->query['class'] = $request->data[$this->alias()]['class'];
+                }
+            }
+        }
     }
 
     public function onUpdateFieldCompetencyTemplate(Event $event, array $attr, $action, Request $request)

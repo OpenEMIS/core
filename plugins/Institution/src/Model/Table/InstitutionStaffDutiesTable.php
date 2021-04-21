@@ -43,7 +43,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         if ($field == 'academic_period_id') {
             return __('Academic Period');
         } else if ($field == 'staff_duties_id') {
-            return __('Duty Type');
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         } else if ($field == 'staff_id') {
             return __('Staff');
         } else if ($field == 'comment') {

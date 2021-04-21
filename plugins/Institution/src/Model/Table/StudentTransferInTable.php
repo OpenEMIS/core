@@ -54,6 +54,9 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 ],
                 'ruleCheckProgrammeEndDateAgainstStudentStartDate' => [
                     'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date']
+                ],
+                'dateAlreadyTaken' => [
+                    'rule' => ['dateAlreadyTaken']
                 ]
             ])
             ->allowEmpty('institution_class_id')
@@ -199,6 +202,83 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
             'new_information_header', 'academic_period_id', 'education_grade_id', 'institution_id', 'institution_class_id', 'start_date', 'end_date',
             'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
         ]);
+        //POCOR-5944 starts
+        $statusId = $entity['status']->id;
+        $session = $this->request->session();
+        $institutionId = $this->request->pass[1];
+        $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        $editCheck = $WorkflowSteps->find()
+                        ->where([$WorkflowSteps->aliasField('id') => $statusId])
+                        ->first();
+        if (!empty($editCheck)) {
+            $isEditable = $editCheck->is_editable;
+            $isRemovable = $editCheck->is_removable;
+            //hide edit button
+            if ($isEditable == 0) {
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false
+                ];
+                
+                $extraButtons = [
+                    'edit' => [
+                        'Institution' => ['Institutions', 'Institutions', 'index'],
+                        'action' => 'Institutions',
+                        'icon' => '<i class="fa kd-edit"></i>',
+                        'title' => __('Edit')
+                    ]
+                ];
+                foreach ($extraButtons as $key => $attr) {
+                    if ($this->AccessControl->check($attr['permission'])) {
+                        $button = [
+                            'type' => 'hidden',
+                            'attr' => $btnAttr,
+                            'url' => [0 => 'index'] 
+                        ];
+                        $button['url']['action'] = $attr['action'];
+                        $button['attr']['title'] = $attr['title'];
+                        $button['label'] = $attr['icon'];
+
+                        $extra['toolbarButtons'][$key] = $button;
+                    }
+                }
+            }
+            //hide delete button
+            if ($isRemovable == 0) {
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false
+                ];
+                
+                $extraButtons = [
+                    'remove' => [
+                        'Institution' => ['Institutions', 'Institutions', 'index'],
+                        'action' => 'Institutions',
+                        'icon' => '<i class="fa fa-trash"></i>',
+                        'title' => __('Delete')
+                    ]
+                ];
+                foreach ($extraButtons as $key => $attr) {
+                    if ($this->AccessControl->check($attr['permission'])) {
+                        $button = [
+                            'type' => 'hidden',
+                            'attr' => $btnAttr,
+                            'url' => [0 => 'index'] 
+                        ];
+                        $button['url']['action'] = $attr['action'];
+                        $button['attr']['title'] = $attr['title'];
+                        $button['label'] = $attr['icon'];
+
+                        $extra['toolbarButtons'][$key] = $button;
+                    }
+                }
+            }
+        }
+        //POCOR-5944 ends
     }
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -263,7 +343,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $institutionId = $entity->institution_id;
         $academicPeriodId = $entity->academic_period_id;
         $startDate = $entity->start_date;
-        $newDate = $startDate->format('Y-m-d');
+        $newDate = date("Y-m-d", strtotime($startDate));
         $endDate = $entity->end_date;
         $institutionStudents = TableRegistry::get('institution_students');
         $query = $institutionStudents->query();
