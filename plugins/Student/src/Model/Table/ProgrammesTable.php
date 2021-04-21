@@ -171,7 +171,7 @@ class ProgrammesTable extends ControllerActionTable
 			}
 		}
 		//POCOR-5671
-		if (isset($buttons['view']) && $this->AccessControl->check(['Institutions', 'StudentTransition'])) {
+		if (isset($buttons['view']) && $this->AccessControl->check(['Institutions', 'StudentTransition']) && $studentStatusId == $statuses['CURRENT']) {
             $icon = '<i class="kd-process"></i>';
             $url = [
 				'plugin' => 'Institution',
