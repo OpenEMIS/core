@@ -1,3 +1,95 @@
+### [3.64.3] - 2021-04-16
+- Bug Fixed: Institutions > Report Cards > Comments: Student transferred to another school, but report card record is still available in the previous school
+- Bug Fixed: Institutions > Academic > Classes: When a Student gets transferred back into the same school in the same year, student is not showing in the list of Unassigned students
+- Bug Fixed: Institutions > Attendance > Student: Withdrawn student still appear on Attendance page
+- Bug Fixed: Institutions > Staff > Finance > Payslip > Add: Unable to add record
+- Bug Fixed: Institutions > Report Cards > Comment: Homeroom Teacher unable to input/edit comment
+- Bug Fixed: Institutions > Students > Health > Vaccinations > Delete: Delete Prompt header is reflecting Immunizations
+- Bug Fixed: Institutions > Performance > Competencies > Import: There is no Option to select Class
+- Bug Fixed: Reports > Institution > Infrastructure: Changes to reports field
+- Bug Fixed: Reports > Institutions > Institutions > View: View format is incorrect
+- Bug Fixed: Administration > Workflow: Editable and Deletable check/uncheck function is not working
+- Bug Fixed: API: The list of Absence -Excused Reasons are not listed in the same order as in Student Attendance page
+- Bug Fixed: Directory > Search user: When selecting User Type as Students, the selection listed belongs to Staff
+- Bug Fixed: Profile: User Account is only showing First and Last Name
+
+### [3.64.2] - 2021-04-14
+- Implemented: Improvement to the school closing process
+- Implemented: Improvement to the student overview page
+- Implemented: Changes to reports for the Infrastructure module
+- Implemented: Improvement of readability of the student status in the current year
+- Bug Fixed: Reports > Institution > Students: Withdrawn: Data not reflected on the View page after report has been generated
+- Bug Fixed: Reports > Workflow report: Report is remain in In-Progress status
+- Bug Fixed: Reports > Institution > Infrastructure report: Add 'All' option for some of the fields
+- Bug Fixed: Users > Identities tab > Edit Page : Make Nationality mandatory
+- Bug Fixed: Institution > Attendance > Students: If a Multigrade Class period is configured as Subjects, the list of Subjects listed are Subjects from All Education Grade that are assigned to the Multi Grade class
+
+### [3.64.1] - 2021-04-09
+- Bug Fixed: Administration > System Setup > Education Structure > Programme: When selecting a past Academic Period filter and then selecting Levels filter, the Academic Period filter reverted to current Academic Period
+- Bug Fixed: Administration > System Setup > Academic Period > Edit: An error encountered when editing End Date for a non-current Academic Period
+- Bug Fixed: Administration > Profile > Institution and Staff > Add/Edit: Error message shows [Message Not Found]
+- Bug Fixed: Administration > Examinations > Centres > Add: 404 error encountered for Existing Institution with 1 Institution
+- Bug Fixed: Administration > System Setup > Education Structure > Programmes/Grades : Unable to save if there is an existing Programmes/Grades with the same code
+- Bug Fixed: Institutions > Academic > Schedules > Timetable > Timetable tab: Overview button is missing
+- Bug Fixed: Institutions > Academic > Schedules > Timetables Edit Page : System should allow user to add lessons without selecting a room
+- Bug Fixed: Institutions > Students> Withdrawn : Search is not working
+- Bug Fixed: Institutions > Survey > Forms: Checkbox question did not appear in the Repeater Survey Form
+- Bug Fixed: Reports > Trainings > Results: Unable to generate report and To add "All Training Courses" selection for Training Course field
+- Bug Fixed: Reports > Workflow Records: Institutions > Student Transfer > Receiving: Upon selecting the Institution, the Institution selected was removed from the field
+- Bug Fixed: Reports > Directory > User List Report: Add username column
+- Bug Fixed: Profile > Guardian > Students > Academic: Guardian is unable to view student Academic page
+- Bug Fixed: Workbench> Survey: Survey does not appear in workbench until user access institutions survey manually
+
+### [3.64.0] - 2021-04-06
+- Implemented: Installation Wizard
+
+### [3.63.2] - 2021-04-01
+- Bug Fixed: Number appearing when editing Institutions > Survey > Forms page
+- Bug Fixed: Issues when viewing Students data in Guardian Login > Profiles > Students page
+
+### [3.63.1] - 2021-03-25
+- Implemented: Reports > Staff > Staff Health report
+- Bug Fixed: Reports > Students > Student Health report: Changes to report
+- Bug Fixed: Institutions > Student > Pending Transfer In > Pending Approval from Receiving Institution: Error
+
+### [3.63.0] - 2021-03-19
+- Implemented: Student Profile feature
+- Implemented: Changes to daily recording of Meal distribution to students
+- Bug Fixed: Administration > System Setup > Attendances > Attendances tab : The period_id shuffles across attendance periods when it is reordered. This can create data inconsistencies in report
+- Bug Fixed: Administration > System Setup > System Configuration > Coordinates: To allow decimal input
+- Bug Fixed: Administration > System Setup > System Configuration > Profile Completeness : Ability to configure features included in profile completeness
+- Bug Fixed: Institutions > Academic > Programmes > Edit: Upon editing page without checking any Subjects and saving record, 404 error encountered
+- Bug Fixed: Institutions > Academic > Subjects > View: Student is having both Withdrawn and Enrolled Status in Subjects page even though student is currently having Enrolled status
+- Bug Fixed: Institutions > Students > Individual student > Academic > Outcomes tab > Subjects dropdown showing unassigned subjects
+
+### [3.62.3] - 2021-03-15
+- Implemented: Feature for school activities/houses/clubs
+- Implemented: Enhancement of Translations
+- Implemented: Improvement of the school closing process changes
+- Bug Fixed: Institutions > Surveys > Forms : Unable to save even though mandatory fields are entered
+- Bug Fixed: Institutions > Academic > Programme > Add/Edit: Number of Subjects listed is not the same as number of Subjects configured in Education Structure
+- Bug Fixed: Institutions > Academic > Subject: Multigrade Class was created but only 1 Subject has Subject allocated for the Grades in the Multigrade
+- Bug Fixed: Institutions > Academic > Subjects > View: Student who was Withdrawn and Enrolled back in the same Institution is still having Withdrawn Status in Subjects page
+- Bug Fixed: Institutions > Add page : Unable to save due to unknown error
+- Bug Fixed: Institutions > Infrastructure > Overview: Unable to edit record
+- Bug Fixed: Institutions > Meals/ Institutions > Infrastructures : Menu for Infrastructure is hidden in Meals
+- Bug Fixed: Institutions > Survey: Data is missing upon saving Survey Form
+- Bug Fixed: Profile > Staff > Career > Classes tab: Encountered 404 error
+- Bug Fixed: Report > Institutions > Staff Leave Report: Changes to report
+- Bug Fixed: Report > Institutions > Staff Attendance Report: Changes to report
+- Bug Fixed: Administration > Security > Roles > System Roles: Re-order function is not working
+
+### [3.62.2] - 2021-03-05
+- Implemented: Generate Risks for all school at one time in Administration > System Setup > Risks
+- Bug Fixed: Profile > Student > Academic > Risk: 404 error upon viewing the Risk record
+- Bug Fixed: Institutions > Meals > Students > Export: Name column only has First Name of students
+- Bug Fixed: Institution > Attendance > Staff: When editing the Time in and Time Out, the up and down button for the minutes should be increased or decreased by 1 instead of 15
+- Bug Fixed: Reports > Institutions > Programmes: Missing Programmes column
+- Bug Fixed: Administration > System Setup > Localization > Translations: Added new data for Infrastructure Needs report
+- Bug Fixed: Reports > Institution > Student Absence report: Changes to the report
+- Bug Fixed: Profile > Student > Academic: Academic Page is missing
+- Bug Fixed: Institutions > Students > Academic > Programmes tab: Student's Start Date was edited after being Admitted to a new Institution but the new Start Date did not reflect in student's Academic page
+
 ### [3.62.1] - 2021-02-26
 - Implemented: Added extra columns for abscence reasons to Attendance Report
 - Implemented: Staff Profile feature
@@ -11,6 +103,7 @@
 - Bug Fixed: Institutions > Students > Bulk Promote: When selecting Promoted, the Next Grade field should not be mandatory
 - Bug Fixed: Administration > Education Structure > Programmes > Edit: Record disappeared after edit
 - Bug Fixed: Staff Payslips API: API Error
+
 ### [3.62.0] - 2021-02-19
 - Implemented: Infrastructure module - Export feature
 - Implemented: Enhancement of the Core survey module: survey school coverage feature

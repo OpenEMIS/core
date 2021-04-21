@@ -59,12 +59,12 @@ class PayslipsTable extends ControllerActionTable
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    { 
         if(!isset($entity->name)){
             $response["name"][] ="Field Can not be empty";
             $entity->errors($response);
                 return false;
-        }else if(!isset($entity->openemis_id)){
+        }else if(!empty($entity->openemis_id)){
             $response["openemis_id"][] ="Field Can not be empty";
             $entity->errors($response);
                 return false;
@@ -101,18 +101,20 @@ class PayslipsTable extends ControllerActionTable
                 $entity->errors($response);
                 return false;
             }else{
-                $Users = TableRegistry::get('security_users');
-                $user_data= $Users
-                            ->find()
-                            ->where(['security_users.openemis_no' => $entity->openemis_id])
-                            ->first();
-                if ((!empty($user_data)  && $user_data->is_staff)) {
-                    $entity->staff_id = $user_data['id'];
-                }else{
-                    $response["openemis_id"][] ="Record not found";
-                    $entity->errors($response);
-                    return false;
-                } 
+                if (!empty($entity->openemis_id)) {
+                    $Users = TableRegistry::get('security_users');
+                    $user_data= $Users
+                                ->find()
+                                ->where(['security_users.openemis_no' => $entity->openemis_id])
+                                ->first();
+                    if ((!empty($user_data)  && $user_data->is_staff)) {
+                        $entity->staff_id = $user_data['id'];
+                    }else{
+                        $response["openemis_id"][] ="Record not found";
+                        $entity->errors($response);
+                        return false;
+                    } 
+                }
             } 
         }
 

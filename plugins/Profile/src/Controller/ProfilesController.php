@@ -103,7 +103,9 @@ class ProfilesController extends AppController
     public function TrainingNeeds()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
     public function StaffAppraisals()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
     public function StaffDuties()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Duties']); }
+    public function StaffAssociations()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.InstitutionAssociationStaff']);}
     public function StudentTextbooks()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
+    public function StudentAssociations()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);}
     public function ProfileGuardians()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Guardians']); }
     public function ProfileGuardianUser()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.GuardianUser']); }
     public function StudentReportCards()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']); }
@@ -270,6 +272,7 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
         
         $header = '';
+
         if ($this->Profiles->exists([$this->Profiles->primaryKey() => $loginUserId])) {
             $studentId = $this->request->pass[1];
             if (!empty($studentId)) {
@@ -277,7 +280,8 @@ class ProfilesController extends AppController
                 $student_id = $sId['id'];
                 
                 if ($action == 'StudentReportCards') {
-                    $student_id = $sId['student_id'];
+                    //$student_id = $sId['student_id']; //POCOR-5979
+                    $student_id = $sId['id'];
                 }
                 $entity = $this->Profiles->get($student_id);
                 $name = $entity->name;
@@ -345,17 +349,21 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
         $action = $this->request->params['action'];
-        $id = $session->read('Student.Students.id');
-        if (!empty($id)) {
-            if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards') {
-                $studentId = $this->ControllerAction->paramsDecode($id)['id'];
+        $studentId = $this->request->params['pass'][1];
+        if (!empty($studentId)) {
+             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards') {
+				$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
                 $entity = $this->Profiles->get($studentId);
                 $name = $entity->name;
                 $header = $name;
                 $header = $header . ' - ' . $model->getHeader($alias);
             }
         } else {
-         $header = $header . ' - ' . $model->getHeader($alias);
+            if ($alias == 'StudentAssociations') {
+                $header = $header . ' - ' . 'Associations';
+            } else {
+                 $header = $header . ' - ' . $model->getHeader($alias);
+            }        
      }
        //POCOR-5675
      $this->set('contentHeader', $header);
@@ -528,7 +536,7 @@ class ProfilesController extends AppController
     public function getAcademicTabElements($options = [])
     {  
         $session = $this->request->session();
-        $studentId = $session->read('Student.Students.id');
+        $studentId = $this->request->pass[1];        
         $id = (array_key_exists('id', $options))? $options['id'] : 0;
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];
@@ -548,7 +556,8 @@ class ProfilesController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'Risks' => ['text' => __('Risks')]
+            'Risks' => ['text' => __('Risks')],
+            'Associations' => ['text' => __('Associations')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -601,6 +610,7 @@ class ProfilesController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
+            'Associations' => ['text' => __('Associations')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);

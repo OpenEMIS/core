@@ -65,7 +65,12 @@ class OpenEmisBehavior extends Behavior
         $model = $this->_table;
         if ($model->action == 'index' || $model->action == 'view') {
             $modal = [];
-            $modal['title'] = $model->getHeader($model->alias()); //$modal['title'] = $model->alias();
+            if($model->getHeader($model->alias()) == 'Immunizations') {
+                $title = 'Vaccinations';
+            }else {
+                $title = $model->getHeader($model->alias());
+            }
+            $modal['title'] = $title; //$modal['title'] = $model->alias();
             $modal['content'] = __('All associated information related to this record will also be removed.');
             $modal['content'] .= '<br><br>';
             $modal['content'] .= __('Are you sure you want to delete this record?');
