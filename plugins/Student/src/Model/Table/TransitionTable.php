@@ -399,7 +399,6 @@ class TransitionTable extends ControllerActionTable
             $StudentId = $requestData['Transition']['student_id'];
             $startDate =  date("Y-m-d", strtotime($requestData['Transition']['start_date']));
             $endDate = date("Y-m-d", strtotime($requestData['Transition']['end_date']));
-            //echo "<pre>";print_r($EducationGradeId);die("Shiva");
             $previousYearId = $AcademicPeriod->find()->where(['id' => $AcademicPeriodsId-1])->first()->id;
             //set student status "Transferred"                    
             $transferStatus = $InstitutionStudents->find()
@@ -407,7 +406,7 @@ class TransitionTable extends ControllerActionTable
                                 $InstitutionStudents->aliasField('id'),
                                 $EducationGrades->aliasField('id'),
                                 $EducationProgrammes->aliasField('id'),
-                                $EducationProgrammes->aliasField('order')
+                                $EducationGrades->aliasField('order')
                             ])
                             ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()], [
                                 $EducationGrades->aliasField('id = ') . $InstitutionStudents->aliasField('education_grade_id')
@@ -421,13 +420,17 @@ class TransitionTable extends ControllerActionTable
                                 $InstitutionStudents->aliasField('institution_id') => $InstitutionId
                             ])
                             ->first();
-            $currentOrder = $EducationProgrammes->find()->where([$EducationProgrammes->aliasField('id') => $EducationProgrammeId])->first()->order;
+            $currentOrder = $EducationGrades->find()
+                            ->where([$EducationGrades->aliasField('id') => $EducationGradeId])
+                            ->first()->order;
+
             //Transferred
             if(!empty($transferStatus)) {
                 $previousEducationGrades = $transferStatus['EducationGrades']['id'];
                 $previousEducationProgrammes = $transferStatus['EducationProgrammes']['id'];
-                $previousOrder = $transferStatus['EducationProgrammes']['order'];
-                if ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes == $EducationProgrammeId) {
+                $previousOrder = $transferStatus['EducationGrades']['order'];
+                
+                if ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId) {
                         $query = $InstitutionStudents->query();
                         $query->update()->set(['student_status_id' => 3])
                                 ->where([
@@ -436,47 +439,11 @@ class TransitionTable extends ControllerActionTable
                                     'academic_period_id' => $previousYearId,
                                     'id' => $transferStatus->id
                                 ])->execute();
-                } elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId) {
-                        $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 3])
-                            ->where([
-                                'institution_id' => $InstitutionId,
-                                'student_id' => $StudentId,
-                                'academic_period_id' => $previousYearId,
-                                'id' => $transferStatus->id
-                            ])->execute();
-                } /*elseif ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId) {
-                        $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 3, 'start_date' => $startDate, 'end_date' => date('Y-m-d')])
-                            ->where([
-                                'institution_id' => $InstitutionId,
-                                'student_id' => $StudentId,
-                                'academic_period_id' => $previousYearId,
-                                'id' => $transferStatus->id
-                            ])->execute();
-                }*/ 
+                } 
                 //Repeated
-                elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes == $EducationProgrammeId && $previousOrder > $currentOrder) {
-                        $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 8])
-                            ->where([
-                                'institution_id' => $InstitutionId,
-                                'student_id' => $StudentId,
-                                'academic_period_id' => $previousYearId,
-                                'id' => $transferStatus->id
-                            ])->execute();
-                } elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder > $currentOrder) {
-                        $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 8])
-                            ->where([
-                                'institution_id' => $InstitutionId,
-                                'student_id' => $StudentId,
-                                'academic_period_id' => $previousYearId,
-                                'id' => $transferStatus->id
-                            ])->execute();
-                } elseif ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder > $currentOrder) {
-                        $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 8])
+                elseif ($previousEducationProgrammes == $EducationProgrammeId && $previousEducationGrades != $EducationGradeId && $previousOrder > $currentOrder) {
+                    $query = $InstitutionStudents->query();
+                    $query->update()->set(['student_status_id' => 8])
                             ->where([
                                 'institution_id' => $InstitutionId,
                                 'student_id' => $StudentId,
@@ -485,36 +452,30 @@ class TransitionTable extends ControllerActionTable
                             ])->execute();
                 } 
                 //Promoted
-                elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes == $EducationProgrammeId && $previousOrder < $currentOrder) {
-                        $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 7])
+                elseif ($previousEducationProgrammes == $EducationProgrammeId && $previousEducationGrades != $EducationGradeId && $previousOrder < $currentOrder) {
+                    $query = $InstitutionStudents->query();
+                    $query->update()->set(['student_status_id' => 7])
                             ->where([
                                 'institution_id' => $InstitutionId,
                                 'student_id' => $StudentId,
                                 'academic_period_id' => $previousYearId,
                                 'id' => $transferStatus->id
                             ])->execute();
-                } elseif ($previousEducationGrades == $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder < $currentOrder) {
-                        $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 7])
+
+                } elseif ($previousEducationProgrammes == $EducationProgrammeId && $previousEducationGrades != $EducationGradeId) {
+                    $query = $InstitutionStudents->query();
+                    $query->update()->set(['student_status_id' => 7])
                             ->where([
                                 'institution_id' => $InstitutionId,
                                 'student_id' => $StudentId,
                                 'academic_period_id' => $previousYearId,
                                 'id' => $transferStatus->id
                             ])->execute();
-                } elseif ($previousEducationGrades != $EducationGradeId && $previousEducationProgrammes != $EducationProgrammeId && $previousOrder < $currentOrder) {
-                        $query = $InstitutionStudents->query();
-                        $query->update()->set(['student_status_id' => 7])
-                            ->where([
-                                'institution_id' => $InstitutionId,
-                                'student_id' => $StudentId,
-                                'academic_period_id' => $previousYearId,
-                                'id' => $transferStatus->id
-                            ])->execute();
+
+                } else {
+                    //do nothing
                 }
             }
-            //echo "<pre>";print_r($this->validator);die();
         }
     }
 }
