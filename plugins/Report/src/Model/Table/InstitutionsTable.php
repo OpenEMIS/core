@@ -200,6 +200,13 @@ class InstitutionsTable extends AppTable
         return $validator;
     }
 
+    //POCOR-5762 starts
+    public function validationStaffLeave(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator->notEmpty('institution_id');
+        return $validator;
+    }//POCOR-5762 ends
 
     public function beforeAction(Event $event)
     { 
@@ -239,7 +246,11 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('infrastructure_level', ['type' => 'hidden']);
         $this->ControllerAction->field('infrastructure_type', ['type' => 'hidden']);
-        
+        //POCOR-5762 starts
+        $this->ControllerAction->field('position', ['type' => 'hidden']);
+        $this->ControllerAction->field('leave_type', ['type' => 'hidden']);
+        $this->ControllerAction->field('workflow_status', ['type' => 'hidden']);
+        //POCOR-5762 ends
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -265,6 +276,8 @@ class InstitutionsTable extends AppTable
             $options['validate'] = 'institutionInfrastructures';
         } elseif ($data[$this->alias()]['feature'] == 'Report.InfrastructureNeeds') {
             $options['validate'] = 'infrastructureNeeds';
+        } elseif ($data[$this->alias()]['feature'] == 'Report.StaffLeave') { //POCOR-5762 
+            $options['validate'] = 'StaffLeave';
         }
 
     }
@@ -291,6 +304,14 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'attendance_type';
                     $fieldsOrder[] = 'periods';
                     $fieldsOrder[] = 'subjects';
+                    $fieldsOrder[] = 'format';
+                    break; 
+
+                case 'Report.InstitutionInfrastructures':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'institution_type_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'infrastructure_level';
                     $fieldsOrder[] = 'format';
                     break;                
                 
@@ -588,7 +609,8 @@ class InstitutionsTable extends AppTable
                           'Report.InstitutionCommittees',
                           'Report.ClassAttendanceMarkedSummaryReport',  
                           'Report.Income',
-                          'Report.Expenditure'
+                          'Report.Expenditure',
+                          'Report.InstitutionInfrastructures'
                          ]
                     )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
@@ -761,7 +783,6 @@ class InstitutionsTable extends AppTable
                 $attr['onChangeReload'] = true;
                 
                 if($feature == 'Report.StaffAttendances' || 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.InstitutionSubjects' || $feature == 'Report.Guardians' || $feature == 'Report.BodyMasses' || $feature == 'Report.InstitutionInfrastructures') {
-
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
@@ -787,7 +808,7 @@ class InstitutionsTable extends AppTable
                 $typeOptions = $TypesTable
                     ->find('list')
                     ->toArray();
-               
+				
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true;
                 $attr['options'] = $typeOptions;
@@ -803,7 +824,7 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, 
                         [
-                            'Report.InstitutionInfrastructures'
+                            //'Report.InstitutionInfrastructures'
                         ])
                 ) {
 
@@ -844,7 +865,8 @@ class InstitutionsTable extends AppTable
                 'Report.StudentAbsences',
                 'Report.InfrastructureNeeds',
                 'Report.Income',
-                'Report.Expenditure'
+                'Report.Expenditure',
+                'Report.StaffLeave' //POCOR-5762
             ];
 
             
@@ -903,7 +925,7 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentWithdrawalReport','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentWithdrawalReport','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports','Report.InstitutionInfrastructures'])) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else if (in_array($feature, ['Report.StudentAttendanceSummary'])) {//POCOR-5906 starts
                             $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;//POCOR-5906 ends
@@ -1278,4 +1300,158 @@ class InstitutionsTable extends AppTable
             }
         }
     }
+
+    //POCOR-5762 starts
+    public function onUpdateFieldLeaveType(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.StaffLeave'])) {
+                $staffLeaveTypeTable = TableRegistry::get('Staff.StaffLeaveTypes');
+                $staffLeaveTypeOptions = $staffLeaveTypeTable->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'name'
+                        ]);
+
+                $staffLeaveTypeList = $staffLeaveTypeOptions->toArray();
+                if (empty($staffLeaveTypeList)) {
+                    $staffLeaveTypeOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    $attr['type'] = 'select';
+                    $attr['options'] = $staffLeaveTypeOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+                    if (in_array($feature, [
+                        'Report.StaffLeave'
+                    ])) {
+                        $staffLeaveTypeOptions = ['0' => __('All Staff Leaves')] + $staffLeaveTypeList;
+                    }else {
+                        $staffLeaveTypeOptions = $staffLeaveTypeList;
+                    }
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $staffLeaveTypeOptions;
+                    //$attr['attr']['required'] = true;
+                }
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldWorkflowStatus(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.StaffLeave'])) {
+                $institutionStaffLeave = TableRegistry::get('institution_staff_leave');
+                $workflowModelsTable = TableRegistry::get('workflow_models');
+                $workflowsTable = TableRegistry::get('workflows');
+
+                $workflowStepsTable = TableRegistry::get('workflow_steps');
+                $workflowStepsOptions = $workflowStepsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'name'
+                        ])
+                        ->select([
+                            $workflowStepsTable->aliasField('id'),
+                            $workflowStepsTable->aliasField('name'),
+                            $workflowModelsTable->aliasField('model')
+                        ])
+                        ->LeftJoin(
+                            [$institutionStaffLeave->alias() => $institutionStaffLeave->table()],
+                            [
+                                $institutionStaffLeave->aliasField('status_id') . ' = '. $workflowStepsTable->aliasField('id')
+                            ]
+                        )
+                        ->LeftJoin(
+                            [$workflowsTable->alias() => $workflowsTable->table()],
+                            [
+                                $workflowsTable->aliasField('id') . ' = '. $workflowStepsTable->aliasField('workflow_id')
+                            ]
+                        )
+                        ->LeftJoin(
+                            [$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            [
+                                $workflowModelsTable->aliasField('id') . ' = '. $workflowsTable->aliasField('workflow_model_id')
+                            ]
+                        )
+                        ->where([
+                            $workflowModelsTable->aliasField('model') => 'Institution.StaffLeave'
+                        ]);
+                $institutionStaffLeaveList = $workflowStepsOptions->toArray();
+                if (empty($institutionStaffLeaveList)) {
+                    $workflowStepsOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    $attr['type'] = 'select';
+                    $attr['options'] = $workflowStepsOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+                    if (in_array($feature, [
+                        'Report.StaffLeave'
+                    ])) {
+                        $workflowStepsOptions = ['0' => __('All Status')] + $institutionStaffLeaveList;
+                    }else {
+                        $workflowStepsOptions = $institutionStaffLeaveList;
+                    }
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $workflowStepsOptions;
+                    //$attr['attr']['required'] = true;
+                }
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldPosition(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.StaffLeave'])) { 
+                $staffPositionTitlesTable = TableRegistry::get('staff_position_titles');
+                $institutionPositionsTable = TableRegistry::get('institution_positions');
+                $institutionPositionsOptions = $institutionPositionsTable
+                        ->find('list', [
+                            'keyField' => $staffPositionTitlesTable->aliasField('id'),
+                            'valueField' => $staffPositionTitlesTable->aliasField('name')
+                        ])
+                        ->select([
+                            $staffPositionTitlesTable->aliasField('id'),
+                            $staffPositionTitlesTable->aliasField('name')
+                        ])
+                        ->RightJoin(
+                            [$staffPositionTitlesTable->alias() => $staffPositionTitlesTable->table()],
+                            [
+                                $institutionPositionsTable->aliasField('staff_position_title_id') . ' = '. $staffPositionTitlesTable->aliasField('id')
+                            ]
+                        );
+                $staffPositionTitlesList = $institutionPositionsOptions->toArray();
+                if (empty($staffPositionTitlesList)) {
+                    $institutionPositionsOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    $attr['type'] = 'select';
+                    $attr['options'] = $institutionPositionsOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+                    if (in_array($feature, [
+                        'Report.StaffLeave'
+                    ])) {
+                        $institutionPositionsOptions = ['0' => __('All Positions')] + $staffPositionTitlesList;
+                    }else {
+                        $institutionPositionsOptions = $staffPositionTitlesList;
+                    }
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $institutionPositionsOptions;
+                    //$attr['attr']['required'] = true;
+                }
+            } 
+            return $attr;
+        }
+    }
+    //POCOR-5762 ends
 }
