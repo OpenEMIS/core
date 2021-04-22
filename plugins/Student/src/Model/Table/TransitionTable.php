@@ -451,6 +451,17 @@ class TransitionTable extends ControllerActionTable
                                 'id' => $transferStatus->id
                             ])->execute();
                 } 
+                //new Repeated status condition
+                elseif ($previousEducationProgrammes == $EducationProgrammeId && $previousEducationGrades == $EducationGradeId && $previousOrder == $currentOrder) {
+                    $query = $InstitutionStudents->query();
+                    $query->update()->set(['student_status_id' => 8])
+                            ->where([
+                                'institution_id' => $InstitutionId,
+                                'student_id' => $StudentId,
+                                'academic_period_id' => $previousYearId,
+                                'id' => $transferStatus->id
+                            ])->execute();
+                } 
                 //Promoted
                 elseif ($previousEducationProgrammes == $EducationProgrammeId && $previousEducationGrades != $EducationGradeId && $previousOrder < $currentOrder) {
                     $query = $InstitutionStudents->query();
