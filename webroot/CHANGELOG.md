@@ -1,3 +1,18 @@
+### [3.64.4] - 2021-04-22
+- Implemented: Add an option to modifying the student grade and specialty
+- Bug Fixed: Institutions > Staff > Finance > Payslip > Edit: Unable to edit record
+- Bug Fixed: Institutions > Staff > Career > Associations : Issues for staff
+- Bug Fixed: Institutions > Attendance > Student: Secondary Teacher unable to mark attendance for the Class he is assigned to
+- Bug Fixed: Institutions > Performance > Report Cards: Unable to generate Report Card
+- Bug Fixed: Institutions > Student > Promote: Education Grade is not reflecting based on the Academic Period selected
+- Bug Fixed: Institutions > Report Cards > Comments: Unable to view All Subjects comments even though security permission is given
+- Bug Fixed: Institutions > Cases > Student Attendance : Set All for Class filter dropdown as Default
+- Bug Fixed: Administration > System Setup > System Configuration > Automated Student Withdrawal: Encountered 404 error
+- Bug Fixed: Administration > System Setup > Field Options > Meal Implementers: Unable to add new record in other language
+- Bug Fixed: Administration > Security > Roles > Permission: Delete functions for Timetables are disabled
+- Bug Fixed: Profile > Workbench > Cases: There are Open Cases in the assignee workbench even though the Cases have been closed
+- Bug Fixed: Ensure that system shows education structure from the correct academic period
+
 ### [3.64.3] - 2021-04-16
 - Bug Fixed: Institutions > Report Cards > Comments: Student transferred to another school, but report card record is still available in the previous school
 - Bug Fixed: Institutions > Academic > Classes: When a Student gets transferred back into the same school in the same year, student is not showing in the list of Unassigned students

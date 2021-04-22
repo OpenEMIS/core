@@ -609,9 +609,12 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
-        if (!empty($gradeOptions)) {
+		
+		if (!empty($gradeOptions)) {
             $gradeOptions = [-1 => __('All Grades')] + $gradeOptions;
-        }
+        } else {
+			$gradeOptions = [-1 => __('All Grades')];
+		}
 
         $selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
         $this->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [

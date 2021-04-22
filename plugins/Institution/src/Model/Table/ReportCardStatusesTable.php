@@ -659,7 +659,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
         
         if ($hasTemplate) {
-             $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id']);
+             $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id'],$params['academic_period_id']);
                 
             if ($checkReportCard) {
                 $this->Alert->warning('ReportCardStatuses.checkReportCardTemplatePeriod');
@@ -685,7 +685,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
         
         if ($hasTemplate) {
-            $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id']);
+            $checkReportCard =  $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id'],$params['academic_period_id']);
                 
                if ($checkReportCard) {
                    $this->Alert->warning('ReportCardStatuses.checkReportCardTemplatePeriod');
@@ -1164,6 +1164,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
         $where = [];
         $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
+        $where[$classStudentsTable->aliasField('academic_period_id')] = $academicPeriodId;
         $classStudents = $classStudentsTable->find()
             ->select([
                 $classStudentsTable->aliasField('education_grade_id'),
