@@ -238,7 +238,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
                             'view',
-                            $this->paramsEncode(['id' => $staffVal->id])
+                            $this->paramsEncode(['id' => $staffVal->user->id])
                         ]);
 
                         $staffList[] = $staffLink;
