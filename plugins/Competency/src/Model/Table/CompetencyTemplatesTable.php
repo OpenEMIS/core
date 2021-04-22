@@ -125,6 +125,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
             $attr['options'] = $periodOptions;
             $attr['default'] = $selectedPeriod;
+			$attr['onChangeReload'] = true;
         } else if ($action == 'edit') {
             $academicPeriodId = $attr['entity']->academic_period_id;
             $attr['type'] = 'readonly';
@@ -141,10 +142,19 @@ class CompetencyTemplatesTable extends ControllerActionTable
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add') {
-            $programmeOptions = $EducationProgrammes
-                ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-                ->find('availableProgrammes')
-                ->toArray();
+			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			if(!empty($this->request->query('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
+				$academicPeriodId = $this->request->query('period');
+			} else {
+				$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
+			}	
+			
+			$programmeOptions = $EducationProgrammes
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                    ->find('availableProgrammes')
+					->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                    ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+					->toArray();	
 
             $attr['options'] = $programmeOptions;
             $attr['onChangeReload'] = 'changeEducationProgrammeId';

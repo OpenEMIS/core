@@ -20,6 +20,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->hasMany('AssociationStaff', ['className' => 'Institution.InstitutionAssociationStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_association_id']);
         $this->toggle('view', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -49,6 +50,37 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         $this->field('total_students', []);
         $this->fields['code']['visible'] = false;
         $this->setFieldOrder(['academic_period_id','name','institution_id','total_male_students','total_female_students','total_students']);
+    }
+
+     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $staffId = $this->Session->read('Staff.Staff.id');
+        if (!empty($staffId)) {
+            $staffId = $this->Session->read('Staff.Staff.id');
+        } else {
+            $staffId =$this->Session->read('Auth.User.id');
+        }
+        $AssocoationStaff = TableRegistry::get('Institution.InstitutionAssociationStaff');
+        $staffData = $AssocoationStaff->find()
+                    ->select([$AssocoationStaff->aliasField('institution_association_id')])
+                    ->where([$AssocoationStaff->aliasField('security_user_id') => $staffId])->toArray();
+        
+        $Ids = [];
+        
+        if (!empty($staffData)) {
+            foreach ($staffData as $key => $value) {
+                $Ids[] = $value->institution_association_id;
+            }
+        }
+       
+        $where = [];
+        if (!empty($Ids)) {
+          $where = [
+                $this->aliasField('id IN') => $Ids,
+            ];
+        } 
+        $query
+        ->orWhere($where);
     }
   
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
