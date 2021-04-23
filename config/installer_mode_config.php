@@ -60,13 +60,6 @@
 	if (!defined('APPLICATION_FAVICON')) define('APPLICATION_FAVICON', $application_favicon);
 	if (!defined('DATABASE_DUMP_FILE')) define('DATABASE_DUMP_FILE', $database_dump_file);
 	if (!defined('APPLICATION_MODE_COUNT')) define('APPLICATION_MODE_COUNT', $count_mode_value);
-
-	
-	
-	
-	
-	
-	
 	
 	
 	
