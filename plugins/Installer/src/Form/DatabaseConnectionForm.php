@@ -170,17 +170,17 @@ return [
         $root = $data['database_admin_user'];
         $rootPass = $data['database_admin_password'];
         if (APPLICATION_MODE == 'census') {
-            $default_db_name = Configure::read('installerCensus') ? 'prd_cen_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerCensus') ? 'prd_cen_user' : APPLICATION_DB_NAME;
+            $default_db_name = Configure::read('installerCensus') ? 'openemis_prd_census_db' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerCensus') ? 'openemis_prd_census_user' : APPLICATION_DB_NAME;
         }else if(APPLICATION_MODE == 'school'){
-            $default_db_name = Configure::read('installerSchool') ? 'prd_sch_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerSchool') ? 'prd_sch_user' : APPLICATION_DB_NAME;
+            $default_db_name = Configure::read('installerSchool') ? 'openemis_prd_school_db' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerSchool') ? 'openemis_prd_school_user' : APPLICATION_DB_NAME;
         }else if(APPLICATION_MODE == 'vaccinations'){
-            $default_db_name = Configure::read('installerVaccinations') ? 'prd_vac_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerVaccinations') ? 'prd_vac_user' : APPLICATION_DB_NAME;
+            $default_db_name = Configure::read('installerVaccinations') ? 'openemis_prd_vaccinations_db' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerVaccinations') ? 'openemis_prd_vaccinations_user' : APPLICATION_DB_NAME;
         }else{
-            $default_db_name = Configure::read('installerCore') ? 'prd_cor_dmo' : APPLICATION_DB_NAME;
-            $default_db_user = Configure::read('installerCore') ? 'prd_cor_user' : APPLICATION_DB_NAME;
+            $default_db_name = Configure::read('installerCore') ? 'openemis_prd_core_db' : APPLICATION_DB_NAME;
+            $default_db_user = Configure::read('installerCore') ? 'openemis_prd_core_user' : APPLICATION_DB_NAME;
         }
         $db = isset($data['datasource_db']) ? $data['datasource_db'] : $default_db_name;
         $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : $default_db_user;
