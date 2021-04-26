@@ -10,7 +10,7 @@ use App\Model\Traits\UserTrait;
 class User extends Entity {
     use UserTrait;
 
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'has_special_needs'];
+    protected $_virtual = ['name', 'name_with_id', 'name_with_id_role', 'default_identity_type', 'has_special_needs'];
 
     protected function _setPassword($password) {
         if (empty($password)) {
@@ -55,6 +55,41 @@ class User extends Entity {
     protected function _getNameWithId() {
         $name = $this->name;
         return trim(sprintf('%s - %s', $this->openemis_no, $name));
+    }
+
+    /**
+     * Calls _getName() and returns the user's fullname prepended with user's openemis_no and user's role
+     * @return string user's fullname with openemis_no and user's role
+     */
+    protected function _getNameWithIdRole() {
+        $name = $this->name;
+        $securityUserId = $this->id;
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $userRole = $SecurityGroupUsers
+                    ->find('all')
+                    ->select([
+                        $SecurityGroupUsers->aliasField('security_role_id'),
+                        $SecurityRoles->aliasField('name')
+                    ])
+                    ->leftJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
+                       'security_role_id = ' . $SecurityRoles->aliasField('id')
+                    ])
+                    ->order([$SecurityRoles->aliasField('order ASC')])
+                    ->where(['security_user_id' => $this->id])
+                    ->toArray(); 
+        if (!empty($userRole )) { 
+            $roles = [];
+            foreach ($userRole as $key => $value) {
+                $roles[] = $value->SecurityRoles['name'];
+            }
+        } 
+
+        if (is_array($roles) && !empty($roles)) {
+            $rolesUsers = implode(', ', $roles);
+        }
+        
+        return trim(sprintf('%s - %s - %s', $this->openemis_no, $name, $rolesUsers));
     }
 
     protected function _getDefaultIdentityType() {

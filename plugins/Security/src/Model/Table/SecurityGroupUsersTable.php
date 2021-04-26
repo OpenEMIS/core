@@ -213,7 +213,7 @@ class SecurityGroupUsersTable extends AppTable {
         $where = array_key_exists('where', $options) ? $options['where'] : [];
         $area = array_key_exists('area', $options) ? $options['area'] : null;
 
-        $query->find('list', ['keyField' => $this->Users->aliasField('id'), 'valueField' => $this->Users->aliasField('name_with_id')])
+        $query->find('list', ['keyField' => $this->Users->aliasField('id'), 'valueField' => $this->Users->aliasField('name_with_id_role')])
                 ->select([
                     $this->Users->aliasField('id'),
                     $this->Users->aliasField('openemis_no'),
