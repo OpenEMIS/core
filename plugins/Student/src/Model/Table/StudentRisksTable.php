@@ -69,7 +69,7 @@ class StudentRisksTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        // POCOR-3125 history button permission to hide and show the link
+        
         if (isset($buttons['view'])) {
             $icon = '<i class="fa fa-eye"></i>';
 
@@ -79,7 +79,6 @@ class StudentRisksTable extends ControllerActionTable
             $buttons['view']['url']['controller'] = 'Institutions';
             $buttons['view']['url']['action'] = 'StudentRisks';
         }
-        // end history button
 
         return $buttons;
     }
