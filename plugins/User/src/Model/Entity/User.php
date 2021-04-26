@@ -57,6 +57,7 @@ class User extends Entity {
         return trim(sprintf('%s - %s', $this->openemis_no, $name));
     }
 
+    //POCOR-5688 starts
     /**
      * Calls _getName() and returns the user's fullname prepended with user's openemis_no and user's role
      * @return string user's fullname with openemis_no and user's role
@@ -67,7 +68,7 @@ class User extends Entity {
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
         $userRole = $SecurityGroupUsers
-                    ->find('all')
+                    ->find()
                     ->select([
                         $SecurityGroupUsers->aliasField('security_role_id'),
                         $SecurityRoles->aliasField('name')
@@ -75,9 +76,10 @@ class User extends Entity {
                     ->leftJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
                        'security_role_id = ' . $SecurityRoles->aliasField('id')
                     ])
-                    ->order([$SecurityRoles->aliasField('order ASC')])
+                    ->order([$SecurityRoles->aliasField('order') => 'asc'])
                     ->where(['security_user_id' => $this->id])
                     ->toArray(); 
+        
         if (!empty($userRole )) { 
             $roles = [];
             foreach ($userRole as $key => $value) {
@@ -89,8 +91,9 @@ class User extends Entity {
             $rolesUsers = implode(', ', $roles);
         }
         
-        return trim(sprintf('%s - %s - %s', $this->openemis_no, $name, $rolesUsers));
+        return trim(sprintf('%s - %s (%s)', $this->openemis_no, $name, $rolesUsers));
     }
+    //POCOR-5688 ends
 
     protected function _getDefaultIdentityType() {
         $data = "";
