@@ -778,6 +778,22 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             UtilsSvc.isAppendLoader(false);
         });
     };
+    vm.onNoScheduledClick = function() {
+        vm.action = 'view';
+        vm.gridOptions.context.mode = vm.action;
+        UtilsSvc.isAppendLoader(true);
+
+        InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams())
+        .then(function(isMarked) {
+            vm.updateIsMarked(isMarked);
+            vm.setColumnDef();
+            vm.countStudentData();
+            AlertSvc.reset($scope);
+        }, vm.error)
+        .finally(function() {
+            UtilsSvc.isAppendLoader(false);
+        });
+    };
 
     vm.onExcelClick = function() {
         var excelUrlWithQuery = vm.excelUrl + '?' + 
